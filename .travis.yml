@@ -1,0 +1,23 @@
+language: go
+go:
+- 1.13
+
+jobs:
+  include:
+    - stage: style
+      script:
+        - make style
+    - stage: unit tests
+      script:
+        - make test
+        - go tool cover -func=coverage.out
+      after_success:
+        - bash <(curl -s https://codecov.io/bash)
+    - stage: REST API tests
+      script:
+        - ./test.sh
+
+stages:
+  - style
+  - unit tests
+  - REST API tests

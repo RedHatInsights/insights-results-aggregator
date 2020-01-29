@@ -1,0 +1,4 @@
+insights-results-aggregator
+*.db
+config_my.toml
+coverage.out
