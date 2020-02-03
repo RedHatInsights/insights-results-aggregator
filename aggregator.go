@@ -18,7 +18,9 @@ limitations under the License.
 package main
 
 import (
+	"flag"
 	"fmt"
+	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
@@ -45,7 +47,25 @@ func loadConfiguration(defaultConfigFile string) {
 	}
 }
 
+func loadBrokerConfiguration() broker.BrokerConfiguration {
+	brokerCfg := viper.Sub("broker")
+	return broker.BrokerConfiguration{
+		brokerCfg.GetString("address"),
+		brokerCfg.GetString("topic"),
+		brokerCfg.GetString("group"),
+	}
+}
+
 func main() {
 	loadConfiguration("config")
 
+	// parse command line arguments and flags
+	var produce = flag.Bool("produce", false, "produce message for testing purposes")
+	flag.Parse()
+
+	brokerCfg := loadBrokerConfiguration()
+
+	if *produce {
+		broker.ProduceMessage(brokerCfg, "test message")
+	}
 }
