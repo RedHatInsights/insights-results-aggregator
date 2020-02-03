@@ -1,0 +1,12 @@
+[broker]
+address = "localhost:9092"
+topic = "platform.results.ccx"
+group = "aggregator"
+
+[processing]
+org_filter = "org.csv"
+
+[metrics]
+enabled = true
+
+[logging]
