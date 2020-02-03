@@ -15,7 +15,7 @@ jobs:
         - bash <(curl -s https://codecov.io/bash)
     - stage: REST API tests
       script:
-        - ./test.sh
+        - make rest_api_tests
 
 stages:
   - style
