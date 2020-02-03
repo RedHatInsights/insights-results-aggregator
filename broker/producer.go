@@ -22,7 +22,7 @@ import (
 )
 
 // ProduceMessage produces message to selected topic
-func ProduceMessage(brokerCfg BrokerConfiguration, message string) (partition int32, offset int64, errout error) {
+func ProduceMessage(brokerCfg Configuration, message string) (partition int32, offset int64, errout error) {
 	producer, err := sarama.NewSyncProducer([]string{brokerCfg.Address}, nil)
 	if err != nil {
 		log.Print(err)

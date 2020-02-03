@@ -16,8 +16,8 @@ limitations under the License.
 
 package broker
 
-// BrokerConfiguration represents configuration of Kafka broker
-type BrokerConfiguration struct {
+// Configuration represents configuration of Kafka broker
+type Configuration struct {
 	Address string
 	Topic   string
 	Group   string
