@@ -37,3 +37,16 @@ func TestLoadConfigurationEnvVariable(t *testing.T) {
 	}
 	main.LoadConfiguration("foobar")
 }
+
+func TestLoadingConfigurationFailure(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic as expected")
+		}
+	}()
+	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
+	if err != nil {
+		t.Fatal(err)
+	}
+	main.LoadConfiguration("this does not exist")
+}
