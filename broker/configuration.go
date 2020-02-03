@@ -1,5 +1,5 @@
 /*
-Copyright © 2019, 2020 Red Hat, Inc.
+Copyright © 2020 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,12 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package broker
 
-// Export for testing
-//
-// Please look into the following blogpost:
-// https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
-// to see why this trick is needed.
-var LoadConfiguration = loadConfiguration
-var LoadBrokerConfiguration = loadBrokerConfiguration
+// Configuration represents configuration of Kafka broker
+type Configuration struct {
+	Address string
+	Topic   string
+	Group   string
+}

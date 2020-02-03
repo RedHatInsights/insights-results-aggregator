@@ -50,3 +50,17 @@ func TestLoadingConfigurationFailure(t *testing.T) {
 	}
 	main.LoadConfiguration("this does not exist")
 }
+
+func TestLoadBrokerConfiguration(t *testing.T) {
+	TestLoadConfiguration(t)
+	brokerCfg := main.LoadBrokerConfiguration()
+	if brokerCfg.Address != "localhost:9092" {
+		t.Fatal("Improper broker address", brokerCfg.Address)
+	}
+	if brokerCfg.Topic != "platform.results.ccx" {
+		t.Fatal("Improper broker topic", brokerCfg.Topic)
+	}
+	if brokerCfg.Group != "aggregator" {
+		t.Fatal("Improper broker group", brokerCfg.Group)
+	}
+}
