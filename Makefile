@@ -34,6 +34,9 @@ run: clean build ## Build the project and executes the binary
 test: clean build ## Run the unit tests
 	@go test -coverprofile coverage.out $(shell go list ./... | grep -v tests)
 
+rest_api_tests: ## Run REST API tests
+	@echo "Running REST API tests"
+
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'
 	@echo ''
