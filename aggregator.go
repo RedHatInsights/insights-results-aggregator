@@ -50,9 +50,9 @@ func loadConfiguration(defaultConfigFile string) {
 func loadBrokerConfiguration() broker.BrokerConfiguration {
 	brokerCfg := viper.Sub("broker")
 	return broker.BrokerConfiguration{
-		brokerCfg.GetString("address"),
-		brokerCfg.GetString("topic"),
-		brokerCfg.GetString("group"),
+		Address: brokerCfg.GetString("address"),
+		Topic:   brokerCfg.GetString("topic"),
+		Group:   brokerCfg.GetString("group"),
 	}
 }
 
