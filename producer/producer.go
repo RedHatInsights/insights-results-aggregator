@@ -14,15 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package broker
+package producer
 
 import (
+	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/Shopify/sarama"
 	"log"
 )
 
 // ProduceMessage produces message to selected topic
-func ProduceMessage(brokerCfg Configuration, message string) (partition int32, offset int64, errout error) {
+func ProduceMessage(brokerCfg broker.Configuration, message string) (partition int32, offset int64, errout error) {
 	producer, err := sarama.NewSyncProducer([]string{brokerCfg.Address}, nil)
 	if err != nil {
 		log.Print(err)

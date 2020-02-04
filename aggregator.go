@@ -21,6 +21,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/consumer"
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
+	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
@@ -60,12 +63,23 @@ func main() {
 	loadConfiguration("config")
 
 	// parse command line arguments and flags
-	var produce = flag.Bool("produce", false, "produce message for testing purposes")
+	var produceMessage = flag.Bool("produce", false, "produce message for testing purposes")
+	var startConsumer = flag.Bool("consumer", false, "start the service in consumer mode")
+	var startServer = flag.Bool("server", false, "start the service in HTTP server mode")
 	flag.Parse()
 
 	brokerCfg := loadBrokerConfiguration()
 
-	if *produce {
-		broker.ProduceMessage(brokerCfg, "test message")
+	switch {
+	case *produceMessage:
+		producer.ProduceMessage(brokerCfg, "test message")
+	case *startConsumer:
+		consumerInstance := consumer.New(brokerCfg)
+		consumerInstance.Start()
+	case *startServer:
+		serverInstance := server.New()
+		serverInstance.Start()
+	default:
+		fmt.Println("Setup error: use -consumer, -server, or -produce CLI flag to select startup mode")
 	}
 }
