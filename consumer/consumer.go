@@ -20,17 +20,21 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 )
 
+// Consumer represents any consumer of insights-rules messages
 type Consumer interface {
 	Start() error
 }
 
-type ConsumerImpl struct {
+// Impl in an implementation of Consumer interface
+type Impl struct {
 }
 
+// New constructs new implementation of Consumer interface
 func New(brokerCfg broker.Configuration) Consumer {
-	return ConsumerImpl{}
+	return Impl{}
 }
 
-func (consumer ConsumerImpl) Start() error {
+// Start starts consumer
+func (consumer Impl) Start() error {
 	return nil
 }

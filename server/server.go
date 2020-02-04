@@ -18,17 +18,21 @@ package server
 
 import ()
 
+// Server represents any REST API HTTP server
 type Server interface {
 	Start() error
 }
 
-type ServerImpl struct {
+// Impl in an implementation of Server interface
+type Impl struct {
 }
 
+// New constructs new implementation of Server interface
 func New() Server {
-	return ServerImpl{}
+	return Impl{}
 }
 
-func (server ServerImpl) Start() error {
+// Start starts server
+func (server Impl) Start() error {
 	return nil
 }
