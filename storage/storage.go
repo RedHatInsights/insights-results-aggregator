@@ -30,28 +30,28 @@ type Storage interface {
 
 // Impl is an implementation of Storage interface
 type Impl struct {
-	connections *sql.DB
-	driver      string
+	connection *sql.DB
+	driver     string
 }
 
 // New function creates and initializes a new instance of Storage interface
 func New(driverName string, dataSourceName string) (Storage, error) {
 	log.Printf("Making connection to data storage, driver=%s datasource=%s", driverName, dataSourceName)
-	connections, err := sql.Open(driverName, dataSourceName)
+	connection, err := sql.Open(driverName, dataSourceName)
 
 	if err != nil {
 		log.Fatal("Can not connect to data storage", err)
 		return nil, err
 	}
 
-	return Impl{connections, driverName}, nil
+	return Impl{connection, driverName}, nil
 }
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.
 func (storage Impl) Close() error {
 	log.Println("Closing connection to data storage")
-	if storage.connections != nil {
-		err := storage.connections.Close()
+	if storage.connection != nil {
+		err := storage.connection.Close()
 		if err != nil {
 			log.Fatal("Can not close connection to data storage", err)
 			return err
