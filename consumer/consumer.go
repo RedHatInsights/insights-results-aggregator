@@ -67,7 +67,6 @@ func (consumer Impl) Start() error {
 		log.Printf("Consumed message offset %d\n", msg.Offset)
 		consumed++
 	}
-	return nil
 }
 
 // Close method closes all resources used by consumer
