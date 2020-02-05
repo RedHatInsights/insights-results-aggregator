@@ -20,14 +20,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/spf13/viper"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
-	"github.com/spf13/viper"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 func loadConfiguration(defaultConfigFile string) {
@@ -74,12 +76,20 @@ func main() {
 	case *produceMessage:
 		producer.ProduceMessage(brokerCfg, "test message")
 	case *startConsumer:
-		consumerInstance := consumer.New(brokerCfg)
-		consumerInstance.Start()
+		consumerInstance, err := consumer.New(brokerCfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer consumerInstance.Close()
+		err = consumerInstance.Start()
+		if err != nil {
+			log.Fatal(err)
+		}
 	case *startServer:
 		serverInstance := server.New()
 		serverInstance.Start()
 	default:
 		fmt.Println("Setup error: use -consumer, -server, or -produce CLI flag to select startup mode")
+		os.Exit(1)
 	}
 }
