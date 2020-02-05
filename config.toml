@@ -10,3 +10,7 @@ org_filter = "org.csv"
 enabled = true
 
 [logging]
+
+[storage]
+driver = "sqlite3"
+datasource = "./aggregator.db"
