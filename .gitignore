@@ -1,5 +1,6 @@
 insights-results-aggregator
 *.db
+*.db.backup
 config_my.toml
 coverage.out
 aggregator
