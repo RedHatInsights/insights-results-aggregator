@@ -24,16 +24,17 @@ import (
 	"time"
 )
 
-// Org represents organization ID
+// OrgID represents organization ID
 type OrgID int
 
 // ClusterName represents name of cluster in format c8590f31-e97e-4b85-b506-c45ce1911a12
 type ClusterName string
 
-// Report represents cluster report
+// ClusterReport represents cluster report
 type ClusterReport string
 
-// ReportedAt represents timestamp of cluster report
+// Timestamp represents any timestamp in a form gathered from database
+// TODO: need to be improved
 type Timestamp string
 
 // Storage represents an interface to any relational database based on SQL language
@@ -88,6 +89,7 @@ type Report struct {
 	ReportedAt Timestamp     `json:"reported_at"`
 }
 
+// ListOfOrgs reads list of all organizations that have at least one cluster report
 func (storage Impl) ListOfOrgs() ([]OrgID, error) {
 	orgs := []OrgID{}
 
@@ -98,11 +100,11 @@ func (storage Impl) ListOfOrgs() ([]OrgID, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var orgId OrgID
+		var orgID OrgID
 
-		err = rows.Scan(&orgId)
+		err = rows.Scan(&orgID)
 		if err == nil {
-			orgs = append(orgs, OrgID(orgId))
+			orgs = append(orgs, OrgID(orgID))
 		} else {
 			log.Println("error", err)
 		}
@@ -110,6 +112,7 @@ func (storage Impl) ListOfOrgs() ([]OrgID, error) {
 	return orgs, nil
 }
 
+// ListOfClustersForOrg reads list of all clusters fro given organization
 func (storage Impl) ListOfClustersForOrg(orgID OrgID) ([]ClusterName, error) {
 	clusters := []ClusterName{}
 
@@ -132,6 +135,7 @@ func (storage Impl) ListOfClustersForOrg(orgID OrgID) ([]ClusterName, error) {
 	return clusters, nil
 }
 
+// ReadReportForCluster reads result (health status) for selected cluster for given organization
 func (storage Impl) ReadReportForCluster(orgID OrgID, clusterName ClusterName) (ClusterReport, error) {
 	rows, err := storage.connection.Query("SELECT report FROM report WHERE org_id = ? AND cluster = ?", orgID, clusterName)
 	if err != nil {
@@ -145,14 +149,14 @@ func (storage Impl) ReadReportForCluster(orgID OrgID, clusterName ClusterName) (
 		err = rows.Scan(&report)
 		if err == nil {
 			return ClusterReport(report), nil
-		} else {
-			log.Println("error", err)
-			return "", err
 		}
+		log.Println("error", err)
+		return "", err
 	}
 	return "", err
 }
 
+// WriteReportForCluster writes result (health status) for selected cluster for given organization
 func (storage Impl) WriteReportForCluster(orgID OrgID, clusterName ClusterName, report ClusterReport) error {
 	statement, err := storage.connection.Prepare("INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at) VALUES ($1, $2, $3, $4)")
 	if err != nil {
