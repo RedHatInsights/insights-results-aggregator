@@ -37,6 +37,10 @@ test: clean build ## Run the unit tests
 rest_api_tests: ## Run REST API tests
 	@echo "Running REST API tests"
 
+sqlite_db:
+	mv aggregator.db aggragator.db.backup
+	local_storage/create_database_sqlite.sh
+
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'
 	@echo ''

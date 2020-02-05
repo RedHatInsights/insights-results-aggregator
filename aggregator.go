@@ -30,6 +30,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
 
 func loadConfiguration(defaultConfigFile string) {
@@ -61,6 +62,14 @@ func loadBrokerConfiguration() broker.Configuration {
 	}
 }
 
+func loadStorageConfiguration() storage.Configuration {
+	storageCfg := viper.Sub("storage")
+	return storage.Configuration{
+		Driver:     storageCfg.GetString("driver"),
+		DataSource: storageCfg.GetString("datasource"),
+	}
+}
+
 func main() {
 	loadConfiguration("config")
 
@@ -71,6 +80,8 @@ func main() {
 	flag.Parse()
 
 	brokerCfg := loadBrokerConfiguration()
+	// not needed ATM
+	// storageCfg := loadStorageConfiguration()
 
 	switch {
 	case *produceMessage:
