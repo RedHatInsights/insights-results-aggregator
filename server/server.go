@@ -25,10 +25,11 @@ type Server interface {
 
 // Impl in an implementation of Server interface
 type Impl struct {
+	Config Configuration
 }
 
 // New constructs new implementation of Server interface
-func New() Server {
+func New(configuration Configuration) Server {
 	return Impl{}
 }
 
