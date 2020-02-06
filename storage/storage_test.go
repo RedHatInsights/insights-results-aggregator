@@ -47,8 +47,8 @@ func TestMockDBStorageReadReport(t *testing.T) {
 	defer mockStorage.Close()
 
 	const testOrgID = storage.OrgID(1)
-	const testClusterName = storage.ClusterName("cluster name")
-	const testClusterReport = storage.ClusterReport("cluster report")
+	const testClusterName = storage.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
+	const testClusterReport = storage.ClusterReport("{}")
 
 	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterReport)
 	if err != nil {
@@ -71,12 +71,12 @@ func TestMockDBStorageListOfOrgs(t *testing.T) {
 	}
 	defer mockStorage.Close()
 
-	err = mockStorage.WriteReportForCluster(1, "cluster 1", "report 1")
+	err = mockStorage.WriteReportForCluster(1, "1deb586c-fb85-4db4-ae5b-139cdbdf77ae", "{}")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = mockStorage.WriteReportForCluster(3, "cluster 2", "report 2")
+	err = mockStorage.WriteReportForCluster(3, "a1bf5b15-5229-4042-9825-c69dc36b57f5", "{}")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,16 +96,16 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 	}
 	defer mockStorage.Close()
 
-	err = mockStorage.WriteReportForCluster(1, "cluster 1", "report 1")
+	err = mockStorage.WriteReportForCluster(1, "eabb4fbf-edfa-45d0-9352-fb05332fdb82", "{}")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = mockStorage.WriteReportForCluster(1, "cluster 2", "report 1")
+	err = mockStorage.WriteReportForCluster(1, "edf5f242-0c12-4307-8c9f-29dcd289d045", "{}")
 	if err != nil {
 		t.Fatal(err)
 	}
 	// also pushing cluster for different org
-	err = mockStorage.WriteReportForCluster(5, "cluster 3", "report 1")
+	err = mockStorage.WriteReportForCluster(5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", "{}")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,12 +115,15 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []storage.ClusterName{"cluster 1", "cluster 2"}, result)
+	assert.Equal(t, []storage.ClusterName{
+		"eabb4fbf-edfa-45d0-9352-fb05332fdb82",
+		"edf5f242-0c12-4307-8c9f-29dcd289d045",
+	}, result)
 
 	result, err = mockStorage.ListOfClustersForOrg(5)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []storage.ClusterName{"cluster 3"}, result)
+	assert.Equal(t, []storage.ClusterName{"4016d01b-62a1-4b49-a36e-c1c5a3d02750"}, result)
 }
