@@ -45,7 +45,7 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 }
 
 // LogRequest - middleware for loging requests
-func (s Impl) LogRequest(nextHandler http.Handler) http.Handler {
+func (server Impl) LogRequest(nextHandler http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			logRequestHandler(writer, request, nextHandler)
