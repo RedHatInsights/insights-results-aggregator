@@ -23,3 +23,5 @@ package main
 // to see why this trick is needed.
 var LoadConfiguration = loadConfiguration
 var LoadBrokerConfiguration = loadBrokerConfiguration
+var LoadServerConfiguration = loadServerConfiguration
+var LoadStorageConfiguration = loadStorageConfiguration

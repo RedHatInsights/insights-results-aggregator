@@ -16,24 +16,7 @@ limitations under the License.
 
 package server
 
-import ()
-
-// Server represents any REST API HTTP server
-type Server interface {
-	Start() error
-}
-
-// Impl in an implementation of Server interface
-type Impl struct {
-	Config Configuration
-}
-
-// New constructs new implementation of Server interface
-func New(configuration Configuration) Server {
-	return Impl{}
-}
-
-// Start starts server
-func (server Impl) Start() error {
-	return nil
+// Configuration represents configuration of REST API HTTP server
+type Configuration struct {
+	Address string
 }

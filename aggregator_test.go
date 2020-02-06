@@ -64,3 +64,22 @@ func TestLoadBrokerConfiguration(t *testing.T) {
 		t.Fatal("Improper broker group", brokerCfg.Group)
 	}
 }
+
+func TestLoadServerConfiguration(t *testing.T) {
+	TestLoadConfiguration(t)
+	serverCfg := main.LoadServerConfiguration()
+	if serverCfg.Address != ":8080" {
+		t.Fatal("Improper server address", serverCfg.Address)
+	}
+}
+
+func TestLoadStorageConfiguration(t *testing.T) {
+	TestLoadConfiguration(t)
+	storageCfg := main.LoadStorageConfiguration()
+	if storageCfg.Driver != "sqlite3" {
+		t.Fatal("Improper DB driver name", storageCfg.Driver)
+	}
+	if storageCfg.DataSource != "xyzzy" {
+		t.Fatal("Improper DB data source name", storageCfg.DataSource)
+	}
+}

@@ -3,6 +3,9 @@ address = "localhost:9092"
 topic = "platform.results.ccx"
 group = "aggregator"
 
+[server]
+address = ":8080"
+
 [processing]
 org_filter = "org.csv"
 
@@ -10,3 +13,7 @@ org_filter = "org.csv"
 enabled = true
 
 [logging]
+
+[storage]
+driver = "sqlite3"
+datasource = "xyzzy"
