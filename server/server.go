@@ -58,27 +58,26 @@ func (server Impl) mainEndpoint(writer http.ResponseWriter, request *http.Reques
 }
 
 // Initialize perform the server initialization
-func (server Impl) Initialize() error {
-	address := server.Config.Address
-
+func (server Impl) Initialize(address string) http.Handler {
 	log.Println("Initializing HTTP server at", address)
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(server.LogRequest)
 
 	// common REST API endpoints
 	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
-
-	log.Println("Starting HTTP server at", address)
-	err := http.ListenAndServe(address, router)
-
-	if err != nil {
-		log.Fatal("Unable to initialize HTTP server", err)
-	}
-	return nil
+	return router
 }
 
 // Start starts server
 func (server Impl) Start() error {
-	server.Initialize()
+	address := server.Config.Address
+	router := server.Initialize(address)
+	log.Println("Starting HTTP server at", address)
+
+	err := http.ListenAndServe(address, router)
+	if err != nil {
+		log.Fatal("Unable to start HTTP server", err)
+	}
 	return nil
 }
