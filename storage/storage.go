@@ -39,6 +39,7 @@ type Timestamp string
 
 // Storage represents an interface to any relational database based on SQL language
 type Storage interface {
+	Init() error
 	Close() error
 	ListOfOrgs() ([]OrgID, error)
 	ListOfClustersForOrg(orgID OrgID) ([]ClusterName, error)
@@ -63,6 +64,20 @@ func New(configuration Configuration) (Storage, error) {
 	}
 
 	return Impl{connection, configuration}, nil
+}
+
+// Init method is doing initialization like creating tables in underlying database
+func (storage Impl) Init() error {
+	_, err := storage.connection.Exec(`
+		create table report (
+			org_id      integer not null,
+			cluster     varchar not null unique,
+			report      varchar not null,
+			reported_at datetime,
+			PRIMARY KEY(org_id, cluster)
+		);
+	`)
+	return err
 }
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.

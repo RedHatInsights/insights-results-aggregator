@@ -15,3 +15,112 @@ limitations under the License.
 */
 
 package storage_test
+
+import (
+	"testing"
+
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/stretchr/testify/assert"
+)
+
+func getMockStorage() (storage.Storage, error) {
+	mockStorage, err := storage.New(storage.Configuration{
+		Driver:     "sqlite3",
+		DataSource: ":memory:",
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = mockStorage.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	return mockStorage, nil
+}
+
+func TestMockDBStorageReadReport(t *testing.T) {
+	mockStorage, err := getMockStorage()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	const testOrgID = storage.OrgID(1)
+	const testClusterName = storage.ClusterName("cluster name")
+	const testClusterReport = storage.ClusterReport("cluster report")
+
+	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterReport)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, testClusterReport, result)
+
+}
+
+func TestMockDBStorageListOfOrgs(t *testing.T) {
+	mockStorage, err := getMockStorage()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	err = mockStorage.WriteReportForCluster(1, "cluster 1", "report 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = mockStorage.WriteReportForCluster(3, "cluster 2", "report 2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := mockStorage.ListOfOrgs()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []storage.OrgID{1, 3}, result)
+}
+
+func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
+	mockStorage, err := getMockStorage()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	err = mockStorage.WriteReportForCluster(1, "cluster 1", "report 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = mockStorage.WriteReportForCluster(1, "cluster 2", "report 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// also pushing cluster for different org
+	err = mockStorage.WriteReportForCluster(5, "cluster 3", "report 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := mockStorage.ListOfClustersForOrg(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []storage.ClusterName{"cluster 1", "cluster 2"}, result)
+
+	result, err = mockStorage.ListOfClustersForOrg(5)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []storage.ClusterName{"cluster 3"}, result)
+}
