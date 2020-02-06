@@ -18,5 +18,6 @@ package server
 
 // Configuration represents configuration of REST API HTTP server
 type Configuration struct {
-	Address string
+	Address   string
+	APIPrefix string
 }

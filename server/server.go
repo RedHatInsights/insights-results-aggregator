@@ -16,7 +16,12 @@ limitations under the License.
 
 package server
 
-import ()
+import (
+	"github.com/gorilla/mux"
+	"io"
+	"log"
+	"net/http"
+)
 
 // Server represents any REST API HTTP server
 type Server interface {
@@ -30,10 +35,50 @@ type Impl struct {
 
 // New constructs new implementation of Server interface
 func New(configuration Configuration) Server {
-	return Impl{}
+	return Impl{Config: configuration}
+}
+
+func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHandler http.Handler) {
+	log.Println("Request URI: " + request.RequestURI)
+	log.Println("Request method: " + request.Method)
+	nextHandler.ServeHTTP(writer, request)
+}
+
+// LogRequest - middleware for loging requests
+func (s Impl) LogRequest(nextHandler http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(writer http.ResponseWriter, request *http.Request) {
+			logRequestHandler(writer, request, nextHandler)
+		})
+}
+
+func (server Impl) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
+	// TODO: just a stub!
+	io.WriteString(writer, "Hello world!\n")
+}
+
+// Initialize perform the server initialization
+func (server Impl) Initialize() error {
+	address := server.Config.Address
+
+	log.Println("Initializing HTTP server at", address)
+	router := mux.NewRouter().StrictSlash(true)
+	router.Use(server.LogRequest)
+
+	// common REST API endpoints
+	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
+
+	log.Println("Starting HTTP server at", address)
+	err := http.ListenAndServe(address, router)
+
+	if err != nil {
+		log.Fatal("Unable to initialize HTTP server", err)
+	}
+	return nil
 }
 
 // Start starts server
 func (server Impl) Start() error {
+	server.Initialize()
 	return nil
 }
