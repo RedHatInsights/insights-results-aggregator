@@ -34,10 +34,15 @@ import (
 )
 
 const (
+	// ExitStatusOK means that the tool finished with success
 	ExitStatusOK = iota
+	// ExitStatusNoCommand is returned when no command (-consumer, -server) is provided via CLI
 	ExitStatusNoCommand
+	// ExitStatusProducerError is returned in case of any producer-related error
 	ExitStatusProducerError
+	// ExitStatusConsumerError is returned in case of any consumer-related error
 	ExitStatusConsumerError
+	// ExitStatusServerError is returned in case of any REST API server-related error
 	ExitStatusServerError
 )
 
