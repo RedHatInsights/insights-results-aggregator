@@ -86,7 +86,8 @@ func loadStorageConfiguration() storage.Configuration {
 func loadServerConfiguration() server.Configuration {
 	serverCfg := viper.Sub("server")
 	return server.Configuration{
-		Address: serverCfg.GetString("address"),
+		Address:   serverCfg.GetString("address"),
+		APIPrefix: serverCfg.GetString("api_prefix"),
 	}
 }
 

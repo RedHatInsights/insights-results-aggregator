@@ -14,10 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package server
+package server_test
 
-// Configuration represents configuration of REST API HTTP server
-type Configuration struct {
-	Address   string
-	APIPrefix string
-}
+import ()

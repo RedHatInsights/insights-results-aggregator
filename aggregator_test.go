@@ -71,6 +71,9 @@ func TestLoadServerConfiguration(t *testing.T) {
 	if serverCfg.Address != ":8080" {
 		t.Fatal("Improper server address", serverCfg.Address)
 	}
+	if serverCfg.APIPrefix != "/api/v1/" {
+		t.Fatal("Improper server API prefix", serverCfg.APIPrefix)
+	}
 }
 
 func TestLoadStorageConfiguration(t *testing.T) {
