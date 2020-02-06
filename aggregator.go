@@ -33,6 +33,14 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
 
+const (
+	ExitStatusOK = iota
+	ExitStatusNoCommand
+	ExitStatusProducerError
+	ExitStatusConsumerError
+	ExitStatusServerError
+)
+
 func loadConfiguration(defaultConfigFile string) {
 	configFile, specified := os.LookupEnv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
 	if specified {
@@ -70,37 +78,84 @@ func loadStorageConfiguration() storage.Configuration {
 	}
 }
 
+func loadServerConfiguration() server.Configuration {
+	serverCfg := viper.Sub("server")
+	return server.Configuration{
+		Address: serverCfg.GetString("address"),
+	}
+}
+
+func produceMessages() error {
+	brokerCfg := loadBrokerConfiguration()
+
+	_, _, err := producer.ProduceMessage(brokerCfg, "test message")
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
+func startConsumer() error {
+	brokerCfg := loadBrokerConfiguration()
+
+	consumerInstance, err := consumer.New(brokerCfg)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer consumerInstance.Close()
+	err = consumerInstance.Start()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
+func startServer() error {
+	serverCfg := loadServerConfiguration()
+
+	serverInstance := server.New(serverCfg)
+	err := serverInstance.Start()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
 func main() {
 	loadConfiguration("config")
 
 	// parse command line arguments and flags
-	var produceMessage = flag.Bool("produce", false, "produce message for testing purposes")
-	var startConsumer = flag.Bool("consumer", false, "start the service in consumer mode")
-	var startServer = flag.Bool("server", false, "start the service in HTTP server mode")
+	var produceMessagesCmd = flag.Bool("produce", false, "produce messages for testing purposes")
+	var startConsumerCmd = flag.Bool("consumer", false, "start the service in consumer mode")
+	var startServerCmd = flag.Bool("server", false, "start the service in HTTP server mode")
 	flag.Parse()
 
-	brokerCfg := loadBrokerConfiguration()
 	// not needed ATM
 	// storageCfg := loadStorageConfiguration()
 
 	switch {
-	case *produceMessage:
-		producer.ProduceMessage(brokerCfg, "test message")
-	case *startConsumer:
-		consumerInstance, err := consumer.New(brokerCfg)
+	case *produceMessagesCmd:
+		err := produceMessages()
 		if err != nil {
-			log.Fatal(err)
+			os.Exit(ExitStatusProducerError)
 		}
-		defer consumerInstance.Close()
-		err = consumerInstance.Start()
+	case *startConsumerCmd:
+		err := startConsumer()
 		if err != nil {
-			log.Fatal(err)
+			os.Exit(ExitStatusConsumerError)
 		}
-	case *startServer:
-		serverInstance := server.New()
-		serverInstance.Start()
+	case *startServerCmd:
+		err := startServer()
+		if err != nil {
+			os.Exit(ExitStatusServerError)
+		}
 	default:
 		fmt.Println("Setup error: use -consumer, -server, or -produce CLI flag to select startup mode")
-		os.Exit(1)
+		os.Exit(ExitStatusNoCommand)
 	}
+	os.Exit(ExitStatusOK)
 }
