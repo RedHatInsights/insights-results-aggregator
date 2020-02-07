@@ -80,6 +80,8 @@ func (server Impl) readOrganizationID(writer http.ResponseWriter, request *http.
 	organizationIDParam, found := mux.Vars(request)["organization"]
 
 	if !found {
+		// query parameter 'organization' can't be found in request, which might be caused by issue in Gorilla mux
+		// (not on client side)
 		const message = "Organization ID is not provided"
 		log.Println(message)
 		responses.SendInternalServerError(writer, message)
@@ -100,6 +102,8 @@ func (server Impl) readOrganizationID(writer http.ResponseWriter, request *http.
 func (server Impl) readClusterName(writer http.ResponseWriter, request *http.Request) (storage.ClusterName, error) {
 	clusterName, found := mux.Vars(request)["cluster"]
 	if !found {
+		// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
+		// (not on client side)
 		const message = "Cluster name is not provided"
 		log.Println(message)
 		responses.SendInternalServerError(writer, message)
