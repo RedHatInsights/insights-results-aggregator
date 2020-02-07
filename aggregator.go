@@ -92,9 +92,14 @@ func loadServerConfiguration() server.Configuration {
 }
 
 func produceMessages() error {
+	const testMessage = `
+{"OrgID":1,
+ "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
+ "Report":"{}"}
+`
 	brokerCfg := loadBrokerConfiguration()
 
-	_, _, err := producer.ProduceMessage(brokerCfg, "test message")
+	_, _, err := producer.ProduceMessage(brokerCfg, testMessage)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -103,9 +108,16 @@ func produceMessages() error {
 }
 
 func startConsumer() error {
-	brokerCfg := loadBrokerConfiguration()
+	storageCfg := loadStorageConfiguration()
+	storage, err := storage.New(storageCfg)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer storage.Close()
 
-	consumerInstance, err := consumer.New(brokerCfg)
+	brokerCfg := loadBrokerConfiguration()
+	consumerInstance, err := consumer.New(brokerCfg, storage)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -126,6 +138,7 @@ func startServer() error {
 		log.Fatal(err)
 		return err
 	}
+	defer storage.Close()
 
 	serverCfg := loadServerConfiguration()
 	serverInstance := server.New(serverCfg, storage)

@@ -17,10 +17,11 @@ limitations under the License.
 package storage_test
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/stretchr/testify/assert"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func getMockStorage() (storage.Storage, error) {
@@ -46,9 +47,9 @@ func TestMockDBStorageReadReport(t *testing.T) {
 	}
 	defer mockStorage.Close()
 
-	const testOrgID = storage.OrgID(1)
-	const testClusterName = storage.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testClusterReport = storage.ClusterReport("{}")
+	const testOrgID = types.OrgID(1)
+	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
+	const testClusterReport = types.ClusterReport("{}")
 
 	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterReport)
 	if err != nil {
@@ -86,7 +87,7 @@ func TestMockDBStorageListOfOrgs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []storage.OrgID{1, 3}, result)
+	assert.Equal(t, []types.OrgID{1, 3}, result)
 }
 
 func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
@@ -115,7 +116,7 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []storage.ClusterName{
+	assert.Equal(t, []types.ClusterName{
 		"eabb4fbf-edfa-45d0-9352-fb05332fdb82",
 		"edf5f242-0c12-4307-8c9f-29dcd289d045",
 	}, result)
@@ -125,5 +126,5 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []storage.ClusterName{"4016d01b-62a1-4b49-a36e-c1c5a3d02750"}, result)
+	assert.Equal(t, []types.ClusterName{"4016d01b-62a1-4b49-a36e-c1c5a3d02750"}, result)
 }
