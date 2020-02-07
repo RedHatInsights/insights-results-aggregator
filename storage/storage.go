@@ -34,6 +34,7 @@ type Storage interface {
 	ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
 	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error)
 	WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport) error
+	ReportsCount() (int, error)
 }
 
 // Impl is an implementation of Storage interface
@@ -176,4 +177,25 @@ func (storage Impl) WriteReportForCluster(orgID types.OrgID, clusterName types.C
 		return err
 	}
 	return nil
+}
+
+// ReportsCount reads number of all records stored in database
+func (storage Impl) ReportsCount() (int, error) {
+	rows, err := storage.connection.Query("SELECT count(*) FROM report")
+	if err != nil {
+		return -1, err
+	}
+	defer rows.Close()
+
+	if rows.Next() {
+		var cnt int
+
+		err = rows.Scan(&cnt)
+		if err == nil {
+			return cnt, nil
+		}
+		log.Println("error", err)
+		return -1, err
+	}
+	return -1, err
 }

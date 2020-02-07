@@ -128,3 +128,30 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 
 	assert.Equal(t, []types.ClusterName{"4016d01b-62a1-4b49-a36e-c1c5a3d02750"}, result)
 }
+
+func TestMockDBReportsCount(t *testing.T) {
+	mockStorage, err := getMockStorage()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	cnt, err := mockStorage.ReportsCount()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, cnt, 0)
+
+	err = mockStorage.WriteReportForCluster(5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", "{}")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cnt, err = mockStorage.ReportsCount()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, cnt, 1)
+}
