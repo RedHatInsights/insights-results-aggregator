@@ -103,9 +103,16 @@ func produceMessages() error {
 }
 
 func startConsumer() error {
-	brokerCfg := loadBrokerConfiguration()
+	storageCfg := loadStorageConfiguration()
+	storage, err := storage.New(storageCfg)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer storage.Close()
 
-	consumerInstance, err := consumer.New(brokerCfg)
+	brokerCfg := loadBrokerConfiguration()
+	consumerInstance, err := consumer.New(brokerCfg, storage)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -126,6 +133,7 @@ func startServer() error {
 		log.Fatal(err)
 		return err
 	}
+	defer storage.Close()
 
 	serverCfg := loadServerConfiguration()
 	serverInstance := server.New(serverCfg, storage)

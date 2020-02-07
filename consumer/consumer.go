@@ -17,10 +17,14 @@ limitations under the License.
 package consumer
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/Shopify/sarama"
 	"log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // Consumer represents any consumer of insights-rules messages
@@ -34,10 +38,17 @@ type Impl struct {
 	Configuration     broker.Configuration
 	Consumer          sarama.Consumer
 	PartitionConsumer sarama.PartitionConsumer
+	Storage           storage.Storage
+}
+
+type incomingMessage struct {
+	Organization *types.OrgID         `json:"OrgID"`
+	ClusterName  *types.ClusterName   `json:"ClusterName"`
+	Report       *types.ClusterReport `json:"Report"`
 }
 
 // New constructs new implementation of Consumer interface
-func New(brokerCfg broker.Configuration) (Consumer, error) {
+func New(brokerCfg broker.Configuration, storage storage.Storage) (Consumer, error) {
 	c, err := sarama.NewConsumer([]string{brokerCfg.Address}, nil)
 	if err != nil {
 		return nil, err
@@ -54,8 +65,32 @@ func New(brokerCfg broker.Configuration) (Consumer, error) {
 		Configuration:     brokerCfg,
 		Consumer:          c,
 		PartitionConsumer: partitionConsumer,
+		Storage:           storage,
 	}
 	return consumer, nil
+}
+
+func parseMessage(messageValue []byte) (types.OrgID, types.ClusterName, types.ClusterReport, error) {
+	var deserialized incomingMessage
+	log.Println(messageValue)
+	log.Println(string(messageValue))
+
+	err := json.Unmarshal(messageValue, &deserialized)
+	if err != nil {
+		return 0, "", "", err
+	}
+
+	log.Println(deserialized)
+	if deserialized.Organization == nil {
+		return 0, "", "", errors.New("Missing required attribute 'OrgID'")
+	}
+	if deserialized.ClusterName == nil {
+		return 0, "", "", errors.New("Missing required attribute 'ClusterName'")
+	}
+	if deserialized.Report == nil {
+		return 0, "", "", errors.New("Missing required attribute 'Report'")
+	}
+	return *deserialized.Organization, *deserialized.ClusterName, *deserialized.Report, nil
 }
 
 // Start starts consumer
@@ -66,6 +101,15 @@ func (consumer Impl) Start() error {
 		msg := <-consumer.PartitionConsumer.Messages()
 		log.Printf("Consumed message offset %d\n", msg.Offset)
 		consumed++
+		orgID, clusterName, report, err := parseMessage(msg.Value)
+		log.Println(orgID, clusterName, report, err)
+		if err != nil {
+			log.Println("Error parsing message from Kafka:", err)
+		}
+		err = consumer.Storage.WriteReportForCluster(orgID, clusterName, report)
+		if err != nil {
+			log.Println("Error writing report to database:", err)
+		}
 	}
 }
 
