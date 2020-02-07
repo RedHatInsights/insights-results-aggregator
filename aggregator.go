@@ -92,9 +92,14 @@ func loadServerConfiguration() server.Configuration {
 }
 
 func produceMessages() error {
+	const testMessage = `
+{"OrgID":1,
+ "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
+ "Report":"{}"}
+`
 	brokerCfg := loadBrokerConfiguration()
 
-	_, _, err := producer.ProduceMessage(brokerCfg, "test message")
+	_, _, err := producer.ProduceMessage(brokerCfg, testMessage)
 	if err != nil {
 		log.Fatal(err)
 		return err
