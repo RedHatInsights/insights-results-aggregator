@@ -10,7 +10,7 @@ Aggregator service for insights results
 
 ### Whole data flow
 
-![data_flow](./doc/customer_facing_services_architecture.png)
+![data_flow](./doc/customer-facing-services-architecture.png)
 
 1. Event about new data from insights operator is consumed from Kafka. That event contains (among other things) URL to S3 Bucket
 2. Insights operator data is read from S3 Bucket and insigts rules are applied to that data
