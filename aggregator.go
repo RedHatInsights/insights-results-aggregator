@@ -120,10 +120,16 @@ func startConsumer() error {
 }
 
 func startServer() error {
-	serverCfg := loadServerConfiguration()
+	storageCfg := loadStorageConfiguration()
+	storage, err := storage.New(storageCfg)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
 
-	serverInstance := server.New(serverCfg)
-	err := serverInstance.Start()
+	serverCfg := loadServerConfiguration()
+	serverInstance := server.New(serverCfg, storage)
+	err = serverInstance.Start()
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -139,9 +145,6 @@ func main() {
 	var startConsumerCmd = flag.Bool("consumer", false, "start the service in consumer mode")
 	var startServerCmd = flag.Bool("server", false, "start the service in HTTP server mode")
 	flag.Parse()
-
-	// not needed ATM
-	// storageCfg := loadStorageConfiguration()
 
 	switch {
 	case *produceMessagesCmd:
