@@ -19,16 +19,27 @@ package consumer_test
 import (
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"testing"
 )
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
+	storageCfg := storage.Configuration{
+		Driver:     "sqlite3",
+		DataSource: ":memory:",
+	}
+	storage, err := storage.New(storageCfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer storage.Close()
+
 	brokerCfg := broker.Configuration{
 		Address: "localhost:1234",
 		Topic:   "topic",
 		Group:   "group",
 	}
-	consumer, err := consumer.New(brokerCfg)
+	consumer, err := consumer.New(brokerCfg, storage)
 	if err == nil {
 		t.Fatal("Error should be reported")
 	}
