@@ -27,6 +27,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // Server represents any REST API HTTP server
@@ -76,7 +77,7 @@ func (server Impl) listOfOrganizations(writer http.ResponseWriter, request *http
 	}
 }
 
-func (server Impl) readOrganizationID(writer http.ResponseWriter, request *http.Request) (storage.OrgID, error) {
+func (server Impl) readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
 	organizationIDParam, found := mux.Vars(request)["organization"]
 
 	if !found {
@@ -96,10 +97,10 @@ func (server Impl) readOrganizationID(writer http.ResponseWriter, request *http.
 		return 0, errors.New(message)
 	}
 
-	return storage.OrgID(int(organizationID)), nil
+	return types.OrgID(int(organizationID)), nil
 }
 
-func (server Impl) readClusterName(writer http.ResponseWriter, request *http.Request) (storage.ClusterName, error) {
+func (server Impl) readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
 	clusterName, found := mux.Vars(request)["cluster"]
 	if !found {
 		// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
@@ -107,10 +108,10 @@ func (server Impl) readClusterName(writer http.ResponseWriter, request *http.Req
 		const message = "Cluster name is not provided"
 		log.Println(message)
 		responses.SendInternalServerError(writer, message)
-		return storage.ClusterName(""), errors.New(message)
+		return types.ClusterName(""), errors.New(message)
 	}
 	// TODO: add check for GUID-like name
-	return storage.ClusterName(clusterName), nil
+	return types.ClusterName(clusterName), nil
 }
 
 func (server Impl) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
@@ -120,7 +121,7 @@ func (server Impl) listOfClustersForOrganization(writer http.ResponseWriter, req
 		return
 	}
 
-	clusters, err := server.Storage.ListOfClustersForOrg(storage.OrgID(int(organizationID)))
+	clusters, err := server.Storage.ListOfClustersForOrg(types.OrgID(int(organizationID)))
 	if err != nil {
 		log.Println("Unable to get list of clusters", err)
 		responses.SendInternalServerError(writer, err.Error())
