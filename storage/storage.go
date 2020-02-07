@@ -108,7 +108,7 @@ type Report struct {
 func (storage Impl) ListOfOrgs() ([]OrgID, error) {
 	orgs := []OrgID{}
 
-	rows, err := storage.connection.Query("SELECT org_id FROM report ORDER BY org_id")
+	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
 	if err != nil {
 		return orgs, err
 	}
