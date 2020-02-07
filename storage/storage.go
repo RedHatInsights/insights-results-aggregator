@@ -22,29 +22,18 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 	"log"
 	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
-
-// OrgID represents organization ID
-type OrgID int
-
-// ClusterName represents name of cluster in format c8590f31-e97e-4b85-b506-c45ce1911a12
-type ClusterName string
-
-// ClusterReport represents cluster report
-type ClusterReport string
-
-// Timestamp represents any timestamp in a form gathered from database
-// TODO: need to be improved
-type Timestamp string
 
 // Storage represents an interface to any relational database based on SQL language
 type Storage interface {
 	Init() error
 	Close() error
-	ListOfOrgs() ([]OrgID, error)
-	ListOfClustersForOrg(orgID OrgID) ([]ClusterName, error)
-	ReadReportForCluster(orgID OrgID, clusterName ClusterName) (ClusterReport, error)
-	WriteReportForCluster(orgID OrgID, clusterName ClusterName, report ClusterReport) error
+	ListOfOrgs() ([]types.OrgID, error)
+	ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
+	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error)
+	WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport) error
 }
 
 // Impl is an implementation of Storage interface
@@ -98,15 +87,15 @@ func (storage Impl) Close() error {
 //     Name: cluster GUID in the following format:
 //         c8590f31-e97e-4b85-b506-c45ce1911a12
 type Report struct {
-	Org        OrgID         `json:"org"`
-	Name       ClusterName   `json:"cluster"`
-	Report     ClusterReport `json:"report"`
-	ReportedAt Timestamp     `json:"reported_at"`
+	Org        types.OrgID         `json:"org"`
+	Name       types.ClusterName   `json:"cluster"`
+	Report     types.ClusterReport `json:"report"`
+	ReportedAt types.Timestamp     `json:"reported_at"`
 }
 
 // ListOfOrgs reads list of all organizations that have at least one cluster report
-func (storage Impl) ListOfOrgs() ([]OrgID, error) {
-	orgs := []OrgID{}
+func (storage Impl) ListOfOrgs() ([]types.OrgID, error) {
+	orgs := []types.OrgID{}
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
 	if err != nil {
@@ -115,11 +104,11 @@ func (storage Impl) ListOfOrgs() ([]OrgID, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var orgID OrgID
+		var orgID types.OrgID
 
 		err = rows.Scan(&orgID)
 		if err == nil {
-			orgs = append(orgs, OrgID(orgID))
+			orgs = append(orgs, types.OrgID(orgID))
 		} else {
 			log.Println("error", err)
 		}
@@ -128,8 +117,8 @@ func (storage Impl) ListOfOrgs() ([]OrgID, error) {
 }
 
 // ListOfClustersForOrg reads list of all clusters fro given organization
-func (storage Impl) ListOfClustersForOrg(orgID OrgID) ([]ClusterName, error) {
-	clusters := []ClusterName{}
+func (storage Impl) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
+	clusters := []types.ClusterName{}
 
 	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = ? ORDER BY cluster", orgID)
 	if err != nil {
@@ -142,7 +131,7 @@ func (storage Impl) ListOfClustersForOrg(orgID OrgID) ([]ClusterName, error) {
 
 		err = rows.Scan(&clusterName)
 		if err == nil {
-			clusters = append(clusters, ClusterName(clusterName))
+			clusters = append(clusters, types.ClusterName(clusterName))
 		} else {
 			log.Println("error", err)
 		}
@@ -151,7 +140,7 @@ func (storage Impl) ListOfClustersForOrg(orgID OrgID) ([]ClusterName, error) {
 }
 
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
-func (storage Impl) ReadReportForCluster(orgID OrgID, clusterName ClusterName) (ClusterReport, error) {
+func (storage Impl) ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error) {
 	rows, err := storage.connection.Query("SELECT report FROM report WHERE org_id = ? AND cluster = ?", orgID, clusterName)
 	if err != nil {
 		return "", err
@@ -163,7 +152,7 @@ func (storage Impl) ReadReportForCluster(orgID OrgID, clusterName ClusterName) (
 
 		err = rows.Scan(&report)
 		if err == nil {
-			return ClusterReport(report), nil
+			return types.ClusterReport(report), nil
 		}
 		log.Println("error", err)
 		return "", err
@@ -172,7 +161,7 @@ func (storage Impl) ReadReportForCluster(orgID OrgID, clusterName ClusterName) (
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
-func (storage Impl) WriteReportForCluster(orgID OrgID, clusterName ClusterName, report ClusterReport) error {
+func (storage Impl) WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport) error {
 	statement, err := storage.connection.Prepare("INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at) VALUES ($1, $2, $3, $4)")
 	if err != nil {
 		return err
