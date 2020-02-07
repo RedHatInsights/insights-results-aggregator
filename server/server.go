@@ -17,10 +17,16 @@ limitations under the License.
 package server
 
 import (
-	"github.com/gorilla/mux"
+	"errors"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+
+	"github.com/RedHatInsights/insights-operator-utils/responses"
+	"github.com/gorilla/mux"
+
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
 
 // Server represents any REST API HTTP server
@@ -30,12 +36,15 @@ type Server interface {
 
 // Impl in an implementation of Server interface
 type Impl struct {
-	Config Configuration
+	Config  Configuration
+	Storage storage.Storage
 }
 
 // New constructs new implementation of Server interface
-func New(configuration Configuration) Server {
-	return Impl{Config: configuration}
+func New(configuration Configuration, storage storage.Storage) Server {
+	return Impl{Config: configuration,
+		Storage: storage,
+	}
 }
 
 func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHandler http.Handler) {
@@ -57,6 +66,88 @@ func (server Impl) mainEndpoint(writer http.ResponseWriter, request *http.Reques
 	io.WriteString(writer, "Hello world!\n")
 }
 
+func (server Impl) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
+	organizations, err := server.Storage.ListOfOrgs()
+	if err != nil {
+		log.Println("Unable to get list of organizations", err)
+		responses.SendInternalServerError(writer, err.Error())
+	} else {
+		responses.SendResponse(writer, responses.BuildOkResponseWithData("organizations", organizations))
+	}
+}
+
+func (server Impl) readOrganizationID(writer http.ResponseWriter, request *http.Request) (storage.OrgID, error) {
+	organizationIDParam, found := mux.Vars(request)["organization"]
+
+	if !found {
+		const message = "Organization ID is not provided"
+		log.Println(message)
+		responses.SendInternalServerError(writer, message)
+		return 0, errors.New(message)
+	}
+
+	organizationID, err := strconv.ParseInt(organizationIDParam, 10, 0)
+	if err != nil {
+		const message = "Wrong organization ID provided"
+		log.Println(message, err)
+		responses.SendError(writer, err.Error())
+		return 0, errors.New(message)
+	}
+
+	return storage.OrgID(int(organizationID)), nil
+}
+
+func (server Impl) readClusterName(writer http.ResponseWriter, request *http.Request) (storage.ClusterName, error) {
+	clusterName, found := mux.Vars(request)["cluster"]
+	if !found {
+		const message = "Cluster name is not provided"
+		log.Println(message)
+		responses.SendInternalServerError(writer, message)
+		return storage.ClusterName(""), errors.New(message)
+	}
+	// TODO: add check for GUID-like name
+	return storage.ClusterName(clusterName), nil
+}
+
+func (server Impl) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
+	organizationID, err := server.readOrganizationID(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	clusters, err := server.Storage.ListOfClustersForOrg(storage.OrgID(int(organizationID)))
+	if err != nil {
+		log.Println("Unable to get list of clusters", err)
+		responses.SendInternalServerError(writer, err.Error())
+	} else {
+		responses.SendResponse(writer, responses.BuildOkResponseWithData("clusters", clusters))
+	}
+}
+
+func (server Impl) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
+	organizationID, err := server.readOrganizationID(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	clusterName, err := server.readClusterName(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	// TODO: error is not reported if cluster does not exist
+	report, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
+	if err != nil {
+		log.Println("Unable to read report for cluster", err)
+		responses.SendInternalServerError(writer, err.Error())
+	} else {
+		responses.SendResponse(writer, responses.BuildOkResponseWithData("report", report))
+	}
+}
+
 // Initialize perform the server initialization
 func (server Impl) Initialize(address string) http.Handler {
 	log.Println("Initializing HTTP server at", address)
@@ -66,6 +157,9 @@ func (server Impl) Initialize(address string) http.Handler {
 
 	// common REST API endpoints
 	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+"organization", server.listOfOrganizations).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+"cluster/{organization}", server.listOfClustersForOrganization).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
 	return router
 }
 
