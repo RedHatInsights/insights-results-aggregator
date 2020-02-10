@@ -31,6 +31,7 @@ import (
 type Consumer interface {
 	Start() error
 	Close() error
+	ProcessMessage(msg *sarama.ConsumerMessage)
 }
 
 // Impl in an implementation of Consumer interface
@@ -75,15 +76,12 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (Consumer, err
 
 func parseMessage(messageValue []byte) (types.OrgID, types.ClusterName, types.ClusterReport, error) {
 	var deserialized incomingMessage
-	log.Println(messageValue)
-	log.Println(string(messageValue))
 
 	err := json.Unmarshal(messageValue, &deserialized)
 	if err != nil {
 		return 0, "", "", err
 	}
 
-	log.Println(deserialized)
 	if deserialized.Organization == nil {
 		return 0, "", "", errors.New("Missing required attribute 'OrgID'")
 	}
@@ -102,17 +100,24 @@ func (consumer Impl) Start() error {
 	consumed := 0
 	for {
 		msg := <-consumer.PartitionConsumer.Messages()
-		log.Printf("Consumed message offset %d\n", msg.Offset)
+		consumer.ProcessMessage(msg)
 		consumed++
-		orgID, clusterName, report, err := parseMessage(msg.Value)
-		log.Println(orgID, clusterName, report, err)
-		if err != nil {
-			log.Println("Error parsing message from Kafka:", err)
-		}
-		err = consumer.Storage.WriteReportForCluster(orgID, clusterName, report)
-		if err != nil {
-			log.Println("Error writing report to database:", err)
-		}
+	}
+}
+
+// ProcessMessage processes an incoming message
+func (consumer Impl) ProcessMessage(msg *sarama.ConsumerMessage) {
+	log.Printf("Consumed message offset %d\n", msg.Offset)
+	orgID, clusterName, report, err := parseMessage(msg.Value)
+	log.Println(orgID, clusterName, report, err)
+	if err != nil {
+		log.Println("Error parsing message from Kafka:", err)
+		return
+	}
+	err = consumer.Storage.WriteReportForCluster(orgID, clusterName, report)
+	if err != nil {
+		log.Println("Error writing report to database:", err)
+		return
 	}
 }
 
