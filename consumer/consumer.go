@@ -55,6 +55,9 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (Consumer, err
 	}
 
 	partitions, err := c.Partitions(brokerCfg.Topic)
+	if err != nil {
+		return nil, err
+	}
 
 	partitionConsumer, err := c.ConsumePartition(brokerCfg.Topic, partitions[0], sarama.OffsetNewest)
 	if err != nil {
