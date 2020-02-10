@@ -49,7 +49,7 @@ func New(configuration Configuration) (Storage, error) {
 	connection, err := sql.Open(configuration.Driver, configuration.DataSource)
 
 	if err != nil {
-		log.Fatal("Can not connect to data storage", err)
+		log.Println("Can not connect to data storage", err)
 		return nil, err
 	}
 
