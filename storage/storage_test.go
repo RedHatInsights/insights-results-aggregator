@@ -45,6 +45,30 @@ func getMockStorage(init bool) (storage.Storage, error) {
 	return mockStorage, nil
 }
 
+func checkReportForCluster(t *testing.T, storage storage.Storage, orgID types.OrgID, clusterName types.ClusterName, expected types.ClusterReport) {
+	result, err := storage.ReadReportForCluster(orgID, clusterName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, expected, result)
+}
+
+// TestMockDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
+func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
+	mockStorage, err := getMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	const testOrgID = types.OrgID(1)
+	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
+	const testClusterReport = types.ClusterReport("")
+
+	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
+}
+
 // TestMockDBStorageReadReportForCluster check the behaviour of method ReadReportForCluster
 func TestMockDBStorageReadReportForCluster(t *testing.T) {
 	mockStorage, err := getMockStorage(true)
@@ -62,13 +86,25 @@ func TestMockDBStorageReadReportForCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
+	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
+}
+
+// TestMockDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster when the table with results does not exist
+func TestMockDBStorageReadReportNoTable(t *testing.T) {
+	mockStorage, err := getMockStorage(false)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer mockStorage.Close()
 
-	assert.Equal(t, testClusterReport, result)
+	const testOrgID = types.OrgID(1)
+	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
+	const testClusterReport = types.ClusterReport("{}")
 
+	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterReport)
+	if err == nil {
+		t.Fatal("Error should be reported")
+	}
 }
 
 // TestMockDBStorageListOfOrgs check the behaviour of method ListOfOrgs
