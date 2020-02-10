@@ -100,7 +100,10 @@ func (consumer Impl) Start() error {
 	consumed := 0
 	for {
 		msg := <-consumer.PartitionConsumer.Messages()
-		consumer.ProcessMessage(msg)
+		err := consumer.ProcessMessage(msg)
+		if err != nil {
+			log.Println("Error processing message consumed from Kafka:", err)
+		}
 		consumed++
 	}
 }
