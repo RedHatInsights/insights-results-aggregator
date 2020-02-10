@@ -135,6 +135,17 @@ func TestMockDBStorageListOfOrgs(t *testing.T) {
 	assert.Equal(t, []types.OrgID{1, 3}, result)
 }
 
+func TestMockDBStorageListOfOrgsNoTable(t *testing.T) {
+	mockStorage, err := getMockStorage(false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	_, err = mockStorage.ListOfOrgs()
+	expectErrorEmptyTable(t, err)
+}
+
 // TestMockDBStorageListOfClustersFor check the behaviour of method ListOfClustersForOrg
 func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 	mockStorage, err := getMockStorage(true)
@@ -167,6 +178,17 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 	assert.Equal(t, []types.ClusterName{"4016d01b-62a1-4b49-a36e-c1c5a3d02750"}, result)
 }
 
+func TestMockDBStorageListOfClustersNoTable(t *testing.T) {
+	mockStorage, err := getMockStorage(false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	_, err = mockStorage.ListOfClustersForOrg(5)
+	expectErrorEmptyTable(t, err)
+}
+
 // TestMockDBReportsCount check the behaviour of method ReportsCount
 func TestMockDBReportsCount(t *testing.T) {
 	mockStorage, err := getMockStorage(true)
@@ -190,4 +212,15 @@ func TestMockDBReportsCount(t *testing.T) {
 	}
 
 	assert.Equal(t, cnt, 1)
+}
+
+func TestMockDBReportsCountNoTable(t *testing.T) {
+	mockStorage, err := getMockStorage(false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	_, err = mockStorage.ReportsCount()
+	expectErrorEmptyTable(t, err)
 }
