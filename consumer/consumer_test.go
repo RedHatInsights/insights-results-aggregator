@@ -18,6 +18,7 @@ package consumer_test
 
 import (
 	"github.com/Shopify/sarama"
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
@@ -56,13 +57,21 @@ func TestParseEmptyMessage(t *testing.T) {
 	if err == nil {
 		t.Fatal("Error is expected to be returned for empty message")
 	}
+	errorMessage := err.Error()
+	if !strings.HasPrefix(errorMessage, "unexpected end of JSON input") {
+		t.Fatal("Improper error message: " + errorMessage)
+	}
 }
 
 func TestParseMessageWithWrongContent(t *testing.T) {
 	const message = `{"this":"is", "not":"expected content"}`
 	_, _, _, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
-		t.Fatal("Error is expected to be returned for empty message")
+		t.Fatal("Error is expected to be returned for message that has improper content")
+	}
+	errorMessage := err.Error()
+	if !strings.HasPrefix(errorMessage, "Missing required attribute 'OrgID'") {
+		t.Fatal("Improper error message: " + errorMessage)
 	}
 }
 
@@ -70,7 +79,11 @@ func TestParseMessageWithImproperJSON(t *testing.T) {
 	const message = `"this_is_not_json_dude"`
 	_, _, _, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
-		t.Fatal("Error is expected to be returned for empty message")
+		t.Fatal("Error is expected to be returned for message that does not contain valid JSON")
+	}
+	errorMessage := err.Error()
+	if !strings.HasPrefix(errorMessage, "json: cannot unmarshal") {
+		t.Fatal("Improper error message: " + errorMessage)
 	}
 }
 

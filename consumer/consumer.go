@@ -31,7 +31,7 @@ import (
 type Consumer interface {
 	Start() error
 	Close() error
-	ProcessMessage(msg *sarama.ConsumerMessage)
+	ProcessMessage(msg *sarama.ConsumerMessage) error
 }
 
 // Impl in an implementation of Consumer interface
@@ -106,19 +106,21 @@ func (consumer Impl) Start() error {
 }
 
 // ProcessMessage processes an incoming message
-func (consumer Impl) ProcessMessage(msg *sarama.ConsumerMessage) {
+func (consumer Impl) ProcessMessage(msg *sarama.ConsumerMessage) error {
 	log.Printf("Consumed message offset %d\n", msg.Offset)
 	orgID, clusterName, report, err := parseMessage(msg.Value)
 	log.Println(orgID, clusterName, report, err)
 	if err != nil {
 		log.Println("Error parsing message from Kafka:", err)
-		return
+		return err
 	}
 	err = consumer.Storage.WriteReportForCluster(orgID, clusterName, report)
 	if err != nil {
 		log.Println("Error writing report to database:", err)
-		return
+		return err
 	}
+	// message has been parsed and stored into storage
+	return nil
 }
 
 // Close method closes all resources used by consumer
