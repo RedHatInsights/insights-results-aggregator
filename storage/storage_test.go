@@ -24,7 +24,8 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-func getMockStorage() (storage.Storage, error) {
+// Create mocked storage based on in-memory Sqlite instance
+func getMockStorage(init bool) (storage.Storage, error) {
 	mockStorage, err := storage.New(storage.Configuration{
 		Driver:     "sqlite3",
 		DataSource: ":memory:",
@@ -32,16 +33,21 @@ func getMockStorage() (storage.Storage, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = mockStorage.Init()
-	if err != nil {
-		return nil, err
+
+	// initialize the database by all required tables
+	if init {
+		err = mockStorage.Init()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return mockStorage, nil
 }
 
-func TestMockDBStorageReadReport(t *testing.T) {
-	mockStorage, err := getMockStorage()
+// TestMockDBStorageReadReportForCluster check the behaviour of method ReadReportForCluster
+func TestMockDBStorageReadReportForCluster(t *testing.T) {
+	mockStorage, err := getMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,8 +71,9 @@ func TestMockDBStorageReadReport(t *testing.T) {
 
 }
 
+// TestMockDBStorageListOfOrgs check the behaviour of method ListOfOrgs
 func TestMockDBStorageListOfOrgs(t *testing.T) {
-	mockStorage, err := getMockStorage()
+	mockStorage, err := getMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,8 +97,9 @@ func TestMockDBStorageListOfOrgs(t *testing.T) {
 	assert.Equal(t, []types.OrgID{1, 3}, result)
 }
 
+// TestMockDBStorageListOfClustersFor check the behaviour of method ListOfClustersForOrg
 func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
-	mockStorage, err := getMockStorage()
+	mockStorage, err := getMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,8 +137,9 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 	assert.Equal(t, []types.ClusterName{"4016d01b-62a1-4b49-a36e-c1c5a3d02750"}, result)
 }
 
+// TestMockDBReportsCount check the behaviour of method ReportsCount
 func TestMockDBReportsCount(t *testing.T) {
-	mockStorage, err := getMockStorage()
+	mockStorage, err := getMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
