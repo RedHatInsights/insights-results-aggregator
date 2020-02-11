@@ -43,9 +43,9 @@ type Impl struct {
 }
 
 type incomingMessage struct {
-	Organization *types.OrgID         `json:"OrgID"`
-	ClusterName  *types.ClusterName   `json:"ClusterName"`
-	Report       *types.ClusterReport `json:"Report"`
+	Organization *types.OrgID       `json:"OrgID"`
+	ClusterName  *types.ClusterName `json:"ClusterName"`
+	Report       *interface{}       `json:"Report"`
 }
 
 // New constructs new implementation of Consumer interface
@@ -74,7 +74,7 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (Consumer, err
 	return consumer, nil
 }
 
-func parseMessage(messageValue []byte) (types.OrgID, types.ClusterName, types.ClusterReport, error) {
+func parseMessage(messageValue []byte) (types.OrgID, types.ClusterName, interface{}, error) {
 	var deserialized incomingMessage
 
 	err := json.Unmarshal(messageValue, &deserialized)
@@ -117,7 +117,14 @@ func (consumer Impl) ProcessMessage(msg *sarama.ConsumerMessage) error {
 		log.Println("Error parsing message from Kafka:", err)
 		return err
 	}
-	err = consumer.Storage.WriteReportForCluster(orgID, clusterName, report)
+
+	reportAsStr, err := json.Marshal(report)
+	if err != nil {
+		log.Println("Error marshalling report:", err)
+		return err
+	}
+
+	err = consumer.Storage.WriteReportForCluster(orgID, clusterName, types.ClusterReport(reportAsStr))
 	if err != nil {
 		log.Println("Error writing report to database:", err)
 		return err
