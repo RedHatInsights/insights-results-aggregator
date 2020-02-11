@@ -150,6 +150,30 @@ func startServer() error {
 	return nil
 }
 
+func startService(produceMessagesCmd bool, startConsumerCmd bool, startServerCmd bool) int {
+	switch {
+	case produceMessagesCmd:
+		err := produceMessages()
+		if err != nil {
+			return ExitStatusProducerError
+		}
+	case startConsumerCmd:
+		err := startConsumer()
+		if err != nil {
+			return ExitStatusConsumerError
+		}
+	case startServerCmd:
+		err := startServer()
+		if err != nil {
+			return ExitStatusServerError
+		}
+	default:
+		fmt.Println("Setup error: use -consumer, -server, or -produce CLI flag to select startup mode")
+		return ExitStatusNoCommand
+	}
+	return ExitStatusOK
+}
+
 func main() {
 	loadConfiguration("config")
 
@@ -159,25 +183,6 @@ func main() {
 	var startServerCmd = flag.Bool("server", false, "start the service in HTTP server mode")
 	flag.Parse()
 
-	switch {
-	case *produceMessagesCmd:
-		err := produceMessages()
-		if err != nil {
-			os.Exit(ExitStatusProducerError)
-		}
-	case *startConsumerCmd:
-		err := startConsumer()
-		if err != nil {
-			os.Exit(ExitStatusConsumerError)
-		}
-	case *startServerCmd:
-		err := startServer()
-		if err != nil {
-			os.Exit(ExitStatusServerError)
-		}
-	default:
-		fmt.Println("Setup error: use -consumer, -server, or -produce CLI flag to select startup mode")
-		os.Exit(ExitStatusNoCommand)
-	}
-	os.Exit(ExitStatusOK)
+	statusCode := startService(*produceMessagesCmd, *startConsumerCmd, *startServerCmd)
+	os.Exit(statusCode)
 }
