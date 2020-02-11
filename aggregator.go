@@ -18,7 +18,6 @@ limitations under the License.
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/spf13/viper"
 	"log"
@@ -28,7 +27,6 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
-	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
@@ -36,10 +34,6 @@ import (
 const (
 	// ExitStatusOK means that the tool finished with success
 	ExitStatusOK = iota
-	// ExitStatusNoCommand is returned when no command (-consumer, -server) is provided via CLI
-	ExitStatusNoCommand
-	// ExitStatusProducerError is returned in case of any producer-related error
-	ExitStatusProducerError
 	// ExitStatusConsumerError is returned in case of any consumer-related error
 	ExitStatusConsumerError
 	// ExitStatusServerError is returned in case of any REST API server-related error
@@ -91,52 +85,35 @@ func loadServerConfiguration() server.Configuration {
 	}
 }
 
-func produceMessages() error {
-	const testMessage = `
-{"OrgID":1,
- "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":"{}"}
-`
-	brokerCfg := loadBrokerConfiguration()
-
-	_, _, err := producer.ProduceMessage(brokerCfg, testMessage)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	return nil
-}
-
-func startConsumer() error {
+func startConsumer() {
 	storageCfg := loadStorageConfiguration()
 	storage, err := storage.New(storageCfg)
 	if err != nil {
-		log.Fatal(err)
-		return err
+		log.Println(err)
+		os.Exit(ExitStatusConsumerError)
 	}
 	defer storage.Close()
 
 	brokerCfg := loadBrokerConfiguration()
 	consumerInstance, err := consumer.New(brokerCfg, storage)
 	if err != nil {
-		log.Fatal(err)
-		return err
+		log.Println(err)
+		os.Exit(ExitStatusConsumerError)
 	}
 	defer consumerInstance.Close()
 	err = consumerInstance.Start()
 	if err != nil {
-		log.Fatal(err)
-		return err
+		log.Println(err)
+		os.Exit(ExitStatusConsumerError)
 	}
-	return nil
 }
 
-func startServer() error {
+func startServer() {
 	storageCfg := loadStorageConfiguration()
 	storage, err := storage.New(storageCfg)
 	if err != nil {
-		log.Fatal(err)
-		return err
+		log.Println(err)
+		os.Exit(ExitStatusServerError)
 	}
 	defer storage.Close()
 
@@ -144,45 +121,21 @@ func startServer() error {
 	serverInstance := server.New(serverCfg, storage)
 	err = serverInstance.Start()
 	if err != nil {
-		log.Fatal(err)
-		return err
+		log.Println(err)
+		os.Exit(ExitStatusServerError)
 	}
-	return nil
 }
 
-func startService(produceMessagesCmd bool, startConsumerCmd bool, startServerCmd bool) int {
-	switch {
-	case produceMessagesCmd:
-		err := produceMessages()
-		if err != nil {
-			return ExitStatusProducerError
-		}
-	case startConsumerCmd:
-		err := startConsumer()
-		if err != nil {
-			return ExitStatusConsumerError
-		}
-	case startServerCmd:
-		err := startServer()
-		if err != nil {
-			return ExitStatusServerError
-		}
-	default:
-		fmt.Println("Setup error: use -consumer, -server, or -produce CLI flag to select startup mode")
-		return ExitStatusNoCommand
-	}
-	return ExitStatusOK
+func startService() {
+	// consumer is run in its own thread
+	go startConsumer()
+	// server can be started in current thread
+	startServer()
+	os.Exit(ExitStatusOK)
 }
 
 func main() {
 	loadConfiguration("config")
 
-	// parse command line arguments and flags
-	var produceMessagesCmd = flag.Bool("produce", false, "produce messages for testing purposes")
-	var startConsumerCmd = flag.Bool("consumer", false, "start the service in consumer mode")
-	var startServerCmd = flag.Bool("server", false, "start the service in HTTP server mode")
-	flag.Parse()
-
-	statusCode := startService(*produceMessagesCmd, *startConsumerCmd, *startServerCmd)
-	os.Exit(statusCode)
+	startService()
 }

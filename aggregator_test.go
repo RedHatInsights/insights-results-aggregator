@@ -86,10 +86,3 @@ func TestLoadStorageConfiguration(t *testing.T) {
 		t.Fatal("Improper DB data source name", storageCfg.DataSource)
 	}
 }
-
-func TestStartServiceNoCommand(t *testing.T) {
-	code := main.StartService(false, false, false)
-	if code != main.ExitStatusNoCommand {
-		t.Fatal("Improper status code", code)
-	}
-}
