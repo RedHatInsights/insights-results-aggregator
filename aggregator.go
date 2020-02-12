@@ -92,6 +92,11 @@ func startConsumer() {
 		log.Println(err)
 		os.Exit(ExitStatusConsumerError)
 	}
+	err = storage.Init()
+	if err != nil {
+		log.Println(err)
+		os.Exit(ExitStatusConsumerError)
+	}
 	defer storage.Close()
 
 	brokerCfg := loadBrokerConfiguration()
