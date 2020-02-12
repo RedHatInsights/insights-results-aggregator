@@ -14,6 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package storage contains an implementation of interface between Go code and
+// (almost any) SQL database like PostgreSQL, SQLite, or MariaDB. An implementation
+// is constructed via New function and it is mandatory to call Close for any
+// opened connection to database. The storage might be initialized by Init method.
 package storage
 
 import (
