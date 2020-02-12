@@ -112,11 +112,11 @@ func (consumer Impl) Start() error {
 func (consumer Impl) ProcessMessage(msg *sarama.ConsumerMessage) error {
 	log.Printf("Consumed message offset %d\n", msg.Offset)
 	orgID, clusterName, report, err := parseMessage(msg.Value)
-	log.Println(orgID, clusterName, report, err)
 	if err != nil {
 		log.Println("Error parsing message from Kafka:", err)
 		return err
 	}
+	log.Printf("Results for organization %d and cluster %s", orgID, clusterName)
 
 	reportAsStr, err := json.Marshal(report)
 	if err != nil {
