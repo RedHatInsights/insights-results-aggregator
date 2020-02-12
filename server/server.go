@@ -19,7 +19,9 @@ limitations under the License.
 // REST API endpoints are available:
 //
 // API_PREFIX/organization - list of all organizations (HTTP GET)
+//
 // API_PREFIX/cluster/{organization} - list of all clusters for given organizations (HTTP GET)
+//
 // API_PREFIX/report/{organization}/{cluster} - insights OCP results for given cluster name (HTTP GET)
 //
 // Please note that API_PREFIX is part of server configuration (see Configuration)
