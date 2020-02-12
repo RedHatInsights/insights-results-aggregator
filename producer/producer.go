@@ -17,9 +17,12 @@ limitations under the License.
 package producer
 
 import (
-	"github.com/RedHatInsights/insights-results-aggregator/broker"
-	"github.com/Shopify/sarama"
 	"log"
+
+	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
+	"github.com/Shopify/sarama"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // ProduceMessage produces message to selected topic

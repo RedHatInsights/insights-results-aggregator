@@ -1,6 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
+github.com/RedHatInsights/insights-operator-controller v0.0.0-20200207074239-4acd9b4389a5 h1:0S3mo1yQ70zC6hWYU0DyJEq1RVETTyCWGQxT0sJgOA8=
 github.com/RedHatInsights/insights-operator-utils v0.0.0-20200128100540-06c122fd8a86 h1:iypZgR01YTg1vYzALrZdZ17R2zGi6NNQJG+9BWxoZGc=
 github.com/RedHatInsights/insights-operator-utils v0.0.0-20200128100540-06c122fd8a86/go.mod h1:c6ReBK57bYPBl3DCb03lo3Jwr+ORT/9XUdlTwzhKQP8=
 github.com/Shopify/sarama v1.26.0 h1:C+zFi+/NJdfeJgZWbu+WaLgk4NcsbmqfFTKsoJmR39U=

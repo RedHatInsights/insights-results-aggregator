@@ -97,7 +97,7 @@ func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 
 	const testOrgID = types.OrgID(1)
 	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testClusterReport = types.ClusterReport("")
+	const testClusterReport = types.ClusterReport("{}")
 
 	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
 }
