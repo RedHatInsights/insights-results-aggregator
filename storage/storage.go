@@ -59,7 +59,7 @@ func New(configuration Configuration) (Storage, error) {
 // Init method is doing initialization like creating tables in underlying database
 func (storage Impl) Init() error {
 	_, err := storage.connection.Exec(`
-		create table report (
+		create table IF NOT EXISTS report (
 			org_id      integer not null,
 			cluster     varchar not null unique,
 			report      varchar not null,
