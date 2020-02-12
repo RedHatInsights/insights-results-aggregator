@@ -44,6 +44,7 @@ func ProduceMessage(brokerCfg broker.Configuration, message string) (partition i
 		log.Printf("FAILED to send message: %s\n", err)
 	} else {
 		log.Printf("message sent to partition %d at offset %d\n", partition, offset)
+		metrics.ProducedMessages.With(prometheus.Labels{"topic": brokerCfg.Topic}).Inc()
 	}
 	return partition, offset, err
 }

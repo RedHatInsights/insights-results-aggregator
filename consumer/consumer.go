@@ -19,10 +19,14 @@ package consumer
 import (
 	"encoding/json"
 	"errors"
-	"github.com/Shopify/sarama"
+	"fmt"
 	"log"
 
+	"github.com/Shopify/sarama"
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -117,6 +121,10 @@ func (consumer Impl) ProcessMessage(msg *sarama.ConsumerMessage) error {
 		log.Println("Error parsing message from Kafka:", err)
 		return err
 	}
+	metrics.ConsumedMessages.With(prometheus.Labels{
+		"orgID":       fmt.Sprint(orgID),
+		"clusterName": fmt.Sprint(clusterName),
+	}).Inc()
 
 	reportAsStr, err := json.Marshal(report)
 	if err != nil {

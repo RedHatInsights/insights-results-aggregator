@@ -18,12 +18,16 @@ package storage
 
 import (
 	"database/sql"
-	_ "github.com/lib/pq"           // PostgreSQL database driver
-	_ "github.com/mattn/go-sqlite3" // SQLite database driver
+	"fmt"
 	"log"
 	"time"
 
+	_ "github.com/lib/pq"           // PostgreSQL database driver
+	_ "github.com/mattn/go-sqlite3" // SQLite database driver
+
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Storage represents an interface to any relational database based on SQL language
@@ -176,6 +180,10 @@ func (storage Impl) WriteReportForCluster(orgID types.OrgID, clusterName types.C
 		log.Print(err)
 		return err
 	}
+	metrics.WrittenReports.With(prometheus.Labels{
+		"orgID":       fmt.Sprint(orgID),
+		"clusterName": fmt.Sprint(clusterName),
+	}).Inc()
 	return nil
 }
 

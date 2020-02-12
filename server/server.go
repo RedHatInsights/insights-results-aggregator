@@ -24,10 +24,12 @@ import (
 	"strconv"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
-	"github.com/gorilla/mux"
-
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Server represents any REST API HTTP server
@@ -51,6 +53,7 @@ func New(configuration Configuration, storage storage.Storage) Server {
 func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHandler http.Handler) {
 	log.Println("Request URI: " + request.RequestURI)
 	log.Println("Request method: " + request.Method)
+	metrics.ApiRequests.With(prometheus.Labels{"url": request.RequestURI}).Inc()
 	nextHandler.ServeHTTP(writer, request)
 }
 
@@ -165,6 +168,10 @@ func (server Impl) Initialize(address string) http.Handler {
 	router.HandleFunc(server.Config.APIPrefix+"organization", server.listOfOrganizations).Methods("GET")
 	router.HandleFunc(server.Config.APIPrefix+"cluster/{organization}", server.listOfClustersForOrganization).Methods("GET")
 	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
+
+	// Prometheus metrics
+	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods("GET")
+
 	return router
 }
 
