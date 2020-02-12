@@ -5,9 +5,7 @@ export TEST_KAFKA_ADDRESS=localhost:9092
 function cleanup()
 {
 	echo Exiting and killing all children...
-	for child_pid in $(pgrep -P $$); do
-		pkill -P $$
-	done
+	pkill -P $$
 }
 trap cleanup EXIT
 
