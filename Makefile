@@ -34,8 +34,17 @@ run: clean build ## Build the project and executes the binary
 test: clean build ## Run the unit tests
 	@go test -coverprofile coverage.out $(shell go list ./... | grep -v tests)
 
+integration_tests: ## Run all integration tests
+	@echo "Running all integration tests"
+	@./test.sh
+
 rest_api_tests: ## Run REST API tests
 	@echo "Running REST API tests"
+	@./test.sh rest_api
+
+metrics_tests: ## Run metrics tests
+	@echo "Running metrics tests"
+	@./test.sh metrics
 
 sqlite_db:
 	mv aggregator.db aggragator.db.backup

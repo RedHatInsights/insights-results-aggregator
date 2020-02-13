@@ -17,9 +17,11 @@ limitations under the License.
 package producer
 
 import (
-	"github.com/RedHatInsights/insights-results-aggregator/broker"
-	"github.com/Shopify/sarama"
 	"log"
+
+	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
+	"github.com/Shopify/sarama"
 )
 
 // ProduceMessage produces message to selected topic
@@ -44,6 +46,7 @@ func ProduceMessage(brokerCfg broker.Configuration, message string) (partition i
 		log.Printf("FAILED to send message: %s\n", err)
 	} else {
 		log.Printf("message sent to partition %d at offset %d\n", partition, offset)
+		metrics.ProducedMessages.Inc()
 	}
 	return partition, offset, err
 }

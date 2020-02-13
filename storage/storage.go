@@ -22,11 +22,13 @@ package storage
 
 import (
 	"database/sql"
-	_ "github.com/lib/pq"           // PostgreSQL database driver
-	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 	"log"
 	"time"
 
+	_ "github.com/lib/pq"           // PostgreSQL database driver
+	_ "github.com/mattn/go-sqlite3" // SQLite database driver
+
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -180,6 +182,7 @@ func (storage Impl) WriteReportForCluster(orgID types.OrgID, clusterName types.C
 		log.Print(err)
 		return err
 	}
+	metrics.WrittenReports.Inc()
 	return nil
 }
 

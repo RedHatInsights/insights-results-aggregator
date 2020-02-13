@@ -35,3 +35,21 @@ All packages developed in this project have documentation available on [GoDoc se
 * [package `server`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/server)
 * [package `storage`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/storage)
 * [package `types`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/types)
+
+## Testing
+
+### Unit tests:
+
+`make test`
+
+### All integration tests:
+
+`make integration_tests`
+
+#### Only rest api tests
+
+`make rest_api_tests`
+
+#### Only metrics tests
+
+`make metrics_tests`
