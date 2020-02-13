@@ -54,11 +54,11 @@ func New(configuration Configuration, storage storage.Storage) Server {
 func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHandler http.Handler) {
 	log.Println("Request URI: " + request.RequestURI)
 	log.Println("Request method: " + request.Method)
-	metrics.ApiRequests.With(prometheus.Labels{"url": request.RequestURI}).Inc()
+	metrics.APIRequests.With(prometheus.Labels{"url": request.RequestURI}).Inc()
 	startTime := time.Now()
 	nextHandler.ServeHTTP(writer, request)
 	duration := time.Since(startTime)
-	metrics.ApiResponsesTime.With(prometheus.Labels{"url": request.RequestURI}).Observe(float64(duration.Microseconds()))
+	metrics.APIResponsesTime.With(prometheus.Labels{"url": request.RequestURI}).Observe(float64(duration.Microseconds()))
 }
 
 // LogRequest - middleware for loging requests
