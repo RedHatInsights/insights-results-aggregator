@@ -52,24 +52,22 @@ func getTestBrokerCfg(t *testing.T) broker.Configuration {
 	return brokerCfg
 }
 
+// TestProducedMessagesMetric tests that produced messages metric works
 func TestProducedMessagesMetric(t *testing.T) {
-	var getNumberOfProducedMessages = func() float64 {
-		return getCounterVecValue(metrics.ProducedMessages, map[string]string{
-			"topic": testTopic,
-		})
-	}
+	// this approach won't work with consumed messages
+	// because they are consumed in another process
 
 	brokerCfg := getTestBrokerCfg(t)
 
-	assert.Equal(t, 0.0, getNumberOfProducedMessages())
+	assert.Equal(t, 0.0, getCounterValue(metrics.ProducedMessages))
 
 	producer.ProduceMessage(brokerCfg, testMessage)
 
-	assert.Equal(t, 1.0, getNumberOfProducedMessages())
+	assert.Equal(t, 1.0, getCounterValue(metrics.ProducedMessages))
 
 	for i := 0; i < 3; i++ {
 		producer.ProduceMessage(brokerCfg, testMessage)
 	}
 
-	assert.Equal(t, 4.0, getNumberOfProducedMessages())
+	assert.Equal(t, 4.0, getCounterValue(metrics.ProducedMessages))
 }

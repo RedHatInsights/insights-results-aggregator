@@ -22,6 +22,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -54,7 +55,10 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 	log.Println("Request URI: " + request.RequestURI)
 	log.Println("Request method: " + request.Method)
 	metrics.ApiRequests.With(prometheus.Labels{"url": request.RequestURI}).Inc()
+	startTime := time.Now()
 	nextHandler.ServeHTTP(writer, request)
+	duration := time.Since(startTime)
+	metrics.ApiResponsesTime.With(prometheus.Labels{"url": request.RequestURI}).Observe(float64(duration.Microseconds()))
 }
 
 // LogRequest - middleware for loging requests

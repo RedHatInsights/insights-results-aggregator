@@ -23,3 +23,21 @@ Aggregator service for insights results
 ### produce_insights_results
 
 This shell script can be used to produce several Insights results into Kafka topic. Its dependency is Kafkacat that needs to be installed on the same machine.
+
+# Testing
+
+## Unit tests:
+
+`make test`
+
+## All integration tests:
+
+`make integration_tests`
+
+### Only rest api tests
+
+`make rest_api_tests`
+
+### Only metrics tests
+
+`make metrics_tests`

@@ -18,7 +18,6 @@ package storage
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -27,7 +26,6 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Storage represents an interface to any relational database based on SQL language
@@ -180,10 +178,7 @@ func (storage Impl) WriteReportForCluster(orgID types.OrgID, clusterName types.C
 		log.Print(err)
 		return err
 	}
-	metrics.WrittenReports.With(prometheus.Labels{
-		"orgID":       fmt.Sprint(orgID),
-		"clusterName": fmt.Sprint(clusterName),
-	}).Inc()
+	metrics.WrittenReports.Inc()
 	return nil
 }
 

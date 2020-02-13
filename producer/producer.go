@@ -22,7 +22,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/Shopify/sarama"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 // ProduceMessage produces message to selected topic
@@ -47,7 +46,7 @@ func ProduceMessage(brokerCfg broker.Configuration, message string) (partition i
 		log.Printf("FAILED to send message: %s\n", err)
 	} else {
 		log.Printf("message sent to partition %d at offset %d\n", partition, offset)
-		metrics.ProducedMessages.With(prometheus.Labels{"topic": brokerCfg.Topic}).Inc()
+		metrics.ProducedMessages.Inc()
 	}
 	return partition, offset, err
 }

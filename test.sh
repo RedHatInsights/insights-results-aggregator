@@ -45,9 +45,38 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
+function test_metrics() {
+	go test ./tests/metrics
+	return $?
+}
+function test_rest_api() {
+	# TODO: complete
+	return 0
+}
+
 echo -e "------------------------------------------------------------------------------------------------"
-go test ./tests/metrics
-EXIT_VALUE=$?
+
+case $1 in
+	metrics)
+		test_metrics
+		EXIT_VALUE=$?
+		;;
+	rest_api)
+		test_rest_api
+		EXIT_VALUE=$?
+		;;
+	*)
+		# all tests
+		# exit value will be 0 if every test returned 0
+		EXIT_VALUE=0
+
+		test_metrics
+		EXIT_VALUE=$(($EXIT_VALUE + $?))
+		test_rest_api
+		EXIT_VALUE=$(($EXIT_VALUE + $?))
+		;;
+esac
+
 echo -e "------------------------------------------------------------------------------------------------"
 
 exit $EXIT_VALUE
