@@ -1,0 +1,99 @@
+openapi: 3.0.0
+
+info:
+  title: Insights Results Aggregator
+  description: Aggregation service for the results of running Insights rules.
+  version: 0.1.0
+
+servers:
+  - url: http://127.0.0.1:8080/api/v1
+    description: Local instance of the insights results aggregation service.
+
+paths:
+  /organization:
+    get:
+      summary: Returns a list of available organization IDs.
+      description: List of organizations for which at least one Insights report is available via the API.
+      responses:
+        "200":
+          description: A JSON array of organization IDs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organizations:
+                    type: array
+                    items:
+                      type: integer
+                      format: int64
+                      minimum: 0
+                  status:
+                    type: string
+                    example: "ok"
+
+  /cluster/{orgId}:
+    get:
+      summary: Returns a list of clusters associated with the specified organization ID.
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          description: ID of the requested organization.
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        "200":
+          description: A JSON array of clusters that belong to the specified organization.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clusters:
+                    type: array
+                    items:
+                      type: string
+                      minLength: 36
+                      maxLength: 36
+                      format: uuid
+                  status:
+                    type: string
+                    example: "ok"
+
+  /report/{orgId}/{clusterId}:
+    get:
+      summary: Returns the latest report for the given organization and cluster.
+      description: The report is specified by the organization ID and the cluster ID. The latest report available for the given combination will be returned.
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: clusterId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 36
+            maxLength: 36
+            format: uuid
+      responses:
+        "200":
+          description: Latest available report for the given organization and cluster combination.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  report:
+                    type: string
+                    format: json
+                  status:
+                    type: string
+                    example: "ok"
