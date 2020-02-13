@@ -163,7 +163,7 @@ func dummyConsumer(s storage.Storage) consumer.Consumer {
 		Topic:   "topic",
 		Group:   "group",
 	}
-	return consumer.Impl{
+	return consumer.KafkaConsumer{
 		Configuration:     brokerCfg,
 		Consumer:          nil,
 		PartitionConsumer: nil,
