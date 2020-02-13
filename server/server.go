@@ -14,6 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package server contains implementation of REST API server for the
+// Insights results aggregator service. In current version, the following
+// REST API endpoints are available:
+//
+// API_PREFIX/organization - list of all organizations (HTTP GET)
+//
+// API_PREFIX/cluster/{organization} - list of all clusters for given organizations (HTTP GET)
+//
+// API_PREFIX/report/{organization}/{cluster} - insights OCP results for given cluster name (HTTP GET)
+//
+// Please note that API_PREFIX is part of server configuration (see Configuration)
 package server
 
 import (

@@ -14,7 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Implementation of insights rules aggregator
+// Entry point to the insights results aggregator service.
+//
+// The service contains consumer (usually Kafka consumer) that consume
+// messages from given source, processs those messages, and stores them
+// in configured data store. It also starts REST API servers with
+// endpoints that expose several types of information: list of organizations,
+// list of clusters for given organization, and cluster health.
 package main
 
 import (
@@ -88,6 +94,11 @@ func loadServerConfiguration() server.Configuration {
 func startConsumer() {
 	storageCfg := loadStorageConfiguration()
 	storage, err := storage.New(storageCfg)
+	if err != nil {
+		log.Println(err)
+		os.Exit(ExitStatusConsumerError)
+	}
+	err = storage.Init()
 	if err != nil {
 		log.Println(err)
 		os.Exit(ExitStatusConsumerError)

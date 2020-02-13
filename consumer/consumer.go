@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package consumer contains interface for any consume that is able to
+// process messages. It also contains implementation of Kafka consumer.
 package consumer
 
 import (
@@ -36,8 +38,8 @@ type Consumer interface {
 	ProcessMessage(msg *sarama.ConsumerMessage) error
 }
 
-// Impl in an implementation of Consumer interface
-type Impl struct {
+// KafkaConsumer in an implementation of Consumer interface
+type KafkaConsumer struct {
 	Configuration     broker.Configuration
 	Consumer          sarama.Consumer
 	PartitionConsumer sarama.PartitionConsumer
@@ -67,7 +69,7 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (Consumer, err
 		return nil, err
 	}
 
-	consumer := Impl{
+	consumer := KafkaConsumer{
 		Configuration:     brokerCfg,
 		Consumer:          c,
 		PartitionConsumer: partitionConsumer,
@@ -97,7 +99,7 @@ func parseMessage(messageValue []byte) (types.OrgID, types.ClusterName, interfac
 }
 
 // Start starts consumer
-func (consumer Impl) Start() error {
+func (consumer KafkaConsumer) Start() error {
 	log.Printf("Consumer has been started, waiting for messages send to topic %s\n", consumer.Configuration.Topic)
 	consumed := 0
 	for {
@@ -111,15 +113,15 @@ func (consumer Impl) Start() error {
 }
 
 // ProcessMessage processes an incoming message
-func (consumer Impl) ProcessMessage(msg *sarama.ConsumerMessage) error {
+func (consumer KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
 	log.Printf("Consumed message offset %d\n", msg.Offset)
 	orgID, clusterName, report, err := parseMessage(msg.Value)
-	log.Println(orgID, clusterName, report, err)
 	if err != nil {
 		log.Println("Error parsing message from Kafka:", err)
 		return err
 	}
 	metrics.ConsumedMessages.Inc()
+	log.Printf("Results for organization %d and cluster %s", orgID, clusterName)
 
 	reportAsStr, err := json.Marshal(report)
 	if err != nil {
@@ -137,7 +139,7 @@ func (consumer Impl) ProcessMessage(msg *sarama.ConsumerMessage) error {
 }
 
 // Close method closes all resources used by consumer
-func (consumer Impl) Close() error {
+func (consumer KafkaConsumer) Close() error {
 	err := consumer.PartitionConsumer.Close()
 	if err != nil {
 		return err
