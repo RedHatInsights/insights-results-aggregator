@@ -43,14 +43,14 @@ type Storage interface {
 	ReportsCount() (int, error)
 }
 
-// Impl is an implementation of Storage interface
-type Impl struct {
+// DBStorage is an implementation of Storage interface
+type DBStorage struct {
 	connection    *sql.DB
 	configuration Configuration
 }
 
 // New function creates and initializes a new instance of Storage interface
-func New(configuration Configuration) (Storage, error) {
+func New(configuration Configuration) (*DBStorage, error) {
 	log.Printf("Making connection to data storage, driver=%s datasource=%s", configuration.Driver, configuration.DataSource)
 	connection, err := sql.Open(configuration.Driver, configuration.DataSource)
 
@@ -59,11 +59,11 @@ func New(configuration Configuration) (Storage, error) {
 		return nil, err
 	}
 
-	return Impl{connection, configuration}, nil
+	return &DBStorage{connection, configuration}, nil
 }
 
 // Init method is doing initialization like creating tables in underlying database
-func (storage Impl) Init() error {
+func (storage DBStorage) Init() error {
 	_, err := storage.connection.Exec(`
 		create table IF NOT EXISTS report (
 			org_id      integer not null,
@@ -77,7 +77,7 @@ func (storage Impl) Init() error {
 }
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.
-func (storage Impl) Close() error {
+func (storage DBStorage) Close() error {
 	log.Println("Closing connection to data storage")
 	if storage.connection != nil {
 		err := storage.connection.Close()
@@ -101,7 +101,7 @@ type Report struct {
 }
 
 // ListOfOrgs reads list of all organizations that have at least one cluster report
-func (storage Impl) ListOfOrgs() ([]types.OrgID, error) {
+func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 	orgs := []types.OrgID{}
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
@@ -124,7 +124,7 @@ func (storage Impl) ListOfOrgs() ([]types.OrgID, error) {
 }
 
 // ListOfClustersForOrg reads list of all clusters fro given organization
-func (storage Impl) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
+func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
 	clusters := []types.ClusterName{}
 
 	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = ? ORDER BY cluster", orgID)
@@ -147,7 +147,7 @@ func (storage Impl) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName
 }
 
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
-func (storage Impl) ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error) {
+func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error) {
 	rows, err := storage.connection.Query("SELECT report FROM report WHERE org_id = ? AND cluster = ?", orgID, clusterName)
 	if err != nil {
 		return "", err
@@ -168,7 +168,7 @@ func (storage Impl) ReadReportForCluster(orgID types.OrgID, clusterName types.Cl
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
-func (storage Impl) WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport) error {
+func (storage DBStorage) WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport) error {
 	statement, err := storage.connection.Prepare("INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at) VALUES ($1, $2, $3, $4)")
 	if err != nil {
 		return err
@@ -187,7 +187,7 @@ func (storage Impl) WriteReportForCluster(orgID types.OrgID, clusterName types.C
 }
 
 // ReportsCount reads number of all records stored in database
-func (storage Impl) ReportsCount() (int, error) {
+func (storage DBStorage) ReportsCount() (int, error) {
 	rows, err := storage.connection.Query("SELECT count(*) FROM report")
 	if err != nil {
 		return -1, err

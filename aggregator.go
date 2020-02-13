@@ -24,14 +24,9 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
-	"github.com/spf13/viper"
 	"log"
 	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
@@ -46,56 +41,19 @@ const (
 	ExitStatusServerError
 )
 
-func loadConfiguration(defaultConfigFile string) {
-	configFile, specified := os.LookupEnv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
-	if specified {
-		// we need to separate the directory name and filename without extension
-		directory, basename := filepath.Split(configFile)
-		file := strings.TrimSuffix(basename, filepath.Ext(basename))
-		// parse the configuration
-		viper.SetConfigName(file)
-		viper.AddConfigPath(directory)
-	} else {
-		// parse the configuration
-		viper.SetConfigName(defaultConfigFile)
-		viper.AddConfigPath(".")
-	}
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s", err))
-	}
-}
-
-func loadBrokerConfiguration() broker.Configuration {
-	brokerCfg := viper.Sub("broker")
-	return broker.Configuration{
-		Address: brokerCfg.GetString("address"),
-		Topic:   brokerCfg.GetString("topic"),
-		Group:   brokerCfg.GetString("group"),
-	}
-}
-
-func loadStorageConfiguration() storage.Configuration {
-	storageCfg := viper.Sub("storage")
-	return storage.Configuration{
-		Driver:     storageCfg.GetString("driver"),
-		DataSource: storageCfg.GetString("datasource"),
-	}
-}
-
-func loadServerConfiguration() server.Configuration {
-	serverCfg := viper.Sub("server")
-	return server.Configuration{
-		Address:   serverCfg.GetString("address"),
-		APIPrefix: serverCfg.GetString("api_prefix"),
-	}
-}
-
-func startConsumer() {
+func startStorageConnection() (*storage.DBStorage, error) {
 	storageCfg := loadStorageConfiguration()
 	storage, err := storage.New(storageCfg)
 	if err != nil {
 		log.Println(err)
+		return nil, err
+	}
+	return storage, nil
+}
+
+func startConsumer() {
+	storage, err := startStorageConnection()
+	if err != nil {
 		os.Exit(ExitStatusConsumerError)
 	}
 	err = storage.Init()
@@ -120,10 +78,8 @@ func startConsumer() {
 }
 
 func startServer() {
-	storageCfg := loadStorageConfiguration()
-	storage, err := storage.New(storageCfg)
+	storage, err := startStorageConnection()
 	if err != nil {
-		log.Println(err)
 		os.Exit(ExitStatusServerError)
 	}
 	defer storage.Close()

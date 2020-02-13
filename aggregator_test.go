@@ -86,3 +86,11 @@ func TestLoadStorageConfiguration(t *testing.T) {
 		t.Fatal("Improper DB data source name", storageCfg.DataSource)
 	}
 }
+
+func TestStartStorageConnection(t *testing.T) {
+	TestLoadConfiguration(t)
+	_, err := main.StartStorageConnection()
+	if err != nil {
+		t.Fatal("Cannot create storage object", err)
+	}
+}

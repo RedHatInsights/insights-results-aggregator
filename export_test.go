@@ -26,3 +26,4 @@ var LoadBrokerConfiguration = loadBrokerConfiguration
 var LoadServerConfiguration = loadServerConfiguration
 var LoadStorageConfiguration = loadStorageConfiguration
 var StartService = startService
+var StartStorageConnection = startStorageConnection
