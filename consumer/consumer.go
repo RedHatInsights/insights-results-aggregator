@@ -21,10 +21,12 @@ package consumer
 import (
 	"encoding/json"
 	"errors"
-	"github.com/Shopify/sarama"
 	"log"
 
+	"github.com/Shopify/sarama"
+
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -118,6 +120,7 @@ func (consumer KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error 
 		log.Println("Error parsing message from Kafka:", err)
 		return err
 	}
+	metrics.ConsumedMessages.Inc()
 	log.Printf("Results for organization %d and cluster %s", orgID, clusterName)
 
 	reportAsStr, err := json.Marshal(report)
