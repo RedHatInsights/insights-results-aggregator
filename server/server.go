@@ -44,20 +44,16 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Server represents any REST API HTTP server
-type Server interface {
-	Start() error
-}
-
-// Impl in an implementation of Server interface
-type Impl struct {
+// HTTPServer in an implementation of Server interface
+type HTTPServer struct {
 	Config  Configuration
 	Storage storage.Storage
 }
 
 // New constructs new implementation of Server interface
-func New(configuration Configuration, storage storage.Storage) Server {
-	return Impl{Config: configuration,
+func New(config Configuration, storage storage.Storage) *HTTPServer {
+	return &HTTPServer{
+		Config:  config,
 		Storage: storage,
 	}
 }
@@ -73,19 +69,19 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 }
 
 // LogRequest - middleware for loging requests
-func (server Impl) LogRequest(nextHandler http.Handler) http.Handler {
+func (server HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			logRequestHandler(writer, request, nextHandler)
 		})
 }
 
-func (server Impl) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
+func (server HTTPServer) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
 	// TODO: just a stub!
 	io.WriteString(writer, "Hello world!\n")
 }
 
-func (server Impl) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
+func (server HTTPServer) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
 	organizations, err := server.Storage.ListOfOrgs()
 	if err != nil {
 		log.Println("Unable to get list of organizations", err)
@@ -95,7 +91,7 @@ func (server Impl) listOfOrganizations(writer http.ResponseWriter, request *http
 	}
 }
 
-func (server Impl) readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
+func (server HTTPServer) readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
 	organizationIDParam, found := mux.Vars(request)["organization"]
 
 	if !found {
@@ -118,7 +114,7 @@ func (server Impl) readOrganizationID(writer http.ResponseWriter, request *http.
 	return types.OrgID(int(organizationID)), nil
 }
 
-func (server Impl) readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
+func (server HTTPServer) readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
 	clusterName, found := mux.Vars(request)["cluster"]
 	if !found {
 		// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
@@ -132,7 +128,7 @@ func (server Impl) readClusterName(writer http.ResponseWriter, request *http.Req
 	return types.ClusterName(clusterName), nil
 }
 
-func (server Impl) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
+func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := server.readOrganizationID(writer, request)
 	if err != nil {
 		// everything has been handled already
@@ -148,7 +144,7 @@ func (server Impl) listOfClustersForOrganization(writer http.ResponseWriter, req
 	}
 }
 
-func (server Impl) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
+func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := server.readOrganizationID(writer, request)
 	if err != nil {
 		// everything has been handled already
@@ -172,7 +168,7 @@ func (server Impl) readReportForCluster(writer http.ResponseWriter, request *htt
 }
 
 // Initialize perform the server initialization
-func (server Impl) Initialize(address string) http.Handler {
+func (server HTTPServer) Initialize(address string) http.Handler {
 	log.Println("Initializing HTTP server at", address)
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -191,7 +187,7 @@ func (server Impl) Initialize(address string) http.Handler {
 }
 
 // Start starts server
-func (server Impl) Start() error {
+func (server HTTPServer) Start() error {
 	address := server.Config.Address
 	router := server.Initialize(address)
 	log.Println("Starting HTTP server at", address)

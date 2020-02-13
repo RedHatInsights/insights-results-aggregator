@@ -53,7 +53,7 @@ type incomingMessage struct {
 }
 
 // New constructs new implementation of Consumer interface
-func New(brokerCfg broker.Configuration, storage storage.Storage) (Consumer, error) {
+func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsumer, error) {
 	c, err := sarama.NewConsumer([]string{brokerCfg.Address}, nil)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (Consumer, err
 		return nil, err
 	}
 
-	consumer := KafkaConsumer{
+	consumer := &KafkaConsumer{
 		Configuration:     brokerCfg,
 		Consumer:          c,
 		PartitionConsumer: partitionConsumer,
