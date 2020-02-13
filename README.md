@@ -24,20 +24,32 @@ Aggregator service for insights results
 
 This shell script can be used to produce several Insights results into Kafka topic. Its dependency is Kafkacat that needs to be installed on the same machine.
 
-# Testing
+## Documentation for developers
 
-## Unit tests:
+All packages developed in this project have documentation available on [GoDoc server](https://godoc.org/):
+
+* [entry point to the service](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator)
+* [package `broker`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/broker)
+* [package `consumer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/consumer)
+* [package `producer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/producer)
+* [package `server`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/server)
+* [package `storage`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/storage)
+* [package `types`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/types)
+
+## Testing
+
+### Unit tests:
 
 `make test`
 
-## All integration tests:
+### All integration tests:
 
 `make integration_tests`
 
-### Only rest api tests
+#### Only rest api tests
 
 `make rest_api_tests`
 
-### Only metrics tests
+#### Only metrics tests
 
 `make metrics_tests`
