@@ -36,6 +36,21 @@ All packages developed in this project have documentation available on [GoDoc se
 * [package `storage`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/storage)
 * [package `types`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/types)
 
+## Database
+
+By default aggregator uses SQLite3 DB, but also it has support of PostgreSQL. For starting PostgreSQL exist script in folder `local_storage`:
+```Bash
+./dockerize_postgres.sh
+```
+
+For establish connection to PostgreSQL, the following configuration options needs to be changed in `storage` section of `config.toml`:
+
+```
+[storage]
+driver = "postgres"
+datasource = "postgres://postgres:postgres@localhost/controller?sslmode=disable"
+```
+
 ## Testing
 
 ### Unit tests:
