@@ -133,7 +133,7 @@ func (server HTTPServer) readClusterName(writer http.ResponseWriter, request *ht
 		return types.ClusterName(""), errors.New(message)
 	}
 
-	if _, parseErr := uuid.Parse(clusterName); parseErr != nil {
+	if _, err := uuid.Parse(clusterName); err != nil {
 		const message = "Cluster name format is invalid"
 		log.Println(message)
 		responses.SendInternalServerError(writer, message)
