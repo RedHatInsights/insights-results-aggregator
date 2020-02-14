@@ -18,10 +18,10 @@ package tests
 
 import "github.com/verdverm/frisby"
 
-const API_URL = "http://localhost:8080/api/v1/"
+const apiURL = "http://localhost:8080/api/v1/"
 
 func checkRestAPIEntryPoint() {
-	f := frisby.Create("Check the entry point to REST API").Get(API_URL)
+	f := frisby.Create("Check the entry point to REST API").Get(apiURL)
 	f.Send()
 	f.ExpectStatus(200)
 	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
@@ -29,7 +29,7 @@ func checkRestAPIEntryPoint() {
 }
 
 func checkNonExistentEntryPoint() {
-	f := frisby.Create("Check the non-existent entry point to REST API").Get(API_URL + "foobar")
+	f := frisby.Create("Check the non-existent entry point to REST API").Get(apiURL + "foobar")
 	f.Send()
 	f.ExpectStatus(404)
 	f.ExpectHeader("Content-Type", "text/plain; charset=utf-8")
@@ -37,7 +37,7 @@ func checkNonExistentEntryPoint() {
 }
 
 func checkWrongEntryPoint() {
-	f := frisby.Create("Check the wrong entry point to REST API").Get(API_URL + "../")
+	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "../")
 	f.Send()
 	f.ExpectStatus(404)
 	f.ExpectHeader("Content-Type", "text/plain; charset=utf-8")
@@ -45,17 +45,17 @@ func checkWrongEntryPoint() {
 }
 
 func checkWrongMethodsForEntryPoint() {
-	f := frisby.Create("Check the entry point to REST API with wrong method: POST").Post(API_URL)
+	f := frisby.Create("Check the entry point to REST API with wrong method: POST").Post(apiURL)
 	f.Send()
 	f.ExpectStatus(405)
 	f.PrintReport()
 
-	f = frisby.Create("Check the entry point to REST API with wrong method: PUT").Put(API_URL)
+	f = frisby.Create("Check the entry point to REST API with wrong method: PUT").Put(apiURL)
 	f.Send()
 	f.ExpectStatus(405)
 	f.PrintReport()
 
-	f = frisby.Create("Check the entry point to REST API with wrong method: DELETE").Delete(API_URL)
+	f = frisby.Create("Check the entry point to REST API with wrong method: DELETE").Delete(apiURL)
 	f.Send()
 	f.ExpectStatus(405)
 	f.PrintReport()
