@@ -21,4 +21,5 @@ type Configuration struct {
 	Address string
 	Topic   string
 	Group   string
+	Enabled bool
 }
