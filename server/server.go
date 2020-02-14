@@ -47,6 +47,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -131,7 +132,13 @@ func (server HTTPServer) readClusterName(writer http.ResponseWriter, request *ht
 		responses.SendInternalServerError(writer, message)
 		return types.ClusterName(""), errors.New(message)
 	}
-	// TODO: add check for GUID-like name
+
+	if _, parseErr := uuid.Parse(clusterName); parseErr != nil {
+		const message = "Cluster name format is invalid"
+		log.Println(message)
+		responses.SendInternalServerError(writer, message)
+		return types.ClusterName(""), errors.New(message)
+	}
 	return types.ClusterName(clusterName), nil
 }
 
@@ -151,7 +158,7 @@ func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWrite
 	}
 }
 
-func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
+func (server HTTPServer) ReadReportForCluster(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := server.readOrganizationID(writer, request)
 	if err != nil {
 		// everything has been handled already
@@ -185,7 +192,7 @@ func (server HTTPServer) Initialize(address string) http.Handler {
 	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
 	router.HandleFunc(server.Config.APIPrefix+"organization", server.listOfOrganizations).Methods("GET")
 	router.HandleFunc(server.Config.APIPrefix+"cluster/{organization}", server.listOfClustersForOrganization).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.ReadReportForCluster).Methods("GET")
 
 	// Prometheus metrics
 	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods("GET")
