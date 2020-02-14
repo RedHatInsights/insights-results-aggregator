@@ -29,7 +29,6 @@ package server
 
 import (
 	"errors"
-	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -77,8 +76,7 @@ func (server HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
 }
 
 func (server HTTPServer) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
-	// TODO: just a stub!
-	io.WriteString(writer, "Hello world!\n")
+	responses.SendResponse(writer, responses.BuildOkResponse())
 }
 
 func (server HTTPServer) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
