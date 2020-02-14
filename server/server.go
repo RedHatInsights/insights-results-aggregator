@@ -47,6 +47,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -131,7 +132,13 @@ func (server HTTPServer) readClusterName(writer http.ResponseWriter, request *ht
 		responses.SendInternalServerError(writer, message)
 		return types.ClusterName(""), errors.New(message)
 	}
-	// TODO: add check for GUID-like name
+
+	if _, err := uuid.Parse(clusterName); err != nil {
+		const message = "Cluster name format is invalid"
+		log.Println(message)
+		responses.SendInternalServerError(writer, message)
+		return types.ClusterName(""), errors.New(message)
+	}
 	return types.ClusterName(clusterName), nil
 }
 
