@@ -1,0 +1,20 @@
+[broker]
+address = "localhost:9092"
+topic = "ccx.ocp.results"
+group = "aggregator"
+
+[server]
+address = ":8080"
+api_prefix = "/api/v1/"
+
+[processing]
+org_filter = "org.csv"
+
+[metrics]
+enabled = true
+
+[logging]
+
+[storage]
+driver = "sqlite3"
+datasource = "./aggregator.db"
