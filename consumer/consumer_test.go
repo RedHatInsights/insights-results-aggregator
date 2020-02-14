@@ -53,7 +53,7 @@ func TestConsumerConstructorNoKafka(t *testing.T) {
 
 func TestParseEmptyMessage(t *testing.T) {
 	const message = ``
-	_, _, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
 		t.Fatal("Error is expected to be returned for empty message")
 	}
@@ -65,7 +65,7 @@ func TestParseEmptyMessage(t *testing.T) {
 
 func TestParseMessageWithWrongContent(t *testing.T) {
 	const message = `{"this":"is", "not":"expected content"}`
-	_, _, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
 		t.Fatal("Error is expected to be returned for message that has improper content")
 	}
@@ -77,7 +77,7 @@ func TestParseMessageWithWrongContent(t *testing.T) {
 
 func TestParseMessageWithImproperJSON(t *testing.T) {
 	const message = `"this_is_not_json_dude"`
-	_, _, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
 		t.Fatal("Error is expected to be returned for message that does not contain valid JSON")
 	}
@@ -88,23 +88,23 @@ func TestParseMessageWithImproperJSON(t *testing.T) {
 }
 
 func TestParseProperMessage(t *testing.T) {
-	const message = `
+	const messageStr = `
 {"OrgID":1,
  "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
  "Report":"{}"}
 `
-	org, cluster, report, err := consumer.ParseMessage([]byte(message))
+	message, err := consumer.ParseMessage([]byte(messageStr))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if org != 1 {
-		t.Fatal("OrgID is different", org)
+	if int(*message.Organization) != 1 {
+		t.Fatal("OrgID is different", message.Organization)
 	}
-	if cluster != "aaaaaaaa-bbbb-cccc-dddd-000000000000" {
-		t.Fatal("Cluster name is different", cluster)
+	if *message.ClusterName != "aaaaaaaa-bbbb-cccc-dddd-000000000000" {
+		t.Fatal("Cluster name is different", *message.ClusterName)
 	}
-	if report != "{}" {
-		t.Fatal("Report name is different", report)
+	if *message.Report != "{}" {
+		t.Fatal("Report name is different", *message.Report)
 	}
 }
 
@@ -114,7 +114,7 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
  "ClusterName":"this is not a UUID",
  "Report":"{}"}
 `
-	_, _, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
 		t.Fatal("Error is expected to be returned for a wrong ClusterName format")
 	}
@@ -129,7 +129,7 @@ func TestParseMessageWithoutOrgID(t *testing.T) {
 {"ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
  "Report":"{}"}
 `
-	_, _, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
 		t.Fatal("Error is expected to be returned for empty message")
 	}
@@ -140,7 +140,7 @@ func TestParseMessageWithoutClusterName(t *testing.T) {
 {"OrgID":1,
  "Report":"{}"}
 `
-	_, _, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
 		t.Fatal("Error is expected to be returned for empty message")
 	}
@@ -151,7 +151,7 @@ func TestParseMessageWithoutReport(t *testing.T) {
 {"OrgID":1,
  "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000"}
 `
-	_, _, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
 		t.Fatal("Error is expected to be returned for empty message")
 	}
@@ -221,12 +221,16 @@ func TestProcessCorrectMessage(t *testing.T) {
 	const messageValue = `
 {"OrgID":1,
  "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":"{}"}
+ "Report":"{}",
+ "LastChecked":"2020-01-23T16:15:59.478901889Z"}
 `
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(messageValue)
 	// messsage is empty -> nothing should be written into storage
-	c.ProcessMessage(&message)
+	err = c.ProcessMessage(&message)
+	if err != nil {
+		t.Fatal(err)
+	}
 	cnt, err := storage.ReportsCount()
 	if err != nil {
 		t.Fatal(err)

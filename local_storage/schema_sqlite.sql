@@ -3,5 +3,6 @@ create table report (
     cluster     varchar not null unique,
     report      varchar not null,
     reported_at datetime,
+    last_checked_at datetime,
     PRIMARY KEY(org_id, cluster)
 );
