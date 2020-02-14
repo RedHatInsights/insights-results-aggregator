@@ -38,7 +38,7 @@ else
 fi
 
 echo "Starting a service"
-./insights-results-aggregator &
+INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests ./insights-results-aggregator &
 
 if [ $? -ne 0 ]; then
 	echo "Could not start the service"
@@ -50,8 +50,18 @@ function test_metrics() {
 	return $?
 }
 function test_rest_api() {
-	# TODO: complete
-	return 0
+        echo "Building REST API tests utility"
+        go build -o rest-api-tests tests/rest_api_tests.go
+        if [ $? -eq 0 ]
+        then
+            echo "REST API tests build ok"
+        else
+            echo "Build failed"
+            return 1
+        fi
+        sleep 1
+        ./rest-api-tests
+	return $?
 }
 
 echo -e "------------------------------------------------------------------------------------------------"
