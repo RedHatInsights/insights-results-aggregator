@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package server contains implementation of REST API server for the
+// Package server contains implementation of REST API server (HTTPServer) for the
 // Insights results aggregator service. In current version, the following
 // REST API endpoints are available:
 //
@@ -24,7 +24,16 @@ limitations under the License.
 //
 // API_PREFIX/report/{organization}/{cluster} - insights OCP results for given cluster name (HTTP GET)
 //
-// Please note that API_PREFIX is part of server configuration (see Configuration)
+// Please note that API_PREFIX is part of server configuration (see Configuration). Also please note that
+// JSON format is used to transfer data between server and clients.
+//
+// Configuration:
+//
+// It is possible to configure the HTTP server. Currently, two configuration options are available and can
+// be changed by using Configuration structure:
+//
+// Address - usually just in a form ":8080", ie. just the port needs to be configured in most cases
+// APIPrefix - usually "/api/v1/" used for all REST API calls
 package server
 
 import (
