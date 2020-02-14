@@ -29,7 +29,7 @@ cyclo: ## Run gocyclo
 style: fmt vet lint cyclo ## Run all the formatting related commands (fmt, vet, lint, cyclo)
 
 run: clean build ## Build the project and executes the binary
-	./insights-operator-aggregator 
+	./insights-results-aggregator
 
 test: clean build ## Run the unit tests
 	@go test -coverprofile coverage.out $(shell go list ./... | grep -v tests)

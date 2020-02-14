@@ -19,6 +19,7 @@ package storage_test
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -57,7 +58,7 @@ func checkReportForCluster(t *testing.T, storage storage.Storage, orgID types.Or
 }
 
 func writeReportForCluster(t *testing.T, storage storage.Storage, orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport) {
-	err := storage.WriteReportForCluster(orgID, clusterName, report)
+	err := storage.WriteReportForCluster(orgID, clusterName, report, time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,7 +162,7 @@ func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
 	const testReport = types.ClusterReport("{}")
 
-	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testReport)
+	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testReport, time.Now())
 	expectErrorClosedStorage(t, err)
 }
 

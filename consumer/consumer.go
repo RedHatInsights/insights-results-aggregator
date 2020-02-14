@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/Shopify/sarama"
 
@@ -50,6 +51,8 @@ type incomingMessage struct {
 	Organization *types.OrgID       `json:"OrgID"`
 	ClusterName  *types.ClusterName `json:"ClusterName"`
 	Report       *interface{}       `json:"Report"`
+	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
+	LastChecked string `json:"LastChecked"`
 }
 
 // New constructs new implementation of Consumer interface
@@ -78,24 +81,24 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 	return consumer, nil
 }
 
-func parseMessage(messageValue []byte) (types.OrgID, types.ClusterName, interface{}, error) {
+func parseMessage(messageValue []byte) (incomingMessage, error) {
 	var deserialized incomingMessage
 
 	err := json.Unmarshal(messageValue, &deserialized)
 	if err != nil {
-		return 0, "", "", err
+		return deserialized, err
 	}
 
 	if deserialized.Organization == nil {
-		return 0, "", "", errors.New("Missing required attribute 'OrgID'")
+		return deserialized, errors.New("Missing required attribute 'OrgID'")
 	}
 	if deserialized.ClusterName == nil {
-		return 0, "", "", errors.New("Missing required attribute 'ClusterName'")
+		return deserialized, errors.New("Missing required attribute 'ClusterName'")
 	}
 	if deserialized.Report == nil {
-		return 0, "", "", errors.New("Missing required attribute 'Report'")
+		return deserialized, errors.New("Missing required attribute 'Report'")
 	}
-	return *deserialized.Organization, *deserialized.ClusterName, *deserialized.Report, nil
+	return deserialized, nil
 }
 
 // Start starts consumer
@@ -115,21 +118,32 @@ func (consumer KafkaConsumer) Start() error {
 // ProcessMessage processes an incoming message
 func (consumer KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
 	log.Printf("Consumed message offset %d\n", msg.Offset)
-	orgID, clusterName, report, err := parseMessage(msg.Value)
+	message, err := parseMessage(msg.Value)
 	if err != nil {
 		log.Println("Error parsing message from Kafka:", err)
 		return err
 	}
 	metrics.ConsumedMessages.Inc()
-	log.Printf("Results for organization %d and cluster %s", orgID, clusterName)
+	log.Printf("Results for organization %d and cluster %s", *message.Organization, *message.ClusterName)
 
-	reportAsStr, err := json.Marshal(report)
+	reportAsStr, err := json.Marshal(*message.Report)
 	if err != nil {
 		log.Println("Error marshalling report:", err)
 		return err
 	}
 
-	err = consumer.Storage.WriteReportForCluster(orgID, clusterName, types.ClusterReport(reportAsStr))
+	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
+	if err != nil {
+		log.Println("Error parsing date from message:", err)
+		return err
+	}
+
+	err = consumer.Storage.WriteReportForCluster(
+		*message.Organization,
+		*message.ClusterName,
+		types.ClusterReport(reportAsStr),
+		lastCheckedTime,
+	)
 	if err != nil {
 		log.Println("Error writing report to database:", err)
 		return err

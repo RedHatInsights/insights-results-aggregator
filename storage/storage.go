@@ -39,7 +39,12 @@ type Storage interface {
 	ListOfOrgs() ([]types.OrgID, error)
 	ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
 	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error)
-	WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport) error
+	WriteReportForCluster(
+		orgID types.OrgID,
+		clusterName types.ClusterName,
+		report types.ClusterReport,
+		collectedAtTime time.Time,
+	) error
 	ReportsCount() (int, error)
 }
 
@@ -70,6 +75,7 @@ func (storage DBStorage) Init() error {
 			cluster     varchar not null unique,
 			report      varchar not null,
 			reported_at datetime,
+			last_checked_at datetime,
 			PRIMARY KEY(org_id, cluster)
 		);
 	`)
@@ -168,8 +174,16 @@ func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName typ
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
-func (storage DBStorage) WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport) error {
-	statement, err := storage.connection.Prepare("INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at) VALUES ($1, $2, $3, $4)")
+func (storage DBStorage) WriteReportForCluster(
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+	report types.ClusterReport,
+	lastCheckedTime time.Time,
+) error {
+	statement, err := storage.connection.Prepare(
+		`INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at) 
+		 VALUES ($1, $2, $3, $4, $5)`,
+	)
 	if err != nil {
 		return err
 	}
@@ -177,7 +191,7 @@ func (storage DBStorage) WriteReportForCluster(orgID types.OrgID, clusterName ty
 
 	t := time.Now()
 
-	_, err = statement.Exec(orgID, clusterName, report, t)
+	_, err = statement.Exec(orgID, clusterName, report, t, lastCheckedTime)
 	if err != nil {
 		log.Print(err)
 		return err
