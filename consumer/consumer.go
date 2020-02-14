@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/google/uuid"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -98,6 +99,13 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 	if deserialized.Report == nil {
 		return deserialized, errors.New("Missing required attribute 'Report'")
 	}
+  
+  _, err = uuid.Parse(string(*deserialized.ClusterName))
+
+	if err != nil {
+		return 0, "", "", errors.New("Cluster name is not a UUID")
+	}
+  
 	return deserialized, nil
 }
 

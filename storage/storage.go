@@ -16,8 +16,15 @@ limitations under the License.
 
 // Package storage contains an implementation of interface between Go code and
 // (almost any) SQL database like PostgreSQL, SQLite, or MariaDB. An implementation
-// is constructed via New function and it is mandatory to call Close for any
-// opened connection to database. The storage might be initialized by Init method.
+// named DBStorage is constructed via New function and it is mandatory to call Close
+// for any opened connection to database. The storage might be initialized by Init
+// method if database schema is empty.
+//
+// It is possible to configure connection to selected database by using Configuration
+// structure. Currently that structure contains two configurable parameter:
+//
+// Driver - a SQL driver, like "sqlite3", "pq" etc.
+// DataSource - specification of data source. The content of this parameter depends on the database used.
 package storage
 
 import (
@@ -32,7 +39,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// Storage represents an interface to any relational database based on SQL language
+// Storage represents an interface to almost any database or storage system
 type Storage interface {
 	Init() error
 	Close() error
@@ -48,7 +55,9 @@ type Storage interface {
 	ReportsCount() (int, error)
 }
 
-// DBStorage is an implementation of Storage interface
+// DBStorage is an implementation of Storage interface that use selected SQL like database
+// like SQLite, PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
+// sql package. It is possible to configure connection via Configuration structure.
 type DBStorage struct {
 	connection    *sql.DB
 	configuration Configuration
