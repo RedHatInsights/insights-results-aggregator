@@ -18,4 +18,4 @@ enabled = true
 
 [storage]
 driver = "sqlite3"
-datasource = "./aggregator.db"
+datasource = "./test.db"
