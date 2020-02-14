@@ -51,6 +51,22 @@ driver = "postgres"
 datasource = "postgres://postgres:postgres@localhost/controller?sslmode=disable"
 ```
 
+## Local setup
+
+### Kafka broker
+
+This service depends on Kafka broker. It can be installed and configured locally. Please follow these steps to configure Kafka:
+
+1. Download the stable Kafka version from [this link](https://www.apache.org/dyn/closer.cgi?path=/kafka/2.4.0/kafka_2.12-2.4.0.tgz)
+1. Uncompress downloaded tarball: `tar -xzf kafka_2.12-2.4.0.tgz`
+1. Change current directory to a newly created directory: `cd kafka_2.12-2.4.0`
+1. Start Zookeeper service: `bin/zookeeper-server-start.sh config/zookeeper.properties`
+1. Start Kafka broker: `bin/kafka-server-start.sh config/server.properties`
+
+### Kafka producer
+
+It is possible to use the script `produce_insights_results` from `utils` to produce several Insights results into Kafka topic. Its dependency is Kafkacat that needs to be installed on the same machine. You can find installation instructions [on this page](https://github.com/edenhill/kafkacat).
+
 ## Testing
 
 ### Unit tests:
