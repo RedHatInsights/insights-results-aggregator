@@ -158,7 +158,7 @@ func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWrite
 	}
 }
 
-func (server HTTPServer) ReadReportForCluster(writer http.ResponseWriter, request *http.Request) {
+func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := server.readOrganizationID(writer, request)
 	if err != nil {
 		// everything has been handled already
@@ -192,7 +192,7 @@ func (server HTTPServer) Initialize(address string) http.Handler {
 	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
 	router.HandleFunc(server.Config.APIPrefix+"organization", server.listOfOrganizations).Methods("GET")
 	router.HandleFunc(server.Config.APIPrefix+"cluster/{organization}", server.listOfClustersForOrganization).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.ReadReportForCluster).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
 
 	// Prometheus metrics
 	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods("GET")
