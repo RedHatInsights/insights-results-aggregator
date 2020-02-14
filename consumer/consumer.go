@@ -99,13 +99,13 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 	if deserialized.Report == nil {
 		return deserialized, errors.New("Missing required attribute 'Report'")
 	}
-  
-  _, err = uuid.Parse(string(*deserialized.ClusterName))
+
+	_, err = uuid.Parse(string(*deserialized.ClusterName))
 
 	if err != nil {
-		return 0, "", "", errors.New("Cluster name is not a UUID")
+		return deserialized, errors.New("Cluster name is not a UUID")
 	}
-  
+
 	return deserialized, nil
 }
 

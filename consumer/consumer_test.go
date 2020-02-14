@@ -114,7 +114,7 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
  "ClusterName":"this is not a UUID",
  "Report":"{}"}
 `
-	_, _, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
 		t.Fatal("Error is expected to be returned for a wrong ClusterName format")
 	}
