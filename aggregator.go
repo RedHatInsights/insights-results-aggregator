@@ -64,6 +64,13 @@ func startConsumer() {
 	defer storage.Close()
 
 	brokerCfg := loadBrokerConfiguration()
+
+	// if broker is disabled, simply don't start it
+	if !brokerCfg.Enabled {
+		log.Println("Broker is disabled, not starting it")
+		return
+	}
+
 	consumerInstance, err := consumer.New(brokerCfg, storage)
 	if err != nil {
 		log.Println(err)

@@ -55,6 +55,7 @@ func loadBrokerConfiguration() broker.Configuration {
 		Address: brokerCfg.GetString("address"),
 		Topic:   brokerCfg.GetString("topic"),
 		Group:   brokerCfg.GetString("group"),
+		Enabled: brokerCfg.GetBool("enabled"),
 	}
 }
 

@@ -14,12 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package broker
+package main
 
-// Configuration represents configuration of Kafka broker
-type Configuration struct {
-	Address string
-	Topic   string
-	Group   string
-	Enabled bool
+import (
+	tests "github.com/RedHatInsights/insights-results-aggregator/tests/rest"
+	"github.com/verdverm/frisby"
+)
+
+func main() {
+	tests.ServerTests()
+	frisby.Global.PrintReport()
 }
