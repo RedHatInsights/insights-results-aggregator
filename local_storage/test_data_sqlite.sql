@@ -1,9 +1,9 @@
-insert into report (org_id, cluster, report, reported_at) values (0, '00000000-0000-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP);
-insert into report (org_id, cluster, report, reported_at) values (0, '00000000-0000-0000-ffff-000000000000', '{}', CURRENT_TIMESTAMP);
-insert into report (org_id, cluster, report, reported_at) values (0, '00000000-0000-0000-0000-ffffffffffff', '{}', CURRENT_TIMESTAMP);
-insert into report (org_id, cluster, report, reported_at) values (1, '00000000-ffff-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP);
-insert into report (org_id, cluster, report, reported_at) values (1, '00000000-0000-ffff-0000-000000000000', '{}', CURRENT_TIMESTAMP);
-insert into report (org_id, cluster, report, reported_at) values (2, 'aaaaaaaa-0000-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP);
-insert into report (org_id, cluster, report, reported_at) values (2, 'addddddd-0000-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP);
-insert into report (org_id, cluster, report, reported_at) values (3, 'addddddd-bbbb-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP);
-insert into report (org_id, cluster, report, reported_at) values (3, 'addddddd-bbbb-cccc-0000-000000000000', '{}', CURRENT_TIMESTAMP);
+insert into report (org_id, cluster, report, reported_at, last_checked_at) values (0, '00000000-0000-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+insert into report (org_id, cluster, report, reported_at, last_checked_at) values (0, '00000000-0000-0000-ffff-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+insert into report (org_id, cluster, report, reported_at, last_checked_at) values (0, '00000000-0000-0000-0000-ffffffffffff', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+insert into report (org_id, cluster, report, reported_at, last_checked_at) values (1, '00000000-ffff-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+insert into report (org_id, cluster, report, reported_at, last_checked_at) values (1, '00000000-0000-ffff-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+insert into report (org_id, cluster, report, reported_at, last_checked_at) values (2, 'aaaaaaaa-0000-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+insert into report (org_id, cluster, report, reported_at, last_checked_at) values (2, 'addddddd-0000-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+insert into report (org_id, cluster, report, reported_at, last_checked_at) values (3, 'addddddd-bbbb-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+insert into report (org_id, cluster, report, reported_at, last_checked_at) values (3, 'addddddd-bbbb-cccc-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
