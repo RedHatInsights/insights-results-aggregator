@@ -108,6 +108,22 @@ func TestParseProperMessage(t *testing.T) {
 	}
 }
 
+func TestParseProperMessageWrongClusterName(t *testing.T) {
+	const message = `
+{"OrgID":1,
+ "ClusterName":"this is not a UUID",
+ "Report":"{}"}
+`
+	_, _, _, err := consumer.ParseMessage([]byte(message))
+	if err == nil {
+		t.Fatal("Error is expected to be returned for a wrong ClusterName format")
+	}
+	errorMessage := err.Error()
+	if !strings.HasPrefix(errorMessage, "Cluster name is not a UUID") {
+		t.Fatal("Improper error message: " + errorMessage)
+	}
+}
+
 func TestParseMessageWithoutOrgID(t *testing.T) {
 	const message = `
 {"ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
