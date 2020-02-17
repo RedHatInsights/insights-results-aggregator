@@ -3,6 +3,8 @@
 SUPERUSER=postgres
 SU_PASSWORD=postgres
 
+# no server = socket
+DB_SERVER=
 DATABASE=aggregator
 
 USER=tester

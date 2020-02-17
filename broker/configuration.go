@@ -16,10 +16,15 @@ limitations under the License.
 
 package broker
 
+import (
+	"github.com/RedHatInsights/insights-results-aggregator/types"
+)
+
 // Configuration represents configuration of Kafka broker
 type Configuration struct {
-	Address string
-	Topic   string
-	Group   string
-	Enabled bool
+	Address      string
+	Topic        string
+	Group        string
+	Enabled      bool
+	OrgWhitelist []types.OrgID
 }
