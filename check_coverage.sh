@@ -5,7 +5,7 @@ ERR_MESSAGE="Code coverage have to be at least $THRESHOLD%"
 
 go_tool_cover_output=$(go tool cover -func=coverage.out)
 
-echo $go_tool_cover_output
+echo "$go_tool_cover_output"
 
 if (( $(echo $go_tool_cover_output | grep -i total | awk '{print $NF}' | egrep "^[-1-9]+" -o) > $THRESHOLD )); then
     exit 0
