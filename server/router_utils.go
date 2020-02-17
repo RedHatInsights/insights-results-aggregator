@@ -75,15 +75,15 @@ func GetRouterPositiveIntParam(request *http.Request, paramName string) (int64, 
 	return value, nil
 }
 
-func (server HTTPServer) readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
-	clusterName, found := mux.Vars(request)["cluster"]
-	if !found {
+func readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
+	clusterName, err := GetRouterParam(request, "cluster")
+	if err != nil {
+		message := fmt.Sprintf("Cluster name is not provided %v", err.Error())
+		log.Println(message)
 		// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
 		// (not on client side)
-		const message = "Cluster name is not provided"
-		log.Println(message)
 		responses.SendInternalServerError(writer, message)
-		return types.ClusterName(""), errors.New(message)
+		return "", err
 	}
 
 	if _, err := uuid.Parse(clusterName); err != nil {
@@ -95,7 +95,7 @@ func (server HTTPServer) readClusterName(writer http.ResponseWriter, request *ht
 	return types.ClusterName(clusterName), nil
 }
 
-func (server HTTPServer) readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
+func readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
 	organizationID, err := GetRouterPositiveIntParam(request, "organization")
 	if err != nil {
 		message := fmt.Sprintf("Error getting organization ID from request %v", err.Error())
@@ -105,7 +105,7 @@ func (server HTTPServer) readOrganizationID(writer http.ResponseWriter, request 
 		} else {
 			responses.Send(http.StatusInternalServerError, writer, err.Error())
 		}
-		return 0, errors.New(message)
+		return 0, err
 	}
 
 	return types.OrgID(int(organizationID)), nil

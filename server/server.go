@@ -97,7 +97,7 @@ func (server HTTPServer) listOfOrganizations(writer http.ResponseWriter, request
 }
 
 func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
-	organizationID, err := server.readOrganizationID(writer, request)
+	organizationID, err := readOrganizationID(writer, request)
 	if err != nil {
 		// everything has been handled already
 		return
@@ -113,13 +113,13 @@ func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWrite
 }
 
 func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
-	organizationID, err := server.readOrganizationID(writer, request)
+	organizationID, err := readOrganizationID(writer, request)
 	if err != nil {
 		// everything has been handled already
 		return
 	}
 
-	clusterName, err := server.readClusterName(writer, request)
+	clusterName, err := readClusterName(writer, request)
 	if err != nil {
 		// everything has been handled already
 		return

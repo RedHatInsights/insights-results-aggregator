@@ -369,3 +369,45 @@ func TestServerStartError(t *testing.T) {
 		t.Fatal(fmt.Errorf("should return an error"))
 	}
 }
+
+func TestGetRouterIntParamMissing(t *testing.T) {
+	request, err := http.NewRequest("GET", "cluster/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = server.GetRouterIntParam(request, "test")
+	if err == nil {
+		t.Fatal("Param should be missing")
+	}
+
+	assert.Equal(t, "missing param test", err.Error())
+}
+
+func TestReadClusterNameMissing(t *testing.T) {
+	request, err := http.NewRequest("GET", "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = server.ReadClusterName(httptest.NewRecorder(), request)
+	if err == nil {
+		t.Fatal("Param should be missing")
+	}
+
+	assert.Equal(t, "missing param cluster", err.Error())
+}
+
+func TestReadOrganizationIDMissing(t *testing.T) {
+	request, err := http.NewRequest("GET", "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = server.ReadOrganizationID(httptest.NewRecorder(), request)
+	if err == nil {
+		t.Fatal("Param should be missing")
+	}
+
+	assert.Equal(t, "missing param organization", err.Error())
+}
