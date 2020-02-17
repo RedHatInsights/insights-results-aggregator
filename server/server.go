@@ -37,17 +37,14 @@ limitations under the License.
 package server
 
 import (
-	"errors"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -99,49 +96,6 @@ func (server HTTPServer) listOfOrganizations(writer http.ResponseWriter, request
 	}
 }
 
-func (server HTTPServer) readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
-	organizationIDParam, found := mux.Vars(request)["organization"]
-
-	if !found {
-		// query parameter 'organization' can't be found in request, which might be caused by issue in Gorilla mux
-		// (not on client side)
-		const message = "Organization ID is not provided"
-		log.Println(message)
-		responses.SendInternalServerError(writer, message)
-		return 0, errors.New(message)
-	}
-
-	organizationID, err := strconv.ParseInt(organizationIDParam, 10, 0)
-	if err != nil {
-		const message = "Wrong organization ID provided"
-		log.Println(message, err)
-		responses.SendError(writer, err.Error())
-		return 0, errors.New(message)
-	}
-
-	return types.OrgID(int(organizationID)), nil
-}
-
-func (server HTTPServer) readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
-	clusterName, found := mux.Vars(request)["cluster"]
-	if !found {
-		// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
-		// (not on client side)
-		const message = "Cluster name is not provided"
-		log.Println(message)
-		responses.SendInternalServerError(writer, message)
-		return types.ClusterName(""), errors.New(message)
-	}
-
-	if _, err := uuid.Parse(clusterName); err != nil {
-		const message = "Cluster name format is invalid"
-		log.Println(message)
-		responses.SendInternalServerError(writer, message)
-		return types.ClusterName(""), errors.New(message)
-	}
-	return types.ClusterName(clusterName), nil
-}
-
 func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := server.readOrganizationID(writer, request)
 	if err != nil {
@@ -171,9 +125,10 @@ func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, reques
 		return
 	}
 
-	// TODO: error is not reported if cluster does not exist
 	report, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
-	if err != nil {
+	if _, ok := err.(*storage.ItemNotFoundError); ok {
+		responses.Send(http.StatusNotFound, writer, err.Error())
+	} else if err != nil {
 		log.Println("Unable to read report for cluster", err)
 		responses.SendInternalServerError(writer, err.Error())
 	} else {
@@ -208,7 +163,8 @@ func (server HTTPServer) Start() error {
 
 	err := http.ListenAndServe(address, router)
 	if err != nil {
-		log.Fatal("Unable to start HTTP server", err)
+		log.Printf("Unable to start HTTP server %v", err)
+		return err
 	}
 	return nil
 }

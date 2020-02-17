@@ -17,39 +17,20 @@ limitations under the License.
 package storage_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// Create mocked storage based on in-memory Sqlite instance
-func getMockStorage(init bool) (storage.Storage, error) {
-	mockStorage, err := storage.New(storage.Configuration{
-		Driver:     "sqlite3",
-		DataSource: ":memory:",
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	// initialize the database by all required tables
-	if init {
-		err = mockStorage.Init()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return mockStorage, nil
-}
-
-func checkReportForCluster(t *testing.T, storage storage.Storage, orgID types.OrgID, clusterName types.ClusterName, expected types.ClusterReport) {
+func checkReportForCluster(t *testing.T, s storage.Storage, orgID types.OrgID, clusterName types.ClusterName, expected types.ClusterReport) {
 	// try to read report for cluster
-	result, err := storage.ReadReportForCluster(orgID, clusterName)
-	if err != nil {
+	result, err := s.ReadReportForCluster(orgID, clusterName)
+	if _, ok := err.(*storage.ItemNotFoundError); err != nil && !ok {
 		t.Fatal(err)
 	}
 
@@ -90,7 +71,7 @@ func TestNewStorage(t *testing.T) {
 
 // TestMockDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
 func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
-	mockStorage, err := getMockStorage(true)
+	mockStorage, err := helpers.GetMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +86,7 @@ func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 
 // TestMockDBStorageReadReportForClusterClosedStorage check the behaviour of method ReadReportForCluster
 func TestMockDBStorageReadReportForClusterClosedStorage(t *testing.T) {
-	mockStorage, err := getMockStorage(true)
+	mockStorage, err := helpers.GetMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +101,7 @@ func TestMockDBStorageReadReportForClusterClosedStorage(t *testing.T) {
 
 // TestMockDBStorageReadReportForCluster check the behaviour of method ReadReportForCluster
 func TestMockDBStorageReadReportForCluster(t *testing.T) {
-	mockStorage, err := getMockStorage(true)
+	mockStorage, err := helpers.GetMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +117,7 @@ func TestMockDBStorageReadReportForCluster(t *testing.T) {
 
 // TestMockDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster when the table with results does not exist
 func TestMockDBStorageReadReportNoTable(t *testing.T) {
-	mockStorage, err := getMockStorage(false)
+	mockStorage, err := helpers.GetMockStorage(false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,7 +133,7 @@ func TestMockDBStorageReadReportNoTable(t *testing.T) {
 
 // TestMockDBStorageWriteReportForClusterClosedStorage check the behaviour of method WriteReportForCluster
 func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
-	mockStorage, err := getMockStorage(true)
+	mockStorage, err := helpers.GetMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,7 +149,7 @@ func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 
 // TestMockDBStorageListOfOrgs check the behaviour of method ListOfOrgs
 func TestMockDBStorageListOfOrgs(t *testing.T) {
-	mockStorage, err := getMockStorage(true)
+	mockStorage, err := helpers.GetMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,7 +167,7 @@ func TestMockDBStorageListOfOrgs(t *testing.T) {
 }
 
 func TestMockDBStorageListOfOrgsNoTable(t *testing.T) {
-	mockStorage, err := getMockStorage(false)
+	mockStorage, err := helpers.GetMockStorage(false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,7 +179,7 @@ func TestMockDBStorageListOfOrgsNoTable(t *testing.T) {
 
 // TestMockDBStorageListOfOrgsClosedStorage check the behaviour of method ListOfOrgs
 func TestMockDBStorageListOfOrgsClosedStorage(t *testing.T) {
-	mockStorage, err := getMockStorage(true)
+	mockStorage, err := helpers.GetMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +191,7 @@ func TestMockDBStorageListOfOrgsClosedStorage(t *testing.T) {
 
 // TestMockDBStorageListOfClustersFor check the behaviour of method ListOfClustersForOrg
 func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
-	mockStorage, err := getMockStorage(true)
+	mockStorage, err := helpers.GetMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -241,7 +222,7 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 }
 
 func TestMockDBStorageListOfClustersNoTable(t *testing.T) {
-	mockStorage, err := getMockStorage(false)
+	mockStorage, err := helpers.GetMockStorage(false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -253,7 +234,7 @@ func TestMockDBStorageListOfClustersNoTable(t *testing.T) {
 
 // TestMockDBStorageListOfClustersClosedStorage check the behaviour of method ListOfOrgs
 func TestMockDBStorageListOfClustersClosedStorage(t *testing.T) {
-	mockStorage, err := getMockStorage(true)
+	mockStorage, err := helpers.GetMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,7 +246,7 @@ func TestMockDBStorageListOfClustersClosedStorage(t *testing.T) {
 
 // TestMockDBReportsCount check the behaviour of method ReportsCount
 func TestMockDBReportsCount(t *testing.T) {
-	mockStorage, err := getMockStorage(true)
+	mockStorage, err := helpers.GetMockStorage(true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -289,7 +270,7 @@ func TestMockDBReportsCount(t *testing.T) {
 }
 
 func TestMockDBReportsCountNoTable(t *testing.T) {
-	mockStorage, err := getMockStorage(false)
+	mockStorage, err := helpers.GetMockStorage(false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -300,7 +281,7 @@ func TestMockDBReportsCountNoTable(t *testing.T) {
 }
 
 func TestMockDBReportsCountClosedStorage(t *testing.T) {
-	mockStorage, err := getMockStorage(false)
+	mockStorage, err := helpers.GetMockStorage(false)
 	if err != nil {
 		t.Fatal(err)
 	}

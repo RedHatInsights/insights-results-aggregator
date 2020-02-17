@@ -17,17 +17,29 @@ limitations under the License.
 package server_test
 
 import (
+	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/stretchr/testify/assert"
 )
 
 var config = server.Configuration{
 	Address:   ":8080",
 	APIPrefix: "/api/test/",
 }
+
+const (
+	testOrgID       = 1
+	testClusterName = "412701a1-c036-490a-9173-a3428c25b677"
+)
 
 func executeRequest(server *server.HTTPServer, req *http.Request) *httptest.ResponseRecorder {
 	router := server.Initialize(config.Address)
@@ -44,8 +56,21 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 	}
 }
 
+func checkResponseBody(t *testing.T, expected string, body io.ReadCloser) {
+	result, err := ioutil.ReadAll(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected = strings.TrimSpace(expected)
+	resultStr := strings.TrimSpace(string(result))
+
+	assert.Equal(t, expected, resultStr)
+}
+
 func TestReadReportForClusterMissingOrgIdAndClusterName(t *testing.T) {
 	server := server.New(config, nil)
+
 	req, err := http.NewRequest("GET", config.APIPrefix+"report/", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -57,6 +82,7 @@ func TestReadReportForClusterMissingOrgIdAndClusterName(t *testing.T) {
 
 func TestReadReportForClusterMissingClusterName(t *testing.T) {
 	server := server.New(config, nil)
+
 	req, err := http.NewRequest("GET", config.APIPrefix+"report/12345", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -68,6 +94,7 @@ func TestReadReportForClusterMissingClusterName(t *testing.T) {
 
 func TestReadReportForClusterBadOrgID(t *testing.T) {
 	server := server.New(config, nil)
+
 	req, err := http.NewRequest("GET", config.APIPrefix+"report/bad_org_id", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -80,6 +107,7 @@ func TestReadReportForClusterBadOrgID(t *testing.T) {
 
 func TestReadReportForClusterBadClusterName(t *testing.T) {
 	server := server.New(config, nil)
+
 	req, err := http.NewRequest("GET", config.APIPrefix+"report/12345/aaaa", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -87,4 +115,257 @@ func TestReadReportForClusterBadClusterName(t *testing.T) {
 
 	response := executeRequest(server, req).Result()
 	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+}
+
+func TestReadNonExistingReport(t *testing.T) {
+	mockStorage, err := helpers.GetMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest(
+		"GET",
+		config.APIPrefix+"report/1/2d615e74-29f8-4bfb-8269-908f1c1b1bb4",
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
+}
+
+func TestReadExistingReport(t *testing.T) {
+	mockStorage, err := helpers.GetMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockStorage.Close()
+
+	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest(
+		"GET",
+		config.APIPrefix+"report/"+fmt.Sprint(testOrgID)+"/"+testClusterName,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusOK, response.StatusCode)
+}
+
+func TestReadReportDBError(t *testing.T) {
+	mockStorage, err := helpers.GetMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mockStorage.Close()
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest(
+		"GET",
+		config.APIPrefix+"report/1/2d615e74-29f8-4bfb-8269-908f1c1b1bb4",
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+}
+
+func TestListOfClustersForNonExistingOrganization(t *testing.T) {
+	mockStorage, err := helpers.GetMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer mockStorage.Close()
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusOK, response.StatusCode)
+	checkResponseBody(t, `{"clusters":[],"status":"ok"}`, response.Body)
+}
+
+func TestListOfClustersForOrganizationOK(t *testing.T) {
+	mockStorage, err := helpers.GetMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer mockStorage.Close()
+
+	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusOK, response.StatusCode)
+	checkResponseBody(t, `{"clusters":["`+testClusterName+`"],"status":"ok"}`, response.Body)
+}
+
+func TestListOfClustersForOrganizationDBError(t *testing.T) {
+	mockStorage, err := helpers.GetMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mockStorage.Close()
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+}
+
+func TestListOfClustersForOrganizationNegativeID(t *testing.T) {
+	server := server.New(config, nil)
+
+	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/-1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
+}
+
+func TestListOfClustersForOrganizationNonIntID(t *testing.T) {
+	server := server.New(config, nil)
+
+	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/nonint", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
+}
+
+func TestMainEndpoint(t *testing.T) {
+	server := server.New(config, nil)
+
+	req, err := http.NewRequest("GET", config.APIPrefix, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusOK, response.StatusCode)
+}
+
+func TestListOfOrganizationsEmpty(t *testing.T) {
+	mockStorage, err := helpers.GetMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer mockStorage.Close()
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("GET", config.APIPrefix+"organization", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusOK, response.StatusCode)
+	checkResponseBody(t, `{"organizations":[],"status":"ok"}`, response.Body)
+}
+
+func TestListOfOrganizationsOK(t *testing.T) {
+	mockStorage, err := helpers.GetMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer mockStorage.Close()
+
+	err = mockStorage.WriteReportForCluster(1, "8083c377-8a05-4922-af8d-e7d0970c1f49", "{}", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = mockStorage.WriteReportForCluster(5, "52ab955f-b769-444d-8170-4b676c5d3c85", "{}", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("GET", config.APIPrefix+"organization", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusOK, response.StatusCode)
+	checkResponseBody(t, `{"organizations":[1,5],"status":"ok"}`, response.Body)
+}
+
+func TestListOfOrganizationsDBError(t *testing.T) {
+	mockStorage, err := helpers.GetMockStorage(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mockStorage.Close()
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("GET", config.APIPrefix+"organization", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+}
+
+func TestServerStartError(t *testing.T) {
+	server := server.New(server.Configuration{
+		Address:   "localhost:99999",
+		APIPrefix: "",
+	}, nil)
+
+	err := server.Start()
+	if err == nil {
+		t.Fatal(fmt.Errorf("should return an error"))
+	}
 }

@@ -17,9 +17,11 @@ limitations under the License.
 package consumer_test
 
 import (
+	"fmt"
 	"github.com/Shopify/sarama"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
@@ -241,5 +243,55 @@ func TestProcessCorrectMessage(t *testing.T) {
 	}
 	if cnt != 1 {
 		t.Fatal("ProcessMessage does more writes than expected")
+	}
+}
+
+func TestProcessingMessageWithClosedStorage(t *testing.T) {
+	storage, err := memoryStorage()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c := dummyConsumer(storage)
+
+	storage.Close()
+
+	const messageValue = `
+{"OrgID":1,
+ "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
+ "Report":"{}",
+ "LastChecked":"2020-01-23T16:15:59.478901889Z"}
+`
+
+	message := sarama.ConsumerMessage{}
+	message.Value = []byte(messageValue)
+	err = c.ProcessMessage(&message)
+	if err == nil {
+		t.Fatal(fmt.Errorf("Expected error because database was closed"))
+	}
+}
+
+func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
+	storage, err := memoryStorage()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c := dummyConsumer(storage)
+
+	defer storage.Close()
+
+	const messageValue = `
+{"OrgID":1,
+ "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
+ "Report":"{}",
+ "LastChecked":"2020.01.23 16:15:59"}
+`
+
+	message := sarama.ConsumerMessage{}
+	message.Value = []byte(messageValue)
+	err = c.ProcessMessage(&message)
+	if _, ok := err.(*time.ParseError); err == nil || !ok {
+		t.Fatal(fmt.Errorf("Expected time.ParseError error because date format is wrong"))
 	}
 }
