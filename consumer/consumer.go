@@ -111,12 +111,11 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 
 func organizationAllowed(consumer KafkaConsumer, orgID types.OrgID) bool {
 	whitelist := consumer.Configuration.OrgWhitelist
-	for _, val := range whitelist {
-		if orgID == val {
-			return true
-		}
+	if whitelist == nil {
+		return false
 	}
-	return false
+	orgWhitelisted := whitelist.Contains(int(orgID))
+	return orgWhitelisted
 }
 
 // Start starts consumer

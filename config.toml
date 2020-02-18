@@ -9,7 +9,7 @@ address = ":8080"
 api_prefix = "/api/v1/"
 
 [processing]
-org_whitelist = "./org_whitelist.csv"
+org_whitelist = "org_whitelist.csv"
 
 [metrics]
 enabled = true

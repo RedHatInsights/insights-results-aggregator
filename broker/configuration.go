@@ -17,7 +17,7 @@ limitations under the License.
 package broker
 
 import (
-	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/deckarep/golang-set"
 )
 
 // Configuration represents configuration of Kafka broker
@@ -26,5 +26,5 @@ type Configuration struct {
 	Topic        string
 	Group        string
 	Enabled      bool
-	OrgWhitelist []types.OrgID
+	OrgWhitelist mapset.Set
 }

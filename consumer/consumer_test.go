@@ -18,6 +18,7 @@ package consumer_test
 
 import (
 	"github.com/Shopify/sarama"
+	"github.com/deckarep/golang-set"
 	"strings"
 	"testing"
 
@@ -173,11 +174,14 @@ func memoryStorage() (storage.Storage, error) {
 	return storage, nil
 }
 
-func dummyConsumer(s storage.Storage) consumer.Consumer {
+func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 	brokerCfg := broker.Configuration{
 		Address: "localhost:1234",
 		Topic:   "topic",
 		Group:   "group",
+	}
+	if whitelist {
+		brokerCfg.OrgWhitelist = mapset.NewSetWith(1)
 	}
 	return consumer.KafkaConsumer{
 		Configuration:     brokerCfg,
@@ -186,7 +190,6 @@ func dummyConsumer(s storage.Storage) consumer.Consumer {
 		Storage:           s,
 	}
 }
-
 func TestProcessEmptyMessage(t *testing.T) {
 	storage, err := memoryStorage()
 	if err != nil {
@@ -194,7 +197,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 	}
 	defer storage.Close()
 
-	c := dummyConsumer(storage)
+	c := dummyConsumer(storage, true)
 
 	message := sarama.ConsumerMessage{}
 	// messsage is empty -> nothing should be written into storage
@@ -216,7 +219,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 	}
 	defer storage.Close()
 
-	c := dummyConsumer(storage)
+	c := dummyConsumer(storage, true)
 
 	const messageValue = `
 {"OrgID":1,

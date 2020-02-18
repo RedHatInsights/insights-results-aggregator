@@ -21,7 +21,9 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
+	"github.com/deckarep/golang-set"
 	"github.com/spf13/viper"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -66,22 +68,29 @@ func loadBrokerConfiguration() broker.Configuration {
 	}
 }
 
-func loadOrganizationWhitelist() []types.OrgID {
-	var whitelist []types.OrgID
-
+func getWhitelistFileName() string {
 	processingCfg := viper.Sub("processing")
 	fileName := processingCfg.GetString("org_whitelist")
+	return fileName
+}
 
+func createReaderFromFile(fileName string) (io.Reader, error) {
 	csvFile, err := os.Open(fileName)
 	if err != nil {
-		log.Fatalf("Error opening %v. Error: %v", fileName, err)
+		return nil, fmt.Errorf("Error opening %v. Error: %v", fileName, err)
 	}
+	reader := bufio.NewReader(csvFile)
+	return reader, nil
+}
 
-	reader := csv.NewReader(bufio.NewReader(csvFile))
+func loadWhitelistFromCSV(r io.Reader) (mapset.Set, error) {
+	whitelist := mapset.NewSet()
+
+	reader := csv.NewReader(r)
 
 	lines, err := reader.ReadAll()
 	if err != nil {
-		log.Fatalf("Error reading CSV file: %v", err)
+		return nil, fmt.Errorf("Error reading CSV file: %v", err)
 	}
 
 	for index, line := range lines {
@@ -91,10 +100,23 @@ func loadOrganizationWhitelist() []types.OrgID {
 
 		orgID, err := strconv.Atoi(line[0]) // single record per line
 		if err != nil {
-			log.Fatalf("Organization ID on line %v in whitelist CSV is not numerical. Found value: %v", index+1, line[0])
+			return nil, fmt.Errorf("Organization ID on line %v in whitelist CSV is not numerical. Found value: %v", index+1, line[0])
 		}
 
-		whitelist = append(whitelist, types.OrgID(orgID))
+		whitelist.Add(types.OrgID(orgID))
+	}
+	return whitelist, nil
+}
+
+func loadOrganizationWhitelist() mapset.Set {
+	fileName := getWhitelistFileName()
+	contentReader, err := createReaderFromFile(fileName)
+	if err != nil {
+		log.Fatalf("Organization whitelist file could not be opened. Error: %v", err)
+	}
+	whitelist, err := loadWhitelistFromCSV(contentReader)
+	if err != nil {
+		log.Fatalf("Whitelist CSV could not be processed. Error: %v", err)
 	}
 	return whitelist
 }
