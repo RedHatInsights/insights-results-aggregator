@@ -17,6 +17,7 @@ limitations under the License.
 package server_test
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -92,17 +93,28 @@ func TestReadReportForClusterMissingClusterName(t *testing.T) {
 	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
 }
 
-func TestReadReportForClusterBadOrgID(t *testing.T) {
+func TestReadReportForClusterNonIntOrgID(t *testing.T) {
 	server := server.New(config, nil)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/bad_org_id", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"report/bad_org_id/cluster_name", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	response := executeRequest(server, req).Result()
-	// It responses with NotFound because it cannot be stored in the DB
-	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
+	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
+}
+
+func TestReadReportForClusterNegativeOrgID(t *testing.T) {
+	server := server.New(config, nil)
+
+	req, err := http.NewRequest("GET", config.APIPrefix+"report/-1/"+testClusterName, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
 }
 
 func TestReadReportForClusterBadClusterName(t *testing.T) {
@@ -118,10 +130,7 @@ func TestReadReportForClusterBadClusterName(t *testing.T) {
 }
 
 func TestReadNonExistingReport(t *testing.T) {
-	mockStorage, err := helpers.GetMockStorage(true)
-	if err != nil {
-		t.Fatal(err)
-	}
+	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer mockStorage.Close()
 
 	server := server.New(config, mockStorage)
@@ -140,13 +149,10 @@ func TestReadNonExistingReport(t *testing.T) {
 }
 
 func TestReadExistingReport(t *testing.T) {
-	mockStorage, err := helpers.GetMockStorage(true)
-	if err != nil {
-		t.Fatal(err)
-	}
+	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer mockStorage.Close()
 
-	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
+	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,11 +173,7 @@ func TestReadExistingReport(t *testing.T) {
 }
 
 func TestReadReportDBError(t *testing.T) {
-	mockStorage, err := helpers.GetMockStorage(true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	mockStorage := helpers.MustGetMockStorage(t, true)
 	mockStorage.Close()
 
 	server := server.New(config, mockStorage)
@@ -190,11 +192,7 @@ func TestReadReportDBError(t *testing.T) {
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
-	mockStorage, err := helpers.GetMockStorage(true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer mockStorage.Close()
 
 	server := server.New(config, mockStorage)
@@ -210,14 +208,10 @@ func TestListOfClustersForNonExistingOrganization(t *testing.T) {
 }
 
 func TestListOfClustersForOrganizationOK(t *testing.T) {
-	mockStorage, err := helpers.GetMockStorage(true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer mockStorage.Close()
 
-	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
+	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,11 +229,7 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 }
 
 func TestListOfClustersForOrganizationDBError(t *testing.T) {
-	mockStorage, err := helpers.GetMockStorage(true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	mockStorage := helpers.MustGetMockStorage(t, true)
 	mockStorage.Close()
 
 	server := server.New(config, mockStorage)
@@ -290,11 +280,7 @@ func TestMainEndpoint(t *testing.T) {
 }
 
 func TestListOfOrganizationsEmpty(t *testing.T) {
-	mockStorage, err := helpers.GetMockStorage(true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer mockStorage.Close()
 
 	server := server.New(config, mockStorage)
@@ -310,14 +296,10 @@ func TestListOfOrganizationsEmpty(t *testing.T) {
 }
 
 func TestListOfOrganizationsOK(t *testing.T) {
-	mockStorage, err := helpers.GetMockStorage(true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer mockStorage.Close()
 
-	err = mockStorage.WriteReportForCluster(1, "8083c377-8a05-4922-af8d-e7d0970c1f49", "{}", time.Now())
+	err := mockStorage.WriteReportForCluster(1, "8083c377-8a05-4922-af8d-e7d0970c1f49", "{}", time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -340,11 +322,7 @@ func TestListOfOrganizationsOK(t *testing.T) {
 }
 
 func TestListOfOrganizationsDBError(t *testing.T) {
-	mockStorage, err := helpers.GetMockStorage(true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	mockStorage := helpers.MustGetMockStorage(t, true)
 	mockStorage.Close()
 
 	server := server.New(config, mockStorage)
@@ -410,4 +388,31 @@ func TestReadOrganizationIDMissing(t *testing.T) {
 	}
 
 	assert.Equal(t, "missing param organization", err.Error())
+}
+
+func TestServerStart(t *testing.T) {
+	s := server.New(server.Configuration{
+		// will use any free port
+		Address:   ":0",
+		APIPrefix: config.APIPrefix,
+	}, nil)
+
+	go func() {
+		// doing some request to be sure server started succesfully
+		req, err := http.NewRequest("GET", config.APIPrefix, nil)
+		if err != nil {
+			panic(err)
+		}
+
+		response := executeRequest(s, req).Result()
+		checkResponseCode(t, http.StatusOK, response.StatusCode)
+
+		// stopping the server
+		s.Stop(context.Background())
+	}()
+
+	err := s.Start()
+	if err != nil && err != http.ErrServerClosed {
+		panic(err)
+	}
 }

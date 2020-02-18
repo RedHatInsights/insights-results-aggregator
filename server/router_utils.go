@@ -51,12 +51,14 @@ func GetRouterIntParam(request *http.Request, paramName string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	intValue, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		return 0, &RouterParsingError{
 			paramName: paramName, paramValue: value, errString: "integer expected",
 		}
 	}
+
 	return intValue, nil
 }
 
@@ -67,14 +69,18 @@ func GetRouterPositiveIntParam(request *http.Request, paramName string) (int64, 
 	if err != nil {
 		return 0, err
 	}
+
 	if value <= 0 {
 		return 0, &RouterParsingError{
 			paramName: paramName, paramValue: value, errString: "positive integer expected",
 		}
 	}
+
 	return value, nil
 }
 
+// readClusterName retrieves cluster name from request
+// if it's not possible, it writes http error to the writer and returns error
 func readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
 	clusterName, err := GetRouterParam(request, "cluster")
 	if err != nil {
@@ -83,28 +89,36 @@ func readClusterName(writer http.ResponseWriter, request *http.Request) (types.C
 		// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
 		// (not on client side)
 		responses.SendInternalServerError(writer, message)
+
 		return "", err
 	}
 
 	if _, err := uuid.Parse(clusterName); err != nil {
-		const message = "Cluster name format is invalid"
+		const message = "cluster name format is invalid"
+
 		log.Println(message)
 		responses.SendInternalServerError(writer, message)
+
 		return types.ClusterName(""), errors.New(message)
 	}
+
 	return types.ClusterName(clusterName), nil
 }
 
+// readOrganizationID retrieves organization id from request
+// if it's not possible, it writes http error to the writer and returns error
 func readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
 	organizationID, err := GetRouterPositiveIntParam(request, "organization")
 	if err != nil {
 		message := fmt.Sprintf("Error getting organization ID from request %v", err.Error())
 		log.Println(message)
+
 		if _, ok := err.(*RouterParsingError); ok {
 			responses.Send(http.StatusBadRequest, writer, err.Error())
 		} else {
 			responses.Send(http.StatusInternalServerError, writer, err.Error())
 		}
+
 		return 0, err
 	}
 

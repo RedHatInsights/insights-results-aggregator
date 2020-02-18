@@ -37,6 +37,7 @@ limitations under the License.
 package server
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -54,6 +55,7 @@ import (
 type HTTPServer struct {
 	Config  Configuration
 	Storage storage.Storage
+	Serv    *http.Server
 }
 
 // New constructs new implementation of Server interface
@@ -75,18 +77,18 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 }
 
 // LogRequest - middleware for loging requests
-func (server HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
+func (server *HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			logRequestHandler(writer, request, nextHandler)
 		})
 }
 
-func (server HTTPServer) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
 	responses.SendResponse(writer, responses.BuildOkResponse())
 }
 
-func (server HTTPServer) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
 	organizations, err := server.Storage.ListOfOrgs()
 	if err != nil {
 		log.Println("Unable to get list of organizations", err)
@@ -96,7 +98,7 @@ func (server HTTPServer) listOfOrganizations(writer http.ResponseWriter, request
 	}
 }
 
-func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := readOrganizationID(writer, request)
 	if err != nil {
 		// everything has been handled already
@@ -112,7 +114,7 @@ func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWrite
 	}
 }
 
-func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := readOrganizationID(writer, request)
 	if err != nil {
 		// everything has been handled already
@@ -137,7 +139,7 @@ func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, reques
 }
 
 // Initialize perform the server initialization
-func (server HTTPServer) Initialize(address string) http.Handler {
+func (server *HTTPServer) Initialize(address string) http.Handler {
 	log.Println("Initializing HTTP server at", address)
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -156,15 +158,22 @@ func (server HTTPServer) Initialize(address string) http.Handler {
 }
 
 // Start starts server
-func (server HTTPServer) Start() error {
+func (server *HTTPServer) Start() error {
 	address := server.Config.Address
-	router := server.Initialize(address)
 	log.Println("Starting HTTP server at", address)
+	router := server.Initialize(address)
+	server.Serv = &http.Server{Addr: address, Handler: router}
 
-	err := http.ListenAndServe(address, router)
-	if err != nil {
+	err := server.Serv.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
 		log.Printf("Unable to start HTTP server %v", err)
 		return err
 	}
+
 	return nil
+}
+
+// Stop stops server's execution
+func (server *HTTPServer) Stop(ctx context.Context) error {
+	return server.Serv.Shutdown(ctx)
 }

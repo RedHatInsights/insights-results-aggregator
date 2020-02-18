@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	"testing"
+
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
 
@@ -23,4 +25,15 @@ func GetMockStorage(init bool) (storage.Storage, error) {
 	}
 
 	return mockStorage, nil
+}
+
+// MustGetMockStorage creates mocked storage based on in-memory Sqlite instance
+// produces t.Fatal(err) on error
+func MustGetMockStorage(t *testing.T, init bool) storage.Storage {
+	mockStorage, err := GetMockStorage(init)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return mockStorage
 }

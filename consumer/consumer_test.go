@@ -18,14 +18,16 @@ package consumer_test
 
 import (
 	"fmt"
-	"github.com/Shopify/sarama"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
+
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
@@ -159,22 +161,6 @@ func TestParseMessageWithoutReport(t *testing.T) {
 	}
 }
 
-func memoryStorage() (storage.Storage, error) {
-	storageCfg := storage.Configuration{
-		Driver:     "sqlite3",
-		DataSource: ":memory:",
-	}
-	storage, err := storage.New(storageCfg)
-	if err != nil {
-		return nil, err
-	}
-	err = storage.Init()
-	if err != nil {
-		return nil, err
-	}
-	return storage, nil
-}
-
 func dummyConsumer(s storage.Storage) consumer.Consumer {
 	brokerCfg := broker.Configuration{
 		Address: "localhost:1234",
@@ -190,10 +176,7 @@ func dummyConsumer(s storage.Storage) consumer.Consumer {
 }
 
 func TestProcessEmptyMessage(t *testing.T) {
-	storage, err := memoryStorage()
-	if err != nil {
-		t.Fatal(err)
-	}
+	storage := helpers.MustGetMockStorage(t, true)
 	defer storage.Close()
 
 	c := dummyConsumer(storage)
@@ -212,10 +195,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 }
 
 func TestProcessCorrectMessage(t *testing.T) {
-	storage, err := memoryStorage()
-	if err != nil {
-		t.Fatal(err)
-	}
+	storage := helpers.MustGetMockStorage(t, true)
 	defer storage.Close()
 
 	c := dummyConsumer(storage)
@@ -229,7 +209,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(messageValue)
 	// messsage is empty -> nothing should be written into storage
-	err = c.ProcessMessage(&message)
+	err := c.ProcessMessage(&message)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -247,10 +227,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 }
 
 func TestProcessingMessageWithClosedStorage(t *testing.T) {
-	storage, err := memoryStorage()
-	if err != nil {
-		t.Fatal(err)
-	}
+	storage := helpers.MustGetMockStorage(t, true)
 
 	c := dummyConsumer(storage)
 
@@ -265,21 +242,17 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(messageValue)
-	err = c.ProcessMessage(&message)
+	err := c.ProcessMessage(&message)
 	if err == nil {
 		t.Fatal(fmt.Errorf("Expected error because database was closed"))
 	}
 }
 
 func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
-	storage, err := memoryStorage()
-	if err != nil {
-		t.Fatal(err)
-	}
+	storage := helpers.MustGetMockStorage(t, true)
+	defer storage.Close()
 
 	c := dummyConsumer(storage)
-
-	defer storage.Close()
 
 	const messageValue = `
 {"OrgID":1,
@@ -290,7 +263,7 @@ func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(messageValue)
-	err = c.ProcessMessage(&message)
+	err := c.ProcessMessage(&message)
 	if _, ok := err.(*time.ParseError); err == nil || !ok {
 		t.Fatal(fmt.Errorf("Expected time.ParseError error because date format is wrong"))
 	}
