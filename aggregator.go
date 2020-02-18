@@ -24,8 +24,10 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
@@ -39,6 +41,11 @@ const (
 	ExitStatusConsumerError
 	// ExitStatusServerError is returned in case of any REST API server-related error
 	ExitStatusServerError
+)
+
+var (
+	serverInstance   *server.HTTPServer = nil
+	consumerInstance consumer.Consumer  = nil
 )
 
 func startStorageConnection() (*storage.DBStorage, error) {
@@ -71,7 +78,7 @@ func startConsumer() {
 		return
 	}
 
-	consumerInstance, err := consumer.New(brokerCfg, storage)
+	consumerInstance, err = consumer.New(brokerCfg, storage)
 	if err != nil {
 		log.Println(err)
 		os.Exit(ExitStatusConsumerError)
@@ -92,7 +99,7 @@ func startServer() {
 	defer storage.Close()
 
 	serverCfg := loadServerConfiguration()
-	serverInstance := server.New(serverCfg, storage)
+	serverInstance = server.New(serverCfg, storage)
 	err = serverInstance.Start()
 	if err != nil {
 		log.Println(err)
@@ -106,6 +113,27 @@ func startService() {
 	// server can be started in current thread
 	startServer()
 	os.Exit(ExitStatusOK)
+}
+
+func waitForServiceToStart() {
+	for {
+		if serverInstance != nil && consumerInstance != nil {
+			// everything was initialized
+			break
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+
+func stopService() {
+	err := serverInstance.Stop(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = consumerInstance.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {

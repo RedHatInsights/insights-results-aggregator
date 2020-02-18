@@ -17,6 +17,7 @@ limitations under the License.
 package storage_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -42,7 +43,7 @@ func checkReportForCluster(
 ) {
 	// try to read report for cluster
 	result, err := s.ReadReportForCluster(orgID, clusterName)
-	if _, ok := err.(*storage.ItemNotFoundError); err != nil && !ok {
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -92,7 +93,22 @@ func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer mockStorage.Close()
 
-	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, "")
+	_, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
+	if err == nil {
+		t.Fatal("expected not found error")
+	}
+
+	if itemNotFoundError, ok := err.(*storage.ItemNotFoundError); ok {
+		itemID := fmt.Sprintf("%v/%v", testOrgID, testClusterName)
+		assert.Equal(
+			t,
+			fmt.Sprintf("Item with ID %v was not found in the storage", itemID),
+			err.Error(),
+		)
+		assert.Equal(t, itemID, itemNotFoundError.ItemID)
+	} else {
+		t.Fatal(err)
+	}
 }
 
 // TestMockDBStorageReadReportForClusterClosedStorage check the behaviour of method ReadReportForCluster

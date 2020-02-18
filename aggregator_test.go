@@ -17,9 +17,12 @@ limitations under the License.
 package main_test
 
 import (
-	"github.com/RedHatInsights/insights-results-aggregator"
 	"os"
 	"testing"
+	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 func TestLoadConfiguration(t *testing.T) {
@@ -93,4 +96,16 @@ func TestStartStorageConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("Cannot create storage object", err)
 	}
+}
+
+func TestStartService(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		main.LoadConfiguration("config")
+		go func() {
+			main.WaitForServiceToStart()
+			main.StopService()
+		}()
+		main.StartService()
+
+	}, 5*time.Second)
 }

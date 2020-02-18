@@ -391,28 +391,30 @@ func TestReadOrganizationIDMissing(t *testing.T) {
 }
 
 func TestServerStart(t *testing.T) {
-	s := server.New(server.Configuration{
-		// will use any free port
-		Address:   ":0",
-		APIPrefix: config.APIPrefix,
-	}, nil)
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		s := server.New(server.Configuration{
+			// will use any free port
+			Address:   ":0",
+			APIPrefix: config.APIPrefix,
+		}, nil)
 
-	go func() {
-		// doing some request to be sure server started succesfully
-		req, err := http.NewRequest("GET", config.APIPrefix, nil)
-		if err != nil {
+		go func() {
+			// doing some request to be sure server started succesfully
+			req, err := http.NewRequest("GET", config.APIPrefix, nil)
+			if err != nil {
+				panic(err)
+			}
+
+			response := executeRequest(s, req).Result()
+			checkResponseCode(t, http.StatusOK, response.StatusCode)
+
+			// stopping the server
+			s.Stop(context.Background())
+		}()
+
+		err := s.Start()
+		if err != nil && err != http.ErrServerClosed {
 			panic(err)
 		}
-
-		response := executeRequest(s, req).Result()
-		checkResponseCode(t, http.StatusOK, response.StatusCode)
-
-		// stopping the server
-		s.Stop(context.Background())
-	}()
-
-	err := s.Start()
-	if err != nil && err != http.ErrServerClosed {
-		panic(err)
-	}
+	}, 5*time.Second)
 }
