@@ -1,0 +1,21 @@
+[broker]
+address = "localhost:9092"
+topic = "ccx.ocp.results"
+group = "aggregator"
+enabled = true
+
+[server]
+address = ":8080"
+api_prefix = "/api/v1/"
+
+[processing]
+org_filter = "org.csv"
+
+[metrics]
+enabled = true
+
+[logging]
+
+[storage]
+driver = "postgres"
+datasource = "host=localhost port=5432 user=postgres password=postgres dbname=aggregator sslmode=disable"
