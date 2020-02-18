@@ -101,6 +101,7 @@ func (server HTTPServer) listOfOrganizations(writer http.ResponseWriter, request
 
 func (server HTTPServer) readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
 	organizationIDParam, found := mux.Vars(request)["organization"]
+	identityContext := request.Context().Value(contextKeyUser)
 
 	if !found {
 		// query parameter 'organization' can't be found in request, which might be caused by issue in Gorilla mux
@@ -109,6 +110,16 @@ func (server HTTPServer) readOrganizationID(writer http.ResponseWriter, request 
 		log.Println(message)
 		responses.SendInternalServerError(writer, message)
 		return 0, errors.New(message)
+	}
+
+	if identityContext != nil && !server.Config.Debug {
+		identity := identityContext.(Identity)
+		if identity.Internal.OrgID != organizationIDParam {
+			const message = "You have no permissions to get info about this organization"
+			log.Println(message)
+			responses.SendForbidden(writer, message)
+			return 0, errors.New(message)
+		}
 	}
 
 	organizationID, err := strconv.ParseInt(organizationIDParam, 10, 0)
@@ -144,6 +155,7 @@ func (server HTTPServer) readClusterName(writer http.ResponseWriter, request *ht
 
 func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := server.readOrganizationID(writer, request)
+
 	if err != nil {
 		// everything has been handled already
 		return
@@ -187,6 +199,9 @@ func (server HTTPServer) Initialize(address string) http.Handler {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(server.LogRequest)
+	if !server.Config.Debug {
+		router.Use(server.Authentication)
+	}
 
 	// common REST API endpoints
 	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
