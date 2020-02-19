@@ -44,8 +44,8 @@ const (
 )
 
 var (
-	serverInstance   *server.HTTPServer = nil
-	consumerInstance consumer.Consumer  = nil
+	serverInstance   *server.HTTPServer
+	consumerInstance consumer.Consumer
 )
 
 func startStorageConnection() (*storage.DBStorage, error) {
