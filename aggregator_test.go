@@ -17,6 +17,8 @@ limitations under the License.
 package main_test
 
 import (
+	"bytes"
+	"github.com/spf13/viper"
 	"os"
 	"testing"
 	"time"
@@ -100,12 +102,38 @@ func TestStartStorageConnection(t *testing.T) {
 
 func TestStartService(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		main.LoadConfiguration("config")
-		go func() {
-			main.WaitForServiceToStart()
-			main.StopService()
-		}()
-		main.StartService()
+		config := []byte(`
+			[broker]
+			address = "localhost:9093"
+			topic = "ccx.ocp.results"
+			group = "aggregator"
+			enabled = false
 
+			[server]
+			address = ":1234"
+			api_prefix = "/api/v1/"
+
+			[processing]
+			org_filter = "org.csv"
+
+			[metrics]
+			enabled = true
+
+			[logging]
+
+			[storage]
+			driver = "sqlite3"
+			datasource = ":memory:"
+		`)
+
+		viper.SetConfigType("toml")
+		viper.ReadConfig(bytes.NewBuffer(config))
+
+		go func() {
+			main.StartService()
+		}()
+
+		main.WaitForServiceToStart()
+		main.StopService()
 	}, 5*time.Second)
 }

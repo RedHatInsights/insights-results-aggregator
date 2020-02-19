@@ -29,6 +29,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
@@ -117,7 +119,15 @@ func startService() {
 
 func waitForServiceToStart() {
 	for {
-		if serverInstance != nil && consumerInstance != nil {
+		isStarted := true
+		if viper.Sub("broker").GetBool("enabled") && consumerInstance == nil {
+			isStarted = false
+		}
+		if serverInstance == nil {
+			isStarted = false
+		}
+
+		if isStarted {
 			// everything was initialized
 			break
 		}
@@ -128,16 +138,20 @@ func waitForServiceToStart() {
 func stopService() {
 	errCode := 0
 
-	err := serverInstance.Stop(context.TODO())
-	if err != nil {
-		log.Println(err)
-		errCode++
+	if serverInstance != nil {
+		err := serverInstance.Stop(context.TODO())
+		if err != nil {
+			log.Println(err)
+			errCode++
+		}
 	}
 
-	err = consumerInstance.Close()
-	if err != nil {
-		log.Println(err)
-		errCode++
+	if consumerInstance != nil {
+		err := consumerInstance.Close()
+		if err != nil {
+			log.Println(err)
+			errCode++
+		}
 	}
 
 	os.Exit(errCode)
