@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export TEST_KAFKA_ADDRESS=localhost:9092
+export TEST_KAFKA_ADDRESS=localhost:9093
 
 COLORS_RED='\033[0;31m'
 COLORS_RESET='\033[0m'
@@ -66,6 +66,16 @@ else
 	exit 1
 fi
 
+function start_kafka() {
+	cd ./local_storage/
+	./dockerize_kafka.sh || {
+		echo -e "${COLORS_RED}could not start kafka${COLORS_RESET}"
+		exit 1
+	}
+	cd ../
+	sleep 2
+}
+
 function start_service() {
 	echo "Starting a service"
 	case $db in
@@ -109,6 +119,7 @@ function test_rest_api() {
 	return $?
 }
 function test_message_processing() {
+	start_kafka
 	start_service
 	go test ./tests/consumer -v
 	return $?

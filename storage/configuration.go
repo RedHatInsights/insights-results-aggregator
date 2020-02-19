@@ -18,6 +18,7 @@ package storage
 
 // Configuration represents configuration of data storage
 type Configuration struct {
-	Driver     string
-	DataSource string
+	Driver        string
+	DataSource    string
+	LogSQLQueries bool
 }

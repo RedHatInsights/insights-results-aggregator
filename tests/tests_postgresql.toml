@@ -1,5 +1,5 @@
 [broker]
-address = "localhost:9092"
+address = "127.0.0.1:9093"
 topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = true
@@ -19,3 +19,4 @@ enabled = true
 [storage]
 driver = "postgres"
 datasource = "host=localhost port=5432 user=postgres password=postgres dbname=aggregator sslmode=disable"
+log_sql_queries = true

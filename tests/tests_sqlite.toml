@@ -1,8 +1,8 @@
 [broker]
-address = "localhost:9093"
+address = "127.0.0.1:9093"
 topic = "ccx.ocp.results"
 group = "aggregator"
-enabled = false
+enabled = true
 
 [server]
 address = ":8080"
@@ -19,3 +19,4 @@ enabled = true
 [storage]
 driver = "sqlite3"
 datasource = "./test.db"
+log_sql_queries = true

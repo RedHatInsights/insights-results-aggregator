@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -30,12 +31,12 @@ import (
 
 const (
 	testTopic       = "ccx.ocp.results"
-	testOrgID       = "1"
+	testOrgID       = "55"
 	testClusterName = "d88d9108-2fde-445c-9fde-28de92f09443"
 	testMessage     = `{
 		"OrgID": ` + testOrgID + `,
 		"ClusterName": "` + testClusterName + `",
-		"Report": "{}",
+		"Report": {},
 		"LastChecked": "2020-01-23T16:15:59.478901889Z"
 	}`
 	apiURL = "http://localhost:8080/api/v1"
