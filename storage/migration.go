@@ -22,7 +22,7 @@ import (
 )
 
 // MigrationVersion represents a version of the database.
-type MigrationVersion int
+type MigrationVersion uint
 
 // MigrationStep represents an action performed to either increase
 // or decrease the migration version of the database.
@@ -50,7 +50,7 @@ func InitMigrationInfo(db *DBStorage) error {
 		return err
 	}
 
-	_, err = tx.Exec("CREATE TABLE migration_info (version INTEGER)")
+	_, err = tx.Exec("CREATE TABLE migration_info (version INTEGER NOT NULL)")
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -67,17 +67,36 @@ func InitMigrationInfo(db *DBStorage) error {
 
 // GetDBVersion reads the current version of the database from the migration info table.
 func GetDBVersion(db *DBStorage) (MigrationVersion, error) {
-	versionRow := db.connection.QueryRow("SELECT version FROM migration_info")
+	rows, err := db.connection.Query("SELECT version FROM migration_info")
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	// Read the first (and hopefully the only) row in the table.
+	if !rows.Next() {
+		return 0, fmt.Errorf("Migration info table is empty")
+	}
+
 	var version MigrationVersion = 0
-	err := versionRow.Scan(&version)
-	return version, err
+	err = rows.Scan(&version)
+	if err != nil {
+		return 0, err
+	}
+
+	// Check if another row is available (it should NOT be).
+	if rows.Next() {
+		return 0, fmt.Errorf("Migration info table contain multiple rows")
+	}
+
+	return version, nil
 }
 
 // SetDBVersion attempts to get the database into the specified
 // target version using available migration steps.
 func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
 	migrationCount := len(migrations)
-	if targetVer < 0 || targetVer > MigrationVersion(migrationCount) {
+	if targetVer > MigrationVersion(migrationCount) {
 		return fmt.Errorf("Invalid target version (available version range is 0-%d)", migrationCount)
 	}
 
@@ -88,7 +107,7 @@ func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
 	}
 
 	// Current version is unexpectedly high.
-	if currentVer < 0 || currentVer > MigrationVersion(migrationCount) {
+	if currentVer > MigrationVersion(migrationCount) {
 		return fmt.Errorf("Current version (%d) is outside of available migration boundaries", currentVer)
 	}
 
