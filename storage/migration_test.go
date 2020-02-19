@@ -37,6 +37,8 @@ func mockDB(t *testing.T) *storage.DBStorage {
 // TestMigrationInit checks that database migration table initialization succeeds.
 func TestMigrationInit(t *testing.T) {
 	db := mockDB(t)
+	defer db.Close()
+
 	if err := storage.InitMigrationInfo(db); err != nil {
 		t.Fatal(err)
 	}
@@ -45,6 +47,7 @@ func TestMigrationInit(t *testing.T) {
 // TestMigrationGetVersion checks that the initial database migration version is 0.
 func TestMigrationGetVersion(t *testing.T) {
 	db := mockDB(t)
+	defer db.Close()
 
 	if err := storage.InitMigrationInfo(db); err != nil {
 		t.Fatal(err)
@@ -64,6 +67,7 @@ func TestMigrationGetVersion(t *testing.T) {
 // the database version in both direction (upgrade and downgrade).
 func TestMigrationSetVersion(t *testing.T) {
 	db := mockDB(t)
+	defer db.Close()
 
 	// Initialize migration info table.
 	if err := storage.InitMigrationInfo(db); err != nil {
