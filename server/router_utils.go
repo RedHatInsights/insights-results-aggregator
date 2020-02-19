@@ -18,7 +18,9 @@ type RouterMissingParamError struct {
 	paramName string
 }
 
-func (e *RouterMissingParamError) Error() string { return fmt.Sprintf("missing param %v", e.paramName) }
+func (e *RouterMissingParamError) Error() string {
+	return fmt.Sprintf("missing param %v", e.paramName)
+}
 
 // RouterParsingError parsing error, for example string when we expected integer
 type RouterParsingError struct {
