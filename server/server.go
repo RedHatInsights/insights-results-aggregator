@@ -18,9 +18,9 @@ limitations under the License.
 // Insights results aggregator service. In current version, the following
 // REST API endpoints are available:
 //
-// API_PREFIX/organization - list of all organizations (HTTP GET)
+// API_PREFIX/organizations - list of all organizations (HTTP GET)
 //
-// API_PREFIX/cluster/{organization} - list of all clusters for given organizations (HTTP GET)
+// API_PREFIX/organizations/{organization}/clusters - list of all clusters for given organization (HTTP GET)
 //
 // API_PREFIX/report/{organization}/{cluster} - insights OCP results for given cluster name (HTTP GET)
 //
@@ -190,8 +190,8 @@ func (server HTTPServer) Initialize(address string) http.Handler {
 
 	// common REST API endpoints
 	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"organization", server.listOfOrganizations).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"cluster/{organization}", server.listOfClustersForOrganization).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+"organizations", server.listOfOrganizations).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods("GET")
 	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
 
 	// Prometheus metrics
