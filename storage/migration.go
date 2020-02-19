@@ -111,6 +111,32 @@ func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
 		return fmt.Errorf("Current version (%d) is outside of available migration boundaries", currentVer)
 	}
 
+	return execMigrationStepsInTx(db, currentVer, targetVer)
+}
+
+// updateMigrationVersionInDB updates the migration version number in the migration info table.
+// This function does NOT rollback in case of an error. The calling function is expected to do that.
+func updateMigrationVersionInDB(tx *sql.Tx, newVersion MigrationVersion) error {
+	res, err := tx.Exec("UPDATE migration_info SET version=?", newVersion)
+	if err != nil {
+		return err
+	}
+
+	// Check that there is exactly 1 row in the migration info table.
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected != 1 {
+		return fmt.Errorf("Unexpected number of affected rows in migration info table (expected: 1, reality: %d)", affected)
+	}
+
+	return nil
+}
+
+// execMigrationStepsInTx executes the necessary migration steps in a single transaction.
+func execMigrationStepsInTx(db *DBStorage, currentVer, targetVer MigrationVersion) error {
 	// Already at target version.
 	if currentVer == targetVer {
 		return nil
@@ -122,6 +148,7 @@ func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
 		return err
 	}
 
+	// Upgrade to target version.
 	for currentVer < targetVer {
 		if err = migrations[currentVer].StepUp(tx); err != nil {
 			tx.Rollback()
@@ -130,6 +157,7 @@ func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
 		currentVer++
 	}
 
+	// Downgrade to target version.
 	for currentVer > targetVer {
 		if err = migrations[currentVer-1].StepDown(tx); err != nil {
 			tx.Rollback()
@@ -138,8 +166,7 @@ func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
 		currentVer--
 	}
 
-	_, err = tx.Exec("UPDATE migration_info SET version=?", currentVer)
-	if err != nil {
+	if err = updateMigrationVersionInDB(tx, currentVer); err != nil {
 		tx.Rollback()
 		return err
 	}
