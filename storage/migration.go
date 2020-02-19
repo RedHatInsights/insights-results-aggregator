@@ -36,11 +36,23 @@ type Migration struct {
 
 // migrations is a list of migrations that, when applied in their order,
 // create the most recent version of the database from scratch.
-var migrations []Migration
+var migrations []Migration = []Migration{}
+
+// GetHighestMigrationVersion returns the highest available migration version.
+// The DB version cannot be set to a value higher than this.
+// This value is equivalent to the length of the list of available migrations.
+func GetHighestMigrationVersion() MigrationVersion {
+	return MigrationVersion(len(migrations))
+}
 
 // AddMigration adds a new migration to the list of available migrations.
 func AddMigration(m Migration) {
 	migrations = append(migrations, m)
+}
+
+// ClearMigrations clears the list of available migrations.
+func ClearMigrations() {
+	migrations = []Migration{}
 }
 
 // InitMigrationInfo creates a table containing migration information in the database.
@@ -95,9 +107,9 @@ func GetDBVersion(db *DBStorage) (MigrationVersion, error) {
 // SetDBVersion attempts to get the database into the specified
 // target version using available migration steps.
 func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
-	migrationCount := len(migrations)
-	if targetVer > MigrationVersion(migrationCount) {
-		return fmt.Errorf("Invalid target version (available version range is 0-%d)", migrationCount)
+	maxVer := GetHighestMigrationVersion()
+	if targetVer > maxVer {
+		return fmt.Errorf("Invalid target version (available version range is 0-%d)", maxVer)
 	}
 
 	// Get current database version.
@@ -107,7 +119,7 @@ func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
 	}
 
 	// Current version is unexpectedly high.
-	if currentVer > MigrationVersion(migrationCount) {
+	if currentVer > maxVer {
 		return fmt.Errorf("Current version (%d) is outside of available migration boundaries", currentVer)
 	}
 
