@@ -34,8 +34,8 @@ func (e *RouterParsingError) Error() string {
 	)
 }
 
-// GetRouterParam retrieves parameter from URL like `/organization/{org_id}`
-func GetRouterParam(request *http.Request, paramName string) (string, error) {
+// getRouterParam retrieves parameter from URL like `/organization/{org_id}`
+func getRouterParam(request *http.Request, paramName string) (string, error) {
 	value, found := mux.Vars(request)[paramName]
 	if !found {
 		return "", &RouterMissingParamError{paramName: paramName}
@@ -44,10 +44,10 @@ func GetRouterParam(request *http.Request, paramName string) (string, error) {
 	return value, nil
 }
 
-// GetRouterIntParam retrieves parameter from URL like `/organization/{org_id}`
+// getRouterIntParam retrieves parameter from URL like `/organization/{org_id}`
 // and check it for being valid integer, otherwise returns error
-func GetRouterIntParam(request *http.Request, paramName string) (int64, error) {
-	value, err := GetRouterParam(request, paramName)
+func getRouterIntParam(request *http.Request, paramName string) (int64, error) {
+	value, err := getRouterParam(request, paramName)
 	if err != nil {
 		return 0, err
 	}
@@ -62,10 +62,10 @@ func GetRouterIntParam(request *http.Request, paramName string) (int64, error) {
 	return intValue, nil
 }
 
-// GetRouterPositiveIntParam retrieves parameter from URL like `/organization/{org_id}`
+// getRouterPositiveIntParam retrieves parameter from URL like `/organization/{org_id}`
 // and check it for being valid and positive integer, otherwise returns error
-func GetRouterPositiveIntParam(request *http.Request, paramName string) (int64, error) {
-	value, err := GetRouterIntParam(request, paramName)
+func getRouterPositiveIntParam(request *http.Request, paramName string) (int64, error) {
+	value, err := getRouterIntParam(request, paramName)
 	if err != nil {
 		return 0, err
 	}
@@ -82,7 +82,7 @@ func GetRouterPositiveIntParam(request *http.Request, paramName string) (int64, 
 // readClusterName retrieves cluster name from request
 // if it's not possible, it writes http error to the writer and returns error
 func readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
-	clusterName, err := GetRouterParam(request, "cluster")
+	clusterName, err := getRouterParam(request, "cluster")
 	if err != nil {
 		message := fmt.Sprintf("Cluster name is not provided %v", err.Error())
 		log.Println(message)
@@ -108,7 +108,7 @@ func readClusterName(writer http.ResponseWriter, request *http.Request) (types.C
 // readOrganizationID retrieves organization id from request
 // if it's not possible, it writes http error to the writer and returns error
 func readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
-	organizationID, err := GetRouterPositiveIntParam(request, "organization")
+	organizationID, err := getRouterPositiveIntParam(request, "organization")
 	if err != nil {
 		message := fmt.Sprintf("Error getting organization ID from request %v", err.Error())
 		log.Println(message)
