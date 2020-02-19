@@ -126,14 +126,21 @@ func waitForServiceToStart() {
 }
 
 func stopService() {
+	errCode := 0
+
 	err := serverInstance.Stop(context.TODO())
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		errCode++
 	}
+
 	err = consumerInstance.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		errCode++
 	}
+
+	os.Exit(errCode)
 }
 
 func main() {
