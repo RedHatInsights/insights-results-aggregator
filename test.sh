@@ -19,6 +19,7 @@ function cleanup()
 	for pid in $(print_descendent_pids $$); do
 		kill -9 $pid 2> /dev/null
 	done
+	sleep 1
 }
 trap cleanup EXIT
 
@@ -73,23 +74,22 @@ function start_kafka() {
 		exit 1
 	}
 	cd ../
-	sleep 2
+	sleep 3
 }
 
 function start_service() {
 	echo "Starting a service"
 	case $db in
 		postgresql)
-			INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests_postgresql \
-				./insights-results-aggregator || \
-				echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
+			export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests_postgresql
 			;;
 		*)
-			INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests_sqlite \
-				./insights-results-aggregator || \
-				echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
+			export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests_sqlite
 			;;
 	esac
+	# TODO: stop parent(this script) if service died
+	./insights-results-aggregator || \
+		echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
 	if [ $? -ne 0 ]; then
 		echo "Could not start the service"
 		exit 1
@@ -101,7 +101,6 @@ function test_metrics() {
 	return $?
 }
 function test_rest_api() {
-	start_service
 	echo "Building REST API tests utility"
 	go build -o rest-api-tests tests/rest_api_tests.go
 	if [ $? -eq 0 ]
@@ -119,13 +118,14 @@ function test_rest_api() {
 	return $?
 }
 function test_message_processing() {
-	start_kafka
-	start_service
 	go test ./tests/consumer -v
 	return $?
 }
 
 echo -e "------------------------------------------------------------------------------------------------"
+	
+start_kafka
+start_service
 
 case $1 in
 	metrics)

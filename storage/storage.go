@@ -182,7 +182,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
 	clusters := []types.ClusterName{}
 
-	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = ? ORDER BY cluster", orgID)
+	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster", orgID)
 	if err != nil {
 		return clusters, err
 	}
@@ -203,16 +203,9 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
 func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error) {
-	var query string
-
-	switch storage.dbDriverType {
-	case DBDriverSQLite:
-		query = "SELECT report FROM report WHERE org_id = ? AND cluster = ?"
-	default:
-		query = "SELECT report FROM report WHERE org_id = ? AND cluster = '?'"
-	}
-
-	rows, err := storage.connection.Query(query, orgID, clusterName)
+	rows, err := storage.connection.Query(
+		"SELECT report FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -228,6 +221,7 @@ func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName typ
 		log.Println("error", err)
 		return "", err
 	}
+
 	return "", &ItemNotFoundError{
 		ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
 	}
@@ -240,10 +234,19 @@ func (storage DBStorage) WriteReportForCluster(
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
 ) error {
-	statement, err := storage.connection.Prepare(
-		`INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at) 
-		 VALUES ($1, $2, $3, $4, $5)`,
-	)
+	var query string
+
+	switch storage.dbDriverType {
+	case DBDriverSQLite:
+		query = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at) 
+		 VALUES ($1, $2, $3, $4, $5)`
+	default:
+		query = `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
+		 VALUES ($1, $2, $3, $4, $5)
+		 ON CONFLICT (org_id, cluster) 
+		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`
+	}
+	statement, err := storage.connection.Prepare(query)
 	if err != nil {
 		return err
 	}

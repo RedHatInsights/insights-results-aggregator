@@ -25,6 +25,12 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+const (
+	testOrgID         = types.OrgID(1)
+	testClusterName   = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
+	testClusterReport = types.ClusterReport("")
+)
+
 // Create mocked storage based on in-memory Sqlite instance
 func getMockStorage(init bool) (storage.Storage, error) {
 	mockStorage, err := storage.New(storage.Configuration{
@@ -96,11 +102,10 @@ func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	}
 	defer mockStorage.Close()
 
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testClusterReport = types.ClusterReport("")
-
-	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
+	_, err = mockStorage.ReadReportForCluster(testOrgID, testClusterName)
+	if _, ok := err.(*storage.ItemNotFoundError); err == nil || !ok {
+		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
+	}
 }
 
 // TestMockDBStorageReadReportForClusterClosedStorage check the behaviour of method ReadReportForCluster
@@ -110,9 +115,6 @@ func TestMockDBStorageReadReportForClusterClosedStorage(t *testing.T) {
 		t.Fatal(err)
 	}
 	mockStorage.Close()
-
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
 
 	_, err = mockStorage.ReadReportForCluster(testOrgID, testClusterName)
 	expectErrorClosedStorage(t, err)
@@ -126,10 +128,6 @@ func TestMockDBStorageReadReportForCluster(t *testing.T) {
 	}
 	defer mockStorage.Close()
 
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testClusterReport = types.ClusterReport("{}")
-
 	writeReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
 	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
 }
@@ -141,10 +139,6 @@ func TestMockDBStorageReadReportNoTable(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer mockStorage.Close()
-
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testClusterReport = types.ClusterReport("{}")
 
 	_, err = mockStorage.ReadReportForCluster(testOrgID, testClusterName)
 	expectErrorEmptyTable(t, err)
@@ -158,11 +152,7 @@ func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 	}
 	mockStorage.Close()
 
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testReport = types.ClusterReport("{}")
-
-	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testReport, time.Now())
+	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterReport, time.Now())
 	expectErrorClosedStorage(t, err)
 }
 

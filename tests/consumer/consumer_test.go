@@ -17,13 +17,11 @@ package tests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/verdverm/frisby"
 
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -39,29 +37,60 @@ const (
 		"Report": {},
 		"LastChecked": "2020-01-23T16:15:59.478901889Z"
 	}`
-	apiURL = "http://localhost:8080/api/v1"
+	apiURL                           = "http://localhost:8080/api/v1"
+	testTimeout                      = 10 * time.Second
+	testProcessingMessageCheckPeriod = 1 * time.Second
 )
 
 // TestConsumingMessage writes message to kafka and expects results on rest api
 func TestConsumingMessage(t *testing.T) {
-	brokerCfg := helpers.GetTestBrokerCfg(t, testTopic)
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		brokerCfg := helpers.GetTestBrokerCfg(t, testTopic)
 
-	_, _, err := producer.ProduceMessage(brokerCfg, testMessage)
-	if err != nil {
-		t.Fatal(err)
-	}
+		_, _, err := producer.ProduceMessage(brokerCfg, testMessage)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	resp, err := http.Get(fmt.Sprintf("%v/report/%v/%v", apiURL, testOrgID, testClusterName))
-	if err != nil {
-		t.Fatal(err)
-	}
+		for {
+			// wait till message is actually processed
+			resp, err := http.Get(apiURL + fmt.Sprintf("/report/%v/%v", testOrgID, testClusterName))
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	defer resp.Body.Close()
+			resp.Body.Close()
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
+			if resp.StatusCode == http.StatusOK {
+				break
+			} else if resp.StatusCode != http.StatusNotFound {
+				t.Fatal(fmt.Errorf("unexpected response status %v", resp.Status))
+			}
 
-	assert.Equal(t, `{"report":"{}","status":"ok"}`, strings.TrimSpace(string(respBytes)))
+			time.Sleep(testProcessingMessageCheckPeriod)
+		}
+
+		frisby.Create("test consuming message /report/org_id/cluster_name").
+			Get(apiURL+fmt.Sprintf("/report/%v/%v", testOrgID, testClusterName)).
+			Send().
+			ExpectStatus(http.StatusOK).
+			ExpectJson("report", "{}").
+			ExpectJson("status", "ok")
+
+		frisby.Create("test consuming message /organization").
+			Get(apiURL + "/organization").
+			Send().
+			ExpectStatus(http.StatusOK).
+			Expect(helpers.FrisbyExpectItemInArray("organizations", 55))
+
+		frisby.Create("test consuming message /cluster/org_id").
+			Get(apiURL + fmt.Sprintf("/cluster/%v", testOrgID)).
+			Send().
+			ExpectStatus(http.StatusOK).
+			Expect(helpers.FrisbyExpectItemInArray("clusters", "d88d9108-2fde-445c-9fde-28de92f09443"))
+
+		for key, err := range frisby.Global.Errors() {
+			t.Fatal(key, err)
+		}
+	}, testTimeout)
 }
