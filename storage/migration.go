@@ -55,25 +55,37 @@ func ClearMigrations() {
 	migrations = []Migration{}
 }
 
-// InitMigrationInfo creates a table containing migration information in the database.
+// InitMigrationInfo ensures that the migration information table is created.
+// If it already exists, no changes will be made to the database.
+// Otherwise, a new migration information table will be created and initialized.
 func InitMigrationInfo(db *DBStorage) error {
 	tx, err := db.connection.Begin()
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec("CREATE TABLE migration_info (version INTEGER NOT NULL)")
-	if err != nil {
+	// Check if migration info table already exists.
+	countResult := tx.QueryRow("SELECT COUNT(*) FROM migration_info")
+	var rowCount int
+	err = countResult.Scan(&rowCount)
+	// If it exists, it must have exactly 1 row.
+	// If it doesn't exist, the "no such table" error is expected.
+	// Otherwise, there's something wrong.
+	if err == nil {
+		tx.Rollback()
+		if rowCount != 1 {
+			return fmt.Errorf("Unexpected number of rows in migration info table (expected: 1, reality: %d)", rowCount)
+		}
+		return nil
+	} else if err.Error() != "no such table: migration_info" {
 		tx.Rollback()
 		return err
 	}
 
-	_, err = tx.Exec("INSERT INTO migration_info(version) VALUES(0)")
-	if err != nil {
+	if err = initInfoTab(tx); err != nil {
 		tx.Rollback()
 		return err
 	}
-
 	return tx.Commit()
 }
 
@@ -124,6 +136,22 @@ func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
 	}
 
 	return execMigrationStepsInTx(db, currentVer, targetVer)
+}
+
+// initInfoTab performs the actual creation and initialization of the migration info table.
+// Transaction finalization (rollback/commit) is expected to be done by the calling function.
+func initInfoTab(tx *sql.Tx) error {
+	_, err := tx.Exec("CREATE TABLE migration_info (version INTEGER NOT NULL)")
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec("INSERT INTO migration_info(version) VALUES(0)")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // updateMigrationVersionInDB updates the migration version number in the migration info table.

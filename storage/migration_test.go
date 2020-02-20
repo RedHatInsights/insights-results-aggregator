@@ -109,6 +109,17 @@ func TestMigrationInit(t *testing.T) {
 	}
 }
 
+// TestMigrationReInit checks that an attempt to re-initialize an already initialized
+// migration info table will simply result in a no-op without any error.
+func TestMigrationReInit(t *testing.T) {
+	db := prepareDBAndMigrations(t)
+	defer db.Close()
+
+	if err := storage.InitMigrationInfo(db); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // TestMigrationGetVersion checks that the initial database migration version is 0.
 func TestMigrationGetVersion(t *testing.T) {
 	db := prepareDBAndMigrations(t)
