@@ -107,6 +107,20 @@ pg_db_name = "controller"
 pg_params = "sslmode=disable"
 ```
 
+### Migration mechanism
+
+This service contains an implementation of a simple database migration mechanism that allows semi-automatic transitions between various database versions as well as building the latest version of the database from scratch.
+
+Before using the migration mechanism, it is first necessary to initialize the migration information table `migration_info`. This can be done using the `storage.InitMigrationInfo(*storage.DBStorage)` function. Any attempt to get or set the database version without initializing this table first will result in a `no such table: migration_info` error from the SQL driver.
+
+To add a new migration level to the list of available migrations, use the `storage.AddMigration(storage.Migration)` function.
+
+To migrate the database to a certain version, in either direction (both upgrade and downgrade), use the `storage.SetDBVersion(*storage.DBStorage, storage.MigrationVersion)` function.
+
+**To upgrade the database to the highest available version, use `storage.SetDBVersion(db, storage.GetHighestMigrationVersion())`.** This will automatically perform all the necessary steps to migrate the database from its current version to the highest defined version.
+
+See `/storage/migration.go` documentation for an overview of all available DB migration functionality.
+
 ## Local setup
 
 ### Kafka broker
@@ -125,11 +139,11 @@ It is possible to use the script `produce_insights_results` from `utils` to prod
 
 ## Testing
 
-### Unit tests:
+### Unit tests
 
 `make test`
 
-### All integration tests:
+### All integration tests
 
 `make integration_tests`
 
