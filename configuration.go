@@ -18,15 +18,22 @@ limitations under the License.
 package main
 
 import (
+	"bufio"
+	"encoding/csv"
 	"fmt"
+	"github.com/deckarep/golang-set"
 	"github.com/spf13/viper"
+	"io"
+	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var (
@@ -75,12 +82,71 @@ func loadConfiguration(defaultConfigFile string) {
 }
 
 func loadBrokerConfiguration() broker.Configuration {
+	orgWhitelist := loadOrganizationWhitelist()
+
 	return broker.Configuration{
-		Address: brokerCfg.GetString("address"),
-		Topic:   brokerCfg.GetString("topic"),
-		Group:   brokerCfg.GetString("group"),
-		Enabled: brokerCfg.GetBool("enabled"),
+		Address:      brokerCfg.GetString("address"),
+		Topic:        brokerCfg.GetString("topic"),
+		Group:        brokerCfg.GetString("group"),
+		Enabled:      brokerCfg.GetBool("enabled"),
+		OrgWhitelist: orgWhitelist,
 	}
+}
+
+// getWhitelistFileName retrieves filename of organization whitelist from config file
+func getWhitelistFileName() string {
+	processingCfg := viper.Sub("processing")
+	fileName := processingCfg.GetString("org_whitelist")
+	return fileName
+}
+
+// createReaderFromFile creates a io.Reader from the given file
+func createReaderFromFile(fileName string) (io.Reader, error) {
+	csvFile, err := os.Open(fileName)
+	if err != nil {
+		return nil, fmt.Errorf("Error opening %v. Error: %v", fileName, err)
+	}
+	reader := bufio.NewReader(csvFile)
+	return reader, nil
+}
+
+// loadWhitelistFromCSV creates a new CSV reader and returns a Set of whitelisted org. IDs
+func loadWhitelistFromCSV(r io.Reader) (mapset.Set, error) {
+	whitelist := mapset.NewSet()
+
+	reader := csv.NewReader(r)
+
+	lines, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("Error reading CSV file: %v", err)
+	}
+
+	for index, line := range lines {
+		if index == 0 {
+			continue // skip header
+		}
+
+		orgID, err := strconv.Atoi(line[0]) // single record per line
+		if err != nil {
+			return nil, fmt.Errorf("Organization ID on line %v in whitelist CSV is not numerical. Found value: %v", index+1, line[0])
+		}
+
+		whitelist.Add(types.OrgID(orgID))
+	}
+	return whitelist, nil
+}
+
+func loadOrganizationWhitelist() mapset.Set {
+	fileName := getWhitelistFileName()
+	contentReader, err := createReaderFromFile(fileName)
+	if err != nil {
+		log.Fatalf("Organization whitelist file could not be opened. Error: %v", err)
+	}
+	whitelist, err := loadWhitelistFromCSV(contentReader)
+	if err != nil {
+		log.Fatalf("Whitelist CSV could not be processed. Error: %v", err)
+	}
+	return whitelist
 }
 
 func loadStorageConfiguration() storage.Configuration {

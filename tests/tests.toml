@@ -10,7 +10,7 @@ api_prefix = "/api/v1/"
 debug = true
 
 [processing]
-org_filter = "org.csv"
+org_whitelist = "org_whitelist.csv"
 
 [metrics]
 enabled = true

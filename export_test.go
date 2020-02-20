@@ -27,3 +27,6 @@ var LoadServerConfiguration = loadServerConfiguration
 var LoadStorageConfiguration = loadStorageConfiguration
 var StartService = startService
 var StartStorageConnection = startStorageConnection
+var LoadOrganizationWhitelist = loadOrganizationWhitelist
+var CreateReaderFromFile = createReaderFromFile
+var LoadWhitelistFromCSV = loadWhitelistFromCSV

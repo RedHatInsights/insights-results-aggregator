@@ -8,7 +8,7 @@ address = ":8080"
 api_prefix = "/api/v1/"
 
 [processing]
-org_filter = "org.csv"
+org_whitelist = "org_whitelist.csv"
 
 [metrics]
 enabled = true

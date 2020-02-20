@@ -109,6 +109,15 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 	return deserialized, nil
 }
 
+func organizationAllowed(consumer KafkaConsumer, orgID types.OrgID) bool {
+	whitelist := consumer.Configuration.OrgWhitelist
+	if whitelist == nil {
+		return false
+	}
+	orgWhitelisted := whitelist.Contains(int(orgID))
+	return orgWhitelisted
+}
+
 // Start starts consumer
 func (consumer KafkaConsumer) Start() error {
 	log.Printf("Consumer has been started, waiting for messages send to topic %s\n", consumer.Configuration.Topic)
@@ -132,6 +141,11 @@ func (consumer KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error 
 		return err
 	}
 	metrics.ConsumedMessages.Inc()
+
+	if ok := organizationAllowed(consumer, *message.Organization); !ok {
+		return errors.New("Organization ID is not whitelisted")
+	}
+
 	log.Printf("Results for organization %d and cluster %s", *message.Organization, *message.ClusterName)
 
 	reportAsStr, err := json.Marshal(*message.Report)
