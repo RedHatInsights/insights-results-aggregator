@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-  "github.com/deckarep/golang-set"
+	"github.com/deckarep/golang-set"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
@@ -232,7 +232,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 func TestProcessingMessageWithClosedStorage(t *testing.T) {
 	storage := helpers.MustGetMockStorage(t, true)
 
-	c := dummyConsumer(storage)
+	c := dummyConsumer(storage, false)
 
 	storage.Close()
 
@@ -255,7 +255,7 @@ func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 	storage := helpers.MustGetMockStorage(t, true)
 	defer storage.Close()
 
-	c := dummyConsumer(storage)
+	c := dummyConsumer(storage, true)
 
 	const messageValue = `
 {"OrgID":1,
@@ -268,6 +268,8 @@ func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 	message.Value = []byte(messageValue)
 	err := c.ProcessMessage(&message)
 	if _, ok := err.(*time.ParseError); err == nil || !ok {
-		t.Fatal(fmt.Errorf("Expected time.ParseError error because date format is wrong"))
+		t.Fatal(fmt.Errorf(
+			"Expected time.ParseError error because date format is wrong. Got %+v", err,
+		))
 	}
 }

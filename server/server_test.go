@@ -198,7 +198,7 @@ func TestListOfClustersForNonExistingOrganization(t *testing.T) {
 
 	server := server.New(config, mockStorage)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/1", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/1/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +219,7 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 
 	server := server.New(config, mockStorage)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/1", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/1/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -229,13 +229,15 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 	checkResponseBody(t, `{"clusters":["`+testClusterName+`"],"status":"ok"}`, response.Body)
 }
 
+// TestListOfClustersForOrganizationDBError expects db error
+// because the storage is closed before the query
 func TestListOfClustersForOrganizationDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	mockStorage.Close()
 
 	server := server.New(config, mockStorage)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/1", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/1/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -247,7 +249,7 @@ func TestListOfClustersForOrganizationDBError(t *testing.T) {
 func TestListOfClustersForOrganizationNegativeID(t *testing.T) {
 	server := server.New(config, nil)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/-1", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/-1/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -259,7 +261,7 @@ func TestListOfClustersForOrganizationNegativeID(t *testing.T) {
 func TestListOfClustersForOrganizationNonIntID(t *testing.T) {
 	server := server.New(config, nil)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"cluster/nonint", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/nonint/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -286,7 +288,7 @@ func TestListOfOrganizationsEmpty(t *testing.T) {
 
 	server := server.New(config, mockStorage)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"organization", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"organizations", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -312,7 +314,7 @@ func TestListOfOrganizationsOK(t *testing.T) {
 
 	server := server.New(config, mockStorage)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"organization", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"organizations", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -328,7 +330,7 @@ func TestListOfOrganizationsDBError(t *testing.T) {
 
 	server := server.New(config, mockStorage)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"organization", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"organizations", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -350,7 +352,7 @@ func TestServerStartError(t *testing.T) {
 }
 
 func TestGetRouterIntParamMissing(t *testing.T) {
-	request, err := http.NewRequest("GET", "cluster/", nil)
+	request, err := http.NewRequest("GET", "organizations//clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -407,7 +409,7 @@ func TestServerStart(t *testing.T) {
 			}
 
 			response := executeRequest(s, req).Result()
-			checkResponseCode(t, http.StatusOK, response.StatusCode)
+			checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 
 			// stopping the server
 			s.Stop(context.Background())

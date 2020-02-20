@@ -9,8 +9,8 @@ import (
 // GetMockStorage creates mocked storage based on in-memory Sqlite instance
 func GetMockStorage(init bool) (storage.Storage, error) {
 	mockStorage, err := storage.New(storage.Configuration{
-		Driver:     "sqlite3",
-		DataSource: ":memory:",
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
 	})
 	if err != nil {
 		return nil, err

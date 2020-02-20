@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 var configAuth = server.Configuration{
@@ -67,7 +68,7 @@ func TestInvalidJsonAuthToken(t *testing.T) {
 }
 
 func TestBadOrganizationID(t *testing.T) {
-	server := server.New(configAuth, nil)
+	server := server.New(configAuth, helpers.MustGetMockStorage(t, true))
 	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations/12345/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -76,5 +77,6 @@ func TestBadOrganizationID(t *testing.T) {
 	req.Header.Set("x-rh-identity", "eyJpZGVudGl0eSI6IHsiaW50ZXJuYWwiOiB7Im9yZ19pZCI6ICIxMjM0In19fQo=")
 
 	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+	checkResponseCode(t, http.StatusOK, response.StatusCode)
+	checkResponseBody(t, `{"clusters":[],"status":"ok"}`, response.Body)
 }

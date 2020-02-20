@@ -19,7 +19,6 @@ package main_test
 import (
 	"bytes"
 	"github.com/spf13/viper"
-	"os"
 	"testing"
 	"time"
 
@@ -47,9 +46,10 @@ func TestStartService(t *testing.T) {
 			[server]
 			address = ":1234"
 			api_prefix = "/api/v1/"
+			debug = true
 
 			[processing]
-			org_filter = "org.csv"
+			org_whitelist = "org_whitelist.csv"
 
 			[metrics]
 			enabled = true
@@ -57,8 +57,14 @@ func TestStartService(t *testing.T) {
 			[logging]
 
 			[storage]
-			driver = "sqlite3"
-			datasource = ":memory:"
+			db_driver = "sqlite3"
+			sqlite_datasource = ":memory:"
+			pg_username = ""
+			pg_password = ""
+			pg_host = ""
+			pg_port = 0
+			pg_db_name = ""
+			pg_params = ""
 		`)
 
 		viper.SetConfigType("toml")
