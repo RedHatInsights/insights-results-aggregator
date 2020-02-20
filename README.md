@@ -69,6 +69,21 @@ the actual driver will be postgres with password "your secret password"
 It's very usefull for deploying docker containers and keeping some of your configuration 
 outside of main config file(like passwords).
 
+## Server configuration
+
+Server configuration is in section `[server]` in config file.
+
+```
+[server]
+address = ":8080"
+api_prefix = "/api/v1/"
+debug = true
+```
+
+ - `address` is host and port which server should listen to
+ - `api_prefix` is prefix for RestAPI path
+ - `debug` is developer mode that turns off authentication
+
 ## Database
 
 By default aggregator uses SQLite3 DB, but also it has support of PostgreSQL. For starting PostgreSQL exist script in folder `local_storage`:

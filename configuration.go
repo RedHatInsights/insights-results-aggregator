@@ -100,5 +100,6 @@ func loadServerConfiguration() server.Configuration {
 	return server.Configuration{
 		Address:   serverCfg.GetString("address"),
 		APIPrefix: serverCfg.GetString("api_prefix"),
+		Debug:     serverCfg.GetBool("debug"),
 	}
 }
