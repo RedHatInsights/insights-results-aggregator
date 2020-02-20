@@ -91,22 +91,8 @@ func New(configuration Configuration) (*DBStorage, error) {
 		}
 	}
 
-	var dataSource string
-	switch configuration.Driver {
-	case "sqlite3":
-		dataSource = configuration.SQLiteDataSource
-	case "postgres":
-
-		dataSource = fmt.Sprintf(
-			"postgresql://%v:%v@%v:%v/%v?%v",
-			configuration.PGUsername,
-			configuration.PGPassword,
-			configuration.PGHost,
-			configuration.PGPort,
-			configuration.PGDBName,
-			configuration.PGParams,
-		)
-	default:
+	dataSource, err := getDataSourceFromConfig(configuration)
+	if err != nil {
 		return nil, fmt.Errorf("Driver %v is not supported", configuration.Driver)
 	}
 
@@ -134,6 +120,25 @@ func New(configuration Configuration) (*DBStorage, error) {
 		configuration: configuration,
 		dbDriverType:  driverType,
 	}, nil
+}
+
+func getDataSourceFromConfig(configuration Configuration) (string, error) {
+	switch configuration.Driver {
+	case "sqlite3":
+		return configuration.SQLiteDataSource, nil
+	case "postgres":
+		return fmt.Sprintf(
+			"postgresql://%v:%v@%v:%v/%v?%v",
+			configuration.PGUsername,
+			configuration.PGPassword,
+			configuration.PGHost,
+			configuration.PGPort,
+			configuration.PGDBName,
+			configuration.PGParams,
+		), nil
+	}
+
+	return "", fmt.Errorf("Driver %v is not supported", configuration.Driver)
 }
 
 // Init method is doing initialization like creating tables in underlying database
