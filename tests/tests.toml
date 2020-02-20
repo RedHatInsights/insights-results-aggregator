@@ -7,6 +7,7 @@ enabled = false
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
+debug = true
 
 [processing]
 org_filter = "org.csv"

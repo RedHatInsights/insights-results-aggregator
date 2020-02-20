@@ -20,4 +20,5 @@ package server
 type Configuration struct {
 	Address   string
 	APIPrefix string
+	Debug     bool
 }
