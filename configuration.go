@@ -85,8 +85,14 @@ func loadBrokerConfiguration() broker.Configuration {
 
 func loadStorageConfiguration() storage.Configuration {
 	return storage.Configuration{
-		Driver:     storageCfg.GetString("driver"),
-		DataSource: storageCfg.GetString("datasource"),
+		Driver:           storageCfg.GetString("db_driver"),
+		SQLiteDataSource: storageCfg.GetString("sqlite_datasource"),
+		PGUsername:       storageCfg.GetString("pg_username"),
+		PGPassword:       storageCfg.GetString("pg_password"),
+		PGHost:           storageCfg.GetString("pg_host"),
+		PGPort:           storageCfg.GetInt("pg_port"),
+		PGDBName:         storageCfg.GetString("pg_db_name"),
+		PGParams:         storageCfg.GetString("pg_params"),
 	}
 }
 

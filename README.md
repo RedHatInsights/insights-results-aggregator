@@ -46,19 +46,25 @@ Also each key in config can be overwritten by corresponding env var. For example
 ```
 ...
 [storage]
-driver = "sqlite3"
-datasource = "./aggregator.db"
+db_driver = "sqlite3"
+sqlite_datasource = "./aggregator.db"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = ""
 ...
 ```
 
 and environment variables 
 
 ```
-INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DRIVER="postgres"
-INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DATASOURCE="postgresql://user:password@localhost:5432/dbname?param1=value1"
+INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER="postgres"
+INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD="your secret password"
 ```
 
-the actual driver will be postgres with connection string for postgres. 
+the actual driver will be postgres with password "your secret password"
 
 It's very usefull for deploying docker containers and keeping some of your configuration 
 outside of main config file(like passwords).
@@ -74,8 +80,13 @@ For establish connection to PostgreSQL, the following configuration options need
 
 ```
 [storage]
-driver = "postgres"
-datasource = "postgres://postgres:postgres@localhost/controller?sslmode=disable"
+db_driver = "postgres"
+pg_username = "postgres"
+pg_password = "postgres"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "controller"
+pg_params = "sslmode=disable"
 ```
 
 ## Local setup
