@@ -17,6 +17,7 @@ limitations under the License.
 package storage_test
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -94,6 +95,40 @@ func TestNewStorage(t *testing.T) {
 	}
 }
 
+// TestNewStorage checks whether constructor for new storage returns error for improper storage configuration
+func TestNewStorageError(t *testing.T) {
+	_, err := storage.New(storage.Configuration{
+		Driver:     "non existing driver",
+		DataSource: "",
+	})
+
+	if err == nil {
+		t.Fatal("Error expected")
+	}
+}
+
+// TestNewStorageWithLogging tests creatign new storage with logs
+func TestNewStorageWithLoggingError(t *testing.T) {
+	s, _ := storage.New(storage.Configuration{
+		Driver:        "postgres",
+		DataSource:    "postgresql://user:pass@localhost:1234/non_existing_db",
+		LogSQLQueries: true,
+	})
+
+	if err := s.Init(); err == nil {
+		t.Fatal("Error needs to be reported for improper storage")
+	}
+
+	_, err := storage.New(storage.Configuration{
+		Driver:        "non existing driver",
+		DataSource:    "",
+		LogSQLQueries: true,
+	})
+	if err == nil {
+		t.Fatal(fmt.Errorf("error expected"))
+	}
+}
+
 // TestMockDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
 func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	mockStorage, err := getMockStorage(true)
@@ -106,6 +141,12 @@ func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	if _, ok := err.(*storage.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
+
+	assert.Equal(
+		t,
+		fmt.Sprintf("Item with ID %+v/%+v was not found in the storage", testOrgID, testClusterName),
+		err.Error(),
+	)
 }
 
 // TestMockDBStorageReadReportForClusterClosedStorage check the behaviour of method ReadReportForCluster

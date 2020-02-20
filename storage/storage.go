@@ -81,16 +81,6 @@ type DBStorage struct {
 // New function creates and initializes a new instance of Storage interface
 func New(configuration Configuration) (*DBStorage, error) {
 	driverName := configuration.Driver
-	var driverType DBDriver
-
-	switch {
-	case strings.HasPrefix(driverName, "sqlite"):
-		driverType = DBDriverSQLite
-	case strings.HasPrefix(driverName, "postgres"):
-		driverType = DBDriverPostgres
-	default:
-		return nil, fmt.Errorf("driver %v is not supported", driverName)
-	}
 
 	if configuration.LogSQLQueries {
 		logger := log.New(os.Stdout, "[sql]", log.LstdFlags)
@@ -107,6 +97,17 @@ func New(configuration Configuration) (*DBStorage, error) {
 	if err != nil {
 		log.Println("Can not connect to data storage", err)
 		return nil, err
+	}
+
+	var driverType DBDriver
+
+	switch {
+	case strings.HasPrefix(driverName, "sqlite"):
+		driverType = DBDriverSQLite
+	case strings.HasPrefix(driverName, "postgres"):
+		driverType = DBDriverPostgres
+	default:
+		return nil, fmt.Errorf("driver %v is not supported", driverName)
 	}
 
 	return &DBStorage{

@@ -10,5 +10,5 @@ type ItemNotFoundError struct {
 }
 
 func (e *ItemNotFoundError) Error() string {
-	return fmt.Sprintf("Item with ID %s was not found in the storage", e.ItemID)
+	return fmt.Sprintf("Item with ID %+v was not found in the storage", e.ItemID)
 }
