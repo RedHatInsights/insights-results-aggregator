@@ -9,6 +9,7 @@ type ItemNotFoundError struct {
 	ItemID interface{}
 }
 
+// Error returns error string
 func (e *ItemNotFoundError) Error() string {
 	return fmt.Sprintf("Item with ID %+v was not found in the storage", e.ItemID)
 }

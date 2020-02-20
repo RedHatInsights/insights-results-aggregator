@@ -29,6 +29,7 @@ const (
 // second arg is params array
 const logFormatterString = "query `%+v` with params `%+v`"
 
+// Before is called before the query was executed allowing yout to log what you asked db to do
 func (h *sqlHooks) Before(ctx context.Context, query string, args ...interface{}) (context.Context, error) {
 	jsonArgs, err := json.Marshal(args)
 	if err == nil {
@@ -40,6 +41,8 @@ func (h *sqlHooks) Before(ctx context.Context, query string, args ...interface{}
 	return context.WithValue(ctx, sqlHooksKeyQueryBeginTime, time.Now()), nil
 }
 
+// After is called after the query was executed showing only successful ones
+// it allows you to see how long your query took
 func (h *sqlHooks) After(ctx context.Context, query string, args ...interface{}) (context.Context, error) {
 	beginTime := ctx.Value(sqlHooksKeyQueryBeginTime).(time.Time)
 
