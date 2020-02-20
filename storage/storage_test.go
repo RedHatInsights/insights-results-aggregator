@@ -98,8 +98,7 @@ func TestNewStorage(t *testing.T) {
 // TestNewStorage checks whether constructor for new storage returns error for improper storage configuration
 func TestNewStorageError(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
-		Driver:     "non existing driver",
-		DataSource: "",
+		Driver: "non existing driver",
 	})
 
 	if err == nil {
@@ -111,7 +110,7 @@ func TestNewStorageError(t *testing.T) {
 func TestNewStorageWithLoggingError(t *testing.T) {
 	s, _ := storage.New(storage.Configuration{
 		Driver:        "postgres",
-		DataSource:    "postgresql://user:pass@localhost:1234/non_existing_db",
+		PGPort:        1234,
 		LogSQLQueries: true,
 	})
 
@@ -121,7 +120,6 @@ func TestNewStorageWithLoggingError(t *testing.T) {
 
 	_, err := storage.New(storage.Configuration{
 		Driver:        "non existing driver",
-		DataSource:    "",
 		LogSQLQueries: true,
 	})
 	if err == nil {
@@ -155,6 +153,7 @@ func TestMockDBStorageReadReportForClusterClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	mockStorage.Close()
 
 	_, err = mockStorage.ReadReportForCluster(testOrgID, testClusterName)
@@ -173,7 +172,8 @@ func TestMockDBStorageReadReportForCluster(t *testing.T) {
 	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
 }
 
-// TestMockDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster when the table with results does not exist
+// TestMockDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster
+// when the table with results does not exist
 func TestMockDBStorageReadReportNoTable(t *testing.T) {
 	mockStorage, err := getMockStorage(false)
 	if err != nil {
@@ -191,6 +191,7 @@ func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	mockStorage.Close()
 
 	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterReport, time.Now())
@@ -233,6 +234,7 @@ func TestMockDBStorageListOfOrgsClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	mockStorage.Close()
 
 	_, err = mockStorage.ListOfOrgs()
@@ -288,6 +290,7 @@ func TestMockDBStorageListOfClustersClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	mockStorage.Close()
 
 	_, err = mockStorage.ListOfClustersForOrg(5)
@@ -335,6 +338,7 @@ func TestMockDBReportsCountClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	mockStorage.Close()
 
 	_, err = mockStorage.ReportsCount()

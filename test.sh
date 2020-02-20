@@ -40,22 +40,8 @@ else
 fi
 
 rm -f test.db
-db=$(printenv DATABASE)
-echo "Creating test database. DB engine is $db"
-case $db in
-	postgresql)
-		cd ./local_storage/
-		./dockerize_postgres.sh
-		# TODO: doesn't work without sleep, fix it
-		# probably we need to wait for postgres to start
-		sleep 2
-		cd ../
-		;;
-	*)
-		./local_storage/create_test_database_sqlite.sh
-		export TEST_DB_DRIVER="sqlite3"
-		;;
-esac
+echo "Creating test database..."
+./local_storage/create_test_database_sqlite.sh
 if [ $? -eq 0 ]
 then
 	echo "Done"
@@ -66,16 +52,8 @@ fi
 
 function start_service() {
 	echo "Starting a service"
-	case $db in
-		postgresql)
-			export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests_postgresql
-			;;
-		*)
-			export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests_sqlite
-			;;
-	esac
 	# TODO: stop parent(this script) if service died
-	./insights-results-aggregator || \
+	INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests ./insights-results-aggregator || \
 		echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
 	if [ $? -ne 0 ]; then
 		echo "Could not start the service"

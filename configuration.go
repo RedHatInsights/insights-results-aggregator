@@ -97,6 +97,7 @@ func loadBrokerConfiguration() broker.Configuration {
 func getWhitelistFileName() string {
 	processingCfg := viper.Sub("processing")
 	fileName := processingCfg.GetString("org_whitelist")
+
 	return fileName
 }
 
@@ -150,7 +151,6 @@ func loadOrganizationWhitelist() mapset.Set {
 }
 
 func loadStorageConfiguration() storage.Configuration {
-	storageCfg := viper.Sub("storage")
 	return storage.Configuration{
 		Driver:           storageCfg.GetString("db_driver"),
 		SQLiteDataSource: storageCfg.GetString("sqlite_datasource"),
