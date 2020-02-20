@@ -6,7 +6,7 @@ info:
   version: 0.1.0
 
 paths:
-  /organization:
+  /organizations:
     get:
       summary: Returns a list of available organization IDs.
       description: List of organizations for which at least one Insights report is available via the API.
@@ -28,7 +28,7 @@ paths:
                     type: string
                     example: "ok"
 
-  /cluster/{orgId}:
+  /organizations/{orgId}/clusters:
     get:
       summary: Returns a list of clusters associated with the specified organization ID.
       parameters:

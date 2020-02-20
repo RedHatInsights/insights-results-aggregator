@@ -66,8 +66,27 @@ type DBStorage struct {
 
 // New function creates and initializes a new instance of Storage interface
 func New(configuration Configuration) (*DBStorage, error) {
-	log.Printf("Making connection to data storage, driver=%s datasource=%s", configuration.Driver, configuration.DataSource)
-	connection, err := sql.Open(configuration.Driver, configuration.DataSource)
+	var dataSource string
+	switch configuration.Driver {
+	case "sqlite3":
+		dataSource = configuration.SQLiteDataSource
+	case "postgres":
+
+		dataSource = fmt.Sprintf(
+			"postgresql://%v:%v@%v:%v/%v?%v",
+			configuration.PGUsername,
+			configuration.PGPassword,
+			configuration.PGHost,
+			configuration.PGPort,
+			configuration.PGDBName,
+			configuration.PGParams,
+		)
+	default:
+		return nil, fmt.Errorf("Driver %v is not supported", configuration.Driver)
+	}
+
+	log.Printf("Making connection to data storage, driver=%s datasource=%s", configuration.Driver, dataSource)
+	connection, err := sql.Open(configuration.Driver, dataSource)
 
 	if err != nil {
 		log.Println("Can not connect to data storage", err)

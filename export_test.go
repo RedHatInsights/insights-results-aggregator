@@ -29,3 +29,6 @@ var StartStorageConnection = startStorageConnection
 var StartService = startService
 var StopService = stopService
 var WaitForServiceToStart = waitForServiceToStart
+var LoadOrganizationWhitelist = loadOrganizationWhitelist
+var CreateReaderFromFile = createReaderFromFile
+var LoadWhitelistFromCSV = loadWhitelistFromCSV

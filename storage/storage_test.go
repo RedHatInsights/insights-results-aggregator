@@ -79,8 +79,8 @@ func expectErrorClosedStorage(t *testing.T, err error) {
 // TestNewStorage checks whether constructor for new storage returns error for improper storage configuration
 func TestNewStorage(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
-		Driver:     "",
-		DataSource: "",
+		Driver:           "",
+		SQLiteDataSource: "",
 	})
 
 	if err == nil {

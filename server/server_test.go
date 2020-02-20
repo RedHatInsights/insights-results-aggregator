@@ -35,6 +35,7 @@ import (
 var config = server.Configuration{
 	Address:   ":8080",
 	APIPrefix: "/api/test/",
+	Debug:     true,
 }
 
 const (

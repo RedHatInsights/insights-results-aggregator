@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+  "github.com/deckarep/golang-set"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
@@ -32,8 +33,8 @@ import (
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
 	storageCfg := storage.Configuration{
-		Driver:     "sqlite3",
-		DataSource: ":memory:",
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
 	}
 	storage, err := storage.New(storageCfg)
 	if err != nil {
@@ -161,11 +162,14 @@ func TestParseMessageWithoutReport(t *testing.T) {
 	}
 }
 
-func dummyConsumer(s storage.Storage) consumer.Consumer {
+func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 	brokerCfg := broker.Configuration{
 		Address: "localhost:1234",
 		Topic:   "topic",
 		Group:   "group",
+	}
+	if whitelist {
+		brokerCfg.OrgWhitelist = mapset.NewSetWith(1)
 	}
 	return consumer.KafkaConsumer{
 		Configuration:     brokerCfg,
@@ -174,12 +178,11 @@ func dummyConsumer(s storage.Storage) consumer.Consumer {
 		Storage:           s,
 	}
 }
-
 func TestProcessEmptyMessage(t *testing.T) {
 	storage := helpers.MustGetMockStorage(t, true)
 	defer storage.Close()
 
-	c := dummyConsumer(storage)
+	c := dummyConsumer(storage, true)
 
 	message := sarama.ConsumerMessage{}
 	// messsage is empty -> nothing should be written into storage
@@ -198,7 +201,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 	storage := helpers.MustGetMockStorage(t, true)
 	defer storage.Close()
 
-	c := dummyConsumer(storage)
+	c := dummyConsumer(storage, true)
 
 	const messageValue = `
 {"OrgID":1,
