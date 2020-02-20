@@ -97,10 +97,7 @@ func TestStartStorageConnection(t *testing.T) {
 }
 
 func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
-	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
-	if err != nil {
-		t.Fatal(err)
-	}
+	os.Clearenv()
 
 	main.LoadConfiguration("tests/config1")
 
