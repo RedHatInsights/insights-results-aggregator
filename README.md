@@ -36,6 +36,39 @@ All packages developed in this project have documentation available on [GoDoc se
 * [package `storage`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/storage)
 * [package `types`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/types)
 
+## Configuration
+
+Configuration is done by toml config, default one is `config.toml` in working directory, 
+but it can be overwritten by `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE` env var. 
+
+Also each key in config can be overwritten by corresponding env var. For example if you have config
+
+```
+...
+[storage]
+db_driver = "sqlite3"
+sqlite_datasource = "./aggregator.db"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = ""
+...
+```
+
+and environment variables 
+
+```
+INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER="postgres"
+INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD="your secret password"
+```
+
+the actual driver will be postgres with password "your secret password"
+
+It's very usefull for deploying docker containers and keeping some of your configuration 
+outside of main config file(like passwords).
+
 ## Server configuration
 
 Server configuration is in section `[server]` in config file.
@@ -62,8 +95,13 @@ For establish connection to PostgreSQL, the following configuration options need
 
 ```
 [storage]
-driver = "postgres"
-datasource = "postgres://postgres:postgres@localhost/controller?sslmode=disable"
+db_driver = "postgres"
+pg_username = "postgres"
+pg_password = "postgres"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "controller"
+pg_params = "sslmode=disable"
 ```
 
 ## Local setup

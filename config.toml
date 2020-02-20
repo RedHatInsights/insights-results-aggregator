@@ -18,5 +18,11 @@ enabled = true
 [logging]
 
 [storage]
-driver = "sqlite3"
-datasource = "./aggregator.db"
+db_driver = "sqlite3"
+sqlite_datasource = "./aggregator.db"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5472
+pg_db_name = "aggregator"
+pg_params = ""

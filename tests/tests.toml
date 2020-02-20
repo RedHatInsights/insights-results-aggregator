@@ -18,5 +18,11 @@ enabled = true
 [logging]
 
 [storage]
-driver = "sqlite3"
-datasource = "./test.db"
+db_driver = "sqlite3"
+sqlite_datasource = "./test.db"
+pg_username = ""
+pg_password = ""
+pg_host = ""
+pg_port = 0
+pg_db_name = ""
+pg_params = ""

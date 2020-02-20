@@ -18,6 +18,8 @@ package main_test
 
 import (
 	"github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -82,8 +84,8 @@ func TestLoadStorageConfiguration(t *testing.T) {
 	if storageCfg.Driver != "sqlite3" {
 		t.Fatal("Improper DB driver name", storageCfg.Driver)
 	}
-	if storageCfg.DataSource != "xyzzy" {
-		t.Fatal("Improper DB data source name", storageCfg.DataSource)
+	if storageCfg.SQLiteDataSource != "xyzzy" {
+		t.Fatal("Improper DB data source name", storageCfg.SQLiteDataSource)
 	}
 }
 
@@ -93,4 +95,40 @@ func TestStartStorageConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("Cannot create storage object", err)
 	}
+}
+
+func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
+	os.Clearenv()
+
+	main.LoadConfiguration("tests/config1")
+
+	storageCfg := main.LoadStorageConfiguration()
+	assert.Equal(t, storage.Configuration{
+		Driver:           "sqlite3",
+		SQLiteDataSource: "xyzzy",
+		PGUsername:       "user",
+		PGPassword:       "password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "",
+	}, storageCfg)
+
+	os.Setenv("INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
+	os.Setenv(
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD",
+		"some very secret password",
+	)
+
+	storageCfg = main.LoadStorageConfiguration()
+	assert.Equal(t, storage.Configuration{
+		Driver:           "postgres",
+		SQLiteDataSource: "xyzzy",
+		PGUsername:       "user",
+		PGPassword:       "some very secret password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "",
+	}, storageCfg)
 }
