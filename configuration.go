@@ -36,6 +36,12 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+var (
+	brokerCfg  *viper.Viper
+	storageCfg *viper.Viper
+	serverCfg  *viper.Viper
+)
+
 func loadConfiguration(defaultConfigFile string) {
 	configFile, specified := os.LookupEnv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
 	if specified {
@@ -50,15 +56,34 @@ func loadConfiguration(defaultConfigFile string) {
 		viper.SetConfigName(defaultConfigFile)
 		viper.AddConfigPath(".")
 	}
+
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error config file: %s", err))
 	}
+
+	// override config from env if there's variable in env
+
+	// workaround because if this issue https://github.com/spf13/viper/issues/507
+	storageCfg = viper.Sub("storage")
+	brokerCfg = viper.Sub("broker")
+	serverCfg = viper.Sub("server")
+
+	const envPrefix = "INSIGHTS_RESULTS_AGGREGATOR__"
+
+	brokerCfg.AutomaticEnv()
+	brokerCfg.SetEnvPrefix(envPrefix + "BROKER_")
+
+	storageCfg.AutomaticEnv()
+	storageCfg.SetEnvPrefix(envPrefix + "STORAGE_")
+
+	serverCfg.AutomaticEnv()
+	serverCfg.SetEnvPrefix(envPrefix + "SERVER_")
 }
 
 func loadBrokerConfiguration() broker.Configuration {
 	orgWhitelist := loadOrganizationWhitelist()
-	brokerCfg := viper.Sub("broker")
+
 	return broker.Configuration{
 		Address:      brokerCfg.GetString("address"),
 		Topic:        brokerCfg.GetString("topic"),
@@ -68,12 +93,14 @@ func loadBrokerConfiguration() broker.Configuration {
 	}
 }
 
+// getWhitelistFileName retrieves filename of organization whitelist from config file
 func getWhitelistFileName() string {
 	processingCfg := viper.Sub("processing")
 	fileName := processingCfg.GetString("org_whitelist")
 	return fileName
 }
 
+// createReaderFromFile creates a io.Reader from the given file
 func createReaderFromFile(fileName string) (io.Reader, error) {
 	csvFile, err := os.Open(fileName)
 	if err != nil {
@@ -83,6 +110,7 @@ func createReaderFromFile(fileName string) (io.Reader, error) {
 	return reader, nil
 }
 
+// loadWhitelistFromCSV creates a new CSV reader and returns a Set of whitelisted org. IDs
 func loadWhitelistFromCSV(r io.Reader) (mapset.Set, error) {
 	whitelist := mapset.NewSet()
 
@@ -122,17 +150,22 @@ func loadOrganizationWhitelist() mapset.Set {
 }
 
 func loadStorageConfiguration() storage.Configuration {
-	storageCfg := viper.Sub("storage")
 	return storage.Configuration{
-		Driver:     storageCfg.GetString("driver"),
-		DataSource: storageCfg.GetString("datasource"),
+		Driver:           storageCfg.GetString("db_driver"),
+		SQLiteDataSource: storageCfg.GetString("sqlite_datasource"),
+		PGUsername:       storageCfg.GetString("pg_username"),
+		PGPassword:       storageCfg.GetString("pg_password"),
+		PGHost:           storageCfg.GetString("pg_host"),
+		PGPort:           storageCfg.GetInt("pg_port"),
+		PGDBName:         storageCfg.GetString("pg_db_name"),
+		PGParams:         storageCfg.GetString("pg_params"),
 	}
 }
 
 func loadServerConfiguration() server.Configuration {
-	serverCfg := viper.Sub("server")
 	return server.Configuration{
 		Address:   serverCfg.GetString("address"),
 		APIPrefix: serverCfg.GetString("api_prefix"),
+		Debug:     serverCfg.GetBool("debug"),
 	}
 }

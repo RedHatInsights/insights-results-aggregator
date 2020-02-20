@@ -29,8 +29,8 @@ import (
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
 	storageCfg := storage.Configuration{
-		Driver:     "sqlite3",
-		DataSource: ":memory:",
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
 	}
 	storage, err := storage.New(storageCfg)
 	if err != nil {
@@ -160,8 +160,8 @@ func TestParseMessageWithoutReport(t *testing.T) {
 
 func memoryStorage() (storage.Storage, error) {
 	storageCfg := storage.Configuration{
-		Driver:     "sqlite3",
-		DataSource: ":memory:",
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
 	}
 	storage, err := storage.New(storageCfg)
 	if err != nil {

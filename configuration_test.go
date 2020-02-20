@@ -18,8 +18,10 @@ package main_test
 
 import (
 	"github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/deckarep/golang-set"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
@@ -91,9 +93,46 @@ func TestLoadStorageConfiguration(t *testing.T) {
 	if storageCfg.Driver != "sqlite3" {
 		t.Fatal("Improper DB driver name", storageCfg.Driver)
 	}
-	if storageCfg.DataSource != "xyzzy" {
-		t.Fatal("Improper DB data source name", storageCfg.DataSource)
+	if storageCfg.SQLiteDataSource != "xyzzy" {
+		t.Fatal("Improper DB data source name", storageCfg.SQLiteDataSource)
 	}
+}
+
+// TestLoadConfigurationOverrideFromEnv tests overriden configuration by env variables
+func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
+	os.Clearenv()
+
+	main.LoadConfiguration("tests/config1")
+
+	storageCfg := main.LoadStorageConfiguration()
+	assert.Equal(t, storage.Configuration{
+		Driver:           "sqlite3",
+		SQLiteDataSource: "xyzzy",
+		PGUsername:       "user",
+		PGPassword:       "password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "",
+	}, storageCfg)
+
+	os.Setenv("INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
+	os.Setenv(
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD",
+		"some very secret password",
+	)
+
+	storageCfg = main.LoadStorageConfiguration()
+	assert.Equal(t, storage.Configuration{
+		Driver:           "postgres",
+		SQLiteDataSource: "xyzzy",
+		PGUsername:       "user",
+		PGPassword:       "some very secret password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "",
+	}, storageCfg)
 }
 
 // TestLoadOrganizationWhitelist tests if the whitelist CSV file gets loaded properly
@@ -109,6 +148,7 @@ func TestLoadOrganizationWhitelist(t *testing.T) {
 	}
 }
 
+// TestCreateReaderFromFile tests error loading a non existent file
 func TestCreateReaderFromFile(t *testing.T) {
 	_, err := main.CreateReaderFromFile("nonexistent.file")
 	if err == nil {
@@ -116,6 +156,7 @@ func TestCreateReaderFromFile(t *testing.T) {
 	}
 }
 
+// TestLoadWhitelistFromCSVExtraParam tests incorrect CSV format
 func TestLoadWhitelistFromCSVExtraParam(t *testing.T) {
 	extraParamCSV := `OrgID
 1,2
@@ -128,6 +169,7 @@ func TestLoadWhitelistFromCSVExtraParam(t *testing.T) {
 	}
 }
 
+// TestLoadWhitelistFromCSVNonInt tests non-integer ID in CSV
 func TestLoadWhitelistFromCSVNonInt(t *testing.T) {
 	nonIntIDCSV := `OrgID
 str
