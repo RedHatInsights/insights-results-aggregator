@@ -20,7 +20,7 @@ package storage
 type Configuration struct {
 	Driver           string
 	SQLiteDataSource string
-	LogSQLQueries bool
+	LogSQLQueries    bool
 	PGUsername       string
 	PGPassword       string
 	PGHost           string
