@@ -61,12 +61,11 @@ func loadBrokerConfiguration() broker.Configuration {
 
 func loadStorageConfiguration() storage.Configuration {
 	storageCfg := viper.Sub("storage")
-	logSQLQueries := strings.ToLower(storageCfg.GetString("log_sql_queries"))
 
 	return storage.Configuration{
 		Driver:        storageCfg.GetString("driver"),
 		DataSource:    storageCfg.GetString("datasource"),
-		LogSQLQueries: strings.HasPrefix(logSQLQueries, "t"),
+		LogSQLQueries: storageCfg.GetBool("log_sql_queries"),
 	}
 }
 
