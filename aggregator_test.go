@@ -18,6 +18,7 @@ package main_test
 
 import (
 	"github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -93,4 +94,31 @@ func TestStartStorageConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("Cannot create storage object", err)
 	}
+}
+
+func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
+	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	main.LoadConfiguration("tests/config1")
+
+	storageCfg := main.LoadStorageConfiguration()
+	assert.Equal(t, "sqlite3", storageCfg.Driver)
+	assert.Equal(t, "xyzzy", storageCfg.DataSource)
+
+	os.Setenv("INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DRIVER", "postgres")
+	os.Setenv(
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DATASOURCE",
+		"postgresql://user:password@localhost:5432/dbname?param1=value1",
+	)
+
+	storageCfg = main.LoadStorageConfiguration()
+	assert.Equal(t, "postgres", storageCfg.Driver)
+	assert.Equal(
+		t,
+		"postgresql://user:password@localhost:5432/dbname?param1=value1",
+		storageCfg.DataSource,
+	)
 }

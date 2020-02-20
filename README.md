@@ -36,6 +36,33 @@ All packages developed in this project have documentation available on [GoDoc se
 * [package `storage`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/storage)
 * [package `types`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/types)
 
+## Configuration
+
+Configuration is done by toml config, default one is `config.toml` in working directory, 
+but it can be overwritten by `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE` env var. 
+
+Also each key in config can be overwritten by corresponding env var. For example if you have config
+
+```
+...
+[storage]
+driver = "sqlite3"
+datasource = "./aggregator.db"
+...
+```
+
+and environment variables 
+
+```
+INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DRIVER="postgres"
+INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DATASOURCE="postgresql://user:password@localhost:5432/dbname?param1=value1"
+```
+
+the actual driver will be postgres with connection string for postgres. 
+
+It's very usefull for deploying docker containers and keeping some of your configuration 
+outside of main config file(like passwords).
+
 ## Database
 
 By default aggregator uses SQLite3 DB, but also it has support of PostgreSQL. For starting PostgreSQL exist script in folder `local_storage`:
