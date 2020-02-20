@@ -27,6 +27,7 @@ import (
 var config = server.Configuration{
 	Address:   ":8080",
 	APIPrefix: "/api/test/",
+	Debug:     true,
 }
 
 func executeRequest(server *server.HTTPServer, req *http.Request) *httptest.ResponseRecorder {

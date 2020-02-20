@@ -7,9 +7,10 @@ enabled = true
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
+debug = true
 
 [processing]
-org_filter = "org.csv"
+org_whitelist = "org_whitelist.csv"
 
 [metrics]
 enabled = true
@@ -17,5 +18,11 @@ enabled = true
 [logging]
 
 [storage]
-driver = "sqlite3"
-datasource = "./aggregator.db"
+db_driver = "sqlite3"
+sqlite_datasource = "./aggregator.db"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5472
+pg_db_name = "aggregator"
+pg_params = ""

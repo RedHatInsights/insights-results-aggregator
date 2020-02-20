@@ -35,8 +35,8 @@ const (
 // Create mocked storage based on in-memory Sqlite instance
 func getMockStorage(init bool) (storage.Storage, error) {
 	mockStorage, err := storage.New(storage.Configuration{
-		Driver:     "sqlite3",
-		DataSource: ":memory:",
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
 	})
 	if err != nil {
 		return nil, err
@@ -86,8 +86,8 @@ func expectErrorClosedStorage(t *testing.T, err error) {
 // TestNewStorage checks whether constructor for new storage returns error for improper storage configuration
 func TestNewStorage(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
-		Driver:     "",
-		DataSource: "",
+		Driver:           "",
+		SQLiteDataSource: "",
 	})
 
 	if err == nil {

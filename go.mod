@@ -7,6 +7,7 @@ require (
 	github.com/Shopify/sarama v1.26.0
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/gchaincl/sqlhooks v1.3.0
+	github.com/deckarep/golang-set v1.7.1
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.3
 	github.com/lib/pq v1.3.0

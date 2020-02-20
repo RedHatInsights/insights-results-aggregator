@@ -16,10 +16,15 @@ limitations under the License.
 
 package broker
 
+import (
+	"github.com/deckarep/golang-set"
+)
+
 // Configuration represents configuration of Kafka broker
 type Configuration struct {
-	Address string
-	Topic   string
-	Group   string
-	Enabled bool
+	Address      string
+	Topic        string
+	Group        string
+	Enabled      bool
+	OrgWhitelist mapset.Set
 }

@@ -18,7 +18,13 @@ package storage
 
 // Configuration represents configuration of data storage
 type Configuration struct {
-	Driver        string
-	DataSource    string
+	Driver           string
+	SQLiteDataSource string
 	LogSQLQueries bool
+	PGUsername       string
+	PGPassword       string
+	PGHost           string
+	PGPort           int
+	PGDBName         string
+	PGParams         string
 }
