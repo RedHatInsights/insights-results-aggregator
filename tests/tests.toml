@@ -1,0 +1,28 @@
+[broker]
+address = "localhost:9093"
+topic = "ccx.ocp.results"
+group = "aggregator"
+enabled = false
+
+[server]
+address = ":8080"
+api_prefix = "/api/v1/"
+debug = true
+
+[processing]
+org_whitelist = "org_whitelist.csv"
+
+[metrics]
+enabled = true
+
+[logging]
+
+[storage]
+db_driver = "sqlite3"
+sqlite_datasource = "./test.db"
+pg_username = ""
+pg_password = ""
+pg_host = ""
+pg_port = 0
+pg_db_name = ""
+pg_params = ""

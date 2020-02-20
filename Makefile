@@ -36,23 +36,11 @@ test: clean build ## Run the unit tests
 
 integration_tests: ## Run all integration tests
 	@echo "Running all integration tests"
-	@DATABASE=sqlite ./test.sh && \
-		DATABASE=postgresql ./test.sh
+	@./test.sh
 
 rest_api_tests: ## Run REST API tests
 	@echo "Running REST API tests"
-	@DATABASE=sqlite ./test.sh rest_api && \
-		DATABASE=postgresql ./test.sh rest_api
-
-metrics_tests: ## Run metrics tests
-	@echo "Running metrics tests"
-	@DATABASE=sqlite ./test.sh metrics && \
-		DATABASE=postgresql ./test.sh metrics
-
-message_processing_tests: ## Run message processing tests
-	@echo "Running message processing tests"
-	@DATABASE=sqlite ./test.sh message_processing && \
-		DATABASE=postgresql ./test.sh message_processing
+	@./test.sh rest_api
 
 sqlite_db:
 	mv aggregator.db aggragator.db.backup

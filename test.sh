@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-export TEST_KAFKA_ADDRESS=localhost:9093
-
 COLORS_RED='\033[0;31m'
 COLORS_RESET='\033[0m'
 
@@ -31,7 +29,6 @@ if fuser test.db &> /dev/null; then
 fi
 
 go clean -testcache
-
 go build -race
 
 if [ $? -eq 0 ]
@@ -67,16 +64,6 @@ else
 	exit 1
 fi
 
-function start_kafka() {
-	cd ./local_storage/
-	./dockerize_kafka.sh || {
-		echo -e "${COLORS_RED}could not start kafka${COLORS_RESET}"
-		exit 1
-	}
-	cd ../
-	sleep 3
-}
-
 function start_service() {
 	echo "Starting a service"
 	case $db in
@@ -96,10 +83,6 @@ function start_service() {
 	fi
 }
 
-function test_metrics() {
-	go test ./tests/metrics
-	return $?
-}
 function test_rest_api() {
 	echo "Building REST API tests utility"
 	go build -o rest-api-tests tests/rest_api_tests.go
@@ -117,27 +100,14 @@ function test_rest_api() {
 	./rest-api-tests
 	return $?
 }
-function test_message_processing() {
-	go test ./tests/consumer -v
-	return $?
-}
 
 echo -e "------------------------------------------------------------------------------------------------"
 	
-start_kafka
 start_service
 
 case $1 in
-	metrics)
-		test_metrics
-		EXIT_VALUE=$?
-		;;
 	rest_api)
 		test_rest_api
-		EXIT_VALUE=$?
-		;;
-	message_processing)
-		test_message_processing
 		EXIT_VALUE=$?
 		;;
 	*)
@@ -145,11 +115,7 @@ case $1 in
 		# exit value will be 0 if every test returned 0
 		EXIT_VALUE=0
 
-		test_metrics
-		EXIT_VALUE=$(($EXIT_VALUE + $?))
 		test_rest_api
-		EXIT_VALUE=$(($EXIT_VALUE + $?))
-		test_message_processing
 		EXIT_VALUE=$(($EXIT_VALUE + $?))
 		;;
 esac
