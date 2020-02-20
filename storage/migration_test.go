@@ -49,8 +49,8 @@ var (
 
 func prepareDB(t *testing.T) *storage.DBStorage {
 	mockStorage, err := storage.New(storage.Configuration{
-		Driver:     "sqlite3",
-		DataSource: ":memory:",
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
 	})
 	if err != nil {
 		t.Fatal(err)
