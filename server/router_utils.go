@@ -66,19 +66,26 @@ func getRouterIntParam(request *http.Request, paramName string) (int64, error) {
 
 // getRouterPositiveIntParam retrieves parameter from URL like `/organization/{org_id}`
 // and check it for being valid and positive integer, otherwise returns error
-func getRouterPositiveIntParam(request *http.Request, paramName string) (int64, error) {
-	value, err := getRouterIntParam(request, paramName)
+func getRouterPositiveIntParam(request *http.Request, paramName string) (uint64, error) {
+	value, err := getRouterParam(request, paramName)
 	if err != nil {
 		return 0, err
 	}
 
-	if value <= 0 {
+	uintValue, err := strconv.ParseUint(value, 10, 64)
+	if err != nil {
 		return 0, &RouterParsingError{
-			paramName: paramName, paramValue: value, errString: "positive integer expected",
+			paramName: paramName, paramValue: value, errString: "unsigned integer expected",
 		}
 	}
 
-	return value, nil
+	if uintValue == 0 {
+		return 0, &RouterParsingError{
+			paramName: paramName, paramValue: value, errString: "positive value expected",
+		}
+	}
+
+	return uintValue, nil
 }
 
 // readClusterName retrieves cluster name from request
@@ -124,5 +131,5 @@ func readOrganizationID(writer http.ResponseWriter, request *http.Request) (type
 		return 0, err
 	}
 
-	return types.OrgID(int(organizationID)), nil
+	return types.OrgID(organizationID), nil
 }

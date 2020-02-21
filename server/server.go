@@ -106,7 +106,7 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 		return
 	}
 
-	clusters, err := server.Storage.ListOfClustersForOrg(types.OrgID(int(organizationID)))
+	clusters, err := server.Storage.ListOfClustersForOrg(types.OrgID(organizationID))
 	if err != nil {
 		log.Println("Unable to get list of clusters", err)
 		responses.SendInternalServerError(writer, err.Error())
