@@ -271,3 +271,16 @@ func TestMockDBReportsCountClosedStorage(t *testing.T) {
 	_, err := mockStorage.ReportsCount()
 	expectErrorClosedStorage(t, err)
 }
+
+func TestDBStorageNewPostgresqlError(t *testing.T) {
+	s, _ := storage.New(storage.Configuration{
+		Driver: "postgres",
+		PGHost: "non-existing-host",
+		PGPort: 12345,
+	})
+
+	err := s.Init()
+	if err == nil {
+		t.Fatal(fmt.Errorf("error expected, got %v", err))
+	}
+}

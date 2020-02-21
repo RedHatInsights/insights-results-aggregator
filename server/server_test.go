@@ -402,6 +402,14 @@ func TestServerStart(t *testing.T) {
 		}, nil)
 
 		go func() {
+			for {
+				if s.Serv != nil {
+					break
+				}
+
+				time.Sleep(500 * time.Millisecond)
+			}
+
 			// doing some request to be sure server started succesfully
 			req, err := http.NewRequest("GET", config.APIPrefix, nil)
 			if err != nil {

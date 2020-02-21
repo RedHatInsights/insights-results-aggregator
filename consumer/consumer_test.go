@@ -23,12 +23,29 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+)
+
+const (
+	testTopicName = "topic"
+	testMessage   = `{
+		"OrgID": 1,
+		"ClusterName": "aaaaaaaa-bbbb-cccc-dddd-000000000000",
+		"Report": "{}",
+		"LastChecked": "2020-01-23T16:15:59.478901889Z"
+	}`
+	// time limit for *some* tests which can stuck in forever loop
+	testCaseTimeLimit = 10 * time.Second
+)
+
+var (
+	testOrgWhiteList = mapset.NewSetWith(1)
 )
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
@@ -75,7 +92,7 @@ func TestParseMessageWithWrongContent(t *testing.T) {
 		t.Fatal("Error is expected to be returned for message that has improper content")
 	}
 	errorMessage := err.Error()
-	if !strings.HasPrefix(errorMessage, "Missing required attribute 'OrgID'") {
+	if !strings.HasPrefix(errorMessage, "missing required attribute 'OrgID'") {
 		t.Fatal("Improper error message: " + errorMessage)
 	}
 }
@@ -124,7 +141,7 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
 		t.Fatal("Error is expected to be returned for a wrong ClusterName format")
 	}
 	errorMessage := err.Error()
-	if !strings.HasPrefix(errorMessage, "Cluster name is not a UUID") {
+	if !strings.HasPrefix(errorMessage, "cluster name is not a UUID") {
 		t.Fatal("Improper error message: " + errorMessage)
 	}
 }
@@ -171,7 +188,7 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 	if whitelist {
 		brokerCfg.OrgWhitelist = mapset.NewSetWith(1)
 	}
-	return consumer.KafkaConsumer{
+	return &consumer.KafkaConsumer{
 		Configuration:     brokerCfg,
 		Consumer:          nil,
 		PartitionConsumer: nil,
@@ -272,4 +289,73 @@ func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 			"Expected time.ParseError error because date format is wrong. Got %+v", err,
 		))
 	}
+}
+
+func TestKafkaConsumerMockOK(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+			t,
+			testTopicName,
+			testOrgWhiteList,
+			[]string{testMessage},
+		)
+
+		go mockConsumer.Serve()
+
+		// wait for message processing
+		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+
+		err := mockConsumer.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, uint64(1), mockConsumer.GetNumberOfSuccessfullyConsumedMessages())
+		assert.Equal(t, uint64(0), mockConsumer.GetNumberOfErrorsConsumingMessages())
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumerMockBadMessage(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+			t, testTopicName, testOrgWhiteList, []string{"bad message"},
+		)
+
+		go mockConsumer.Serve()
+
+		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+
+		err := mockConsumer.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, uint64(0), mockConsumer.GetNumberOfSuccessfullyConsumedMessages())
+		assert.Equal(t, uint64(1), mockConsumer.GetNumberOfErrorsConsumingMessages())
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+			t, testTopicName, testOrgWhiteList, []string{testMessage},
+		)
+
+		err := mockConsumer.Storage.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		go mockConsumer.Serve()
+
+		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+
+		err = mockConsumer.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, uint64(0), mockConsumer.GetNumberOfSuccessfullyConsumedMessages())
+		assert.Equal(t, uint64(1), mockConsumer.GetNumberOfErrorsConsumingMessages())
+	}, testCaseTimeLimit)
 }

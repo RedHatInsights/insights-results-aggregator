@@ -85,12 +85,9 @@ func startConsumer() {
 		log.Println(err)
 		os.Exit(ExitStatusConsumerError)
 	}
+
 	defer consumerInstance.Close()
-	err = consumerInstance.Start()
-	if err != nil {
-		log.Println(err)
-		os.Exit(ExitStatusConsumerError)
-	}
+	consumerInstance.Serve()
 }
 
 func startServer() {
