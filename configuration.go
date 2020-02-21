@@ -149,6 +149,18 @@ func loadOrganizationWhitelist() mapset.Set {
 	return whitelist
 }
 
+func getAPISpecFile() (string, error) {
+	specFile := serverCfg.GetString("api_spec_file")
+
+	fileInfo, err := os.Stat(specFile)
+	if os.IsNotExist(err) {
+		return specFile, err
+	}
+
+	name := fileInfo.Name()
+	return name, nil
+}
+
 func loadStorageConfiguration() storage.Configuration {
 	return storage.Configuration{
 		Driver:           storageCfg.GetString("db_driver"),
@@ -163,9 +175,14 @@ func loadStorageConfiguration() storage.Configuration {
 }
 
 func loadServerConfiguration() server.Configuration {
+	apiSpecFile, err := getAPISpecFile()
+	if err != nil {
+		log.Fatalf("All customer facing APIs MUST serve the current OpenAPI specification. Error: %s", err)
+	}
 	return server.Configuration{
-		Address:   serverCfg.GetString("address"),
-		APIPrefix: serverCfg.GetString("api_prefix"),
-		Debug:     serverCfg.GetBool("debug"),
+		Address:     serverCfg.GetString("address"),
+		APIPrefix:   serverCfg.GetString("api_prefix"),
+		APISpecFile: apiSpecFile,
+		Debug:       serverCfg.GetBool("debug"),
 	}
 }
