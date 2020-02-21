@@ -35,7 +35,7 @@ import (
 var config = server.Configuration{
 	Address:     ":8080",
 	APIPrefix:   "/api/test/",
-	APISpecFile: "openapi.yml",
+	APISpecFile: "openapi.json",
 	Debug:       true,
 }
 

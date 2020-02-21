@@ -170,7 +170,7 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods("GET")
 
 	// OpenAPI specs
-	router.HandleFunc(server.Config.APIPrefix+server.Config.APISpecFile, server.serveAPISpecFile).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods("GET")
 
 	return router
 }
