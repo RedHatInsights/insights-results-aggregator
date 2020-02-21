@@ -265,12 +265,15 @@ func (storage DBStorage) WriteReportForCluster(
 	case DBDriverSQLite:
 		query = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at) 
 		 VALUES ($1, $2, $3, $4, $5)`
-	default:
+	case DBDriverPostgres:
 		query = `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
 		 VALUES ($1, $2, $3, $4, $5)
 		 ON CONFLICT (org_id, cluster) 
 		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`
+	default:
+		return fmt.Errorf("Writing report with DB %v is not supported", storage.dbDriverType)
 	}
+
 	statement, err := storage.connection.Prepare(query)
 	if err != nil {
 		return err
