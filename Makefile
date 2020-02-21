@@ -42,10 +42,6 @@ rest_api_tests: ## Run REST API tests
 	@echo "Running REST API tests"
 	@./test.sh rest_api
 
-metrics_tests: ## Run metrics tests
-	@echo "Running metrics tests"
-	@./test.sh metrics
-
 sqlite_db:
 	mv aggregator.db aggragator.db.backup
 	local_storage/create_database_sqlite.sh

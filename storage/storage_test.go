@@ -17,12 +17,19 @@ limitations under the License.
 package storage_test
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+)
+
+const (
+	testOrgID         = types.OrgID(1)
+	testClusterName   = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
+	testClusterReport = types.ClusterReport("")
 )
 
 // Create mocked storage based on in-memory Sqlite instance
@@ -88,6 +95,38 @@ func TestNewStorage(t *testing.T) {
 	}
 }
 
+// TestNewStorage checks whether constructor for new storage returns error for improper storage configuration
+func TestNewStorageError(t *testing.T) {
+	_, err := storage.New(storage.Configuration{
+		Driver: "non existing driver",
+	})
+
+	if err == nil {
+		t.Fatal("Error expected")
+	}
+}
+
+// TestNewStorageWithLogging tests creatign new storage with logs
+func TestNewStorageWithLoggingError(t *testing.T) {
+	s, _ := storage.New(storage.Configuration{
+		Driver:        "postgres",
+		PGPort:        1234,
+		LogSQLQueries: true,
+	})
+
+	if err := s.Init(); err == nil {
+		t.Fatal("Error needs to be reported for improper storage")
+	}
+
+	_, err := storage.New(storage.Configuration{
+		Driver:        "non existing driver",
+		LogSQLQueries: true,
+	})
+	if err == nil {
+		t.Fatal(fmt.Errorf("error expected"))
+	}
+}
+
 // TestMockDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
 func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	mockStorage, err := getMockStorage(true)
@@ -96,11 +135,16 @@ func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	}
 	defer mockStorage.Close()
 
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testClusterReport = types.ClusterReport("")
+	_, err = mockStorage.ReadReportForCluster(testOrgID, testClusterName)
+	if _, ok := err.(*storage.ItemNotFoundError); err == nil || !ok {
+		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
+	}
 
-	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
+	assert.Equal(
+		t,
+		fmt.Sprintf("Item with ID %+v/%+v was not found in the storage", testOrgID, testClusterName),
+		err.Error(),
+	)
 }
 
 // TestMockDBStorageReadReportForClusterClosedStorage check the behaviour of method ReadReportForCluster
@@ -109,10 +153,8 @@ func TestMockDBStorageReadReportForClusterClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	mockStorage.Close()
 
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
+	mockStorage.Close()
 
 	_, err = mockStorage.ReadReportForCluster(testOrgID, testClusterName)
 	expectErrorClosedStorage(t, err)
@@ -126,25 +168,18 @@ func TestMockDBStorageReadReportForCluster(t *testing.T) {
 	}
 	defer mockStorage.Close()
 
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testClusterReport = types.ClusterReport("{}")
-
 	writeReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
 	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, testClusterReport)
 }
 
-// TestMockDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster when the table with results does not exist
+// TestMockDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster
+// when the table with results does not exist
 func TestMockDBStorageReadReportNoTable(t *testing.T) {
 	mockStorage, err := getMockStorage(false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer mockStorage.Close()
-
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testClusterReport = types.ClusterReport("{}")
 
 	_, err = mockStorage.ReadReportForCluster(testOrgID, testClusterName)
 	expectErrorEmptyTable(t, err)
@@ -156,13 +191,10 @@ func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	mockStorage.Close()
 
-	const testOrgID = types.OrgID(1)
-	const testClusterName = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	const testReport = types.ClusterReport("{}")
-
-	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testReport, time.Now())
+	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterReport, time.Now())
 	expectErrorClosedStorage(t, err)
 }
 
@@ -202,6 +234,7 @@ func TestMockDBStorageListOfOrgsClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	mockStorage.Close()
 
 	_, err = mockStorage.ListOfOrgs()
@@ -257,6 +290,7 @@ func TestMockDBStorageListOfClustersClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	mockStorage.Close()
 
 	_, err = mockStorage.ListOfClustersForOrg(5)
@@ -304,6 +338,7 @@ func TestMockDBReportsCountClosedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	mockStorage.Close()
 
 	_, err = mockStorage.ReportsCount()
