@@ -27,26 +27,67 @@ const (
 )
 
 var (
-	testOrgWhiteList = mapset.NewSetWith(1)
+	testOrgWhiteList = mapset.NewSetWith(1, 2, 3)
+	testBrokerCfg    = broker.Configuration{
+		Address:      kafkaAddress,
+		Topic:        testTopicName,
+		Group:        "",
+		Enabled:      true,
+		OrgWhitelist: testOrgWhiteList,
+	}
 )
+
+func mustNewKafkaConsumer(t *testing.T) *consumer.KafkaConsumer {
+	kafkaConsumer, err := consumer.New(testBrokerCfg, helpers.MustGetMockStorage(t, true))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return kafkaConsumer
+}
+
+func mustProcessNextMessage(t *testing.T, kafkaConsumer *consumer.KafkaConsumer) string {
+	msg := <-kafkaConsumer.PartitionConsumer.Messages()
+	if msg == nil {
+		t.Fatal("message expected")
+	}
+
+	err := kafkaConsumer.ProcessMessage(msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return string(msg.Value)
+}
 
 // TestConsumerOffset test that kafka consumes messages from the correct offset
 func TestConsumerOffset(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		brokerCfg := broker.Configuration{
-			Address:      kafkaAddress,
-			Topic:        testTopicName,
-			Group:        "",
-			Enabled:      true,
-			OrgWhitelist: testOrgWhiteList,
-		}
+		const (
+			message1 = `{
+				"OrgID": 1,
+				"ClusterName": "aaaaaaaa-bbbb-cccc-dddd-000000000001",
+				"Report": "{}",
+				"LastChecked": "2020-01-23T16:15:59.478901889Z"
+			}`
+			message2 = `{
+				"OrgID": 2,
+				"ClusterName": "aaaaaaaa-bbbb-cccc-dddd-000000000002",
+				"Report": "{}",
+				"LastChecked": "2020-01-23T16:15:59.478901889Z"
+			}`
+			message3 = `{
+				"OrgID": 3,
+				"ClusterName": "aaaaaaaa-bbbb-cccc-dddd-000000000003",
+				"Report": "{}",
+				"LastChecked": "2020-01-23T16:15:59.478901889Z"
+			}`
+		)
 
-		// remove topic with all messages
-		// b := sarama.NewBroker(kafkaAddress)
-		// b.DeleteTopic()
 		saramaConf := sarama.NewConfig()
+		// deleting topics is supported from this version
 		saramaConf.Version = sarama.V0_10_1_0
 
+		// remove topic with all messages
 		clusterAdmin, err := sarama.NewClusterAdmin([]string{kafkaAddress}, saramaConf)
 		if err != nil {
 			t.Fatal(err)
@@ -57,32 +98,26 @@ func TestConsumerOffset(t *testing.T) {
 		}
 
 		mustProduceMessage := func(message string) {
-			_, _, err := producer.ProduceMessage(brokerCfg, message)
+			_, _, err := producer.ProduceMessage(testBrokerCfg, message)
 			if err != nil {
 				t.Fatal(err)
 			}
 		}
 
 		// produce some messages
-		mustProduceMessage("message1")
-		mustProduceMessage("message2")
+		mustProduceMessage(message1)
+		mustProduceMessage(message2)
 
 		// then connect
-		kafkaConsumer, err := consumer.New(brokerCfg, helpers.MustGetMockStorage(t, true))
-		if err != nil {
-			t.Fatal(err)
-		}
+		kafkaConsumer := mustNewKafkaConsumer(t)
 
 		// and produce one more message
-		mustProduceMessage("message3")
+		mustProduceMessage(message3)
 
-		msg := <-kafkaConsumer.PartitionConsumer.Messages()
-		if msg == nil {
-			t.Fatal("message expected")
-		}
+		message := mustProcessNextMessage(t, kafkaConsumer)
 
 		// we expect it to start consuming from the beginning
-		assert.Equal(t, "message1", string(msg.Value))
+		assert.Equal(t, message1, message)
 
 		// disconnect, connect again and expect it to remember offset
 		err = kafkaConsumer.Close()
@@ -90,16 +125,10 @@ func TestConsumerOffset(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		kafkaConsumer, err = consumer.New(brokerCfg, helpers.MustGetMockStorage(t, true))
-		if err != nil {
-			t.Fatal(err)
-		}
+		kafkaConsumer = mustNewKafkaConsumer(t)
 
-		msg = <-kafkaConsumer.PartitionConsumer.Messages()
-		if msg == nil {
-			t.Fatal("message expected")
-		}
+		message = mustProcessNextMessage(t, kafkaConsumer)
 
-		assert.Equal(t, "message2", string(msg.Value))
+		assert.Equal(t, message2, message)
 	}, testCaseTimeLimit)
 }
