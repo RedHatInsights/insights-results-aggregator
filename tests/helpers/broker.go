@@ -14,18 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package storage
+package helpers
 
 import (
-	"fmt"
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/RedHatInsights/insights-results-aggregator/broker"
 )
 
-// ItemNotFoundError shows that item with id ItemID wasn't found in the storage
-type ItemNotFoundError struct {
-	ItemID interface{}
-}
+// GetTestBrokerCfg returns config for a broker with address set in env var TEST_KAFKA_ADDRESS
+func GetTestBrokerCfg(t *testing.T, topic string) broker.Configuration {
+	brokerCfg := broker.Configuration{
+		Address: os.Getenv("TEST_KAFKA_ADDRESS"),
+		Topic:   topic,
+		Group:   "",
+	}
 
-// Error returns error string
-func (e *ItemNotFoundError) Error() string {
-	return fmt.Sprintf("Item with ID %+v was not found in the storage", e.ItemID)
+	assert.NotEmpty(
+		t,
+		brokerCfg.Address,
+		`Please, set up TEST_KAFKA_ADDRESS env variable. For example "localhost:9092"`,
+	)
+
+	return brokerCfg
 }

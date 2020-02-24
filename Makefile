@@ -42,13 +42,13 @@ rest_api_tests: ## Run REST API tests
 	@echo "Running REST API tests"
 	@./test.sh rest_api
 
-metrics_tests: ## Run metrics tests
-	@echo "Running metrics tests"
-	@./test.sh metrics
-
 sqlite_db:
 	mv aggregator.db aggragator.db.backup
 	local_storage/create_database_sqlite.sh
+
+license:
+	GO111MODULE=off go get -u github.com/google/addlicense && \
+		addlicense -c "Red Hat, Inc" -l "apache" -v ./
 
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'

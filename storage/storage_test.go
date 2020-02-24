@@ -31,8 +31,9 @@ import (
 const (
 	testOrgID         = types.OrgID(1)
 	testClusterName   = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	testClusterReport = types.ClusterReport("{}")
+	testClusterReport = types.ClusterReport("")
 )
+
 
 func checkReportForCluster(
 	t *testing.T,
@@ -88,26 +89,46 @@ func TestNewStorage(t *testing.T) {
 	}
 }
 
+// TestNewStorage checks whether constructor for new storage returns error for improper storage configuration
+func TestNewStorageError(t *testing.T) {
+	_, err := storage.New(storage.Configuration{
+		Driver: "non existing driver",
+	})
+
+	if err == nil {
+		t.Fatal("Error expected")
+	}
+}
+
+// TestNewStorageWithLogging tests creatign new storage with logs
+func TestNewStorageWithLoggingError(t *testing.T) {
+	s, _ := storage.New(storage.Configuration{
+		Driver:        "postgres",
+		PGPort:        1234,
+		LogSQLQueries: true,
+	})
+
+	if err := s.Init(); err == nil {
+		t.Fatal("Error needs to be reported for improper storage")
+	}
+
+	_, err := storage.New(storage.Configuration{
+		Driver:        "non existing driver",
+		LogSQLQueries: true,
+	})
+	if err == nil {
+		t.Fatal(fmt.Errorf("error expected"))
+	}
+}
+
 // TestMockDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
 func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer mockStorage.Close()
 
-	_, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
-	if err == nil {
-		t.Fatal("expected not found error")
-	}
-
-	if itemNotFoundError, ok := err.(*storage.ItemNotFoundError); ok {
-		itemID := fmt.Sprintf("%v/%v", testOrgID, testClusterName)
-		assert.Equal(
-			t,
-			fmt.Sprintf("Item with ID %v was not found in the storage", itemID),
-			err.Error(),
-		)
-		assert.Equal(t, itemID, itemNotFoundError.ItemID)
-	} else {
-		t.Fatal(err)
+	_, err = mockStorage.ReadReportForCluster(testOrgID, testClusterName)
+	if _, ok := err.(*storage.ItemNotFoundError); err == nil || !ok {
+		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
 }
 
@@ -150,9 +171,7 @@ func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 		testClusterReport,
 		time.Now(),
 	)
-	if err == nil {
-		t.Fatal("error expected")
-	}
+	expectErrorClosedStorage(t, err)
 }
 
 // TestMockDBStorageListOfOrgs check the behaviour of method ListOfOrgs

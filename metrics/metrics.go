@@ -14,6 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package metrics contains all metrics that needs to be exposed to Prometheus
+// and indirectly to Grafana. Currently, the following metrics are exposed:
+//
+// api_endpoints_requests - number of requests made for each REST API endpoint
+//
+// api_endpoints_response_time - response times for all REST API endpoints
+//
+// consumed_messages - total number of messages consumed from selected broker
+//
+// produced_messages - total number of produced messages
+//
+// written_reports - total number of reports written into the storage (cache)
 package metrics
 
 import (
@@ -34,10 +46,10 @@ var APIResponsesTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Buckets: prometheus.LinearBuckets(0, 20, 20),
 }, []string{"url"})
 
-// ConsumedMessages shows number of messages consumed from kafka by aggregator
+// ConsumedMessages shows number of messages consumed from Kafka by aggregator
 var ConsumedMessages = promauto.NewCounter(prometheus.CounterOpts{
 	Name: "consumed_messages",
-	Help: "The total number of messages consumed from kafka",
+	Help: "The total number of messages consumed from Kafka",
 })
 
 // ProducedMessages shows number of messages produced by producer package

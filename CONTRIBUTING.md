@@ -8,6 +8,8 @@ All methods meant to be used by end-user *must be* documented - **no exceptions!
 
 Other code quality metrics are measured as well via [Go Report Card](https://goreportcard.com/report/github.com/RedHatInsights/insights-results-aggregator)
 
+Please, don't forget to call `make license` to add license headers to new files
+
 
 ### Naming conventions
 

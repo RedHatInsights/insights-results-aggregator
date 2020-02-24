@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package consumer contains interface for any consume that is able to
+// Package consumer contains interface for any consumer that is able to
 // process messages. It also contains implementation of Kafka consumer.
 package consumer
 
@@ -50,6 +50,7 @@ type KafkaConsumer struct {
 	numberOfErrorsConsumingMessages      uint64
 }
 
+// incomingMessage is representation of message consumed from any broker
 type incomingMessage struct {
 	Organization *types.OrgID       `json:"OrgID"`
 	ClusterName  *types.ClusterName `json:"ClusterName"`
@@ -85,6 +86,7 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 	return consumer, nil
 }
 
+// parseMessage tries to parse incoming message and read all required attributes from it
 func parseMessage(messageValue []byte) (incomingMessage, error) {
 	var deserialized incomingMessage
 
@@ -112,6 +114,7 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 	return deserialized, nil
 }
 
+// organizationAllowed checks whether the given organization is on whitelist or not
 func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 	whitelist := consumer.Configuration.OrgWhitelist
 	if whitelist == nil {

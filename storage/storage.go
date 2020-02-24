@@ -31,6 +31,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	_ "github.com/lib/pq"           // PostgreSQL database driver
@@ -56,32 +58,41 @@ type Storage interface {
 	ReportsCount() (int, error)
 }
 
+// DBDriver type for db driver enum
+type DBDriver int
+
+const (
+	// DBDriverSQLite shows that db driver is sqlite
+	DBDriverSQLite DBDriver = iota
+	// DBDriverPostgres shows that db driver is postrgres
+	DBDriverPostgres
+)
+
 // DBStorage is an implementation of Storage interface that use selected SQL like database
 // like SQLite, PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
 // sql package. It is possible to configure connection via Configuration structure.
+// SQLQueriesLog is log for sql queries, default is nil which means nothing is logged
 type DBStorage struct {
 	connection    *sql.DB
 	configuration Configuration
+	dbDriverType  DBDriver
 }
 
 // New function creates and initializes a new instance of Storage interface
 func New(configuration Configuration) (*DBStorage, error) {
-	var dataSource string
-	switch configuration.Driver {
-	case "sqlite3":
-		dataSource = configuration.SQLiteDataSource
-	case "postgres":
+	driverName := configuration.Driver
 
-		dataSource = fmt.Sprintf(
-			"postgresql://%v:%v@%v:%v/%v?%v",
-			configuration.PGUsername,
-			configuration.PGPassword,
-			configuration.PGHost,
-			configuration.PGPort,
-			configuration.PGDBName,
-			configuration.PGParams,
-		)
-	default:
+	if configuration.LogSQLQueries {
+		logger := log.New(os.Stdout, "[sql]", log.LstdFlags)
+		var err error
+		driverName, err = InitAndGetSQLDriverWithLogs(driverName, logger)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	dataSource, err := getDataSourceFromConfig(configuration)
+	if err != nil {
 		return nil, fmt.Errorf("Driver %v is not supported", configuration.Driver)
 	}
 
@@ -93,7 +104,41 @@ func New(configuration Configuration) (*DBStorage, error) {
 		return nil, err
 	}
 
-	return &DBStorage{connection, configuration}, nil
+	var driverType DBDriver
+
+	switch {
+	case strings.HasPrefix(driverName, "sqlite"):
+		driverType = DBDriverSQLite
+	case strings.HasPrefix(driverName, "postgres"):
+		driverType = DBDriverPostgres
+	default:
+		return nil, fmt.Errorf("driver %v is not supported", driverName)
+	}
+
+	return &DBStorage{
+		connection:    connection,
+		configuration: configuration,
+		dbDriverType:  driverType,
+	}, nil
+}
+
+func getDataSourceFromConfig(configuration Configuration) (string, error) {
+	switch configuration.Driver {
+	case "sqlite3":
+		return configuration.SQLiteDataSource, nil
+	case "postgres":
+		return fmt.Sprintf(
+			"postgresql://%v:%v@%v:%v/%v?%v",
+			configuration.PGUsername,
+			configuration.PGPassword,
+			configuration.PGHost,
+			configuration.PGPort,
+			configuration.PGDBName,
+			configuration.PGParams,
+		), nil
+	}
+
+	return "", fmt.Errorf("Driver %v is not supported", configuration.Driver)
 }
 
 // Init method is doing initialization like creating tables in underlying database
@@ -162,7 +207,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
 	clusters := []types.ClusterName{}
 
-	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = ? ORDER BY cluster", orgID)
+	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster", orgID)
 	if err != nil {
 		return clusters, err
 	}
@@ -183,7 +228,9 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
 func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error) {
-	rows, err := storage.connection.Query("SELECT report FROM report WHERE org_id = ? AND cluster = ?", orgID, clusterName)
+	rows, err := storage.connection.Query(
+		"SELECT report FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -199,6 +246,7 @@ func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName typ
 		log.Println("error", err)
 		return "", err
 	}
+	
 	return "", &ItemNotFoundError{
 		ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
 	}
@@ -211,10 +259,22 @@ func (storage DBStorage) WriteReportForCluster(
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
 ) error {
-	statement, err := storage.connection.Prepare(
-		`INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at) 
-		 VALUES ($1, $2, $3, $4, $5)`,
-	)
+	var query string
+
+	switch storage.dbDriverType {
+	case DBDriverSQLite:
+		query = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at) 
+		 VALUES ($1, $2, $3, $4, $5)`
+	case DBDriverPostgres:
+		query = `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
+		 VALUES ($1, $2, $3, $4, $5)
+		 ON CONFLICT (org_id, cluster) 
+		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`
+	default:
+		return fmt.Errorf("Writing report with DB %v is not supported", storage.dbDriverType)
+	}
+
+	statement, err := storage.connection.Prepare(query)
 	if err != nil {
 		return err
 	}
