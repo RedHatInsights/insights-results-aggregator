@@ -17,14 +17,35 @@ limitations under the License.
 package consumer_test
 
 import (
-	"github.com/Shopify/sarama"
-	"github.com/deckarep/golang-set"
+	"fmt"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/Shopify/sarama"
+	mapset "github.com/deckarep/golang-set"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+)
+
+const (
+	testTopicName = "topic"
+	testMessage   = `{
+		"OrgID": 1,
+		"ClusterName": "aaaaaaaa-bbbb-cccc-dddd-000000000000",
+		"Report": "{}",
+		"LastChecked": "2020-01-23T16:15:59.478901889Z"
+	}`
+	// time limit for *some* tests which can stuck in forever loop
+	testCaseTimeLimit = 10 * time.Second
+)
+
+var (
+	testOrgWhiteList = mapset.NewSetWith(1)
 )
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
@@ -71,7 +92,7 @@ func TestParseMessageWithWrongContent(t *testing.T) {
 		t.Fatal("Error is expected to be returned for message that has improper content")
 	}
 	errorMessage := err.Error()
-	if !strings.HasPrefix(errorMessage, "Missing required attribute 'OrgID'") {
+	if !strings.HasPrefix(errorMessage, "missing required attribute 'OrgID'") {
 		t.Fatal("Improper error message: " + errorMessage)
 	}
 }
@@ -120,7 +141,7 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
 		t.Fatal("Error is expected to be returned for a wrong ClusterName format")
 	}
 	errorMessage := err.Error()
-	if !strings.HasPrefix(errorMessage, "Cluster name is not a UUID") {
+	if !strings.HasPrefix(errorMessage, "cluster name is not a UUID") {
 		t.Fatal("Improper error message: " + errorMessage)
 	}
 }
@@ -158,22 +179,6 @@ func TestParseMessageWithoutReport(t *testing.T) {
 	}
 }
 
-func memoryStorage() (storage.Storage, error) {
-	storageCfg := storage.Configuration{
-		Driver:           "sqlite3",
-		SQLiteDataSource: ":memory:",
-	}
-	storage, err := storage.New(storageCfg)
-	if err != nil {
-		return nil, err
-	}
-	err = storage.Init()
-	if err != nil {
-		return nil, err
-	}
-	return storage, nil
-}
-
 func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 	brokerCfg := broker.Configuration{
 		Address: "localhost:1234",
@@ -183,7 +188,7 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 	if whitelist {
 		brokerCfg.OrgWhitelist = mapset.NewSetWith(1)
 	}
-	return consumer.KafkaConsumer{
+	return &consumer.KafkaConsumer{
 		Configuration:     brokerCfg,
 		Consumer:          nil,
 		PartitionConsumer: nil,
@@ -191,10 +196,7 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 	}
 }
 func TestProcessEmptyMessage(t *testing.T) {
-	storage, err := memoryStorage()
-	if err != nil {
-		t.Fatal(err)
-	}
+	storage := helpers.MustGetMockStorage(t, true)
 	defer storage.Close()
 
 	c := dummyConsumer(storage, true)
@@ -213,10 +215,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 }
 
 func TestProcessCorrectMessage(t *testing.T) {
-	storage, err := memoryStorage()
-	if err != nil {
-		t.Fatal(err)
-	}
+	storage := helpers.MustGetMockStorage(t, true)
 	defer storage.Close()
 
 	c := dummyConsumer(storage, true)
@@ -230,7 +229,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(messageValue)
 	// messsage is empty -> nothing should be written into storage
-	err = c.ProcessMessage(&message)
+	err := c.ProcessMessage(&message)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -245,4 +244,118 @@ func TestProcessCorrectMessage(t *testing.T) {
 	if cnt != 1 {
 		t.Fatal("ProcessMessage does more writes than expected")
 	}
+}
+
+func TestProcessingMessageWithClosedStorage(t *testing.T) {
+	storage := helpers.MustGetMockStorage(t, true)
+
+	c := dummyConsumer(storage, false)
+
+	storage.Close()
+
+	const messageValue = `
+{"OrgID":1,
+ "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
+ "Report":"{}",
+ "LastChecked":"2020-01-23T16:15:59.478901889Z"}
+`
+
+	message := sarama.ConsumerMessage{}
+	message.Value = []byte(messageValue)
+	err := c.ProcessMessage(&message)
+	if err == nil {
+		t.Fatal(fmt.Errorf("Expected error because database was closed"))
+	}
+}
+
+func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
+	storage := helpers.MustGetMockStorage(t, true)
+	defer storage.Close()
+
+	c := dummyConsumer(storage, true)
+
+	const messageValue = `
+{"OrgID":1,
+ "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
+ "Report":"{}",
+ "LastChecked":"2020.01.23 16:15:59"}
+`
+
+	message := sarama.ConsumerMessage{}
+	message.Value = []byte(messageValue)
+	err := c.ProcessMessage(&message)
+	if _, ok := err.(*time.ParseError); err == nil || !ok {
+		t.Fatal(fmt.Errorf(
+			"Expected time.ParseError error because date format is wrong. Got %+v", err,
+		))
+	}
+}
+
+func TestKafkaConsumerMockOK(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+			t,
+			testTopicName,
+			testOrgWhiteList,
+			[]string{testMessage},
+		)
+
+		go mockConsumer.Serve()
+
+		// wait for message processing
+		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+
+		err := mockConsumer.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, uint64(1), mockConsumer.GetNumberOfSuccessfullyConsumedMessages())
+		assert.Equal(t, uint64(0), mockConsumer.GetNumberOfErrorsConsumingMessages())
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumerMockBadMessage(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+			t, testTopicName, testOrgWhiteList, []string{"bad message"},
+		)
+
+		go mockConsumer.Serve()
+
+		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+
+		err := mockConsumer.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, uint64(0), mockConsumer.GetNumberOfSuccessfullyConsumedMessages())
+		assert.Equal(t, uint64(1), mockConsumer.GetNumberOfErrorsConsumingMessages())
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+			t, testTopicName, testOrgWhiteList, []string{testMessage},
+		)
+
+		err := mockConsumer.Storage.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		go mockConsumer.Serve()
+
+		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+
+		err = mockConsumer.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, uint64(0), mockConsumer.GetNumberOfSuccessfullyConsumedMessages())
+		assert.Equal(t, uint64(1), mockConsumer.GetNumberOfErrorsConsumingMessages())
+	}, testCaseTimeLimit)
 }

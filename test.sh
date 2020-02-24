@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 COLORS_RED='\033[0;31m'
 COLORS_RESET='\033[0m'
 

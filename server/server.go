@@ -37,18 +37,16 @@ limitations under the License.
 package server
 
 import (
-	"errors"
+	"context"
 	"log"
 	"net/http"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -58,6 +56,7 @@ import (
 type HTTPServer struct {
 	Config  Configuration
 	Storage storage.Storage
+	Serv    *http.Server
 }
 
 // New constructs new implementation of Server interface
@@ -79,18 +78,18 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 }
 
 // LogRequest - middleware for loging requests
-func (server HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
+func (server *HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			logRequestHandler(writer, request, nextHandler)
 		})
 }
 
-func (server HTTPServer) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
 	responses.SendResponse(writer, responses.BuildOkResponse())
 }
 
-func (server HTTPServer) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
 	organizations, err := server.Storage.ListOfOrgs()
 	if err != nil {
 		log.Println("Unable to get list of organizations", err)
@@ -100,69 +99,15 @@ func (server HTTPServer) listOfOrganizations(writer http.ResponseWriter, request
 	}
 }
 
-func (server HTTPServer) readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
-	organizationIDParam, found := mux.Vars(request)["organization"]
-	identityContext := request.Context().Value(contextKeyUser)
-
-	if !found {
-		// query parameter 'organization' can't be found in request, which might be caused by issue in Gorilla mux
-		// (not on client side)
-		const message = "Organization ID is not provided"
-		log.Println(message)
-		responses.SendInternalServerError(writer, message)
-		return 0, errors.New(message)
-	}
-
-	if identityContext != nil && !server.Config.Debug {
-		identity := identityContext.(Identity)
-		if identity.Internal.OrgID != organizationIDParam {
-			const message = "You have no permissions to get info about this organization"
-			log.Println(message)
-			responses.SendForbidden(writer, message)
-			return 0, errors.New(message)
-		}
-	}
-
-	organizationID, err := strconv.ParseInt(organizationIDParam, 10, 0)
-	if err != nil {
-		const message = "Wrong organization ID provided"
-		log.Println(message, err)
-		responses.SendError(writer, err.Error())
-		return 0, errors.New(message)
-	}
-
-	return types.OrgID(int(organizationID)), nil
-}
-
-func (server HTTPServer) readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
-	clusterName, found := mux.Vars(request)["cluster"]
-	if !found {
-		// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
-		// (not on client side)
-		const message = "Cluster name is not provided"
-		log.Println(message)
-		responses.SendInternalServerError(writer, message)
-		return types.ClusterName(""), errors.New(message)
-	}
-
-	if _, err := uuid.Parse(clusterName); err != nil {
-		const message = "Cluster name format is invalid"
-		log.Println(message)
-		responses.SendInternalServerError(writer, message)
-		return types.ClusterName(""), errors.New(message)
-	}
-	return types.ClusterName(clusterName), nil
-}
-
-func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
-	organizationID, err := server.readOrganizationID(writer, request)
+func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
+	organizationID, err := readOrganizationID(writer, request)
 
 	if err != nil {
 		// everything has been handled already
 		return
 	}
 
-	clusters, err := server.Storage.ListOfClustersForOrg(types.OrgID(int(organizationID)))
+	clusters, err := server.Storage.ListOfClustersForOrg(types.OrgID(organizationID))
 	if err != nil {
 		log.Println("Unable to get list of clusters", err)
 		responses.SendInternalServerError(writer, err.Error())
@@ -171,20 +116,19 @@ func (server HTTPServer) listOfClustersForOrganization(writer http.ResponseWrite
 	}
 }
 
-func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
-	organizationID, err := server.readOrganizationID(writer, request)
+func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
+	organizationID, err := readOrganizationID(writer, request)
 	if err != nil {
 		// everything has been handled already
 		return
 	}
 
-	clusterName, err := server.readClusterName(writer, request)
+	clusterName, err := readClusterName(writer, request)
 	if err != nil {
 		// everything has been handled already
 		return
 	}
 
-	// TODO: error is not reported if cluster does not exist
 	report, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
 	if _, ok := err.(*storage.ItemNotFoundError); ok {
 		responses.Send(http.StatusNotFound, writer, err.Error())
@@ -207,7 +151,7 @@ func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *h
 }
 
 // Initialize perform the server initialization
-func (server HTTPServer) Initialize(address string) http.Handler {
+func (server *HTTPServer) Initialize(address string) http.Handler {
 	log.Println("Initializing HTTP server at", address)
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -232,14 +176,22 @@ func (server HTTPServer) Initialize(address string) http.Handler {
 }
 
 // Start starts server
-func (server HTTPServer) Start() error {
+func (server *HTTPServer) Start() error {
 	address := server.Config.Address
-	router := server.Initialize(address)
 	log.Println("Starting HTTP server at", address)
+	router := server.Initialize(address)
+	server.Serv = &http.Server{Addr: address, Handler: router}
 
-	err := http.ListenAndServe(address, router)
-	if err != nil {
-		log.Fatal("Unable to start HTTP server", err)
+	err := server.Serv.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		log.Printf("Unable to start HTTP server %v", err)
+		return err
 	}
+
 	return nil
+}
+
+// Stop stops server's execution
+func (server *HTTPServer) Stop(ctx context.Context) error {
+	return server.Serv.Shutdown(ctx)
 }

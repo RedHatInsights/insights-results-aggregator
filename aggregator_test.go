@@ -17,8 +17,13 @@ limitations under the License.
 package main_test
 
 import (
-	"github.com/RedHatInsights/insights-results-aggregator"
+	"bytes"
+	"github.com/spf13/viper"
 	"testing"
+	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 func TestStartStorageConnection(t *testing.T) {
@@ -27,4 +32,49 @@ func TestStartStorageConnection(t *testing.T) {
 	if err != nil {
 		t.Fatal("Cannot create storage object", err)
 	}
+}
+
+func TestStartService(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		config := []byte(`
+			[broker]
+			address = "localhost:9093"
+			topic = "ccx.ocp.results"
+			group = "aggregator"
+			enabled = false
+
+			[server]
+			address = ":1234"
+			api_prefix = "/api/v1/"
+			debug = true
+
+			[processing]
+			org_whitelist = "org_whitelist.csv"
+
+			[metrics]
+			enabled = true
+
+			[logging]
+
+			[storage]
+			db_driver = "sqlite3"
+			sqlite_datasource = ":memory:"
+			pg_username = ""
+			pg_password = ""
+			pg_host = ""
+			pg_port = 0
+			pg_db_name = ""
+			pg_params = ""
+		`)
+
+		viper.SetConfigType("toml")
+		viper.ReadConfig(bytes.NewBuffer(config))
+
+		go func() {
+			main.StartService()
+		}()
+
+		main.WaitForServiceToStart()
+		main.StopService()
+	}, 5*time.Second)
 }

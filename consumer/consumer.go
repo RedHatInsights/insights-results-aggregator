@@ -35,17 +35,19 @@ import (
 
 // Consumer represents any consumer of insights-rules messages
 type Consumer interface {
-	Start() error
+	Serve()
 	Close() error
 	ProcessMessage(msg *sarama.ConsumerMessage) error
 }
 
 // KafkaConsumer in an implementation of Consumer interface
 type KafkaConsumer struct {
-	Configuration     broker.Configuration
-	Consumer          sarama.Consumer
-	PartitionConsumer sarama.PartitionConsumer
-	Storage           storage.Storage
+	Configuration                        broker.Configuration
+	Consumer                             sarama.Consumer
+	PartitionConsumer                    sarama.PartitionConsumer
+	Storage                              storage.Storage
+	numberOfSuccessfullyConsumedMessages uint64
+	numberOfErrorsConsumingMessages      uint64
 }
 
 // incomingMessage is representation of message consumed from any broker
@@ -80,6 +82,7 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 		PartitionConsumer: partitionConsumer,
 		Storage:           storage,
 	}
+
 	return consumer, nil
 }
 
@@ -93,50 +96,53 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 	}
 
 	if deserialized.Organization == nil {
-		return deserialized, errors.New("Missing required attribute 'OrgID'")
+		return deserialized, errors.New("missing required attribute 'OrgID'")
 	}
 	if deserialized.ClusterName == nil {
-		return deserialized, errors.New("Missing required attribute 'ClusterName'")
+		return deserialized, errors.New("missing required attribute 'ClusterName'")
 	}
 	if deserialized.Report == nil {
-		return deserialized, errors.New("Missing required attribute 'Report'")
+		return deserialized, errors.New("missing required attribute 'Report'")
 	}
 
 	_, err = uuid.Parse(string(*deserialized.ClusterName))
 
 	if err != nil {
-		return deserialized, errors.New("Cluster name is not a UUID")
+		return deserialized, errors.New("cluster name is not a UUID")
 	}
 
 	return deserialized, nil
 }
 
 // organizationAllowed checks whether the given organization is on whitelist or not
-func organizationAllowed(consumer KafkaConsumer, orgID types.OrgID) bool {
+func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 	whitelist := consumer.Configuration.OrgWhitelist
 	if whitelist == nil {
 		return false
 	}
+
 	orgWhitelisted := whitelist.Contains(int(orgID))
+
 	return orgWhitelisted
 }
 
-// Start starts consumer
-func (consumer KafkaConsumer) Start() error {
+// Serve starts listening for messages and processing them. It blocks current thread
+func (consumer *KafkaConsumer) Serve() {
 	log.Printf("Consumer has been started, waiting for messages send to topic %s\n", consumer.Configuration.Topic)
-	consumed := 0
-	for {
-		msg := <-consumer.PartitionConsumer.Messages()
+
+	for msg := range consumer.PartitionConsumer.Messages() {
 		err := consumer.ProcessMessage(msg)
 		if err != nil {
 			log.Println("Error processing message consumed from Kafka:", err)
+			consumer.numberOfErrorsConsumingMessages++
+		} else {
+			consumer.numberOfSuccessfullyConsumedMessages++
 		}
-		consumed++
 	}
 }
 
 // ProcessMessage processes an incoming message
-func (consumer KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
+func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
 	log.Printf("Consumed message offset %d\n", msg.Offset)
 	message, err := parseMessage(msg.Value)
 	if err != nil {
@@ -178,11 +184,28 @@ func (consumer KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error 
 }
 
 // Close method closes all resources used by consumer
-func (consumer KafkaConsumer) Close() error {
+func (consumer *KafkaConsumer) Close() error {
 	err := consumer.PartitionConsumer.Close()
 	if err != nil {
 		return err
 	}
+
 	err = consumer.Consumer.Close()
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetNumberOfSuccessfullyConsumedMessages returns number of consumed messages
+// since creating KafkaConsumer obj
+func (consumer *KafkaConsumer) GetNumberOfSuccessfullyConsumedMessages() uint64 {
+	return consumer.numberOfSuccessfullyConsumedMessages
+}
+
+// GetNumberOfErrorsConsumingMessages returns number of errors during consuming messages
+// since creating KafkaConsumer obj
+func (consumer *KafkaConsumer) GetNumberOfErrorsConsumingMessages() uint64 {
+	return consumer.numberOfErrorsConsumingMessages
 }

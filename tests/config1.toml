@@ -18,7 +18,7 @@ enabled = true
 
 [storage]
 db_driver = "sqlite3"
-sqlite_datasource = "xyzzy"
+sqlite_datasource = ":memory:"
 pg_username = "user"
 pg_password = "password"
 pg_host = "localhost"
