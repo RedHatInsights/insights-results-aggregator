@@ -246,7 +246,7 @@ func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName typ
 		log.Println("error", err)
 		return "", err
 	}
-	
+
 	return "", &ItemNotFoundError{
 		ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
 	}

@@ -34,7 +34,6 @@ const (
 	testClusterReport = types.ClusterReport("")
 )
 
-
 func checkReportForCluster(
 	t *testing.T,
 	s storage.Storage,
@@ -126,7 +125,7 @@ func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer mockStorage.Close()
 
-	_, err = mockStorage.ReadReportForCluster(testOrgID, testClusterName)
+	_, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
 	if _, ok := err.(*storage.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
