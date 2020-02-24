@@ -20,16 +20,16 @@ COLORS_RESET='\033[0m'
 function cleanup()
 {
 	print_descendent_pids() {
-		pids=$(pgrep -P $1)
-		echo $pids
+		pids=$(pgrep -P "$1")
+		echo "$pids"
 		for pid in $pids; do
-			print_descendent_pids $pid
+			print_descendent_pids "$pid"
 		done
 	}
 
 	echo Exiting and killing all children...
 	for pid in $(print_descendent_pids $$); do
-		kill -9 $pid 2> /dev/null
+		kill -9 "$pid" 2> /dev/null
 	done
 	sleep 1
 }
