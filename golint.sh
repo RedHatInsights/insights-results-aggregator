@@ -14,11 +14,11 @@
 # limitations under the License.
 
 
-cd "$(dirname $0)"
+cd "$(dirname "$0")" || exit
 
 go get golang.org/x/lint/golint
 
-if golint `go list ./...` |
+if golint $(go list ./...) |
     grep -v ALL_CAPS |
     grep .; then
   exit 1
