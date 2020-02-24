@@ -107,7 +107,7 @@ case $1 in
 		EXIT_VALUE=0
 
 		test_rest_api
-		EXIT_VALUE=$(($EXIT_VALUE + $?))
+		EXIT_VALUE=$((EXIT_VALUE + $?))
 		;;
 esac
 
