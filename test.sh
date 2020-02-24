@@ -43,9 +43,8 @@ if fuser test.db &> /dev/null; then
 fi
 
 go clean -testcache
-go build -race
 
-if [ $? -eq 0 ]
+if go build -race
 then
     echo "Service build ok"
 else
@@ -55,8 +54,8 @@ fi
 
 rm -f test.db
 echo "Creating test database..."
-./local_storage/create_test_database_sqlite.sh
-if [ $? -eq 0 ]
+
+if ./local_storage/create_test_database_sqlite.sh
 then
 	echo "Done"
 else
@@ -69,7 +68,8 @@ function start_service() {
 	# TODO: stop parent(this script) if service died
 	INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests ./insights-results-aggregator || \
 		echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
-	if [ $? -ne 0 ]; then
+	if [ $? -ne 0 ]
+        then
 		echo "Could not start the service"
 		exit 1
 	fi
@@ -77,8 +77,7 @@ function start_service() {
 
 function test_rest_api() {
 	echo "Building REST API tests utility"
-	go build -o rest-api-tests tests/rest_api_tests.go
-	if [ $? -eq 0 ]
+	if go build -o rest-api-tests tests/rest_api_tests.go
 	then
 		echo "REST API tests build ok"
 	else
