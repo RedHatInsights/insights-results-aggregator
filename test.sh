@@ -41,6 +41,16 @@ if fuser test.db &> /dev/null; then
 	exit 1
 fi
 
+echo "Testing OpenAPI specifications file"
+docker run --rm -v ${PWD}:/local/ openapitools/openapi-generator-cli validate -i ./local/openapi.yml
+if [ $? -eq 0 ]
+then
+    echo "OpenAPI spec file is OK"
+else
+    echo "OpenAPI spec file validation failed"
+    exit 1
+fi
+
 go clean -testcache
 go build -race
 

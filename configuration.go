@@ -164,10 +164,31 @@ func loadStorageConfiguration() storage.Configuration {
 	}
 }
 
+// getAPISpecFile retrieves the filename of OpenAPI specifications file
+func getAPISpecFile(serverCfg *viper.Viper) (string, error) {
+	specFile := serverCfg.GetString("api_spec_file")
+
+	fileInfo, err := os.Stat(specFile)
+	if os.IsNotExist(err) {
+		return specFile, fmt.Errorf("OpenAPI spec file path does not exist. Path: %v", specFile)
+	}
+	if fileMode := fileInfo.Mode(); !fileMode.IsRegular() {
+		return specFile, fmt.Errorf("OpenAPI spec file path is not a file. Path: %v", specFile)
+	}
+
+	name := fileInfo.Name()
+	return name, nil
+}
+
 func loadServerConfiguration() server.Configuration {
+	apiSpecFile, err := getAPISpecFile(serverCfg)
+	if err != nil {
+		log.Fatalf("All customer facing APIs MUST serve the current OpenAPI specification. Error: %s", err)
+	}
 	return server.Configuration{
-		Address:   serverCfg.GetString("address"),
-		APIPrefix: serverCfg.GetString("api_prefix"),
-		Debug:     serverCfg.GetBool("debug"),
+		Address:     serverCfg.GetString("address"),
+		APIPrefix:   serverCfg.GetString("api_prefix"),
+		APISpecFile: apiSpecFile,
+		Debug:       serverCfg.GetBool("debug"),
 	}
 }

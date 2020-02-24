@@ -33,9 +33,10 @@ import (
 )
 
 var config = server.Configuration{
-	Address:   ":8080",
-	APIPrefix: "/api/test/",
-	Debug:     true,
+	Address:     ":8080",
+	APIPrefix:   "/api/test/",
+	APISpecFile: "openapi.yml",
+	Debug:       true,
 }
 
 const (
