@@ -17,17 +17,17 @@ limitations under the License.
 package server_test
 
 import (
+	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/RedHatInsights/insights-results-aggregator/server"
 )
 
 var config = server.Configuration{
-	Address:   ":8080",
-	APIPrefix: "/api/test/",
-	Debug:     true,
+	Address:     ":8080",
+	APIPrefix:   "/api/test/",
+	APISpecFile: "openapi.yml",
+	Debug:       true,
 }
 
 func executeRequest(server *server.HTTPServer, req *http.Request) *httptest.ResponseRecorder {

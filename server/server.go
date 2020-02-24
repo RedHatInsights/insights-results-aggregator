@@ -40,6 +40,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -195,6 +196,16 @@ func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, reques
 	}
 }
 
+// serveAPISpecFile serves an OpenAPI specifications file specified in config file
+func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *http.Request) {
+	absPath, err := filepath.Abs(server.Config.APISpecFile)
+	if err != nil {
+		log.Fatalf("Error creating absolute path of OpenAPI spec file. %v", err)
+	}
+
+	http.ServeFile(writer, request, absPath)
+}
+
 // Initialize perform the server initialization
 func (server HTTPServer) Initialize(address string) http.Handler {
 	log.Println("Initializing HTTP server at", address)
@@ -213,6 +224,9 @@ func (server HTTPServer) Initialize(address string) http.Handler {
 
 	// Prometheus metrics
 	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods("GET")
+
+	// OpenAPI specs
+	router.HandleFunc(server.Config.APIPrefix+server.Config.APISpecFile, server.serveAPISpecFile).Methods("GET")
 
 	return router
 }
