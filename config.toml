@@ -7,7 +7,7 @@ enabled = true
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
-api_spec_file = "openaapi.yml"
+api_spec_file = "openapi.yml"
 debug = true
 
 [processing]

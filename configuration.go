@@ -150,18 +150,6 @@ func loadOrganizationWhitelist() mapset.Set {
 	return whitelist
 }
 
-func getAPISpecFile() (string, error) {
-	specFile := serverCfg.GetString("api_spec_file")
-
-	fileInfo, err := os.Stat(specFile)
-	if os.IsNotExist(err) {
-		return specFile, err
-	}
-
-	name := fileInfo.Name()
-	return name, nil
-}
-
 func loadStorageConfiguration() storage.Configuration {
 	return storage.Configuration{
 		Driver:           storageCfg.GetString("db_driver"),
@@ -176,8 +164,24 @@ func loadStorageConfiguration() storage.Configuration {
 	}
 }
 
+// getAPISpecFile retrieves the filename of OpenAPI specifications file
+func getAPISpecFile(serverCfg *viper.Viper) (string, error) {
+	specFile := serverCfg.GetString("api_spec_file")
+
+	fileInfo, err := os.Stat(specFile)
+	if os.IsNotExist(err) {
+		return specFile, fmt.Errorf("OpenAPI spec file path does not exist. Path: %v", specFile)
+	}
+	if fileMode := fileInfo.Mode(); !fileMode.IsRegular() {
+		return specFile, fmt.Errorf("OpenAPI spec file path is not a file. Path: %v", specFile)
+	}
+
+	name := fileInfo.Name()
+	return name, nil
+}
+
 func loadServerConfiguration() server.Configuration {
-	apiSpecFile, err := getAPISpecFile()
+	apiSpecFile, err := getAPISpecFile(serverCfg)
 	if err != nil {
 		log.Fatalf("All customer facing APIs MUST serve the current OpenAPI specification. Error: %s", err)
 	}

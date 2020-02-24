@@ -198,7 +198,11 @@ func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, reques
 
 // serveAPISpecFile serves an OpenAPI specifications file specified in config file
 func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *http.Request) {
-	absPath, _ := filepath.Abs(server.Config.APISpecFile)
+	absPath, err := filepath.Abs(server.Config.APISpecFile)
+	if err != nil {
+		log.Fatalf("Error creating absolute path of OpenAPI spec file. %v", err)
+	}
+
 	http.ServeFile(writer, request, absPath)
 }
 
