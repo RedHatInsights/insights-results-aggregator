@@ -16,15 +16,14 @@ limitations under the License.
 
 package storage
 
-// Configuration represents configuration of data storage
-type Configuration struct {
-	Driver           string
-	SQLiteDataSource string
-	LogSQLQueries    bool
-	PGUsername       string
-	PGPassword       string
-	PGHost           string
-	PGPort           int
-	PGDBName         string
-	PGParams         string
-}
+// Export for testing
+//
+// Please look into the following blogpost:
+// https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
+// to see why this trick is needed.
+type SQLHooks = sqlHooks
+
+const (
+	LogFormatterString        = logFormatterString
+	SQLHooksKeyQueryBeginTime = sqlHooksKeyQueryBeginTime
+)

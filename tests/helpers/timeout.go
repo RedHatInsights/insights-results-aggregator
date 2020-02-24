@@ -14,17 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package storage
+package helpers
 
-// Configuration represents configuration of data storage
-type Configuration struct {
-	Driver           string
-	SQLiteDataSource string
-	LogSQLQueries    bool
-	PGUsername       string
-	PGPassword       string
-	PGHost           string
-	PGPort           int
-	PGDBName         string
-	PGParams         string
+import (
+	"testing"
+	"time"
+)
+
+// TestFunctionPtr pointer to test function
+type TestFunctionPtr = func(*testing.T)
+
+// RunTestWithTimeout runs test with timeToRun timeout and fails if it wasn't in time
+func RunTestWithTimeout(t *testing.T, test TestFunctionPtr, timeToRun time.Duration) {
+	timeout := time.After(timeToRun)
+	done := make(chan bool)
+
+	go func() {
+		test(t)
+		done <- true
+	}()
+
+	select {
+	case <-timeout:
+		t.Fatal("Test ran out of time")
+	case <-done:
+	}
 }

@@ -186,7 +186,9 @@ func (server HTTPServer) readReportForCluster(writer http.ResponseWriter, reques
 
 	// TODO: error is not reported if cluster does not exist
 	report, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
-	if err != nil {
+	if _, ok := err.(*storage.ItemNotFoundError); ok {
+		responses.Send(http.StatusNotFound, writer, err.Error())
+	} else if err != nil {
 		log.Println("Unable to read report for cluster", err)
 		responses.SendInternalServerError(writer, err.Error())
 	} else {
