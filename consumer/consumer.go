@@ -91,7 +91,7 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 
 	nextOffset, _ := partitionOffsetManager.NextOffset()
 	if nextOffset < 0 {
-		// if next offset wasn't stored yet, initial state of broker
+		// if next offset wasn't stored yet, initial state of the broker
 		nextOffset = sarama.OffsetOldest
 	}
 

@@ -15,14 +15,8 @@ import (
 )
 
 const (
-	kafkaAddress  = "localhost:9092"
-	testTopicName = "topic"
-	testMessage   = `{
-		"OrgID": 1,
-		"ClusterName": "aaaaaaaa-bbbb-cccc-dddd-000000000000",
-		"Report": "{}",
-		"LastChecked": "2020-01-23T16:15:59.478901889Z"
-	}`
+	kafkaAddress      = "localhost:9092"
+	testTopicName     = "topic"
 	testCaseTimeLimit = 10 * time.Second
 )
 
