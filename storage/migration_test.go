@@ -250,3 +250,20 @@ func TestMigrationSetVersionDownError(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// TestMigrationSetVersionCurrentTooHighError makes sure that if the current DB version
+// is outside of the available migration range, it is reported as an error.
+func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
+	db := prepareDBAndMigrations(t)
+	defer db.Close()
+
+	if err := storage.SetDBVersion(db, 1); err != nil {
+		t.Fatal(err)
+	}
+
+	storage.ClearMigrations()
+
+	if err := storage.SetDBVersion(db, 0); err == nil || err.Error() != "Current version (1) is outside of available migration boundaries" {
+		t.Fatal(err)
+	}
+}
