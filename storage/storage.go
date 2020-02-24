@@ -143,17 +143,32 @@ func getDataSourceFromConfig(configuration Configuration) (string, error) {
 
 // Init method is doing initialization like creating tables in underlying database
 func (storage DBStorage) Init() error {
-	_, err := storage.connection.Exec(`
-		create table IF NOT EXISTS report (
-			org_id      integer not null,
-			cluster     varchar not null unique,
-			report      varchar not null,
-			reported_at datetime,
-			last_checked_at datetime,
-			PRIMARY KEY(org_id, cluster)
-		);
-	`)
-	return err
+	if err := InitMigrationInfo(&storage); err != nil {
+		return err
+	}
+
+	ClearMigrations()
+
+	AddMigration(Migration{
+		StepUp: func(tx *sql.Tx) error {
+			_, err := tx.Exec(`
+				CREATE TABLE report (
+					org_id          INTEGER NOT NULL,
+					cluster         VARCHAR NOT NULL UNIQUE,
+					report          VARCHAR NOT NULL,
+					reported_at     DATETIME,
+					last_checked_at DATETIME,
+					PRIMARY KEY(org_id, cluster)
+				)`)
+			return err
+		},
+		StepDown: func(tx *sql.Tx) error {
+			_, err := tx.Exec(`DROP TABLE report`)
+			return err
+		},
+	})
+
+	return SetDBVersion(&storage, GetHighestMigrationVersion())
 }
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.
