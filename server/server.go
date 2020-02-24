@@ -41,8 +41,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"strconv"
-  "time"
+	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
