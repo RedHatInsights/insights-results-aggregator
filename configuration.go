@@ -36,6 +36,10 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+const (
+	configFileEnvVariableName = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
+)
+
 var (
 	brokerCfg  *viper.Viper
 	storageCfg *viper.Viper
@@ -43,7 +47,7 @@ var (
 )
 
 func loadConfiguration(defaultConfigFile string) {
-	configFile, specified := os.LookupEnv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
+	configFile, specified := os.LookupEnv(configFileEnvVariableName)
 	if specified {
 		// we need to separate the directory name and filename without extension
 		directory, basename := filepath.Split(configFile)
