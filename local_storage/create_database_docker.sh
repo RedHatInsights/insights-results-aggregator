@@ -32,7 +32,7 @@ psql "postgresql://${SUPERUSER}:${SU_PASSWORD}@${DB_SERVER}" -c "CREATE DATABASE
 psql "postgresql://${SUPERUSER}:${SU_PASSWORD}@${DB_SERVER}" -c "CREATE USER ${USER} PASSWORD '${USER_PASSWORD}';"
 
 #create schema
-cat "${SCRIPT_DIR}/schema_postgres.sql" | psql  "postgresql://${SUPERUSER}:${SU_PASSWORD}@${DB_SERVER}/${DATABASE}"
+psql  "postgresql://${SUPERUSER}:${SU_PASSWORD}@${DB_SERVER}/${DATABASE}" < "${SCRIPT_DIR}/schema_postgres.sql"
 
 # grant priviliges to user
 psql "postgresql://${SUPERUSER}:${SU_PASSWORD}@${DB_SERVER}/${DATABASE}" -c "GRANT  SELECT, INSERT, UPDATE,  DELETE
