@@ -42,7 +42,9 @@ if fuser test.db &> /dev/null; then
 fi
 
 echo "Testing OpenAPI specifications file"
-docker run --rm -v ${PWD}:/local/ openapitools/openapi-generator-cli validate -i ./local/openapi.json
+# shellcheck disable=2181
+docker run --rm -v "${PWD}":/local/ openapitools/openapi-generator-cli validate -i ./local/openapi.json
+
 if [ $? -eq 0 ]
 then
     echo "OpenAPI spec file is OK"
@@ -77,6 +79,7 @@ function start_service() {
 	# TODO: stop parent(this script) if service died
 	INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests ./insights-results-aggregator || \
 		echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
+        # shellcheck disable=2181
 	if [ $? -ne 0 ]
         then
 		echo "Could not start the service"
