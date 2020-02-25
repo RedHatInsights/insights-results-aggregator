@@ -17,7 +17,10 @@ limitations under the License.
 package storage_test
 
 import (
+	"bytes"
+	"database/sql"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
@@ -129,6 +132,15 @@ func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	if _, ok := err.(*storage.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
+
+	assert.Equal(
+		t,
+		fmt.Sprintf(
+			"Item with ID %+v/%+v was not found in the storage",
+			testOrgID, testClusterName,
+		),
+		err.Error(),
+	)
 }
 
 // TestMockDBStorageReadReportForClusterClosedStorage check the behaviour of method ReadReportForCluster
@@ -301,4 +313,53 @@ func TestDBStorageNewPostgresqlError(t *testing.T) {
 	if err == nil {
 		t.Fatal(fmt.Errorf("error expected, got %v", err))
 	}
+}
+
+func mustWriteReport(
+	t *testing.T,
+	connection *sql.DB,
+	orgID interface{},
+	clusterName interface{},
+	clusterReport interface{},
+) {
+	query := `
+		INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
+		VALUES ($1, $2, $3, $4, $5);
+	`
+
+	statement, err := connection.Prepare(query)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = statement.Exec(
+		orgID,
+		clusterName,
+		clusterReport,
+		time.Now(),
+		time.Now(),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	statement.Close()
+}
+
+func TestDBStorageListOfOrgsLogError(t *testing.T) {
+	buf := new(bytes.Buffer)
+	log.SetOutput(buf)
+
+	s := helpers.MustGetMockStorage(t, true)
+
+	connection := storage.GetConnection(s.(*storage.DBStorage))
+	// write illegal negative org_id
+	mustWriteReport(t, connection, -1, testClusterName, testClusterReport)
+
+	_, err := s.ListOfOrgs()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Contains(t, buf.String(), "sql: Scan error")
 }

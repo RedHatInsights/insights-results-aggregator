@@ -228,28 +228,22 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
 func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error) {
-	rows, err := storage.connection.Query(
+	var report string
+	err := storage.connection.QueryRow(
 		"SELECT report FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
-	)
-	if err != nil {
-		return "", err
-	}
-	defer rows.Close()
+	).Scan(&report)
 
-	if rows.Next() {
-		var report string
-
-		err = rows.Scan(&report)
-		if err == nil {
-			return types.ClusterReport(report), nil
+	switch {
+	case err == sql.ErrNoRows:
+		return "", &ItemNotFoundError{
+			ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
 		}
-		log.Println("error", err)
+	case err != nil:
 		return "", err
 	}
 
-	return "", &ItemNotFoundError{
-		ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
-	}
+	return types.ClusterReport(report), nil
+
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
@@ -287,27 +281,16 @@ func (storage DBStorage) WriteReportForCluster(
 		log.Print(err)
 		return err
 	}
+
 	metrics.WrittenReports.Inc()
+
 	return nil
 }
 
 // ReportsCount reads number of all records stored in database
 func (storage DBStorage) ReportsCount() (int, error) {
-	rows, err := storage.connection.Query("SELECT count(*) FROM report")
-	if err != nil {
-		return -1, err
-	}
-	defer rows.Close()
+	count := int(-1)
+	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
 
-	if rows.Next() {
-		var cnt int
-
-		err = rows.Scan(&cnt)
-		if err == nil {
-			return cnt, nil
-		}
-		log.Println("error", err)
-		return -1, err
-	}
-	return -1, err
+	return count, err
 }
