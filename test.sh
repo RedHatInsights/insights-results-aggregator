@@ -28,7 +28,11 @@ function cleanup()
 
 	echo Exiting and killing all children...
 	for pid in $(print_descendent_pids $$); do
-		kill -9 "$pid" 2> /dev/null
+		if ! kill "$pid" &> /dev/null; then
+			# wait for it to stop correctly
+			sleep 1
+			kill -9 "$pid" &> /dev/null
+		fi
 	done
 	sleep 1
 }
