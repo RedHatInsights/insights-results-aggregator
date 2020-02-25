@@ -48,6 +48,9 @@ type KafkaConsumer struct {
 	Storage                              storage.Storage
 	numberOfSuccessfullyConsumedMessages uint64
 	numberOfErrorsConsumingMessages      uint64
+	offsetManager                        sarama.OffsetManager
+	partitionOffsetManager               sarama.PartitionOffsetManager
+	client                               sarama.Client
 }
 
 // incomingMessage is representation of message consumed from any broker
@@ -61,29 +64,55 @@ type incomingMessage struct {
 
 // New constructs new implementation of Consumer interface
 func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsumer, error) {
-	c, err := sarama.NewConsumer([]string{brokerCfg.Address}, nil)
+	client, err := sarama.NewClient([]string{brokerCfg.Address}, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	partitions, err := c.Partitions(brokerCfg.Topic)
+	consumer, err := sarama.NewConsumerFromClient(client)
 	if err != nil {
 		return nil, err
 	}
 
-	partitionConsumer, err := c.ConsumePartition(brokerCfg.Topic, partitions[0], sarama.OffsetNewest)
+	partitions, err := consumer.Partitions(brokerCfg.Topic)
 	if err != nil {
 		return nil, err
 	}
 
-	consumer := &KafkaConsumer{
-		Configuration:     brokerCfg,
-		Consumer:          c,
-		PartitionConsumer: partitionConsumer,
-		Storage:           storage,
+	offsetManager, err := sarama.NewOffsetManagerFromClient(brokerCfg.Group, client)
+	if err != nil {
+		return nil, err
 	}
 
-	return consumer, nil
+	partitionOffsetManager, err := offsetManager.ManagePartition(brokerCfg.Topic, partitions[0])
+	if err != nil {
+		return nil, err
+	}
+
+	nextOffset, _ := partitionOffsetManager.NextOffset()
+	if nextOffset < 0 {
+		// if next offset wasn't stored yet, initial state of the broker
+		nextOffset = sarama.OffsetOldest
+	}
+
+	partitionConsumer, err := consumer.ConsumePartition(
+		brokerCfg.Topic,
+		partitions[0],
+		nextOffset,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &KafkaConsumer{
+		Configuration:          brokerCfg,
+		Consumer:               consumer,
+		PartitionConsumer:      partitionConsumer,
+		Storage:                storage,
+		offsetManager:          offsetManager,
+		partitionOffsetManager: partitionOffsetManager,
+		client:                 client,
+	}, nil
 }
 
 // parseMessage tries to parse incoming message and read all required attributes from it
@@ -180,6 +209,12 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 		return err
 	}
 	// message has been parsed and stored into storage
+
+	// remember offset
+	if consumer.partitionOffsetManager != nil {
+		consumer.partitionOffsetManager.MarkOffset(msg.Offset+1, "")
+	}
+
 	return nil
 }
 
@@ -193,6 +228,27 @@ func (consumer *KafkaConsumer) Close() error {
 	err = consumer.Consumer.Close()
 	if err != nil {
 		return err
+	}
+
+	if consumer.partitionOffsetManager != nil {
+		err = consumer.partitionOffsetManager.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	if consumer.partitionOffsetManager != nil {
+		err = consumer.offsetManager.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	if consumer.client != nil {
+		err = consumer.client.Close()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
