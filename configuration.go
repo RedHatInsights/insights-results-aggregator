@@ -176,8 +176,7 @@ func getAPISpecFile(serverCfg *viper.Viper) (string, error) {
 		return specFile, fmt.Errorf("OpenAPI spec file path is not a file. Path: %v", specFile)
 	}
 
-	name := fileInfo.Name()
-	return name, nil
+	return specFile, nil
 }
 
 func loadServerConfiguration() server.Configuration {

@@ -78,11 +78,13 @@ Server configuration is in section `[server]` in config file.
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
+api_spec_file = "openapi.json"
 debug = true
 ```
 
  - `address` is host and port which server should listen to
  - `api_prefix` is prefix for RestAPI path
+ - `api_spec_file` is the location of a required OpenAPI specifications file
  - `debug` is developer mode that turns off authentication
 
 ## Database
