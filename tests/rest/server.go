@@ -62,7 +62,7 @@ func checkWrongMethodsForEntryPoint() {
 }
 
 func checkOpenAPISpecifications() {
-	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "openapi.yml")
+	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "openapi.json")
 	f.Send()
 	f.ExpectStatus(200)
 	f.PrintReport()

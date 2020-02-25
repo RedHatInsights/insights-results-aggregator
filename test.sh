@@ -42,9 +42,9 @@ if fuser test.db &> /dev/null; then
 fi
 
 echo "Testing OpenAPI specifications file"
-docker run --rm -v "${PWD}":/local/ openapitools/openapi-generator-cli validate -i ./local/openapi.yml
-
 # shellcheck disable=2181
+docker run --rm -v "${PWD}":/local/ openapitools/openapi-generator-cli validate -i ./local/openapi.json
+
 if [ $? -eq 0 ]
 then
     echo "OpenAPI spec file is OK"
