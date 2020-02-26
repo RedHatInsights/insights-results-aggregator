@@ -71,9 +71,9 @@ func getRouterIntParam(request *http.Request, paramName string) (int64, error) {
 	intValue, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		return 0, &RouterParsingError{
-			paramName: paramName,
+			paramName:  paramName,
 			paramValue: value,
-			errString: "integer expected",
+			errString:  "integer expected",
 		}
 	}
 

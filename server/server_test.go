@@ -402,7 +402,7 @@ func mustGetRequestWithMuxVars(
 	url string,
 	body io.Reader,
 	vars map[string]string,
-) *http.Request{
+) *http.Request {
 	request, err := http.NewRequest(method, url, body)
 	if err != nil {
 		t.Fatal(err)
