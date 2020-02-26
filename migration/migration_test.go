@@ -63,7 +63,7 @@ func prepareDB(t *testing.T) *sql.DB {
 	return conn
 }
 
-func prepareDBAndMigrations(t *testing.T) *sql.DB {
+func prepareDBAndInfo(t *testing.T) *sql.DB {
 	db := prepareDB(t)
 
 	if err := migration.InitInfoTable(db); err != nil {
@@ -71,17 +71,21 @@ func prepareDBAndMigrations(t *testing.T) *sql.DB {
 		t.Fatal(err)
 	}
 
-	*migration.Migrations = []migration.Migration{testMigration}
-
 	return db
+}
+
+func prepareDBAndMigrations(t *testing.T) *sql.DB {
+	*migration.Migrations = []migration.Migration{testMigration}
+	return prepareDBAndInfo(t)
 }
 
 // TestMigrationFull tests majority of the migration
 // mechanism's functionality, all in one place.
 func TestMigrationFull(t *testing.T) {
-	db := prepareDBAndMigrations(t)
-	maxVer := migration.GetMaxVersion()
+	// Don't overwrite the migration list, use the real migrations.
+	db := prepareDBAndInfo(t)
 
+	maxVer := migration.GetMaxVersion()
 	if maxVer == 0 {
 		t.Fatal("No migrations available")
 	}
@@ -93,16 +97,20 @@ func TestMigrationFull(t *testing.T) {
 		t.Fatalf("Unexpected version: %d (expected: %d)", currentVer, 0)
 	}
 
-	err = migration.SetDBVersion(db, maxVer)
+	stepUpAndDown(t, db, maxVer, 0)
+}
+
+func stepUpAndDown(t *testing.T, db *sql.DB, upVer, downVer migration.Version) {
+	err := migration.SetDBVersion(db, upVer)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	currentVer, err = migration.GetDBVersion(db)
+	currentVer, err := migration.GetDBVersion(db)
 	if err != nil {
 		t.Fatal(err)
-	} else if currentVer != maxVer {
-		t.Fatalf("Unexpected version: %d (expected: %d)", currentVer, maxVer)
+	} else if currentVer != upVer {
+		t.Fatalf("Unexpected version: %d (expected: %d)", currentVer, upVer)
 	}
 
 	err = migration.SetDBVersion(db, 0)
@@ -113,8 +121,8 @@ func TestMigrationFull(t *testing.T) {
 	currentVer, err = migration.GetDBVersion(db)
 	if err != nil {
 		t.Fatal(err)
-	} else if currentVer != 0 {
-		t.Fatalf("Unexpected version: %d (expected: %d)", currentVer, 0)
+	} else if currentVer != downVer {
+		t.Fatalf("Unexpected version: %d (expected: %d)", currentVer, downVer)
 	}
 }
 
