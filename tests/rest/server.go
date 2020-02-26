@@ -19,6 +19,7 @@ package tests
 import "github.com/verdverm/frisby"
 
 const apiURL = "http://localhost:8080/api/v1/"
+const knownOrganization = "1"
 
 // checkRestAPIEntryPoint check if the entry point (usually /api/v1/) responds correctly to HTTP GET command
 func checkRestAPIEntryPoint() {
@@ -57,25 +58,58 @@ func sendAndExpectStatus(f *frisby.Frisby, expectedStatus int) {
 	f.PrintReport()
 }
 
-// check whether other HTTP methods are rejected correctly
+// checkGetEndpointByOtherMethods checks whether a 'GET' endpoint respond correctly if other HTTP methods are used
+func checkGetEndpointByOtherMethods(endpoint string) {
+	f := frisby.Create("Check the end point " + endpoint + " with wrong method: POST").Post(apiURL)
+	sendAndExpectStatus(f, 405)
+
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: PUT").Put(apiURL)
+	sendAndExpectStatus(f, 405)
+
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: DELETE").Delete(apiURL)
+	sendAndExpectStatus(f, 405)
+
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: PATCH").Patch(apiURL)
+	sendAndExpectStatus(f, 405)
+
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: OPTIONS").Options(apiURL)
+	sendAndExpectStatus(f, 405)
+
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: HEAD").Head(apiURL)
+	sendAndExpectStatus(f, 405)
+}
+
+// check whether other HTTP methods are rejected correctly for the REST API entry point
 func checkWrongMethodsForEntryPoint() {
-	f := frisby.Create("Check the entry point to REST API with wrong method: POST").Post(apiURL)
-	sendAndExpectStatus(f, 405)
+	checkGetEndpointByOtherMethods(apiURL)
+}
 
-	f = frisby.Create("Check the entry point to REST API with wrong method: PUT").Put(apiURL)
-	sendAndExpectStatus(f, 405)
+// checkOrganizationsEndpoint check if the end point to return list of organizations responds correctly to HTTP GET command
+func checkOrganizationsEndpoint() {
+	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations")
+	f.Send()
+	f.ExpectStatus(200)
+	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+	f.PrintReport()
+}
 
-	f = frisby.Create("Check the entry point to REST API with wrong method: DELETE").Delete(apiURL)
-	sendAndExpectStatus(f, 405)
+// checkOrganizationsEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
+func checkOrganizationsEndpointWrongMethods() {
+	checkGetEndpointByOtherMethods(apiURL + "organizations")
+}
 
-	f = frisby.Create("Check the entry point to REST API with wrong method: PATCH").Patch(apiURL)
-	sendAndExpectStatus(f, 405)
+// checkClustersEndpoint check if the end point to return list of clusters responds correctly to HTTP GET command
+func checkClustersEndpoint() {
+	f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(apiURL + "organizations/" + knownOrganization + "/clusters")
+	f.Send()
+	f.ExpectStatus(200)
+	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+	f.PrintReport()
+}
 
-	f = frisby.Create("Check the entry point to REST API with wrong method: OPTIONS").Options(apiURL)
-	sendAndExpectStatus(f, 405)
-
-	f = frisby.Create("Check the entry point to REST API with wrong method: HEAD").Head(apiURL)
-	sendAndExpectStatus(f, 405)
+// checkClustersEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
+func checkClustersEndpointWrongMethods() {
+	checkGetEndpointByOtherMethods(apiURL + "organizations/" + knownOrganization + "/clusters")
 }
 
 // checkOpenAPISpecifications checks whether OpenAPI endpoint is handled correctly
@@ -93,5 +127,9 @@ func ServerTests() {
 	checkNonExistentEntryPoint()
 	checkWrongEntryPoint()
 	checkWrongMethodsForEntryPoint()
+	checkOrganizationsEndpoint()
+	checkOrganizationsEndpointWrongMethods()
+	checkClustersEndpoint()
+	checkClustersEndpointWrongMethods()
 	checkOpenAPISpecifications()
 }
