@@ -19,6 +19,7 @@ package tests
 import "github.com/verdverm/frisby"
 
 const apiURL = "http://localhost:8080/api/v1/"
+const knownOrganization = "1"
 
 // checkRestAPIEntryPoint check if the entry point (usually /api/v1/) responds correctly to HTTP GET command
 func checkRestAPIEntryPoint() {
@@ -97,6 +98,20 @@ func checkOrganizationsEndpointWrongMethods() {
 	checkGetEndpointByOtherMethods(apiURL + "organizations")
 }
 
+// checkClustersEndpoint check if the end point to return list of clusters responds correctly to HTTP GET command
+func checkClustersEndpoint() {
+	f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(apiURL + "organizations/" + knownOrganization + "/clusters")
+	f.Send()
+	f.ExpectStatus(200)
+	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+	f.PrintReport()
+}
+
+// checkClustersEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
+func checkClustersEndpointWrongMethods() {
+	checkGetEndpointByOtherMethods(apiURL + "organizations/" + knownOrganization + "/clusters")
+}
+
 // checkOpenAPISpecifications checks whether OpenAPI endpoint is handled correctly
 func checkOpenAPISpecifications() {
 	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "openapi.json")
@@ -114,5 +129,7 @@ func ServerTests() {
 	checkWrongMethodsForEntryPoint()
 	checkOrganizationsEndpoint()
 	checkOrganizationsEndpointWrongMethods()
+	checkClustersEndpoint()
+	checkClustersEndpointWrongMethods()
 	checkOpenAPISpecifications()
 }
