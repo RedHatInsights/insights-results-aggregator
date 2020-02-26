@@ -19,6 +19,7 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/verdverm/frisby"
@@ -115,24 +116,6 @@ func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
 	return response
 }
 
-// compare two organization lists
-func compareOrglists(a, b []int) bool {
-	if (a == nil) != (b == nil) {
-		return false
-	}
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
 // checkOrganizationsEndpoint check if the end point to return list of organizations responds correctly to HTTP GET command
 func checkOrganizationsEndpoint() {
 	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations")
@@ -144,7 +127,7 @@ func checkOrganizationsEndpoint() {
 		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", organizationsResponse.Status))
 	}
 	expectedOrglist := []int{1, 2, 3, 4}
-	if !compareOrglists(organizationsResponse.Organizations, expectedOrglist) {
+	if !reflect.DeepEqual(organizationsResponse.Organizations, expectedOrglist) {
 		f.AddError(fmt.Sprintf("Expected the following organizations %v, but got %v instead", expectedOrglist, organizationsResponse.Organizations))
 	}
 	f.PrintReport()
