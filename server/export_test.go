@@ -21,4 +21,5 @@ var (
 	ReadOrganizationID = readOrganizationID
 	ReadClusterName    = readClusterName
 	GetRouterIntParam  = getRouterIntParam
+	GetRouterPositiveIntParam  = getRouterPositiveIntParam
 )

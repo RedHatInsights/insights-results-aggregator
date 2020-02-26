@@ -19,6 +19,7 @@ package server_test
 import (
 	"context"
 	"fmt"
+	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -393,6 +394,65 @@ func TestReadOrganizationIDMissing(t *testing.T) {
 	}
 
 	assert.Equal(t, "missing param organization", err.Error())
+}
+
+func mustGetRequestWithMuxVars(
+	t *testing.T,
+	method string,
+	url string,
+	body io.Reader,
+	vars map[string]string,
+) *http.Request{
+	request, err := http.NewRequest(method, url, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	request = mux.SetURLVars(request, vars)
+
+	return request
+}
+
+func TestGetRouterIntParamNonIntError(t *testing.T) {
+	request := mustGetRequestWithMuxVars(t, "GET", "", nil, map[string]string{
+		"id": "non int",
+	})
+
+	_, err := server.GetRouterIntParam(request, "id")
+
+	if err == nil {
+		t.Fatalf("Error expected, got %v", err)
+	}
+
+	assert.Contains(t, err.Error(), "integer expected")
+}
+
+func TestGetRouterIntParamOK(t *testing.T) {
+	request := mustGetRequestWithMuxVars(t, "GET", "", nil, map[string]string{
+		"id": "99",
+	})
+
+	id, err := server.GetRouterIntParam(request, "id")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, int64(99), id)
+}
+
+func TestGetRouterPositiveIntParamZeroError(t *testing.T) {
+	request := mustGetRequestWithMuxVars(t, "GET", "", nil, map[string]string{
+		"id": "0",
+	})
+
+	_, err := server.GetRouterPositiveIntParam(request, "id")
+
+	if err == nil {
+		t.Fatalf("Error expected, got %v", err)
+	}
+
+	assert.Contains(t, err.Error(), "positive value expected")
 }
 
 func TestServerStart(t *testing.T) {
