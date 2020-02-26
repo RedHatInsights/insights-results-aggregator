@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -429,4 +430,71 @@ func TestServerStart(t *testing.T) {
 			panic(err)
 		}
 	}, 5*time.Second)
+}
+
+func TestServeAPISpecFileOK(t *testing.T) {
+	err := os.Chdir("../")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer mockStorage.Close()
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest(
+		"GET",
+		config.APIPrefix+config.APISpecFile,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+
+	checkResponseCode(t, http.StatusOK, response.StatusCode)
+
+	fileData, err := ioutil.ReadFile(config.APISpecFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	checkResponseBody(t, string(fileData), response.Body)
+}
+
+func TestServeAPISpecFileError(t *testing.T) {
+	dirName, err := ioutil.TempDir("/tmp/", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = os.Chdir(dirName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = os.Remove(dirName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer mockStorage.Close()
+
+	server := server.New(config, mockStorage)
+
+	req, err := http.NewRequest(
+		"GET",
+		config.APIPrefix+config.APISpecFile,
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(server, req).Result()
+
+	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
 }
