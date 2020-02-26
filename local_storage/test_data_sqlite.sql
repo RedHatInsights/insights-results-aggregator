@@ -12,6 +12,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+delete from report;
+
 insert into report (org_id, cluster, report, reported_at, last_checked_at) values (1, '00000000-0000-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 insert into report (org_id, cluster, report, reported_at, last_checked_at) values (1, '00000000-0000-0000-ffff-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 insert into report (org_id, cluster, report, reported_at, last_checked_at) values (1, '00000000-0000-0000-0000-ffffffffffff', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

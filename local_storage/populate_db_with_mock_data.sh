@@ -18,5 +18,4 @@ DATABASE=test.db
 
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
-sqlite3 "${SCRIPT_DIR}/../${DATABASE}" < "${SCRIPT_DIR}/schema_sqlite.sql"
 sqlite3 "${SCRIPT_DIR}/../${DATABASE}" < "${SCRIPT_DIR}/test_data_sqlite.sql"

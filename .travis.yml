@@ -27,9 +27,9 @@ jobs:
         - ./check_coverage.sh
       after_success:
         - bash <(curl -s https://codecov.io/bash)
-    - stage: REST API tests
+    - stage: integration tests
       script:
-        - make rest_api_tests
+        - make integration_tests
 
 stages:
   - style
