@@ -60,26 +60,6 @@ func getRouterParam(request *http.Request, paramName string) (string, error) {
 	return value, nil
 }
 
-// getRouterIntParam retrieves parameter from URL like `/organization/{org_id}`
-// and check it for being valid integer, otherwise returns error
-func getRouterIntParam(request *http.Request, paramName string) (int64, error) {
-	value, err := getRouterParam(request, paramName)
-	if err != nil {
-		return 0, err
-	}
-
-	intValue, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return 0, &RouterParsingError{
-			paramName:  paramName,
-			paramValue: value,
-			errString:  "integer expected",
-		}
-	}
-
-	return intValue, nil
-}
-
 // getRouterPositiveIntParam retrieves parameter from URL like `/organization/{org_id}`
 // and check it for being valid and positive integer, otherwise returns error
 func getRouterPositiveIntParam(request *http.Request, paramName string) (uint64, error) {

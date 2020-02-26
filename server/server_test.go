@@ -360,7 +360,7 @@ func TestGetRouterIntParamMissing(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = server.GetRouterIntParam(request, "test")
+	_, err = server.GetRouterPositiveIntParam(request, "test")
 	if err == nil {
 		t.Fatal("Param should be missing")
 	}
@@ -418,7 +418,7 @@ func TestGetRouterIntParamNonIntError(t *testing.T) {
 		"id": "non int",
 	})
 
-	_, err := server.GetRouterIntParam(request, "id")
+	_, err := server.GetRouterPositiveIntParam(request, "id")
 
 	if err == nil {
 		t.Fatalf("Error expected, got %v", err)
@@ -432,13 +432,13 @@ func TestGetRouterIntParamOK(t *testing.T) {
 		"id": "99",
 	})
 
-	id, err := server.GetRouterIntParam(request, "id")
+	id, err := server.GetRouterPositiveIntParam(request, "id")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, int64(99), id)
+	assert.Equal(t, uint64(99), id)
 }
 
 func TestGetRouterPositiveIntParamZeroError(t *testing.T) {
