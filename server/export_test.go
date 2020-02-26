@@ -18,7 +18,8 @@ package server
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
 var (
-	ReadOrganizationID = readOrganizationID
-	ReadClusterName    = readClusterName
-	GetRouterIntParam  = getRouterIntParam
+	ReadOrganizationID        = readOrganizationID
+	ReadClusterName           = readClusterName
+	GetRouterIntParam         = getRouterIntParam
+	GetRouterPositiveIntParam = getRouterPositiveIntParam
 )

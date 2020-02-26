@@ -16,6 +16,10 @@ limitations under the License.
 
 package storage
 
+import (
+	"database/sql"
+)
+
 // Export for testing
 //
 // Please look into the following blogpost:
@@ -27,3 +31,7 @@ const (
 	LogFormatterString        = logFormatterString
 	SQLHooksKeyQueryBeginTime = sqlHooksKeyQueryBeginTime
 )
+
+func GetConnection(storage *DBStorage) *sql.DB {
+	return storage.connection
+}

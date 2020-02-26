@@ -144,7 +144,13 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *http.Request) {
 	absPath, err := filepath.Abs(server.Config.APISpecFile)
 	if err != nil {
-		log.Fatalf("Error creating absolute path of OpenAPI spec file. %v", err)
+		log.Printf("Error creating absolute path of OpenAPI spec file. %v", err)
+		responses.Send(
+			http.StatusInternalServerError,
+			writer,
+			"Error creating absolute path of OpenAPI spec file",
+		)
+		return
 	}
 
 	http.ServeFile(writer, request, absPath)
