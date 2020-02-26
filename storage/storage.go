@@ -39,6 +39,7 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -143,32 +144,11 @@ func getDataSourceFromConfig(configuration Configuration) (string, error) {
 
 // Init method is doing initialization like creating tables in underlying database
 func (storage DBStorage) Init() error {
-	if err := InitMigrationInfo(&storage); err != nil {
+	if err := migration.InitInfoTable(storage.connection); err != nil {
 		return err
 	}
 
-	ClearMigrations()
-
-	AddMigration(Migration{
-		StepUp: func(tx *sql.Tx) error {
-			_, err := tx.Exec(`
-				CREATE TABLE report (
-					org_id          INTEGER NOT NULL,
-					cluster         VARCHAR NOT NULL UNIQUE,
-					report          VARCHAR NOT NULL,
-					reported_at     DATETIME,
-					last_checked_at DATETIME,
-					PRIMARY KEY(org_id, cluster)
-				)`)
-			return err
-		},
-		StepDown: func(tx *sql.Tx) error {
-			_, err := tx.Exec(`DROP TABLE report`)
-			return err
-		},
-	})
-
-	return SetDBVersion(&storage, GetHighestMigrationVersion())
+	return migration.SetDBVersion(storage.connection, migration.GetMaxVersion())
 }
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.

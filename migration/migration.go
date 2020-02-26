@@ -14,52 +14,44 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package storage
+package migration
 
 import (
 	"database/sql"
 	"fmt"
 )
 
-// MigrationVersion represents a version of the database.
-type MigrationVersion uint
+// Version represents a version of the database.
+type Version uint
 
-// MigrationStep represents an action performed to either increase
+// Step represents an action performed to either increase
 // or decrease the migration version of the database.
-type MigrationStep func(tx *sql.Tx) error
+type Step func(tx *sql.Tx) error
 
 // Migration type describes a single Migration.
 type Migration struct {
-	StepUp   MigrationStep
-	StepDown MigrationStep
+	StepUp   Step
+	StepDown Step
 }
 
 // migrations is a list of migrations that, when applied in their order,
 // create the most recent version of the database from scratch.
-var migrations []Migration = []Migration{}
+var migrations []Migration = []Migration{
+	mig1,
+}
 
-// GetHighestMigrationVersion returns the highest available migration version.
+// GetMaxVersion returns the highest available migration version.
 // The DB version cannot be set to a value higher than this.
 // This value is equivalent to the length of the list of available migrations.
-func GetHighestMigrationVersion() MigrationVersion {
-	return MigrationVersion(len(migrations))
+func GetMaxVersion() Version {
+	return Version(len(migrations))
 }
 
-// AddMigration adds a new migration to the list of available migrations.
-func AddMigration(m Migration) {
-	migrations = append(migrations, m)
-}
-
-// ClearMigrations clears the list of available migrations.
-func ClearMigrations() {
-	migrations = []Migration{}
-}
-
-// InitMigrationInfo ensures that the migration information table is created.
+// InitInfoTable ensures that the migration information table is created.
 // If it already exists, no changes will be made to the database.
 // Otherwise, a new migration information table will be created and initialized.
-func InitMigrationInfo(db *DBStorage) error {
-	tx, err := db.connection.Begin()
+func InitInfoTable(db *sql.DB) error {
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
@@ -90,8 +82,8 @@ func InitMigrationInfo(db *DBStorage) error {
 }
 
 // GetDBVersion reads the current version of the database from the migration info table.
-func GetDBVersion(db *DBStorage) (MigrationVersion, error) {
-	rows, err := db.connection.Query("SELECT version FROM migration_info")
+func GetDBVersion(db *sql.DB) (Version, error) {
+	rows, err := db.Query("SELECT version FROM migration_info")
 	if err != nil {
 		return 0, err
 	}
@@ -102,7 +94,7 @@ func GetDBVersion(db *DBStorage) (MigrationVersion, error) {
 		return 0, fmt.Errorf("Migration info table is empty")
 	}
 
-	var version MigrationVersion = 0
+	var version Version = 0
 	err = rows.Scan(&version)
 	if err != nil {
 		return 0, err
@@ -118,8 +110,8 @@ func GetDBVersion(db *DBStorage) (MigrationVersion, error) {
 
 // SetDBVersion attempts to get the database into the specified
 // target version using available migration steps.
-func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
-	maxVer := GetHighestMigrationVersion()
+func SetDBVersion(db *sql.DB, targetVer Version) error {
+	maxVer := GetMaxVersion()
 	if targetVer > maxVer {
 		return fmt.Errorf("Invalid target version (available version range is 0-%d)", maxVer)
 	}
@@ -135,7 +127,7 @@ func SetDBVersion(db *DBStorage, targetVer MigrationVersion) error {
 		return fmt.Errorf("Current version (%d) is outside of available migration boundaries", currentVer)
 	}
 
-	return execMigrationStepsInTx(db, currentVer, targetVer)
+	return execStepsInTx(db, currentVer, targetVer)
 }
 
 // initInfoTab performs the actual creation and initialization of the migration info table.
@@ -154,9 +146,9 @@ func initInfoTab(tx *sql.Tx) error {
 	return nil
 }
 
-// updateMigrationVersionInDB updates the migration version number in the migration info table.
+// updateVersionInDB updates the migration version number in the migration info table.
 // This function does NOT rollback in case of an error. The calling function is expected to do that.
-func updateMigrationVersionInDB(tx *sql.Tx, newVersion MigrationVersion) error {
+func updateVersionInDB(tx *sql.Tx, newVersion Version) error {
 	res, err := tx.Exec("UPDATE migration_info SET version=?", newVersion)
 	if err != nil {
 		return err
@@ -175,15 +167,15 @@ func updateMigrationVersionInDB(tx *sql.Tx, newVersion MigrationVersion) error {
 	return nil
 }
 
-// execMigrationStepsInTx executes the necessary migration steps in a single transaction.
-func execMigrationStepsInTx(db *DBStorage, currentVer, targetVer MigrationVersion) error {
+// execStepsInTx executes the necessary migration steps in a single transaction.
+func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
 	// Already at target version.
 	if currentVer == targetVer {
 		return nil
 	}
 
 	// Begin a new transaction.
-	tx, err := db.connection.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
@@ -206,7 +198,7 @@ func execMigrationStepsInTx(db *DBStorage, currentVer, targetVer MigrationVersio
 		currentVer--
 	}
 
-	if err = updateMigrationVersionInDB(tx, currentVer); err != nil {
+	if err = updateVersionInDB(tx, currentVer); err != nil {
 		tx.Rollback()
 		return err
 	}
