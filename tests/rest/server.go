@@ -16,10 +16,25 @@ limitations under the License.
 
 package tests
 
-import "github.com/verdverm/frisby"
+import (
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"strconv"
+
+	"github.com/verdverm/frisby"
+)
 
 const apiURL = "http://localhost:8080/api/v1/"
-const knownOrganization = "1"
+
+// list of known organizations that are stored in test database
+var knownOrganizations []int = []int{1, 2, 3, 4}
+
+// list of unknown organizations that are not stored in test database
+var unknownOrganizations []int = []int{5, 6, 7, 8}
+
+// list of improper organization IDs
+var improperOrganizations []int = []int{-1000, -1, 0}
 
 // checkRestAPIEntryPoint check if the entry point (usually /api/v1/) responds correctly to HTTP GET command
 func checkRestAPIEntryPoint() {
@@ -84,12 +99,37 @@ func checkWrongMethodsForEntryPoint() {
 	checkGetEndpointByOtherMethods(apiURL)
 }
 
+// OrganizationsResponse represents response containing list of organizations
+type OrganizationsResponse struct {
+	Organizations []int  `json:"organizations"`
+	Status        string `json:"status"`
+}
+
+func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
+	response := OrganizationsResponse{}
+	text, err := f.Resp.Content()
+	if err != nil {
+		f.AddError(err.Error())
+	} else {
+		json.Unmarshal(text, &response)
+	}
+	return response
+}
+
 // checkOrganizationsEndpoint check if the end point to return list of organizations responds correctly to HTTP GET command
 func checkOrganizationsEndpoint() {
 	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations")
 	f.Send()
 	f.ExpectStatus(200)
 	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+	organizationsResponse := readOrganizationsFromResponse(f)
+	if organizationsResponse.Status != "ok" {
+		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", organizationsResponse.Status))
+	}
+	expectedOrglist := []int{1, 2, 3, 4}
+	if !reflect.DeepEqual(organizationsResponse.Organizations, expectedOrglist) {
+		f.AddError(fmt.Sprintf("Expected the following organizations %v, but got %v instead", expectedOrglist, organizationsResponse.Organizations))
+	}
 	f.PrintReport()
 }
 
@@ -98,18 +138,53 @@ func checkOrganizationsEndpointWrongMethods() {
 	checkGetEndpointByOtherMethods(apiURL + "organizations")
 }
 
-// checkClustersEndpoint check if the end point to return list of clusters responds correctly to HTTP GET command
-func checkClustersEndpoint() {
-	f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(apiURL + "organizations/" + knownOrganization + "/clusters")
-	f.Send()
-	f.ExpectStatus(200)
-	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
-	f.PrintReport()
+func constructURLForOrganizationsClusters(organization int) string {
+	orgID := strconv.Itoa(organization)
+	return apiURL + "organizations/" + orgID + "/clusters"
+}
+
+// checkClustersEndpointForKnownOrganizations check if the end point to return list of clusters responds correctly to HTTP GET command
+func checkClustersEndpointForKnownOrganizations() {
+	for _, knownOrganization := range knownOrganizations {
+		url := constructURLForOrganizationsClusters(knownOrganization)
+		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
+		f.Send()
+		f.ExpectStatus(200)
+		f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+		f.PrintReport()
+	}
+}
+
+// checkClustersEndpointForUnknownOrganizations check if the end point to return list of clusters responds correctly to HTTP GET command
+func checkClustersEndpointForUnknownOrganizations() {
+	for _, unknownOrganization := range unknownOrganizations {
+		url := constructURLForOrganizationsClusters(unknownOrganization)
+		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
+		f.Send()
+		f.ExpectStatus(200)
+		f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+		f.PrintReport()
+	}
+}
+
+// checkClustersEndpointForImproperOrganizations check if the end point to return list of clusters responds correctly to HTTP GET command
+func checkClustersEndpointForImproperOrganizations() {
+	for _, improperOrganization := range improperOrganizations {
+		url := constructURLForOrganizationsClusters(improperOrganization)
+		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
+		f.Send()
+		f.ExpectStatus(400)
+		f.PrintReport()
+	}
 }
 
 // checkClustersEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
 func checkClustersEndpointWrongMethods() {
-	checkGetEndpointByOtherMethods(apiURL + "organizations/" + knownOrganization + "/clusters")
+	for _, knownOrganization := range knownOrganizations {
+		orgID := strconv.Itoa(knownOrganization)
+		url := apiURL + "organizations/" + orgID + "/clusters"
+		checkGetEndpointByOtherMethods(url)
+	}
 }
 
 // checkOpenAPISpecifications checks whether OpenAPI endpoint is handled correctly
@@ -129,7 +204,9 @@ func ServerTests() {
 	checkWrongMethodsForEntryPoint()
 	checkOrganizationsEndpoint()
 	checkOrganizationsEndpointWrongMethods()
-	checkClustersEndpoint()
+	checkClustersEndpointForKnownOrganizations()
+	checkClustersEndpointForUnknownOrganizations()
+	checkClustersEndpointForImproperOrganizations()
 	checkClustersEndpointWrongMethods()
 	checkOpenAPISpecifications()
 }
