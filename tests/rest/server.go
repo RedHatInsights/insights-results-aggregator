@@ -17,6 +17,8 @@ limitations under the License.
 package tests
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/verdverm/frisby"
@@ -96,12 +98,55 @@ func checkWrongMethodsForEntryPoint() {
 	checkGetEndpointByOtherMethods(apiURL)
 }
 
+// OrganizationsResponse represents response containing list of organizations
+type OrganizationsResponse struct {
+	Organizations []int  `json:"organizations"`
+	Status        string `json:"status"`
+}
+
+func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
+	response := OrganizationsResponse{}
+	text, err := f.Resp.Content()
+	if err != nil {
+		f.AddError(err.Error())
+	} else {
+		json.Unmarshal(text, &response)
+	}
+	return response
+}
+
+// compare two organization lists
+func compareOrglists(a, b []int) bool {
+	if (a == nil) != (b == nil) {
+		return false
+	}
+
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // checkOrganizationsEndpoint check if the end point to return list of organizations responds correctly to HTTP GET command
 func checkOrganizationsEndpoint() {
 	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations")
 	f.Send()
 	f.ExpectStatus(200)
 	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+	organizationsResponse := readOrganizationsFromResponse(f)
+	if organizationsResponse.Status != "ok" {
+		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", organizationsResponse.Status))
+	}
+	expectedOrglist := []int{1, 2, 3, 4}
+	if !compareOrglists(organizationsResponse.Organizations, expectedOrglist) {
+		f.AddError(fmt.Sprintf("Expected the following organizations %v, but got %v instead", expectedOrglist, organizationsResponse.Organizations))
+	}
 	f.PrintReport()
 }
 
