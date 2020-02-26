@@ -83,6 +83,20 @@ func checkWrongMethodsForEntryPoint() {
 	checkGetEndpointByOtherMethods(apiURL)
 }
 
+// checkOrganizationsEndpoint check if the end point to return list of organizations responds correctly to HTTP GET command
+func checkOrganizationsEndpoint() {
+	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations")
+	f.Send()
+	f.ExpectStatus(200)
+	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+	f.PrintReport()
+}
+
+// checkOrganizationsEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
+func checkOrganizationsEndpointWrongMethods() {
+	checkGetEndpointByOtherMethods(apiURL + "organizations")
+}
+
 // checkOpenAPISpecifications checks whether OpenAPI endpoint is handled correctly
 func checkOpenAPISpecifications() {
 	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "openapi.json")
@@ -98,5 +112,7 @@ func ServerTests() {
 	checkNonExistentEntryPoint()
 	checkWrongEntryPoint()
 	checkWrongMethodsForEntryPoint()
+	checkOrganizationsEndpoint()
+	checkOrganizationsEndpointWrongMethods()
 	checkOpenAPISpecifications()
 }
