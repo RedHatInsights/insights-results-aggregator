@@ -39,6 +39,7 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -143,17 +144,11 @@ func getDataSourceFromConfig(configuration Configuration) (string, error) {
 
 // Init method is doing initialization like creating tables in underlying database
 func (storage DBStorage) Init() error {
-	_, err := storage.connection.Exec(`
-		create table IF NOT EXISTS report (
-			org_id      integer not null,
-			cluster     varchar not null unique,
-			report      varchar not null,
-			reported_at datetime,
-			last_checked_at datetime,
-			PRIMARY KEY(org_id, cluster)
-		);
-	`)
-	return err
+	if err := migration.InitInfoTable(storage.connection); err != nil {
+		return err
+	}
+
+	return migration.SetDBVersion(storage.connection, migration.GetMaxVersion())
 }
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.

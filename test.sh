@@ -45,17 +45,6 @@ if fuser test.db &> /dev/null; then
 	exit 1
 fi
 
-echo "Testing OpenAPI specifications file"
-# shellcheck disable=2181
-docker run --rm -v "${PWD}":/local/ openapitools/openapi-generator-cli validate -i ./local/openapi.json
-
-if [ $? -eq 0 ]
-then
-    echo "OpenAPI spec file is OK"
-else
-    echo "OpenAPI spec file validation failed"
-    exit 1
-fi
 
 go clean -testcache
 
@@ -67,16 +56,18 @@ else
     exit 1
 fi
 
-rm -f test.db
-echo "Creating test database..."
+function populate_db_with_mock_data() {
+	echo "Populating db with mock data..."
 
-if ./local_storage/create_test_database_sqlite.sh
-then
-	echo "Done"
-else
-	echo "Creating DB failed"
-	exit 1
-fi
+	if ./local_storage/populate_db_with_mock_data.sh
+	then
+		echo "Done"
+		return 0
+	else
+		echo "Unable to populate db with mock data"
+		return 1
+	fi
+}
 
 function start_service() {
 	echo "Starting a service"
@@ -85,13 +76,28 @@ function start_service() {
 		echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
         # shellcheck disable=2181
 	if [ $? -ne 0 ]
-        then
+    then
 		echo "Could not start the service"
 		exit 1
 	fi
 }
 
 function test_rest_api() {
+	start_service
+	# Retry populating the database with mock data N times.
+	# Wait 1 second between attempts.
+	# Without this, the DB could be locked because
+	# the migrations have not yet finished.
+	for i in {1..5}
+	do
+		populate_db_with_mock_data && break || sleep 1
+	done
+	if [ $? -ne 0 ]
+	then
+		echo "Populating DB with mock data failed"
+		return 1
+	fi
+
 	echo "Building REST API tests utility"
 	if go build -o rest-api-tests tests/rest_api_tests.go
 	then
@@ -108,13 +114,29 @@ function test_rest_api() {
 	return $?
 }
 
+function test_openapi() {
+	echo "Testing OpenAPI specifications file"
+	# shellcheck disable=2181
+	docker run --rm -v "${PWD}":/local/ openapitools/openapi-generator-cli validate -i ./local/openapi.json
+
+	if [ $? -eq 0 ]
+	then
+		echo "OpenAPI spec file is OK"
+	else
+		echo "OpenAPI spec file validation failed"
+		exit 1
+	fi
+}
+
 echo -e "------------------------------------------------------------------------------------------------"
-	
-start_service
 
 case $1 in
 	rest_api)
 		test_rest_api
+		EXIT_VALUE=$?
+		;;
+	openapi)
+		test_openapi
 		EXIT_VALUE=$?
 		;;
 	*)
@@ -123,6 +145,9 @@ case $1 in
 		EXIT_VALUE=0
 
 		test_rest_api
+		EXIT_VALUE=$((EXIT_VALUE + $?))
+
+		test_openapi
 		EXIT_VALUE=$((EXIT_VALUE + $?))
 		;;
 esac
