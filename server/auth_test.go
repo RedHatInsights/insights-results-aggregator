@@ -30,6 +30,7 @@ var configAuth = server.Configuration{
 	Debug:     false,
 }
 
+// TestMissingAuthToken checks how the missing auth. token header (expected in HTTP request) is handled
 func TestMissingAuthToken(t *testing.T) {
 	server := server.New(configAuth, nil)
 	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
@@ -41,6 +42,22 @@ func TestMissingAuthToken(t *testing.T) {
 	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 }
 
+// TestMalformedAuthToken checks whether string that is not BASE64-encoded can't be decoded
+func TestMalformedAuthToken(t *testing.T) {
+	server := server.New(configAuth, nil)
+	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// the following error is expected: illegal base64 data at input byte 0
+	req.Header.Set("x-rh-identity", "!")
+
+	response := executeRequest(server, req).Result()
+	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+}
+
+// TestInvalidAuthToken checks whether token header that is not properly encoded is handled correctly
 func TestInvalidAuthToken(t *testing.T) {
 	server := server.New(configAuth, nil)
 	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
@@ -54,6 +71,7 @@ func TestInvalidAuthToken(t *testing.T) {
 	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 }
 
+// TestInvalidAuthToken checks whether token header that does not contain correct JSON (encoded by BASE64) is handled correctly
 func TestInvalidJsonAuthToken(t *testing.T) {
 	server := server.New(configAuth, nil)
 	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
@@ -67,6 +85,7 @@ func TestInvalidJsonAuthToken(t *testing.T) {
 	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 }
 
+// TestBadOrganizationID checks if organization ID is checked properly
 func TestBadOrganizationID(t *testing.T) {
 	server := server.New(configAuth, helpers.MustGetMockStorage(t, true))
 	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations/12345/clusters", nil)
