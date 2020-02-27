@@ -33,6 +33,7 @@ All packages developed in this project have documentation available on [GoDoc se
 * [package `consumer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/consumer)
 * [package `producer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/producer)
 * [package `metrics`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/metrics)
+* [package `migration`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/migration)
 * [package `server`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/server)
 * [package `storage`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/storage)
 * [package `types`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/types)
