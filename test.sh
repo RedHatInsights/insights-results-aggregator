@@ -50,10 +50,10 @@ go clean -testcache
 
 if go build -race
 then
-    echo "Service build ok"
+	echo "Service build ok"
 else
-    echo "Build failed"
-    exit 1
+	echo "Build failed"
+	exit 1
 fi
 
 function populate_db_with_mock_data() {
@@ -74,9 +74,9 @@ function start_service() {
 	# TODO: stop parent(this script) if service died
 	INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests ./insights-results-aggregator || \
 		echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
-        # shellcheck disable=2181
+	# shellcheck disable=2181
 	if [ $? -ne 0 ]
-    then
+	then
 		echo "Could not start the service"
 		exit 1
 	fi
@@ -90,13 +90,8 @@ function test_rest_api() {
 	# the migrations have not yet finished.
 	for i in {1..5}
 	do
-		populate_db_with_mock_data && break || sleep 1
+		populate_db_with_mock_data 2> /dev/null && break || sleep 1
 	done
-	if [ $? -ne 0 ]
-	then
-		echo "Populating DB with mock data failed"
-		return 1
-	fi
 
 	echo "Building REST API tests utility"
 	if go build -o rest-api-tests tests/rest_api_tests.go
