@@ -62,7 +62,7 @@ type Storage interface {
 type DBDriver int
 
 const (
-	// DBDriverSQLite shows that db driver is sqlite
+	// DBDriverSQLite3 shows that db driver is sqlite
 	DBDriverSQLite3 DBDriver = iota
 	// DBDriverPostgres shows that db driver is postrgres
 	DBDriverPostgres
