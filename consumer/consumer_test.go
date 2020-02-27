@@ -37,7 +37,13 @@ const (
 	testMessage   = `{
 		"OrgID": 1,
 		"ClusterName": "aaaaaaaa-bbbb-cccc-dddd-000000000000",
-		"Report": "{}",
+		"Report":{
+		  "fingerprints": [],
+		  "info": [],
+		  "reports": [],
+		  "skips": [],
+		  "system": {}
+		},
 		"LastChecked": "2020-01-23T16:15:59.478901889Z"
 	}`
 	// time limit for *some* tests which can stuck in forever loop
@@ -113,7 +119,14 @@ func TestParseProperMessage(t *testing.T) {
 	const messageStr = `
 {"OrgID":1,
  "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":"{}"}
+ "Report":{
+   "fingerprints": [],
+   "info": [],
+   "reports": [],
+   "skips": [],
+   "system": {}
+ }
+}
 `
 	message, err := consumer.ParseMessage([]byte(messageStr))
 	if err != nil {
@@ -125,8 +138,8 @@ func TestParseProperMessage(t *testing.T) {
 	if *message.ClusterName != "aaaaaaaa-bbbb-cccc-dddd-000000000000" {
 		t.Fatal("Cluster name is different", *message.ClusterName)
 	}
-	if *message.Report != "{}" {
-		t.Fatal("Report name is different", *message.Report)
+	if len(*message.Report) != 5 {
+		t.Fatal("Report has different structure", *message.Report)
 	}
 }
 
@@ -134,7 +147,14 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
 	const message = `
 {"OrgID":1,
  "ClusterName":"this is not a UUID",
- "Report":"{}"}
+ "Report":{
+   "fingerprints": [],
+   "info": [],
+   "reports": [],
+   "skips": [],
+   "system": {}
+ }
+}
 `
 	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
@@ -149,7 +169,14 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
 func TestParseMessageWithoutOrgID(t *testing.T) {
 	const message = `
 {"ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":"{}"}
+ "Report":{
+   "fingerprints": [],
+   "info": [],
+   "reports": [],
+   "skips": [],
+   "system": {}
+ }
+}
 `
 	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
@@ -160,7 +187,14 @@ func TestParseMessageWithoutOrgID(t *testing.T) {
 func TestParseMessageWithoutClusterName(t *testing.T) {
 	const message = `
 {"OrgID":1,
- "Report":"{}"}
+ "Report":{
+   "fingerprints": [],
+   "info": [],
+   "reports": [],
+   "skips": [],
+   "system": {}
+ }
+}
 `
 	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
@@ -176,6 +210,30 @@ func TestParseMessageWithoutReport(t *testing.T) {
 	_, err := consumer.ParseMessage([]byte(message))
 	if err == nil {
 		t.Fatal("Error is expected to be returned for empty message")
+	}
+}
+
+func TestParseMessageEmptyReport(t *testing.T) {
+	const message = `
+{"OrgID":1,
+ "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
+ "Report":{}}
+`
+	_, err := consumer.ParseMessage([]byte(message))
+	if err == nil {
+		t.Fatal("Error is expected to be returned for message with null report")
+	}
+}
+
+func TestParseMessageNullReport(t *testing.T) {
+	const message = `
+{"OrgID":1,
+ "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
+ "Report":null}
+`
+	_, err := consumer.ParseMessage([]byte(message))
+	if err == nil {
+		t.Fatal("Error is expected to be returned for message with null report")
 	}
 }
 
@@ -223,7 +281,13 @@ func TestProcessCorrectMessage(t *testing.T) {
 	const messageValue = `
 {"OrgID":1,
  "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":"{}",
+ "Report":{
+   "fingerprints": [],
+   "info": [],
+   "reports": [],
+   "skips": [],
+   "system": {}
+ },
  "LastChecked":"2020-01-23T16:15:59.478901889Z"}
 `
 	message := sarama.ConsumerMessage{}
@@ -256,7 +320,13 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 	const messageValue = `
 {"OrgID":1,
  "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":"{}",
+ "Report":{
+   "fingerprints": [],
+   "info": [],
+   "reports": [],
+   "skips": [],
+   "system": {}
+ },
  "LastChecked":"2020-01-23T16:15:59.478901889Z"}
 `
 
@@ -277,7 +347,13 @@ func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 	const messageValue = `
 {"OrgID":1,
  "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":"{}",
+ "Report":{
+   "fingerprints": [],
+   "info": [],
+   "reports": [],
+   "skips": [],
+   "system": {}
+ },
  "LastChecked":"2020.01.23 16:15:59"}
 `
 

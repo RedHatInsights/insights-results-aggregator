@@ -53,11 +53,14 @@ type KafkaConsumer struct {
 	client                               sarama.Client
 }
 
+// report represents report send in a message consumed from any broker
+type report map[string]*json.RawMessage
+
 // incomingMessage is representation of message consumed from any broker
 type incomingMessage struct {
 	Organization *types.OrgID       `json:"OrgID"`
 	ClusterName  *types.ClusterName `json:"ClusterName"`
-	Report       *interface{}       `json:"Report"`
+	Report       *report            `json:"Report"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
 	LastChecked string `json:"LastChecked"`
 }
@@ -115,6 +118,19 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 	}, nil
 }
 
+// checkReportStructure tests if the report has correct structure
+func checkReportStructure(r report) error {
+	// the structure is not well defined yet, so all we should do is to check if all keys are there
+	expectedKeys := []string{"fingerprints", "info", "reports", "skips", "system"}
+	for _, expectedKey := range expectedKeys {
+		_, found := r[expectedKey]
+		if !found {
+			return errors.New("Improper report structure, missing key " + expectedKey)
+		}
+	}
+	return nil
+}
+
 // parseMessage tries to parse incoming message and read all required attributes from it
 func parseMessage(messageValue []byte) (incomingMessage, error) {
 	var deserialized incomingMessage
@@ -138,6 +154,11 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 
 	if err != nil {
 		return deserialized, errors.New("cluster name is not a UUID")
+	}
+
+	err = checkReportStructure(*deserialized.Report)
+	if err != nil {
+		return deserialized, err
 	}
 
 	return deserialized, nil
