@@ -34,4 +34,4 @@ jobs:
 stages:
   - style
   - unit tests
-  - REST API tests
+  - integration tests
