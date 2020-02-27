@@ -55,7 +55,13 @@ var (
 	testMessage = `{
 		"OrgID": ` + fmt.Sprint(testOrgID) + `,
 		"ClusterName": "` + testClusterName + `",
-		"Report": "{}",
+		"Report": {
+		  "fingerprints": [],
+		  "info": [],
+		  "reports": [],
+		  "skips": [],
+		  "system": {}
+		},
 		"LastChecked": "2020-01-23T16:15:59.478901889Z"
 	}`
 	testOrgWhiteList = mapset.NewSetWith(1)
