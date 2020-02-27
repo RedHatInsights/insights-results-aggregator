@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/gchaincl/sqlhooks"
-	pq "github.com/lib/pq"
-	sqlite3 "github.com/mattn/go-sqlite3"
+	"github.com/lib/pq"
+	"github.com/mattn/go-sqlite3"
 )
 
 type sqlHooks struct {
@@ -79,16 +79,19 @@ func (h *sqlHooks) After(ctx context.Context, query string, args ...interface{})
 }
 
 // InitAndGetSQLDriverWithLogs initializes driver with logging queries and returns driver's name
-func InitAndGetSQLDriverWithLogs(driverName string, logger *log.Logger) (string, error) {
+func InitAndGetSQLDriverWithLogs(driverType DBDriver, logger *log.Logger) (string, error) {
 	var driver sql_driver.Driver
+	var driverName string
 
-	switch driverName {
-	case "sqlite", "sqlite3":
+	switch driverType {
+	case DBDriverSQLite3:
 		driver = &sqlite3.SQLiteDriver{}
-	case "postgres":
+		driverName = "sqlite3"
+	case DBDriverPostgres:
 		driver = &pq.Driver{}
+		driverName = "postgres"
 	default:
-		return "", fmt.Errorf("driver %v is not supported", driverName)
+		return "", fmt.Errorf("driver %v is not supported", driverType)
 	}
 
 	// linear search is not gonna be an issue since there's not many drivers

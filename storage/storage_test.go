@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/DATA-DOG/go-sqlmock"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -362,4 +363,16 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	}
 
 	assert.Contains(t, buf.String(), "sql: Scan error")
+}
+
+func TestGetDataSourceForDriverFromConfigDriverIsNotSupportedError(t *testing.T) {
+	_, err := storage.GetDataSourceForDriverFromConfig(
+		-1,
+		storage.Configuration{},
+	)
+	if err == nil {
+		t.Fatalf("Expected error, got %v", err)
+	}
+
+	assert.Equal(t, "Driver -1 is not supported", err.Error())
 }

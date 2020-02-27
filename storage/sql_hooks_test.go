@@ -32,14 +32,14 @@ import (
 
 func TestInitAndGetSQLDriverWithLogsOK(t *testing.T) {
 	logger := log.New(os.Stdout, "[sql]", log.LstdFlags)
-	driverName, err := storage.InitAndGetSQLDriverWithLogs("sqlite3", logger)
+	driverName, err := storage.InitAndGetSQLDriverWithLogs(storage.DBDriverSQLite3, logger)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Equal(t, "sqlite3WithHooks", driverName)
 
-	driverName, err = storage.InitAndGetSQLDriverWithLogs("postgres", logger)
+	driverName, err = storage.InitAndGetSQLDriverWithLogs(storage.DBDriverPostgres, logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestInitAndGetSQLDriverWithLogsOK(t *testing.T) {
 
 func TestInitAndGetSQLDriverWithLogsDriverNotFound(t *testing.T) {
 	logger := log.New(os.Stdout, "[sql]", log.LstdFlags)
-	const nonExistingDriver = "asdfaserxcvzasfd"
+	const nonExistingDriver = -1
 	_, err := storage.InitAndGetSQLDriverWithLogs(nonExistingDriver, logger)
 	if err == nil || err.Error() != fmt.Sprintf("driver %v is not supported", nonExistingDriver) {
 		t.Fatal(fmt.Errorf("expected driver not supported error, got %+v", err))
