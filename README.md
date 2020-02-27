@@ -140,7 +140,19 @@ It is possible to use the script `produce_insights_results` from `utils` to prod
 
 ## Testing
 
+The following tests can be run to test your code in `insights-results-aggregator`. Detailed information about each type of test is included in the corresponding subsection:
+
+1. Unit tests: checks behaviour of all units in source code (methods, functions)
+1. REST API Tests: test the real REST API of locally deployed application with database initialized with test data only
+1. Integration tests: the integration tests for `insights-results-aggregator` service
+1. Metrics tests: test whether Prometheus metrics are exposed as expected
+
 ### Unit tests
+
+Set of unit tests checks all units of source code. Additionaly the code coverage is computed and displayed.
+Code coverage is stored in a file `coverage.out`.
+
+To run unit tests use the following command:
 
 `make test`
 
@@ -148,7 +160,11 @@ It is possible to use the script `produce_insights_results` from `utils` to prod
 
 `make integration_tests`
 
-#### Only rest api tests
+#### Only REST API tests
+
+Set of tests to check REST API of locally deployed application with database initialized with test data only.
+
+To run REST API tests use the following command:
 
 `make rest_api_tests`
 
