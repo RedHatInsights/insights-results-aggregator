@@ -14,6 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package migration contains an implementation of a simple database migration
+// mechanism that allows semi-automatic transitions between various database
+// versions as well as building the latest version of the database from
+// scratch.
+//
+// Please look into README.md with further instructions how to use it.
 package migration
 
 import (
