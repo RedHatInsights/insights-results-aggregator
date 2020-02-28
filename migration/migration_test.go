@@ -67,7 +67,7 @@ func prepareDBAndInfo(t *testing.T) *sql.DB {
 	db := prepareDB(t)
 
 	if err := migration.InitInfoTable(db); err != nil {
-		db.Close()
+		_ = db.Close()
 		t.Fatal(err)
 	}
 
@@ -375,7 +375,7 @@ func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
 func TestMigrationInitClosedDB(t *testing.T) {
 	db := prepareDB(t)
 	// Intentionally no `defer` here.
-	db.Close()
+	_ = db.Close()
 
 	if err := migration.InitInfoTable(db); err == nil || err.Error() != dbClosedErrorMsg {
 		t.Fatal(err)
@@ -385,7 +385,7 @@ func TestMigrationInitClosedDB(t *testing.T) {
 func TestMigrationGetVersionClosedDB(t *testing.T) {
 	db := prepareDBAndMigrations(t)
 	// Intentionally no `defer` here.
-	db.Close()
+	_ = db.Close()
 
 	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != dbClosedErrorMsg {
 		t.Fatal(err)
@@ -395,7 +395,7 @@ func TestMigrationGetVersionClosedDB(t *testing.T) {
 func TestMigrationSetVersionClosedDB(t *testing.T) {
 	db := prepareDBAndMigrations(t)
 	// Intentionally no `defer` here.
-	db.Close()
+	_ = db.Close()
 
 	if err := migration.SetDBVersion(db, 0); err == nil || err.Error() != dbClosedErrorMsg {
 		t.Fatal(err)
