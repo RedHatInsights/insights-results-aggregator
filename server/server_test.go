@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -71,6 +72,14 @@ func checkResponseBody(t *testing.T, expected string, body io.ReadCloser) {
 	resultStr := strings.TrimSpace(string(result))
 
 	assert.Equal(t, expected, resultStr)
+}
+
+// close starage with check whether the close operation was successful
+func closeStorage(t *testing.T, mockStorage storage.Storage) {
+	err := mockStorage.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestReadReportForClusterMissingOrgIdAndClusterName(t *testing.T) {
@@ -135,7 +144,7 @@ func TestReadReportForClusterBadClusterName(t *testing.T) {
 
 func TestReadNonExistingReport(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer closeStorage(t, mockStorage)
 
 	server := server.New(config, mockStorage)
 
@@ -154,7 +163,7 @@ func TestReadNonExistingReport(t *testing.T) {
 
 func TestReadExistingReport(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer closeStorage(t, mockStorage)
 
 	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
 	if err != nil {
@@ -197,7 +206,7 @@ func TestReadReportDBError(t *testing.T) {
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer closeStorage(t, mockStorage)
 
 	server := server.New(config, mockStorage)
 
@@ -213,7 +222,7 @@ func TestListOfClustersForNonExistingOrganization(t *testing.T) {
 
 func TestListOfClustersForOrganizationOK(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer closeStorage(t, mockStorage)
 
 	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
 	if err != nil {
@@ -236,7 +245,7 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 // because the storage is closed before the query
 func TestListOfClustersForOrganizationDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	mockStorage.Close()
+	closeStorage(t, mockStorage)
 
 	server := server.New(config, mockStorage)
 
@@ -287,7 +296,7 @@ func TestMainEndpoint(t *testing.T) {
 
 func TestListOfOrganizationsEmpty(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer closeStorage(t, mockStorage)
 
 	server := server.New(config, mockStorage)
 
@@ -303,7 +312,7 @@ func TestListOfOrganizationsEmpty(t *testing.T) {
 
 func TestListOfOrganizationsOK(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer closeStorage(t, mockStorage)
 
 	err := mockStorage.WriteReportForCluster(1, "8083c377-8a05-4922-af8d-e7d0970c1f49", "{}", time.Now())
 	if err != nil {
@@ -329,7 +338,7 @@ func TestListOfOrganizationsOK(t *testing.T) {
 
 func TestListOfOrganizationsDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	mockStorage.Close()
+	closeStorage(t, mockStorage)
 
 	server := server.New(config, mockStorage)
 
@@ -499,7 +508,7 @@ func TestServeAPISpecFileOK(t *testing.T) {
 	}
 
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer closeStorage(t, mockStorage)
 
 	server := server.New(config, mockStorage)
 
@@ -541,7 +550,7 @@ func TestServeAPISpecFileError(t *testing.T) {
 	}
 
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer closeStorage(t, mockStorage)
 
 	server := server.New(config, mockStorage)
 
