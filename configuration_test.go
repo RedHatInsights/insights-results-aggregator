@@ -116,11 +116,20 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 		PGParams:         "",
 	}, storageCfg)
 
-	os.Setenv("INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
-	os.Setenv(
+	err := os.Setenv("INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = os.Setenv(
 		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD",
 		"some very secret password",
 	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	storageCfg = main.LoadStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
