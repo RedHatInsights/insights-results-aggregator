@@ -25,6 +25,7 @@ package migration
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // Version represents a version of the database.
@@ -75,7 +76,8 @@ func InitInfoTable(db *sql.DB) error {
 			return fmt.Errorf("Unexpected number of rows in migration info table (expected: 1, reality: %d)", rowCount)
 		}
 		return nil
-	} else if err.Error() != "no such table: migration_info" {
+	} else if !strings.Contains(err.Error(), "migration_info") {
+		// An error not related to the nonexistence of the migration_info table.
 		_ = tx.Rollback()
 		return err
 	}
