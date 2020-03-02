@@ -21,14 +21,15 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
-	"github.com/deckarep/golang-set"
-	"github.com/spf13/viper"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	mapset "github.com/deckarep/golang-set"
+	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
@@ -49,9 +50,12 @@ const (
 )
 
 var (
-	brokerCfg  *viper.Viper
-	storageCfg *viper.Viper
-	serverCfg  *viper.Viper
+	brokerCfg     *viper.Viper
+	storageCfg    *viper.Viper
+	serverCfg     *viper.Viper
+	processingCfg *viper.Viper
+	metricsCfg    *viper.Viper
+	loggingCfg    *viper.Viper
 )
 
 func loadConfiguration(defaultConfigFile string) {
@@ -87,6 +91,9 @@ func loadConfiguration(defaultConfigFile string) {
 	storageCfg = viper.Sub("storage")
 	brokerCfg = viper.Sub("broker")
 	serverCfg = viper.Sub("server")
+	processingCfg = viper.Sub("processing")
+	metricsCfg = viper.Sub("metrics")
+	loggingCfg = viper.Sub("logging")
 
 	const envPrefix = "INSIGHTS_RESULTS_AGGREGATOR__"
 
@@ -98,6 +105,15 @@ func loadConfiguration(defaultConfigFile string) {
 
 	serverCfg.AutomaticEnv()
 	serverCfg.SetEnvPrefix(envPrefix + "SERVER_")
+
+	processingCfg.AutomaticEnv()
+	processingCfg.SetEnvPrefix(envPrefix + "PROCESSING_")
+
+	metricsCfg.AutomaticEnv()
+	metricsCfg.SetEnvPrefix(envPrefix + "METRICS_")
+
+	loggingCfg.AutomaticEnv()
+	loggingCfg.SetEnvPrefix(envPrefix + "LOGGING_")
 }
 
 func loadBrokerConfiguration() broker.Configuration {
@@ -110,14 +126,6 @@ func loadBrokerConfiguration() broker.Configuration {
 		Enabled:      brokerCfg.GetBool("enabled"),
 		OrgWhitelist: orgWhitelist,
 	}
-}
-
-// getWhitelistFileName retrieves filename of organization whitelist from config file
-func getWhitelistFileName() string {
-	processingCfg := viper.Sub("processing")
-	fileName := processingCfg.GetString("org_whitelist")
-
-	return fileName
 }
 
 // createReaderFromFile creates a io.Reader from the given file
@@ -157,7 +165,7 @@ func loadWhitelistFromCSV(r io.Reader) (mapset.Set, error) {
 }
 
 func loadOrganizationWhitelist() mapset.Set {
-	fileName := getWhitelistFileName()
+	fileName := processingCfg.GetString("org_whitelist")
 	contentReader, err := createReaderFromFile(fileName)
 	if err != nil {
 		log.Fatalf("Organization whitelist file could not be opened. Error: %v", err)
