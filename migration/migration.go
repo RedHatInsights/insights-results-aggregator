@@ -70,18 +70,18 @@ func InitInfoTable(db *sql.DB) error {
 	// If it doesn't exist, the "no such table" error is expected.
 	// Otherwise, there's something wrong.
 	if err == nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		if rowCount != 1 {
 			return fmt.Errorf("Unexpected number of rows in migration info table (expected: 1, reality: %d)", rowCount)
 		}
 		return nil
 	} else if err.Error() != "no such table: migration_info" {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 
 	if err = initInfoTab(tx); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	return tx.Commit()
@@ -189,7 +189,7 @@ func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
 	// Upgrade to target version.
 	for currentVer < targetVer {
 		if err = migrations[currentVer].StepUp(tx); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 		currentVer++
@@ -198,14 +198,14 @@ func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
 	// Downgrade to target version.
 	for currentVer > targetVer {
 		if err = migrations[currentVer-1].StepDown(tx); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 		currentVer--
 	}
 
 	if err = updateVersionInDB(tx, currentVer); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 

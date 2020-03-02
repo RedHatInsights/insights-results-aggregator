@@ -38,6 +38,14 @@ import (
 
 const (
 	configFileEnvVariableName = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
+	emptyConfig               = `
+		[broker]
+		[server]
+		[processing]
+		[metrics]
+		[logging]
+		[storage]
+	`
 )
 
 var (
@@ -62,8 +70,15 @@ func loadConfiguration(defaultConfigFile string) {
 	}
 
 	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s", err))
+	if _, isNotFoundError := err.(viper.ConfigFileNotFoundError); !specified && isNotFoundError {
+		// viper is not smart enough to understand the structure of config by itself
+		viper.SetConfigType("toml")
+		err := viper.ReadConfig(strings.NewReader(emptyConfig))
+		if err != nil {
+			panic(err)
+		}
+	} else if err != nil {
+		panic(fmt.Errorf("fatal error config file: %s", err))
 	}
 
 	// override config from env if there's variable in env
