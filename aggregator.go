@@ -60,6 +60,24 @@ func startStorageConnection() (*storage.DBStorage, error) {
 	return storage, nil
 }
 
+// closeStorage closes specified DBStorage with proper error checking
+// whether the close operation was successful or not.
+func closeStorage(storage *storage.DBStorage) {
+	err := storage.Close()
+	if err != nil {
+		log.Println("Error during closing storage connection", err)
+	}
+}
+
+// closeConsumer closes specified consumer instance with proper error checking
+// whether the close operation was successful or not.
+func closeConsumer(consumerInstance consumer.Consumer) {
+	err := consumerInstance.Close()
+	if err != nil {
+		log.Println("Error during closing consumer", err)
+	}
+}
+
 func startConsumer() {
 	storage, err := startStorageConnection()
 	if err != nil {
@@ -70,7 +88,7 @@ func startConsumer() {
 		log.Println(err)
 		os.Exit(ExitStatusConsumerError)
 	}
-	defer storage.Close()
+	defer closeStorage(storage)
 
 	brokerCfg := loadBrokerConfiguration()
 
@@ -86,7 +104,7 @@ func startConsumer() {
 		os.Exit(ExitStatusConsumerError)
 	}
 
-	defer consumerInstance.Close()
+	defer closeConsumer(consumerInstance)
 	consumerInstance.Serve()
 }
 
@@ -95,7 +113,7 @@ func startServer() {
 	if err != nil {
 		os.Exit(ExitStatusServerError)
 	}
-	defer storage.Close()
+	defer closeStorage(storage)
 
 	serverCfg := loadServerConfiguration()
 	serverInstance = server.New(serverCfg, storage)
