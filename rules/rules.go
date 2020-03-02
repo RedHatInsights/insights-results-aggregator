@@ -17,11 +17,8 @@
 // up to date by periodically updating them.
 package rules
 
-import (
-	"github.com/robfig/cron"
-)
-
-
-type RuleContent struct {
-	Config Configuration,
+// RulesConfiguration represents the configuration of rules package
+type RulesConfiguration struct {
+	crontabConfig       string
+	contentUpdateScript string
 }

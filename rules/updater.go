@@ -15,3 +15,37 @@ limitations under the License.
 */
 
 package rules
+
+import (
+	"github.com/robfig/cron"
+	"log"
+	"os/exec"
+)
+
+// Updater represents
+type Updater struct {
+	Config Configuration
+}
+
+// New constructs a Updater from configuration, enables cron job
+func New(config Configuration) *Updater {
+	/*
+	    updater := Updater{config}
+		crontab := cron.New()
+	    crontab.AddFunc(config.crontabConfig, updater.UpdateInsightsRulesContent)
+	*/
+}
+
+// UpdateInsightsRulesContent runs the script update_insights_rules_content.sh.
+// Ran either by cron or on demand
+func (u *Updater) UpdateInsightsRulesContent() error {
+	log.Println("Updating insights rules content")
+	updateScript := u.Config.contentUpdateScript
+	cmd := exec.Command(updateScript)
+	err := cmd.Run()
+	if err != nil {
+		log.Printf("Error updating the insights rules content: %v", err)
+		return err
+	}
+	return nil
+}

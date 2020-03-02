@@ -13,7 +13,8 @@ enabled = true
 org_whitelist = "org_whitelist.csv"
 
 [rules]
-rules_content_repository = "https://gitlab.cee.redhat.com/insights-rules/insights-content.git"
+content_update_cron = "0 0 * * *"
+content_update_script = "update_insights_rules_content.sh"
 
 [server]
 address = ":8080"

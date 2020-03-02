@@ -40,10 +40,11 @@ const (
 	configFileEnvVariableName = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
 	emptyConfig               = `
 		[broker]
-		[server]
-		[processing]
-		[metrics]
 		[logging]
+		[metrics]
+		[processing]
+		[rules]
+		[server]
 		[storage]
 	`
 )

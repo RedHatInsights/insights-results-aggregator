@@ -16,7 +16,8 @@ limitations under the License.
 
 package rules
 
-// Configuration represents configuration of Rules Content
+// Configuration represents the configuration of rules package
 type Configuration struct {
-	RulesContentRepository string
+	crontabConfig       string
+	contentUpdateScript string
 }

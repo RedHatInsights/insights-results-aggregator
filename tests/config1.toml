@@ -3,18 +3,21 @@ address = "localhost:9092"
 topic = "platform.results.ccx"
 group = "aggregator"
 
-[server]
-address = ":8080"
-api_prefix = "/api/v1/"
-api_spec_file = "openapi.json"
-
-[processing]
-org_whitelist = "org_whitelist.csv"
+[logging]
 
 [metrics]
 enabled = true
 
-[logging]
+[processing]
+org_whitelist = "org_whitelist.csv"
+
+[rules]
+rules_content_repository = "git@gitlab.cee.redhat.com:ccx/ccx-rules-ocp.git"
+
+[server]
+address = ":8080"
+api_prefix = "/api/v1/"
+api_spec_file = "openapi.json"
 
 [storage]
 db_driver = "sqlite3"
