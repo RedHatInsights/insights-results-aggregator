@@ -126,10 +126,19 @@ func stepUpAndDown(t *testing.T, db *sql.DB, upVer, downVer migration.Version) {
 	}
 }
 
+// closeDB closes the connection to DB with check whether the close operation
+// was successful or not.
+func closeDB(t *testing.T, mockDB *sql.DB) {
+	err := mockDB.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // TestMigrationInit checks that database migration table initialization succeeds.
 func TestMigrationInit(t *testing.T) {
 	db := prepareDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := migration.InitInfoTable(db); err != nil {
 		t.Fatal(err)
@@ -144,7 +153,7 @@ func TestMigrationInit(t *testing.T) {
 // migration info table will simply result in a no-op without any error.
 func TestMigrationReInit(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if err := migration.InitInfoTable(db); err != nil {
 		t.Fatal(err)
@@ -153,7 +162,7 @@ func TestMigrationReInit(t *testing.T) {
 
 func TestMigrationInitNotOneRow(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10)")
 	if err != nil {
@@ -168,7 +177,7 @@ func TestMigrationInitNotOneRow(t *testing.T) {
 // TestMigrationGetVersion checks that the initial database migration version is 0.
 func TestMigrationGetVersion(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	version, err := migration.GetDBVersion(db)
 	if err != nil {
@@ -183,7 +192,7 @@ func TestMigrationGetVersion(t *testing.T) {
 func TestMigrationGetVersionMissingInfoTable(t *testing.T) {
 	// Prepare DB without preparing the migration info table.
 	db := prepareDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != noSuchTableErrorMsg {
 		t.Fatal(err)
@@ -192,7 +201,7 @@ func TestMigrationGetVersionMissingInfoTable(t *testing.T) {
 
 func TestMigrationGetVersionMultipleRows(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10)")
 	if err != nil {
@@ -206,7 +215,7 @@ func TestMigrationGetVersionMultipleRows(t *testing.T) {
 
 func TestMigrationGetVersionEmptyTable(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	_, err := db.Exec("DELETE FROM migration_info")
 	if err != nil {
@@ -220,7 +229,7 @@ func TestMigrationGetVersionEmptyTable(t *testing.T) {
 
 func TestMigrationGetVersionInvalidType(t *testing.T) {
 	db := prepareDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	_, err := db.Exec("CREATE TABLE migration_info ( version TEXT )")
 	if err != nil {
@@ -241,7 +250,7 @@ func TestMigrationGetVersionInvalidType(t *testing.T) {
 // the database version in both direction (upgrade and downgrade).
 func TestMigrationSetVersion(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	// Step-up from 0 to 1.
 	if err := migration.SetDBVersion(db, 1); err != nil {
@@ -274,7 +283,7 @@ func TestMigrationSetVersion(t *testing.T) {
 
 func TestMigrationNoInfoTable(t *testing.T) {
 	db := prepareDB(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	// Intentionally missing info table initialization here.
 
@@ -286,7 +295,7 @@ func TestMigrationNoInfoTable(t *testing.T) {
 
 func TestMigrationSetVersionSame(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	// Step-up from 0 to 1.
 	if err := migration.SetDBVersion(db, 1); err != nil {
@@ -310,7 +319,7 @@ func TestMigrationSetVersionSame(t *testing.T) {
 
 func TestMigrationSetVersionTargetTooHigh(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	// Step-up from 0 to 2 (impossible -- only 1 migration is available).
 	if err := migration.SetDBVersion(db, 2); err.Error() != "Invalid target version (available version range is 0-1)" {
@@ -321,7 +330,7 @@ func TestMigrationSetVersionTargetTooHigh(t *testing.T) {
 // TestMigrationSetVersionUpError checks that an error during a step-up is correctly handled.
 func TestMigrationSetVersionUpError(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	*migration.Migrations = []migration.Migration{
 		migration.Migration{
@@ -338,7 +347,7 @@ func TestMigrationSetVersionUpError(t *testing.T) {
 // TestMigrationSetVersionDownError checks that an error during a step-down is correctly handled.
 func TestMigrationSetVersionDownError(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	*migration.Migrations = []migration.Migration{
 		migration.Migration{
@@ -361,7 +370,7 @@ func TestMigrationSetVersionDownError(t *testing.T) {
 // is outside of the available migration range, it is reported as an error.
 func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	if _, err := db.Exec("UPDATE migration_info SET version=10"); err != nil {
 		t.Fatal(err)
@@ -375,7 +384,7 @@ func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
 func TestMigrationInitClosedDB(t *testing.T) {
 	db := prepareDB(t)
 	// Intentionally no `defer` here.
-	_ = db.Close()
+	closeDB(t, db)
 
 	if err := migration.InitInfoTable(db); err == nil || err.Error() != dbClosedErrorMsg {
 		t.Fatal(err)
@@ -385,7 +394,7 @@ func TestMigrationInitClosedDB(t *testing.T) {
 func TestMigrationGetVersionClosedDB(t *testing.T) {
 	db := prepareDBAndMigrations(t)
 	// Intentionally no `defer` here.
-	_ = db.Close()
+	closeDB(t, db)
 
 	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != dbClosedErrorMsg {
 		t.Fatal(err)
@@ -395,7 +404,7 @@ func TestMigrationGetVersionClosedDB(t *testing.T) {
 func TestMigrationSetVersionClosedDB(t *testing.T) {
 	db := prepareDBAndMigrations(t)
 	// Intentionally no `defer` here.
-	_ = db.Close()
+	closeDB(t, db)
 
 	if err := migration.SetDBVersion(db, 0); err == nil || err.Error() != dbClosedErrorMsg {
 		t.Fatal(err)
@@ -404,7 +413,7 @@ func TestMigrationSetVersionClosedDB(t *testing.T) {
 
 func TestMigrationInitRollbackStep(t *testing.T) {
 	db := prepareDBAndMigrations(t)
-	defer db.Close()
+	defer closeDB(t, db)
 
 	*migration.Migrations = []migration.Migration{migration.Migration{
 		StepUp:   stepRollbackFn,
