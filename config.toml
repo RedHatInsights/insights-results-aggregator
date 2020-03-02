@@ -4,19 +4,22 @@ topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = true
 
+[logging]
+
+[metrics]
+enabled = true
+
+[processing]
+org_whitelist = "org_whitelist.csv"
+
+[rules]
+rules_content_repository = "https://gitlab.cee.redhat.com/insights-rules/insights-content.git"
+
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
 api_spec_file = "openapi.json"
 debug = true
-
-[processing]
-org_whitelist = "org_whitelist.csv"
-
-[metrics]
-enabled = true
-
-[logging]
 
 [storage]
 db_driver = "sqlite3"
@@ -27,3 +30,4 @@ pg_host = "localhost"
 pg_port = 5472
 pg_db_name = "aggregator"
 pg_params = ""
+
