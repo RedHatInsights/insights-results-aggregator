@@ -94,7 +94,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 
 	dataSource, err := getDataSourceFromConfig(configuration)
 	if err != nil {
-		return nil, fmt.Errorf("Driver %v is not supported", configuration.Driver)
+		return nil, fmt.Errorf("driver '%v' is not supported", configuration.Driver)
 	}
 
 	log.Printf("Making connection to data storage, driver=%s datasource=%s", configuration.Driver, dataSource)
@@ -139,7 +139,7 @@ func getDataSourceFromConfig(configuration Configuration) (string, error) {
 		), nil
 	}
 
-	return "", fmt.Errorf("Driver %v is not supported", configuration.Driver)
+	return "", fmt.Errorf("driver %v is not supported", configuration.Driver)
 }
 
 // Init method is doing initialization like creating tables in underlying database
@@ -260,7 +260,7 @@ func (storage DBStorage) WriteReportForCluster(
 		 ON CONFLICT (org_id, cluster) 
 		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`
 	default:
-		return fmt.Errorf("Writing report with DB %v is not supported", storage.dbDriverType)
+		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
 	statement, err := storage.connection.Prepare(query)

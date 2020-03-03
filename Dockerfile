@@ -22,6 +22,7 @@ RUN cd insights-results-aggregator && \
 FROM registry.access.redhat.com/ubi8-minimal
 
 COPY --from=builder /go/insights-results-aggregator/insights-results-aggregator .
+COPY --from=builder /go/insights-results-aggregator/openapi.json /openapi/openapi.json
 
 RUN chmod a+x /insights-results-aggregator
 

@@ -111,7 +111,10 @@ func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
 	if err != nil {
 		f.AddError(err.Error())
 	} else {
-		json.Unmarshal(text, &response)
+		err := json.Unmarshal(text, &response)
+		if err != nil {
+			f.AddError(err.Error())
+		}
 	}
 	return response
 }
