@@ -16,8 +16,8 @@ limitations under the License.
 
 // Entry point to the insights results aggregator service.
 //
-// The service contains consumer (usually Kafka consumer) that consume
-// messages from given source, processs those messages, and stores them
+// The service contains consumer (usually Kafka consumer) that consumes
+// messages from given source, processes those messages and stores them
 // in configured data store. It also starts REST API servers with
 // endpoints that expose several types of information: list of organizations,
 // list of clusters for given organization, and cluster health.
@@ -43,6 +43,7 @@ const (
 	ExitStatusConsumerError
 	// ExitStatusServerError is returned in case of any REST API server-related error
 	ExitStatusServerError
+	defaultConfigFilename = "config"
 )
 
 var (
@@ -51,13 +52,15 @@ var (
 )
 
 func startStorageConnection() (*storage.DBStorage, error) {
-	storageCfg := loadStorageConfiguration()
-	storage, err := storage.New(storageCfg)
+	storageCfg := getStorageConfiguration()
+
+	dbStorage, err := storage.New(storageCfg)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	return storage, nil
+
+	return dbStorage, nil
 }
 
 // closeStorage closes specified DBStorage with proper error checking
@@ -79,18 +82,18 @@ func closeConsumer(consumerInstance consumer.Consumer) {
 }
 
 func startConsumer() {
-	storage, err := startStorageConnection()
+	dbStorage, err := startStorageConnection()
 	if err != nil {
 		os.Exit(ExitStatusConsumerError)
 	}
-	err = storage.Init()
+	err = dbStorage.Init()
 	if err != nil {
 		log.Println(err)
 		os.Exit(ExitStatusConsumerError)
 	}
-	defer closeStorage(storage)
+	defer closeStorage(dbStorage)
 
-	brokerCfg := loadBrokerConfiguration()
+	brokerCfg := getBrokerConfiguration()
 
 	// if broker is disabled, simply don't start it
 	if !brokerCfg.Enabled {
@@ -98,7 +101,7 @@ func startConsumer() {
 		return
 	}
 
-	consumerInstance, err = consumer.New(brokerCfg, storage)
+	consumerInstance, err = consumer.New(brokerCfg, dbStorage)
 	if err != nil {
 		log.Println(err)
 		os.Exit(ExitStatusConsumerError)
@@ -109,14 +112,14 @@ func startConsumer() {
 }
 
 func startServer() {
-	storage, err := startStorageConnection()
+	dbStorage, err := startStorageConnection()
 	if err != nil {
 		os.Exit(ExitStatusServerError)
 	}
-	defer closeStorage(storage)
+	defer closeStorage(dbStorage)
 
-	serverCfg := loadServerConfiguration()
-	serverInstance = server.New(serverCfg, storage)
+	serverCfg := getServerConfiguration()
+	serverInstance = server.New(serverCfg, dbStorage)
 	err = serverInstance.Start()
 	if err != nil {
 		log.Println(err)
@@ -173,7 +176,10 @@ func stopService() {
 }
 
 func main() {
-	loadConfiguration("config")
+	err := loadConfiguration(defaultConfigFilename)
+	if err != nil {
+		panic(err)
+	}
 
 	startService()
 }
