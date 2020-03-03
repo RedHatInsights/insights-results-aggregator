@@ -172,7 +172,7 @@ func loadWhitelistFromCSV(r io.Reader) (mapset.Set, error) {
 			continue // skip header
 		}
 
-		orgID, err := strconv.Atoi(line[0]) // single record per line
+		orgID, err := strconv.ParseUint(line[0], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"organization ID on line %v in whitelist CSV is not numerical. Found value: %v",
