@@ -31,7 +31,7 @@ shellcheck: ## Run shellcheck
 
 errcheck: ## Run errcheck
 	@echo "Running errcheck"
-	-./goerrcheck.sh
+	./goerrcheck.sh
 
 style: fmt vet lint cyclo shellcheck errcheck ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
 
