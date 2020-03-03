@@ -39,6 +39,9 @@ type RuleContent struct {
 	Errors     map[string]RuleErrorContent
 }
 
+// RuleContentDirectory contains content for all available rules in a directory.
+type RuleContentDirectory map[string]RuleContent
+
 // parseErrorContents reads the contents of the specified directory
 // and parses all subdirectories as error key contents.
 // This implicitly checks that the directory exists,
@@ -75,8 +78,8 @@ func parseErrorContents(ruleDirPath string) (map[string]RuleErrorContent, error)
 	return errorContents, nil
 }
 
-// Parse attempts to parse all available rule content from the specified directory.
-func Parse(ruleDirPath string) (RuleContent, error) {
+// parseRuleContent attempts to parse all available rule content from the specified directory.
+func parseRuleContent(ruleDirPath string) (RuleContent, error) {
 	errorContents, err := parseErrorContents(ruleDirPath)
 	if err != nil {
 		return RuleContent{}, err
@@ -115,4 +118,28 @@ func Parse(ruleDirPath string) (RuleContent, error) {
 		Plugin:     plugin,
 		Errors:     errorContents,
 	}, nil
+}
+
+// ParseRuleContentDir finds all rule content in a directory and parses it.
+func ParseRuleContentDir(dirPath string) (RuleContentDirectory, error) {
+	entries, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		return RuleContentDirectory{}, err
+	}
+
+	contentDir := RuleContentDirectory{}
+
+	for _, e := range entries {
+		if e.IsDir() {
+			name := e.Name()
+			ruleContent, err := parseRuleContent(path.Join(dirPath, name))
+			if err != nil {
+				return RuleContentDirectory{}, err
+			}
+
+			contentDir[name] = ruleContent
+		}
+	}
+
+	return contentDir, nil
 }
