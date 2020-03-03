@@ -187,7 +187,7 @@ func TestReadExistingReport(t *testing.T) {
 
 func TestReadReportDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	mockStorage.Close()
+	_ = mockStorage.Close()
 
 	server := server.New(config, mockStorage)
 
@@ -491,7 +491,7 @@ func TestServerStart(t *testing.T) {
 			checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 
 			// stopping the server
-			s.Stop(context.Background())
+			_ = s.Stop(context.Background())
 		}()
 
 		err := s.Start()

@@ -355,7 +355,7 @@ func mustWriteReport(
 		t.Fatal(err)
 	}
 
-	statement.Close()
+	_ = statement.Close()
 }
 
 func TestDBStorageListOfOrgsLogError(t *testing.T) {

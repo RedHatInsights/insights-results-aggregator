@@ -30,7 +30,7 @@ import (
 
 func getCounterValue(counter prometheus.Counter) float64 {
 	pb := &prom_models.Metric{}
-	counter.Write(pb)
+	_ = counter.Write(pb)
 
 	return pb.GetCounter().GetValue()
 }

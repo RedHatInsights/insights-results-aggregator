@@ -261,7 +261,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 
 	message := sarama.ConsumerMessage{}
 	// messsage is empty -> nothing should be written into storage
-	c.ProcessMessage(&message)
+	_ = c.ProcessMessage(&message)
 	cnt, err := storage.ReportsCount()
 	if err != nil {
 		t.Fatal(err)
@@ -315,7 +315,7 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 
 	c := dummyConsumer(storage, false)
 
-	storage.Close()
+	_ = storage.Close()
 
 	const messageValue = `
 {"OrgID":1,
