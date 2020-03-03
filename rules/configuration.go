@@ -18,6 +18,7 @@ package rules
 
 // Configuration represents the configuration of rules package
 type Configuration struct {
-	crontabConfig       string
-	contentUpdateScript string
+	CrontabEnabled      bool
+	CronJobConfig       string
+	ContentUpdateScript string
 }

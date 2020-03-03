@@ -21,6 +21,7 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
+	"github.com/RedHatInsights/insights-results-aggregator/rules"
 	"github.com/deckarep/golang-set"
 	"github.com/spf13/viper"
 	"io"
@@ -53,6 +54,7 @@ var (
 	brokerCfg  *viper.Viper
 	storageCfg *viper.Viper
 	serverCfg  *viper.Viper
+	rulesCfg   *viper.Viper
 )
 
 func loadConfiguration(defaultConfigFile string) {
@@ -88,6 +90,7 @@ func loadConfiguration(defaultConfigFile string) {
 	storageCfg = viper.Sub("storage")
 	brokerCfg = viper.Sub("broker")
 	serverCfg = viper.Sub("server")
+	rulesCfg = viper.Sub("rules")
 
 	const envPrefix = "INSIGHTS_RESULTS_AGGREGATOR__"
 
@@ -99,6 +102,9 @@ func loadConfiguration(defaultConfigFile string) {
 
 	serverCfg.AutomaticEnv()
 	serverCfg.SetEnvPrefix(envPrefix + "SERVER_")
+
+	rulesCfg.AutomaticEnv()
+	rulesCfg.SetEnvPrefix(envPrefix + "RULES_")
 }
 
 func loadBrokerConfiguration() broker.Configuration {
@@ -209,5 +215,18 @@ func loadServerConfiguration() server.Configuration {
 		APIPrefix:   serverCfg.GetString("api_prefix"),
 		APISpecFile: apiSpecFile,
 		Debug:       serverCfg.GetBool("debug"),
+	}
+}
+
+func loadRulesConfiguration() rules.Configuration {
+	absPath, err := filepath.Abs(rulesCfg.GetString("content_update_script"))
+	if err != nil {
+		log.Fatalf("Error creating absolute path of rules content update script. %v", err)
+	}
+
+	return rules.Configuration{
+		CrontabEnabled:      rulesCfg.GetBool("content_auto_update"),
+		CronJobConfig:       rulesCfg.GetString("content_update_cron"),
+		ContentUpdateScript: absPath,
 	}
 }

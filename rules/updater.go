@@ -17,35 +17,59 @@ limitations under the License.
 package rules
 
 import (
-	"github.com/robfig/cron"
+	"context"
+	"github.com/robfig/cron/v3"
 	"log"
 	"os/exec"
 )
 
 // Updater represents
 type Updater struct {
-	Config Configuration
+	Config  Configuration
+	Crontab *cron.Cron
 }
 
-// New constructs a Updater from configuration, enables cron job
-func New(config Configuration) *Updater {
-	/*
-	    updater := Updater{config}
-		crontab := cron.New()
-	    crontab.AddFunc(config.crontabConfig, updater.UpdateInsightsRulesContent)
-	*/
+// NewUpdater constructs an Updater from configuration, configures Cron job, but doesn't start it
+func NewUpdater(config Configuration) *Updater {
+	updater := Updater{Config: config}
+
+	crontab := cron.New()
+	crontab.AddFunc(config.CronJobConfig, updater.UpdateInsightsRulesContentCron)
+	updater.Crontab = crontab
+
+	return &updater
+}
+
+// StartUpdater starts the crontab
+func (u *Updater) StartUpdater() {
+	u.Crontab.Start()
+}
+
+// StopUpdater stops the crontab and returns context of running jobs
+func (u *Updater) StopUpdater() context.Context {
+	return u.Crontab.Stop()
 }
 
 // UpdateInsightsRulesContent runs the script update_insights_rules_content.sh.
 // Ran either by cron or on demand
 func (u *Updater) UpdateInsightsRulesContent() error {
 	log.Println("Updating insights rules content")
-	updateScript := u.Config.contentUpdateScript
-	cmd := exec.Command(updateScript)
+
+	cmd := exec.Command(u.Config.ContentUpdateScript)
 	err := cmd.Run()
 	if err != nil {
-		log.Printf("Error updating the insights rules content: %v", err)
+		log.Printf("Error during the execution of the insights rules content update script: %v", err)
 		return err
 	}
+
 	return nil
+}
+
+// UpdateInsightsRulesContentCron is just a wrapper for UpdateInsightsRulesContent
+// beacuse the functions passed to cron.AddFunc mustn't return anything.
+func (u *Updater) UpdateInsightsRulesContentCron() {
+	err := u.UpdateInsightsRulesContent()
+	if err != nil {
+		log.Printf("Error during periodic Insights rules content update: %v", err)
+	}
 }

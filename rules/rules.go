@@ -16,9 +16,3 @@
 // rules (descriptions, reasons, etc.) as well as keeping the content
 // up to date by periodically updating them.
 package rules
-
-// RulesConfiguration represents the configuration of rules package
-type RulesConfiguration struct {
-	crontabConfig       string
-	contentUpdateScript string
-}

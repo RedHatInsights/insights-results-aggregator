@@ -12,7 +12,9 @@ enabled = true
 org_whitelist = "org_whitelist.csv"
 
 [rules]
-rules_content_repository = "git@gitlab.cee.redhat.com:ccx/ccx-rules-ocp.git"
+content_auto_update = true
+content_update_cron = "0 0 * * *"
+content_update_script = "update_insights_rules_content.sh"
 
 [server]
 address = ":8080"

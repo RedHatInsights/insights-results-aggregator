@@ -25,6 +25,7 @@ package main
 
 import (
 	"context"
+	"github.com/RedHatInsights/insights-results-aggregator/rules"
 	"log"
 	"os"
 	"time"
@@ -48,6 +49,7 @@ const (
 var (
 	serverInstance   *server.HTTPServer
 	consumerInstance consumer.Consumer
+	updaterInstance  *rules.Updater
 )
 
 func startStorageConnection() (*storage.DBStorage, error) {
@@ -124,7 +126,21 @@ func startServer() {
 	}
 }
 
+func startRulesUpdater() {
+	rulesCfg := loadRulesConfiguration()
+	updaterInstance = rules.NewUpdater(rulesCfg)
+
+	if !rulesCfg.CrontabEnabled {
+		log.Println("Cron job for updating rules content is disabled.")
+		return
+	}
+
+	updaterInstance.StartUpdater()
+}
+
 func startService() {
+	// rules updater runs "cron" jobs in separate goroutines
+	startRulesUpdater()
 	// consumer is run in its own thread
 	go startConsumer()
 	// server can be started in current thread
