@@ -42,6 +42,19 @@ type RuleContent struct {
 // RuleContentDirectory contains content for all available rules in a directory.
 type RuleContentDirectory map[string]RuleContent
 
+// readFilesIntoByteArrayPointers reads the contents of the specified files
+// in the base directory and saves them via the specified byte slice pointers.
+func readFilesIntoByteArrayPointers(baseDir string, fileMap map[string]*[]byte) error {
+	for name, ptr := range fileMap {
+		var err error
+		*ptr, err = ioutil.ReadFile(path.Join(baseDir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // parseErrorContents reads the contents of the specified directory
 // and parses all subdirectories as error key contents.
 // This implicitly checks that the directory exists,
@@ -58,20 +71,16 @@ func parseErrorContents(ruleDirPath string) (map[string]RuleErrorContent, error)
 		if e.IsDir() {
 			name := e.Name()
 
-			generic, err := ioutil.ReadFile(path.Join(ruleDirPath, name, "generic.md"))
-			if err != nil {
-				return nil, err
+			errContent := RuleErrorContent{}
+			contentFiles := map[string]*[]byte{
+				"generic.md":    &errContent.Generic,
+				"metadata.yaml": &errContent.Metadata,
+			}
+			if err := readFilesIntoByteArrayPointers(path.Join(ruleDirPath, name), contentFiles); err != nil {
+				return errorContents, err
 			}
 
-			metadata, err := ioutil.ReadFile(path.Join(ruleDirPath, name, "metadata.yaml"))
-			if err != nil {
-				return nil, err
-			}
-
-			errorContents[name] = RuleErrorContent{
-				Generic:  generic,
-				Metadata: metadata,
-			}
+			errorContents[name] = errContent
 		}
 	}
 
@@ -85,39 +94,19 @@ func parseRuleContent(ruleDirPath string) (RuleContent, error) {
 		return RuleContent{}, err
 	}
 
-	summary, err := ioutil.ReadFile(path.Join(ruleDirPath, "summary.md"))
-	if err != nil {
+	ruleContent := RuleContent{Errors: errorContents}
+	contentFiles := map[string]*[]byte{
+		"summary.md":    &ruleContent.Summary,
+		"reason.md":     &ruleContent.Reason,
+		"resolution.md": &ruleContent.Resolution,
+		"more_info.md":  &ruleContent.MoreInfo,
+		"plugin.yaml":   &ruleContent.Plugin,
+	}
+	if err := readFilesIntoByteArrayPointers(ruleDirPath, contentFiles); err != nil {
 		return RuleContent{}, err
 	}
 
-	reason, err := ioutil.ReadFile(path.Join(ruleDirPath, "reason.md"))
-	if err != nil {
-		return RuleContent{}, err
-	}
-
-	resolution, err := ioutil.ReadFile(path.Join(ruleDirPath, "resolution.md"))
-	if err != nil {
-		return RuleContent{}, err
-	}
-
-	moreInfo, err := ioutil.ReadFile(path.Join(ruleDirPath, "more_info.md"))
-	if err != nil {
-		return RuleContent{}, err
-	}
-
-	plugin, err := ioutil.ReadFile(path.Join(ruleDirPath, "plugin.yaml"))
-	if err != nil {
-		return RuleContent{}, err
-	}
-
-	return RuleContent{
-		Summary:    summary,
-		Reason:     reason,
-		Resolution: resolution,
-		MoreInfo:   moreInfo,
-		Plugin:     plugin,
-		Errors:     errorContents,
-	}, nil
+	return ruleContent, nil
 }
 
 // ParseRuleContentDir finds all rule content in a directory and parses it.
