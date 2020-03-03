@@ -68,7 +68,10 @@ func TestStartService(t *testing.T) {
 		`)
 
 		viper.SetConfigType("toml")
-		viper.ReadConfig(bytes.NewBuffer(config))
+		err := viper.ReadConfig(bytes.NewBuffer(config))
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		go func() {
 			main.StartService()
