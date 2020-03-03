@@ -134,15 +134,17 @@ See `/migration/migration.go` documentation for an overview of all available DB 
 
 ## Local setup
 
-### Kafka broker
+There is `docker-compose` configuration that provisions a minimal stack of Insight Platform.
 
-This service depends on Kafka broker. It can be installed and configured locally. Please follow these steps to configure Kafka:
+### Prerequisites
 
-1. Download the stable Kafka version from [this link](https://www.apache.org/dyn/closer.cgi?path=/kafka/2.4.0/kafka_2.12-2.4.0.tgz)
-1. Uncompress downloaded tarball: `tar -xzf kafka_2.12-2.4.0.tgz`
-1. Change current directory to a newly created directory: `cd kafka_2.12-2.4.0`
-1. Start Zookeeper service: `bin/zookeeper-server-start.sh config/zookeeper.properties`
-1. Start Kafka broker: `bin/kafka-server-start.sh config/server.properties`
+* minio requires `../minio/data/` and `../minio/config` directories to be created
+* edit localhost line in your `/etc/hosts`:  `127.0.0.1       localhost kafka minio`
+* `ingress` image should present on your machine. You can build it locally from this repo https://github.com/RedHatInsights/insights-ingress-go
+
+### Usage
+Start the stack `podman-compose up` or `docker-compose up`
+Stop `podman-compose down` or `docker-compose down`
 
 ### Kafka producer
 
