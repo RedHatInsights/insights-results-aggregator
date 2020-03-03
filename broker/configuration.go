@@ -22,9 +22,9 @@ import (
 
 // Configuration represents configuration of Kafka broker
 type Configuration struct {
-	Address      string
-	Topic        string
-	Group        string
-	Enabled      bool
-	OrgWhitelist mapset.Set
+	Address      string     `mapstructure:"address" toml:"address"`
+	Topic        string     `mapstructure:"topic" toml:"topic"`
+	Group        string     `mapstructure:"group" toml:"group"`
+	Enabled      bool       `mapstructure:"enabled" toml:"enabled"`
+	OrgWhitelist mapset.Set `mapstructure:"org_white_list" toml:"org_white_list"`
 }

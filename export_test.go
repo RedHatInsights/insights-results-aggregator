@@ -23,14 +23,14 @@ package main
 // to see why this trick is needed.
 var (
 	LoadConfiguration         = loadConfiguration
-	LoadBrokerConfiguration   = loadBrokerConfiguration
-	LoadServerConfiguration   = loadServerConfiguration
-	LoadStorageConfiguration  = loadStorageConfiguration
+	GetBrokerConfiguration    = getBrokerConfiguration
+	GetServerConfiguration    = getServerConfiguration
+	GetStorageConfiguration   = getStorageConfiguration
+	GetOrganizationWhitelist  = getOrganizationWhitelist
 	StartStorageConnection    = startStorageConnection
 	StartService              = startService
 	StopService               = stopService
 	WaitForServiceToStart     = waitForServiceToStart
-	LoadOrganizationWhitelist = loadOrganizationWhitelist
-	CreateReaderFromFile      = createReaderFromFile
 	LoadWhitelistFromCSV      = loadWhitelistFromCSV
+	ConfigFileEnvVariableName = configFileEnvVariableName
 )

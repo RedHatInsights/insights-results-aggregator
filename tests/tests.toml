@@ -13,11 +13,6 @@ debug = true
 [processing]
 org_whitelist = "org_whitelist.csv"
 
-[metrics]
-enabled = true
-
-[logging]
-
 [storage]
 db_driver = "sqlite3"
 sqlite_datasource = "./test.db"
