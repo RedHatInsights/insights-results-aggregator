@@ -261,7 +261,11 @@ func TestProcessEmptyMessage(t *testing.T) {
 
 	message := sarama.ConsumerMessage{}
 	// messsage is empty -> nothing should be written into storage
-	_ = c.ProcessMessage(&message)
+	err := c.ProcessMessage(&message)
+	if err == nil {
+		t.Fatal("Expected unexpected end of JSON input error")
+	}
+
 	cnt, err := storage.ReportsCount()
 	if err != nil {
 		t.Fatal(err)
@@ -315,7 +319,10 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 
 	c := dummyConsumer(storage, false)
 
-	_ = storage.Close()
+	err := storage.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	const messageValue = `
 {"OrgID":1,
@@ -332,7 +339,7 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(messageValue)
-	err := c.ProcessMessage(&message)
+	err = c.ProcessMessage(&message)
 	if err == nil {
 		t.Fatal(fmt.Errorf("Expected error because database was closed"))
 	}
