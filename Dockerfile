@@ -23,12 +23,11 @@ RUN wget https://password.corp.redhat.com/RH-IT-Root-CA.crt -P /tmp
 ENV GIT_SSL_CAINFO=/tmp/RH-IT-Root-CA.crt
 ENV RULES_CONTENT_DIR=/rules_content
 
-# clone rules content repository
+# clone rules content repository and build the aggregator
 RUN umask 0022 && \
     mkdir -p $RULES_CONTENT_DIR && \
-    git -C $RULES_CONTENT_DIR clone $SOURCE_REPOSITORY_URL $RULES_CONTENT_DIR
-
-RUN cd insights-results-aggregator && \
+    git -C $RULES_CONTENT_DIR clone $SOURCE_REPOSITORY_URL $RULES_CONTENT_DIR && \
+    cd insights-results-aggregator && \
     make build
 
 FROM registry.access.redhat.com/ubi8-minimal
