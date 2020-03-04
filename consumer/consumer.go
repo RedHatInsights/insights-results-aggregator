@@ -158,6 +158,8 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 
 	err = checkReportStructure(*deserialized.Report)
 	if err != nil {
+		log.Println("Deserialied report read from message with improper structure:")
+		log.Println(*deserialized.Report)
 		return deserialized, err
 	}
 
