@@ -38,6 +38,20 @@ func mustLoadConfiguration(path string) {
 	}
 }
 
+func removeFile(t *testing.T, filename string) {
+	err := os.Remove(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func fileClose(file *os.File) {
+	err := file.Close()
+	if err != nil {
+		panic(err)
+	}
+}
+
 // TestLoadConfiguration loads a configuration file for testing
 func TestLoadConfiguration(t *testing.T) {
 	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
@@ -226,7 +240,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer os.Remove(tmpFilename)
+	defer removeFile(t, tmpFilename)
 
 	os.Clearenv()
 	mustSetEnv(t, main.ConfigFileEnvVariableName, tmpFilename)
@@ -271,13 +285,18 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 	}, main.GetStorageConfiguration())
 }
 
-func GetTmpConfigFile(configData string) (string, error) {
+func GetTmpConfigFile(configData string) (configFile string, err error) {
 	tmpFile, err := ioutil.TempFile("/tmp", "tmp_config_*.toml")
 	if err != nil {
 		return "", err
 	}
 
-	defer tmpFile.Close()
+	defer func() {
+		err = tmpFile.Close()
+		if err != nil {
+			configFile = ""
+		}
+	}()
 
 	if _, err := tmpFile.Write([]byte(configData)); err != nil {
 		return "", err

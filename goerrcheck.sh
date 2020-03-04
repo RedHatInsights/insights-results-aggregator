@@ -16,9 +16,4 @@
 
 go get github.com/kisielk/errcheck
 
-OUTPUT=`errcheck ./... | awk '$2 !~ /defer/ {print}'`
-
-[[ ! -z "$OUTPUT" ]] && EXIT_VALUE=1
-
-echo "$OUTPUT"
-exit $EXIT_VALUE
+errcheck ./...
