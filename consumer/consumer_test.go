@@ -30,6 +30,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 const (
@@ -51,7 +52,7 @@ const (
 )
 
 var (
-	testOrgWhiteList = mapset.NewSetWith(1)
+	testOrgWhiteList = mapset.NewSetWith(types.OrgID(1))
 )
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
@@ -244,7 +245,7 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 		Group:   "group",
 	}
 	if whitelist {
-		brokerCfg.OrgWhitelist = mapset.NewSetWith(1)
+		brokerCfg.OrgWhitelist = mapset.NewSetWith(types.OrgID(1))
 	}
 	return &consumer.KafkaConsumer{
 		Configuration:     brokerCfg,
@@ -401,11 +402,15 @@ func TestKafkaConsumerMockOK(t *testing.T) {
 func TestKafkaConsumerMockBadMessage(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
-			t, testTopicName, testOrgWhiteList, []string{"bad message"},
+			t,
+			testTopicName,
+			testOrgWhiteList,
+			[]string{"bad message"},
 		)
 
 		go mockConsumer.Serve()
 
+		// wait for message processing
 		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
 
 		err := mockConsumer.Close()

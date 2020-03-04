@@ -173,7 +173,7 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 		return false
 	}
 
-	orgWhitelisted := whitelist.Contains(int(orgID))
+	orgWhitelisted := whitelist.Contains(types.OrgID(orgID))
 
 	return orgWhitelisted
 }
