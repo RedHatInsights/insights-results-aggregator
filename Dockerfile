@@ -16,13 +16,26 @@ FROM golang:1.13 AS builder
 
 COPY . insights-results-aggregator
 
-RUN cd insights-results-aggregator && \
+ARG SOURCE_REPOSITORY_URL
+
+# get CA cert for SSL
+RUN wget https://password.corp.redhat.com/RH-IT-Root-CA.crt -P /tmp
+ENV GIT_SSL_CAINFO=/tmp/RH-IT-Root-CA.crt
+ENV RULES_CONTENT_DIR=/rules_content
+
+# clone rules content repository and build the aggregator
+RUN umask 0022 && \
+    mkdir -p $RULES_CONTENT_DIR && \
+    git -C $RULES_CONTENT_DIR clone $SOURCE_REPOSITORY_URL $RULES_CONTENT_DIR && \
+    cd insights-results-aggregator && \
     make build
 
 FROM registry.access.redhat.com/ubi8-minimal
 
 COPY --from=builder /go/insights-results-aggregator/insights-results-aggregator .
 COPY --from=builder /go/insights-results-aggregator/openapi.json /openapi/openapi.json
+# copy just the content of the rules, not the whole repository
+COPY --from=builder /rules_content/content /rules_content
 
 RUN chmod a+x /insights-results-aggregator
 
