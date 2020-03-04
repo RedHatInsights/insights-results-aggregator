@@ -245,7 +245,7 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 		Group:   "group",
 	}
 	if whitelist {
-		brokerCfg.OrgWhitelist = mapset.NewSetWith(1)
+		brokerCfg.OrgWhitelist = mapset.NewSetWith(types.OrgID(1))
 	}
 	return &consumer.KafkaConsumer{
 		Configuration:     brokerCfg,
@@ -273,7 +273,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 	}
 }
 
-func _TestProcessCorrectMessage(t *testing.T) {
+func TestProcessCorrectMessage(t *testing.T) {
 	storage := helpers.MustGetMockStorage(t, true)
 	defer storage.Close()
 
@@ -339,7 +339,7 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 	}
 }
 
-func _TestProcessingMessageWithWrongDateFormat(t *testing.T) {
+func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 	storage := helpers.MustGetMockStorage(t, true)
 	defer storage.Close()
 
