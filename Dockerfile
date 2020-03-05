@@ -16,17 +16,18 @@ FROM golang:1.13 AS builder
 
 COPY . insights-results-aggregator
 
-ARG SOURCE_REPOSITORY_URL
+ARG GITHUB_API_TOKEN
 
-# get CA cert for SSL
-RUN wget https://password.corp.redhat.com/RH-IT-Root-CA.crt -P /tmp
-ENV GIT_SSL_CAINFO=/tmp/RH-IT-Root-CA.crt
-ENV RULES_CONTENT_DIR=/rules_content
+ENV RULES_CONTENT_DIR=/rules_content \
+    RULES_REPO=https://github.com/RedHatInsights/ccx-rules-ocp/ \
+    GIT_ASKPASS=/git-askpass.sh
 
 # clone rules content repository and build the aggregator
 RUN umask 0022 && \
     mkdir -p $RULES_CONTENT_DIR && \
-    git -C $RULES_CONTENT_DIR clone $SOURCE_REPOSITORY_URL $RULES_CONTENT_DIR && \
+    echo "echo $GITHUB_API_TOKEN" > $GIT_ASKPASS && \
+    chmod +x /git-askpass.sh && \
+    git -C $RULES_CONTENT_DIR clone $RULES_REPO $RULES_CONTENT_DIR && \
     cd insights-results-aggregator && \
     make build
 
