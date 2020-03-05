@@ -84,7 +84,9 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	// Read the first (and hopefully the only) row in the table.
 	if !rows.Next() {
