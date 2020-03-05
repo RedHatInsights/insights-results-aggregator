@@ -23,7 +23,7 @@ type OrgID uint64
 type ClusterName string
 
 // ClusterReport represents cluster report
-type ClusterReport string
+type ClusterReport jsonb
 
 // Timestamp represents any timestamp in a form gathered from database
 // TODO: need to be improved

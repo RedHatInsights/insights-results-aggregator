@@ -45,13 +45,6 @@ func removeFile(t *testing.T, filename string) {
 	}
 }
 
-func fileClose(file *os.File) {
-	err := file.Close()
-	if err != nil {
-		panic(err)
-	}
-}
-
 // TestLoadConfiguration loads a configuration file for testing
 func TestLoadConfiguration(t *testing.T) {
 	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
