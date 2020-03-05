@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -52,6 +53,7 @@ var config struct {
 		OrgWhiteListFile string `mapstructure:"org_white_list_file" toml:"org_white_list_file"`
 	} `mapstructure:"processing"`
 	Storage storage.Configuration `mapstructure:"storage" toml:"storage"`
+	Content content.Configuration `mapstructure:"content" toml:"content"`
 }
 
 // loadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
@@ -138,6 +140,10 @@ func getServerConfiguration() server.Configuration {
 	}
 
 	return config.Server
+}
+
+func getContentPathConfiguration() string {
+	return config.Content.ContentPath
 }
 
 // checkIfFileExists returns nil if path doesn't exist or isn't a file, otherwise it returns corresponding error
