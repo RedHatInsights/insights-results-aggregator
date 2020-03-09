@@ -102,6 +102,15 @@ func TestLoadServerConfiguration(t *testing.T) {
 	assert.Equal(t, "/api/v1/", serverCfg.APIPrefix)
 }
 
+// TestLoadContentPathConfiguration tests loading the content configuration
+func TestLoadContentPathConfiguration(t *testing.T) {
+	TestLoadConfiguration(t)
+
+	contentPath := main.GetContentPathConfiguration()
+
+	assert.Equal(t, "/rules_content", contentPath)
+}
+
 // TestLoadStorageConfiguration tests loading the storage configuration sub-tree
 func TestLoadStorageConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
@@ -334,6 +343,8 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
 
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules_content")
+
 	mustLoadConfiguration("/non_existing_path")
 
 	brokerCfg := main.GetBrokerConfiguration()
@@ -373,4 +384,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		PGDBName:         "aggregator",
 		PGParams:         "params",
 	}, main.GetStorageConfiguration())
+
+	contentPath := main.GetContentPathConfiguration()
+	assert.Equal(t, contentPath, "/rules_content")
 }
