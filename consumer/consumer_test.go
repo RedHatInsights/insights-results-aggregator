@@ -30,6 +30,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 const (
@@ -51,8 +52,15 @@ const (
 )
 
 var (
-	testOrgWhiteList = mapset.NewSetWith(1)
+	testOrgWhiteList = mapset.NewSetWith(types.OrgID(1))
 )
+
+func closeStorage(t *testing.T, storage storage.Storage) {
+	err := storage.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
 	storageCfg := storage.Configuration{
@@ -63,7 +71,7 @@ func TestConsumerConstructorNoKafka(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer storage.Close()
+	defer closeStorage(t, storage)
 
 	brokerCfg := broker.Configuration{
 		Address: "localhost:1234",
@@ -244,7 +252,7 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 		Group:   "group",
 	}
 	if whitelist {
-		brokerCfg.OrgWhitelist = mapset.NewSetWith(1)
+		brokerCfg.OrgWhitelist = mapset.NewSetWith(types.OrgID(1))
 	}
 	return &consumer.KafkaConsumer{
 		Configuration:     brokerCfg,
@@ -255,13 +263,17 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 }
 func TestProcessEmptyMessage(t *testing.T) {
 	storage := helpers.MustGetMockStorage(t, true)
-	defer storage.Close()
+	defer closeStorage(t, storage)
 
 	c := dummyConsumer(storage, true)
 
 	message := sarama.ConsumerMessage{}
 	// messsage is empty -> nothing should be written into storage
-	c.ProcessMessage(&message)
+	err := c.ProcessMessage(&message)
+	if err == nil {
+		t.Fatal("Expected unexpected end of JSON input error")
+	}
+
 	cnt, err := storage.ReportsCount()
 	if err != nil {
 		t.Fatal(err)
@@ -274,7 +286,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 
 func TestProcessCorrectMessage(t *testing.T) {
 	storage := helpers.MustGetMockStorage(t, true)
-	defer storage.Close()
+	defer closeStorage(t, storage)
 
 	c := dummyConsumer(storage, true)
 
@@ -315,7 +327,10 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 
 	c := dummyConsumer(storage, false)
 
-	storage.Close()
+	err := storage.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	const messageValue = `
 {"OrgID":1,
@@ -332,7 +347,7 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(messageValue)
-	err := c.ProcessMessage(&message)
+	err = c.ProcessMessage(&message)
 	if err == nil {
 		t.Fatal(fmt.Errorf("Expected error because database was closed"))
 	}
@@ -340,7 +355,7 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 
 func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 	storage := helpers.MustGetMockStorage(t, true)
-	defer storage.Close()
+	defer closeStorage(t, storage)
 
 	c := dummyConsumer(storage, true)
 
@@ -394,11 +409,15 @@ func TestKafkaConsumerMockOK(t *testing.T) {
 func TestKafkaConsumerMockBadMessage(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
-			t, testTopicName, testOrgWhiteList, []string{"bad message"},
+			t,
+			testTopicName,
+			testOrgWhiteList,
+			[]string{"bad message"},
 		)
 
 		go mockConsumer.Serve()
 
+		// wait for message processing
 		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
 
 		err := mockConsumer.Close()

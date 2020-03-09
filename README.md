@@ -28,12 +28,6 @@ Aggregator service consists of three main parts:
 4. That results are consumed by Insights rules aggregator service that caches them
 5. The service provides such data via REST API to other tools, like OpenShift Cluster Manager web UI, OpenShift console, etc.
 
-## Utilities
-
-### produce_insights_results
-
-This shell script can be used to produce several Insights results into Kafka topic. Its dependency is Kafkacat that needs to be installed on the same machine.
-
 ## Documentation for developers
 
 All packages developed in this project have documentation available on [GoDoc server](https://godoc.org/):
@@ -98,14 +92,37 @@ debug = true
  - `api_spec_file` is the location of a required OpenAPI specifications file
  - `debug` is developer mode that turns off authentication
 
-## Database
+## Local setup
 
-By default aggregator uses SQLite3 DB, but also it has support of PostgreSQL. For starting PostgreSQL exist script in folder `local_storage`:
-```Bash
-./dockerize_postgres.sh
+There is a `docker-compose` configuration that provisions a minimal stack of Insight Platform and
+a postgres database.
+You can download it here https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plugin/blob/master/docker-compose.yml
+
+### Prerequisites
+
+* minio requires `../minio/data/` and `../minio/config` directories to be created
+* edit localhost line in your `/etc/hosts`:  `127.0.0.1       localhost kafka minio`
+* `ingress` image should present on your machine. You can build it locally from this repo https://github.com/RedHatInsights/insights-ingress-go
+
+### Usage
+Start the stack `podman-compose up` or `docker-compose up`
+Stop `podman-compose down` or `docker-compose down`
+
+In order to upload an insights archive, you can use `curl`:
+```
+curl -k -vvvv -F "upload=@/path/to/your/archive.zip;type=application/vnd.redhat.testareno.archive+zip" http://localhost:3000/api/ingress/v1/upload -H "x-rh-identity: eyJpZGVudGl0eSI6IHsiYWNjb3VudF9udW1iZXIiOiAiMDAwMDAwMSIsICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjEifX19Cg=="
 ```
 
-For establish connection to PostgreSQL, the following configuration options needs to be changed in `storage` section of `config.toml`:
+### Kafka producer
+
+It is possible to use the script `produce_insights_results` from `utils` to produce several Insights results into Kafka topic. Its dependency is Kafkacat that needs to be installed on the same machine. You can find installation instructions [on this page](https://github.com/edenhill/kafkacat).
+
+## Database
+
+Aggregator is configured to use SQLite3 DB by default, but it also supports PostgreSQL. 
+In CI and QA environments, the configuration is overriden by environment variables to use PostgreSQL.
+
+To establish connection to PostgreSQL, the following configuration options need to be changed in `storage` section of `config.toml`:
 
 ```
 [storage]
@@ -132,30 +149,6 @@ To migrate the database to a certain version, in either direction (both upgrade 
 
 See `/migration/migration.go` documentation for an overview of all available DB migration functionality.
 
-## Local setup
-
-There is a `docker-compose` configuration that provisions a minimal stack of Insight Platform and
-a postgres database.
-You can download it here https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plugin/blob/master/docker-compose.yml
-
-### Prerequisites
-
-* minio requires `../minio/data/` and `../minio/config` directories to be created
-* edit localhost line in your `/etc/hosts`:  `127.0.0.1       localhost kafka minio`
-* `ingress` image should present on your machine. You can build it locally from this repo https://github.com/RedHatInsights/insights-ingress-go
-
-### Usage
-Start the stack `podman-compose up` or `docker-compose up`
-Stop `podman-compose down` or `docker-compose down`
-
-In order to upload an insights archive, you can use `curl`:
-```
-curl -k -vvvv -F "upload=@/path/to/your/archive.zip;type=application/vnd.redhat.testareno.archive+zip" http://localhost:3000/api/ingress/v1/upload -H "x-rh-identity: eyJpZGVudGl0eSI6IHsiYWNjb3VudF9udW1iZXIiOiAiMDAwMDAwMSIsICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjEifX19Cg=="
-```
-
-### Kafka producer
-
-It is possible to use the script `produce_insights_results` from `utils` to produce several Insights results into Kafka topic. Its dependency is Kafkacat that needs to be installed on the same machine. You can find installation instructions [on this page](https://github.com/edenhill/kafkacat).
 
 ## Testing
 
@@ -190,3 +183,20 @@ To run REST API tests use the following command:
 #### Only metrics tests
 
 `make metrics_tests`
+
+## CI
+
+[Travis CI](https://travis-ci.com/) is configured for this repository. Several tests and checks are started for all pull requests:
+
+* Unit tests that use the standard tool `go test`
+* `go fmt` tool to check code formatting. That tool is run with `-s` flag to perform [following transformations](https://golang.org/cmd/gofmt/#hdr-The_simplify_command)
+* `go vet` to report likely mistakes in source code, for example suspicious constructs, such as Printf calls whose arguments do not align with the format string.
+* `golint` as a linter for all Go sources stored in this repository
+* `gocyclo` to report all functions and methods with too high cyclomatic complexity. The cyclomatic complexity of a function is calculated according to the following rules: 1 is the base complexity of a function +1 for each 'if', 'for', 'case', '&&' or '||' Go Report Card warns on functions with cyclomatic complexity > 9
+* `ineffassign` to detect and print all ineffectual assignments in Go code
+* `errcheck` for checking for all unchecked errors in go programs
+* `shellcheck` to perform static analysis for all shell scripts used in this repository
+
+Please note that all checks mentioned above have to pass for the change to be merged into master branch.
+
+History of checks performed by CI is available at [RedHatInsights / insights-results-aggregator](https://travis-ci.org/RedHatInsights/insights-results-aggregator).

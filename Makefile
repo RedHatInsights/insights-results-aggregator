@@ -29,7 +29,11 @@ cyclo: ## Run gocyclo
 shellcheck: ## Run shellcheck
 	shellcheck **/*.sh
 
-style: fmt vet lint cyclo shellcheck ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
+errcheck: ## Run errcheck
+	@echo "Running errcheck"
+	./goerrcheck.sh
+
+style: fmt vet lint cyclo shellcheck errcheck ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
 
 run: clean build ## Build the project and executes the binary
 	./insights-results-aggregator
