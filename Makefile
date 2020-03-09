@@ -58,6 +58,7 @@ license:
 		addlicense -c "Red Hat, Inc" -l "apache" -v ./
 
 before_commit: style test integration_tests license
+	./check_coverage.sh
 
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'
