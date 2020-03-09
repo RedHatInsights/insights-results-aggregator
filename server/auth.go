@@ -29,7 +29,8 @@ import (
 type contextKey string
 
 const (
-	contextKeyUser = contextKey("user")
+	contextKeyUser        = contextKey("user")
+	malformedTokenMessage = "Malformed authentication token"
 )
 
 // Internal contains information about organization ID
@@ -61,7 +62,7 @@ func (server HTTPServer) Authentication(next http.Handler) http.Handler {
 
 		decoded, err := base64.StdEncoding.DecodeString(tokenHeader) //Decode token to JSON string
 		if err != nil {                                              //Malformed token, returns with http code 403 as usual
-			responses.SendForbidden(w, "Malformed authentication token")
+			responses.SendForbidden(w, malformedTokenMessage)
 			return
 		}
 
@@ -69,7 +70,7 @@ func (server HTTPServer) Authentication(next http.Handler) http.Handler {
 		err = json.Unmarshal(decoded, tk)
 
 		if err != nil { //Malformed token, returns with http code 403 as usual
-			responses.SendForbidden(w, "Malformed authentication token")
+			responses.SendForbidden(w, malformedTokenMessage)
 			return
 		}
 
