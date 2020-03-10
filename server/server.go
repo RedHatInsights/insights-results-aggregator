@@ -24,6 +24,12 @@ limitations under the License.
 //
 // API_PREFIX/report/{organization}/{cluster} - insights OCP results for given cluster name (HTTP GET)
 //
+// API_PREFIX/rule/{cluster}/{rule_id}/like - like a rule for cluster with current user (from auth token)
+//
+// API_PREFIX/rule/{cluster}/{rule_id}/dislike - dislike a rule for cluster with current user (from auth token)
+//
+// API_PREFIX/rule/{cluster}/{rule_id}/reset_vote- reset vote for a rule for cluster with current user (from auth token)
+//
 // Please note that API_PREFIX is part of server configuration (see Configuration). Also please note that
 // JSON format is used to transfer data between server and clients.
 //
