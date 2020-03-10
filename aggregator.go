@@ -46,6 +46,8 @@ const (
 	// ExitStatusServerError is returned in case of any REST API server-related error
 	ExitStatusServerError
 	defaultConfigFilename = "config"
+
+	consumerExitedErrorMessage = "consumer exited with error code %v"
 )
 
 var (
@@ -145,7 +147,7 @@ func startService() int {
 	go func() {
 		consumerExitCode := startConsumer()
 		if consumerExitCode != 0 {
-			fmt.Printf("consumer exited with error code %v", consumerExitCode)
+			fmt.Printf(consumerExitedErrorMessage, consumerExitCode)
 			exitCode += consumerExitCode
 		}
 
@@ -155,7 +157,7 @@ func startService() int {
 	// server can be started in current thread
 	serverExitCode := startServer()
 	if serverExitCode != 0 {
-		fmt.Printf("consumer exited with error code %v", serverExitCode)
+		fmt.Printf(consumerExitedErrorMessage, serverExitCode)
 		exitCode += serverExitCode
 	}
 
