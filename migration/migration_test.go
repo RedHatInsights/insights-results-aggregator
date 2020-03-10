@@ -169,7 +169,7 @@ func TestMigrationInitNotOneRow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	const expectedErrStr = "Unexpected number of rows in migration info table (expected: 1, reality: 2)"
+	const expectedErrStr = "unexpected number of rows in migration info table (expected: 1, reality: 2)"
 	if err := migration.InitInfoTable(db); err == nil || err.Error() != expectedErrStr {
 		t.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func TestMigrationGetVersionMultipleRows(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != "Migration info table contain multiple rows" {
+	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != "migration info table contain multiple rows" {
 		t.Fatal(err)
 	}
 }
@@ -223,7 +223,7 @@ func TestMigrationGetVersionEmptyTable(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != "Migration info table is empty" {
+	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != "migration info table is empty" {
 		t.Fatal(err)
 	}
 }
@@ -325,7 +325,7 @@ func TestMigrationSetVersionTargetTooHigh(t *testing.T) {
 	defer closeDB(t, db)
 
 	// Step-up from 0 to 2 (impossible -- only 1 migration is available).
-	if err := migration.SetDBVersion(db, 2); err.Error() != "Invalid target version (available version range is 0-1)" {
+	if err := migration.SetDBVersion(db, 2); err.Error() != "invalid target version (available version range is 0-1)" {
 		t.Fatal(err)
 	}
 }
@@ -379,7 +379,7 @@ func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	const expectedErrStr = "Current version (10) is outside of available migration boundaries"
+	const expectedErrStr = "current version (10) is outside of available migration boundaries"
 	if err := migration.SetDBVersion(db, 0); err == nil || err.Error() != expectedErrStr {
 		t.Fatal(err)
 	}
