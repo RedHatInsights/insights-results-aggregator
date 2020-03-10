@@ -45,6 +45,7 @@ type Migration struct {
 // create the most recent version of the database from scratch.
 var migrations []Migration = []Migration{
 	mig1,
+	mig2,
 }
 
 // GetMaxVersion returns the highest available migration version.
