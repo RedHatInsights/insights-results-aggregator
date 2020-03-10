@@ -180,7 +180,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		responses.Send(http.StatusInternalServerError, writer, err.Error())
 	} else {
-		responses.Send(http.StatusOK, writer, "{}")
+		responses.Send(http.StatusOK, writer, responses.BuildOkResponse())
 	}
 }
 
@@ -218,7 +218,7 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	router.HandleFunc(apiPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
 	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/like", server.likeRule).Methods("PUT")
 	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/dislike", server.dislikeRule).Methods("PUT")
-	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/resetVote", server.resetVoteOnRule).Methods("PUT")
+	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/reset_vote", server.resetVoteOnRule).Methods("PUT")
 	router.HandleFunc(
 		apiPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization,
 	).Methods("GET")

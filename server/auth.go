@@ -43,8 +43,8 @@ type Internal struct {
 
 // Identity contains internal user info
 type Identity struct {
-	AccountNumber string   `json:"account_number"`
-	Internal      Internal `json:"internal"`
+	AccountNumber types.UserID `json:"account_number"`
+	Internal      Internal     `json:"internal"`
 }
 
 // Token is x-rh-identity struct
@@ -93,5 +93,5 @@ func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID,
 		return "", fmt.Errorf("contextKeyUser has wrong type")
 	}
 
-	return types.UserID(identity.AccountNumber), nil
+	return identity.AccountNumber, nil
 }
