@@ -21,12 +21,34 @@ package content
 import (
 	"io/ioutil"
 	"path"
+
+	"github.com/go-yaml/yaml"
 )
 
-// RuleErrorContent wraps content of a single error key.
-type RuleErrorContent struct {
+// ErrorKeyMetadata is a Go representation of the `metadata.yaml`
+// file inside of an error key content directory.
+type ErrorKeyMetadata struct {
+	Condition   string `yaml:"condition"`
+	Description string `yaml:"description"`
+	Impact      int    `yaml:"impact"`
+	Likelihood  int    `yaml:"likelihood"`
+	PublishDate string `yaml:"publish_date"`
+	Status      string `yaml:"status"`
+}
+
+// RuleErrorKeyContent wraps content of a single error key.
+type RuleErrorKeyContent struct {
 	Generic  []byte
-	Metadata []byte
+	Metadata ErrorKeyMetadata
+}
+
+// RulePluginInfo is a Go representation of the `plugin.yaml`
+// file inside of the rule content directory.
+type RulePluginInfo struct {
+	Name         string `yaml:"name"`
+	NodeID       string `yaml:"node_id"`
+	ProductCode  string `yaml:"product_code"`
+	PythonModule string `yaml:"python_module"`
 }
 
 // RuleContent wraps all the content available for a rule into a single structure.
@@ -35,8 +57,8 @@ type RuleContent struct {
 	Reason     []byte
 	Resolution []byte
 	MoreInfo   []byte
-	Plugin     []byte
-	Errors     map[string]RuleErrorContent
+	Plugin     RulePluginInfo
+	ErrorKeys  map[string]RuleErrorKeyContent
 }
 
 // RuleContentDirectory contains content for all available rules in a directory.
@@ -59,24 +81,30 @@ func readFilesIntoByteArrayPointers(baseDir string, fileMap map[string]*[]byte) 
 // and parses all subdirectories as error key contents.
 // This implicitly checks that the directory exists,
 // so it is not necessary to ever check that elsewhere.
-func parseErrorContents(ruleDirPath string) (map[string]RuleErrorContent, error) {
+func parseErrorContents(ruleDirPath string) (map[string]RuleErrorKeyContent, error) {
 	entries, err := ioutil.ReadDir(ruleDirPath)
 	if err != nil {
 		return nil, err
 	}
 
-	errorContents := map[string]RuleErrorContent{}
+	errorContents := map[string]RuleErrorKeyContent{}
 
 	for _, e := range entries {
 		if e.IsDir() {
 			name := e.Name()
 
-			errContent := RuleErrorContent{}
+			var metadataBytes []byte
+
+			errContent := RuleErrorKeyContent{}
 			contentFiles := map[string]*[]byte{
 				"generic.md":    &errContent.Generic,
-				"metadata.yaml": &errContent.Metadata,
+				"metadata.yaml": &metadataBytes,
 			}
 			if err := readFilesIntoByteArrayPointers(path.Join(ruleDirPath, name), contentFiles); err != nil {
+				return errorContents, err
+			}
+
+			if err := yaml.Unmarshal(metadataBytes, &errContent.Metadata); err != nil {
 				return errorContents, err
 			}
 
@@ -94,15 +122,21 @@ func parseRuleContent(ruleDirPath string) (RuleContent, error) {
 		return RuleContent{}, err
 	}
 
-	ruleContent := RuleContent{Errors: errorContents}
+	var pluginBytes []byte
+
+	ruleContent := RuleContent{ErrorKeys: errorContents}
 	contentFiles := map[string]*[]byte{
 		"summary.md":    &ruleContent.Summary,
 		"reason.md":     &ruleContent.Reason,
 		"resolution.md": &ruleContent.Resolution,
 		"more_info.md":  &ruleContent.MoreInfo,
-		"plugin.yaml":   &ruleContent.Plugin,
+		"plugin.yaml":   &pluginBytes,
 	}
 	if err := readFilesIntoByteArrayPointers(ruleDirPath, contentFiles); err != nil {
+		return RuleContent{}, err
+	}
+
+	if err := yaml.Unmarshal(pluginBytes, &ruleContent.Plugin); err != nil {
 		return RuleContent{}, err
 	}
 
