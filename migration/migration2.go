@@ -25,7 +25,7 @@ var mig2 = Migration{
 		_, err := tx.Exec(`
 			CREATE TABLE rule (
 				module          VARCHAR PRIMARY KEY,
-				name            VARCHAR NOT NULL,
+				"name"            VARCHAR NOT NULL,
 				summary         VARCHAR NOT NULL,
 				reason          VARCHAR NOT NULL,
 				resolution      VARCHAR NOT NULL,

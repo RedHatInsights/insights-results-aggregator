@@ -38,6 +38,7 @@ import (
 	_ "github.com/lib/pq"           // PostgreSQL database driver
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 
+	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -294,4 +295,76 @@ func (storage DBStorage) ReportsCount() (int, error) {
 	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
 
 	return count, err
+}
+
+// loadRuleErrorKeyContent inserts the error key contents of all available rules into the database.
+func loadRuleErrorKeyContent(tx *sql.Tx, ruleModuleName string, errorKeys map[string]content.RuleErrorKeyContent) error {
+	for errName, errProperties := range errorKeys {
+		var errIsActiveStatus bool
+		switch strings.ToLower(errProperties.Metadata.Status) {
+		case "active":
+			errIsActiveStatus = true
+		case "inactive":
+			errIsActiveStatus = false
+		default:
+			_ = tx.Rollback()
+			return fmt.Errorf("invalid rule error key status: '%s'", errProperties.Metadata.Status)
+		}
+
+		_, err := tx.Exec(`INSERT INTO rule_error_key(error_key, rule_module, condition,
+				description, impact, likelihood, publish_date, active, generic)
+				VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			errName,
+			ruleModuleName,
+			errProperties.Metadata.Condition,
+			errProperties.Metadata.Description,
+			errProperties.Metadata.Impact,
+			errProperties.Metadata.Likelihood,
+			errProperties.Metadata.PublishDate,
+			errIsActiveStatus,
+			errProperties.Generic)
+
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadRuleContent loads the parsed rule content into the database.
+func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory) error {
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec("TRUNCATE rule CASCADE"); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	for _, rule := range contentDir {
+		_, err := tx.Exec(`INSERT INTO rule(module, "name", summary, reason, resolution, more_info)
+				VALUES($1, $2, $3, $4, $5, $6)`,
+			rule.Plugin.PythonModule,
+			rule.Plugin.Name,
+			rule.Summary,
+			rule.Reason,
+			rule.Resolution,
+			rule.MoreInfo)
+
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+
+		if err := loadRuleErrorKeyContent(tx, rule.Plugin.PythonModule, rule.ErrorKeys); err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit()
 }

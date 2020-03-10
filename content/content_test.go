@@ -35,7 +35,7 @@ func TestContentParseOK(t *testing.T) {
 		t.Fatal("'rule1' content is missing")
 	}
 
-	_, exists = rule1Content.Errors["err_key"]
+	_, exists = rule1Content.ErrorKeys["err_key"]
 	if !exists {
 		t.Fatal("'err_key' error content is missing")
 	}
