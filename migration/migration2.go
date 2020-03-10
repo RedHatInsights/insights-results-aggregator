@@ -44,7 +44,7 @@ var mig2 = Migration{
 				impact          INTEGER NOT NULL,
 				likelihood      INTEGER NOT NULL,
 				publish_date    TIMESTAMP NOT NULL,
-				status          BOOLEAN NOT NULL,
+				active          BOOLEAN NOT NULL,
 				generic         VARCHAR NOT NULL,
 				PRIMARY KEY(error_key, rule_module)
 			)`)
