@@ -24,12 +24,12 @@ var mig2 = Migration{
 	StepUp: func(tx *sql.Tx) error {
 		_, err := tx.Exec(`
 			CREATE TABLE rule (
-				module          VARCHAR PRIMARY KEY,
-				"name"            VARCHAR NOT NULL,
-				summary         VARCHAR NOT NULL,
-				reason          VARCHAR NOT NULL,
-				resolution      VARCHAR NOT NULL,
-				more_info       VARCHAR NOT NULL
+				"module"        VARCHAR PRIMARY KEY,
+				"name"          VARCHAR NOT NULL,
+				"summary"       VARCHAR NOT NULL,
+				"reason"        VARCHAR NOT NULL,
+				"resolution"    VARCHAR NOT NULL,
+				"more_info"     VARCHAR NOT NULL
 			)`)
 		if err != nil {
 			return err
@@ -37,16 +37,16 @@ var mig2 = Migration{
 
 		_, err = tx.Exec(`
 			CREATE TABLE rule_error_key (
-				error_key       VARCHAR NOT NULL,
-				rule_module     VARCHAR NOT NULL REFERENCES rule(module),
-				condition       VARCHAR NOT NULL,
-				description     VARCHAR NOT NULL,
-				impact          INTEGER NOT NULL,
-				likelihood      INTEGER NOT NULL,
-				publish_date    TIMESTAMP NOT NULL,
-				active          BOOLEAN NOT NULL,
-				generic         VARCHAR NOT NULL,
-				PRIMARY KEY(error_key, rule_module)
+				"error_key"     VARCHAR NOT NULL,
+				"rule_module"   VARCHAR NOT NULL REFERENCES rule(module),
+				"condition"     VARCHAR NOT NULL,
+				"description"   VARCHAR NOT NULL,
+				"impact"        INTEGER NOT NULL,
+				"likelihood"    INTEGER NOT NULL,
+				"publish_date"  TIMESTAMP NOT NULL,
+				"active"        BOOLEAN NOT NULL,
+				"generic"       VARCHAR NOT NULL,
+				PRIMARY KEY("error_key", "rule_module")
 			)`)
 		return err
 	},
