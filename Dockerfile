@@ -16,13 +16,27 @@ FROM golang:1.13 AS builder
 
 COPY . insights-results-aggregator
 
-RUN cd insights-results-aggregator && \
+ARG GITHUB_API_TOKEN
+
+ENV RULES_CONTENT_DIR=/rules_content \
+    RULES_REPO=https://github.com/RedHatInsights/ccx-rules-ocp/ \
+    GIT_ASKPASS=/git-askpass.sh
+
+# clone rules content repository and build the aggregator
+RUN umask 0022 && \
+    mkdir -p $RULES_CONTENT_DIR && \
+    echo "echo $GITHUB_API_TOKEN" > $GIT_ASKPASS && \
+    chmod +x /git-askpass.sh && \
+    git -C $RULES_CONTENT_DIR clone $RULES_REPO $RULES_CONTENT_DIR && \
+    cd insights-results-aggregator && \
     make build
 
 FROM registry.access.redhat.com/ubi8-minimal
 
 COPY --from=builder /go/insights-results-aggregator/insights-results-aggregator .
 COPY --from=builder /go/insights-results-aggregator/openapi.json /openapi/openapi.json
+# copy just the content of the rules, not the whole repository
+COPY --from=builder /rules_content/content /rules_content
 
 RUN chmod a+x /insights-results-aggregator
 

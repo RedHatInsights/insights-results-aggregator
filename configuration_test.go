@@ -38,6 +38,13 @@ func mustLoadConfiguration(path string) {
 	}
 }
 
+func removeFile(t *testing.T, filename string) {
+	err := os.Remove(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // TestLoadConfiguration loads a configuration file for testing
 func TestLoadConfiguration(t *testing.T) {
 	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
@@ -60,18 +67,12 @@ func TestLoadConfigurationEnvVariable(t *testing.T) {
 
 // TestLoadingConfigurationFailure tests loading a non-existent configuration file
 func TestLoadingConfigurationFailure(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic as expected")
-		}
-	}()
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "non existing file")
 
-	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
-	if err != nil {
-		t.Fatal(err)
+	err := main.LoadConfiguration("")
+	if err == nil {
+		t.Fatalf("error expected, got %v", err)
 	}
-
-	mustLoadConfiguration("this does not exist")
 }
 
 // TestLoadBrokerConfiguration tests loading the broker configuration sub-tree
@@ -102,19 +103,21 @@ func TestLoadStorageConfiguration(t *testing.T) {
 	storageCfg := main.GetStorageConfiguration()
 
 	assert.Equal(t, "sqlite3", storageCfg.Driver)
-	assert.Equal(t, "xyzzy", storageCfg.SQLiteDataSource)
+	assert.Equal(t, ":memory:", storageCfg.SQLiteDataSource)
 }
 
 // TestLoadConfigurationOverrideFromEnv tests overriding configuration by env variables
 func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 	os.Clearenv()
 
-	mustLoadConfiguration("tests/config1")
+	const configPath = "tests/config1"
+
+	mustLoadConfiguration(configPath)
 
 	storageCfg := main.GetStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "sqlite3",
-		SQLiteDataSource: "xyzzy",
+		SQLiteDataSource: ":memory:",
 		PGUsername:       "user",
 		PGPassword:       "password",
 		PGHost:           "localhost",
@@ -123,25 +126,15 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 		PGParams:         "",
 	}, storageCfg)
 
-	err := os.Setenv("INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "some very secret password")
 
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = os.Setenv(
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD",
-		"some very secret password",
-	)
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	mustLoadConfiguration(configPath)
 
 	storageCfg = main.GetStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "postgres",
-		SQLiteDataSource: "xyzzy",
+		SQLiteDataSource: ":memory:",
 		PGUsername:       "user",
 		PGPassword:       "some very secret password",
 		PGHost:           "localhost",
@@ -157,7 +150,9 @@ func TestLoadOrganizationWhitelist(t *testing.T) {
 		types.OrgID(1),
 		types.OrgID(2),
 		types.OrgID(3),
+		types.OrgID(11789772),
 	)
+
 	orgWhitelist := main.GetOrganizationWhitelist()
 	if equal := orgWhitelist.Equal(expectedWhitelist); !equal {
 		t.Errorf(
@@ -226,7 +221,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer os.Remove(tmpFilename)
+	defer removeFile(t, tmpFilename)
 
 	os.Clearenv()
 	mustSetEnv(t, main.ConfigFileEnvVariableName, tmpFilename)
@@ -254,6 +249,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 			types.OrgID(1),
 			types.OrgID(2),
 			types.OrgID(3),
+			types.OrgID(11789772),
 		)),
 		"organization_white_list is wrong",
 	)
@@ -276,8 +272,6 @@ func GetTmpConfigFile(configData string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	defer tmpFile.Close()
 
 	if _, err := tmpFile.Write([]byte(configData)); err != nil {
 		return "", err
@@ -346,6 +340,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 			types.OrgID(1),
 			types.OrgID(2),
 			types.OrgID(3),
+			types.OrgID(11789772),
 		)),
 		"organization_white_list is wrong",
 	)

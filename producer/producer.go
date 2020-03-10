@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package producer contains functions that can be used to produce (i.e. send)
+// messages to properly configured Kafka broker.
 package producer
 
 import (
@@ -24,7 +26,9 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-// ProduceMessage produces message to selected topic
+// ProduceMessage produces message to selected topic. That function returns
+// partition ID and offset of new message or an error value in case of any
+// problem on broker side.
 func ProduceMessage(brokerCfg broker.Configuration, message string) (partition int32, offset int64, errout error) {
 	producer, err := sarama.NewSyncProducer([]string{brokerCfg.Address}, nil)
 	if err != nil {

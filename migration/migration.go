@@ -45,6 +45,7 @@ type Migration struct {
 // create the most recent version of the database from scratch.
 var migrations = []Migration{
 	mig1,
+	mig2,
 	mig3,
 }
 
@@ -85,7 +86,9 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	// Read the first (and hopefully the only) row in the table.
 	if !rows.Next() {

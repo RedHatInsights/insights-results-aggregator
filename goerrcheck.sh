@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Copyright 2020 Red Hat, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +14,6 @@
 # limitations under the License.
 
 
-THRESHOLD=83
-ERR_MESSAGE="Code coverage have to be at least $THRESHOLD%"
+go get github.com/kisielk/errcheck
 
-go_tool_cover_output=$(go tool cover -func=coverage.out)
-
-echo "$go_tool_cover_output"
-
-if (( $(echo "$go_tool_cover_output" | grep -i total | awk '{print $NF}' | grep -E "^[0-9]+" -o) >= THRESHOLD )); then
-    exit 0
-else
-    echo -e "\\033[31m$ERR_MESSAGE\\e[0m"
-    exit 1
-fi
+errcheck ./...

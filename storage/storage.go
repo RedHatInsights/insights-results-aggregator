@@ -190,6 +190,10 @@ type Report struct {
 	ReportedAt types.Timestamp     `json:"reported_at"`
 }
 
+func closeRows(rows *sql.Rows) {
+	_ = rows.Close()
+}
+
 // ListOfOrgs reads list of all organizations that have at least one cluster report
 func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 	orgs := make([]types.OrgID, 0)
@@ -198,7 +202,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 	if err != nil {
 		return orgs, err
 	}
-	defer rows.Close()
+	defer closeRows(rows)
 
 	for rows.Next() {
 		var orgID types.OrgID
@@ -221,7 +225,7 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 	if err != nil {
 		return clusters, err
 	}
-	defer rows.Close()
+	defer closeRows(rows)
 
 	for rows.Next() {
 		var clusterName string
@@ -263,7 +267,7 @@ func (storage DBStorage) WriteReportForCluster(
 	clusterName types.ClusterName,
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
-) error {
+) (err error) {
 	var query string
 
 	switch storage.dbDriverType {
@@ -283,7 +287,9 @@ func (storage DBStorage) WriteReportForCluster(
 	if err != nil {
 		return err
 	}
-	defer statement.Close()
+	defer func() {
+		err = statement.Close()
+	}()
 
 	t := time.Now()
 
