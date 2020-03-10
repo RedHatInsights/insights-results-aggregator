@@ -169,7 +169,8 @@ func TestMigrationInitNotOneRow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := migration.InitInfoTable(db); err == nil || err.Error() != "Unexpected number of rows in migration info table (expected: 1, reality: 2)" {
+	const expectedErrStr = "Unexpected number of rows in migration info table (expected: 1, reality: 2)"
+	if err := migration.InitInfoTable(db); err == nil || err.Error() != expectedErrStr {
 		t.Fatal(err)
 	}
 }
@@ -241,7 +242,9 @@ func TestMigrationGetVersionInvalidType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != `sql: Scan error on column index 0, name "version": converting driver.Value type string ("hello world") to a uint: invalid syntax` {
+	const expectedErrStr = `sql: Scan error on column index 0, name "version": ` +
+		`converting driver.Value type string ("hello world") to a uint: invalid syntax`
+	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != expectedErrStr {
 		t.Fatal(err)
 	}
 }
@@ -333,7 +336,7 @@ func TestMigrationSetVersionUpError(t *testing.T) {
 	defer closeDB(t, db)
 
 	*migration.Migrations = []migration.Migration{
-		migration.Migration{
+		{
 			StepUp:   stepErrorFn,
 			StepDown: stepNoopFn,
 		},
@@ -350,7 +353,7 @@ func TestMigrationSetVersionDownError(t *testing.T) {
 	defer closeDB(t, db)
 
 	*migration.Migrations = []migration.Migration{
-		migration.Migration{
+		{
 			StepUp:   stepNoopFn,
 			StepDown: stepErrorFn,
 		},
@@ -376,7 +379,8 @@ func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := migration.SetDBVersion(db, 0); err == nil || err.Error() != "Current version (10) is outside of available migration boundaries" {
+	const expectedErrStr = "Current version (10) is outside of available migration boundaries"
+	if err := migration.SetDBVersion(db, 0); err == nil || err.Error() != expectedErrStr {
 		t.Fatal(err)
 	}
 }
@@ -415,12 +419,13 @@ func TestMigrationInitRollbackStep(t *testing.T) {
 	db := prepareDBAndMigrations(t)
 	defer closeDB(t, db)
 
-	*migration.Migrations = []migration.Migration{migration.Migration{
+	*migration.Migrations = []migration.Migration{{
 		StepUp:   stepRollbackFn,
 		StepDown: stepNoopFn,
 	}}
 
-	if err := migration.SetDBVersion(db, 1); err == nil || err.Error() != "sql: transaction has already been committed or rolled back" {
+	const expectedErrStr = "sql: transaction has already been committed or rolled back"
+	if err := migration.SetDBVersion(db, 1); err == nil || err.Error() != expectedErrStr {
 		t.Fatal(err)
 	}
 }

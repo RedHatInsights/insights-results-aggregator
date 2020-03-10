@@ -43,18 +43,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// UserVote is a type for user's vote
-type UserVote int
-
-const (
-	// UserVoteDislike shows user's dislike
-	UserVoteDislike UserVote = -1
-	// UserVoteNone shows no vote from user
-	UserVoteNone UserVote = 0
-	// UserVoteLike shows user's like
-	UserVoteLike UserVote = 1
-)
-
 // Storage represents an interface to almost any database or storage system
 type Storage interface {
 	Init() error
@@ -69,7 +57,7 @@ type Storage interface {
 		collectedAtTime time.Time,
 	) error
 	ReportsCount() (int, error)
-	LikeOrDislikeRule(
+	VoteOnRule(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		userID types.UserID,
@@ -81,6 +69,9 @@ type Storage interface {
 		userID types.UserID,
 		message string,
 	) error
+	GetUserFeedbackOnRule(
+		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+	) (*UserFeedbackOnRule, error)
 }
 
 // DBDriver type for db driver enum
@@ -313,105 +304,4 @@ func (storage DBStorage) ReportsCount() (int, error) {
 	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
 
 	return count, err
-}
-
-// LikeOrDislikeRule likes or dislikes rule for cluster by user. If entry exists, it overwrites it
-func (storage DBStorage) LikeOrDislikeRule(
-	clusterID types.ClusterName,
-	ruleID types.RuleID,
-	userID types.UserID,
-	userVote UserVote,
-) error {
-	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, userID, &userVote, nil)
-}
-
-// AddOrUpdateFeedbackOnRule adds feedback on rule for cluster by user. If entry exists, it overwrites it
-func (storage DBStorage) AddOrUpdateFeedbackOnRule(
-	clusterID types.ClusterName,
-	ruleID types.RuleID,
-	userID types.UserID,
-	message string,
-) error {
-	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, userID, nil, &message)
-}
-
-// addOrUpdateUserFeedbackOnRuleForCluster adds or updates feedback
-// will update user vote and messagePtr if the pointers are not nil
-func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
-	clusterID types.ClusterName,
-	ruleID types.RuleID,
-	userID types.UserID,
-	userVotePtr *UserVote,
-	messagePtr *string,
-) error {
-	updateVote := false
-	updateMessage := false
-	userVote := UserVoteNone
-	message := ""
-
-	if userVotePtr != nil {
-		updateVote = true
-		userVote = *userVotePtr
-	}
-
-	if messagePtr != nil {
-		updateMessage = true
-		message = *messagePtr
-	}
-
-	query, err := storage.constructUpsertClusterRuleUserFeedback(updateVote, updateMessage)
-	if err != nil {
-		return err
-	}
-
-	statement, err := storage.connection.Prepare(query)
-	if err != nil {
-		return err
-	}
-	defer statement.Close()
-
-	now := time.Now()
-
-	_, err = statement.Exec(clusterID, ruleID, userID, userVote, now, now, message)
-	if err != nil {
-		log.Print(err)
-		return err
-	}
-
-	metrics.FeedbackOnRules.Inc()
-
-	return nil
-}
-
-func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote bool, updateMessage bool) (string, error) {
-	var query string
-
-	switch storage.dbDriverType {
-	case DBDriverSQLite, DBDriverPostgres:
-		query = `
-			INSERT INTO cluster_rule_user_feedback 
-			(cluster_id, rule_id, user_id, user_vote, added_at, updated_at, message)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`
-
-		var updates []string
-
-		if updateVote {
-			updates = append(updates, "user_vote = $4")
-		}
-
-		if updateMessage {
-			updates = append(updates, "message = $7")
-		}
-
-		if len(updates) > 0 {
-			updates = append(updates, "updated_at = $6")
-			query += "ON CONFLICT (cluster_id, rule_id, user_id) DO UPDATE SET "
-			query += strings.Join(updates, ", ")
-		}
-	default:
-		return "", fmt.Errorf("DB driver %v is not supported", storage.dbDriverType)
-	}
-
-	return query, nil
 }

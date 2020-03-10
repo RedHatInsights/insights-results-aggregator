@@ -176,7 +176,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err = server.Storage.LikeOrDislikeRule(clusterID, types.RuleID(ruleID), userID, userVote)
+	err = server.Storage.VoteOnRule(clusterID, types.RuleID(ruleID), userID, userVote)
 	if err != nil {
 		responses.Send(http.StatusInternalServerError, writer, err.Error())
 	} else {
