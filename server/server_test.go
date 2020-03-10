@@ -19,7 +19,6 @@ package server_test
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -28,6 +27,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gorilla/mux"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
@@ -481,7 +482,7 @@ func TestServerStart(t *testing.T) {
 				time.Sleep(500 * time.Millisecond)
 			}
 
-			// doing some request to be sure server started succesfully
+			// doing some request to be sure server started successfully
 			req, err := http.NewRequest("GET", config.APIPrefix, nil)
 			if err != nil {
 				panic(err)
@@ -491,7 +492,10 @@ func TestServerStart(t *testing.T) {
 			checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 
 			// stopping the server
-			s.Stop(context.Background())
+			err = s.Stop(context.Background())
+			if err != nil {
+				panic(err)
+			}
 		}()
 
 		err := s.Start()

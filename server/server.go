@@ -85,11 +85,11 @@ func (server *HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
 		})
 }
 
-func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, _ *http.Request) {
 	responses.SendResponse(writer, responses.BuildOkResponse())
 }
 
-func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, _ *http.Request) {
 	organizations, err := server.Storage.ListOfOrgs()
 	if err != nil {
 		log.Println("Unable to get list of organizations", err)
@@ -107,7 +107,7 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 		return
 	}
 
-	clusters, err := server.Storage.ListOfClustersForOrg(types.OrgID(organizationID))
+	clusters, err := server.Storage.ListOfClustersForOrg(organizationID)
 	if err != nil {
 		log.Println("Unable to get list of clusters", err)
 		responses.SendInternalServerError(writer, err.Error())
@@ -140,6 +140,50 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	}
 }
 
+// likeRule likes the rule for current user
+func (server *HTTPServer) likeRule(writer http.ResponseWriter, request *http.Request) {
+	server.voteOnRule(writer, request, storage.UserVoteLike)
+}
+
+// dislikeRule dislikes the rule for current user
+func (server *HTTPServer) dislikeRule(writer http.ResponseWriter, request *http.Request) {
+	server.voteOnRule(writer, request, storage.UserVoteDislike)
+}
+
+// resetVoteOnRule resets vote for the rule for current user
+func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *http.Request) {
+	server.voteOnRule(writer, request, storage.UserVoteNone)
+}
+
+func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
+	clusterID, err := readClusterName(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	ruleID, err := getRouterParam(request, "rule_id")
+	if err != nil {
+		log.Println(err)
+		responses.Send(http.StatusInternalServerError, writer, "Unable to get param 'rule_id' from request")
+		return
+	}
+
+	userID, err := server.GetCurrentUserID(request)
+	if err != nil {
+		log.Println(err)
+		responses.Send(http.StatusInternalServerError, writer, "Unable to get user id")
+		return
+	}
+
+	err = server.Storage.LikeOrDislikeRule(clusterID, types.RuleID(ruleID), userID, userVote)
+	if err != nil {
+		responses.Send(http.StatusInternalServerError, writer, err.Error())
+	} else {
+		responses.Send(http.StatusOK, writer, "{}")
+	}
+}
+
 // serveAPISpecFile serves an OpenAPI specifications file specified in config file
 func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *http.Request) {
 	absPath, err := filepath.Abs(server.Config.APISpecFile)
@@ -166,17 +210,24 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 		router.Use(server.Authentication)
 	}
 
+	apiPrefix := server.Config.APIPrefix
+
 	// common REST API endpoints
-	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"organizations", server.listOfOrganizations).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
+	router.HandleFunc(apiPrefix, server.mainEndpoint).Methods("GET")
+	router.HandleFunc(apiPrefix+"organizations", server.listOfOrganizations).Methods("GET")
+	router.HandleFunc(apiPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
+	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/like", server.likeRule).Methods("PUT")
+	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/dislike", server.dislikeRule).Methods("PUT")
+	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/resetVote", server.resetVoteOnRule).Methods("PUT")
+	router.HandleFunc(
+		apiPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization,
+	).Methods("GET")
 
 	// Prometheus metrics
-	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods("GET")
+	router.Handle(apiPrefix+"metrics", promhttp.Handler()).Methods("GET")
 
 	// OpenAPI specs
-	router.HandleFunc(server.Config.APIPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods("GET")
+	router.HandleFunc(apiPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods("GET")
 
 	return router
 }

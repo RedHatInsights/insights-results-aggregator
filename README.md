@@ -28,6 +28,35 @@ Aggregator service consists of three main parts:
 4. That results are consumed by Insights rules aggregator service that caches them
 5. The service provides such data via REST API to other tools, like OpenShift Cluster Manager web UI, OpenShift console, etc.
 
+### DB structure
+
+```sql
+CREATE TABLE report (
+    org_id          INTEGER NOT NULL,
+    cluster         VARCHAR NOT NULL UNIQUE,
+    report          VARCHAR NOT NULL,
+    reported_at     TIMESTAMP,
+    last_checked_at TIMESTAMP,
+    PRIMARY KEY(org_id, cluster)
+)
+
+-- user_vote is user's vote, 
+-- 0 is none,
+-- 1 is like,
+-- -1 is dislike
+CREATE TABLE cluster_rule_user_feedback (
+    cluster_id VARCHAR NOT NULL,
+    rule_id INTEGER  NOT NULL,
+    user_id VARCHAR NOT NULL,
+    user_vote SMALLINT NOT NULL,
+    added_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    message VARCHAR NOT NULL,
+
+    PRIMARY KEY(cluster_id, rule_id, user_id)
+)
+```
+
 ## Utilities
 
 ### produce_insights_results
@@ -132,7 +161,7 @@ To migrate the database to a certain version, in either direction (both upgrade 
 
 See `/migration/migration.go` documentation for an overview of all available DB migration functionality.
 
-## Local setup
+### Local setup
 
 There is a `docker-compose` configuration that provisions a minimal stack of Insight Platform and
 a postgres database.

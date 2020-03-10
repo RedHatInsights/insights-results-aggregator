@@ -28,3 +28,9 @@ type ClusterReport string
 // Timestamp represents any timestamp in a form gathered from database
 // TODO: need to be improved
 type Timestamp string
+
+// RuleID represents type for rule id
+type RuleID string
+
+// UserID represents type for user id
+type UserID string

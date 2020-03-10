@@ -43,6 +43,18 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+// UserVote is a type for user's vote
+type UserVote int
+
+const (
+	// UserVoteDislike shows user's dislike
+	UserVoteDislike UserVote = -1
+	// UserVoteNone shows no vote from user
+	UserVoteNone UserVote = 0
+	// UserVoteLike shows user's like
+	UserVoteLike UserVote = 1
+)
+
 // Storage represents an interface to almost any database or storage system
 type Storage interface {
 	Init() error
@@ -57,6 +69,18 @@ type Storage interface {
 		collectedAtTime time.Time,
 	) error
 	ReportsCount() (int, error)
+	LikeOrDislikeRule(
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		userID types.UserID,
+		userVote UserVote,
+	) error
+	AddOrUpdateFeedbackOnRule(
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		userID types.UserID,
+		message string,
+	) error
 }
 
 // DBDriver type for db driver enum
@@ -177,7 +201,7 @@ type Report struct {
 
 // ListOfOrgs reads list of all organizations that have at least one cluster report
 func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
-	orgs := []types.OrgID{}
+	orgs := make([]types.OrgID, 0)
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
 	if err != nil {
@@ -190,7 +214,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 
 		err = rows.Scan(&orgID)
 		if err == nil {
-			orgs = append(orgs, types.OrgID(orgID))
+			orgs = append(orgs, orgID)
 		} else {
 			log.Println("error", err)
 		}
@@ -200,7 +224,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 
 // ListOfClustersForOrg reads list of all clusters fro given organization
 func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
-	clusters := []types.ClusterName{}
+	clusters := make([]types.ClusterName, 0)
 
 	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster", orgID)
 	if err != nil {
@@ -222,7 +246,9 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 }
 
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
-func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error) {
+func (storage DBStorage) ReadReportForCluster(
+	orgID types.OrgID, clusterName types.ClusterName,
+) (types.ClusterReport, error) {
 	var report string
 	err := storage.connection.QueryRow(
 		"SELECT report FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
@@ -238,7 +264,6 @@ func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName typ
 	}
 
 	return types.ClusterReport(report), nil
-
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
@@ -284,8 +309,109 @@ func (storage DBStorage) WriteReportForCluster(
 
 // ReportsCount reads number of all records stored in database
 func (storage DBStorage) ReportsCount() (int, error) {
-	count := int(-1)
+	count := -1
 	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
 
 	return count, err
+}
+
+// LikeOrDislikeRule likes or dislikes rule for cluster by user. If entry exists, it overwrites it
+func (storage DBStorage) LikeOrDislikeRule(
+	clusterID types.ClusterName,
+	ruleID types.RuleID,
+	userID types.UserID,
+	userVote UserVote,
+) error {
+	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, userID, &userVote, nil)
+}
+
+// AddOrUpdateFeedbackOnRule adds feedback on rule for cluster by user. If entry exists, it overwrites it
+func (storage DBStorage) AddOrUpdateFeedbackOnRule(
+	clusterID types.ClusterName,
+	ruleID types.RuleID,
+	userID types.UserID,
+	message string,
+) error {
+	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, userID, nil, &message)
+}
+
+// addOrUpdateUserFeedbackOnRuleForCluster adds or updates feedback
+// will update user vote and messagePtr if the pointers are not nil
+func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
+	clusterID types.ClusterName,
+	ruleID types.RuleID,
+	userID types.UserID,
+	userVotePtr *UserVote,
+	messagePtr *string,
+) error {
+	updateVote := false
+	updateMessage := false
+	userVote := UserVoteNone
+	message := ""
+
+	if userVotePtr != nil {
+		updateVote = true
+		userVote = *userVotePtr
+	}
+
+	if messagePtr != nil {
+		updateMessage = true
+		message = *messagePtr
+	}
+
+	query, err := storage.constructUpsertClusterRuleUserFeedback(updateVote, updateMessage)
+	if err != nil {
+		return err
+	}
+
+	statement, err := storage.connection.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	now := time.Now()
+
+	_, err = statement.Exec(clusterID, ruleID, userID, userVote, now, now, message)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+
+	metrics.FeedbackOnRules.Inc()
+
+	return nil
+}
+
+func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote bool, updateMessage bool) (string, error) {
+	var query string
+
+	switch storage.dbDriverType {
+	case DBDriverSQLite, DBDriverPostgres:
+		query = `
+			INSERT INTO cluster_rule_user_feedback 
+			(cluster_id, rule_id, user_id, user_vote, added_at, updated_at, message)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`
+
+		var updates []string
+
+		if updateVote {
+			updates = append(updates, "user_vote = $4")
+		}
+
+		if updateMessage {
+			updates = append(updates, "message = $7")
+		}
+
+		if len(updates) > 0 {
+			updates = append(updates, "updated_at = $6")
+			query += "ON CONFLICT (cluster_id, rule_id, user_id) DO UPDATE SET "
+			query += strings.Join(updates, ", ")
+		}
+	default:
+		return "", fmt.Errorf("DB driver %v is not supported", storage.dbDriverType)
+	}
+
+	return query, nil
 }
