@@ -25,8 +25,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/spf13/viper"
@@ -44,6 +46,8 @@ const (
 	// ExitStatusServerError is returned in case of any REST API server-related error
 	ExitStatusServerError
 	defaultConfigFilename = "config"
+
+	consumerExitedErrorMessage = "consumer exited with error code %v"
 )
 
 var (
@@ -81,15 +85,16 @@ func closeConsumer(consumerInstance consumer.Consumer) {
 	}
 }
 
-func startConsumer() {
+// startConsumer starts consumer and returns exit code, 0 is no error
+func startConsumer() int {
 	dbStorage, err := startStorageConnection()
 	if err != nil {
-		os.Exit(ExitStatusConsumerError)
+		return ExitStatusConsumerError
 	}
 	err = dbStorage.Init()
 	if err != nil {
 		log.Println(err)
-		os.Exit(ExitStatusConsumerError)
+		return ExitStatusConsumerError
 	}
 	defer closeStorage(dbStorage)
 
@@ -98,23 +103,26 @@ func startConsumer() {
 	// if broker is disabled, simply don't start it
 	if !brokerCfg.Enabled {
 		log.Println("Broker is disabled, not starting it")
-		return
+		return ExitStatusOK
 	}
 
 	consumerInstance, err = consumer.New(brokerCfg, dbStorage)
 	if err != nil {
 		log.Println(err)
-		os.Exit(ExitStatusConsumerError)
+		return ExitStatusConsumerError
 	}
 
 	defer closeConsumer(consumerInstance)
 	consumerInstance.Serve()
+
+	return ExitStatusOK
 }
 
-func startServer() {
+// startServer starts the server and returns error code
+func startServer() int {
 	dbStorage, err := startStorageConnection()
 	if err != nil {
-		os.Exit(ExitStatusServerError)
+		return ExitStatusServerError
 	}
 	defer closeStorage(dbStorage)
 
@@ -123,16 +131,39 @@ func startServer() {
 	err = serverInstance.Start()
 	if err != nil {
 		log.Println(err)
-		os.Exit(ExitStatusServerError)
+		return ExitStatusServerError
 	}
+
+	return ExitStatusOK
 }
 
-func startService() {
+// startService starts service and returns error code
+func startService() int {
+	var waitGroup sync.WaitGroup
+	exitCode := 0
+
+	waitGroup.Add(1)
 	// consumer is run in its own thread
-	go startConsumer()
+	go func() {
+		consumerExitCode := startConsumer()
+		if consumerExitCode != 0 {
+			fmt.Printf(consumerExitedErrorMessage, consumerExitCode)
+			exitCode += consumerExitCode
+		}
+
+		waitGroup.Done()
+	}()
+
 	// server can be started in current thread
-	startServer()
-	os.Exit(ExitStatusOK)
+	serverExitCode := startServer()
+	if serverExitCode != 0 {
+		fmt.Printf(consumerExitedErrorMessage, serverExitCode)
+		exitCode += serverExitCode
+	}
+
+	waitGroup.Wait()
+
+	return exitCode
 }
 
 func waitForServiceToStart() {
@@ -153,7 +184,7 @@ func waitForServiceToStart() {
 	}
 }
 
-func stopService() {
+func stopService() int {
 	errCode := 0
 
 	if serverInstance != nil {
@@ -172,7 +203,7 @@ func stopService() {
 		}
 	}
 
-	os.Exit(errCode)
+	return errCode
 }
 
 func main() {
@@ -181,5 +212,8 @@ func main() {
 		panic(err)
 	}
 
-	startService()
+	errCode := startService()
+	if errCode != 0 {
+		os.Exit(errCode)
+	}
 }
