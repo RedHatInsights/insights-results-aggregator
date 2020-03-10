@@ -28,8 +28,12 @@ import (
 const (
 	apiURL            = "http://localhost:8080/api/v1/"
 	contentTypeHeader = "Content-Type"
-	ContentTypeJSON   = "application/json; charset=utf-8"
-	ContentTypeText   = "text/plain; charset=utf-8"
+
+	// ContentTypeJSON represents MIME type for JSON format
+	ContentTypeJSON = "application/json; charset=utf-8"
+
+	// ContentTypeText represents MIME type for plain text format
+	ContentTypeText = "text/plain; charset=utf-8"
 )
 
 // list of known organizations that are stored in test database
