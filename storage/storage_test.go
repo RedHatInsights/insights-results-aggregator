@@ -38,6 +38,75 @@ const (
 	testClusterReport = types.ClusterReport("")
 )
 
+var (
+	ruleContentActiveOK = content.RuleContentDirectory{
+		"rc": content.RuleContent{
+			Summary:    []byte("summary"),
+			Reason:     []byte("reason"),
+			Resolution: []byte("resolution"),
+			MoreInfo:   []byte("more info"),
+			ErrorKeys: map[string]content.RuleErrorKeyContent{
+				"ek": content.RuleErrorKeyContent{
+					Generic: []byte("generic"),
+					Metadata: content.ErrorKeyMetadata{
+						Condition:   "condition",
+						Description: "description",
+						Impact:      1,
+						Likelihood:  1,
+						PublishDate: "1970-01-01 00:00:00",
+						Status:      "active",
+					},
+				},
+			},
+		},
+	}
+	ruleContentInactiveOK = content.RuleContentDirectory{
+		"rc": content.RuleContent{
+			Summary:    []byte("summary"),
+			Reason:     []byte("reason"),
+			Resolution: []byte("resolution"),
+			MoreInfo:   []byte("more info"),
+			ErrorKeys: map[string]content.RuleErrorKeyContent{
+				"ek": content.RuleErrorKeyContent{
+					Generic: []byte("generic"),
+					Metadata: content.ErrorKeyMetadata{
+						Condition:   "condition",
+						Description: "description",
+						Impact:      1,
+						Likelihood:  1,
+						PublishDate: "1970-01-01 00:00:00",
+						Status:      "inactive",
+					},
+				},
+			},
+		},
+	}
+	ruleContentBadStatus = content.RuleContentDirectory{
+		"rc": content.RuleContent{
+			Summary:    []byte("summary"),
+			Reason:     []byte("reason"),
+			Resolution: []byte("resolution"),
+			MoreInfo:   []byte("more info"),
+			ErrorKeys: map[string]content.RuleErrorKeyContent{
+				"ek": content.RuleErrorKeyContent{
+					Generic: []byte("generic"),
+					Metadata: content.ErrorKeyMetadata{
+						Condition:   "condition",
+						Description: "description",
+						Impact:      1,
+						Likelihood:  1,
+						PublishDate: "1970-01-01 00:00:00",
+						Status:      "bad",
+					},
+				},
+			},
+		},
+	}
+	ruleContentNull = content.RuleContentDirectory{
+		"rc": content.RuleContent{},
+	}
+)
+
 func checkReportForCluster(
 	t *testing.T,
 	s storage.Storage,
@@ -380,34 +449,42 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	assert.Contains(t, buf.String(), "sql: Scan error")
 }
 
-func TestLoadRuleContent(t *testing.T) {
+func TestLoadRuleContentActiveOK(t *testing.T) {
 	s := helpers.MustGetMockStorage(t, true)
 	dbStorage := s.(*storage.DBStorage)
 
-	ruleContent := content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": content.RuleErrorKeyContent{
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "active",
-					},
-				},
-			},
-		},
-	}
-
-	err := dbStorage.LoadRuleContent(ruleContent)
+	err := dbStorage.LoadRuleContent(ruleContentActiveOK)
 	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadRuleContentInactiveOK(t *testing.T) {
+	s := helpers.MustGetMockStorage(t, true)
+	dbStorage := s.(*storage.DBStorage)
+
+	err := dbStorage.LoadRuleContent(ruleContentInactiveOK)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadRuleContentNull(t *testing.T) {
+	s := helpers.MustGetMockStorage(t, true)
+	dbStorage := s.(*storage.DBStorage)
+
+	err := dbStorage.LoadRuleContent(ruleContentNull)
+	if err == nil || err.Error() != "NOT NULL constraint failed: rule.summary" {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadRuleContentBadStatus(t *testing.T) {
+	s := helpers.MustGetMockStorage(t, true)
+	dbStorage := s.(*storage.DBStorage)
+
+	err := dbStorage.LoadRuleContent(ruleContentBadStatus)
+	if err == nil || err.Error() != "invalid rule error key status: 'bad'" {
 		t.Fatal(err)
 	}
 }
