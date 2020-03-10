@@ -340,7 +340,8 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 		return err
 	}
 
-	if _, err := tx.Exec("TRUNCATE rule CASCADE"); err != nil {
+	// SQLite doesn't support `TRUNCATE`, so it's necessary to use `DELETE` and then `VACUUM`.
+	if _, err := tx.Exec("DELETE FROM rule_error_key; DELETE FROM rule;"); err != nil {
 		_ = tx.Rollback()
 		return err
 	}
@@ -366,5 +367,13 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 		}
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	if _, err := storage.connection.Exec("VACUUM"); err != nil {
+		return err
+	}
+
+	return nil
 }
