@@ -76,7 +76,7 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	userID types.UserID,
 	userVotePtr *UserVote,
 	messagePtr *string,
-) error {
+) (outError error) {
 	updateVote := false
 	updateMessage := false
 	userVote := UserVoteNone
@@ -101,7 +101,9 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	if err != nil {
 		return err
 	}
-	defer statement.Close()
+	defer func() {
+		outError = statement.Close()
+	}()
 
 	now := time.Now()
 

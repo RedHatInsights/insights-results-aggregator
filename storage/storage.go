@@ -267,7 +267,7 @@ func (storage DBStorage) WriteReportForCluster(
 	clusterName types.ClusterName,
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
-) (err error) {
+) (outError error) {
 	var query string
 
 	switch storage.dbDriverType {
@@ -288,7 +288,7 @@ func (storage DBStorage) WriteReportForCluster(
 		return err
 	}
 	defer func() {
-		err = statement.Close()
+		outError = statement.Close()
 	}()
 
 	t := time.Now()
