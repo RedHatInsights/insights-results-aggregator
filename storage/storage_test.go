@@ -26,6 +26,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -377,4 +378,36 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	}
 
 	assert.Contains(t, buf.String(), "sql: Scan error")
+}
+
+func TestLoadRuleContent(t *testing.T) {
+	s := helpers.MustGetMockStorage(t, true)
+	dbStorage := s.(*storage.DBStorage)
+
+	ruleContent := content.RuleContentDirectory{
+		"rc": content.RuleContent{
+			Summary:    []byte("summary"),
+			Reason:     []byte("reason"),
+			Resolution: []byte("resolution"),
+			MoreInfo:   []byte("more info"),
+			ErrorKeys: map[string]content.RuleErrorKeyContent{
+				"ek": content.RuleErrorKeyContent{
+					Generic: []byte("generic"),
+					Metadata: content.ErrorKeyMetadata{
+						Condition:   "condition",
+						Description: "description",
+						Impact:      1,
+						Likelihood:  1,
+						PublishDate: "1970-01-01 00:00:00",
+						Status:      "active",
+					},
+				},
+			},
+		},
+	}
+
+	err := dbStorage.LoadRuleContent(ruleContent)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
