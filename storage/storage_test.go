@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 	"testing"
 	"time"
 
@@ -36,6 +37,8 @@ const (
 	testOrgID         = types.OrgID(1)
 	testClusterName   = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
 	testClusterReport = types.ClusterReport("")
+	testRuleID        = types.RuleID("1")
+	testUserID        = types.UserID("1")
 )
 
 var (
@@ -447,6 +450,115 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	}
 
 	assert.Contains(t, buf.String(), "sql: Scan error")
+}
+
+func TestDBStorageVoteOnRule(t *testing.T) {
+	for _, vote := range []storage.UserVote{
+		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
+	} {
+		mockStorage := helpers.MustGetMockStorage(t, true)
+
+		helpers.FailOnError(t, mockStorage.VoteOnRule(
+			testClusterName, testRuleID, testUserID, vote,
+		))
+
+		feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+		helpers.FailOnError(t, err)
+
+		assert.Equal(t, testClusterName, feedback.ClusterID)
+		assert.Equal(t, testRuleID, feedback.RuleID)
+		assert.Equal(t, testUserID, feedback.UserID)
+		assert.Equal(t, "", feedback.Message)
+		assert.Equal(t, vote, feedback.UserVote)
+
+		helpers.FailOnError(t, mockStorage.Close())
+	}
+}
+
+func TestDBStorageChangeVote(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	helpers.FailOnError(t, mockStorage.VoteOnRule(
+		testClusterName, testRuleID, testUserID, storage.UserVoteLike,
+	))
+	// just to be sure that addedAt != to updatedAt
+	time.Sleep(1 * time.Millisecond)
+	helpers.FailOnError(t, mockStorage.VoteOnRule(
+		testClusterName, testRuleID, testUserID, storage.UserVoteDislike,
+	))
+
+	feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testClusterName, feedback.ClusterID)
+	assert.Equal(t, testRuleID, feedback.RuleID)
+	assert.Equal(t, testUserID, feedback.UserID)
+	assert.Equal(t, "", feedback.Message)
+	assert.Equal(t, storage.UserVoteDislike, feedback.UserVote)
+	assert.NotEqual(t, feedback.AddedAt, feedback.UpdatedAt)
+}
+
+func TestDBStorageTextFeedback(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	helpers.FailOnError(t, mockStorage.AddOrUpdateFeedbackOnRule(
+		testClusterName, testRuleID, testUserID, "test feedback",
+	))
+
+	feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testClusterName, feedback.ClusterID)
+	assert.Equal(t, testRuleID, feedback.RuleID)
+	assert.Equal(t, testUserID, feedback.UserID)
+	assert.Equal(t, "test feedback", feedback.Message)
+	assert.Equal(t, storage.UserVoteNone, feedback.UserVote)
+}
+
+func TestDBStorageFeedbackChangeMessage(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	helpers.FailOnError(t, mockStorage.AddOrUpdateFeedbackOnRule(
+		testClusterName, testRuleID, testUserID, "message1",
+	))
+	// just to be sure that addedAt != to updatedAt
+	time.Sleep(1 * time.Millisecond)
+	helpers.FailOnError(t, mockStorage.AddOrUpdateFeedbackOnRule(
+		testClusterName, testRuleID, testUserID, "message2",
+	))
+
+	feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testClusterName, feedback.ClusterID)
+	assert.Equal(t, testRuleID, feedback.RuleID)
+	assert.Equal(t, testUserID, feedback.UserID)
+	assert.Equal(t, "message2", feedback.Message)
+	assert.Equal(t, storage.UserVoteNone, feedback.UserVote)
+	assert.NotEqual(t, feedback.AddedAt, feedback.UpdatedAt)
+}
+
+func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	if _, ok := err.(*storage.ItemNotFoundError); err == nil || !ok {
+		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
+	}
+}
+
+func TestDBStorageFeedbackErrorDBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	if err == nil || !strings.Contains(err.Error(), "database is closed") {
+		t.Fatalf("expected sql database is closed error, got %T, %+v", err, err)
+	}
 }
 
 func TestLoadRuleContentActiveOK(t *testing.T) {

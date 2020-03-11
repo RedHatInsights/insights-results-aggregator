@@ -24,3 +24,6 @@ pg_port = 5472
 pg_db_name = "aggregator"
 pg_params = ""
 log_sql_queries = true
+
+[content]
+path = "/rules_content"

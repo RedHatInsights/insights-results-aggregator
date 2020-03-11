@@ -31,6 +31,35 @@ Aggregator service consists of three main parts:
 4. That results are consumed by Insights rules aggregator service that caches them
 5. The service provides such data via REST API to other tools, like OpenShift Cluster Manager web UI, OpenShift console, etc.
 
+### DB structure
+
+```sql
+CREATE TABLE report (
+    org_id          INTEGER NOT NULL,
+    cluster         VARCHAR NOT NULL UNIQUE,
+    report          VARCHAR NOT NULL,
+    reported_at     TIMESTAMP,
+    last_checked_at TIMESTAMP,
+    PRIMARY KEY(org_id, cluster)
+)
+
+-- user_vote is user's vote, 
+-- 0 is none,
+-- 1 is like,
+-- -1 is dislike
+CREATE TABLE cluster_rule_user_feedback (
+    cluster_id VARCHAR NOT NULL,
+    rule_id INTEGER  NOT NULL,
+    user_id VARCHAR NOT NULL,
+    user_vote SMALLINT NOT NULL,
+    added_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    message VARCHAR NOT NULL,
+
+    PRIMARY KEY(cluster_id, rule_id, user_id)
+)
+```
+
 ## Documentation for developers
 
 All packages developed in this project have documentation available on [GoDoc server](https://godoc.org/):
@@ -160,7 +189,6 @@ To migrate the database to a certain version, in either direction (both upgrade 
 
 See `/migration/migration.go` documentation for an overview of all available DB migration functionality.
 
-
 ## Contribution
 
 Please look into document [CONTRIBUTING.md](CONTRIBUTING.md) that contains all information about how to contribute to this project.
@@ -211,6 +239,7 @@ To run REST API tests use the following command:
 * `go vet` to report likely mistakes in source code, for example suspicious constructs, such as Printf calls whose arguments do not align with the format string.
 * `golint` as a linter for all Go sources stored in this repository
 * `gocyclo` to report all functions and methods with too high cyclomatic complexity. The cyclomatic complexity of a function is calculated according to the following rules: 1 is the base complexity of a function +1 for each 'if', 'for', 'case', '&&' or '||' Go Report Card warns on functions with cyclomatic complexity > 9
+* `goconst` to find repeated strings that could be replaced by a constant
 * `ineffassign` to detect and print all ineffectual assignments in Go code
 * `errcheck` for checking for all unchecked errors in go programs
 * `shellcheck` to perform static analysis for all shell scripts used in this repository

@@ -51,3 +51,8 @@ func MustGetMockStorage(t *testing.T, init bool) storage.Storage {
 
 	return mockStorage
 }
+
+// MustCloseStorage closes storage and panics if it wasn't successful
+func MustCloseStorage(t *testing.T, s storage.Storage) {
+	FailOnError(t, s.Close())
+}

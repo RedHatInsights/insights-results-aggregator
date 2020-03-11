@@ -64,3 +64,9 @@ var WrittenReports = promauto.NewCounter(prometheus.CounterOpts{
 	Name: "written_reports",
 	Help: "The total number of reports written to the storage",
 })
+
+// FeedbackOnRules shows how many times users left feedback on rules
+var FeedbackOnRules = promauto.NewCounter(prometheus.CounterOpts{
+	Name: "feedback_on_rules",
+	Help: "The total number of left feedback",
+})

@@ -14,24 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Implementation of REST API tests that checks all REST API endpoints of
-// Insights aggregator service.
-//
-// These test should be started by using one of following commands in order to be configured properly:
-//
-//   ./test.sh rest_api
-//   make rest_api_tests
-package main
+package migration
 
 import (
-	"os"
-
-	tests "github.com/RedHatInsights/insights-results-aggregator/tests/rest"
-	"github.com/verdverm/frisby"
+	"database/sql"
 )
 
-func main() {
-	tests.ServerTests()
-	frisby.Global.PrintReport()
-	os.Exit(frisby.Global.NumErrored)
+var mig3 = Migration{
+	StepUp: func(tx *sql.Tx) error {
+		_, err := tx.Exec(`
+			CREATE TABLE cluster_rule_user_feedback (
+				cluster_id VARCHAR NOT NULL,
+				rule_id VARCHAR NOT NULL,
+				user_id VARCHAR NOT NULL,
+				message VARCHAR NOT NULL,
+				user_vote SMALLINT NOT NULL,
+				added_at TIMESTAMP NOT NULL,
+				updated_at TIMESTAMP NOT NULL,
+				
+				PRIMARY KEY(cluster_id, rule_id, user_id)
+			)`)
+		return err
+	},
+	StepDown: func(tx *sql.Tx) error {
+		_, err := tx.Exec(`DROP TABLE cluster_rule_user_feedback`)
+		return err
+	},
 }

@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package helpers
 
-// Please look into the following blogpost:
-// https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
-// to see why this trick is needed.
-var (
-	ReadOrganizationID        = readOrganizationID
-	ReadClusterName           = readClusterName
-	GetRouterPositiveIntParam = getRouterPositiveIntParam
-	ContextKeyUser            = contextKeyUser
+import (
+	"testing"
 )
+
+// FailOnError wraps result of function with one argument
+func FailOnError(t *testing.T, err error) {
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -64,3 +64,9 @@ type RuleContentResponse struct {
 	TotalRisk    int
 	RiskOfChange int
 }
+
+// RuleID represents type for rule id
+type RuleID string
+
+// UserID represents type for user id
+type UserID string
