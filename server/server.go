@@ -38,6 +38,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -116,6 +117,31 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 	}
 }
 
+func (server *HTTPServer) getContentForRules(
+	writer http.ResponseWriter,
+	report types.ClusterReport,
+	pagination types.Pagination,
+) ([]types.RuleContentResponse, error) {
+
+	var reportRules types.ReportRules
+
+	err := json.Unmarshal([]byte(report), &reportRules)
+	if err != nil {
+		log.Println("Unable to parse cluster report", err)
+		responses.SendInternalServerError(writer, err.Error())
+		return nil, err
+	}
+
+	// log.Println(reportRules)
+	rules, err := server.Storage.GetContentForRules(reportRules)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return rules, nil
+}
+
 func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := readOrganizationID(writer, request)
 	if err != nil {
@@ -135,9 +161,26 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	} else if err != nil {
 		log.Println("Unable to read report for cluster", err)
 		responses.SendInternalServerError(writer, err.Error())
-	} else {
-		responses.SendResponse(writer, responses.BuildOkResponseWithData("report", report))
 	}
+
+	rulesPagination, err := readPaginationParams(writer, request, server)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	rulesContent, err := server.getContentForRules(writer, report, rulesPagination)
+	log.Println(rulesContent)
+	if err != nil {
+		return
+	}
+
+	response := types.ReportResponse{
+		Report: report,
+		Rules:  rulesContent,
+		Count:  len(rulesContent),
+	}
+	responses.SendResponse(writer, responses.BuildOkResponseWithData("report", response))
 }
 
 // serveAPISpecFile serves an OpenAPI specifications file specified in config file

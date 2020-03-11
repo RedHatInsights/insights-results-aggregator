@@ -1,5 +1,5 @@
 [broker]
-address = "localhost:9092"
+address = "localhost:29092"
 topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = true
@@ -9,6 +9,7 @@ address = ":8080"
 api_prefix = "/api/v1/"
 api_spec_file = "openapi.json"
 debug = true
+default_page_size = 10
 
 [processing]
 org_whitelist = "org_whitelist.csv"

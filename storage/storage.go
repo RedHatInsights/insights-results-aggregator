@@ -58,6 +58,7 @@ type Storage interface {
 		collectedAtTime time.Time,
 	) error
 	ReportsCount() (int, error)
+	GetContentForRules(rules types.ReportRules) ([]types.RuleContentResponse, error)
 }
 
 // DBDriver type for db driver enum
@@ -248,6 +249,68 @@ func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName typ
 
 	return types.ClusterReport(report), nil
 
+}
+
+// constructWhereClause constructs a dynamic WHERE .. IN clause
+func constructWhereClause(reportRules types.ReportRules) string {
+	var statement string
+
+	for i, rule := range reportRules.Rules {
+		singleVal := ""
+		module := strings.TrimRight(rule.Module, ".report") // remove trailing .report from module name
+
+		if i == 0 {
+			singleVal = fmt.Sprintf("VALUES (\"%v\", \"%v\")", rule.ErrorKey, module)
+		} else {
+			singleVal = fmt.Sprintf(", (%v, %v)", rule.ErrorKey, module)
+		}
+		statement = statement + singleVal
+	}
+	return statement
+}
+
+// GetContentForRules retrieves content for rules
+func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]types.RuleContentResponse, error) {
+	rules := []types.RuleContentResponse{}
+
+	whereInStatement := constructWhereClause(reportRules)
+
+	q := `SELECT rek.error_key, rek.rule_module, rek.description, rek.publish_date,
+		rek.impact, rek.likelihood
+		FROM rule_error_key rek LEFT JOIN rule r ON rek.rule_module = r.module
+		WHERE (rek.error_key, rek.rule_module) IN (%v)`
+
+	q = fmt.Sprintf(q, whereInStatement)
+
+	rows, err := storage.connection.Query(q)
+
+	if err != nil {
+		return rules, err
+	}
+	defer closeRows(rows)
+
+	for rows.Next() {
+		var rule types.RuleContentResponse
+		var impact, likelihood int
+
+		err = rows.Scan(
+			&rule.ErrorKey,
+			&rule.RuleModule,
+			&rule.Description,
+			&rule.CreatedAt,
+			&impact,
+			&likelihood,
+		)
+		if err != nil {
+			log.Println("SQL error in retrieving content for rules", err)
+			continue
+		}
+
+		rule.TotalRisk = ((impact + likelihood) / 2)
+
+		rules = append(rules, rule)
+	}
+	return rules, nil
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization

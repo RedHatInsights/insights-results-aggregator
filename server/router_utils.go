@@ -27,6 +27,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const defaultPage = 1
+
 // RouterMissingParamError missing parameter in URL
 type RouterMissingParamError struct {
 	paramName string
@@ -128,4 +130,43 @@ func readOrganizationID(writer http.ResponseWriter, request *http.Request) (type
 	}
 
 	return types.OrgID(organizationID), nil
+}
+
+func getRouterPositiveIntParamOrDefault(request *http.Request, paramName string, defaultValue uint64) (uint64, error) {
+	value, err := getRouterPositiveIntParam(request, paramName)
+	if err != nil {
+		if _, ok := err.(*RouterMissingParamError); ok {
+			return defaultValue, nil
+		}
+
+		return 0, err
+	}
+
+	return value, nil
+}
+
+func readPaginationParams(writer http.ResponseWriter, request *http.Request, server *HTTPServer) (types.Pagination, error) {
+	pageNumber, err := getRouterPositiveIntParamOrDefault(request, "page", defaultPage)
+	if err != nil {
+		if _, ok := err.(*RouterParsingError); ok {
+			responses.Send(http.StatusBadRequest, writer, err.Error())
+		} else {
+			responses.Send(http.StatusInternalServerError, writer, err.Error())
+		}
+
+		return types.Pagination{}, err
+	}
+
+	pageSize, err := getRouterPositiveIntParamOrDefault(request, "perPage", server.Config.DefaultPageSize)
+	if err != nil {
+		if _, ok := err.(*RouterParsingError); ok {
+			responses.Send(http.StatusBadRequest, writer, err.Error())
+		} else {
+			responses.Send(http.StatusInternalServerError, writer, err.Error())
+		}
+
+		return types.Pagination{}, err
+	}
+
+	return types.Pagination{PageNumber: pageNumber, PageSize: pageSize}, nil
 }

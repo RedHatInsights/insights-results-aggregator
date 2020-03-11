@@ -28,3 +28,39 @@ type ClusterReport string
 // Timestamp represents any timestamp in a form gathered from database
 // TODO: need to be improved
 type Timestamp string
+
+// Pagination represents the parameters used for paging cluster report rules
+type Pagination struct {
+	PageNumber uint64
+	PageSize   uint64
+}
+
+// RuleOnReport represents a single (hit) rule of the string encoded report
+type RuleOnReport struct {
+	Module   string `json:"component"`
+	ErrorKey string `json:"key"`
+}
+
+// ReportRules is a helper struct for easy JSON unmarshalling of string encoded report
+type ReportRules struct {
+	Rules []RuleOnReport `json:"reports"`
+}
+
+// ReportResponse represents the response of /report endpoint
+type ReportResponse struct {
+	Count   int
+	Page    uint64
+	PerPage uint64
+	Report  ClusterReport
+	Rules   []RuleContentResponse
+}
+
+// RuleContentResponse represents a single rule in the response of /report endpoint
+type RuleContentResponse struct {
+	ErrorKey     string
+	RuleModule   string
+	Description  string
+	CreatedAt    string
+	TotalRisk    int
+	RiskOfChange int
+}
