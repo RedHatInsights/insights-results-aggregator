@@ -222,9 +222,9 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	router.HandleFunc(apiPrefix, server.mainEndpoint).Methods("GET")
 	router.HandleFunc(apiPrefix+"organizations", server.listOfOrganizations).Methods("GET")
 	router.HandleFunc(apiPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
-	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/like", server.likeRule).Methods("PUT")
-	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/dislike", server.dislikeRule).Methods("PUT")
-	router.HandleFunc(apiPrefix+"rule/{cluster}/{rule_id}/reset_vote", server.resetVoteOnRule).Methods("PUT")
+	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/like", server.likeRule).Methods("PUT")
+	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike", server.dislikeRule).Methods("PUT")
+	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote", server.resetVoteOnRule).Methods("PUT")
 	router.HandleFunc(
 		apiPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization,
 	).Methods("GET")

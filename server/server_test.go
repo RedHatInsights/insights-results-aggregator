@@ -593,7 +593,7 @@ func TestRuleFeedbackVote(t *testing.T) {
 
 			testServer := server.New(config, mockStorage)
 
-			url := fmt.Sprintf("%v%v/%v/%v/%v", config.APIPrefix, "rule", testClusterName, testRuleID, action)
+			url := fmt.Sprintf("%vclusters/%v/rules/%v/%v", config.APIPrefix, testClusterName, testRuleID, action)
 			req, err := http.NewRequest("PUT", url, nil)
 			helpers.FailOnError(t, err)
 
@@ -623,9 +623,7 @@ func TestRuleFeedbackVote(t *testing.T) {
 func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
 	testServer := server.New(config, nil)
 
-	url := fmt.Sprintf(
-		"%v%v/%v/%v/%v", config.APIPrefix, "rule", testBadClusterName, testRuleID, "like",
-	)
+	url := fmt.Sprintf("%vclusters/%v/rules/%v/like", config.APIPrefix, testBadClusterName, testRuleID)
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -641,7 +639,7 @@ func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
 
 	testServer := server.New(config, mockStorage)
 
-	url := fmt.Sprintf("%v%v/%v/%v/%v", config.APIPrefix, "rule", testClusterName, testRuleID, "like")
+	url := fmt.Sprintf("%vclusters/%v/rules/%v/like", config.APIPrefix, testClusterName, testRuleID)
 	req, err := http.NewRequest("PUT", url, nil)
 	helpers.FailOnError(t, err)
 
