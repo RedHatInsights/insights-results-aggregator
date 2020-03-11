@@ -22,15 +22,16 @@ package main
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
 var (
-	LoadConfiguration         = loadConfiguration
-	GetBrokerConfiguration    = getBrokerConfiguration
-	GetServerConfiguration    = getServerConfiguration
-	GetStorageConfiguration   = getStorageConfiguration
-	GetOrganizationWhitelist  = getOrganizationWhitelist
-	StartStorageConnection    = startStorageConnection
-	StartService              = startService
-	StopService               = stopService
-	WaitForServiceToStart     = waitForServiceToStart
-	LoadWhitelistFromCSV      = loadWhitelistFromCSV
-	ConfigFileEnvVariableName = configFileEnvVariableName
+	LoadConfiguration           = loadConfiguration
+	GetBrokerConfiguration      = getBrokerConfiguration
+	GetServerConfiguration      = getServerConfiguration
+	GetContentPathConfiguration = getContentPathConfiguration
+	GetStorageConfiguration     = getStorageConfiguration
+	GetOrganizationWhitelist    = getOrganizationWhitelist
+	StartStorageConnection      = startStorageConnection
+	StartService                = startService
+	StopService                 = stopService
+	WaitForServiceToStart       = waitForServiceToStart
+	LoadWhitelistFromCSV        = loadWhitelistFromCSV
+	ConfigFileEnvVariableName   = configFileEnvVariableName
 )
