@@ -159,7 +159,7 @@ func constructURLForOrganizationsClusters(organization int) string {
 func checkClustersEndpointForKnownOrganizations() {
 	for _, knownOrganization := range knownOrganizations {
 		url := constructURLForOrganizationsClusters(knownOrganization)
-		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
+		f := frisby.Create("Check the end point to return list of clusters for known organization by HTTP GET method").Get(url)
 		f.Send()
 		f.ExpectStatus(200)
 		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -171,7 +171,7 @@ func checkClustersEndpointForKnownOrganizations() {
 func checkClustersEndpointForUnknownOrganizations() {
 	for _, unknownOrganization := range unknownOrganizations {
 		url := constructURLForOrganizationsClusters(unknownOrganization)
-		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
+		f := frisby.Create("Check the end point to return list of clusters for unknown organization by HTTP GET method").Get(url)
 		f.Send()
 		f.ExpectStatus(200)
 		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)

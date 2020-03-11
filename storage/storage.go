@@ -68,6 +68,10 @@ const (
 	DBDriverSQLite DBDriver = iota
 	// DBDriverPostgres shows that db driver is postrgres
 	DBDriverPostgres
+
+	// driverNotSupportedMessage is a template for error message displayed
+	// in all situations where given DB driver is not supported
+	driverNotSupportedMessage = "driver '%v' is not supported"
 )
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
@@ -95,7 +99,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 
 	dataSource, err := getDataSourceFromConfig(configuration)
 	if err != nil {
-		return nil, fmt.Errorf("driver '%v' is not supported", configuration.Driver)
+		return nil, fmt.Errorf(driverNotSupportedMessage, configuration.Driver)
 	}
 
 	log.Printf("Making connection to data storage, driver=%s datasource=%s", configuration.Driver, dataSource)
@@ -114,7 +118,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 	case strings.HasPrefix(driverName, "postgres"):
 		driverType = DBDriverPostgres
 	default:
-		return nil, fmt.Errorf("driver %v is not supported", driverName)
+		return nil, fmt.Errorf(driverNotSupportedMessage, driverName)
 	}
 
 	return &DBStorage{

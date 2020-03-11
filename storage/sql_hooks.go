@@ -88,7 +88,7 @@ func InitAndGetSQLDriverWithLogs(driverName string, logger *log.Logger) (string,
 	case "postgres":
 		driver = &pq.Driver{}
 	default:
-		return "", fmt.Errorf("driver %v is not supported", driverName)
+		return "", fmt.Errorf(driverNotSupportedMessage, driverName)
 	}
 
 	// linear search is not gonna be an issue since there's not many drivers
