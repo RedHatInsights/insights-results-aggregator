@@ -51,9 +51,6 @@ const (
 	defaultConfigFilename = "config"
 
 	consumerExitedErrorMessage = "consumer exited with error code %v"
-
-	// ruleContentDirPath is a path of the directory with the rule contents.
-	ruleContentDirPath = "/rules-content/"
 )
 
 var (
@@ -108,6 +105,7 @@ func prepareDB() int {
 		return ExitStatusPrepareDbError
 	}
 
+	ruleContentDirPath := getContentPathConfiguration()
 	contentDir, err := content.ParseRuleContentDir(ruleContentDirPath)
 	if err != nil {
 		log.Println(err)
