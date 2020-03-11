@@ -54,7 +54,7 @@ var config struct {
 	} `mapstructure:"processing"`
 	Storage storage.Configuration `mapstructure:"storage" toml:"storage"`
 	Content struct {
-		ContentPath string `mapstructure:"path" toml:path`
+		ContentPath string `mapstructure:"path" toml:"path"`
 	} `mapstructure:"content" toml:"content"`
 }
 
