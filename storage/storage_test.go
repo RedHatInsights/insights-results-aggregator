@@ -558,7 +558,7 @@ func TestDBStorageFeedbackErrorDBError(t *testing.T) {
 	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
 	if err == nil || !strings.Contains(err.Error(), "database is closed") {
 		t.Fatalf("expected sql database is closed error, got %T, %+v", err, err)
-  }
+	}
 }
 
 func TestLoadRuleContentActiveOK(t *testing.T) {
