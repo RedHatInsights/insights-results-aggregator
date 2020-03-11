@@ -20,6 +20,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -128,4 +129,61 @@ func readOrganizationID(writer http.ResponseWriter, request *http.Request) (type
 	}
 
 	return types.OrgID(organizationID), nil
+}
+
+// readClusterNames does the same as `readClusterName`, except for multiple clusters.
+func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]types.ClusterName, error) {
+	clusterNamesParam, err := getRouterParam(request, "clusters")
+	if err != nil {
+		message := fmt.Sprintf("Cluster names are not provided %v", err.Error())
+		log.Println(message)
+		// See `readClusterName`.
+		responses.SendInternalServerError(writer, message)
+
+		return []types.ClusterName{}, err
+	}
+
+	clusterNamesConverted := []types.ClusterName{}
+	for _, cn := range strings.Split(",", clusterNamesParam) {
+		if _, err := uuid.Parse(cn); err != nil {
+			const message = "cluster name format is invalid"
+
+			log.Println(message)
+			responses.SendInternalServerError(writer, message)
+
+			return []types.ClusterName{}, errors.New(message)
+		}
+
+		clusterNamesConverted = append(clusterNamesConverted, types.ClusterName(cn))
+	}
+
+	return clusterNamesConverted, nil
+}
+
+// readOrganizationIDs does the same as `readOrganizationID`, except for multiple organizations.
+func readOrganizationIDs(writer http.ResponseWriter, request *http.Request) ([]types.OrgID, error) {
+	organizationsParam, err := getRouterParam(request, "organizations")
+	if err != nil {
+		message := fmt.Sprintf("Error getting organization IDs from request %v", err.Error())
+		log.Println(message)
+
+		if _, ok := err.(*RouterParsingError); ok {
+			responses.Send(http.StatusBadRequest, writer, err.Error())
+		} else {
+			responses.Send(http.StatusInternalServerError, writer, err.Error())
+		}
+
+		return []types.OrgID{}, err
+	}
+
+	organizationsConverted := []types.OrgID{}
+	for _, orgStr := range strings.Split(",", organizationsParam) {
+		orgInt, err := strconv.ParseUint(orgStr, 10, 64)
+		if err != nil {
+			return []types.OrgID{}, err
+		}
+		organizationsConverted = append(organizationsConverted, types.OrgID(orgInt))
+	}
+
+	return organizationsConverted, nil
 }
