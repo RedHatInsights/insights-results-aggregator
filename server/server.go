@@ -167,16 +167,16 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	}
 
 	// common REST API endpoints
-	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"organizations", server.listOfOrganizations).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods(http.MethodGet)
+	router.HandleFunc(server.Config.APIPrefix+"organizations", server.listOfOrganizations).Methods(http.MethodGet)
+	router.HandleFunc(server.Config.APIPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods(http.MethodGet)
+	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods(http.MethodGet)
 
 	// Prometheus metrics
-	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods("GET")
+	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods(http.MethodGet)
 
 	// OpenAPI specs
-	router.HandleFunc(server.Config.APIPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods(http.MethodGet)
 
 	return router
 }
