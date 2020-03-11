@@ -58,6 +58,21 @@ type Storage interface {
 		collectedAtTime time.Time,
 	) error
 	ReportsCount() (int, error)
+	VoteOnRule(
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		userID types.UserID,
+		userVote UserVote,
+	) error
+	AddOrUpdateFeedbackOnRule(
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		userID types.UserID,
+		message string,
+	) error
+	GetUserFeedbackOnRule(
+		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+	) (*UserFeedbackOnRule, error)
 }
 
 // DBDriver type for db driver enum
@@ -186,7 +201,7 @@ func closeRows(rows *sql.Rows) {
 
 // ListOfOrgs reads list of all organizations that have at least one cluster report
 func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
-	orgs := []types.OrgID{}
+	orgs := make([]types.OrgID, 0)
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
 	if err != nil {
@@ -199,7 +214,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 
 		err = rows.Scan(&orgID)
 		if err == nil {
-			orgs = append(orgs, types.OrgID(orgID))
+			orgs = append(orgs, orgID)
 		} else {
 			log.Println("error", err)
 		}
@@ -209,7 +224,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 
 // ListOfClustersForOrg reads list of all clusters fro given organization
 func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
-	clusters := []types.ClusterName{}
+	clusters := make([]types.ClusterName, 0)
 
 	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster", orgID)
 	if err != nil {
@@ -231,7 +246,9 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 }
 
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
-func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error) {
+func (storage DBStorage) ReadReportForCluster(
+	orgID types.OrgID, clusterName types.ClusterName,
+) (types.ClusterReport, error) {
 	var report string
 	err := storage.connection.QueryRow(
 		"SELECT report FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
@@ -247,7 +264,6 @@ func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName typ
 	}
 
 	return types.ClusterReport(report), nil
-
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
@@ -256,7 +272,7 @@ func (storage DBStorage) WriteReportForCluster(
 	clusterName types.ClusterName,
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
-) (err error) {
+) (outError error) {
 	var query string
 
 	switch storage.dbDriverType {
@@ -277,7 +293,7 @@ func (storage DBStorage) WriteReportForCluster(
 		return err
 	}
 	defer func() {
-		err = statement.Close()
+		outError = statement.Close()
 	}()
 
 	t := time.Now()
@@ -295,7 +311,7 @@ func (storage DBStorage) WriteReportForCluster(
 
 // ReportsCount reads number of all records stored in database
 func (storage DBStorage) ReportsCount() (int, error) {
-	count := int(-1)
+	count := -1
 	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
 
 	return count, err

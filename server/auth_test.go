@@ -71,7 +71,8 @@ func TestInvalidAuthToken(t *testing.T) {
 	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 }
 
-// TestInvalidAuthToken checks whether token header that does not contain correct JSON (encoded by BASE64) is handled correctly
+// TestInvalidAuthToken checks whether token header that does not contain correct JSON
+// (encoded by BASE64) is handled correctly
 func TestInvalidJsonAuthToken(t *testing.T) {
 	server := server.New(configAuth, nil)
 	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)

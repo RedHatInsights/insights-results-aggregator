@@ -22,8 +22,12 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/RedHatInsights/insights-operator-utils/responses"
+	"fmt"
 	"net/http"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
+
+	"github.com/RedHatInsights/insights-operator-utils/responses"
 )
 
 type contextKey string
@@ -40,7 +44,8 @@ type Internal struct {
 
 // Identity contains internal user info
 type Identity struct {
-	Internal Internal `json:"internal"`
+	AccountNumber types.UserID `json:"account_number"`
+	Internal      Internal     `json:"internal"`
 }
 
 // Token is x-rh-identity struct
@@ -49,10 +54,8 @@ type Token struct {
 }
 
 // Authentication middleware for checking auth rights
-func (server HTTPServer) Authentication(next http.Handler) http.Handler {
-
+func (server *HTTPServer) Authentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		tokenHeader := r.Header.Get("x-rh-identity") //Grab the token from the header
 
 		if tokenHeader == "" { //Token is missing, returns with error code 403 Unauthorized
@@ -80,4 +83,16 @@ func (server HTTPServer) Authentication(next http.Handler) http.Handler {
 		// Proceed to proxy
 		next.ServeHTTP(w, r)
 	})
+}
+
+// GetCurrentUserID retrieves current user's id from request
+func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID, error) {
+	i := request.Context().Value(contextKeyUser)
+
+	identity, ok := i.(Identity)
+	if !ok {
+		return "", fmt.Errorf("contextKeyUser has wrong type")
+	}
+
+	return identity.AccountNumber, nil
 }
