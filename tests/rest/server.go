@@ -204,7 +204,7 @@ func checkOpenAPISpecifications() {
 	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "openapi.json")
 	f.Send()
 	f.ExpectStatus(200)
-	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.ExpectHeader(contentTypeHeader, "application/json")
 	f.PrintReport()
 }
 

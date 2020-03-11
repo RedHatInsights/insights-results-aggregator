@@ -24,6 +24,8 @@ limitations under the License.
 package main
 
 import (
+	"os"
+
 	tests "github.com/RedHatInsights/insights-results-aggregator/tests/rest"
 	"github.com/verdverm/frisby"
 )
@@ -31,4 +33,5 @@ import (
 func main() {
 	tests.ServerTests()
 	frisby.Global.PrintReport()
+	os.Exit(frisby.Global.NumErrored)
 }
