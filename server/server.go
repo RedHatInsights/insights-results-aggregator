@@ -52,6 +52,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// HTTPMethodGet represents textual representation of HTTP GET method used by net/http package
+const HTTPMethodGet = "GET"
+
 // HTTPServer in an implementation of Server interface
 type HTTPServer struct {
 	Config  Configuration
@@ -167,16 +170,16 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	}
 
 	// common REST API endpoints
-	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"organizations", server.listOfOrganizations).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods(HTTPMethodGet)
+	router.HandleFunc(server.Config.APIPrefix+"organizations", server.listOfOrganizations).Methods(HTTPMethodGet)
+	router.HandleFunc(server.Config.APIPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods(HTTPMethodGet)
+	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods(HTTPMethodGet)
 
 	// Prometheus metrics
-	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods("GET")
+	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods(HTTPMethodGet)
 
 	// OpenAPI specs
-	router.HandleFunc(server.Config.APIPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods("GET")
+	router.HandleFunc(server.Config.APIPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods(HTTPMethodGet)
 
 	return router
 }
