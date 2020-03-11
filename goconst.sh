@@ -14,5 +14,5 @@
 # limitations under the License.
 
 
-go get github.com/jgautheron/goconst/cmd/goconst
+GO111MODULE=off go get github.com/jgautheron/goconst/cmd/goconst
 goconst -min-occurrences=3 ./...
