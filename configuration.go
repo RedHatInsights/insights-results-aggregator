@@ -146,6 +146,10 @@ func getServerConfiguration() server.Configuration {
 
 // getContentPathConfiguration get the path to the content files from the configuration
 func getContentPathConfiguration() string {
+	if len(config.Content.ContentPath) == 0 {
+		config.Content.ContentPath = defaultContentPath
+	}
+
 	return config.Content.ContentPath
 }
 
