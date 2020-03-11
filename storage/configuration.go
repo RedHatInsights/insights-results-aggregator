@@ -16,6 +16,11 @@ limitations under the License.
 
 package storage
 
+const (
+	sqliteDriverName   = "sqlite3"
+	postgresDriverName = "postgres"
+)
+
 // Configuration represents configuration of data storage
 type Configuration struct {
 	Driver           string `mapstructure:"db_driver" toml:"db_driver"`

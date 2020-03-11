@@ -115,7 +115,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 	switch {
 	case strings.HasPrefix(driverName, "sqlite"):
 		driverType = DBDriverSQLite
-	case strings.HasPrefix(driverName, "postgres"):
+	case strings.HasPrefix(driverName, postgresDriverName):
 		driverType = DBDriverPostgres
 	default:
 		return nil, fmt.Errorf(driverNotSupportedMessage, driverName)
@@ -130,9 +130,9 @@ func New(configuration Configuration) (*DBStorage, error) {
 
 func getDataSourceFromConfig(configuration Configuration) (string, error) {
 	switch configuration.Driver {
-	case "sqlite3":
+	case sqliteDriverName:
 		return configuration.SQLiteDataSource, nil
-	case "postgres":
+	case postgresDriverName:
 		return fmt.Sprintf(
 			"postgresql://%v:%v@%v:%v/%v?%v",
 			configuration.PGUsername,
