@@ -83,7 +83,7 @@ func InitAndGetSQLDriverWithLogs(driverName string, logger *log.Logger) (string,
 	var driver sql_driver.Driver
 
 	switch driverName {
-	case "sqlite", sqliteDriverName:
+	case sqliteDriverName:
 		driver = &sqlite3.SQLiteDriver{}
 	case postgresDriverName:
 		driver = &pq.Driver{}
