@@ -24,6 +24,8 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/content"
 )
 
+const errYAMLBadToken = "yaml: line 14: found character that cannot start any token"
+
 func TestContentParseOK(t *testing.T) {
 	con, err := content.ParseRuleContentDir("../tests/content/ok/")
 	if err != nil {
@@ -35,7 +37,7 @@ func TestContentParseOK(t *testing.T) {
 		t.Fatal("'rule1' content is missing")
 	}
 
-	_, exists = rule1Content.Errors["err_key"]
+	_, exists = rule1Content.ErrorKeys["err_key"]
 	if !exists {
 		t.Fatal("'err_key' error content is missing")
 	}
@@ -52,6 +54,20 @@ func TestContentParseInvalidDir(t *testing.T) {
 func TestContentParseMissingFile(t *testing.T) {
 	_, err := content.ParseRuleContentDir("../tests/content/missing/")
 	if err == nil || !strings.HasSuffix(err.Error(), ": no such file or directory") {
+		t.Fatal(err)
+	}
+}
+
+func TestContentParseBadPluginYAML(t *testing.T) {
+	_, err := content.ParseRuleContentDir("../tests/content/bad_plugin/")
+	if err == nil || err.Error() != errYAMLBadToken {
+		t.Fatal(err)
+	}
+}
+
+func TestContentParseBadMetadataYAML(t *testing.T) {
+	_, err := content.ParseRuleContentDir("../tests/content/bad_metadata/")
+	if err == nil || err.Error() != errYAMLBadToken {
 		t.Fatal(err)
 	}
 }

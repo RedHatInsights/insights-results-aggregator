@@ -219,21 +219,21 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	apiPrefix := server.Config.APIPrefix
 
 	// common REST API endpoints
-	router.HandleFunc(apiPrefix, server.mainEndpoint).Methods("GET")
-	router.HandleFunc(apiPrefix+"organizations", server.listOfOrganizations).Methods("GET")
-	router.HandleFunc(apiPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
-	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/like", server.likeRule).Methods("PUT")
-	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike", server.dislikeRule).Methods("PUT")
-	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote", server.resetVoteOnRule).Methods("PUT")
+	router.HandleFunc(apiPrefix, server.mainEndpoint).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+"organizations", server.listOfOrganizations).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/like", server.likeRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike", server.dislikeRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote", server.resetVoteOnRule).Methods(http.MethodPut)
 	router.HandleFunc(
 		apiPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization,
-	).Methods("GET")
+	).Methods(http.MethodGet)
 
 	// Prometheus metrics
-	router.Handle(apiPrefix+"metrics", promhttp.Handler()).Methods("GET")
+	router.Handle(apiPrefix+"metrics", promhttp.Handler()).Methods(http.MethodGet)
 
 	// OpenAPI specs
-	router.HandleFunc(apiPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods("GET")
+	router.HandleFunc(apiPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods(http.MethodGet)
 
 	return router
 }

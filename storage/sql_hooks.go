@@ -83,12 +83,12 @@ func InitAndGetSQLDriverWithLogs(driverName string, logger *log.Logger) (string,
 	var driver sql_driver.Driver
 
 	switch driverName {
-	case "sqlite", "sqlite3":
+	case sqliteDriverName:
 		driver = &sqlite3.SQLiteDriver{}
-	case "postgres":
+	case postgresDriverName:
 		driver = &pq.Driver{}
 	default:
-		return "", fmt.Errorf("driver %v is not supported", driverName)
+		return "", fmt.Errorf(driverNotSupportedMessage, driverName)
 	}
 
 	// linear search is not gonna be an issue since there's not many drivers

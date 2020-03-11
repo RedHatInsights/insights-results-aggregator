@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
+	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
@@ -41,6 +42,8 @@ import (
 const (
 	// ExitStatusOK means that the tool finished with success
 	ExitStatusOK = iota
+	// ExitStatusPrepareDbError is returned when the DB preparation (including rule content loading) fails
+	ExitStatusPrepareDbError
 	// ExitStatusConsumerError is returned in case of any consumer-related error
 	ExitStatusConsumerError
 	// ExitStatusServerError is returned in case of any REST API server-related error
@@ -85,15 +88,42 @@ func closeConsumer(consumerInstance consumer.Consumer) {
 	}
 }
 
+// prepareDB migrates the DB to the latest version
+// and loads all available rule content into it.
+func prepareDB() int {
+	dbStorage, err := startStorageConnection()
+	if err != nil {
+		return ExitStatusPrepareDbError
+	}
+	defer closeStorage(dbStorage)
+
+	// Initialize the database by running necessary
+	// migrations to get to the highest available version.
+	err = dbStorage.Init()
+	if err != nil {
+		log.Println(err)
+		return ExitStatusPrepareDbError
+	}
+
+	ruleContentDirPath := getContentPathConfiguration()
+	contentDir, err := content.ParseRuleContentDir(ruleContentDirPath)
+	if err != nil {
+		log.Println(err)
+		return ExitStatusPrepareDbError
+	}
+
+	if err := dbStorage.LoadRuleContent(contentDir); err != nil {
+		log.Println(err)
+		return ExitStatusPrepareDbError
+	}
+
+	return ExitStatusOK
+}
+
 // startConsumer starts consumer and returns exit code, 0 is no error
 func startConsumer() int {
 	dbStorage, err := startStorageConnection()
 	if err != nil {
-		return ExitStatusConsumerError
-	}
-	err = dbStorage.Init()
-	if err != nil {
-		log.Println(err)
 		return ExitStatusConsumerError
 	}
 	defer closeStorage(dbStorage)
@@ -141,6 +171,12 @@ func startServer() int {
 func startService() int {
 	var waitGroup sync.WaitGroup
 	exitCode := 0
+
+	prepDbExitCode := prepareDB()
+	if prepDbExitCode != 0 {
+		fmt.Printf(consumerExitedErrorMessage, prepDbExitCode)
+		exitCode += prepDbExitCode
+	}
 
 	waitGroup.Add(1)
 	// consumer is run in its own thread

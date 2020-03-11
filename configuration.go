@@ -42,6 +42,7 @@ import (
 const (
 	configFileEnvVariableName   = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
 	defaultOrgWhiteListFileName = "org_whitelist.csv"
+	defaultContentPath          = "/rules_content"
 )
 
 // config has exactly the same structure as *.toml file
@@ -52,6 +53,9 @@ var config struct {
 		OrgWhiteListFile string `mapstructure:"org_white_list_file" toml:"org_white_list_file"`
 	} `mapstructure:"processing"`
 	Storage storage.Configuration `mapstructure:"storage" toml:"storage"`
+	Content struct {
+		ContentPath string `mapstructure:"path" toml:"path"`
+	} `mapstructure:"content" toml:"content"`
 }
 
 // loadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
@@ -138,6 +142,15 @@ func getServerConfiguration() server.Configuration {
 	}
 
 	return config.Server
+}
+
+// getContentPathConfiguration get the path to the content files from the configuration
+func getContentPathConfiguration() string {
+	if len(config.Content.ContentPath) == 0 {
+		config.Content.ContentPath = defaultContentPath
+	}
+
+	return config.Content.ContentPath
 }
 
 // checkIfFileExists returns nil if path doesn't exist or isn't a file, otherwise it returns corresponding error
