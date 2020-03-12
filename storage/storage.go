@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	_ "github.com/lib/pq"           // PostgreSQL database driver
@@ -275,12 +276,12 @@ func (storage DBStorage) WriteReportForCluster(
 
 	switch storage.dbDriverType {
 	case DBDriverSQLite3:
-		query = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at) 
+		query = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at)
 		 VALUES ($1, $2, $3, $4, $5)`
 	case DBDriverPostgres:
 		query = `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
 		 VALUES ($1, $2, $3, $4, $5)
-		 ON CONFLICT (org_id, cluster) 
+		 ON CONFLICT (org_id, cluster)
 		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`
 	default:
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)

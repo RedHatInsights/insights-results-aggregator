@@ -31,7 +31,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -462,7 +461,7 @@ func TestGetDataSourceForDriverFromConfigDriverIsNotSupportedError(t *testing.T)
 		t.Fatalf("Expected error, got %v", err)
 	}
 
-	assert.Equal(t, "Driver -1 is not supported", err.Error())
+	assert.Equal(t, "driver -1 is not supported", err.Error())
 }
 
 func TestDBStorageVoteOnRule(t *testing.T) {
