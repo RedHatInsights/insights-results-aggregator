@@ -192,8 +192,8 @@ func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, reques
 		return
 	}
 
-	for _, oi := range orgIds {
-		if err := server.Storage.DeleteReportsForOrg(oi); err != nil {
+	for _, org := range orgIds {
+		if err := server.Storage.DeleteReportsForOrg(org); err != nil {
 			log.Println("Unable to delete reports:", err)
 			responses.SendInternalServerError(writer, err.Error())
 			return
@@ -210,8 +210,8 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 		return
 	}
 
-	for _, cn := range clusterNames {
-		if err := server.Storage.DeleteReportsForCluster(cn); err != nil {
+	for _, cluster := range clusterNames {
+		if err := server.Storage.DeleteReportsForCluster(cluster); err != nil {
 			log.Println("Unable to delete reports:", err)
 			responses.SendInternalServerError(writer, err.Error())
 			return

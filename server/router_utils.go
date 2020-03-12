@@ -144,8 +144,8 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 	}
 
 	clusterNamesConverted := []types.ClusterName{}
-	for _, cn := range strings.Split(",", clusterNamesParam) {
-		if _, err := uuid.Parse(cn); err != nil {
+	for _, clusterName := range strings.Split(",", clusterNamesParam) {
+		if _, err := uuid.Parse(clusterName); err != nil {
 			const message = "cluster name format is invalid"
 
 			log.Println(message)
@@ -154,7 +154,7 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 			return []types.ClusterName{}, errors.New(message)
 		}
 
-		clusterNamesConverted = append(clusterNamesConverted, types.ClusterName(cn))
+		clusterNamesConverted = append(clusterNamesConverted, types.ClusterName(clusterName))
 	}
 
 	return clusterNamesConverted, nil
