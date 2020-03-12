@@ -17,17 +17,23 @@ limitations under the License.
 package main_test
 
 import (
-	"bytes"
-	"github.com/spf13/viper"
+	"os"
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/stretchr/testify/assert"
+
+	main "github.com/RedHatInsights/insights-results-aggregator"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+)
+
+const (
+	testsTimeout = 5 * time.Second
 )
 
 func TestStartStorageConnection(t *testing.T) {
 	TestLoadConfiguration(t)
+
 	_, err := main.StartStorageConnection()
 	if err != nil {
 		t.Fatal("Cannot create storage object", err)
@@ -36,45 +42,16 @@ func TestStartStorageConnection(t *testing.T) {
 
 func TestStartService(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		config := []byte(`
-			[broker]
-			address = "localhost:9093"
-			topic = "ccx.ocp.results"
-			group = "aggregator"
-			enabled = false
+		os.Clearenv()
 
-			[server]
-			address = ":1234"
-			api_prefix = "/api/v1/"
-			debug = true
-
-			[processing]
-			org_whitelist = "org_whitelist.csv"
-
-			[metrics]
-			enabled = true
-
-			[logging]
-
-			[storage]
-			db_driver = "sqlite3"
-			sqlite_datasource = ":memory:"
-			pg_username = ""
-			pg_password = ""
-			pg_host = ""
-			pg_port = 0
-			pg_db_name = ""
-			pg_params = ""
-		`)
-
-		viper.SetConfigType("toml")
-		viper.ReadConfig(bytes.NewBuffer(config))
+		mustLoadConfiguration("./tests/tests")
 
 		go func() {
 			main.StartService()
 		}()
 
 		main.WaitForServiceToStart()
-		main.StopService()
-	}, 5*time.Second)
+		errCode := main.StopService()
+		assert.Equal(t, 0, errCode)
+	}, testsTimeout)
 }

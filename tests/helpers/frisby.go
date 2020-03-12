@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"reflect"
 
 	"github.com/verdverm/frisby"
@@ -78,7 +79,13 @@ func unmarshalResponseBodyToJSON(respBody io.ReadCloser, obj interface{}) error 
 	if err != nil {
 		return err
 	}
-	defer respBody.Close()
+	defer func() {
+		// error should not happen there, but we need to make errcheck tool happy
+		err := respBody.Close()
+		if err != nil {
+			log.Fatal("respBody.Close() fails - that is not expected")
+		}
+	}()
 
 	err = json.Unmarshal(bodyBytes, obj)
 	if err != nil {

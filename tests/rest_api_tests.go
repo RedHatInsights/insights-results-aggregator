@@ -14,9 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Implementation of REST API tests that checks all REST API endpoints of
+// Insights aggregator service.
+//
+// These test should be started by using one of following commands in order to be configured properly:
+//
+//   ./test.sh rest_api
+//   make rest_api_tests
 package main
 
 import (
+	"os"
+
 	tests "github.com/RedHatInsights/insights-results-aggregator/tests/rest"
 	"github.com/verdverm/frisby"
 )
@@ -24,4 +33,5 @@ import (
 func main() {
 	tests.ServerTests()
 	frisby.Global.PrintReport()
+	os.Exit(frisby.Global.NumErrored)
 }

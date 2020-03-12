@@ -25,6 +25,7 @@ package migration
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // Version represents a version of the database.
@@ -42,8 +43,10 @@ type Migration struct {
 
 // migrations is a list of migrations that, when applied in their order,
 // create the most recent version of the database from scratch.
-var migrations []Migration = []Migration{
+var migrations = []Migration{
 	mig1,
+	mig2,
+	mig3,
 }
 
 // GetMaxVersion returns the highest available migration version.
@@ -57,34 +60,24 @@ func GetMaxVersion() Version {
 // If it already exists, no changes will be made to the database.
 // Otherwise, a new migration information table will be created and initialized.
 func InitInfoTable(db *sql.DB) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
 	// Check if migration info table already exists.
-	countResult := tx.QueryRow("SELECT COUNT(*) FROM migration_info")
+	countResult := db.QueryRow("SELECT COUNT(*) FROM migration_info")
 	var rowCount int
-	err = countResult.Scan(&rowCount)
+	err := countResult.Scan(&rowCount)
 	// If it exists, it must have exactly 1 row.
 	// If it doesn't exist, the "no such table" error is expected.
 	// Otherwise, there's something wrong.
 	if err == nil {
-		tx.Rollback()
 		if rowCount != 1 {
-			return fmt.Errorf("Unexpected number of rows in migration info table (expected: 1, reality: %d)", rowCount)
+			return fmt.Errorf("unexpected number of rows in migration info table (expected: 1, reality: %d)", rowCount)
 		}
 		return nil
-	} else if err.Error() != "no such table: migration_info" {
-		tx.Rollback()
+	} else if !strings.Contains(err.Error(), "migration_info") {
+		// An error not related to the nonexistence of the migration_info table.
 		return err
 	}
 
-	if err = initInfoTab(tx); err != nil {
-		tx.Rollback()
-		return err
-	}
-	return tx.Commit()
+	return initInfoTab(db)
 }
 
 // GetDBVersion reads the current version of the database from the migration info table.
@@ -93,11 +86,13 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	// Read the first (and hopefully the only) row in the table.
 	if !rows.Next() {
-		return 0, fmt.Errorf("Migration info table is empty")
+		return 0, fmt.Errorf("migration info table is empty")
 	}
 
 	var version Version = 0
@@ -108,7 +103,7 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 
 	// Check if another row is available (it should NOT be).
 	if rows.Next() {
-		return 0, fmt.Errorf("Migration info table contain multiple rows")
+		return 0, fmt.Errorf("migration info table contain multiple rows")
 	}
 
 	return version, nil
@@ -119,7 +114,7 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 func SetDBVersion(db *sql.DB, targetVer Version) error {
 	maxVer := GetMaxVersion()
 	if targetVer > maxVer {
-		return fmt.Errorf("Invalid target version (available version range is 0-%d)", maxVer)
+		return fmt.Errorf("invalid target version (available version range is 0-%d)", maxVer)
 	}
 
 	// Get current database version.
@@ -130,32 +125,38 @@ func SetDBVersion(db *sql.DB, targetVer Version) error {
 
 	// Current version is unexpectedly high.
 	if currentVer > maxVer {
-		return fmt.Errorf("Current version (%d) is outside of available migration boundaries", currentVer)
+		return fmt.Errorf("current version (%d) is outside of available migration boundaries", currentVer)
 	}
 
 	return execStepsInTx(db, currentVer, targetVer)
 }
 
 // initInfoTab performs the actual creation and initialization of the migration info table.
-// Transaction finalization (rollback/commit) is expected to be done by the calling function.
-func initInfoTab(tx *sql.Tx) error {
-	_, err := tx.Exec("CREATE TABLE migration_info (version INTEGER NOT NULL)")
+func initInfoTab(db *sql.DB) error {
+	tx, err := db.Begin()
 	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec("CREATE TABLE migration_info (version INTEGER NOT NULL)")
+	if err != nil {
+		_ = tx.Rollback()
 		return err
 	}
 
 	_, err = tx.Exec("INSERT INTO migration_info(version) VALUES(0)")
 	if err != nil {
+		_ = tx.Rollback()
 		return err
 	}
 
-	return nil
+	return tx.Commit()
 }
 
 // updateVersionInDB updates the migration version number in the migration info table.
 // This function does NOT rollback in case of an error. The calling function is expected to do that.
 func updateVersionInDB(tx *sql.Tx, newVersion Version) error {
-	res, err := tx.Exec("UPDATE migration_info SET version=?", newVersion)
+	res, err := tx.Exec("UPDATE migration_info SET version=$1", newVersion)
 	if err != nil {
 		return err
 	}
@@ -167,7 +168,7 @@ func updateVersionInDB(tx *sql.Tx, newVersion Version) error {
 	}
 
 	if affected != 1 {
-		return fmt.Errorf("Unexpected number of affected rows in migration info table (expected: 1, reality: %d)", affected)
+		return fmt.Errorf("unexpected number of affected rows in migration info table (expected: 1, reality: %d)", affected)
 	}
 
 	return nil
@@ -189,7 +190,7 @@ func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
 	// Upgrade to target version.
 	for currentVer < targetVer {
 		if err = migrations[currentVer].StepUp(tx); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 		currentVer++
@@ -198,14 +199,14 @@ func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
 	// Downgrade to target version.
 	for currentVer > targetVer {
 		if err = migrations[currentVer-1].StepDown(tx); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 		currentVer--
 	}
 
 	if err = updateVersionInDB(tx, currentVer); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 

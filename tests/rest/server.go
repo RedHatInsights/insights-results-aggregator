@@ -25,7 +25,16 @@ import (
 	"github.com/verdverm/frisby"
 )
 
-const apiURL = "http://localhost:8080/api/v1/"
+const (
+	apiURL            = "http://localhost:8080/api/v1/"
+	contentTypeHeader = "Content-Type"
+
+	// ContentTypeJSON represents MIME type for JSON format
+	ContentTypeJSON = "application/json; charset=utf-8"
+
+	// ContentTypeText represents MIME type for plain text format
+	ContentTypeText = "text/plain; charset=utf-8"
+)
 
 // list of known organizations that are stored in test database
 var knownOrganizations []int = []int{1, 2, 3, 4}
@@ -41,7 +50,7 @@ func checkRestAPIEntryPoint() {
 	f := frisby.Create("Check the entry point to REST API using HTTP GET method").Get(apiURL)
 	f.Send()
 	f.ExpectStatus(200)
-	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 	f.PrintReport()
 }
 
@@ -50,7 +59,7 @@ func checkNonExistentEntryPoint() {
 	f := frisby.Create("Check the non-existent entry point to REST API").Get(apiURL + "foobar")
 	f.Send()
 	f.ExpectStatus(404)
-	f.ExpectHeader("Content-Type", "text/plain; charset=utf-8")
+	f.ExpectHeader(contentTypeHeader, ContentTypeText)
 	f.PrintReport()
 }
 
@@ -61,7 +70,7 @@ func checkWrongEntryPoint() {
 		f := frisby.Create("Check the wrong entry point to REST API with postfix '" + postfix + "'").Get(apiURL + postfix)
 		f.Send()
 		f.ExpectStatus(404)
-		f.ExpectHeader("Content-Type", "text/plain; charset=utf-8")
+		f.ExpectHeader(contentTypeHeader, ContentTypeText)
 		f.PrintReport()
 	}
 }
@@ -111,7 +120,10 @@ func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
 	if err != nil {
 		f.AddError(err.Error())
 	} else {
-		json.Unmarshal(text, &response)
+		err := json.Unmarshal(text, &response)
+		if err != nil {
+			f.AddError(err.Error())
+		}
 	}
 	return response
 }
@@ -121,7 +133,7 @@ func checkOrganizationsEndpoint() {
 	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations")
 	f.Send()
 	f.ExpectStatus(200)
-	f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 	organizationsResponse := readOrganizationsFromResponse(f)
 	if organizationsResponse.Status != "ok" {
 		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", organizationsResponse.Status))
@@ -147,10 +159,10 @@ func constructURLForOrganizationsClusters(organization int) string {
 func checkClustersEndpointForKnownOrganizations() {
 	for _, knownOrganization := range knownOrganizations {
 		url := constructURLForOrganizationsClusters(knownOrganization)
-		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
+		f := frisby.Create("Check the end point to return list of clusters for known organization by HTTP GET method").Get(url)
 		f.Send()
 		f.ExpectStatus(200)
-		f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 		f.PrintReport()
 	}
 }
@@ -159,10 +171,10 @@ func checkClustersEndpointForKnownOrganizations() {
 func checkClustersEndpointForUnknownOrganizations() {
 	for _, unknownOrganization := range unknownOrganizations {
 		url := constructURLForOrganizationsClusters(unknownOrganization)
-		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
+		f := frisby.Create("Check the end point to return list of clusters for unknown organization by HTTP GET method").Get(url)
 		f.Send()
 		f.ExpectStatus(200)
-		f.ExpectHeader("Content-Type", "application/json; charset=utf-8")
+		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 		f.PrintReport()
 	}
 }
@@ -192,7 +204,7 @@ func checkOpenAPISpecifications() {
 	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "openapi.json")
 	f.Send()
 	f.ExpectStatus(200)
-	f.ExpectHeader("Content-Type", "application/json")
+	f.ExpectHeader(contentTypeHeader, "application/json")
 	f.PrintReport()
 }
 

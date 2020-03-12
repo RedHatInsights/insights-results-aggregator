@@ -51,7 +51,7 @@ func TestInitAndGetSQLDriverWithLogsDriverNotFound(t *testing.T) {
 	logger := log.New(os.Stdout, "[sql]", log.LstdFlags)
 	const nonExistingDriver = -1
 	_, err := storage.InitAndGetSQLDriverWithLogs(nonExistingDriver, logger)
-	if err == nil || err.Error() != fmt.Sprintf("driver %v is not supported", nonExistingDriver) {
+	if err == nil || err.Error() != fmt.Sprintf("driver '%v' is not supported", nonExistingDriver) {
 		t.Fatal(fmt.Errorf("expected driver not supported error, got %+v", err))
 	}
 }

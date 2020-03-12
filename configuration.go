@@ -18,17 +18,20 @@ limitations under the License.
 package main
 
 import (
-	"bufio"
+	"bytes"
 	"encoding/csv"
 	"fmt"
-	"github.com/deckarep/golang-set"
-	"github.com/spf13/viper"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/BurntSushi/toml"
+	mapset "github.com/deckarep/golang-set"
+	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
@@ -37,16 +40,26 @@ import (
 )
 
 const (
-	configFileEnvVariableName = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
+	configFileEnvVariableName   = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
+	defaultOrgWhiteListFileName = "org_whitelist.csv"
+	defaultContentPath          = "/rules_content"
 )
 
-var (
-	brokerCfg  *viper.Viper
-	storageCfg *viper.Viper
-	serverCfg  *viper.Viper
-)
+// config has exactly the same structure as *.toml file
+var config struct {
+	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
+	Server     server.Configuration `mapstructure:"server" toml:"server"`
+	Processing struct {
+		OrgWhiteListFile string `mapstructure:"org_white_list_file" toml:"org_white_list_file"`
+	} `mapstructure:"processing"`
+	Storage storage.Configuration `mapstructure:"storage" toml:"storage"`
+	Content struct {
+		ContentPath string `mapstructure:"path" toml:"path"`
+	} `mapstructure:"content" toml:"content"`
+}
 
-func loadConfiguration(defaultConfigFile string) {
+// loadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
+func loadConfiguration(defaultConfigFile string) error {
 	configFile, specified := os.LookupEnv(configFileEnvVariableName)
 	if specified {
 		// we need to separate the directory name and filename without extension
@@ -62,57 +75,98 @@ func loadConfiguration(defaultConfigFile string) {
 	}
 
 	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s", err))
+	if _, isNotFoundError := err.(viper.ConfigFileNotFoundError); !specified && isNotFoundError {
+		// viper is not smart enough to understand the structure of config by itself
+		fakeTomlConfigWriter := new(bytes.Buffer)
+
+		err := toml.NewEncoder(fakeTomlConfigWriter).Encode(config)
+		if err != nil {
+			return err
+		}
+
+		fakeTomlConfig := fakeTomlConfigWriter.String()
+
+		viper.SetConfigType("toml")
+
+		err = viper.ReadConfig(strings.NewReader(fakeTomlConfig))
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return fmt.Errorf("fatal error config file: %s", err)
 	}
 
 	// override config from env if there's variable in env
 
-	// workaround because if this issue https://github.com/spf13/viper/issues/507
-	storageCfg = viper.Sub("storage")
-	brokerCfg = viper.Sub("broker")
-	serverCfg = viper.Sub("server")
+	const envPrefix = "INSIGHTS_RESULTS_AGGREGATOR_"
 
-	const envPrefix = "INSIGHTS_RESULTS_AGGREGATOR__"
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix(envPrefix)
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "__"))
 
-	brokerCfg.AutomaticEnv()
-	brokerCfg.SetEnvPrefix(envPrefix + "BROKER_")
-
-	storageCfg.AutomaticEnv()
-	storageCfg.SetEnvPrefix(envPrefix + "STORAGE_")
-
-	serverCfg.AutomaticEnv()
-	serverCfg.SetEnvPrefix(envPrefix + "SERVER_")
+	return viper.Unmarshal(&config)
 }
 
-func loadBrokerConfiguration() broker.Configuration {
-	orgWhitelist := loadOrganizationWhitelist()
+func getBrokerConfiguration() broker.Configuration {
+	config.Broker.OrgWhitelist = getOrganizationWhitelist()
 
-	return broker.Configuration{
-		Address:      brokerCfg.GetString("address"),
-		Topic:        brokerCfg.GetString("topic"),
-		Group:        brokerCfg.GetString("group"),
-		Enabled:      brokerCfg.GetBool("enabled"),
-		OrgWhitelist: orgWhitelist,
+	return config.Broker
+}
+
+func getOrganizationWhitelist() mapset.Set {
+	if len(config.Processing.OrgWhiteListFile) == 0 {
+		config.Processing.OrgWhiteListFile = defaultOrgWhiteListFileName
 	}
-}
 
-// getWhitelistFileName retrieves filename of organization whitelist from config file
-func getWhitelistFileName() string {
-	processingCfg := viper.Sub("processing")
-	fileName := processingCfg.GetString("org_whitelist")
-
-	return fileName
-}
-
-// createReaderFromFile creates a io.Reader from the given file
-func createReaderFromFile(fileName string) (io.Reader, error) {
-	csvFile, err := os.Open(fileName)
+	orgWhiteListFileData, err := ioutil.ReadFile(config.Processing.OrgWhiteListFile)
 	if err != nil {
-		return nil, fmt.Errorf("Error opening %v. Error: %v", fileName, err)
+		log.Fatalf("Organization whitelist file could not be opened. Error: %v", err)
 	}
-	reader := bufio.NewReader(csvFile)
-	return reader, nil
+
+	whitelist, err := loadWhitelistFromCSV(bytes.NewBuffer(orgWhiteListFileData))
+	if err != nil {
+		log.Fatalf("Whitelist CSV could not be processed. Error: %v", err)
+	}
+
+	return whitelist
+}
+
+func getStorageConfiguration() storage.Configuration {
+	return config.Storage
+}
+
+func getServerConfiguration() server.Configuration {
+	err := checkIfFileExists(config.Server.APISpecFile)
+	if err != nil {
+		log.Fatalf("All customer facing APIs MUST serve the current OpenAPI specification. Error: '%s'", err)
+	}
+
+	return config.Server
+}
+
+// getContentPathConfiguration get the path to the content files from the configuration
+func getContentPathConfiguration() string {
+	if len(config.Content.ContentPath) == 0 {
+		config.Content.ContentPath = defaultContentPath
+	}
+
+	return config.Content.ContentPath
+}
+
+// checkIfFileExists returns nil if path doesn't exist or isn't a file, otherwise it returns corresponding error
+func checkIfFileExists(path string) error {
+	fileInfo, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("OpenAPI spec file path does not exist. Path: '%v'", path)
+	} else if err != nil {
+		return err
+	}
+
+	if fileMode := fileInfo.Mode(); !fileMode.IsRegular() {
+		return fmt.Errorf("OpenAPI spec file path is not a file. Path: '%v'", path)
+	}
+
+	return nil
 }
 
 // loadWhitelistFromCSV creates a new CSV reader and returns a Set of whitelisted org. IDs
@@ -123,7 +177,7 @@ func loadWhitelistFromCSV(r io.Reader) (mapset.Set, error) {
 
 	lines, err := reader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("Error reading CSV file: %v", err)
+		return nil, fmt.Errorf("error reading CSV file: %v", err)
 	}
 
 	for index, line := range lines {
@@ -131,67 +185,16 @@ func loadWhitelistFromCSV(r io.Reader) (mapset.Set, error) {
 			continue // skip header
 		}
 
-		orgID, err := strconv.Atoi(line[0]) // single record per line
+		orgID, err := strconv.ParseUint(line[0], 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("Organization ID on line %v in whitelist CSV is not numerical. Found value: %v", index+1, line[0])
+			return nil, fmt.Errorf(
+				"organization ID on line %v in whitelist CSV is not numerical. Found value: %v",
+				index+1, line[0],
+			)
 		}
 
 		whitelist.Add(types.OrgID(orgID))
 	}
+
 	return whitelist, nil
-}
-
-func loadOrganizationWhitelist() mapset.Set {
-	fileName := getWhitelistFileName()
-	contentReader, err := createReaderFromFile(fileName)
-	if err != nil {
-		log.Fatalf("Organization whitelist file could not be opened. Error: %v", err)
-	}
-	whitelist, err := loadWhitelistFromCSV(contentReader)
-	if err != nil {
-		log.Fatalf("Whitelist CSV could not be processed. Error: %v", err)
-	}
-	return whitelist
-}
-
-func loadStorageConfiguration() storage.Configuration {
-	return storage.Configuration{
-		Driver:           storageCfg.GetString("db_driver"),
-		SQLiteDataSource: storageCfg.GetString("sqlite_datasource"),
-		LogSQLQueries:    storageCfg.GetBool("log_sql_queries"),
-		PGUsername:       storageCfg.GetString("pg_username"),
-		PGPassword:       storageCfg.GetString("pg_password"),
-		PGHost:           storageCfg.GetString("pg_host"),
-		PGPort:           storageCfg.GetInt("pg_port"),
-		PGDBName:         storageCfg.GetString("pg_db_name"),
-		PGParams:         storageCfg.GetString("pg_params"),
-	}
-}
-
-// getAPISpecFile retrieves the filename of OpenAPI specifications file
-func getAPISpecFile(serverCfg *viper.Viper) (string, error) {
-	specFile := serverCfg.GetString("api_spec_file")
-
-	fileInfo, err := os.Stat(specFile)
-	if os.IsNotExist(err) {
-		return specFile, fmt.Errorf("OpenAPI spec file path does not exist. Path: %v", specFile)
-	}
-	if fileMode := fileInfo.Mode(); !fileMode.IsRegular() {
-		return specFile, fmt.Errorf("OpenAPI spec file path is not a file. Path: %v", specFile)
-	}
-
-	return specFile, nil
-}
-
-func loadServerConfiguration() server.Configuration {
-	apiSpecFile, err := getAPISpecFile(serverCfg)
-	if err != nil {
-		log.Fatalf("All customer facing APIs MUST serve the current OpenAPI specification. Error: %s", err)
-	}
-	return server.Configuration{
-		Address:     serverCfg.GetString("address"),
-		APIPrefix:   serverCfg.GetString("api_prefix"),
-		APISpecFile: apiSpecFile,
-		Debug:       serverCfg.GetBool("debug"),
-	}
 }

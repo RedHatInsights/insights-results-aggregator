@@ -37,6 +37,7 @@ import (
 	_ "github.com/lib/pq"           // PostgreSQL database driver
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 
+	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -56,6 +57,21 @@ type Storage interface {
 		collectedAtTime time.Time,
 	) error
 	ReportsCount() (int, error)
+	VoteOnRule(
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		userID types.UserID,
+		userVote UserVote,
+	) error
+	AddOrUpdateFeedbackOnRule(
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		userID types.UserID,
+		message string,
+	) error
+	GetUserFeedbackOnRule(
+		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+	) (*UserFeedbackOnRule, error)
 }
 
 // DBDriver type for db driver enum
@@ -66,6 +82,10 @@ const (
 	DBDriverSQLite3 DBDriver = iota
 	// DBDriverPostgres shows that db driver is postrgres
 	DBDriverPostgres
+
+	// driverNotSupportedMessage is a template for error message displayed
+	// in all situations where given DB driver is not supported
+	driverNotSupportedMessage = "driver '%v' is not supported"
 )
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
@@ -103,7 +123,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 
 	dataSource, err := getDataSourceForDriverFromConfig(driverType, configuration)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(driverNotSupportedMessage, configuration.Driver)
 	}
 
 	log.Printf("Making connection to data storage, driver=%s datasource=%s", configuration.Driver, dataSource)
@@ -137,7 +157,7 @@ func getDataSourceForDriverFromConfig(driverType DBDriver, configuration Configu
 		), nil
 	}
 
-	return "", fmt.Errorf("Driver %v is not supported", driverType)
+	return "", fmt.Errorf("driver %v is not supported", driverType)
 }
 
 // Init method is doing initialization like creating tables in underlying database
@@ -173,22 +193,26 @@ type Report struct {
 	ReportedAt types.Timestamp     `json:"reported_at"`
 }
 
+func closeRows(rows *sql.Rows) {
+	_ = rows.Close()
+}
+
 // ListOfOrgs reads list of all organizations that have at least one cluster report
 func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
-	orgs := []types.OrgID{}
+	orgs := make([]types.OrgID, 0)
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
 	if err != nil {
 		return orgs, err
 	}
-	defer rows.Close()
+	defer closeRows(rows)
 
 	for rows.Next() {
 		var orgID types.OrgID
 
 		err = rows.Scan(&orgID)
 		if err == nil {
-			orgs = append(orgs, types.OrgID(orgID))
+			orgs = append(orgs, orgID)
 		} else {
 			log.Println("error", err)
 		}
@@ -198,13 +222,13 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 
 // ListOfClustersForOrg reads list of all clusters fro given organization
 func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
-	clusters := []types.ClusterName{}
+	clusters := make([]types.ClusterName, 0)
 
 	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster", orgID)
 	if err != nil {
 		return clusters, err
 	}
-	defer rows.Close()
+	defer closeRows(rows)
 
 	for rows.Next() {
 		var clusterName string
@@ -220,7 +244,9 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 }
 
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
-func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error) {
+func (storage DBStorage) ReadReportForCluster(
+	orgID types.OrgID, clusterName types.ClusterName,
+) (types.ClusterReport, error) {
 	var report string
 	err := storage.connection.QueryRow(
 		"SELECT report FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
@@ -236,7 +262,6 @@ func (storage DBStorage) ReadReportForCluster(orgID types.OrgID, clusterName typ
 	}
 
 	return types.ClusterReport(report), nil
-
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
@@ -245,7 +270,7 @@ func (storage DBStorage) WriteReportForCluster(
 	clusterName types.ClusterName,
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
-) error {
+) (outError error) {
 	var query string
 
 	switch storage.dbDriverType {
@@ -258,14 +283,16 @@ func (storage DBStorage) WriteReportForCluster(
 		 ON CONFLICT (org_id, cluster) 
 		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`
 	default:
-		return fmt.Errorf("Writing report with DB %v is not supported", storage.dbDriverType)
+		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
 	statement, err := storage.connection.Prepare(query)
 	if err != nil {
 		return err
 	}
-	defer statement.Close()
+	defer func() {
+		outError = statement.Close()
+	}()
 
 	t := time.Now()
 
@@ -282,8 +309,89 @@ func (storage DBStorage) WriteReportForCluster(
 
 // ReportsCount reads number of all records stored in database
 func (storage DBStorage) ReportsCount() (int, error) {
-	count := int(-1)
+	count := -1
 	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
 
 	return count, err
+}
+
+// loadRuleErrorKeyContent inserts the error key contents of all available rules into the database.
+func loadRuleErrorKeyContent(tx *sql.Tx, ruleModuleName string, errorKeys map[string]content.RuleErrorKeyContent) error {
+	for errName, errProperties := range errorKeys {
+		var errIsActiveStatus bool
+		switch strings.ToLower(errProperties.Metadata.Status) {
+		case "active":
+			errIsActiveStatus = true
+		case "inactive":
+			errIsActiveStatus = false
+		default:
+			_ = tx.Rollback()
+			return fmt.Errorf("invalid rule error key status: '%s'", errProperties.Metadata.Status)
+		}
+
+		_, err := tx.Exec(`INSERT INTO rule_error_key(error_key, rule_module, condition,
+				description, impact, likelihood, publish_date, active, generic)
+				VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			errName,
+			ruleModuleName,
+			errProperties.Metadata.Condition,
+			errProperties.Metadata.Description,
+			errProperties.Metadata.Impact,
+			errProperties.Metadata.Likelihood,
+			errProperties.Metadata.PublishDate,
+			errIsActiveStatus,
+			errProperties.Generic)
+
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LoadRuleContent loads the parsed rule content into the database.
+func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory) error {
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	// SQLite doesn't support `TRUNCATE`, so it's necessary to use `DELETE` and then `VACUUM`.
+	if _, err := tx.Exec("DELETE FROM rule_error_key; DELETE FROM rule;"); err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	for _, rule := range contentDir {
+		_, err := tx.Exec(`INSERT INTO rule(module, "name", summary, reason, resolution, more_info)
+				VALUES($1, $2, $3, $4, $5, $6)`,
+			rule.Plugin.PythonModule,
+			rule.Plugin.Name,
+			rule.Summary,
+			rule.Reason,
+			rule.Resolution,
+			rule.MoreInfo)
+
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+
+		if err := loadRuleErrorKeyContent(tx, rule.Plugin.PythonModule, rule.ErrorKeys); err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	if _, err := storage.connection.Exec("VACUUM"); err != nil {
+		return err
+	}
+
+	return nil
 }

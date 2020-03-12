@@ -17,15 +17,33 @@ limitations under the License.
 package main_test
 
 import (
-	"github.com/RedHatInsights/insights-results-aggregator"
-	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/deckarep/golang-set"
-	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	mapset "github.com/deckarep/golang-set"
+	"github.com/stretchr/testify/assert"
+
+	main "github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
+
+func mustLoadConfiguration(path string) {
+	err := main.LoadConfiguration(path)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func removeFile(t *testing.T, filename string) {
+	err := os.Remove(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 // TestLoadConfiguration loads a configuration file for testing
 func TestLoadConfiguration(t *testing.T) {
@@ -33,81 +51,82 @@ func TestLoadConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	main.LoadConfiguration("tests/config1")
+
+	mustLoadConfiguration("tests/config1")
 }
 
-// TestLoadConfigurationEnvVariable tests loading the config. file for testing from an environemnt variable
+// TestLoadConfigurationEnvVariable tests loading the config. file for testing from an environment variable
 func TestLoadConfigurationEnvVariable(t *testing.T) {
 	err := os.Setenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "tests/config1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	main.LoadConfiguration("foobar")
+
+	mustLoadConfiguration("foobar")
 }
 
 // TestLoadingConfigurationFailure tests loading a non-existent configuration file
 func TestLoadingConfigurationFailure(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic as expected")
-		}
-	}()
-	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
-	if err != nil {
-		t.Fatal(err)
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "non existing file")
+
+	err := main.LoadConfiguration("")
+	if err == nil {
+		t.Fatalf("error expected, got %v", err)
 	}
-	main.LoadConfiguration("this does not exist")
 }
 
 // TestLoadBrokerConfiguration tests loading the broker configuration sub-tree
 func TestLoadBrokerConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
-	brokerCfg := main.LoadBrokerConfiguration()
-	if brokerCfg.Address != "localhost:9092" {
-		t.Fatal("Improper broker address", brokerCfg.Address)
-	}
-	if brokerCfg.Topic != "platform.results.ccx" {
-		t.Fatal("Improper broker topic", brokerCfg.Topic)
-	}
-	if brokerCfg.Group != "aggregator" {
-		t.Fatal("Improper broker group", brokerCfg.Group)
-	}
+
+	brokerCfg := main.GetBrokerConfiguration()
+
+	assert.Equal(t, "localhost:9092", brokerCfg.Address)
+	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
+	assert.Equal(t, "aggregator", brokerCfg.Group)
 }
 
 // TestLoadServerConfiguration tests loading the server configuration sub-tree
 func TestLoadServerConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
-	serverCfg := main.LoadServerConfiguration()
-	if serverCfg.Address != ":8080" {
-		t.Fatal("Improper server address", serverCfg.Address)
-	}
-	if serverCfg.APIPrefix != "/api/v1/" {
-		t.Fatal("Improper server API prefix", serverCfg.APIPrefix)
-	}
+
+	serverCfg := main.GetServerConfiguration()
+
+	assert.Equal(t, ":8080", serverCfg.Address)
+	assert.Equal(t, "/api/v1/", serverCfg.APIPrefix)
+}
+
+// TestLoadContentPathConfiguration tests loading the content configuration
+func TestLoadContentPathConfiguration(t *testing.T) {
+	TestLoadConfiguration(t)
+
+	contentPath := main.GetContentPathConfiguration()
+
+	assert.Equal(t, "/rules_content", contentPath)
 }
 
 // TestLoadStorageConfiguration tests loading the storage configuration sub-tree
 func TestLoadStorageConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
-	storageCfg := main.LoadStorageConfiguration()
-	if storageCfg.Driver != "sqlite3" {
-		t.Fatal("Improper DB driver name", storageCfg.Driver)
-	}
-	if storageCfg.SQLiteDataSource != "xyzzy" {
-		t.Fatal("Improper DB data source name", storageCfg.SQLiteDataSource)
-	}
+
+	storageCfg := main.GetStorageConfiguration()
+
+	assert.Equal(t, "sqlite3", storageCfg.Driver)
+	assert.Equal(t, ":memory:", storageCfg.SQLiteDataSource)
 }
 
-// TestLoadConfigurationOverrideFromEnv tests overriden configuration by env variables
+// TestLoadConfigurationOverrideFromEnv tests overriding configuration by env variables
 func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 	os.Clearenv()
 
-	main.LoadConfiguration("tests/config1")
+	const configPath = "tests/config1"
 
-	storageCfg := main.LoadStorageConfiguration()
+	mustLoadConfiguration(configPath)
+
+	storageCfg := main.GetStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "sqlite3",
-		SQLiteDataSource: "xyzzy",
+		SQLiteDataSource: ":memory:",
 		PGUsername:       "user",
 		PGPassword:       "password",
 		PGHost:           "localhost",
@@ -116,16 +135,15 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 		PGParams:         "",
 	}, storageCfg)
 
-	os.Setenv("INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
-	os.Setenv(
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD",
-		"some very secret password",
-	)
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "some very secret password")
 
-	storageCfg = main.LoadStorageConfiguration()
+	mustLoadConfiguration(configPath)
+
+	storageCfg = main.GetStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "postgres",
-		SQLiteDataSource: "xyzzy",
+		SQLiteDataSource: ":memory:",
 		PGUsername:       "user",
 		PGPassword:       "some very secret password",
 		PGHost:           "localhost",
@@ -141,18 +159,15 @@ func TestLoadOrganizationWhitelist(t *testing.T) {
 		types.OrgID(1),
 		types.OrgID(2),
 		types.OrgID(3),
+		types.OrgID(11789772),
 	)
-	orgWhitelist := main.LoadOrganizationWhitelist()
-	if equal := orgWhitelist.Equal(expectedWhitelist); !equal {
-		t.Errorf("Org whitelist did not load properly. Order of elements does not matter. Expected %v. Got %v", expectedWhitelist, orgWhitelist)
-	}
-}
 
-// TestCreateReaderFromFile tests error loading a non existent file
-func TestCreateReaderFromFile(t *testing.T) {
-	_, err := main.CreateReaderFromFile("nonexistent.file")
-	if err == nil {
-		t.Error("Nonexistent file was opened.")
+	orgWhitelist := main.GetOrganizationWhitelist()
+	if equal := orgWhitelist.Equal(expectedWhitelist); !equal {
+		t.Errorf(
+			"Org whitelist did not load properly. Order of elements does not matter. Expected %v. Got %v",
+			expectedWhitelist, orgWhitelist,
+		)
 	}
 }
 
@@ -180,4 +195,179 @@ str
 	if err == nil {
 		t.Errorf("Non-integer organization ID got parsed")
 	}
+}
+
+func TestLoadConfigurationFromFile(t *testing.T) {
+	config := `[broker]
+		address = "localhost:9092"
+		topic = "platform.results.ccx"
+		group = "aggregator"
+		enabled = true
+
+		[server]
+		address = ":8080"
+		api_prefix = "/api/v1/"
+		api_spec_file = "openapi.json"
+		debug = true
+
+		[processing]
+		org_whitelist = "org_whitelist.csv"
+
+		[storage]
+		db_driver = "sqlite3"
+		sqlite_datasource = ":memory:"
+		pg_username = "user"
+		pg_password = "password"
+		pg_host = "localhost"
+		pg_port = 5432
+		pg_db_name = "aggregator"
+		pg_params = "params"
+		log_sql_queries = true
+	`
+
+	tmpFilename, err := GetTmpConfigFile(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer removeFile(t, tmpFilename)
+
+	os.Clearenv()
+	mustSetEnv(t, main.ConfigFileEnvVariableName, tmpFilename)
+	mustLoadConfiguration("tests/config1")
+
+	brokerCfg := main.GetBrokerConfiguration()
+
+	assert.Equal(t, "localhost:9092", brokerCfg.Address)
+	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
+	assert.Equal(t, "aggregator", brokerCfg.Group)
+	assert.Equal(t, true, brokerCfg.Enabled)
+
+	assert.Equal(t, server.Configuration{
+		Address:     ":8080",
+		APIPrefix:   "/api/v1/",
+		APISpecFile: "openapi.json",
+		Debug:       true,
+	}, main.GetServerConfiguration())
+
+	orgWhiteList := main.GetOrganizationWhitelist()
+
+	assert.True(
+		t,
+		orgWhiteList.Equal(mapset.NewSetWith(
+			types.OrgID(1),
+			types.OrgID(2),
+			types.OrgID(3),
+			types.OrgID(11789772),
+		)),
+		"organization_white_list is wrong",
+	)
+
+	assert.Equal(t, storage.Configuration{
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
+		LogSQLQueries:    true,
+		PGUsername:       "user",
+		PGPassword:       "password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "params",
+	}, main.GetStorageConfiguration())
+}
+
+func GetTmpConfigFile(configData string) (string, error) {
+	tmpFile, err := ioutil.TempFile("/tmp", "tmp_config_*.toml")
+	if err != nil {
+		return "", err
+	}
+
+	if _, err := tmpFile.Write([]byte(configData)); err != nil {
+		return "", err
+	}
+
+	if err := tmpFile.Close(); err != nil {
+		return "", err
+	}
+
+	return tmpFile.Name(), nil
+}
+
+func mustSetEnv(t *testing.T, key, val string) {
+	err := os.Setenv(key, val)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadConfigurationFromEnv(t *testing.T) {
+	os.Clearenv()
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS", "localhost:9093")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC", "platform.results.ccx")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP", "aggregator")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED", "true")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS", ":8080")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX", "/api/v1/")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE", "openapi.json")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG", "true")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_WHITELIST", "org_whitelist.csv")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "sqlite3")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE", ":memory:")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_USERNAME", "user")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "password")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_HOST", "localhost")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PORT", "5432")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_DB_NAME", "aggregator")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules_content")
+
+	mustLoadConfiguration("/non_existing_path")
+
+	brokerCfg := main.GetBrokerConfiguration()
+
+	assert.Equal(t, "localhost:9093", brokerCfg.Address)
+	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
+	assert.Equal(t, "aggregator", brokerCfg.Group)
+	assert.Equal(t, true, brokerCfg.Enabled)
+
+	assert.Equal(t, server.Configuration{
+		Address:     ":8080",
+		APIPrefix:   "/api/v1/",
+		APISpecFile: "openapi.json",
+		Debug:       true,
+	}, main.GetServerConfiguration())
+
+	orgWhiteList := main.GetOrganizationWhitelist()
+
+	assert.True(
+		t,
+		orgWhiteList.Equal(mapset.NewSetWith(
+			types.OrgID(1),
+			types.OrgID(2),
+			types.OrgID(3),
+			types.OrgID(11789772),
+		)),
+		"organization_white_list is wrong",
+	)
+
+	assert.Equal(t, storage.Configuration{
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
+		LogSQLQueries:    true,
+		PGUsername:       "user",
+		PGPassword:       "password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "params",
+	}, main.GetStorageConfiguration())
+
+	contentPath := main.GetContentPathConfiguration()
+	assert.Equal(t, contentPath, "/rules_content")
 }
