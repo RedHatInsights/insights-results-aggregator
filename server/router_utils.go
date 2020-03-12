@@ -85,6 +85,21 @@ func getRouterPositiveIntParam(request *http.Request, paramName string) (uint64,
 	return uintValue, nil
 }
 
+// validateClusterName checks that the cluster name is a valid UUID.
+// Converted custer name is returned if everything is okay, otherwise an error is returned.
+func validateClusterName(writer http.ResponseWriter, clusterName string) (types.ClusterName, error) {
+	if _, err := uuid.Parse(clusterName); err != nil {
+		const message = "cluster name format is invalid"
+
+		log.Println(message)
+		responses.SendInternalServerError(writer, message)
+
+		return "", errors.New(message)
+	}
+
+	return types.ClusterName(clusterName), nil
+}
+
 // readClusterName retrieves cluster name from request
 // if it's not possible, it writes http error to the writer and returns error
 func readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
@@ -99,16 +114,7 @@ func readClusterName(writer http.ResponseWriter, request *http.Request) (types.C
 		return "", err
 	}
 
-	if _, err := uuid.Parse(clusterName); err != nil {
-		const message = "cluster name format is invalid"
-
-		log.Println(message)
-		responses.SendInternalServerError(writer, message)
-
-		return types.ClusterName(""), errors.New(message)
-	}
-
-	return types.ClusterName(clusterName), nil
+	return validateClusterName(writer, clusterName)
 }
 
 // readOrganizationID retrieves organization id from request
@@ -145,16 +151,12 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 
 	clusterNamesConverted := []types.ClusterName{}
 	for _, clusterName := range strings.Split(",", clusterNamesParam) {
-		if _, err := uuid.Parse(clusterName); err != nil {
-			const message = "cluster name format is invalid"
-
-			log.Println(message)
-			responses.SendInternalServerError(writer, message)
-
-			return []types.ClusterName{}, errors.New(message)
+		convertedName, err := validateClusterName(writer, clusterName)
+		if err != nil {
+			return []types.ClusterName{}, err
 		}
 
-		clusterNamesConverted = append(clusterNamesConverted, types.ClusterName(clusterName))
+		clusterNamesConverted = append(clusterNamesConverted, convertedName)
 	}
 
 	return clusterNamesConverted, nil
