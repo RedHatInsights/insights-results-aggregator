@@ -26,4 +26,4 @@ pg_params = ""
 log_sql_queries = true
 
 [content]
-path = "/rules_content"
+path = "/rules-content"

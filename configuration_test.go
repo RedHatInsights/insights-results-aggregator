@@ -102,7 +102,7 @@ func TestLoadContentPathConfiguration(t *testing.T) {
 
 	contentPath := main.GetContentPathConfiguration()
 
-	assert.Equal(t, "/rules_content", contentPath)
+	assert.Equal(t, "/rules-content", contentPath)
 }
 
 // TestLoadStorageConfiguration tests loading the storage configuration sub-tree
@@ -325,7 +325,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules_content")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
 
 	mustLoadConfiguration("/non_existing_path")
 
@@ -369,5 +369,5 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	}, main.GetStorageConfiguration())
 
 	contentPath := main.GetContentPathConfiguration()
-	assert.Equal(t, contentPath, "/rules_content")
+	assert.Equal(t, contentPath, "/rules-content")
 }

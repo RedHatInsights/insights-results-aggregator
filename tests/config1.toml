@@ -27,4 +27,4 @@ pg_db_name = "aggregator"
 pg_params = ""
 
 [content]
-path = "/rules_content"
+path = "/rules-content"
