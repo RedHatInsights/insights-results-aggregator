@@ -122,9 +122,9 @@ func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote bool,
 	var query string
 
 	switch storage.dbDriverType {
-	case DBDriverSQLite, DBDriverPostgres:
+	case DBDriverSQLite3, DBDriverPostgres:
 		query = `
-			INSERT INTO cluster_rule_user_feedback 
+			INSERT INTO cluster_rule_user_feedback
 			(cluster_id, rule_id, user_id, user_vote, added_at, updated_at, message)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
 		`
@@ -158,8 +158,8 @@ func (storage DBStorage) GetUserFeedbackOnRule(
 	feedback := UserFeedbackOnRule{}
 
 	err := storage.connection.QueryRow(
-		`SELECT cluster_id, rule_id, user_id, message, user_vote, added_at, updated_at 
-		FROM cluster_rule_user_feedback 
+		`SELECT cluster_id, rule_id, user_id, message, user_vote, added_at, updated_at
+		FROM cluster_rule_user_feedback
 		WHERE cluster_id = $1 AND rule_id = $2 AND user_id = $3`,
 		clusterID, ruleID, userID,
 	).Scan(

@@ -79,8 +79,8 @@ type Storage interface {
 type DBDriver int
 
 const (
-	// DBDriverSQLite shows that db driver is sqlite
-	DBDriverSQLite DBDriver = iota
+	// DBDriverSQLite3 shows that db driver is sqlite
+	DBDriverSQLite3 DBDriver = iota
 	// DBDriverPostgres shows that db driver is postrgres
 	DBDriverPostgres
 
@@ -102,38 +102,37 @@ type DBStorage struct {
 // New function creates and initializes a new instance of Storage interface
 func New(configuration Configuration) (*DBStorage, error) {
 	driverName := configuration.Driver
+	var driverType DBDriver
+
+	switch driverName {
+	case "sqlite3":
+		driverType = DBDriverSQLite3
+	case "postgres":
+		driverType = DBDriverPostgres
+	default:
+		return nil, fmt.Errorf("driver %v is not supported", driverName)
+	}
 
 	if configuration.LogSQLQueries {
 		logger := log.New(os.Stdout, "[sql]", log.LstdFlags)
 		var err error
-		driverName, err = InitAndGetSQLDriverWithLogs(driverName, logger)
+		driverName, err = InitAndGetSQLDriverWithLogs(driverType, logger)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	dataSource, err := getDataSourceFromConfig(configuration)
+	dataSource, err := getDataSourceForDriverFromConfig(driverType, configuration)
 	if err != nil {
 		return nil, fmt.Errorf(driverNotSupportedMessage, configuration.Driver)
 	}
 
 	log.Printf("Making connection to data storage, driver=%s datasource=%s", configuration.Driver, dataSource)
-	connection, err := sql.Open(configuration.Driver, dataSource)
+	connection, err := sql.Open(driverName, dataSource)
 
 	if err != nil {
 		log.Println("Can not connect to data storage", err)
 		return nil, err
-	}
-
-	var driverType DBDriver
-
-	switch {
-	case strings.HasPrefix(driverName, "sqlite"):
-		driverType = DBDriverSQLite
-	case strings.HasPrefix(driverName, postgresDriverName):
-		driverType = DBDriverPostgres
-	default:
-		return nil, fmt.Errorf(driverNotSupportedMessage, driverName)
 	}
 
 	return &DBStorage{
@@ -143,11 +142,11 @@ func New(configuration Configuration) (*DBStorage, error) {
 	}, nil
 }
 
-func getDataSourceFromConfig(configuration Configuration) (string, error) {
-	switch configuration.Driver {
-	case sqliteDriverName:
+func getDataSourceForDriverFromConfig(driverType DBDriver, configuration Configuration) (string, error) {
+	switch driverType {
+	case DBDriverSQLite3:
 		return configuration.SQLiteDataSource, nil
-	case postgresDriverName:
+	case DBDriverPostgres:
 		return fmt.Sprintf(
 			"postgresql://%v:%v@%v:%v/%v?%v",
 			configuration.PGUsername,
@@ -159,7 +158,7 @@ func getDataSourceFromConfig(configuration Configuration) (string, error) {
 		), nil
 	}
 
-	return "", fmt.Errorf("driver %v is not supported", configuration.Driver)
+	return "", fmt.Errorf("driver %v is not supported", driverType)
 }
 
 // Init method is doing initialization like creating tables in underlying database
@@ -276,13 +275,13 @@ func (storage DBStorage) WriteReportForCluster(
 	var query string
 
 	switch storage.dbDriverType {
-	case DBDriverSQLite:
-		query = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at) 
+	case DBDriverSQLite3:
+		query = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at)
 		 VALUES ($1, $2, $3, $4, $5)`
 	case DBDriverPostgres:
 		query = `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
 		 VALUES ($1, $2, $3, $4, $5)
-		 ON CONFLICT (org_id, cluster) 
+		 ON CONFLICT (org_id, cluster)
 		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`
 	default:
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
