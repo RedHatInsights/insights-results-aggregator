@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-THRESHOLD=83
+THRESHOLD=80
 ERR_MESSAGE="Code coverage have to be at least $THRESHOLD%"
 
 go_tool_cover_output=$(go tool cover -func=coverage.out)
