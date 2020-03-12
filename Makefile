@@ -26,6 +26,10 @@ cyclo: ## Run gocyclo
 	@echo "Running gocyclo"
 	./gocyclo.sh
 
+ineffassign: ## Run ineffassign checker
+	@echo "Running ineffassign checker"
+	./ineffassign.sh
+
 shellcheck: ## Run shellcheck
 	shellcheck **/*.sh
 
@@ -37,7 +41,7 @@ goconst: ## Run goconst checker
 	@echo "Running goconst checker"
 	./goconst.sh
 
-style: fmt vet lint cyclo shellcheck errcheck goconst ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
+style: fmt vet lint cyclo shellcheck errcheck goconst ineffassign ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
 
 run: clean build ## Build the project and executes the binary
 	./insights-results-aggregator
