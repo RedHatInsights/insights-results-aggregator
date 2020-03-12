@@ -272,7 +272,7 @@
     "/organizations/{orgIds}": {
       "delete": {
         "summary": "Deletes organization data from database.",
-        "description": "All database entries related to the specified organization IDs will be deleted.",
+        "description": "[DEBUG ONLY] All database entries related to the specified organization IDs will be deleted.",
         "parameters": [
           {
             "name": "orgIds",
@@ -299,7 +299,7 @@
     "/clusters/{clusterIds}": {
       "delete": {
         "summary": "Deletes cluster data from database.",
-        "description": "All database entries related to the specified cluster IDs will be deleted.",
+        "description": "[DEBUG ONLY] All database entries related to the specified cluster IDs will be deleted.",
         "parameters": [
           {
             "name": "clusterIds",
