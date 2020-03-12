@@ -43,16 +43,17 @@ type RuleOnReport struct {
 
 // ReportRules is a helper struct for easy JSON unmarshalling of string encoded report
 type ReportRules struct {
-	Rules []RuleOnReport `json:"reports"`
+	HitRules     []RuleOnReport `json:"reports"`
+	SkippedRules []RuleOnReport `json:"skips"`
+	PassedRules  []RuleOnReport `json:"pass"`
+	TotalCount   int
 }
 
 // ReportResponse represents the response of /report endpoint
 type ReportResponse struct {
-	Count   int
-	Page    uint64
-	PerPage uint64
-	Report  ClusterReport
-	Rules   []RuleContentResponse
+	Count  int
+	Report ClusterReport
+	Rules  []RuleContentResponse
 }
 
 // RuleContentResponse represents a single rule in the response of /report endpoint
@@ -60,6 +61,7 @@ type RuleContentResponse struct {
 	ErrorKey     string
 	RuleModule   string
 	Description  string
+	Generic      string
 	CreatedAt    string
 	TotalRisk    int
 	RiskOfChange int

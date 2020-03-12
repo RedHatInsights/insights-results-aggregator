@@ -123,11 +123,18 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 	}
 }
 
+func getTotalRuleCount(reportRules types.ReportRules) int {
+	totalCount := len(reportRules.HitRules) +
+		len(reportRules.SkippedRules) +
+		len(reportRules.PassedRules)
+	return totalCount
+}
+
+// getContentForRules returns the hit rules from the report, as well as total count of all rules (skipped, ..)
 func (server *HTTPServer) getContentForRules(
 	writer http.ResponseWriter,
 	report types.ClusterReport,
-	pagination types.Pagination,
-) ([]types.RuleContentResponse, error) {
+) ([]types.RuleContentResponse, int, error) {
 
 	var reportRules types.ReportRules
 
@@ -135,17 +142,19 @@ func (server *HTTPServer) getContentForRules(
 	if err != nil {
 		log.Println("Unable to parse cluster report", err)
 		responses.SendInternalServerError(writer, err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 
-	// log.Println(reportRules)
-	rules, err := server.Storage.GetContentForRules(reportRules)
+	totalRules := getTotalRuleCount(reportRules)
+
+	hitRules, err := server.Storage.GetContentForRules(reportRules)
 	if err != nil {
-		log.Println(err)
-		return nil, err
+		log.Println("Unable to retrieve rules content from database", err)
+		responses.SendInternalServerError(writer, err.Error())
+		return nil, 0, err
 	}
 
-	return rules, nil
+	return hitRules, totalRules, nil
 }
 
 func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
@@ -169,22 +178,23 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		responses.SendInternalServerError(writer, err.Error())
 	}
 
-	rulesPagination, err := readPaginationParams(writer, request, server)
+	rulesContent, rulesCount, err := server.getContentForRules(writer, report)
 	if err != nil {
-		// everything has been handled already
 		return
 	}
-
-	rulesContent, err := server.getContentForRules(writer, report, rulesPagination)
-	log.Println(rulesContent)
-	if err != nil {
-		return
+	hitRulesCount := len(rulesContent)
+	// -1 as count in response means there are no rules for this cluster
+	// as opposed to no rules hit for the cluster
+	if rulesCount == 0 {
+		rulesCount = -1
+	} else {
+		rulesCount = hitRulesCount
 	}
 
 	response := types.ReportResponse{
 		Report: report,
 		Rules:  rulesContent,
-		Count:  len(rulesContent),
+		Count:  rulesCount,
 	}
 	responses.SendResponse(writer, responses.BuildOkResponseWithData("report", response))
 }

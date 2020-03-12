@@ -271,7 +271,7 @@ func (storage DBStorage) ReadReportForCluster(
 func constructWhereClause(reportRules types.ReportRules) string {
 	var statement string
 
-	for i, rule := range reportRules.Rules {
+	for i, rule := range reportRules.HitRules {
 		singleVal := ""
 		module := strings.TrimRight(rule.Module, ".report") // remove trailing .report from module name
 
@@ -285,20 +285,19 @@ func constructWhereClause(reportRules types.ReportRules) string {
 	return statement
 }
 
-// GetContentForRules retrieves content for rules
+// GetContentForRules retrieves content for rules that were hit in the report
 func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]types.RuleContentResponse, error) {
 	rules := []types.RuleContentResponse{}
 
+	query := `SELECT error_key, rule_module, description, generic, publish_date,
+		impact, likelihood
+		FROM rule_error_key
+		WHERE (error_key, rule_module) IN ( %v )`
+
 	whereInStatement := constructWhereClause(reportRules)
+	query = fmt.Sprintf(query, whereInStatement)
 
-	q := `SELECT rek.error_key, rek.rule_module, rek.description, rek.publish_date,
-		rek.impact, rek.likelihood
-		FROM rule_error_key rek LEFT JOIN rule r ON rek.rule_module = r.module
-		WHERE (rek.error_key, rek.rule_module) IN (%v)`
-
-	q = fmt.Sprintf(q, whereInStatement)
-
-	rows, err := storage.connection.Query(q)
+	rows, err := storage.connection.Query(query, whereInStatement)
 
 	if err != nil {
 		return rules, err
@@ -313,12 +312,13 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 			&rule.ErrorKey,
 			&rule.RuleModule,
 			&rule.Description,
+			&rule.Generic,
 			&rule.CreatedAt,
 			&impact,
 			&likelihood,
 		)
 		if err != nil {
-			log.Println("SQL error in retrieving content for rules", err)
+			log.Println("SQL error while retrieving content for rule", err)
 			continue
 		}
 
@@ -326,6 +326,12 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 
 		rules = append(rules, rule)
 	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("SQL error while retrieving content for rules", err)
+		return rules, err
+	}
+
 	return rules, nil
 }
 
