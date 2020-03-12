@@ -8,4 +8,4 @@
 1. Code changes reviewed by at least one peer
 1. Acceptance criteria are verified and fulfilled
 1. Code merged in the main branch
-1. User docs completed, reviewed and published(if applicable)
+1. User docs completed, reviewed and published (if applicable)
