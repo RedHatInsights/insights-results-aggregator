@@ -33,6 +33,14 @@ Aggregator service consists of three main parts:
 
 ### DB structure
 
+#### Table report
+
+This table is used as a cache for reports consumed from broker. Size of this
+table (i.e. number of records) scales linearly with the number of clusters,
+because only latest report for given cluster is stored (it is guarantied by DB
+constraints). That table has defined compound key `org_id+cluster`,
+additionally `cluster` name needs to be unique across all organizations.
+
 ```sql
 CREATE TABLE report (
     org_id          INTEGER NOT NULL,
@@ -42,7 +50,11 @@ CREATE TABLE report (
     last_checked_at TIMESTAMP,
     PRIMARY KEY(org_id, cluster)
 )
+```
 
+#### Table cluster_rule_user_feedback
+
+```sql
 -- user_vote is user's vote, 
 -- 0 is none,
 -- 1 is like,
