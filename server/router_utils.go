@@ -100,27 +100,41 @@ func validateClusterName(writer http.ResponseWriter, clusterName string) (types.
 	return types.ClusterName(clusterName), nil
 }
 
+// splitRequestParamArray takes a single HTTP request parameter and splits it
+// into a slice of strings. This assumes that the parameter is a comma-separated array.
+func splitRequestParamArray(arrayParam string) []string {
+	return strings.Split(arrayParam, ",")
+}
+
+func handleOrgIDError(writer http.ResponseWriter, err error) {
+	message := fmt.Sprintf("Error getting organization ID from request %v", err.Error())
+	log.Println(message)
+
+	if _, ok := err.(*RouterParsingError); ok {
+		responses.Send(http.StatusBadRequest, writer, err.Error())
+	} else {
+		responses.Send(http.StatusInternalServerError, writer, err.Error())
+	}
+}
+
+func handleClusterNameError(writer http.ResponseWriter, err error) {
+	message := fmt.Sprintf("Cluster name is not provided %v", err.Error())
+	log.Println(message)
+	// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
+	// (not on client side)
+	responses.SendInternalServerError(writer, message)
+}
+
 // readClusterName retrieves cluster name from request
 // if it's not possible, it writes http error to the writer and returns error
 func readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
 	clusterName, err := getRouterParam(request, "cluster")
 	if err != nil {
-		message := fmt.Sprintf("Cluster name is not provided %v", err.Error())
-		log.Println(message)
-		// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
-		// (not on client side)
-		responses.SendInternalServerError(writer, message)
-
+		handleClusterNameError(writer, err)
 		return "", err
 	}
 
 	return validateClusterName(writer, clusterName)
-}
-
-// splitRequestParamArray takes a single HTTP request parameter and splits it
-// into a slice of strings. This assumes that the parameter is a comma-separated array.
-func splitRequestParamArray(arrayParam string) []string {
-	return strings.Split(arrayParam, ",")
 }
 
 // readOrganizationID retrieves organization id from request
@@ -128,15 +142,7 @@ func splitRequestParamArray(arrayParam string) []string {
 func readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
 	organizationID, err := getRouterPositiveIntParam(request, "organization")
 	if err != nil {
-		message := fmt.Sprintf("Error getting organization ID from request %v", err.Error())
-		log.Println(message)
-
-		if _, ok := err.(*RouterParsingError); ok {
-			responses.Send(http.StatusBadRequest, writer, err.Error())
-		} else {
-			responses.Send(http.StatusInternalServerError, writer, err.Error())
-		}
-
+		handleOrgIDError(writer, err)
 		return 0, err
 	}
 
@@ -172,15 +178,7 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 func readOrganizationIDs(writer http.ResponseWriter, request *http.Request) ([]types.OrgID, error) {
 	organizationsParam, err := getRouterParam(request, "organizations")
 	if err != nil {
-		message := fmt.Sprintf("Error getting organization IDs from request %v", err.Error())
-		log.Println(message)
-
-		if _, ok := err.(*RouterParsingError); ok {
-			responses.Send(http.StatusBadRequest, writer, err.Error())
-		} else {
-			responses.Send(http.StatusInternalServerError, writer, err.Error())
-		}
-
+		handleOrgIDError(writer, err)
 		return []types.OrgID{}, err
 	}
 
