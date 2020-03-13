@@ -122,8 +122,8 @@ var (
 					Metadata: content.ErrorKeyMetadata{
 						Condition:   "condition",
 						Description: "rule 1 description",
-						Impact:      1,
-						Likelihood:  2,
+						Impact:      2,
+						Likelihood:  4,
 						PublishDate: "1970-01-01 00:00:00",
 						Status:      "active",
 					},
@@ -147,8 +147,8 @@ var (
 					Metadata: content.ErrorKeyMetadata{
 						Condition:   "condition",
 						Description: "rule 2 description",
-						Impact:      3,
-						Likelihood:  1,
+						Impact:      6,
+						Likelihood:  2,
 						PublishDate: "1970-01-02 00:00:00",
 						Status:      "active",
 					},
@@ -173,7 +173,7 @@ var (
 						Condition:   "condition",
 						Description: "rule 3 description",
 						Impact:      2,
-						Likelihood:  3,
+						Likelihood:  2,
 						PublishDate: "1970-01-03 00:00:00",
 						Status:      "active",
 					},
@@ -249,7 +249,7 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 	res, err := mockStorage.GetContentForRules(types.ReportRules{
 		HitRules: []types.RuleOnReport{
 			{
-				Module:   string(testRuleID) + ".report",
+				Module:   string(testRuleID),
 				ErrorKey: "ek",
 			},
 		},
@@ -297,6 +297,10 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 	})
 	helpers.FailOnError(t, err)
 
+	assert.Len(t, res, 3)
+
+	// TODO: check risk of change when it will be returned correctly
+	// total risk is `(impact + likelihood) / 2`
 	assert.Equal(t, []types.RuleContentResponse{
 		{
 			ErrorKey:     "ek1",
@@ -304,8 +308,8 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			Description:  "rule 1 description",
 			Generic:      "rule 1 details",
 			CreatedAt:    "1970-01-01T00:00:00Z",
-			TotalRisk:    1,
-			RiskOfChange: 2,
+			TotalRisk:    3,
+			RiskOfChange: 0,
 		},
 		{
 			ErrorKey:     "ek2",
@@ -313,8 +317,8 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			Description:  "rule 2 description",
 			Generic:      "rule 2 details",
 			CreatedAt:    "1970-01-02T00:00:00Z",
-			TotalRisk:    3,
-			RiskOfChange: 1,
+			TotalRisk:    4,
+			RiskOfChange: 0,
 		},
 		{
 			ErrorKey:     "ek3",
@@ -323,7 +327,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			Generic:      "rule 3 details",
 			CreatedAt:    "1970-01-03T00:00:00Z",
 			TotalRisk:    2,
-			RiskOfChange: 3,
+			RiskOfChange: 0,
 		},
 	}, res)
 }

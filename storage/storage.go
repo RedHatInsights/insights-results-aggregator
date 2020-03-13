@@ -276,9 +276,9 @@ func constructWhereClause(reportRules types.ReportRules) string {
 		module := strings.TrimRight(rule.Module, ".report") // remove trailing .report from module name
 
 		if i == 0 {
-			singleVal = fmt.Sprintf("VALUES (\"%v\", \"%v\")", "AUTH_OPERATOR_PROXY_ERROR", "ccx_rules_ocp.external.rules.cluster_wide_proxy_auth_check")
+			singleVal = fmt.Sprintf(`VALUES ("%v", "%v")`, rule.ErrorKey, module)
 		} else {
-			singleVal = fmt.Sprintf(", (\"%v\", \"%v\")", rule.ErrorKey, module)
+			singleVal = fmt.Sprintf(`, ("%v", "%v")`, rule.ErrorKey, module)
 		}
 		statement = statement + singleVal
 	}
@@ -287,7 +287,7 @@ func constructWhereClause(reportRules types.ReportRules) string {
 
 // GetContentForRules retrieves content for rules that were hit in the report
 func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]types.RuleContentResponse, error) {
-	rules := []types.RuleContentResponse{}
+	rules := make([]types.RuleContentResponse, 0)
 
 	query := `SELECT error_key, rule_module, description, generic, publish_date,
 		impact, likelihood
@@ -322,7 +322,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 			continue
 		}
 
-		rule.TotalRisk = ((impact + likelihood) / 2)
+		rule.TotalRisk = (impact + likelihood) / 2
 
 		rules = append(rules, rule)
 	}
