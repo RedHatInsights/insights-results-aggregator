@@ -452,6 +452,18 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	assert.Contains(t, buf.String(), "sql: Scan error")
 }
 
+func TestGetDataSourceForDriverFromConfigDriverIsNotSupportedError(t *testing.T) {
+	_, err := storage.GetDataSourceForDriverFromConfig(
+		-1,
+		storage.Configuration{},
+	)
+	if err == nil {
+		t.Fatalf("Expected error, got %v", err)
+	}
+
+	assert.Equal(t, "driver -1 is not supported", err.Error())
+}
+
 func TestDBStorageVoteOnRule(t *testing.T) {
 	for _, vote := range []storage.UserVote{
 		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,

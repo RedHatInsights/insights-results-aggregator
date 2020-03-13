@@ -33,6 +33,14 @@ Aggregator service consists of three main parts:
 
 ### DB structure
 
+#### Table report
+
+This table is used as a cache for reports consumed from broker. Size of this
+table (i.e. number of records) scales linearly with the number of clusters,
+because only latest report for given cluster is stored (it is guarantied by DB
+constraints). That table has defined compound key `org_id+cluster`,
+additionally `cluster` name needs to be unique across all organizations.
+
 ```sql
 CREATE TABLE report (
     org_id          INTEGER NOT NULL,
@@ -42,7 +50,11 @@ CREATE TABLE report (
     last_checked_at TIMESTAMP,
     PRIMARY KEY(org_id, cluster)
 )
+```
 
+#### Table cluster_rule_user_feedback
+
+```sql
 -- user_vote is user's vote, 
 -- 0 is none,
 -- 1 is like,
@@ -76,12 +88,12 @@ All packages developed in this project have documentation available on [GoDoc se
 
 ## Configuration
 
-Configuration is done by toml config, default one is `config.toml` in working directory, 
-but it can be overwritten by `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE` env var. 
+Configuration is done by toml config, default one is `config.toml` in working directory,
+but it can be overwritten by `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE` env var.
 
 Also each key in config can be overwritten by corresponding env var. For example if you have config
 
-```
+```toml
 ...
 [storage]
 db_driver = "sqlite3"
@@ -95,23 +107,23 @@ pg_params = ""
 ...
 ```
 
-and environment variables 
+and environment variables
 
-```
+```shell
 INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER="postgres"
 INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD="your secret password"
 ```
 
 the actual driver will be postgres with password "your secret password"
 
-It's very usefull for deploying docker containers and keeping some of your configuration 
+It's very useful for deploying docker containers and keeping some of your configuration
 outside of main config file(like passwords).
 
 ## Server configuration
 
 Server configuration is in section `[server]` in config file.
 
-```
+```toml
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
@@ -119,22 +131,22 @@ api_spec_file = "openapi.json"
 debug = true
 ```
 
- - `address` is host and port which server should listen to
- - `api_prefix` is prefix for RestAPI path
- - `api_spec_file` is the location of a required OpenAPI specifications file
- - `debug` is developer mode that turns off authentication
+* `address` is host and port which server should listen to
+* `api_prefix` is prefix for RestAPI path
+* `api_spec_file` is the location of a required OpenAPI specifications file
+* `debug` is developer mode that turns off authentication
 
 ## Local setup
 
 There is a `docker-compose` configuration that provisions a minimal stack of Insight Platform and
 a postgres database.
-You can download it here https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plugin/blob/master/docker-compose.yml
+You can download it here <https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plugin/blob/master/docker-compose.yml>
 
 ### Prerequisites
 
 * minio requires `../minio/data/` and `../minio/config` directories to be created
 * edit localhost line in your `/etc/hosts`:  `127.0.0.1       localhost kafka minio`
-* `ingress` image should present on your machine. You can build it locally from this repo https://github.com/RedHatInsights/insights-ingress-go
+* `ingress` image should present on your machine. You can build it locally from this repo <https://github.com/RedHatInsights/insights-ingress-go>
 
 ### Usage
 
@@ -147,7 +159,8 @@ You can download it here https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plugi
 Stop Minimal Insights Platform stack `podman-compose down` or `docker-compose down`
 
 In order to upload an insights archive, you can use `curl`:
-```
+
+```shell
 curl -k -vvvv -F "upload=@/path/to/your/archive.zip;type=application/vnd.redhat.testareno.archive+zip" http://localhost:3000/api/ingress/v1/upload -H "x-rh-identity: eyJpZGVudGl0eSI6IHsiYWNjb3VudF9udW1iZXIiOiAiMDAwMDAwMSIsICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjEifX19Cg=="
 ```
 
@@ -159,12 +172,12 @@ It is possible to use the script `produce_insights_results` from `utils` to prod
 
 ## Database
 
-Aggregator is configured to use SQLite3 DB by default, but it also supports PostgreSQL. 
+Aggregator is configured to use SQLite3 DB by default, but it also supports PostgreSQL.
 In CI and QA environments, the configuration is overriden by environment variables to use PostgreSQL.
 
 To establish connection to PostgreSQL, the following configuration options need to be changed in `storage` section of `config.toml`:
 
-```
+```toml
 [storage]
 db_driver = "postgres"
 pg_username = "postgres"
@@ -194,7 +207,6 @@ See `/migration/migration.go` documentation for an overview of all available DB 
 Please look into document [CONTRIBUTING.md](CONTRIBUTING.md) that contains all information about how to contribute to this project.
 
 Please look also at [Definitiot of Done](DoD.md) document with further informations.
-
 
 ## Testing
 

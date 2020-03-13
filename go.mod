@@ -11,6 +11,7 @@ require (
 	github.com/gchaincl/sqlhooks v1.3.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/google/uuid v1.1.1
+	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf // indirect
 	github.com/gorilla/mux v1.7.3
 	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/lib/pq v1.3.0
