@@ -89,7 +89,7 @@ func getRouterPositiveIntParam(request *http.Request, paramName string) (uint64,
 // Converted custer name is returned if everything is okay, otherwise an error is returned.
 func validateClusterName(writer http.ResponseWriter, clusterName string) (types.ClusterName, error) {
 	if _, err := uuid.Parse(clusterName); err != nil {
-		const message = "cluster name format is invalid"
+		message := fmt.Sprintf("invalid cluster name format: '%s'", clusterName)
 
 		log.Println(message)
 		responses.SendInternalServerError(writer, message)
@@ -115,6 +115,12 @@ func readClusterName(writer http.ResponseWriter, request *http.Request) (types.C
 	}
 
 	return validateClusterName(writer, clusterName)
+}
+
+// splitRequestParamArray takes a single HTTP request parameter and splits it
+// into a slice of strings. This assumes that the parameter is a comma-separated array.
+func splitRequestParamArray(arrayParam string) []string {
+	return strings.Split(arrayParam, ",")
 }
 
 // readOrganizationID retrieves organization id from request
@@ -150,7 +156,7 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 	}
 
 	clusterNamesConverted := []types.ClusterName{}
-	for _, clusterName := range strings.Split(",", clusterNamesParam) {
+	for _, clusterName := range splitRequestParamArray(clusterNamesParam) {
 		convertedName, err := validateClusterName(writer, clusterName)
 		if err != nil {
 			return []types.ClusterName{}, err
@@ -179,7 +185,7 @@ func readOrganizationIDs(writer http.ResponseWriter, request *http.Request) ([]t
 	}
 
 	organizationsConverted := []types.OrgID{}
-	for _, orgStr := range strings.Split(",", organizationsParam) {
+	for _, orgStr := range splitRequestParamArray(organizationsParam) {
 		orgInt, err := strconv.ParseUint(orgStr, 10, 64)
 		if err != nil {
 			return []types.OrgID{}, err
