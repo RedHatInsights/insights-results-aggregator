@@ -163,11 +163,6 @@ func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *h
 
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
 	clusterID, err := readClusterName(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
 	ruleID, err := getRouterParam(request, "rule_id")
 	if err != nil {
 		log.Println(err)
@@ -188,6 +183,42 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	} else {
 		responses.Send(http.StatusOK, writer, responses.BuildOkResponse())
 	}
+}
+
+func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {
+	orgIds, err := readOrganizationIDs(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	for _, org := range orgIds {
+		if err := server.Storage.DeleteReportsForOrg(org); err != nil {
+			log.Println("Unable to delete reports:", err)
+			responses.SendInternalServerError(writer, err.Error())
+			return
+		}
+	}
+
+	responses.SendResponse(writer, responses.BuildOkResponse())
+}
+
+func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *http.Request) {
+	clusterNames, err := readClusterNames(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	for _, cluster := range clusterNames {
+		if err := server.Storage.DeleteReportsForCluster(cluster); err != nil {
+			log.Println("Unable to delete reports:", err)
+			responses.SendInternalServerError(writer, err.Error())
+			return
+		}
+	}
+
+	responses.SendResponse(writer, responses.BuildOkResponse())
 }
 
 // serveAPISpecFile serves an OpenAPI specifications file specified in config file
@@ -218,6 +249,11 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 
 	apiPrefix := server.Config.APIPrefix
 
+	if server.Config.Debug {
+		router.HandleFunc(apiPrefix+"organizations/{organizations}", server.deleteOrganizations).Methods(http.MethodDelete)
+		router.HandleFunc(apiPrefix+"clusters/{clusters}", server.deleteClusters).Methods(http.MethodDelete)
+	}
+
 	// common REST API endpoints
 	router.HandleFunc(apiPrefix, server.mainEndpoint).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+"organizations", server.listOfOrganizations).Methods(http.MethodGet)
@@ -225,9 +261,7 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/like", server.likeRule).Methods(http.MethodPut)
 	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike", server.dislikeRule).Methods(http.MethodPut)
 	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote", server.resetVoteOnRule).Methods(http.MethodPut)
-	router.HandleFunc(
-		apiPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization,
-	).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods(http.MethodGet)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+"metrics", promhttp.Handler()).Methods(http.MethodGet)

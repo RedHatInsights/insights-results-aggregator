@@ -73,6 +73,8 @@ type Storage interface {
 	GetUserFeedbackOnRule(
 		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
 	) (*UserFeedbackOnRule, error)
+	DeleteReportsForOrg(orgID types.OrgID) error
+	DeleteReportsForCluster(clusterName types.ClusterName) error
 }
 
 // DBDriver type for db driver enum
@@ -314,6 +316,18 @@ func (storage DBStorage) ReportsCount() (int, error) {
 	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
 
 	return count, err
+}
+
+// DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
+func (storage DBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
+	_, err := storage.connection.Exec("DELETE FROM report WHERE org_id = $1", orgID)
+	return err
+}
+
+// DeleteReportsForCluster deletes all reports related to the specified cluster from the storage.
+func (storage DBStorage) DeleteReportsForCluster(clusterName types.ClusterName) error {
+	_, err := storage.connection.Exec("DELETE FROM report WHERE cluster = $1", clusterName)
+	return err
 }
 
 // loadRuleErrorKeyContent inserts the error key contents of all available rules into the database.
