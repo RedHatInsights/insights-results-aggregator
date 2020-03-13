@@ -656,7 +656,7 @@ func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
 
 func TestDeleteReportsByOrganization(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer helpers.MustCloseStorage(t, mockStorage)
 	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest("DELETE", config.APIPrefix+"organizations/1", nil)
@@ -669,7 +669,7 @@ func TestDeleteReportsByOrganization(t *testing.T) {
 
 func TestDeleteReportsByClusterName(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer mockStorage.Close()
+	defer helpers.MustCloseStorage(t, mockStorage)
 	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest("DELETE", config.APIPrefix+"clusters/2d615e74-29f8-4bfb-8269-908f1c1b1bb4", nil)
