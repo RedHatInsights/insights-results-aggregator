@@ -170,7 +170,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	report, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
+	report, lastChecked, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
 	if _, ok := err.(*storage.ItemNotFoundError); ok {
 		responses.Send(http.StatusNotFound, writer, err.Error())
 	} else if err != nil {
@@ -192,10 +192,13 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	}
 
 	response := types.ReportResponse{
-		Report: report,
-		Rules:  rulesContent,
-		Count:  rulesCount,
+		Meta: types.ReportResponseMeta{
+			Count:         rulesCount,
+			LastCheckedAt: lastChecked,
+		},
+		Rules: rulesContent,
 	}
+
 	responses.SendResponse(writer, responses.BuildOkResponseWithData("report", response))
 }
 

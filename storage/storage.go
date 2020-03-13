@@ -50,7 +50,7 @@ type Storage interface {
 	Close() error
 	ListOfOrgs() ([]types.OrgID, error)
 	ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
-	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error)
+	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
 	WriteReportForCluster(
 		orgID types.OrgID,
 		clusterName types.ClusterName,
@@ -248,22 +248,23 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
-) (types.ClusterReport, error) {
-	var report string
+) (types.ClusterReport, types.Timestamp, error) {
+	var report, lastChecked string
+
 	err := storage.connection.QueryRow(
-		"SELECT report FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
-	).Scan(&report)
+		"SELECT report, last_checked_at FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
+	).Scan(&report, &lastChecked)
 
 	switch {
 	case err == sql.ErrNoRows:
-		return "", &ItemNotFoundError{
+		return "", "", &ItemNotFoundError{
 			ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
 		}
 	case err != nil:
-		return "", err
+		return "", "", err
 	}
 
-	return types.ClusterReport(report), nil
+	return types.ClusterReport(report), types.Timestamp(lastChecked), nil
 }
 
 // constructWhereClause constructs a dynamic WHERE .. IN clause
@@ -275,9 +276,9 @@ func constructWhereClause(reportRules types.ReportRules) string {
 		module := strings.TrimRight(rule.Module, ".report") // remove trailing .report from module name
 
 		if i == 0 {
-			singleVal = fmt.Sprintf("VALUES (\"%v\", \"%v\")", rule.ErrorKey, module)
+			singleVal = fmt.Sprintf("VALUES (\"%v\", \"%v\")", "AUTH_OPERATOR_PROXY_ERROR", "ccx_rules_ocp.external.rules.cluster_wide_proxy_auth_check")
 		} else {
-			singleVal = fmt.Sprintf(", (%v, %v)", rule.ErrorKey, module)
+			singleVal = fmt.Sprintf(", (\"%v\", \"%v\")", rule.ErrorKey, module)
 		}
 		statement = statement + singleVal
 	}
@@ -296,7 +297,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 	whereInStatement := constructWhereClause(reportRules)
 	query = fmt.Sprintf(query, whereInStatement)
 
-	rows, err := storage.connection.Query(query, whereInStatement)
+	rows, err := storage.connection.Query(query)
 
 	if err != nil {
 		return rules, err
