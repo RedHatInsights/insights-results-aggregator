@@ -268,6 +268,61 @@
           }
         }
       }
+    },
+    "/organizations/{orgIds}": {
+      "delete": {
+        "summary": "Deletes organization data from database.",
+        "description": "[DEBUG ONLY] All database entries related to the specified organization IDs will be deleted.",
+        "parameters": [
+          {
+            "name": "orgIds",
+            "in": "path",
+            "required": true,
+            "description": "IDs of the organizations whose data are supposed to be deleted.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion was successful."
+          }
+        }
+      }
+    },
+    "/clusters/{clusterIds}": {
+      "delete": {
+        "summary": "Deletes cluster data from database.",
+        "description": "[DEBUG ONLY] All database entries related to the specified cluster IDs will be deleted.",
+        "parameters": [
+          {
+            "name": "clusterIds",
+            "in": "path",
+            "required": true,
+            "description": "IDs of the clusters whose data are supposed to be deleted.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion was successful."
+          }
+        }
+      }
     }
   }
 }

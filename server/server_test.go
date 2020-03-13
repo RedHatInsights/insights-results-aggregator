@@ -653,3 +653,29 @@ func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
 
 	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
 }
+
+func TestDeleteReportsByOrganization(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+	testServer := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("DELETE", config.APIPrefix+"organizations/1", nil)
+	helpers.FailOnError(t, err)
+
+	resp := executeRequest(testServer, req)
+
+	checkResponseCode(t, http.StatusOK, resp.Result().StatusCode)
+}
+
+func TestDeleteReportsByClusterName(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+	testServer := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("DELETE", config.APIPrefix+"clusters/2d615e74-29f8-4bfb-8269-908f1c1b1bb4", nil)
+	helpers.FailOnError(t, err)
+
+	resp := executeRequest(testServer, req)
+
+	checkResponseCode(t, http.StatusOK, resp.Result().StatusCode)
+}
