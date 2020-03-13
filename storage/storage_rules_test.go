@@ -192,6 +192,17 @@ func TestLoadRuleContentActiveOK(t *testing.T) {
 	helpers.FailOnError(t, err)
 }
 
+func TestLoadRuleContentDBError(t *testing.T) {
+	s := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, s)
+	dbStorage := s.(*storage.DBStorage)
+
+	err := dbStorage.LoadRuleContent(ruleContentActiveOK)
+	if err == nil {
+		t.Fatalf("error expected, got %+v", err)
+	}
+}
+
 func TestLoadRuleContentInactiveOK(t *testing.T) {
 	s := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, s)
@@ -236,6 +247,21 @@ func TestDBStorageGetContentForRulesEmpty(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	assert.Empty(t, res)
+}
+
+func TestDBStorageGetContentForRulesDBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	_, err := mockStorage.GetContentForRules(types.ReportRules{
+		HitRules:     nil,
+		SkippedRules: nil,
+		PassedRules:  nil,
+		TotalCount:   0,
+	})
+	if err == nil {
+		t.Fatalf("error expected, got %+v", err)
+	}
 }
 
 func TestDBStorageGetContentForRulesOK(t *testing.T) {
