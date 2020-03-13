@@ -27,87 +27,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 const (
-	testOrgID         = types.OrgID(1)
-	testClusterName   = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
-	testClusterReport = types.ClusterReport("")
-	testRuleID        = types.RuleID("1")
-	testUserID        = types.UserID("1")
-)
-
-var (
-	ruleContentActiveOK = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": content.RuleErrorKeyContent{
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "active",
-					},
-				},
-			},
-		},
-	}
-	ruleContentInactiveOK = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": content.RuleErrorKeyContent{
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "inactive",
-					},
-				},
-			},
-		},
-	}
-	ruleContentBadStatus = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": content.RuleErrorKeyContent{
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "bad",
-					},
-				},
-			},
-		},
-	}
-	ruleContentNull = content.RuleContentDirectory{
-		"rc": content.RuleContent{},
-	}
+	testOrgID              = types.OrgID(1)
+	testClusterName        = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
+	testClusterEmptyReport = types.ClusterReport("{}")
+	testRuleID             = types.RuleID("ccx_rules_ocp.external.rules.nodes_kubelet_version_check")
+	testUserID             = types.UserID("1")
 )
 
 func checkReportForCluster(
@@ -261,7 +191,7 @@ func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 	err := mockStorage.WriteReportForCluster(
 		testOrgID,
 		testClusterName,
-		testClusterReport,
+		testClusterEmptyReport,
 		time.Now(),
 	)
 	expectErrorClosedStorage(t, err)
@@ -272,8 +202,8 @@ func TestMockDBStorageListOfOrgs(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer closeStorage(t, mockStorage)
 
-	writeReportForCluster(t, mockStorage, 1, "1deb586c-fb85-4db4-ae5b-139cdbdf77ae", testClusterReport)
-	writeReportForCluster(t, mockStorage, 3, "a1bf5b15-5229-4042-9825-c69dc36b57f5", testClusterReport)
+	writeReportForCluster(t, mockStorage, 1, "1deb586c-fb85-4db4-ae5b-139cdbdf77ae", testClusterEmptyReport)
+	writeReportForCluster(t, mockStorage, 3, "a1bf5b15-5229-4042-9825-c69dc36b57f5", testClusterEmptyReport)
 
 	result, err := mockStorage.ListOfOrgs()
 	if err != nil {
@@ -306,11 +236,11 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer closeStorage(t, mockStorage)
 
-	writeReportForCluster(t, mockStorage, 1, "eabb4fbf-edfa-45d0-9352-fb05332fdb82", testClusterReport)
-	writeReportForCluster(t, mockStorage, 1, "edf5f242-0c12-4307-8c9f-29dcd289d045", testClusterReport)
+	writeReportForCluster(t, mockStorage, 1, "eabb4fbf-edfa-45d0-9352-fb05332fdb82", testClusterEmptyReport)
+	writeReportForCluster(t, mockStorage, 1, "edf5f242-0c12-4307-8c9f-29dcd289d045", testClusterEmptyReport)
 
 	// also pushing cluster for different org
-	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testClusterReport)
+	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testClusterEmptyReport)
 
 	result, err := mockStorage.ListOfClustersForOrg(1)
 	if err != nil {
@@ -360,7 +290,7 @@ func TestMockDBReportsCount(t *testing.T) {
 
 	assert.Equal(t, cnt, 0)
 
-	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testClusterReport)
+	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testClusterEmptyReport)
 
 	cnt, err = mockStorage.ReportsCount()
 	if err != nil {
@@ -442,7 +372,7 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 
 	connection := storage.GetConnection(s.(*storage.DBStorage))
 	// write illegal negative org_id
-	mustWriteReport(t, connection, -1, testClusterName, testClusterReport)
+	mustWriteReport(t, connection, -1, testClusterName, testClusterEmptyReport)
 
 	_, err := s.ListOfOrgs()
 	if err != nil {
@@ -570,45 +500,5 @@ func TestDBStorageFeedbackErrorDBError(t *testing.T) {
 	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
 	if err == nil || !strings.Contains(err.Error(), "database is closed") {
 		t.Fatalf("expected sql database is closed error, got %T, %+v", err, err)
-	}
-}
-
-func TestLoadRuleContentActiveOK(t *testing.T) {
-	s := helpers.MustGetMockStorage(t, true)
-	dbStorage := s.(*storage.DBStorage)
-
-	err := dbStorage.LoadRuleContent(ruleContentActiveOK)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestLoadRuleContentInactiveOK(t *testing.T) {
-	s := helpers.MustGetMockStorage(t, true)
-	dbStorage := s.(*storage.DBStorage)
-
-	err := dbStorage.LoadRuleContent(ruleContentInactiveOK)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestLoadRuleContentNull(t *testing.T) {
-	s := helpers.MustGetMockStorage(t, true)
-	dbStorage := s.(*storage.DBStorage)
-
-	err := dbStorage.LoadRuleContent(ruleContentNull)
-	if err == nil || err.Error() != "NOT NULL constraint failed: rule.summary" {
-		t.Fatal(err)
-	}
-}
-
-func TestLoadRuleContentBadStatus(t *testing.T) {
-	s := helpers.MustGetMockStorage(t, true)
-	dbStorage := s.(*storage.DBStorage)
-
-	err := dbStorage.LoadRuleContent(ruleContentBadStatus)
-	if err == nil || err.Error() != "invalid rule error key status: 'bad'" {
-		t.Fatal(err)
 	}
 }
