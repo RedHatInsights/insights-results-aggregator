@@ -44,6 +44,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -122,6 +123,40 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 	}
 }
 
+func getTotalRuleCount(reportRules types.ReportRules) int {
+	totalCount := len(reportRules.HitRules) +
+		len(reportRules.SkippedRules) +
+		len(reportRules.PassedRules)
+	return totalCount
+}
+
+// getContentForRules returns the hit rules from the report, as well as total count of all rules (skipped, ..)
+func (server *HTTPServer) getContentForRules(
+	writer http.ResponseWriter,
+	report types.ClusterReport,
+) ([]types.RuleContentResponse, int, error) {
+
+	var reportRules types.ReportRules
+
+	err := json.Unmarshal([]byte(report), &reportRules)
+	if err != nil {
+		log.Println("Unable to parse cluster report", err)
+		responses.SendInternalServerError(writer, err.Error())
+		return nil, 0, err
+	}
+
+	totalRules := getTotalRuleCount(reportRules)
+
+	hitRules, err := server.Storage.GetContentForRules(reportRules)
+	if err != nil {
+		log.Println("Unable to retrieve rules content from database", err)
+		responses.SendInternalServerError(writer, err.Error())
+		return nil, 0, err
+	}
+
+	return hitRules, totalRules, nil
+}
+
 func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := readOrganizationID(writer, request)
 	if err != nil {
@@ -135,15 +170,37 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	report, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
+	report, lastChecked, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
 	if _, ok := err.(*storage.ItemNotFoundError); ok {
 		responses.Send(http.StatusNotFound, writer, err.Error())
 	} else if err != nil {
 		log.Println("Unable to read report for cluster", err)
 		responses.SendInternalServerError(writer, err.Error())
-	} else {
-		responses.SendResponse(writer, responses.BuildOkResponseWithData("report", report))
 	}
+
+	rulesContent, rulesCount, err := server.getContentForRules(writer, report)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+	hitRulesCount := len(rulesContent)
+	// -1 as count in response means there are no rules for this cluster
+	// as opposed to no rules hit for the cluster
+	if rulesCount == 0 {
+		rulesCount = -1
+	} else {
+		rulesCount = hitRulesCount
+	}
+
+	response := types.ReportResponse{
+		Meta: types.ReportResponseMeta{
+			Count:         rulesCount,
+			LastCheckedAt: lastChecked,
+		},
+		Rules: rulesContent,
+	}
+
+	responses.SendResponse(writer, responses.BuildOkResponseWithData("report", response))
 }
 
 // likeRule likes the rule for current user

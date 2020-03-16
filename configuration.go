@@ -42,7 +42,7 @@ import (
 const (
 	configFileEnvVariableName   = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
 	defaultOrgWhiteListFileName = "org_whitelist.csv"
-	defaultContentPath          = "/rules_content"
+	defaultContentPath          = "/rules-content"
 )
 
 // config has exactly the same structure as *.toml file
