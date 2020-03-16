@@ -18,7 +18,7 @@ COPY . insights-results-aggregator
 
 ARG GITHUB_API_TOKEN
 
-ENV RULES_CONTENT_DIR=/rules_content \
+ENV RULES_CONTENT_DIR=/rules-content \
     RULES_REPO=https://github.com/RedHatInsights/ccx-rules-ocp/ \
     GIT_ASKPASS=/git-askpass.sh
 
@@ -35,8 +35,8 @@ FROM registry.access.redhat.com/ubi8-minimal
 
 COPY --from=builder /go/insights-results-aggregator/insights-results-aggregator .
 COPY --from=builder /go/insights-results-aggregator/openapi.json /openapi/openapi.json
-# copy just the content of the rules, not the whole repository
-COPY --from=builder /rules_content/content /rules_content
+# copy just the content of the external rules, not the whole repository
+COPY --from=builder /rules-content/content/external/rules/ /rules-content
 
 RUN chmod a+x /insights-results-aggregator
 

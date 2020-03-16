@@ -51,7 +51,7 @@ type Storage interface {
 	Close() error
 	ListOfOrgs() ([]types.OrgID, error)
 	ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
-	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, error)
+	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
 	WriteReportForCluster(
 		orgID types.OrgID,
 		clusterName types.ClusterName,
@@ -74,6 +74,7 @@ type Storage interface {
 	GetUserFeedbackOnRule(
 		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
 	) (*UserFeedbackOnRule, error)
+	GetContentForRules(rules types.ReportRules) ([]types.RuleContentResponse, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
 }
@@ -251,22 +252,91 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
-) (types.ClusterReport, error) {
-	var report string
+) (types.ClusterReport, types.Timestamp, error) {
+	var report, lastChecked string
+
 	err := storage.connection.QueryRow(
-		"SELECT report FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
-	).Scan(&report)
+		"SELECT report, last_checked_at FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
+	).Scan(&report, &lastChecked)
 
 	switch {
 	case err == sql.ErrNoRows:
-		return "", &ItemNotFoundError{
+		return "", "", &ItemNotFoundError{
 			ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
 		}
 	case err != nil:
-		return "", err
+		return "", "", err
 	}
 
-	return types.ClusterReport(report), nil
+	return types.ClusterReport(report), types.Timestamp(lastChecked), nil
+}
+
+// constructWhereClause constructs a dynamic WHERE .. IN clause
+func constructWhereClause(reportRules types.ReportRules) string {
+	var statement string
+
+	for i, rule := range reportRules.HitRules {
+		singleVal := ""
+		module := strings.TrimRight(rule.Module, ".report") // remove trailing .report from module name
+
+		if i == 0 {
+			singleVal = fmt.Sprintf(`VALUES ("%v", "%v")`, rule.ErrorKey, module)
+		} else {
+			singleVal = fmt.Sprintf(`, ("%v", "%v")`, rule.ErrorKey, module)
+		}
+		statement = statement + singleVal
+	}
+	return statement
+}
+
+// GetContentForRules retrieves content for rules that were hit in the report
+func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]types.RuleContentResponse, error) {
+	rules := make([]types.RuleContentResponse, 0)
+
+	query := `SELECT error_key, rule_module, description, generic, publish_date,
+		impact, likelihood
+		FROM rule_error_key
+		WHERE (error_key, rule_module) IN ( %v )`
+
+	whereInStatement := constructWhereClause(reportRules)
+	query = fmt.Sprintf(query, whereInStatement)
+
+	rows, err := storage.connection.Query(query)
+
+	if err != nil {
+		return rules, err
+	}
+	defer closeRows(rows)
+
+	for rows.Next() {
+		var rule types.RuleContentResponse
+		var impact, likelihood int
+
+		err = rows.Scan(
+			&rule.ErrorKey,
+			&rule.RuleModule,
+			&rule.Description,
+			&rule.Generic,
+			&rule.CreatedAt,
+			&impact,
+			&likelihood,
+		)
+		if err != nil {
+			log.Println("SQL error while retrieving content for rule", err)
+			continue
+		}
+
+		rule.TotalRisk = (impact + likelihood) / 2
+
+		rules = append(rules, rule)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println("SQL error while retrieving content for rules", err)
+		return rules, err
+	}
+
+	return rules, nil
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization

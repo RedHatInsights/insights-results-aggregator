@@ -81,7 +81,7 @@ func TestLoadBrokerConfiguration(t *testing.T) {
 
 	brokerCfg := main.GetBrokerConfiguration()
 
-	assert.Equal(t, "localhost:9092", brokerCfg.Address)
+	assert.Equal(t, "localhost:29092", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
 }
@@ -102,7 +102,7 @@ func TestLoadContentPathConfiguration(t *testing.T) {
 
 	contentPath := main.GetContentPathConfiguration()
 
-	assert.Equal(t, "/rules_content", contentPath)
+	assert.Equal(t, "/rules-content", contentPath)
 }
 
 // TestLoadStorageConfiguration tests loading the storage configuration sub-tree
@@ -199,19 +199,22 @@ str
 
 func TestLoadConfigurationFromFile(t *testing.T) {
 	config := `[broker]
-		address = "localhost:9092"
+		address = "localhost:29092"
 		topic = "platform.results.ccx"
 		group = "aggregator"
 		enabled = true
+
+		[content]
+		path = "/rules-content"
+
+		[processing]
+		org_whitelist = "org_whitelist.csv"
 
 		[server]
 		address = ":8080"
 		api_prefix = "/api/v1/"
 		api_spec_file = "openapi.json"
 		debug = true
-
-		[processing]
-		org_whitelist = "org_whitelist.csv"
 
 		[storage]
 		db_driver = "sqlite3"
@@ -238,7 +241,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 
 	brokerCfg := main.GetBrokerConfiguration()
 
-	assert.Equal(t, "localhost:9092", brokerCfg.Address)
+	assert.Equal(t, "localhost:29092", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
 	assert.Equal(t, true, brokerCfg.Enabled)
@@ -325,7 +328,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules_content")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
 
 	mustLoadConfiguration("/non_existing_path")
 
@@ -369,5 +372,5 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	}, main.GetStorageConfiguration())
 
 	contentPath := main.GetContentPathConfiguration()
-	assert.Equal(t, contentPath, "/rules_content")
+	assert.Equal(t, contentPath, "/rules-content")
 }
