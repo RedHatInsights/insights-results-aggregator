@@ -14,8 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package containing logic for parsing rule content.
-
+// Package content contains logic for parsing rule content.
 package content
 
 import (

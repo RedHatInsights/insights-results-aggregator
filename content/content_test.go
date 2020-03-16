@@ -26,6 +26,7 @@ import (
 
 const errYAMLBadToken = "yaml: line 14: found character that cannot start any token"
 
+// TestContentParseOK checks whether reading from directory of correct content works as expected
 func TestContentParseOK(t *testing.T) {
 	con, err := content.ParseRuleContentDir("../tests/content/ok/")
 	if err != nil {
@@ -43,6 +44,7 @@ func TestContentParseOK(t *testing.T) {
 	}
 }
 
+// TestContentParseInvalidDir checks how incorrect (non-existing) directory is handled
 func TestContentParseInvalidDir(t *testing.T) {
 	const invalidDirPath = "../tests/content/not-a-real-dir/"
 	_, err := content.ParseRuleContentDir(invalidDirPath)
@@ -51,6 +53,27 @@ func TestContentParseInvalidDir(t *testing.T) {
 	}
 }
 
+// TestContentParseNotDirectory1 checks how incorrect (non-existing) directory is handled
+func TestContentParseNotDirectory1(t *testing.T) {
+	// this is not a proper directory
+	const notADirPath = "../tests/tests.toml"
+	_, err := content.ParseRuleContentDir(notADirPath)
+	if err == nil || err.Error() != "readdirent: not a directory" {
+		t.Fatal(err)
+	}
+}
+
+// TestContentParseNotDirectory2 checks how incorrect (non-existing) directory is handled
+func TestContentParseInvalidDir2(t *testing.T) {
+	// this is not a proper directory
+	const notADirPath = "/dev/null"
+	_, err := content.ParseRuleContentDir(notADirPath)
+	if err == nil || err.Error() != "readdirent: not a directory" {
+		t.Fatal(err)
+	}
+}
+
+// TestContentParseMissingFile checks how missing file(s) in content directory are handled
 func TestContentParseMissingFile(t *testing.T) {
 	_, err := content.ParseRuleContentDir("../tests/content/missing/")
 	if err == nil || !strings.HasSuffix(err.Error(), ": no such file or directory") {
@@ -58,6 +81,7 @@ func TestContentParseMissingFile(t *testing.T) {
 	}
 }
 
+// TestContentParseBadPluginYAML tests handling bad/incorrect plugin.yaml file
 func TestContentParseBadPluginYAML(t *testing.T) {
 	_, err := content.ParseRuleContentDir("../tests/content/bad_plugin/")
 	if err == nil || err.Error() != errYAMLBadToken {
@@ -65,6 +89,7 @@ func TestContentParseBadPluginYAML(t *testing.T) {
 	}
 }
 
+// TestContentParseBadMetadataYAML tests handling bad/incorrect metadata.yaml file
 func TestContentParseBadMetadataYAML(t *testing.T) {
 	_, err := content.ParseRuleContentDir("../tests/content/bad_metadata/")
 	if err == nil || err.Error() != errYAMLBadToken {

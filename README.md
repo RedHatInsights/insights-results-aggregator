@@ -31,6 +31,8 @@ Aggregator service consists of three main parts:
 4. That results are consumed by Insights rules aggregator service that caches them
 5. The service provides such data via REST API to other tools, like OpenShift Cluster Manager web UI, OpenShift console, etc.
 
+Please note that results are filtered - only results for organizations listed in `org_whitelist.csv` are processed and cached in aggregator.
+
 ### DB structure
 
 #### Table report
@@ -79,9 +81,10 @@ All packages developed in this project have documentation available on [GoDoc se
 * [entry point to the service](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator)
 * [package `broker`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/broker)
 * [package `consumer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/consumer)
-* [package `producer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/producer)
+* [package `content`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/content)
 * [package `metrics`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/metrics)
 * [package `migration`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/migration)
+* [package `producer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/producer)
 * [package `server`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/server)
 * [package `storage`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/storage)
 * [package `types`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/types)
@@ -220,7 +223,7 @@ The following tests can be run to test your code in `insights-results-aggregator
 ### Unit tests
 
 Set of unit tests checks all units of source code. Additionaly the code coverage is computed and displayed.
-Code coverage is stored in a file `coverage.out`.
+Code coverage is stored in a file `coverage.out` and can be checked by a script named `check_coverage.sh`.
 
 To run unit tests use the following command:
 
@@ -246,7 +249,7 @@ To run REST API tests use the following command:
 
 [Travis CI](https://travis-ci.com/) is configured for this repository. Several tests and checks are started for all pull requests:
 
-* Unit tests that use the standard tool `go test`
+* Unit tests that use the standard tool `go test`.
 * `go fmt` tool to check code formatting. That tool is run with `-s` flag to perform [following transformations](https://golang.org/cmd/gofmt/#hdr-The_simplify_command)
 * `go vet` to report likely mistakes in source code, for example suspicious constructs, such as Printf calls whose arguments do not align with the format string.
 * `golint` as a linter for all Go sources stored in this repository
