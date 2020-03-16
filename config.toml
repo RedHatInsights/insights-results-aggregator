@@ -4,14 +4,17 @@ topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = true
 
+[content]
+path = "/rules-content"
+
+[processing]
+org_whitelist = "org_whitelist.csv"
+
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
 api_spec_file = "openapi.json"
 debug = true
-
-[processing]
-org_whitelist = "org_whitelist.csv"
 
 [storage]
 db_driver = "sqlite3"
@@ -23,6 +26,3 @@ pg_port = 5472
 pg_db_name = "aggregator"
 pg_params = ""
 log_sql_queries = true
-
-[content]
-path = "/rules-content"

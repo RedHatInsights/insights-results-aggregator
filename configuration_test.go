@@ -204,14 +204,17 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		group = "aggregator"
 		enabled = true
 
+		[content]
+		path = "/rules-content"
+
+		[processing]
+		org_whitelist = "org_whitelist.csv"
+
 		[server]
 		address = ":8080"
 		api_prefix = "/api/v1/"
 		api_spec_file = "openapi.json"
 		debug = true
-
-		[processing]
-		org_whitelist = "org_whitelist.csv"
 
 		[storage]
 		db_driver = "sqlite3"
