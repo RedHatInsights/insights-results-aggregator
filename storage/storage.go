@@ -322,7 +322,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 			&likelihood,
 		)
 		if err != nil {
-			log.Println("SQL error while retrieving content for rule", err)
+			log.Error().Err(err).Msg("SQL error while retrieving content for rule")
 			continue
 		}
 
@@ -332,7 +332,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Println("SQL error while retrieving content for rules", err)
+		log.Error().Err(err).Msg("SQL error while retrieving content for rules")
 		return rules, err
 	}
 

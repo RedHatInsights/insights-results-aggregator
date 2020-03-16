@@ -141,7 +141,7 @@ func (server *HTTPServer) getContentForRules(
 
 	err := json.Unmarshal([]byte(report), &reportRules)
 	if err != nil {
-		log.Println("Unable to parse cluster report", err)
+		log.Error().Err(err).Msg("Unable to parse cluster report")
 		responses.SendInternalServerError(writer, err.Error())
 		return nil, 0, err
 	}
@@ -150,7 +150,7 @@ func (server *HTTPServer) getContentForRules(
 
 	hitRules, err := server.Storage.GetContentForRules(reportRules)
 	if err != nil {
-		log.Println("Unable to retrieve rules content from database", err)
+		log.Error().Err(err).Msg("Unable to retrieve rules content from database")
 		responses.SendInternalServerError(writer, err.Error())
 		return nil, 0, err
 	}
