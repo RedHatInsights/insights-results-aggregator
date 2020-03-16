@@ -15,5 +15,4 @@
 
 
 go get github.com/kisielk/errcheck
-
 errcheck ./...
