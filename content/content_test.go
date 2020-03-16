@@ -58,7 +58,7 @@ func TestContentParseNotDirectory1(t *testing.T) {
 	// this is not a proper directory
 	const notADirPath = "../tests/tests.toml"
 	_, err := content.ParseRuleContentDir(notADirPath)
-	if err == nil || err.Error() != fmt.Sprintf("open %s: no such file or directory", invalidDirPath) {
+	if err == nil || err.Error() != "readdirent: not a directory" {
 		t.Fatal(err)
 	}
 }
@@ -68,7 +68,7 @@ func TestContentParseInvalidDir2(t *testing.T) {
 	// this is not a proper directory
 	const notADirPath = "/dev/null"
 	_, err := content.ParseRuleContentDir(notADirPath)
-	if err == nil || err.Error() != fmt.Sprintf("open %s: no such file or directory", invalidDirPath) {
+	if err == nil || err.Error() != "readdirent: not a directory" {
 		t.Fatal(err)
 	}
 }
