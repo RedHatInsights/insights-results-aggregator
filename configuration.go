@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -31,6 +30,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	mapset "github.com/deckarep/golang-set"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
@@ -120,12 +120,12 @@ func getOrganizationWhitelist() mapset.Set {
 
 	orgWhiteListFileData, err := ioutil.ReadFile(config.Processing.OrgWhiteListFile)
 	if err != nil {
-		log.Fatalf("Organization whitelist file could not be opened. Error: %v", err)
+		log.Fatal().Err(err).Msg("Organization whitelist file could not be opened")
 	}
 
 	whitelist, err := loadWhitelistFromCSV(bytes.NewBuffer(orgWhiteListFileData))
 	if err != nil {
-		log.Fatalf("Whitelist CSV could not be processed. Error: %v", err)
+		log.Fatal().Err(err).Msg("Whitelist CSV could not be processed")
 	}
 
 	return whitelist
@@ -138,7 +138,7 @@ func getStorageConfiguration() storage.Configuration {
 func getServerConfiguration() server.Configuration {
 	err := checkIfFileExists(config.Server.APISpecFile)
 	if err != nil {
-		log.Fatalf("All customer facing APIs MUST serve the current OpenAPI specification. Error: '%s'", err)
+		log.Fatal().Err(err).Msg("All customer facing APIs MUST serve the current OpenAPI specification")
 	}
 
 	return config.Server
