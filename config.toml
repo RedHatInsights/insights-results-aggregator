@@ -1,5 +1,5 @@
 [broker]
-address = "localhost:9092"
+address = "localhost:29092"
 topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = true

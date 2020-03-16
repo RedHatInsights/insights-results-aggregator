@@ -81,7 +81,7 @@ func TestLoadBrokerConfiguration(t *testing.T) {
 
 	brokerCfg := main.GetBrokerConfiguration()
 
-	assert.Equal(t, "localhost:9092", brokerCfg.Address)
+	assert.Equal(t, "localhost:29092", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
 }
@@ -199,7 +199,7 @@ str
 
 func TestLoadConfigurationFromFile(t *testing.T) {
 	config := `[broker]
-		address = "localhost:9092"
+		address = "localhost:29092"
 		topic = "platform.results.ccx"
 		group = "aggregator"
 		enabled = true
@@ -241,7 +241,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 
 	brokerCfg := main.GetBrokerConfiguration()
 
-	assert.Equal(t, "localhost:9092", brokerCfg.Address)
+	assert.Equal(t, "localhost:29092", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
 	assert.Equal(t, true, brokerCfg.Enabled)
