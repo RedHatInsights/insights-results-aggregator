@@ -44,18 +44,19 @@ package server
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"path/filepath"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // HTTPServer in an implementation of Server interface
@@ -74,8 +75,8 @@ func New(config Configuration, storage storage.Storage) *HTTPServer {
 }
 
 func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHandler http.Handler) {
-	log.Println("Request URI: " + request.RequestURI)
-	log.Println("Request method: " + request.Method)
+	log.Print("Request URI: " + request.RequestURI)
+	log.Print("Request method: " + request.Method)
 	metrics.APIRequests.With(prometheus.Labels{"url": request.RequestURI}).Inc()
 	startTime := time.Now()
 	nextHandler.ServeHTTP(writer, request)
@@ -98,7 +99,7 @@ func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, _ *http.Reque
 func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, _ *http.Request) {
 	organizations, err := server.Storage.ListOfOrgs()
 	if err != nil {
-		log.Println("Unable to get list of organizations", err)
+		log.Error().Err(err).Msg("Unable to get list of organizations")
 		responses.SendInternalServerError(writer, err.Error())
 	} else {
 		responses.SendResponse(writer, responses.BuildOkResponseWithData("organizations", organizations))
@@ -115,7 +116,7 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 
 	clusters, err := server.Storage.ListOfClustersForOrg(organizationID)
 	if err != nil {
-		log.Println("Unable to get list of clusters", err)
+		log.Error().Err(err).Msg("Unable to get list of clusters")
 		responses.SendInternalServerError(writer, err.Error())
 	} else {
 		responses.SendResponse(writer, responses.BuildOkResponseWithData("clusters", clusters))
@@ -139,7 +140,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	if _, ok := err.(*storage.ItemNotFoundError); ok {
 		responses.Send(http.StatusNotFound, writer, err.Error())
 	} else if err != nil {
-		log.Println("Unable to read report for cluster", err)
+		log.Error().Err(err).Msg("Unable to read report for cluster")
 		responses.SendInternalServerError(writer, err.Error())
 	} else {
 		responses.SendResponse(writer, responses.BuildOkResponseWithData("report", report))
@@ -165,15 +166,17 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	clusterID, err := readClusterName(writer, request)
 	ruleID, err := getRouterParam(request, "rule_id")
 	if err != nil {
-		log.Println(err)
-		responses.Send(http.StatusInternalServerError, writer, "Unable to get param 'rule_id' from request")
+		const message = "Unable to read report for cluster"
+		log.Error().Err(err).Msg(message)
+		responses.Send(http.StatusInternalServerError, writer, message)
 		return
 	}
 
 	userID, err := server.GetCurrentUserID(request)
 	if err != nil {
-		log.Println(err)
-		responses.Send(http.StatusInternalServerError, writer, "Unable to get user id")
+		const message = "Unable to get user id"
+		log.Error().Err(err).Msg(message)
+		responses.Send(http.StatusInternalServerError, writer, message)
 		return
 	}
 
@@ -194,7 +197,7 @@ func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, reques
 
 	for _, org := range orgIds {
 		if err := server.Storage.DeleteReportsForOrg(org); err != nil {
-			log.Println("Unable to delete reports:", err)
+			log.Error().Err(err).Msg("Unable to delete reports")
 			responses.SendInternalServerError(writer, err.Error())
 			return
 		}
@@ -212,7 +215,7 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 
 	for _, cluster := range clusterNames {
 		if err := server.Storage.DeleteReportsForCluster(cluster); err != nil {
-			log.Println("Unable to delete reports:", err)
+			log.Error().Err(err).Msg("Unable to delete reports")
 			responses.SendInternalServerError(writer, err.Error())
 			return
 		}
@@ -225,11 +228,12 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *http.Request) {
 	absPath, err := filepath.Abs(server.Config.APISpecFile)
 	if err != nil {
-		log.Printf("Error creating absolute path of OpenAPI spec file. %v", err)
+		const message = "Error creating absolute path of OpenAPI spec file"
+		log.Error().Err(err).Msg(message)
 		responses.Send(
 			http.StatusInternalServerError,
 			writer,
-			"Error creating absolute path of OpenAPI spec file",
+			message,
 		)
 		return
 	}
@@ -239,7 +243,7 @@ func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *h
 
 // Initialize perform the server initialization
 func (server *HTTPServer) Initialize(address string) http.Handler {
-	log.Println("Initializing HTTP server at", address)
+	log.Print("Initializing HTTP server at", address)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(server.LogRequest)
@@ -275,13 +279,13 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 // Start starts server
 func (server *HTTPServer) Start() error {
 	address := server.Config.Address
-	log.Println("Starting HTTP server at", address)
+	log.Print("Starting HTTP server at", address)
 	router := server.Initialize(address)
 	server.Serv = &http.Server{Addr: address, Handler: router}
 
 	err := server.Serv.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		log.Printf("Unable to start HTTP server %v", err)
+		log.Error().Err(err).Msg("Unable to start HTTP server")
 		return err
 	}
 

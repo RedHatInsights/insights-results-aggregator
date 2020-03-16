@@ -50,6 +50,7 @@ const (
 	ExitStatusServerError
 	defaultConfigFilename = "config"
 
+	databasePreparationMessage = "database preparation existed with error code %v"
 	consumerExitedErrorMessage = "consumer exited with error code %v"
 )
 
@@ -174,7 +175,7 @@ func startService() int {
 
 	prepDbExitCode := prepareDB()
 	if prepDbExitCode != 0 {
-		log.Info().Msg(fmt.Sprintf(consumerExitedErrorMessage, prepDbExitCode))
+		log.Info().Msg(fmt.Sprintf(databasePreparationMessage, prepDbExitCode))
 		exitCode += prepDbExitCode
 	}
 
