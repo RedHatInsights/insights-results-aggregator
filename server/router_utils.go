@@ -17,15 +17,16 @@ package server
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/RedHatInsights/insights-operator-utils/responses"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
+
+	"github.com/RedHatInsights/insights-operator-utils/responses"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // RouterMissingParamError missing parameter in URL
@@ -91,7 +92,7 @@ func validateClusterName(writer http.ResponseWriter, clusterName string) (types.
 	if _, err := uuid.Parse(clusterName); err != nil {
 		message := fmt.Sprintf("invalid cluster name format: '%s'", clusterName)
 
-		log.Println(message)
+		log.Error().Err(err).Msg(message)
 		responses.SendInternalServerError(writer, message)
 
 		return "", errors.New(message)
@@ -107,8 +108,7 @@ func splitRequestParamArray(arrayParam string) []string {
 }
 
 func handleOrgIDError(writer http.ResponseWriter, err error) {
-	message := fmt.Sprintf("Error getting organization ID from request %v", err.Error())
-	log.Println(message)
+	log.Error().Err(err).Msg("Error getting organization ID from request")
 
 	if _, ok := err.(*RouterParsingError); ok {
 		responses.Send(http.StatusBadRequest, writer, err.Error())
@@ -119,7 +119,8 @@ func handleOrgIDError(writer http.ResponseWriter, err error) {
 
 func handleClusterNameError(writer http.ResponseWriter, err error) {
 	message := fmt.Sprintf("Cluster name is not provided %v", err.Error())
-	log.Println(message)
+	log.Error().Msg(message)
+
 	// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
 	// (not on client side)
 	responses.SendInternalServerError(writer, message)
@@ -154,7 +155,8 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 	clusterNamesParam, err := getRouterParam(request, "clusters")
 	if err != nil {
 		message := fmt.Sprintf("Cluster names are not provided %v", err.Error())
-		log.Println(message)
+		log.Error().Msg(message)
+
 		// See `readClusterName`.
 		responses.SendInternalServerError(writer, message)
 

@@ -20,10 +20,12 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/stretchr/testify/assert"
 
@@ -366,7 +368,7 @@ func mustWriteReport(
 
 func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	buf := new(bytes.Buffer)
-	log.SetOutput(buf)
+	log.Logger = zerolog.New(buf).With().Str("type", "SQL").Logger()
 
 	s := helpers.MustGetMockStorage(t, true)
 
