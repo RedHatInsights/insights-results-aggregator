@@ -19,6 +19,8 @@ limitations under the License.
 package producer
 
 import (
+	"fmt"
+
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
 

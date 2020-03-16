@@ -11,7 +11,6 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License.
 */
 
 // Package storage contains an implementation of interface between Go code and
@@ -30,10 +29,12 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	_ "github.com/lib/pq"           // PostgreSQL database driver
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
@@ -116,9 +117,10 @@ func New(configuration Configuration) (*DBStorage, error) {
 	}
 
 	if configuration.LogSQLQueries {
-		logger := log.New(os.Stdout, "[sql]", log.LstdFlags)
+		// create new logger
+		logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
 		var err error
-		driverName, err = InitAndGetSQLDriverWithLogs(driverType, logger)
+		driverName, err = InitAndGetSQLDriverWithLogs(driverType, &logger)
 		if err != nil {
 			return nil, err
 		}
@@ -133,7 +135,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 	connection, err := sql.Open(driverName, dataSource)
 
 	if err != nil {
-		log.Println("Can not connect to data storage", err)
+		log.Error().Err(err).Msg("Can not connect to data storage")
 		return nil, err
 	}
 
@@ -174,11 +176,11 @@ func (storage DBStorage) Init() error {
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.
 func (storage DBStorage) Close() error {
-	log.Println("Closing connection to data storage")
+	log.Print("Closing connection to data storage")
 	if storage.connection != nil {
 		err := storage.connection.Close()
 		if err != nil {
-			log.Fatal("Can not close connection to data storage", err)
+			log.Error().Err(err).Msg("Can not close connection to data storage")
 			return err
 		}
 	}
@@ -217,7 +219,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 		if err == nil {
 			orgs = append(orgs, orgID)
 		} else {
-			log.Println("error", err)
+			log.Error().Err(err).Msg("ListOfOrgID")
 		}
 	}
 	return orgs, nil
@@ -240,7 +242,7 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 		if err == nil {
 			clusters = append(clusters, types.ClusterName(clusterName))
 		} else {
-			log.Println("error", err)
+			log.Error().Err(err).Msg("ListOfClustersForOrg")
 		}
 	}
 	return clusters, nil

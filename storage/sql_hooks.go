@@ -22,16 +22,16 @@ import (
 	sql_driver "database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/gchaincl/sqlhooks"
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
+	"github.com/rs/zerolog"
 )
 
 type sqlHooks struct {
-	SQLQueriesLogger *log.Logger
+	SQLQueriesLogger *zerolog.Logger
 }
 
 type sqlHooksKey int
@@ -79,7 +79,7 @@ func (h *sqlHooks) After(ctx context.Context, query string, args ...interface{})
 }
 
 // InitAndGetSQLDriverWithLogs initializes driver with logging queries and returns driver's name
-func InitAndGetSQLDriverWithLogs(driverType DBDriver, logger *log.Logger) (string, error) {
+func InitAndGetSQLDriverWithLogs(driverType DBDriver, logger *zerolog.Logger) (string, error) {
 	var driver sql_driver.Driver
 	var driverName string
 

@@ -17,9 +17,10 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -109,7 +110,7 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 
 	_, err = statement.Exec(clusterID, ruleID, userID, userVote, now, now, message)
 	if err != nil {
-		log.Print(err)
+		log.Error().Err(err).Msg("addOrUpdateUserFeedbackOnRuleForCluster")
 		return err
 	}
 
