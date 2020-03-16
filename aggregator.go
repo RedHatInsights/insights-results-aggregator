@@ -30,7 +30,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
@@ -244,9 +243,6 @@ func stopService() int {
 }
 
 func main() {
-	// configure logger
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-
 	err := loadConfiguration(defaultConfigFilename)
 	if err != nil {
 		panic(err)

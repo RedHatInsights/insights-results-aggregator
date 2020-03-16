@@ -21,11 +21,11 @@ package consumer
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -158,8 +158,8 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 
 	err = checkReportStructure(*deserialized.Report)
 	if err != nil {
-		log.Println("Deserialied report read from message with improper structure:")
-		log.Println(*deserialized.Report)
+		log.Print("Deserialied report read from message with improper structure:")
+		log.Print(*deserialized.Report)
 		return deserialized, err
 	}
 
@@ -185,7 +185,7 @@ func (consumer *KafkaConsumer) Serve() {
 	for msg := range consumer.PartitionConsumer.Messages() {
 		err := consumer.ProcessMessage(msg)
 		if err != nil {
-			log.Println("Error processing message consumed from Kafka:", err)
+			log.Error().Err(err).Msg("Error processing message consumed from Kafka")
 			consumer.numberOfErrorsConsumingMessages++
 		} else {
 			consumer.numberOfSuccessfullyConsumedMessages++
@@ -198,7 +198,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	log.Printf("Consumed message offset %d\n", msg.Offset)
 	message, err := parseMessage(msg.Value)
 	if err != nil {
-		log.Println("Error parsing message from Kafka:", err)
+		log.Error().Err(err).Msg("Error parsing message from Kafka")
 		return err
 	}
 	metrics.ConsumedMessages.Inc()
@@ -211,13 +211,13 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 
 	reportAsStr, err := json.Marshal(*message.Report)
 	if err != nil {
-		log.Println("Error marshalling report:", err)
+		log.Error().Err(err).Msg("Error marshalling report")
 		return err
 	}
 
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
 	if err != nil {
-		log.Println("Error parsing date from message:", err)
+		log.Error().Err(err).Msg("Error parsing date from message")
 		return err
 	}
 
@@ -228,7 +228,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 		lastCheckedTime,
 	)
 	if err != nil {
-		log.Println("Error writing report to database:", err)
+		log.Error().Err(err).Msg("Error writing report to database")
 		return err
 	}
 	// message has been parsed and stored into storage
