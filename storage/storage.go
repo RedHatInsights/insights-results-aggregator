@@ -280,9 +280,9 @@ func constructWhereClause(reportRules types.ReportRules) string {
 		module := strings.TrimRight(rule.Module, ".report") // remove trailing .report from module name
 
 		if i == 0 {
-			singleVal = fmt.Sprintf(`VALUES ("%v", "%v")`, rule.ErrorKey, module)
+			singleVal = fmt.Sprintf(`VALUES ('%v', '%v')`, rule.ErrorKey, module)
 		} else {
-			singleVal = fmt.Sprintf(`, ("%v", "%v")`, rule.ErrorKey, module)
+			singleVal = fmt.Sprintf(`, ('%v', '%v')`, rule.ErrorKey, module)
 		}
 		statement = statement + singleVal
 	}
