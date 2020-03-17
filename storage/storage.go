@@ -272,8 +272,13 @@ func (storage DBStorage) ReadReportForCluster(
 }
 
 // constructWhereClause constructs a dynamic WHERE .. IN clause
-func constructWhereClause(reportRules types.ReportRules) string {
-	var statement string
+// If the rules list is empty, returns NULL to have a syntactically correct WHERE NULL, selecting nothing
+func constructWhereClauseForContent(reportRules types.ReportRules) string {
+	if len(reportRules.HitRules) == 0 {
+		return "NULL" // WHERE NULL
+	}
+	statement := "(error_key, rule_module) IN (%v)"
+	var values string
 
 	for i, rule := range reportRules.HitRules {
 		singleVal := ""
@@ -284,8 +289,9 @@ func constructWhereClause(reportRules types.ReportRules) string {
 		} else {
 			singleVal = fmt.Sprintf(`, ('%v', '%v')`, rule.ErrorKey, module)
 		}
-		statement = statement + singleVal
+		values = values + singleVal
 	}
+	statement = fmt.Sprintf(statement, values)
 	return statement
 }
 
@@ -296,9 +302,9 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 	query := `SELECT error_key, rule_module, description, generic, publish_date,
 		impact, likelihood
 		FROM rule_error_key
-		WHERE (error_key, rule_module) IN ( %v )`
+		WHERE %v`
 
-	whereInStatement := constructWhereClause(reportRules)
+	whereInStatement := constructWhereClauseForContent(reportRules)
 	query = fmt.Sprintf(query, whereInStatement)
 
 	rows, err := storage.connection.Query(query)
