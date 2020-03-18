@@ -180,7 +180,7 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 
 // Serve starts listening for messages and processing them. It blocks current thread
 func (consumer *KafkaConsumer) Serve() {
-	log.Printf("Consumer has been started, waiting for messages send to topic %s\n", consumer.Configuration.Topic)
+	log.Printf("Consumer has been started, waiting for messages send to topic %s", consumer.Configuration.Topic)
 
 	for msg := range consumer.PartitionConsumer.Messages() {
 		err := consumer.ProcessMessage(msg)
@@ -193,9 +193,28 @@ func (consumer *KafkaConsumer) Serve() {
 	}
 }
 
+func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
+	log.Info().
+		Int("offset", int(originalMessage.Offset)).
+		Str("topic", consumer.Configuration.Topic).
+		Int("organization", int(*parsedMessage.Organization)).
+		Str("cluster", string(*parsedMessage.ClusterName)).
+		Msg(event)
+}
+
+func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string, err error) {
+	log.Error().
+		Int("offset", int(originalMessage.Offset)).
+		Str("topic", consumer.Configuration.Topic).
+		Int("organization", int(*parsedMessage.Organization)).
+		Str("cluster", string(*parsedMessage.ClusterName)).
+		Err(err).
+		Msg(event)
+}
+
 // ProcessMessage processes an incoming message
 func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
-	log.Printf("Consumed message offset %d\n", msg.Offset)
+	log.Info().Int("offset", int(msg.Offset)).Str("topic", consumer.Configuration.Topic).Str("group", consumer.Configuration.Group).Msg("Consumed")
 	message, err := parseMessage(msg.Value)
 	if err != nil {
 		log.Error().Err(err).Msg("Error parsing message from Kafka")
@@ -203,23 +222,29 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	}
 	metrics.ConsumedMessages.Inc()
 
+	logMessageInfo(consumer, msg, message, "Read")
+
 	if ok := organizationAllowed(consumer, *message.Organization); !ok {
 		return errors.New("Organization ID is not whitelisted")
 	}
 
-	log.Printf("Results for organization %d and cluster %s", *message.Organization, *message.ClusterName)
+	logMessageInfo(consumer, msg, message, "Organization whitelisted")
 
 	reportAsStr, err := json.Marshal(*message.Report)
 	if err != nil {
-		log.Error().Err(err).Msg("Error marshalling report")
+		logMessageError(consumer, msg, message, "Error marshalling report", err)
 		return err
 	}
 
+	logMessageInfo(consumer, msg, message, "Marshalled")
+
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
 	if err != nil {
-		log.Error().Err(err).Msg("Error parsing date from message")
+		logMessageError(consumer, msg, message, "Error parsing date from message", err)
 		return err
 	}
+
+	logMessageInfo(consumer, msg, message, "Time ok")
 
 	err = consumer.Storage.WriteReportForCluster(
 		*message.Organization,
@@ -228,9 +253,11 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 		lastCheckedTime,
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("Error writing report to database")
+		logMessageError(consumer, msg, message, "Error writing report to database", err)
 		return err
 	}
+	logMessageInfo(consumer, msg, message, "Stored")
+
 	// message has been parsed and stored into storage
 
 	// remember offset
