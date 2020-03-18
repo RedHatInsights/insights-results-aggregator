@@ -149,7 +149,7 @@ func TestReadNonExistingReport(t *testing.T) {
 
 	req, err := http.NewRequest(
 		"GET",
-		config.APIPrefix+"report/1/2d615e74-29f8-4bfb-8269-908f1c1b1bb4",
+		fmt.Sprintf("%v%v/%v", config.APIPrefix, "report/1", testClusterName),
 		nil,
 	)
 	if err != nil {
@@ -158,6 +158,11 @@ func TestReadNonExistingReport(t *testing.T) {
 
 	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
+	checkResponseBody(
+		t,
+		fmt.Sprintf(`{"status":"Item with ID 1/%v was not found in the storage"}`, testClusterName),
+		response.Body,
+	)
 }
 
 func TestReadExistingReport(t *testing.T) {
@@ -201,6 +206,7 @@ func TestReadReportDBError(t *testing.T) {
 
 	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+	checkResponseBody(t, `{"status":"sql: database is closed"}`, response.Body)
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
