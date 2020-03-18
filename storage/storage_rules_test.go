@@ -21,6 +21,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -113,83 +114,6 @@ var (
 						Impact:      1,
 						Likelihood:  1,
 						PublishDate: "1970-01-01 00:00:00",
-						Status:      "active",
-					},
-				},
-			},
-		},
-	}
-	ruleContentMultipleRules = content.RuleContentDirectory{
-		"rc1": content.RuleContent{
-			Summary:    []byte("rule 1 summary"),
-			Reason:     []byte("rule 1 reason"),
-			Resolution: []byte("rule 1 resolution"),
-			MoreInfo:   []byte("rule 1 more info"),
-			Plugin: content.RulePluginInfo{
-				Name:         "rule 1 name",
-				NodeID:       string(testClusterName),
-				ProductCode:  "rule 1 product code",
-				PythonModule: "test.rule1",
-			},
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek1": {
-					Generic: []byte("rule 1 details"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "rule 1 description",
-						Impact:      2,
-						Likelihood:  4,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "active",
-					},
-				},
-			},
-		},
-		"rc2": content.RuleContent{
-			Summary:    []byte("rule 2 summary"),
-			Reason:     []byte("rule 2 reason"),
-			Resolution: []byte("rule 2 resolution"),
-			MoreInfo:   []byte("rule 2 more info"),
-			Plugin: content.RulePluginInfo{
-				Name:         "rule 2 name",
-				NodeID:       string(testClusterName),
-				ProductCode:  "rule 2 product code",
-				PythonModule: "test.rule2",
-			},
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek2": {
-					Generic: []byte("rule 2 details"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "rule 2 description",
-						Impact:      6,
-						Likelihood:  2,
-						PublishDate: "1970-01-02 00:00:00",
-						Status:      "active",
-					},
-				},
-			},
-		},
-		"rc3": content.RuleContent{
-			Summary:    []byte("rule 3 summary"),
-			Reason:     []byte("rule 3 reason"),
-			Resolution: []byte("rule 3 resolution"),
-			MoreInfo:   []byte("rule 3 more info"),
-			Plugin: content.RulePluginInfo{
-				Name:         "rule 3 name",
-				NodeID:       string(testClusterName),
-				ProductCode:  "rule 3 product code",
-				PythonModule: "test.rule3",
-			},
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek3": {
-					Generic: []byte("rule 3 details"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "rule 3 description",
-						Impact:      2,
-						Likelihood:  2,
-						PublishDate: "1970-01-03 00:00:00",
 						Status:      "active",
 					},
 				},
@@ -316,7 +240,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 	defer helpers.MustCloseStorage(t, mockStorage)
 	dbStorage := mockStorage.(*storage.DBStorage)
 
-	err := dbStorage.LoadRuleContent(ruleContentMultipleRules)
+	err := dbStorage.LoadRuleContent(testdata.RuleContent3Rules)
 	helpers.FailOnError(t, err)
 
 	res, err := mockStorage.GetContentForRules(types.ReportRules{

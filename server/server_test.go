@@ -69,11 +69,10 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 	}
 }
 
+// checkResponseBody checks if body is the same string as expected,
 func checkResponseBody(t *testing.T, expected string, body io.ReadCloser) {
 	result, err := ioutil.ReadAll(body)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	expected = strings.TrimSpace(expected)
 	resultStr := strings.TrimSpace(string(result))
@@ -81,132 +80,14 @@ func checkResponseBody(t *testing.T, expected string, body io.ReadCloser) {
 	assert.Equal(t, expected, resultStr)
 }
 
-func TestReadReportForClusterMissingOrgIdAndClusterName(t *testing.T) {
-	testServer := server.New(config, nil)
+// checkResponseBodyJSON checks if body is the same json as in expected
+// (ignores whitespaces, newlines, etc)
+// also validates both expected and body to be a valid json
+func checkResponseBodyJSON(t *testing.T, expectedJSON string, body io.ReadCloser) {
+	result, err := ioutil.ReadAll(body)
+	helpers.FailOnError(t, err)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
-}
-
-func TestReadReportForClusterMissingClusterName(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/12345", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
-}
-
-func TestReadReportForClusterNonIntOrgID(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/bad_org_id/cluster_name", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
-}
-
-func TestReadReportForClusterNegativeOrgID(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/-1/"+string(testClusterName), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
-}
-
-func TestReadReportForClusterBadClusterName(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/12345/"+string(testBadClusterName), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
-}
-
-func TestReadNonExistingReport(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest(
-		"GET",
-		fmt.Sprintf("%v%v/%v", config.APIPrefix, "report/1", testClusterName),
-		nil,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
-	checkResponseBody(
-		t,
-		fmt.Sprintf(`{"status":"Item with ID 1/%v was not found in the storage"}`, testClusterName),
-		response.Body,
-	)
-}
-
-func TestReadExistingReport(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-
-	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest(
-		"GET",
-		config.APIPrefix+"report/"+fmt.Sprint(testOrgID)+"/"+string(testClusterName),
-		nil,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
-}
-
-func TestReadReportDBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
-
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest(
-		"GET",
-		config.APIPrefix+"report/1/2d615e74-29f8-4bfb-8269-908f1c1b1bb4",
-		nil,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
-	checkResponseBody(t, `{"status":"sql: database is closed"}`, response.Body)
+	helpers.AssertStringsAreEqualJSON(t, expectedJSON, string(result))
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
