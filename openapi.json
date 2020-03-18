@@ -85,7 +85,7 @@
     },
     "/report/{orgId}/{clusterId}": {
       "get": {
-        "summary": "Returns the latest report for the given organization and cluster.",
+        "summary": "Returns the latest report for the given organization and cluster which contains information about rules that were hit by the cluster.",
         "description": "The report is specified by the organization ID and the cluster ID. The latest report available for the given combination will be returned.",
         "parameters": [
           {
@@ -112,15 +112,73 @@
         ],
         "responses": {
           "200": {
-            "description": "Latest available report for the given organization and cluster combination.",
+            "description": "Latest available report for the given organization and cluster combination. Returns rules and their descriptions that were hit by the cluster.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "report": {
-                      "type": "string",
-                      "format": "json"
+                      "type": "object",
+                      "properties": {
+                        "meta": {
+                          "type": "object",
+                          "properties": {
+                            "count": {
+                              "type": "integer",
+                              "description": "Number of rules that were hit by the cluster. -1 is returned when no rules are defined for the cluster.",
+                              "example": "1"
+                            },
+                            "last_checked_at": {
+                              "type": "string",
+                              "format": "date",
+                              "example": "2020-01-23T16:15:59.478901889Z"
+                            }
+                          }
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string",
+                                "description": "The title of the rule, a short description.",
+                                "example": "Authentication operator is degraded while having a cluster wide proxy configured"
+                              },
+                              "details": {
+                                "type": "string",
+                                "description": "Details of the rule - templates rendered on frontend."
+                              },
+                              "created_at": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "2020-01-02T16:15:59.478901889Z"
+                              },
+                              "total_risk": {
+                                "type": "integer",
+                                "description": "Total risk - calculated from rule impact and likelihood.",
+                                "enum": [
+                                  0,
+                                  1,
+                                  2,
+                                  3,
+                                  4
+                                ]
+                              },
+                              "risk_of_change": {
+                                "type": "integer",
+                                "enum": [
+                                  1,
+                                  2,
+                                  3,
+                                  4
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
                     },
                     "status": {
                       "type": "string",
@@ -130,6 +188,196 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/like": {
+      "put": {
+        "summary": "Puts like for the rule with cluster for current user",
+        "description": "Puts like for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/dislike": {
+      "put": {
+        "summary": "Puts dislike for the rule with cluster for current user",
+        "description": "Puts dislike for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/reset_vote": {
+      "put": {
+        "summary": "Resets vote for the rule with cluster for current user",
+        "description": "Resets vote for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations/{orgIds}": {
+      "delete": {
+        "summary": "Deletes organization data from database.",
+        "description": "[DEBUG ONLY] All database entries related to the specified organization IDs will be deleted.",
+        "parameters": [
+          {
+            "name": "orgIds",
+            "in": "path",
+            "required": true,
+            "description": "IDs of the organizations whose data are supposed to be deleted.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion was successful."
+          }
+        }
+      }
+    },
+    "/clusters/{clusterIds}": {
+      "delete": {
+        "summary": "Deletes cluster data from database.",
+        "description": "[DEBUG ONLY] All database entries related to the specified cluster IDs will be deleted.",
+        "parameters": [
+          {
+            "name": "clusterIds",
+            "in": "path",
+            "required": true,
+            "description": "IDs of the clusters whose data are supposed to be deleted.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion was successful."
           }
         }
       }

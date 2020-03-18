@@ -32,6 +32,10 @@ const (
 	SQLHooksKeyQueryBeginTime = sqlHooksKeyQueryBeginTime
 )
 
+var (
+	GetDataSourceForDriverFromConfig = getDataSourceForDriverFromConfig
+)
+
 func GetConnection(storage *DBStorage) *sql.DB {
 	return storage.connection
 }

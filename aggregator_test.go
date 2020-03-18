@@ -21,12 +21,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/stretchr/testify/assert"
+
+	main "github.com/RedHatInsights/insights-results-aggregator"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+)
+
+const (
+	testsTimeout = 5 * time.Second
 )
 
 func TestStartStorageConnection(t *testing.T) {
 	TestLoadConfiguration(t)
+
 	_, err := main.StartStorageConnection()
 	if err != nil {
 		t.Fatal("Cannot create storage object", err)
@@ -37,11 +44,14 @@ func TestStartService(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		os.Clearenv()
 
+		mustLoadConfiguration("./tests/tests")
+
 		go func() {
 			main.StartService()
 		}()
 
 		main.WaitForServiceToStart()
-		main.StopService()
-	}, 5*time.Second)
+		errCode := main.StopService()
+		assert.Equal(t, 0, errCode)
+	}, testsTimeout)
 }

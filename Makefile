@@ -26,6 +26,10 @@ cyclo: ## Run gocyclo
 	@echo "Running gocyclo"
 	./gocyclo.sh
 
+ineffassign: ## Run ineffassign checker
+	@echo "Running ineffassign checker"
+	./ineffassign.sh
+
 shellcheck: ## Run shellcheck
 	shellcheck **/*.sh
 
@@ -33,7 +37,11 @@ errcheck: ## Run errcheck
 	@echo "Running errcheck"
 	./goerrcheck.sh
 
-style: fmt vet lint cyclo shellcheck errcheck ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
+goconst: ## Run goconst checker
+	@echo "Running goconst checker"
+	./goconst.sh
+
+style: fmt vet lint cyclo shellcheck errcheck goconst ineffassign ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
 
 run: clean build ## Build the project and executes the binary
 	./insights-results-aggregator
@@ -58,6 +66,7 @@ license:
 		addlicense -c "Red Hat, Inc" -l "apache" -v ./
 
 before_commit: style test integration_tests license
+	./check_coverage.sh
 
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'

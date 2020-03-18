@@ -1,20 +1,23 @@
 [broker]
-address = "localhost:9092"
+address = "localhost:29092"
 topic = "platform.results.ccx"
 group = "aggregator"
+
+[content]
+path = "/rules-content"
+
+[logging]
+
+[metrics]
+enabled = true
+
+[processing]
+org_whitelist = "org_whitelist.csv"
 
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
 api_spec_file = "openapi.json"
-
-[processing]
-org_whitelist = "org_whitelist.csv"
-
-[metrics]
-enabled = true
-
-[logging]
 
 [storage]
 db_driver = "sqlite3"

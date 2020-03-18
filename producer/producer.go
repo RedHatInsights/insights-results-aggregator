@@ -14,26 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package producer contains functions that can be used to produce (i.e. send)
+// messages to properly configured Kafka broker.
 package producer
 
 import (
-	"log"
+	"fmt"
+
+	"github.com/Shopify/sarama"
+	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
-	"github.com/Shopify/sarama"
 )
 
-// ProduceMessage produces message to selected topic
+// ProduceMessage produces message to selected topic. That function returns
+// partition ID and offset of new message or an error value in case of any
+// problem on broker side.
 func ProduceMessage(brokerCfg broker.Configuration, message string) (partition int32, offset int64, errout error) {
 	producer, err := sarama.NewSyncProducer([]string{brokerCfg.Address}, nil)
 	if err != nil {
-		log.Print(err)
+		log.Error().Err(err).Msg("New producer")
 		return -1, -1, err
 	}
 	defer func() {
 		if err := producer.Close(); err != nil {
-			log.Print(err)
+			log.Error().Err(err).Msg("Producer.close()")
 			partition = -1
 			offset = -1
 			errout = err
@@ -43,9 +49,9 @@ func ProduceMessage(brokerCfg broker.Configuration, message string) (partition i
 	msg := &sarama.ProducerMessage{Topic: brokerCfg.Topic, Value: sarama.StringEncoder(message)}
 	partition, offset, err = producer.SendMessage(msg)
 	if err != nil {
-		log.Printf("FAILED to send message: %s\n", err)
+		log.Error().Err(err).Msg("FAILED to send message")
 	} else {
-		log.Printf("message sent to partition %d at offset %d\n", partition, offset)
+		log.Info().Msg(fmt.Sprintf("message sent to partition %d at offset %d\n", partition, offset))
 		metrics.ProducedMessages.Inc()
 	}
 	return partition, offset, err

@@ -43,8 +43,10 @@ type Migration struct {
 
 // migrations is a list of migrations that, when applied in their order,
 // create the most recent version of the database from scratch.
-var migrations []Migration = []Migration{
+var migrations = []Migration{
 	mig1,
+	mig2,
+	mig3,
 }
 
 // GetMaxVersion returns the highest available migration version.
@@ -67,7 +69,7 @@ func InitInfoTable(db *sql.DB) error {
 	// Otherwise, there's something wrong.
 	if err == nil {
 		if rowCount != 1 {
-			return fmt.Errorf("Unexpected number of rows in migration info table (expected: 1, reality: %d)", rowCount)
+			return fmt.Errorf("unexpected number of rows in migration info table (expected: 1, reality: %d)", rowCount)
 		}
 		return nil
 	} else if !strings.Contains(err.Error(), "migration_info") {
@@ -90,7 +92,7 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 
 	// Read the first (and hopefully the only) row in the table.
 	if !rows.Next() {
-		return 0, fmt.Errorf("Migration info table is empty")
+		return 0, fmt.Errorf("migration info table is empty")
 	}
 
 	var version Version = 0
@@ -101,7 +103,7 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 
 	// Check if another row is available (it should NOT be).
 	if rows.Next() {
-		return 0, fmt.Errorf("Migration info table contain multiple rows")
+		return 0, fmt.Errorf("migration info table contain multiple rows")
 	}
 
 	return version, nil
@@ -112,7 +114,7 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 func SetDBVersion(db *sql.DB, targetVer Version) error {
 	maxVer := GetMaxVersion()
 	if targetVer > maxVer {
-		return fmt.Errorf("Invalid target version (available version range is 0-%d)", maxVer)
+		return fmt.Errorf("invalid target version (available version range is 0-%d)", maxVer)
 	}
 
 	// Get current database version.
@@ -123,7 +125,7 @@ func SetDBVersion(db *sql.DB, targetVer Version) error {
 
 	// Current version is unexpectedly high.
 	if currentVer > maxVer {
-		return fmt.Errorf("Current version (%d) is outside of available migration boundaries", currentVer)
+		return fmt.Errorf("current version (%d) is outside of available migration boundaries", currentVer)
 	}
 
 	return execStepsInTx(db, currentVer, targetVer)
@@ -166,7 +168,7 @@ func updateVersionInDB(tx *sql.Tx, newVersion Version) error {
 	}
 
 	if affected != 1 {
-		return fmt.Errorf("Unexpected number of affected rows in migration info table (expected: 1, reality: %d)", affected)
+		return fmt.Errorf("unexpected number of affected rows in migration info table (expected: 1, reality: %d)", affected)
 	}
 
 	return nil

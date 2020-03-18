@@ -17,14 +17,16 @@ package server
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
+	"strings"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
 // RouterMissingParamError missing parameter in URL
@@ -84,30 +86,56 @@ func getRouterPositiveIntParam(request *http.Request, paramName string) (uint64,
 	return uintValue, nil
 }
 
+// validateClusterName checks that the cluster name is a valid UUID.
+// Converted custer name is returned if everything is okay, otherwise an error is returned.
+func validateClusterName(writer http.ResponseWriter, clusterName string) (types.ClusterName, error) {
+	if _, err := uuid.Parse(clusterName); err != nil {
+		message := fmt.Sprintf("invalid cluster name format: '%s'", clusterName)
+
+		log.Error().Err(err).Msg(message)
+		responses.SendInternalServerError(writer, message)
+
+		return "", errors.New(message)
+	}
+
+	return types.ClusterName(clusterName), nil
+}
+
+// splitRequestParamArray takes a single HTTP request parameter and splits it
+// into a slice of strings. This assumes that the parameter is a comma-separated array.
+func splitRequestParamArray(arrayParam string) []string {
+	return strings.Split(arrayParam, ",")
+}
+
+func handleOrgIDError(writer http.ResponseWriter, err error) {
+	log.Error().Err(err).Msg("Error getting organization ID from request")
+
+	if _, ok := err.(*RouterParsingError); ok {
+		responses.Send(http.StatusBadRequest, writer, err.Error())
+	} else {
+		responses.Send(http.StatusInternalServerError, writer, err.Error())
+	}
+}
+
+func handleClusterNameError(writer http.ResponseWriter, err error) {
+	message := fmt.Sprintf("Cluster name is not provided %v", err.Error())
+	log.Error().Msg(message)
+
+	// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
+	// (not on client side)
+	responses.SendInternalServerError(writer, message)
+}
+
 // readClusterName retrieves cluster name from request
 // if it's not possible, it writes http error to the writer and returns error
 func readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
 	clusterName, err := getRouterParam(request, "cluster")
 	if err != nil {
-		message := fmt.Sprintf("Cluster name is not provided %v", err.Error())
-		log.Println(message)
-		// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
-		// (not on client side)
-		responses.SendInternalServerError(writer, message)
-
+		handleClusterNameError(writer, err)
 		return "", err
 	}
 
-	if _, err := uuid.Parse(clusterName); err != nil {
-		const message = "cluster name format is invalid"
-
-		log.Println(message)
-		responses.SendInternalServerError(writer, message)
-
-		return types.ClusterName(""), errors.New(message)
-	}
-
-	return types.ClusterName(clusterName), nil
+	return validateClusterName(writer, clusterName)
 }
 
 // readOrganizationID retrieves organization id from request
@@ -115,17 +143,55 @@ func readClusterName(writer http.ResponseWriter, request *http.Request) (types.C
 func readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
 	organizationID, err := getRouterPositiveIntParam(request, "organization")
 	if err != nil {
-		message := fmt.Sprintf("Error getting organization ID from request %v", err.Error())
-		log.Println(message)
-
-		if _, ok := err.(*RouterParsingError); ok {
-			responses.Send(http.StatusBadRequest, writer, err.Error())
-		} else {
-			responses.Send(http.StatusInternalServerError, writer, err.Error())
-		}
-
+		handleOrgIDError(writer, err)
 		return 0, err
 	}
 
 	return types.OrgID(organizationID), nil
+}
+
+// readClusterNames does the same as `readClusterName`, except for multiple clusters.
+func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]types.ClusterName, error) {
+	clusterNamesParam, err := getRouterParam(request, "clusters")
+	if err != nil {
+		message := fmt.Sprintf("Cluster names are not provided %v", err.Error())
+		log.Error().Msg(message)
+
+		// See `readClusterName`.
+		responses.SendInternalServerError(writer, message)
+
+		return []types.ClusterName{}, err
+	}
+
+	clusterNamesConverted := []types.ClusterName{}
+	for _, clusterName := range splitRequestParamArray(clusterNamesParam) {
+		convertedName, err := validateClusterName(writer, clusterName)
+		if err != nil {
+			return []types.ClusterName{}, err
+		}
+
+		clusterNamesConverted = append(clusterNamesConverted, convertedName)
+	}
+
+	return clusterNamesConverted, nil
+}
+
+// readOrganizationIDs does the same as `readOrganizationID`, except for multiple organizations.
+func readOrganizationIDs(writer http.ResponseWriter, request *http.Request) ([]types.OrgID, error) {
+	organizationsParam, err := getRouterParam(request, "organizations")
+	if err != nil {
+		handleOrgIDError(writer, err)
+		return []types.OrgID{}, err
+	}
+
+	organizationsConverted := []types.OrgID{}
+	for _, orgStr := range splitRequestParamArray(organizationsParam) {
+		orgInt, err := strconv.ParseUint(orgStr, 10, 64)
+		if err != nil {
+			return []types.OrgID{}, err
+		}
+		organizationsConverted = append(organizationsConverted, types.OrgID(orgInt))
+	}
+
+	return organizationsConverted, nil
 }

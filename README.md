@@ -1,6 +1,9 @@
 # Insights Results Aggregator
 
-[![GoDoc](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator?status.svg)](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator) [![Go Report Card](https://goreportcard.com/badge/github.com/RedHatInsights/insights-results-aggregator)](https://goreportcard.com/report/github.com/RedHatInsights/insights-results-aggregator) [![Build Status](https://travis-ci.org/RedHatInsights/insights-results-aggregator.svg?branch=master)](https://travis-ci.org/RedHatInsights/insights-results-aggregator) [![codecov](https://codecov.io/gh/RedHatInsights/insights-results-aggregator/branch/master/graph/badge.svg)](https://codecov.io/gh/RedHatInsights/insights-results-aggregator)
+[![GoDoc](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator?status.svg)](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator)
+[![Go Report Card](https://goreportcard.com/badge/github.com/RedHatInsights/insights-results-aggregator)](https://goreportcard.com/report/github.com/RedHatInsights/insights-results-aggregator)
+[![Build Status](https://travis-ci.org/RedHatInsights/insights-results-aggregator.svg?branch=master)](https://travis-ci.org/RedHatInsights/insights-results-aggregator)
+[![codecov](https://codecov.io/gh/RedHatInsights/insights-results-aggregator/branch/master/graph/badge.svg)](https://codecov.io/gh/RedHatInsights/insights-results-aggregator)
 
 Aggregator service for insights results
 
@@ -28,6 +31,49 @@ Aggregator service consists of three main parts:
 4. That results are consumed by Insights rules aggregator service that caches them
 5. The service provides such data via REST API to other tools, like OpenShift Cluster Manager web UI, OpenShift console, etc.
 
+Please note that results are filtered - only results for organizations listed in `org_whitelist.csv` are processed and cached in aggregator.
+
+### DB structure
+
+#### Table report
+
+This table is used as a cache for reports consumed from broker. Size of this
+table (i.e. number of records) scales linearly with the number of clusters,
+because only latest report for given cluster is stored (it is guarantied by DB
+constraints). That table has defined compound key `org_id+cluster`,
+additionally `cluster` name needs to be unique across all organizations.
+
+```sql
+CREATE TABLE report (
+    org_id          INTEGER NOT NULL,
+    cluster         VARCHAR NOT NULL UNIQUE,
+    report          VARCHAR NOT NULL,
+    reported_at     TIMESTAMP,
+    last_checked_at TIMESTAMP,
+    PRIMARY KEY(org_id, cluster)
+)
+```
+
+#### Table cluster_rule_user_feedback
+
+```sql
+-- user_vote is user's vote, 
+-- 0 is none,
+-- 1 is like,
+-- -1 is dislike
+CREATE TABLE cluster_rule_user_feedback (
+    cluster_id VARCHAR NOT NULL,
+    rule_id INTEGER  NOT NULL,
+    user_id VARCHAR NOT NULL,
+    user_vote SMALLINT NOT NULL,
+    added_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    message VARCHAR NOT NULL,
+
+    PRIMARY KEY(cluster_id, rule_id, user_id)
+)
+```
+
 ## Documentation for developers
 
 All packages developed in this project have documentation available on [GoDoc server](https://godoc.org/):
@@ -35,21 +81,22 @@ All packages developed in this project have documentation available on [GoDoc se
 * [entry point to the service](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator)
 * [package `broker`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/broker)
 * [package `consumer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/consumer)
-* [package `producer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/producer)
+* [package `content`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/content)
 * [package `metrics`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/metrics)
 * [package `migration`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/migration)
+* [package `producer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/producer)
 * [package `server`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/server)
 * [package `storage`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/storage)
 * [package `types`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/types)
 
 ## Configuration
 
-Configuration is done by toml config, default one is `config.toml` in working directory, 
-but it can be overwritten by `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE` env var. 
+Configuration is done by toml config, default one is `config.toml` in working directory,
+but it can be overwritten by `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE` env var.
 
 Also each key in config can be overwritten by corresponding env var. For example if you have config
 
-```
+```toml
 ...
 [storage]
 db_driver = "sqlite3"
@@ -63,23 +110,23 @@ pg_params = ""
 ...
 ```
 
-and environment variables 
+and environment variables
 
-```
+```shell
 INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER="postgres"
 INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD="your secret password"
 ```
 
 the actual driver will be postgres with password "your secret password"
 
-It's very usefull for deploying docker containers and keeping some of your configuration 
+It's very useful for deploying docker containers and keeping some of your configuration
 outside of main config file(like passwords).
 
 ## Server configuration
 
 Server configuration is in section `[server]` in config file.
 
-```
+```toml
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
@@ -87,31 +134,40 @@ api_spec_file = "openapi.json"
 debug = true
 ```
 
- - `address` is host and port which server should listen to
- - `api_prefix` is prefix for RestAPI path
- - `api_spec_file` is the location of a required OpenAPI specifications file
- - `debug` is developer mode that turns off authentication
+* `address` is host and port which server should listen to
+* `api_prefix` is prefix for RestAPI path
+* `api_spec_file` is the location of a required OpenAPI specifications file
+* `debug` is developer mode that turns off authentication
 
 ## Local setup
 
 There is a `docker-compose` configuration that provisions a minimal stack of Insight Platform and
 a postgres database.
-You can download it here https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plugin/blob/master/docker-compose.yml
+You can download it here <https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plugin/blob/master/docker-compose.yml>
 
 ### Prerequisites
 
 * minio requires `../minio/data/` and `../minio/config` directories to be created
 * edit localhost line in your `/etc/hosts`:  `127.0.0.1       localhost kafka minio`
-* `ingress` image should present on your machine. You can build it locally from this repo https://github.com/RedHatInsights/insights-ingress-go
+* `ingress` image should present on your machine. You can build it locally from this repo <https://github.com/RedHatInsights/insights-ingress-go>
 
 ### Usage
-Start the stack `podman-compose up` or `docker-compose up`
-Stop `podman-compose down` or `docker-compose down`
+
+1. Start the stack `podman-compose up` or `docker-compose up`
+2. Wait until kafka will be up.
+3. Start `ccx-data-pipeline`: `python3 -m insights_messaging config-devel.yaml`
+4. Build `insights-results-aggregator`: `make build`
+5. Start `insights-results-aggregator`: `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=config-devel.toml ./insights-results-aggregator`
+
+Stop Minimal Insights Platform stack `podman-compose down` or `docker-compose down`
 
 In order to upload an insights archive, you can use `curl`:
-```
+
+```shell
 curl -k -vvvv -F "upload=@/path/to/your/archive.zip;type=application/vnd.redhat.testareno.archive+zip" http://localhost:3000/api/ingress/v1/upload -H "x-rh-identity: eyJpZGVudGl0eSI6IHsiYWNjb3VudF9udW1iZXIiOiAiMDAwMDAwMSIsICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjEifX19Cg=="
 ```
+
+or you can use integration tests suite. More details are [here](https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plugin).
 
 ### Kafka producer
 
@@ -119,12 +175,12 @@ It is possible to use the script `produce_insights_results` from `utils` to prod
 
 ## Database
 
-Aggregator is configured to use SQLite3 DB by default, but it also supports PostgreSQL. 
+Aggregator is configured to use SQLite3 DB by default, but it also supports PostgreSQL.
 In CI and QA environments, the configuration is overriden by environment variables to use PostgreSQL.
 
 To establish connection to PostgreSQL, the following configuration options need to be changed in `storage` section of `config.toml`:
 
-```
+```toml
 [storage]
 db_driver = "postgres"
 pg_username = "postgres"
@@ -149,6 +205,11 @@ To migrate the database to a certain version, in either direction (both upgrade 
 
 See `/migration/migration.go` documentation for an overview of all available DB migration functionality.
 
+## Contribution
+
+Please look into document [CONTRIBUTING.md](CONTRIBUTING.md) that contains all information about how to contribute to this project.
+
+Please look also at [Definitiot of Done](DoD.md) document with further informations.
 
 ## Testing
 
@@ -162,7 +223,7 @@ The following tests can be run to test your code in `insights-results-aggregator
 ### Unit tests
 
 Set of unit tests checks all units of source code. Additionaly the code coverage is computed and displayed.
-Code coverage is stored in a file `coverage.out`.
+Code coverage is stored in a file `coverage.out` and can be checked by a script named `check_coverage.sh`.
 
 To run unit tests use the following command:
 
@@ -188,11 +249,12 @@ To run REST API tests use the following command:
 
 [Travis CI](https://travis-ci.com/) is configured for this repository. Several tests and checks are started for all pull requests:
 
-* Unit tests that use the standard tool `go test`
+* Unit tests that use the standard tool `go test`.
 * `go fmt` tool to check code formatting. That tool is run with `-s` flag to perform [following transformations](https://golang.org/cmd/gofmt/#hdr-The_simplify_command)
 * `go vet` to report likely mistakes in source code, for example suspicious constructs, such as Printf calls whose arguments do not align with the format string.
 * `golint` as a linter for all Go sources stored in this repository
 * `gocyclo` to report all functions and methods with too high cyclomatic complexity. The cyclomatic complexity of a function is calculated according to the following rules: 1 is the base complexity of a function +1 for each 'if', 'for', 'case', '&&' or '||' Go Report Card warns on functions with cyclomatic complexity > 9
+* `goconst` to find repeated strings that could be replaced by a constant
 * `ineffassign` to detect and print all ineffectual assignments in Go code
 * `errcheck` for checking for all unchecked errors in go programs
 * `shellcheck` to perform static analysis for all shell scripts used in this repository

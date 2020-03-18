@@ -25,13 +25,16 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
+	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
+	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
@@ -39,11 +42,16 @@ import (
 const (
 	// ExitStatusOK means that the tool finished with success
 	ExitStatusOK = iota
+	// ExitStatusPrepareDbError is returned when the DB preparation (including rule content loading) fails
+	ExitStatusPrepareDbError
 	// ExitStatusConsumerError is returned in case of any consumer-related error
 	ExitStatusConsumerError
 	// ExitStatusServerError is returned in case of any REST API server-related error
 	ExitStatusServerError
 	defaultConfigFilename = "config"
+
+	databasePreparationMessage = "database preparation existed with error code %v"
+	consumerExitedErrorMessage = "consumer exited with error code %v"
 )
 
 var (
@@ -56,7 +64,7 @@ func startStorageConnection() (*storage.DBStorage, error) {
 
 	dbStorage, err := storage.New(storageCfg)
 	if err != nil {
-		log.Println(err)
+		log.Error().Err(err).Msg("storage.New")
 		return nil, err
 	}
 
@@ -68,7 +76,7 @@ func startStorageConnection() (*storage.DBStorage, error) {
 func closeStorage(storage *storage.DBStorage) {
 	err := storage.Close()
 	if err != nil {
-		log.Println("Error during closing storage connection", err)
+		log.Error().Err(err).Msg("Error during closing storage connection")
 	}
 }
 
@@ -77,19 +85,47 @@ func closeStorage(storage *storage.DBStorage) {
 func closeConsumer(consumerInstance consumer.Consumer) {
 	err := consumerInstance.Close()
 	if err != nil {
-		log.Println("Error during closing consumer", err)
+		log.Error().Err(err).Msg("Error during closing consumer")
 	}
 }
 
-func startConsumer() {
+// prepareDB migrates the DB to the latest version
+// and loads all available rule content into it.
+func prepareDB() int {
 	dbStorage, err := startStorageConnection()
 	if err != nil {
-		os.Exit(ExitStatusConsumerError)
+		return ExitStatusPrepareDbError
 	}
+	defer closeStorage(dbStorage)
+
+	// Initialize the database by running necessary
+	// migrations to get to the highest available version.
 	err = dbStorage.Init()
 	if err != nil {
-		log.Println(err)
-		os.Exit(ExitStatusConsumerError)
+		log.Error().Err(err).Msg("DB initialization error")
+		return ExitStatusPrepareDbError
+	}
+
+	ruleContentDirPath := getContentPathConfiguration()
+	contentDir, err := content.ParseRuleContentDir(ruleContentDirPath)
+	if err != nil {
+		log.Error().Err(err).Msg("Rules parsing error")
+		return ExitStatusPrepareDbError
+	}
+
+	if err := dbStorage.LoadRuleContent(contentDir); err != nil {
+		log.Error().Err(err).Msg("Rules content loading error")
+		return ExitStatusPrepareDbError
+	}
+
+	return ExitStatusOK
+}
+
+// startConsumer starts consumer and returns exit code, 0 is no error
+func startConsumer() int {
+	dbStorage, err := startStorageConnection()
+	if err != nil {
+		return ExitStatusConsumerError
 	}
 	defer closeStorage(dbStorage)
 
@@ -97,24 +133,27 @@ func startConsumer() {
 
 	// if broker is disabled, simply don't start it
 	if !brokerCfg.Enabled {
-		log.Println("Broker is disabled, not starting it")
-		return
+		log.Info().Msg("Broker is disabled, not starting it")
+		return ExitStatusOK
 	}
 
 	consumerInstance, err = consumer.New(brokerCfg, dbStorage)
 	if err != nil {
-		log.Println(err)
-		os.Exit(ExitStatusConsumerError)
+		log.Error().Err(err).Msg("Broker initialization error")
+		return ExitStatusConsumerError
 	}
 
 	defer closeConsumer(consumerInstance)
 	consumerInstance.Serve()
+
+	return ExitStatusOK
 }
 
-func startServer() {
+// startServer starts the server and returns error code
+func startServer() int {
 	dbStorage, err := startStorageConnection()
 	if err != nil {
-		os.Exit(ExitStatusServerError)
+		return ExitStatusServerError
 	}
 	defer closeStorage(dbStorage)
 
@@ -122,17 +161,46 @@ func startServer() {
 	serverInstance = server.New(serverCfg, dbStorage)
 	err = serverInstance.Start()
 	if err != nil {
-		log.Println(err)
-		os.Exit(ExitStatusServerError)
+		log.Error().Err(err).Msg("HTTP(s) start error")
+		return ExitStatusServerError
 	}
+
+	return ExitStatusOK
 }
 
-func startService() {
+// startService starts service and returns error code
+func startService() int {
+	var waitGroup sync.WaitGroup
+	exitCode := 0
+
+	prepDbExitCode := prepareDB()
+	if prepDbExitCode != 0 {
+		log.Info().Msg(fmt.Sprintf(databasePreparationMessage, prepDbExitCode))
+		exitCode += prepDbExitCode
+	}
+
+	waitGroup.Add(1)
 	// consumer is run in its own thread
-	go startConsumer()
+	go func() {
+		consumerExitCode := startConsumer()
+		if consumerExitCode != 0 {
+			log.Info().Msg(fmt.Sprintf(consumerExitedErrorMessage, prepDbExitCode))
+			exitCode += consumerExitCode
+		}
+
+		waitGroup.Done()
+	}()
+
 	// server can be started in current thread
-	startServer()
-	os.Exit(ExitStatusOK)
+	serverExitCode := startServer()
+	if serverExitCode != 0 {
+		log.Info().Msg(fmt.Sprintf(consumerExitedErrorMessage, prepDbExitCode))
+		exitCode += serverExitCode
+	}
+
+	waitGroup.Wait()
+
+	return exitCode
 }
 
 func waitForServiceToStart() {
@@ -153,13 +221,13 @@ func waitForServiceToStart() {
 	}
 }
 
-func stopService() {
+func stopService() int {
 	errCode := 0
 
 	if serverInstance != nil {
 		err := serverInstance.Stop(context.TODO())
 		if err != nil {
-			log.Println(err)
+			log.Error().Err(err).Msg("HTTP(s) server stop error")
 			errCode++
 		}
 	}
@@ -167,12 +235,12 @@ func stopService() {
 	if consumerInstance != nil {
 		err := consumerInstance.Close()
 		if err != nil {
-			log.Println(err)
+			log.Error().Err(err).Msg("Consumer stop error")
 			errCode++
 		}
 	}
 
-	os.Exit(errCode)
+	return errCode
 }
 
 func main() {
@@ -181,5 +249,8 @@ func main() {
 		panic(err)
 	}
 
-	startService()
+	errCode := startService()
+	if errCode != 0 {
+		os.Exit(errCode)
+	}
 }

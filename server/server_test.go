@@ -19,7 +19,6 @@ package server_test
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -29,8 +28,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
+
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+
+	"github.com/gorilla/mux"
+
+	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/stretchr/testify/assert"
 )
@@ -43,12 +47,15 @@ var config = server.Configuration{
 }
 
 const (
-	testOrgID       = 1
-	testClusterName = "412701a1-c036-490a-9173-a3428c25b677"
+	testOrgID          = types.OrgID(1)
+	testClusterName    = types.ClusterName("412701a1-c036-490a-9173-a3428c25b677")
+	testRuleID         = types.RuleID("1")
+	testUserID         = types.UserID("1")
+	testBadClusterName = types.ClusterName("aaaa")
 )
 
-func executeRequest(server *server.HTTPServer, req *http.Request) *httptest.ResponseRecorder {
-	router := server.Initialize(config.Address)
+func executeRequest(testServer *server.HTTPServer, req *http.Request) *httptest.ResponseRecorder {
+	router := testServer.Initialize(config.Address)
 
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
@@ -74,79 +81,71 @@ func checkResponseBody(t *testing.T, expected string, body io.ReadCloser) {
 	assert.Equal(t, expected, resultStr)
 }
 
-// close starage with check whether the close operation was successful
-func closeStorage(t *testing.T, mockStorage storage.Storage) {
-	err := mockStorage.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestReadReportForClusterMissingOrgIdAndClusterName(t *testing.T) {
-	server := server.New(config, nil)
+	testServer := server.New(config, nil)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"report/", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
 }
 
 func TestReadReportForClusterMissingClusterName(t *testing.T) {
-	server := server.New(config, nil)
+	testServer := server.New(config, nil)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"report/12345", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
 }
 
 func TestReadReportForClusterNonIntOrgID(t *testing.T) {
-	server := server.New(config, nil)
+	testServer := server.New(config, nil)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"report/bad_org_id/cluster_name", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
 }
 
 func TestReadReportForClusterNegativeOrgID(t *testing.T) {
-	server := server.New(config, nil)
+	testServer := server.New(config, nil)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/-1/"+testClusterName, nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"report/-1/"+string(testClusterName), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
 }
 
 func TestReadReportForClusterBadClusterName(t *testing.T) {
-	server := server.New(config, nil)
+	testServer := server.New(config, nil)
 
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/12345/aaaa", nil)
+	req, err := http.NewRequest("GET", config.APIPrefix+"report/12345/"+string(testBadClusterName), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
 }
 
 func TestReadNonExistingReport(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, mockStorage)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest(
 		"GET",
@@ -157,42 +156,39 @@ func TestReadNonExistingReport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
 }
 
 func TestReadExistingReport(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, mockStorage)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
 	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest(
 		"GET",
-		config.APIPrefix+"report/"+fmt.Sprint(testOrgID)+"/"+testClusterName,
+		config.APIPrefix+"report/"+fmt.Sprint(testOrgID)+"/"+string(testClusterName),
 		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusOK, response.StatusCode)
 }
 
 func TestReadReportDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	err := mockStorage.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.MustCloseStorage(t, mockStorage)
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest(
 		"GET",
@@ -203,119 +199,119 @@ func TestReadReportDBError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, mockStorage)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/1/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusOK, response.StatusCode)
 	checkResponseBody(t, `{"clusters":[],"status":"ok"}`, response.Body)
 }
 
 func TestListOfClustersForOrganizationOK(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, mockStorage)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
 	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/1/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusOK, response.StatusCode)
-	checkResponseBody(t, `{"clusters":["`+testClusterName+`"],"status":"ok"}`, response.Body)
+	checkResponseBody(t, `{"clusters":["`+string(testClusterName)+`"],"status":"ok"}`, response.Body)
 }
 
 // TestListOfClustersForOrganizationDBError expects db error
 // because the storage is closed before the query
 func TestListOfClustersForOrganizationDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	closeStorage(t, mockStorage)
+	helpers.MustCloseStorage(t, mockStorage)
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/1/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
 }
 
 func TestListOfClustersForOrganizationNegativeID(t *testing.T) {
-	server := server.New(config, nil)
+	testServer := server.New(config, nil)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/-1/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
 }
 
 func TestListOfClustersForOrganizationNonIntID(t *testing.T) {
-	server := server.New(config, nil)
+	testServer := server.New(config, nil)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/nonint/clusters", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
 }
 
 func TestMainEndpoint(t *testing.T) {
-	server := server.New(config, nil)
+	testServer := server.New(config, nil)
 
 	req, err := http.NewRequest("GET", config.APIPrefix, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusOK, response.StatusCode)
 }
 
 func TestListOfOrganizationsEmpty(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, mockStorage)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"organizations", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusOK, response.StatusCode)
 	checkResponseBody(t, `{"organizations":[],"status":"ok"}`, response.Body)
 }
 
 func TestListOfOrganizationsOK(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, mockStorage)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
 	err := mockStorage.WriteReportForCluster(1, "8083c377-8a05-4922-af8d-e7d0970c1f49", "{}", time.Now())
 	if err != nil {
@@ -327,40 +323,40 @@ func TestListOfOrganizationsOK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"organizations", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusOK, response.StatusCode)
 	checkResponseBody(t, `{"organizations":[1,5],"status":"ok"}`, response.Body)
 }
 
 func TestListOfOrganizationsDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	closeStorage(t, mockStorage)
+	helpers.MustCloseStorage(t, mockStorage)
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest("GET", config.APIPrefix+"organizations", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
 }
 
 func TestServerStartError(t *testing.T) {
-	server := server.New(server.Configuration{
+	testServer := server.New(server.Configuration{
 		Address:   "localhost:99999",
 		APIPrefix: "",
 	}, nil)
 
-	err := server.Start()
+	err := testServer.Start()
 	if err == nil {
 		t.Fatal(fmt.Errorf("should return an error"))
 	}
@@ -484,7 +480,7 @@ func TestServerStart(t *testing.T) {
 				time.Sleep(500 * time.Millisecond)
 			}
 
-			// doing some request to be sure server started succesfully
+			// doing some request to be sure server started successfully
 			req, err := http.NewRequest("GET", config.APIPrefix, nil)
 			if err != nil {
 				panic(err)
@@ -514,9 +510,9 @@ func TestServeAPISpecFileOK(t *testing.T) {
 	}
 
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, mockStorage)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest(
 		"GET",
@@ -527,7 +523,7 @@ func TestServeAPISpecFileOK(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 
 	checkResponseCode(t, http.StatusOK, response.StatusCode)
 
@@ -556,9 +552,9 @@ func TestServeAPISpecFileError(t *testing.T) {
 	}
 
 	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, mockStorage)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
-	server := server.New(config, mockStorage)
+	testServer := server.New(config, mockStorage)
 
 	req, err := http.NewRequest(
 		"GET",
@@ -569,7 +565,117 @@ func TestServeAPISpecFileError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	response := executeRequest(server, req).Result()
+	response := executeRequest(testServer, req).Result()
 
 	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+}
+
+func TestRuleFeedbackVote(t *testing.T) {
+	for _, action := range []string{
+		"like", "dislike", "reset_vote",
+	} {
+		var expectedVote storage.UserVote
+
+		switch action {
+		case "like":
+			expectedVote = storage.UserVoteLike
+		case "dislike":
+			expectedVote = storage.UserVoteDislike
+		case "reset_vote":
+			expectedVote = storage.UserVoteNone
+		default:
+			t.Fatal("not expected action")
+		}
+
+		func(action string) {
+			mockStorage := helpers.MustGetMockStorage(t, true)
+			defer helpers.MustCloseStorage(t, mockStorage)
+
+			testServer := server.New(config, mockStorage)
+
+			url := fmt.Sprintf("%vclusters/%v/rules/%v/%v", config.APIPrefix, testClusterName, testRuleID, action)
+			req, err := http.NewRequest("PUT", url, nil)
+			helpers.FailOnError(t, err)
+
+			// authorize user
+			identity := server.Identity{
+				AccountNumber: testUserID,
+			}
+			req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
+
+			response := executeRequest(testServer, req).Result()
+
+			checkResponseCode(t, http.StatusOK, response.StatusCode)
+			checkResponseBody(t, `{"status":"ok"}`, response.Body)
+
+			feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+			helpers.FailOnError(t, err)
+
+			assert.Equal(t, testClusterName, feedback.ClusterID)
+			assert.Equal(t, testRuleID, feedback.RuleID)
+			assert.Equal(t, testUserID, feedback.UserID)
+			assert.Equal(t, "", feedback.Message)
+			assert.Equal(t, expectedVote, feedback.UserVote)
+		}(action)
+	}
+}
+
+func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
+	testServer := server.New(config, nil)
+
+	url := fmt.Sprintf("%vclusters/%v/rules/%v/like", config.APIPrefix, testBadClusterName, testRuleID)
+	req, err := http.NewRequest("PUT", url, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(testServer, req).Result()
+	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+}
+
+func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	testServer := server.New(config, mockStorage)
+
+	url := fmt.Sprintf("%vclusters/%v/rules/%v/like", config.APIPrefix, testClusterName, testRuleID)
+	req, err := http.NewRequest("PUT", url, nil)
+	helpers.FailOnError(t, err)
+
+	// authorize user
+	identity := server.Identity{
+		AccountNumber: testUserID,
+	}
+	req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
+
+	response := executeRequest(testServer, req).Result()
+
+	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+}
+
+func TestDeleteReportsByOrganization(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+	testServer := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("DELETE", config.APIPrefix+"organizations/1", nil)
+	helpers.FailOnError(t, err)
+
+	resp := executeRequest(testServer, req)
+
+	checkResponseCode(t, http.StatusOK, resp.Result().StatusCode)
+}
+
+func TestDeleteReportsByClusterName(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+	testServer := server.New(config, mockStorage)
+
+	req, err := http.NewRequest("DELETE", config.APIPrefix+"clusters/2d615e74-29f8-4bfb-8269-908f1c1b1bb4", nil)
+	helpers.FailOnError(t, err)
+
+	resp := executeRequest(testServer, req)
+
+	checkResponseCode(t, http.StatusOK, resp.Result().StatusCode)
 }

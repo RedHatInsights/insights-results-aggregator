@@ -67,18 +67,12 @@ func TestLoadConfigurationEnvVariable(t *testing.T) {
 
 // TestLoadingConfigurationFailure tests loading a non-existent configuration file
 func TestLoadingConfigurationFailure(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic as expected")
-		}
-	}()
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "non existing file")
 
-	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
-	if err != nil {
-		t.Fatal(err)
+	err := main.LoadConfiguration("")
+	if err == nil {
+		t.Fatalf("error expected, got %v", err)
 	}
-
-	mustLoadConfiguration("this does not exist")
 }
 
 // TestLoadBrokerConfiguration tests loading the broker configuration sub-tree
@@ -87,7 +81,7 @@ func TestLoadBrokerConfiguration(t *testing.T) {
 
 	brokerCfg := main.GetBrokerConfiguration()
 
-	assert.Equal(t, "localhost:9092", brokerCfg.Address)
+	assert.Equal(t, "localhost:29092", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
 }
@@ -102,6 +96,15 @@ func TestLoadServerConfiguration(t *testing.T) {
 	assert.Equal(t, "/api/v1/", serverCfg.APIPrefix)
 }
 
+// TestLoadContentPathConfiguration tests loading the content configuration
+func TestLoadContentPathConfiguration(t *testing.T) {
+	TestLoadConfiguration(t)
+
+	contentPath := main.GetContentPathConfiguration()
+
+	assert.Equal(t, "/rules-content", contentPath)
+}
+
 // TestLoadStorageConfiguration tests loading the storage configuration sub-tree
 func TestLoadStorageConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
@@ -109,19 +112,21 @@ func TestLoadStorageConfiguration(t *testing.T) {
 	storageCfg := main.GetStorageConfiguration()
 
 	assert.Equal(t, "sqlite3", storageCfg.Driver)
-	assert.Equal(t, "xyzzy", storageCfg.SQLiteDataSource)
+	assert.Equal(t, ":memory:", storageCfg.SQLiteDataSource)
 }
 
 // TestLoadConfigurationOverrideFromEnv tests overriding configuration by env variables
 func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 	os.Clearenv()
 
-	mustLoadConfiguration("tests/config1")
+	const configPath = "tests/config1"
+
+	mustLoadConfiguration(configPath)
 
 	storageCfg := main.GetStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "sqlite3",
-		SQLiteDataSource: "xyzzy",
+		SQLiteDataSource: ":memory:",
 		PGUsername:       "user",
 		PGPassword:       "password",
 		PGHost:           "localhost",
@@ -130,25 +135,15 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 		PGParams:         "",
 	}, storageCfg)
 
-	err := os.Setenv("INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "some very secret password")
 
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = os.Setenv(
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD",
-		"some very secret password",
-	)
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	mustLoadConfiguration(configPath)
 
 	storageCfg = main.GetStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "postgres",
-		SQLiteDataSource: "xyzzy",
+		SQLiteDataSource: ":memory:",
 		PGUsername:       "user",
 		PGPassword:       "some very secret password",
 		PGHost:           "localhost",
@@ -164,7 +159,9 @@ func TestLoadOrganizationWhitelist(t *testing.T) {
 		types.OrgID(1),
 		types.OrgID(2),
 		types.OrgID(3),
+		types.OrgID(11789772),
 	)
+
 	orgWhitelist := main.GetOrganizationWhitelist()
 	if equal := orgWhitelist.Equal(expectedWhitelist); !equal {
 		t.Errorf(
@@ -202,19 +199,22 @@ str
 
 func TestLoadConfigurationFromFile(t *testing.T) {
 	config := `[broker]
-		address = "localhost:9092"
+		address = "localhost:29092"
 		topic = "platform.results.ccx"
 		group = "aggregator"
 		enabled = true
+
+		[content]
+		path = "/rules-content"
+
+		[processing]
+		org_whitelist = "org_whitelist.csv"
 
 		[server]
 		address = ":8080"
 		api_prefix = "/api/v1/"
 		api_spec_file = "openapi.json"
 		debug = true
-
-		[processing]
-		org_whitelist = "org_whitelist.csv"
 
 		[storage]
 		db_driver = "sqlite3"
@@ -241,7 +241,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 
 	brokerCfg := main.GetBrokerConfiguration()
 
-	assert.Equal(t, "localhost:9092", brokerCfg.Address)
+	assert.Equal(t, "localhost:29092", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
 	assert.Equal(t, true, brokerCfg.Enabled)
@@ -261,6 +261,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 			types.OrgID(1),
 			types.OrgID(2),
 			types.OrgID(3),
+			types.OrgID(11789772),
 		)),
 		"organization_white_list is wrong",
 	)
@@ -278,18 +279,11 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 	}, main.GetStorageConfiguration())
 }
 
-func GetTmpConfigFile(configData string) (configFile string, err error) {
+func GetTmpConfigFile(configData string) (string, error) {
 	tmpFile, err := ioutil.TempFile("/tmp", "tmp_config_*.toml")
 	if err != nil {
 		return "", err
 	}
-
-	defer func() {
-		err = tmpFile.Close()
-		if err != nil {
-			configFile = ""
-		}
-	}()
 
 	if _, err := tmpFile.Write([]byte(configData)); err != nil {
 		return "", err
@@ -334,6 +328,8 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
 
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
+
 	mustLoadConfiguration("/non_existing_path")
 
 	brokerCfg := main.GetBrokerConfiguration()
@@ -358,6 +354,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 			types.OrgID(1),
 			types.OrgID(2),
 			types.OrgID(3),
+			types.OrgID(11789772),
 		)),
 		"organization_white_list is wrong",
 	)
@@ -373,4 +370,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		PGDBName:         "aggregator",
 		PGParams:         "params",
 	}, main.GetStorageConfiguration())
+
+	contentPath := main.GetContentPathConfiguration()
+	assert.Equal(t, contentPath, "/rules-content")
 }

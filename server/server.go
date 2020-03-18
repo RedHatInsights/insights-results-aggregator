@@ -24,6 +24,12 @@ limitations under the License.
 //
 // API_PREFIX/report/{organization}/{cluster} - insights OCP results for given cluster name (HTTP GET)
 //
+// API_PREFIX/rule/{cluster}/{rule_id}/like - like a rule for cluster with current user (from auth token)
+//
+// API_PREFIX/rule/{cluster}/{rule_id}/dislike - dislike a rule for cluster with current user (from auth token)
+//
+// API_PREFIX/rule/{cluster}/{rule_id}/reset_vote- reset vote for a rule for cluster with current user (from auth token)
+//
 // Please note that API_PREFIX is part of server configuration (see Configuration). Also please note that
 // JSON format is used to transfer data between server and clients.
 //
@@ -38,18 +44,20 @@ package server
 
 import (
 	"context"
-	"log"
+	"encoding/json"
 	"net/http"
 	"path/filepath"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // HTTPServer in an implementation of Server interface
@@ -68,8 +76,8 @@ func New(config Configuration, storage storage.Storage) *HTTPServer {
 }
 
 func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHandler http.Handler) {
-	log.Println("Request URI: " + request.RequestURI)
-	log.Println("Request method: " + request.Method)
+	log.Print("Request URI: " + request.RequestURI)
+	log.Print("Request method: " + request.Method)
 	metrics.APIRequests.With(prometheus.Labels{"url": request.RequestURI}).Inc()
 	startTime := time.Now()
 	nextHandler.ServeHTTP(writer, request)
@@ -85,14 +93,14 @@ func (server *HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
 		})
 }
 
-func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, _ *http.Request) {
 	responses.SendResponse(writer, responses.BuildOkResponse())
 }
 
-func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, request *http.Request) {
+func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, _ *http.Request) {
 	organizations, err := server.Storage.ListOfOrgs()
 	if err != nil {
-		log.Println("Unable to get list of organizations", err)
+		log.Error().Err(err).Msg("Unable to get list of organizations")
 		responses.SendInternalServerError(writer, err.Error())
 	} else {
 		responses.SendResponse(writer, responses.BuildOkResponseWithData("organizations", organizations))
@@ -107,13 +115,47 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 		return
 	}
 
-	clusters, err := server.Storage.ListOfClustersForOrg(types.OrgID(organizationID))
+	clusters, err := server.Storage.ListOfClustersForOrg(organizationID)
 	if err != nil {
-		log.Println("Unable to get list of clusters", err)
+		log.Error().Err(err).Msg("Unable to get list of clusters")
 		responses.SendInternalServerError(writer, err.Error())
 	} else {
 		responses.SendResponse(writer, responses.BuildOkResponseWithData("clusters", clusters))
 	}
+}
+
+func getTotalRuleCount(reportRules types.ReportRules) int {
+	totalCount := len(reportRules.HitRules) +
+		len(reportRules.SkippedRules) +
+		len(reportRules.PassedRules)
+	return totalCount
+}
+
+// getContentForRules returns the hit rules from the report, as well as total count of all rules (skipped, ..)
+func (server *HTTPServer) getContentForRules(
+	writer http.ResponseWriter,
+	report types.ClusterReport,
+) ([]types.RuleContentResponse, int, error) {
+
+	var reportRules types.ReportRules
+
+	err := json.Unmarshal([]byte(report), &reportRules)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to parse cluster report")
+		responses.SendInternalServerError(writer, err.Error())
+		return nil, 0, err
+	}
+
+	totalRules := getTotalRuleCount(reportRules)
+
+	hitRules, err := server.Storage.GetContentForRules(reportRules)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to retrieve rules content from database")
+		responses.SendInternalServerError(writer, err.Error())
+		return nil, 0, err
+	}
+
+	return hitRules, totalRules, nil
 }
 
 func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
@@ -129,26 +171,126 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	report, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
+	report, lastChecked, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
 	if _, ok := err.(*storage.ItemNotFoundError); ok {
 		responses.Send(http.StatusNotFound, writer, err.Error())
 	} else if err != nil {
-		log.Println("Unable to read report for cluster", err)
+		log.Error().Err(err).Msg("Unable to read report for cluster")
 		responses.SendInternalServerError(writer, err.Error())
-	} else {
-		responses.SendResponse(writer, responses.BuildOkResponseWithData("report", report))
 	}
+
+	rulesContent, rulesCount, err := server.getContentForRules(writer, report)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+	hitRulesCount := len(rulesContent)
+	// -1 as count in response means there are no rules for this cluster
+	// as opposed to no rules hit for the cluster
+	if rulesCount == 0 {
+		rulesCount = -1
+	} else {
+		rulesCount = hitRulesCount
+	}
+
+	response := types.ReportResponse{
+		Meta: types.ReportResponseMeta{
+			Count:         rulesCount,
+			LastCheckedAt: lastChecked,
+		},
+		Rules: rulesContent,
+	}
+
+	responses.SendResponse(writer, responses.BuildOkResponseWithData("report", response))
+}
+
+// likeRule likes the rule for current user
+func (server *HTTPServer) likeRule(writer http.ResponseWriter, request *http.Request) {
+	server.voteOnRule(writer, request, storage.UserVoteLike)
+}
+
+// dislikeRule dislikes the rule for current user
+func (server *HTTPServer) dislikeRule(writer http.ResponseWriter, request *http.Request) {
+	server.voteOnRule(writer, request, storage.UserVoteDislike)
+}
+
+// resetVoteOnRule resets vote for the rule for current user
+func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *http.Request) {
+	server.voteOnRule(writer, request, storage.UserVoteNone)
+}
+
+func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
+	clusterID, err := readClusterName(writer, request)
+	ruleID, err := getRouterParam(request, "rule_id")
+	if err != nil {
+		const message = "Unable to read report for cluster"
+		log.Error().Err(err).Msg(message)
+		responses.Send(http.StatusInternalServerError, writer, message)
+		return
+	}
+
+	userID, err := server.GetCurrentUserID(request)
+	if err != nil {
+		const message = "Unable to get user id"
+		log.Error().Err(err).Msg(message)
+		responses.Send(http.StatusInternalServerError, writer, message)
+		return
+	}
+
+	err = server.Storage.VoteOnRule(clusterID, types.RuleID(ruleID), userID, userVote)
+	if err != nil {
+		responses.Send(http.StatusInternalServerError, writer, err.Error())
+	} else {
+		responses.Send(http.StatusOK, writer, responses.BuildOkResponse())
+	}
+}
+
+func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {
+	orgIds, err := readOrganizationIDs(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	for _, org := range orgIds {
+		if err := server.Storage.DeleteReportsForOrg(org); err != nil {
+			log.Error().Err(err).Msg("Unable to delete reports")
+			responses.SendInternalServerError(writer, err.Error())
+			return
+		}
+	}
+
+	responses.SendResponse(writer, responses.BuildOkResponse())
+}
+
+func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *http.Request) {
+	clusterNames, err := readClusterNames(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	for _, cluster := range clusterNames {
+		if err := server.Storage.DeleteReportsForCluster(cluster); err != nil {
+			log.Error().Err(err).Msg("Unable to delete reports")
+			responses.SendInternalServerError(writer, err.Error())
+			return
+		}
+	}
+
+	responses.SendResponse(writer, responses.BuildOkResponse())
 }
 
 // serveAPISpecFile serves an OpenAPI specifications file specified in config file
 func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *http.Request) {
 	absPath, err := filepath.Abs(server.Config.APISpecFile)
 	if err != nil {
-		log.Printf("Error creating absolute path of OpenAPI spec file. %v", err)
+		const message = "Error creating absolute path of OpenAPI spec file"
+		log.Error().Err(err).Msg(message)
 		responses.Send(
 			http.StatusInternalServerError,
 			writer,
-			"Error creating absolute path of OpenAPI spec file",
+			message,
 		)
 		return
 	}
@@ -158,7 +300,7 @@ func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *h
 
 // Initialize perform the server initialization
 func (server *HTTPServer) Initialize(address string) http.Handler {
-	log.Println("Initializing HTTP server at", address)
+	log.Print("Initializing HTTP server at", address)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(server.LogRequest)
@@ -166,17 +308,27 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 		router.Use(server.Authentication)
 	}
 
+	apiPrefix := server.Config.APIPrefix
+
+	if server.Config.Debug {
+		router.HandleFunc(apiPrefix+"organizations/{organizations}", server.deleteOrganizations).Methods(http.MethodDelete)
+		router.HandleFunc(apiPrefix+"clusters/{clusters}", server.deleteClusters).Methods(http.MethodDelete)
+	}
+
 	// common REST API endpoints
-	router.HandleFunc(server.Config.APIPrefix, server.mainEndpoint).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"organizations", server.listOfOrganizations).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods("GET")
-	router.HandleFunc(server.Config.APIPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods("GET")
+	router.HandleFunc(apiPrefix, server.mainEndpoint).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+"organizations", server.listOfOrganizations).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/like", server.likeRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike", server.dislikeRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote", server.resetVoteOnRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods(http.MethodGet)
 
 	// Prometheus metrics
-	router.Handle(server.Config.APIPrefix+"metrics", promhttp.Handler()).Methods("GET")
+	router.Handle(apiPrefix+"metrics", promhttp.Handler()).Methods(http.MethodGet)
 
 	// OpenAPI specs
-	router.HandleFunc(server.Config.APIPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods("GET")
+	router.HandleFunc(apiPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods(http.MethodGet)
 
 	return router
 }
@@ -184,13 +336,13 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 // Start starts server
 func (server *HTTPServer) Start() error {
 	address := server.Config.Address
-	log.Println("Starting HTTP server at", address)
+	log.Print("Starting HTTP server at", address)
 	router := server.Initialize(address)
 	server.Serv = &http.Server{Addr: address, Handler: router}
 
 	err := server.Serv.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		log.Printf("Unable to start HTTP server %v", err)
+		log.Error().Err(err).Msg("Unable to start HTTP server")
 		return err
 	}
 

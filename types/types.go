@@ -28,3 +28,46 @@ type ClusterReport string
 // Timestamp represents any timestamp in a form gathered from database
 // TODO: need to be improved
 type Timestamp string
+
+// RuleOnReport represents a single (hit) rule of the string encoded report
+type RuleOnReport struct {
+	Module   string `json:"component"`
+	ErrorKey string `json:"key"`
+}
+
+// ReportRules is a helper struct for easy JSON unmarshalling of string encoded report
+type ReportRules struct {
+	HitRules     []RuleOnReport `json:"reports"`
+	SkippedRules []RuleOnReport `json:"skips"`
+	PassedRules  []RuleOnReport `json:"pass"`
+	TotalCount   int
+}
+
+// ReportResponse represents the response of /report endpoint
+type ReportResponse struct {
+	Meta  ReportResponseMeta    `json:"meta"`
+	Rules []RuleContentResponse `json:"data"`
+}
+
+// ReportResponseMeta contains metadata about the report
+type ReportResponseMeta struct {
+	Count         int       `json:"count"`
+	LastCheckedAt Timestamp `json:"last_checked_at"`
+}
+
+// RuleContentResponse represents a single rule in the response of /report endpoint
+type RuleContentResponse struct {
+	ErrorKey     string `json:"-"`
+	RuleModule   string `json:"-"`
+	Description  string `json:"description"`
+	Generic      string `json:"details"`
+	CreatedAt    string `json:"created_at"`
+	TotalRisk    int    `json:"total_risk"`
+	RiskOfChange int    `json:"risk_of_change"`
+}
+
+// RuleID represents type for rule id
+type RuleID string
+
+// UserID represents type for user id
+type UserID string

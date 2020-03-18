@@ -20,26 +20,27 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"math"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInitAndGetSQLDriverWithLogsOK(t *testing.T) {
-	logger := log.New(os.Stdout, "[sql]", log.LstdFlags)
-	driverName, err := storage.InitAndGetSQLDriverWithLogs("sqlite3", logger)
+	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
+	driverName, err := storage.InitAndGetSQLDriverWithLogs(storage.DBDriverSQLite3, &logger)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Equal(t, "sqlite3WithHooks", driverName)
 
-	driverName, err = storage.InitAndGetSQLDriverWithLogs("postgres", logger)
+	driverName, err = storage.InitAndGetSQLDriverWithLogs(storage.DBDriverPostgres, &logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,10 +49,10 @@ func TestInitAndGetSQLDriverWithLogsOK(t *testing.T) {
 }
 
 func TestInitAndGetSQLDriverWithLogsDriverNotFound(t *testing.T) {
-	logger := log.New(os.Stdout, "[sql]", log.LstdFlags)
-	const nonExistingDriver = "asdfaserxcvzasfd"
-	_, err := storage.InitAndGetSQLDriverWithLogs(nonExistingDriver, logger)
-	if err == nil || err.Error() != fmt.Sprintf("driver %v is not supported", nonExistingDriver) {
+	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
+	const nonExistingDriver = -1
+	_, err := storage.InitAndGetSQLDriverWithLogs(nonExistingDriver, &logger)
+	if err == nil || err.Error() != fmt.Sprintf("driver '%v' is not supported", nonExistingDriver) {
 		t.Fatal(fmt.Errorf("expected driver not supported error, got %+v", err))
 	}
 }
@@ -61,8 +62,8 @@ func TestSQLHooksLoggingArgsJSON(t *testing.T) {
 	var params = []interface{}{}
 
 	buf := new(bytes.Buffer)
-	logger := log.New(buf, "[sql]", log.LstdFlags)
-	hooks := storage.SQLHooks{logger}
+	logger := zerolog.New(buf).With().Str("type", "SQL").Logger()
+	hooks := storage.SQLHooks{&logger}
 
 	_, err := hooks.Before(context.Background(), query, params...)
 	if err != nil {
@@ -97,8 +98,8 @@ func TestSQLHooksLoggingArgsNotJSON(t *testing.T) {
 	var params = []interface{}{math.Inf(1)}
 
 	buf := new(bytes.Buffer)
-	logger := log.New(buf, "[sql]", log.LstdFlags)
-	hooks := storage.SQLHooks{logger}
+	logger := zerolog.New(buf).With().Str("type", "SQL").Logger()
+	hooks := storage.SQLHooks{&logger}
 
 	_, err := hooks.Before(context.Background(), query, params...)
 	if err != nil {

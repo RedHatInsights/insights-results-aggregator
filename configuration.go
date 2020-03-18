@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -31,6 +30,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	mapset "github.com/deckarep/golang-set"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
@@ -42,6 +42,7 @@ import (
 const (
 	configFileEnvVariableName   = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
 	defaultOrgWhiteListFileName = "org_whitelist.csv"
+	defaultContentPath          = "/rules-content"
 )
 
 // config has exactly the same structure as *.toml file
@@ -52,6 +53,9 @@ var config struct {
 		OrgWhiteListFile string `mapstructure:"org_white_list_file" toml:"org_white_list_file"`
 	} `mapstructure:"processing"`
 	Storage storage.Configuration `mapstructure:"storage" toml:"storage"`
+	Content struct {
+		ContentPath string `mapstructure:"path" toml:"path"`
+	} `mapstructure:"content" toml:"content"`
 }
 
 // loadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
@@ -116,12 +120,12 @@ func getOrganizationWhitelist() mapset.Set {
 
 	orgWhiteListFileData, err := ioutil.ReadFile(config.Processing.OrgWhiteListFile)
 	if err != nil {
-		log.Fatalf("Organization whitelist file could not be opened. Error: %v", err)
+		log.Fatal().Err(err).Msg("Organization whitelist file could not be opened")
 	}
 
 	whitelist, err := loadWhitelistFromCSV(bytes.NewBuffer(orgWhiteListFileData))
 	if err != nil {
-		log.Fatalf("Whitelist CSV could not be processed. Error: %v", err)
+		log.Fatal().Err(err).Msg("Whitelist CSV could not be processed")
 	}
 
 	return whitelist
@@ -134,10 +138,19 @@ func getStorageConfiguration() storage.Configuration {
 func getServerConfiguration() server.Configuration {
 	err := checkIfFileExists(config.Server.APISpecFile)
 	if err != nil {
-		log.Fatalf("All customer facing APIs MUST serve the current OpenAPI specification. Error: '%s'", err)
+		log.Fatal().Err(err).Msg("All customer facing APIs MUST serve the current OpenAPI specification")
 	}
 
 	return config.Server
+}
+
+// getContentPathConfiguration get the path to the content files from the configuration
+func getContentPathConfiguration() string {
+	if len(config.Content.ContentPath) == 0 {
+		config.Content.ContentPath = defaultContentPath
+	}
+
+	return config.Content.ContentPath
 }
 
 // checkIfFileExists returns nil if path doesn't exist or isn't a file, otherwise it returns corresponding error
