@@ -174,9 +174,11 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	report, lastChecked, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
 	if _, ok := err.(*storage.ItemNotFoundError); ok {
 		responses.Send(http.StatusNotFound, writer, err.Error())
+		return
 	} else if err != nil {
 		log.Error().Err(err).Msg("Unable to read report for cluster")
 		responses.SendInternalServerError(writer, err.Error())
+		return
 	}
 
 	rulesContent, rulesCount, err := server.getContentForRules(writer, report)
