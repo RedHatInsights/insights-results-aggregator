@@ -20,10 +20,11 @@ package server
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	jwt "github.com/dgrijalva/jwt-go"
 	"net/http"
+	"strings"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 
@@ -53,34 +54,68 @@ type Token struct {
 	Identity Identity `json:"identity"`
 }
 
+// JWTPayload is structure that contain data from parsed JWT token
+type JWTPayload struct {
+	AccountNumber types.UserID `json:"account_number"`
+	OrgID         string       `json:"org_id"`
+}
+
 // Authentication middleware for checking auth rights
 func (server *HTTPServer) Authentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenHeader := r.Header.Get("x-rh-identity") // Grab the token from the header
+		var tokenHeader string
+		// In case of testing on local machine we don't take x-rh-identity header, but instead Authorization with JWT token in it
+		if server.Config.Debug {
+			tokenHeader = r.Header.Get("Authorization") //Grab the token from the header
+			splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
+			if len(splitted) != 2 {
+				responses.SendForbidden(w, "Invalid/Malformed auth token")
+				return
+			}
+
+			// Here we take JWT token which include 3 parts, we need only second one
+			splitted = strings.Split(splitted[1], ".")
+			tokenHeader = splitted[1]
+		} else {
+			tokenHeader = r.Header.Get("x-rh-identity") //Grab the token from the header
+		}
 
 		if tokenHeader == "" { // Token is missing, returns with error code 403 Unauthorized
 			responses.SendForbidden(w, "Missing auth token")
 			return
 		}
 
-		decoded, err := base64.StdEncoding.DecodeString(tokenHeader) // Decode token to JSON string
-		if err != nil {                                              // Malformed token, returns with http code 403 as usual
+		decoded, err := jwt.DecodeSegment(tokenHeader) // Decode token to JSON string
+		if err != nil {                                // Malformed token, returns with http code 403 as usual
 			responses.SendForbidden(w, malformedTokenMessage)
 			return
 		}
 
 		tk := &Token{}
-		err = json.Unmarshal(decoded, tk)
 
-		if err != nil { // Malformed token, returns with http code 403 as usual
-			responses.SendForbidden(w, malformedTokenMessage)
-			return
+		// If we took JWT token, it has different structure then x-rh-identity
+		if server.Config.Debug {
+			jwt := &JWTPayload{}
+			err = json.Unmarshal([]byte(decoded), jwt)
+			if err != nil { //Malformed token, returns with http code 403 as usual
+				responses.SendForbidden(w, malformedTokenMessage)
+				return
+			}
+			// Map JWT token to inner token
+			tk.Identity = Identity{AccountNumber: jwt.AccountNumber, Internal: Internal{OrgID: jwt.OrgID}}
+		} else {
+			err = json.Unmarshal([]byte(decoded), tk)
+
+			if err != nil { //Malformed token, returns with http code 403 as usual
+				responses.SendForbidden(w, malformedTokenMessage)
+				return
+			}
 		}
 
 		// Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
 		ctx := context.WithValue(r.Context(), contextKeyUser, tk.Identity)
 		r = r.WithContext(ctx)
-		// Proceed to proxy
+
 		next.ServeHTTP(w, r)
 	})
 }
