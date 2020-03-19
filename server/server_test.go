@@ -44,6 +44,7 @@ var config = server.Configuration{
 	APIPrefix:   "/api/test/",
 	APISpecFile: "openapi.json",
 	Debug:       true,
+	Auth:        false,
 }
 
 const (
@@ -356,6 +357,8 @@ func TestServerStart(t *testing.T) {
 			// will use any free port
 			Address:   ":0",
 			APIPrefix: config.APIPrefix,
+			Auth:      true,
+			Debug:     true,
 		}, nil)
 
 		go func() {
