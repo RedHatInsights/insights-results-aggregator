@@ -43,11 +43,19 @@ var config = server.Configuration{
 	APISpecFile: "openapi.json",
 	Debug:       true,
 	Auth:        false,
+	UseHTTPS:    false,
+	EnableCORS:  true,
 }
 
 func checkResponseCode(t *testing.T, expected, actual int) {
 	if expected != actual {
 		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
+	}
+}
+
+func checkHeaders(t *testing.T, expected, actual string) {
+	if expected != actual {
+		t.Errorf("Expected response headers %s. Got %s\n", expected, actual)
 	}
 }
 
@@ -57,6 +65,33 @@ func TestMakeURLToEndpoint(t *testing.T) {
 		"api/prefix/report/-55/cluster_id",
 		server.MakeURLToEndpoint("api/prefix/", server.ReportEndpoint, -55, "cluster_id"),
 	)
+}
+
+func TestAddCORSHeaders(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testServer := server.New(config, mockStorage)
+
+	req, err := http.NewRequest(
+		"OPTIONS",
+		config.APIPrefix+"report/"+fmt.Sprint(testOrgID)+"/"+string(testClusterName),
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := executeRequest(testServer, req).Result()
+	checkHeaders(t, "*", response.Header.Get("Access-Control-Allow-Origin"))
+	checkHeaders(t, "POST, GET, OPTIONS, PUT, DELETE", response.Header.Get("Access-Control-Allow-Methods"))
+	checkHeaders(t, "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization", response.Header.Get("Access-Control-Allow-Headers"))
+	checkHeaders(t, "true", response.Header.Get("Access-Control-Allow-Credentials"))
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {

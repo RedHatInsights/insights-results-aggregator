@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -353,6 +353,18 @@ func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *h
 	http.ServeFile(writer, request, absPath)
 }
 
+// addCORSHeaders - middleware for adding headers that should be in any response
+func (server *HTTPServer) addCORSHeaders(nextHandler http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			nextHandler.ServeHTTP(w, r)
+		})
+}
+
 // Initialize perform the server initialization
 func (server *HTTPServer) Initialize(address string) http.Handler {
 	log.Print("Initializing HTTP server at", address)
@@ -378,6 +390,15 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 			openAPIURL + "?", // to be able to test using Frisby
 		}
 		router.Use(func(next http.Handler) http.Handler { return server.Authentication(next, noAuthURLs) })
+	}
+
+	if server.Config.EnableCORS {
+		router.Use(server.addCORSHeaders)
+		router.Methods("OPTIONS").HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+				return
+			})
 	}
 
 	// it is possible to use special REST API endpoints in debug mode
@@ -410,8 +431,13 @@ func (server *HTTPServer) Start() error {
 	log.Print("Starting HTTP server at", address)
 	router := server.Initialize(address)
 	server.Serv = &http.Server{Addr: address, Handler: router}
+	var err error
 
-	err := server.Serv.ListenAndServe()
+	if server.Config.UseHTTPS {
+		err = server.Serv.ListenAndServeTLS("server.crt", "server.key")
+	} else {
+		err = server.Serv.ListenAndServe()
+	}
 	if err != nil && err != http.ErrServerClosed {
 		log.Error().Err(err).Msg("Unable to start HTTP server")
 		return err

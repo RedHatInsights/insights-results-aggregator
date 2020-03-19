@@ -22,6 +22,8 @@ api_prefix = "/api/v1/"
 api_spec_file = "openapi.json"
 auth = false
 auth_type = "xrh"
+use_https = false
+enable_cors = true
 
 [storage]
 db_driver = "sqlite3"

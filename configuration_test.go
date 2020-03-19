@@ -155,6 +155,7 @@ func TestLoadOrganizationWhitelist(t *testing.T) {
 		types.OrgID(2),
 		types.OrgID(3),
 		types.OrgID(11789772),
+		types.OrgID(656485),
 	)
 
 	orgWhitelist := main.GetOrganizationWhitelist()
@@ -206,6 +207,8 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		api_prefix = "/api/v1/"
 		api_spec_file = "openapi.json"
 		debug = true
+		use_https = false
+		enable_cors = true
 
 		[storage]
 		db_driver = "sqlite3"
@@ -241,6 +244,8 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		APISpecFile: "openapi.json",
 		AuthType:    "xrh",
 		Debug:       true,
+		UseHTTPS:    false,
+		EnableCORS:  true,
 	}, main.GetServerConfiguration())
 
 	orgWhiteList := main.GetOrganizationWhitelist()
@@ -252,6 +257,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 			types.OrgID(2),
 			types.OrgID(3),
 			types.OrgID(11789772),
+			types.OrgID(656485),
 		)),
 		"organization_white_list is wrong",
 	)
@@ -333,6 +339,8 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		APISpecFile: "openapi.json",
 		AuthType:    "xrh",
 		Debug:       true,
+		UseHTTPS:    false,
+		EnableCORS:  true,
 	}, main.GetServerConfiguration())
 
 	orgWhiteList := main.GetOrganizationWhitelist()
@@ -344,6 +352,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 			types.OrgID(2),
 			types.OrgID(3),
 			types.OrgID(11789772),
+			types.OrgID(656485),
 		)),
 		"organization_white_list is wrong",
 	)

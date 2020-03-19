@@ -18,6 +18,8 @@ api_spec_file = "openapi.json"
 debug = true
 auth = true
 auth_type = "xrh"
+use_https = false
+enable_cors = true
 
 [storage]
 db_driver = "sqlite3"
