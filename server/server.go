@@ -85,7 +85,7 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 	metrics.APIResponsesTime.With(prometheus.Labels{"url": request.RequestURI}).Observe(float64(duration.Microseconds()))
 }
 
-// LogRequest - middleware for loging requests
+// LogRequest - middleware for logging requests
 func (server *HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
@@ -136,7 +136,6 @@ func (server *HTTPServer) getContentForRules(
 	writer http.ResponseWriter,
 	report types.ClusterReport,
 ) ([]types.RuleContentResponse, int, error) {
-
 	var reportRules types.ReportRules
 
 	err := json.Unmarshal([]byte(report), &reportRules)
