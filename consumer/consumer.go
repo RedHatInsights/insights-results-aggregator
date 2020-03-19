@@ -158,7 +158,7 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 
 	err = checkReportStructure(*deserialized.Report)
 	if err != nil {
-		log.Print("Deserialied report read from message with improper structure:")
+		log.Print("Deserialized report read from message with improper structure:")
 		log.Print(*deserialized.Report)
 		return deserialized, err
 	}
@@ -202,6 +202,14 @@ func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMes
 		Msg(event)
 }
 
+func logUnparsedMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, event string, err error) {
+	log.Error().
+		Int("offset", int(originalMessage.Offset)).
+		Str("topic", consumer.Configuration.Topic).
+		Err(err).
+		Msg(event)
+}
+
 func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string, err error) {
 	log.Error().
 		Int("offset", int(originalMessage.Offset)).
@@ -217,7 +225,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	log.Info().Int("offset", int(msg.Offset)).Str("topic", consumer.Configuration.Topic).Str("group", consumer.Configuration.Group).Msg("Consumed")
 	message, err := parseMessage(msg.Value)
 	if err != nil {
-		log.Error().Err(err).Msg("Error parsing message from Kafka")
+		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
 		return err
 	}
 	metrics.ConsumedMessages.Inc()
