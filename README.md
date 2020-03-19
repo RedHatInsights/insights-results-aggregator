@@ -132,12 +132,14 @@ address = ":8080"
 api_prefix = "/api/v1/"
 api_spec_file = "openapi.json"
 debug = true
+auth = true
 ```
 
 * `address` is host and port which server should listen to
 * `api_prefix` is prefix for RestAPI path
 * `api_spec_file` is the location of a required OpenAPI specifications file
-* `debug` is developer mode that turns off authentication
+* `debug` is developer mode that enables some special API endpoints not used on production
+* `auth` turns on or turns authentication
 
 ## Local setup
 

@@ -28,6 +28,7 @@ var configAuth = server.Configuration{
 	Address:   ":8080",
 	APIPrefix: "/api/test/",
 	Debug:     false,
+	Auth:      true,
 }
 
 // TestMissingAuthToken checks how the missing auth. token header (expected in HTTP request) is handled

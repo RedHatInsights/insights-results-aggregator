@@ -305,12 +305,15 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(server.LogRequest)
-	if !server.Config.Debug {
+
+	// enable authentication, but only if it is setup in configuration
+	if server.Config.Auth {
 		router.Use(server.Authentication)
 	}
 
 	apiPrefix := server.Config.APIPrefix
 
+	// it is possible to use special REST API endpoints in debug mode
 	if server.Config.Debug {
 		router.HandleFunc(apiPrefix+"organizations/{organizations}", server.deleteOrganizations).Methods(http.MethodDelete)
 		router.HandleFunc(apiPrefix+"clusters/{clusters}", server.deleteClusters).Methods(http.MethodDelete)
