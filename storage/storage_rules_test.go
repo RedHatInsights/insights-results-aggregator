@@ -556,5 +556,5 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testUserID, storage.UserVoteNone)
 	helpers.FailOnError(t, err)
 
-	assert.Contains(t, errStr, buf.String())
+	assert.Contains(t, buf.String(), errStr)
 }
