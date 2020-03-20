@@ -33,6 +33,19 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+const (
+	// key for topic name used in structured log messages
+	topicKey = "topic"
+	// key for broker group name used in structured log messages
+	groupKey = "group"
+	// key for message offset used in structured log messages
+	offsetKey = "offset"
+	// key for organization ID used in structured log messages
+	organizationKey = "organization"
+	// key for cluster ID used in structured log messages
+	clusterKey = "cluster"
+)
+
 // Consumer represents any consumer of insights-rules messages
 type Consumer interface {
 	Serve()
@@ -195,34 +208,34 @@ func (consumer *KafkaConsumer) Serve() {
 
 func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
 	log.Info().
-		Int("offset", int(originalMessage.Offset)).
-		Str("topic", consumer.Configuration.Topic).
-		Int("organization", int(*parsedMessage.Organization)).
-		Str("cluster", string(*parsedMessage.ClusterName)).
+		Int(offsetKey, int(originalMessage.Offset)).
+		Str(topicKey, consumer.Configuration.Topic).
+		Int(organizationKey, int(*parsedMessage.Organization)).
+		Str(clusterKey, string(*parsedMessage.ClusterName)).
 		Msg(event)
 }
 
 func logUnparsedMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, event string, err error) {
 	log.Error().
-		Int("offset", int(originalMessage.Offset)).
-		Str("topic", consumer.Configuration.Topic).
+		Int(offsetKey, int(originalMessage.Offset)).
+		Str(topicKey, consumer.Configuration.Topic).
 		Err(err).
 		Msg(event)
 }
 
 func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string, err error) {
 	log.Error().
-		Int("offset", int(originalMessage.Offset)).
-		Str("topic", consumer.Configuration.Topic).
-		Int("organization", int(*parsedMessage.Organization)).
-		Str("cluster", string(*parsedMessage.ClusterName)).
+		Int(offsetKey, int(originalMessage.Offset)).
+		Str(topicKey, consumer.Configuration.Topic).
+		Int(organizationKey, int(*parsedMessage.Organization)).
+		Str(clusterKey, string(*parsedMessage.ClusterName)).
 		Err(err).
 		Msg(event)
 }
 
 // ProcessMessage processes an incoming message
 func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
-	log.Info().Int("offset", int(msg.Offset)).Str("topic", consumer.Configuration.Topic).Str("group", consumer.Configuration.Group).Msg("Consumed")
+	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 	message, err := parseMessage(msg.Value)
 	if err != nil {
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
