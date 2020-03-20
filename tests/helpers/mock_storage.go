@@ -17,6 +17,8 @@ package helpers
 import (
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
+
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
 
@@ -55,4 +57,14 @@ func MustGetMockStorage(t *testing.T, init bool) storage.Storage {
 // MustCloseStorage closes storage and panics if it wasn't successful
 func MustCloseStorage(t *testing.T, s storage.Storage) {
 	FailOnError(t, s.Close())
+}
+
+// MustGetMockStorageWithExpects returns mock db storage
+// with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
+// before each query, so first try to use MustGetMockStorage
+func MustGetMockStorageWithExpects(t *testing.T) (storage.Storage, sqlmock.Sqlmock) {
+	connection, expects, err := sqlmock.New()
+	FailOnError(t, err)
+
+	return storage.NewFromConnection(connection, storage.DBDriverGeneral), expects
 }

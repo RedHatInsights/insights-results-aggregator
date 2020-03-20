@@ -87,6 +87,8 @@ const (
 	DBDriverSQLite3 DBDriver = iota
 	// DBDriverPostgres shows that db driver is postrgres
 	DBDriverPostgres
+	// general sql(used for mock now)
+	DBDriverGeneral
 
 	// driverNotSupportedMessage is a template for error message displayed
 	// in all situations where given DB driver is not supported
@@ -98,9 +100,8 @@ const (
 // sql package. It is possible to configure connection via Configuration structure.
 // SQLQueriesLog is log for sql queries, default is nil which means nothing is logged
 type DBStorage struct {
-	connection    *sql.DB
-	configuration Configuration
-	dbDriverType  DBDriver
+	connection   *sql.DB
+	dbDriverType DBDriver
 }
 
 // New function creates and initializes a new instance of Storage interface
@@ -133,18 +134,21 @@ func New(configuration Configuration) (*DBStorage, error) {
 	}
 
 	log.Printf("Making connection to data storage, driver=%s datasource=%s", configuration.Driver, dataSource)
-	connection, err := sql.Open(driverName, dataSource)
 
+	connection, err := sql.Open(driverName, dataSource)
 	if err != nil {
 		log.Error().Err(err).Msg("Can not connect to data storage")
 		return nil, err
 	}
 
+	return NewFromConnection(connection, driverType), nil
+}
+
+func NewFromConnection(connection *sql.DB, dbDriverType DBDriver) *DBStorage {
 	return &DBStorage{
-		connection:    connection,
-		configuration: configuration,
-		dbDriverType:  driverType,
-	}, nil
+		connection:   connection,
+		dbDriverType: dbDriverType,
+	}
 }
 
 func getDataSourceForDriverFromConfig(driverType DBDriver, configuration Configuration) (string, error) {

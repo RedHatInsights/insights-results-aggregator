@@ -146,7 +146,7 @@ var (
 	"info": []
 }
 `)
-	// "last_checked_at": "` + LastCheckedAt.Format(time.RFC3339Nano) + `"
+
 	Report3RulesExpectedResponse = `
 {
   "report": {
