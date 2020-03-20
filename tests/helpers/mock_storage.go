@@ -68,3 +68,15 @@ func MustGetMockStorageWithExpects(t *testing.T) (storage.Storage, sqlmock.Sqlmo
 
 	return storage.NewFromConnection(connection, storage.DBDriverGeneral), expects
 }
+
+// MustCloseMockStorageWithExpects closes mock storage with expects and panics if it wasn't successful
+func MustCloseMockStorageWithExpects(
+	t *testing.T, mockStorage storage.Storage, expects sqlmock.Sqlmock,
+) {
+	if err := expects.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+	expects.ExpectClose()
+	FailOnError(t, mockStorage.Close())
+}

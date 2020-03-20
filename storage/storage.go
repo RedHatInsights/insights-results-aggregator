@@ -28,10 +28,14 @@ package storage
 
 import (
 	"database/sql"
+	sql_driver "database/sql/driver"
 	"fmt"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
+	"github.com/mattn/go-sqlite3"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -77,6 +81,7 @@ type Storage interface {
 	GetContentForRules(rules types.ReportRules) ([]types.RuleContentResponse, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
+	LoadRuleContent(contentDir content.RuleContentDirectory) error
 }
 
 // DBDriver type for db driver enum
@@ -106,34 +111,15 @@ type DBStorage struct {
 
 // New function creates and initializes a new instance of Storage interface
 func New(configuration Configuration) (*DBStorage, error) {
-	driverName := configuration.Driver
-	var driverType DBDriver
-
-	switch driverName {
-	case "sqlite3":
-		driverType = DBDriverSQLite3
-	case "postgres":
-		driverType = DBDriverPostgres
-	default:
-		return nil, fmt.Errorf("driver %v is not supported", driverName)
-	}
-
-	if configuration.LogSQLQueries {
-		// create new logger
-		logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
-		var err error
-		driverName, err = InitAndGetSQLDriverWithLogs(driverType, &logger)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	dataSource, err := getDataSourceForDriverFromConfig(driverType, configuration)
+	driverType, driverName, dataSource, err := initAndGetDriver(configuration)
 	if err != nil {
-		return nil, fmt.Errorf(driverNotSupportedMessage, configuration.Driver)
+		return nil, err
 	}
 
-	log.Printf("Making connection to data storage, driver=%s datasource=%s", configuration.Driver, dataSource)
+	log.Printf(
+		"Making connection to data storage, driver=%s datasource=%s",
+		driverName, dataSource,
+	)
 
 	connection, err := sql.Open(driverName, dataSource)
 	if err != nil {
@@ -144,6 +130,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 	return NewFromConnection(connection, driverType), nil
 }
 
+// New function creates and initializes a new instance of Storage interface from prepared connection
 func NewFromConnection(connection *sql.DB, dbDriverType DBDriver) *DBStorage {
 	return &DBStorage{
 		connection:   connection,
@@ -151,12 +138,21 @@ func NewFromConnection(connection *sql.DB, dbDriverType DBDriver) *DBStorage {
 	}
 }
 
-func getDataSourceForDriverFromConfig(driverType DBDriver, configuration Configuration) (string, error) {
-	switch driverType {
-	case DBDriverSQLite3:
-		return configuration.SQLiteDataSource, nil
-	case DBDriverPostgres:
-		return fmt.Sprintf(
+// initAndGetDriver initializes driver(with logs if logSQLQueries is true),
+// checks if it's supported and returns driver type, driver name, dataSource and error
+func initAndGetDriver(configuration Configuration) (driverType DBDriver, driverName string, dataSource string, err error) {
+	var driver sql_driver.Driver
+	driverName = configuration.Driver
+
+	switch driverName {
+	case "sqlite3":
+		driverType = DBDriverSQLite3
+		driver = &sqlite3.SQLiteDriver{}
+		dataSource = configuration.SQLiteDataSource
+	case "postgres":
+		driverType = DBDriverPostgres
+		driver = &pq.Driver{}
+		dataSource = fmt.Sprintf(
 			"postgresql://%v:%v@%v:%v/%v?%v",
 			configuration.PGUsername,
 			configuration.PGPassword,
@@ -164,10 +160,18 @@ func getDataSourceForDriverFromConfig(driverType DBDriver, configuration Configu
 			configuration.PGPort,
 			configuration.PGDBName,
 			configuration.PGParams,
-		), nil
+		)
+	default:
+		err = fmt.Errorf("driver %v is not supported", driverName)
+		return
 	}
 
-	return "", fmt.Errorf("driver %v is not supported", driverType)
+	if configuration.LogSQLQueries {
+		logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
+		driverName = InitSQLDriverWithLogs(driver, driverName, &logger)
+	}
+
+	return
 }
 
 // Init method is doing initialization like creating tables in underlying database
@@ -355,7 +359,7 @@ func (storage DBStorage) WriteReportForCluster(
 	clusterName types.ClusterName,
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
-) (outError error) {
+) error {
 	var query string
 
 	switch storage.dbDriverType {
@@ -376,7 +380,10 @@ func (storage DBStorage) WriteReportForCluster(
 		return err
 	}
 	defer func() {
-		outError = statement.Close()
+		err := statement.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to close statement")
+		}
 	}()
 
 	t := time.Now()
@@ -483,10 +490,6 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 	}
 
 	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	if _, err := storage.connection.Exec("VACUUM"); err != nil {
 		return err
 	}
 

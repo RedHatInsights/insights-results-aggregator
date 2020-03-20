@@ -21,12 +21,9 @@ import (
 	"database/sql"
 	sql_driver "database/sql/driver"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/gchaincl/sqlhooks"
-	"github.com/lib/pq"
-	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 )
 
@@ -78,38 +75,30 @@ func (h *sqlHooks) After(ctx context.Context, query string, args ...interface{})
 	return ctx, nil
 }
 
-// InitAndGetSQLDriverWithLogs initializes driver with logging queries and returns driver's name
-func InitAndGetSQLDriverWithLogs(driverType DBDriver, logger *zerolog.Logger) (string, error) {
-	var driver sql_driver.Driver
-	var driverName string
-
-	switch driverType {
-	case DBDriverSQLite3:
-		driver = &sqlite3.SQLiteDriver{}
-		driverName = "sqlite3"
-	case DBDriverPostgres:
-		driver = &pq.Driver{}
-		driverName = "postgres"
-	default:
-		return "", fmt.Errorf(driverNotSupportedMessage, driverType)
-	}
-
+// InitSQLDriverWithLogs initializes wrapped version of driver with logging sql queries
+// and returns its name
+func InitSQLDriverWithLogs(
+	realDriver sql_driver.Driver,
+	realDriverName string,
+	logger *zerolog.Logger,
+) string {
 	// linear search is not gonna be an issue since there's not many drivers
 	// and we call New() only ones/twice per process life
 	foundHooksDriver := false
+	hooksDriverName := realDriverName + "WithHooks"
 
 	for _, existingDriver := range sql.Drivers() {
-		if existingDriver == driverName+"WithHooks" {
+		if existingDriver == hooksDriverName {
 			foundHooksDriver = true
 			break
 		}
 	}
 
 	if !foundHooksDriver {
-		sql.Register(driverName+"WithHooks", sqlhooks.Wrap(driver, &sqlHooks{
+		sql.Register(hooksDriverName, sqlhooks.Wrap(realDriver, &sqlHooks{
 			SQLQueriesLogger: logger,
 		}))
 	}
 
-	return driverName + "WithHooks", nil
+	return hooksDriverName
 }

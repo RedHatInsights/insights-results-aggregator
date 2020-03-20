@@ -126,8 +126,8 @@ func TestNewStorageWithLoggingError(t *testing.T) {
 	}
 }
 
-// TestMockDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
-func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
+// TestDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
+func TestDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
@@ -146,8 +146,8 @@ func TestMockDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	)
 }
 
-// TestMockDBStorageReadReportForClusterClosedStorage check the behaviour of method ReadReportForCluster
-func TestMockDBStorageReadReportForClusterClosedStorage(t *testing.T) {
+// TestDBStorageReadReportForClusterClosedStorage check the behaviour of method ReadReportForCluster
+func TestDBStorageReadReportForClusterClosedStorage(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	// we need to close storage right now
 	helpers.MustCloseStorage(t, mockStorage)
@@ -156,8 +156,8 @@ func TestMockDBStorageReadReportForClusterClosedStorage(t *testing.T) {
 	expectErrorClosedStorage(t, err)
 }
 
-// TestMockDBStorageReadReportForCluster check the behaviour of method ReadReportForCluster
-func TestMockDBStorageReadReportForCluster(t *testing.T) {
+// TestDBStorageReadReportForCluster check the behaviour of method ReadReportForCluster
+func TestDBStorageReadReportForCluster(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
@@ -165,9 +165,9 @@ func TestMockDBStorageReadReportForCluster(t *testing.T) {
 	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, `{"report":{}}`)
 }
 
-// TestMockDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster
+// TestDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster
 // when the table with results does not exist
-func TestMockDBStorageReadReportNoTable(t *testing.T) {
+func TestDBStorageReadReportNoTable(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, false)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
@@ -175,8 +175,8 @@ func TestMockDBStorageReadReportNoTable(t *testing.T) {
 	expectErrorEmptyTable(t, err)
 }
 
-// TestMockDBStorageWriteReportForClusterClosedStorage check the behaviour of method WriteReportForCluster
-func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
+// TestDBStorageWriteReportForClusterClosedStorage check the behaviour of method WriteReportForCluster
+func TestDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	// we need to close storage right now
 	helpers.MustCloseStorage(t, mockStorage)
@@ -190,8 +190,32 @@ func TestMockDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 	expectErrorClosedStorage(t, err)
 }
 
-// TestMockDBStorageListOfOrgs check the behaviour of method ListOfOrgs
-func TestMockDBStorageListOfOrgs(t *testing.T) {
+func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, false)
+	defer helpers.MustCloseStorage(t, mockStorage)
+	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+
+	// create a table with a bad type
+	_, err := connection.Exec(`
+		CREATE TABLE report (
+			org_id          INTEGER NOT NULL,
+			cluster         INTEGER NOT NULL UNIQUE CHECK(typeof(cluster) = 'integer'),
+			report          VARCHAR NOT NULL,
+			reported_at     TIMESTAMP,
+			last_checked_at TIMESTAMP,
+			PRIMARY KEY(org_id, cluster)
+		)
+	`)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+	)
+	assert.EqualError(t, err, "CHECK constraint failed: report")
+}
+
+// TestDBStorageListOfOrgs check the behaviour of method ListOfOrgs
+func TestDBStorageListOfOrgs(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
@@ -206,7 +230,7 @@ func TestMockDBStorageListOfOrgs(t *testing.T) {
 	assert.Equal(t, []types.OrgID{1, 3}, result)
 }
 
-func TestMockDBStorageListOfOrgsNoTable(t *testing.T) {
+func TestDBStorageListOfOrgsNoTable(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, false)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
@@ -214,8 +238,8 @@ func TestMockDBStorageListOfOrgsNoTable(t *testing.T) {
 	expectErrorEmptyTable(t, err)
 }
 
-// TestMockDBStorageListOfOrgsClosedStorage check the behaviour of method ListOfOrgs
-func TestMockDBStorageListOfOrgsClosedStorage(t *testing.T) {
+// TestDBStorageListOfOrgsClosedStorage check the behaviour of method ListOfOrgs
+func TestDBStorageListOfOrgsClosedStorage(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	// we need to close storage right now
 	helpers.MustCloseStorage(t, mockStorage)
@@ -224,8 +248,8 @@ func TestMockDBStorageListOfOrgsClosedStorage(t *testing.T) {
 	expectErrorClosedStorage(t, err)
 }
 
-// TestMockDBStorageListOfClustersFor check the behaviour of method ListOfClustersForOrg
-func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
+// TestDBStorageListOfClustersFor check the behaviour of method ListOfClustersForOrg
+func TestDBStorageListOfClustersForOrg(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
@@ -253,7 +277,7 @@ func TestMockDBStorageListOfClustersForOrg(t *testing.T) {
 	assert.Equal(t, []types.ClusterName{"4016d01b-62a1-4b49-a36e-c1c5a3d02750"}, result)
 }
 
-func TestMockDBStorageListOfClustersNoTable(t *testing.T) {
+func TestDBStorageListOfClustersNoTable(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, false)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
@@ -261,8 +285,8 @@ func TestMockDBStorageListOfClustersNoTable(t *testing.T) {
 	expectErrorEmptyTable(t, err)
 }
 
-// TestMockDBStorageListOfClustersClosedStorage check the behaviour of method ListOfOrgs
-func TestMockDBStorageListOfClustersClosedStorage(t *testing.T) {
+// TestDBStorageListOfClustersClosedStorage check the behaviour of method ListOfOrgs
+func TestDBStorageListOfClustersClosedStorage(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	// we need to close storage right now
 	helpers.MustCloseStorage(t, mockStorage)
@@ -362,6 +386,7 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	log.Logger = zerolog.New(buf)
 
 	s := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, s)
 
 	connection := storage.GetConnection(s.(*storage.DBStorage))
 	// write illegal negative org_id
@@ -375,19 +400,7 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	assert.Contains(t, buf.String(), "sql: Scan error")
 }
 
-func TestGetDataSourceForDriverFromConfigDriverIsNotSupportedError(t *testing.T) {
-	_, err := storage.GetDataSourceForDriverFromConfig(
-		-1,
-		storage.Configuration{},
-	)
-	if err == nil {
-		t.Fatalf("Expected error, got %v", err)
-	}
-
-	assert.Equal(t, "driver -1 is not supported", err.Error())
-}
-
-func TestMockDBStorageCloseError(t *testing.T) {
+func TestDBStorageCloseError(t *testing.T) {
 	const errString = "unable to close the database"
 	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
 	expects.ExpectClose().WillReturnError(fmt.Errorf(errString))
@@ -395,19 +408,61 @@ func TestMockDBStorageCloseError(t *testing.T) {
 	assert.EqualError(t, err, errString)
 }
 
-func TestMockDBStorageListOfClustersForOrgScanError(t *testing.T) {
+func TestDBStorageListOfClustersForOrgScanError(t *testing.T) {
 	// just for the coverage, because this error can't happen ever because we use
 	// not null in table creation
 	buf := new(bytes.Buffer)
 	log.Logger = zerolog.New(buf)
 
 	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
 	expects.ExpectQuery("SELECT cluster FROM report").WillReturnRows(
 		sqlmock.NewRows([]string{"cluster"}).AddRow(nil),
 	)
 
-	_, _ = mockStorage.ListOfClustersForOrg(testdata.OrgID)
+	_, err := mockStorage.ListOfClustersForOrg(testdata.OrgID)
+	helpers.FailOnError(t, err)
 
 	assert.Contains(t, buf.String(), "converting NULL to string is unsupported")
+}
+
+func assertNumberOfReports(t *testing.T, mockStorage storage.Storage, expectedNumberOfReports int) {
+	numberOfReports, err := mockStorage.ReportsCount()
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedNumberOfReports, numberOfReports)
+}
+
+func TestDBStorageDeleteReports(t *testing.T) {
+	for _, functionName := range []string{
+		"DeleteReportsForOrg", "DeleteReportsForCluster",
+	} {
+		func() {
+			mockStorage := helpers.MustGetMockStorage(t, true)
+			defer helpers.MustCloseStorage(t, mockStorage)
+			assertNumberOfReports(t, mockStorage, 0)
+
+			err := mockStorage.WriteReportForCluster(
+				testdata.OrgID,
+				testdata.ClusterName,
+				testdata.Report3Rules,
+				testdata.LastCheckedAt,
+			)
+			helpers.FailOnError(t, err)
+
+			assertNumberOfReports(t, mockStorage, 1)
+
+			switch functionName {
+			case "DeleteReportsForOrg":
+				err = mockStorage.DeleteReportsForOrg(testdata.OrgID)
+			case "DeleteReportsForCluster":
+				err = mockStorage.DeleteReportsForCluster(testdata.ClusterName)
+			default:
+				t.Fatal(fmt.Errorf("unexpected function name"))
+			}
+			helpers.FailOnError(t, err)
+
+			assertNumberOfReports(t, mockStorage, 0)
+		}()
+	}
 }

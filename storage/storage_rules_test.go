@@ -15,10 +15,19 @@
 package storage_test
 
 import (
+	"bytes"
+	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"sort"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+
+	"github.com/DATA-DOG/go-sqlmock"
 
 	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
@@ -36,7 +45,7 @@ var (
 			Resolution: []byte("resolution"),
 			MoreInfo:   []byte("more info"),
 			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": content.RuleErrorKeyContent{
+				"ek": {
 					Generic: []byte("generic"),
 					Metadata: content.ErrorKeyMetadata{
 						Condition:   "condition",
@@ -57,7 +66,7 @@ var (
 			Resolution: []byte("resolution"),
 			MoreInfo:   []byte("more info"),
 			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": content.RuleErrorKeyContent{
+				"ek": {
 					Generic: []byte("generic"),
 					Metadata: content.ErrorKeyMetadata{
 						Condition:   "condition",
@@ -78,7 +87,7 @@ var (
 			Resolution: []byte("resolution"),
 			MoreInfo:   []byte("more info"),
 			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": content.RuleErrorKeyContent{
+				"ek": {
 					Generic: []byte("generic"),
 					Metadata: content.ErrorKeyMetadata{
 						Condition:   "condition",
@@ -124,7 +133,7 @@ var (
 	}
 )
 
-func TestLoadRuleContentActiveOK(t *testing.T) {
+func TestDBStorageLoadRuleContentActiveOK(t *testing.T) {
 	s := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, s)
 	dbStorage := s.(*storage.DBStorage)
@@ -133,7 +142,7 @@ func TestLoadRuleContentActiveOK(t *testing.T) {
 	helpers.FailOnError(t, err)
 }
 
-func TestLoadRuleContentDBError(t *testing.T) {
+func TestDBStorageLoadRuleContentDBError(t *testing.T) {
 	s := helpers.MustGetMockStorage(t, true)
 	helpers.MustCloseStorage(t, s)
 	dbStorage := s.(*storage.DBStorage)
@@ -144,7 +153,33 @@ func TestLoadRuleContentDBError(t *testing.T) {
 	}
 }
 
-func TestLoadRuleContentInactiveOK(t *testing.T) {
+func TestDBStorageLoadRuleContentDeleteDBError(t *testing.T) {
+	const errorStr = "delete error"
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectBegin()
+	expects.ExpectExec("DELETE FROM rule_error_key").
+		WillReturnError(fmt.Errorf(errorStr))
+
+	err := mockStorage.LoadRuleContent(ruleContentActiveOK)
+	assert.EqualError(t, err, errorStr)
+}
+
+func TestDBStorageLoadRuleContentCommitDBError(t *testing.T) {
+	const errorStr = "commit error"
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectBegin()
+	expects.ExpectExec("DELETE FROM rule_error_key").WillReturnResult(driver.ResultNoRows)
+	expects.ExpectCommit().WillReturnError(fmt.Errorf(errorStr))
+
+	err := mockStorage.LoadRuleContent(content.RuleContentDirectory{})
+	assert.EqualError(t, err, errorStr)
+}
+
+func TestDBStorageLoadRuleContentInactiveOK(t *testing.T) {
 	s := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, s)
 	dbStorage := s.(*storage.DBStorage)
@@ -153,7 +188,7 @@ func TestLoadRuleContentInactiveOK(t *testing.T) {
 	helpers.FailOnError(t, err)
 }
 
-func TestLoadRuleContentNull(t *testing.T) {
+func TestDBStorageLoadRuleContentNull(t *testing.T) {
 	s := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, s)
 	dbStorage := s.(*storage.DBStorage)
@@ -164,7 +199,7 @@ func TestLoadRuleContentNull(t *testing.T) {
 	}
 }
 
-func TestLoadRuleContentBadStatus(t *testing.T) {
+func TestDBStorageLoadRuleContentBadStatus(t *testing.T) {
 	s := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, s)
 	dbStorage := s.(*storage.DBStorage)
@@ -304,6 +339,47 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 	}, res)
 }
 
+func TestDBStorageGetContentForRulesScanError(t *testing.T) {
+	buf := new(bytes.Buffer)
+	log.Logger = zerolog.New(buf)
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	columns := []string{
+		"error_key",
+		"rule_module",
+		"description",
+		"generic",
+		"publish_date",
+		"impact",
+		"likelihood",
+	}
+
+	values := make([]driver.Value, 0)
+	for _, val := range columns {
+		values = append(values, val)
+	}
+
+	// return bad values
+	expects.ExpectQuery("SELECT .* FROM rule_error_key").WillReturnRows(
+		sqlmock.NewRows(columns).AddRow(values...),
+	)
+
+	_, err := mockStorage.GetContentForRules(types.ReportRules{
+		HitRules: []types.RuleOnReport{
+			{
+				Module:   "rule_module",
+				ErrorKey: "error_key",
+			},
+		},
+		TotalCount: 1,
+	})
+	helpers.FailOnError(t, err)
+
+	assert.Regexp(t, "converting driver.Value type .+ to .*", buf.String())
+}
+
 func TestDBStorageVoteOnRule(t *testing.T) {
 	for _, vote := range []storage.UserVote{
 		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
@@ -411,4 +487,74 @@ func TestDBStorageFeedbackErrorDBError(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "database is closed") {
 		t.Fatalf("expected sql database is closed error, got %T, %+v", err, err)
 	}
+}
+
+func TestDBStorageVoteOnRuleDBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, storage.UserVoteNone)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
+	connection, err := sql.Open("sqlite3", ":memory:")
+	helpers.FailOnError(t, err)
+
+	mockStorage := storage.NewFromConnection(connection, -1)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err = mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, storage.UserVoteNone)
+	assert.EqualError(t, err, "DB driver -1 is not supported")
+}
+
+func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, false)
+	defer helpers.MustCloseStorage(t, mockStorage)
+	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+
+	// create a table with a bad type
+	_, err := connection.Exec(`
+		CREATE TABLE cluster_rule_user_feedback (
+			cluster_id INTEGER NOT NULL CHECK(typeof(cluster_id) = 'integer'),
+			rule_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			message INTEGER NOT NULL,
+			user_vote INTEGER NOT NULL,
+			added_at INTEGER NOT NULL,
+			updated_at INTEGER NOT NULL,
+
+			PRIMARY KEY(cluster_id, rule_id, user_id)
+		)
+	`)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.VoteOnRule("non int", testRuleID, testUserID, storage.UserVoteNone)
+	assert.EqualError(t, err, "CHECK constraint failed: cluster_rule_user_feedback")
+}
+
+func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
+	// TODO: seems to be not coverable because of the bug in golang
+	// related issues:
+	// https://github.com/DATA-DOG/go-sqlmock/issues/185
+	// https://github.com/golang/go/issues/37973
+
+	const errStr = "close error"
+
+	buf := new(bytes.Buffer)
+	log.Logger = zerolog.New(buf)
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectPrepare("INSERT").
+		WillBeClosed().
+		WillReturnCloseError(fmt.Errorf(errStr)).
+		ExpectExec().
+		WillReturnResult(driver.ResultNoRows)
+
+	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testUserID, storage.UserVoteNone)
+	helpers.FailOnError(t, err)
+
+	assert.Contains(t, errStr, buf.String())
 }
