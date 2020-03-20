@@ -15,4 +15,12 @@
 
 
 GO111MODULE=off go get github.com/jgautheron/goconst/cmd/goconst
-goconst -min-occurrences=3 ./...
+
+if [[ $(goconst -min-occurrences=3 ./... | tee /dev/tty | wc -l) -ne 0 ]]
+then
+    echo "Duplicated string(s) found"
+    exit 1
+else
+    echo "No duplicated strings found"
+    exit 0
+fi
