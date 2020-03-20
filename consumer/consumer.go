@@ -233,7 +233,11 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	logMessageInfo(consumer, msg, message, "Read")
 
 	if ok := organizationAllowed(consumer, *message.Organization); !ok {
-		return errors.New("Organization ID is not whitelisted")
+		const cause = "Organization ID is not whitelisted"
+		// now we have all required information about the incoming message,
+		// the rigth time to record structured log entry
+		logMessageError(consumer, msg, message, cause, err)
+		return errors.New(cause)
 	}
 
 	logMessageInfo(consumer, msg, message, "Organization whitelisted")
