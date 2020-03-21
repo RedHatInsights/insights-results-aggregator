@@ -15,6 +15,7 @@
 package testdata
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/content"
@@ -42,6 +43,19 @@ const (
 )
 
 var (
+	ConsumerReport = `{
+		"fingerprints": [],
+		"info": [],
+		"reports": [],
+		"skips": [],
+		"system": {}
+	}`
+	ConsumerMessage = `{
+		"OrgID": ` + fmt.Sprint(OrgID) + `,
+		"ClusterName": "` + string(ClusterName) + `",
+		"Report":` + ConsumerReport + `,
+		"LastChecked": "` + LastCheckedAt.Format(time.RFC3339) + `"
+	}`
 	LastCheckedAt     = time.Unix(0, 0)
 	RuleContent3Rules = content.RuleContentDirectory{
 		"rc1": content.RuleContent{
@@ -146,7 +160,6 @@ var (
 	"info": []
 }
 `)
-	// "last_checked_at": "` + LastCheckedAt.Format(time.RFC3339Nano) + `"
 	Report3RulesExpectedResponse = `
 {
   "report": {

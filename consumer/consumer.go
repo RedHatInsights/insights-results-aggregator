@@ -67,13 +67,13 @@ type KafkaConsumer struct {
 }
 
 // report represents report send in a message consumed from any broker
-type report map[string]*json.RawMessage
+type Report map[string]*json.RawMessage
 
 // incomingMessage is representation of message consumed from any broker
 type incomingMessage struct {
 	Organization *types.OrgID       `json:"OrgID"`
 	ClusterName  *types.ClusterName `json:"ClusterName"`
-	Report       *report            `json:"Report"`
+	Report       *Report            `json:"Report"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
 	LastChecked string `json:"LastChecked"`
 }
@@ -132,7 +132,7 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 }
 
 // checkReportStructure tests if the report has correct structure
-func checkReportStructure(r report) error {
+func checkReportStructure(r Report) error {
 	// the structure is not well defined yet, so all we should do is to check if all keys are there
 	expectedKeys := []string{"fingerprints", "info", "reports", "skips", "system"}
 	for _, expectedKey := range expectedKeys {
@@ -186,7 +186,7 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 		return false
 	}
 
-	orgWhitelisted := whitelist.Contains(types.OrgID(orgID))
+	orgWhitelisted := whitelist.Contains(orgID)
 
 	return orgWhitelisted
 }
@@ -246,9 +246,9 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	logMessageInfo(consumer, msg, message, "Read")
 
 	if ok := organizationAllowed(consumer, *message.Organization); !ok {
-		const cause = "Organization ID is not whitelisted"
+		const cause = "organization ID is not whitelisted"
 		// now we have all required information about the incoming message,
-		// the rigth time to record structured log entry
+		// the right time to record structured log entry
 		logMessageError(consumer, msg, message, cause, err)
 		return errors.New(cause)
 	}
