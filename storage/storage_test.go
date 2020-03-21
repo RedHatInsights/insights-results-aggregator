@@ -19,6 +19,7 @@ package storage_test
 import (
 	"bytes"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
 	"testing"
 	"time"
@@ -190,6 +191,20 @@ func TestDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 	expectErrorClosedStorage(t, err)
 }
 
+// TestDBStorageWriteReportForClusterClosedStorage check the behaviour of method WriteReportForCluster
+func TestDBStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
+	fakeStorage := storage.NewFromConnection(nil, -1)
+	// no need to close it
+
+	err := fakeStorage.WriteReportForCluster(
+		testOrgID,
+		testClusterName,
+		testClusterEmptyReport,
+		time.Now(),
+	)
+	assert.EqualError(t, err, "writing report with DB -1 is not supported")
+}
+
 func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, false)
 	defer helpers.MustCloseStorage(t, mockStorage)
@@ -212,6 +227,21 @@ func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
 	)
 	assert.EqualError(t, err, "CHECK constraint failed: report")
+}
+
+func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
+	mockStorage, expects := helpers.MustGetMockStorageWithExpectsForDriver(t, storage.DBDriverPostgres)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectPrepare("INSERT INTO report").
+		WillBeClosed().
+		ExpectExec().
+		WillReturnResult(driver.ResultNoRows)
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
 }
 
 // TestDBStorageListOfOrgs check the behaviour of method ListOfOrgs

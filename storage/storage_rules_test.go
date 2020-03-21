@@ -401,6 +401,48 @@ func TestDBStorageGetContentForRulesScanError(t *testing.T) {
 	assert.Regexp(t, "converting driver.Value type .+ to .*", buf.String())
 }
 
+func TestDBStorageGetContentForRulesRowsError(t *testing.T) {
+	const rowErr = "row error"
+
+	buf := new(bytes.Buffer)
+	log.Logger = zerolog.New(buf)
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	columns := []string{
+		"error_key",
+		"rule_module",
+		"description",
+		"generic",
+		"publish_date",
+		"impact",
+		"likelihood",
+	}
+
+	values := []driver.Value{
+		"ek", "rule_module", "desc", "generic", 0, 0, 0,
+	}
+
+	// return bad values
+	expects.ExpectQuery("SELECT .* FROM rule_error_key").WillReturnRows(
+		sqlmock.NewRows(columns).AddRow(values...).RowError(0, fmt.Errorf(rowErr)),
+	)
+
+	_, err := mockStorage.GetContentForRules(types.ReportRules{
+		HitRules: []types.RuleOnReport{
+			{
+				Module:   "rule_module",
+				ErrorKey: "error_key",
+			},
+		},
+		TotalCount: 1,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), rowErr)
+	assert.Contains(t, buf.String(), "SQL rows error while retrieving content for rules")
+}
+
 func TestDBStorageVoteOnRule(t *testing.T) {
 	for _, vote := range []storage.UserVote{
 		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,

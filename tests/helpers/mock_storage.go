@@ -62,11 +62,23 @@ func MustCloseStorage(t *testing.T, s storage.Storage) {
 // MustGetMockStorageWithExpects returns mock db storage
 // with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
 // before each query, so first try to use MustGetMockStorage
+// don't forget to call MustCloseMockStorageWithExpects
 func MustGetMockStorageWithExpects(t *testing.T) (storage.Storage, sqlmock.Sqlmock) {
+	return MustGetMockStorageWithExpectsForDriver(t, storage.DBDriverGeneral)
+}
+
+// MustGetMockStorageWithExpectsForDriver returns mock db storage
+// with specified driver type and
+// with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
+// before each query, so first try to use MustGetMockStorage
+// don't forget to call MustCloseMockStorageWithExpects
+func MustGetMockStorageWithExpectsForDriver(
+	t *testing.T, driverType storage.DBDriver,
+) (storage.Storage, sqlmock.Sqlmock) {
 	connection, expects, err := sqlmock.New()
 	FailOnError(t, err)
 
-	return storage.NewFromConnection(connection, storage.DBDriverGeneral), expects
+	return storage.NewFromConnection(connection, driverType), expects
 }
 
 // MustCloseMockStorageWithExpects closes mock storage with expects and panics if it wasn't successful
