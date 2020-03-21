@@ -92,7 +92,7 @@ const (
 	DBDriverSQLite3 DBDriver = iota
 	// DBDriverPostgres shows that db driver is postrgres
 	DBDriverPostgres
-	// general sql(used for mock now)
+	// DBDriverGeneral general sql(used for mock now)
 	DBDriverGeneral
 
 	// driverNotSupportedMessage is a template for error message displayed
@@ -130,7 +130,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 	return NewFromConnection(connection, driverType), nil
 }
 
-// New function creates and initializes a new instance of Storage interface from prepared connection
+// NewFromConnection function creates and initializes a new instance of Storage interface from prepared connection
 func NewFromConnection(connection *sql.DB, dbDriverType DBDriver) *DBStorage {
 	return &DBStorage{
 		connection:   connection,
