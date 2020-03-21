@@ -66,7 +66,7 @@ type KafkaConsumer struct {
 	client                               sarama.Client
 }
 
-// report represents report send in a message consumed from any broker
+// Report represents report send in a message consumed from any broker
 type Report map[string]*json.RawMessage
 
 // incomingMessage is representation of message consumed from any broker
@@ -83,7 +83,7 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 	return NewWithSaramaConfig(brokerCfg, storage, nil, true)
 }
 
-// New constructs new implementation of Consumer interface
+// NewWithSaramaConfig constructs new implementation of Consumer interface with custom sarama config
 func NewWithSaramaConfig(
 	brokerCfg broker.Configuration,
 	storage storage.Storage,
