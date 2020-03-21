@@ -34,32 +34,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//func TestInitAndGetSQLDriverWithLogsOK(t *testing.T) {
-//	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
-//	driverName, err := storage.InitAndGetSQLDriverWithLogs(storage.DBDriverSQLite3, &logger)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	assert.Equal(t, "sqlite3WithHooks", driverName)
-//
-//	driverName, err = storage.InitAndGetSQLDriverWithLogs(storage.DBDriverPostgres, &logger)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	assert.Equal(t, "postgresWithHooks", driverName)
-//}
-//
-//func TestInitAndGetSQLDriverWithLogsDriverNotFound(t *testing.T) {
-//	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
-//	const nonExistingDriver = -1
-//	_, err := storage.InitAndGetSQLDriverWithLogs(nonExistingDriver, &logger)
-//	if err == nil || err.Error() != fmt.Sprintf("driver '%v' is not supported", nonExistingDriver) {
-//		t.Fatal(fmt.Errorf("expected driver not supported error, got %+v", err))
-//	}
-//}
-
 func TestInitSQLDriverWithLogs(t *testing.T) {
 	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
 
