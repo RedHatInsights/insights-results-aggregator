@@ -80,7 +80,17 @@ type incomingMessage struct {
 
 // New constructs new implementation of Consumer interface
 func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsumer, error) {
-	client, err := sarama.NewClient([]string{brokerCfg.Address}, nil)
+	return NewWithSaramaConfig(brokerCfg, storage, nil, true)
+}
+
+// New constructs new implementation of Consumer interface
+func NewWithSaramaConfig(
+	brokerCfg broker.Configuration,
+	storage storage.Storage,
+	saramaConfig *sarama.Config,
+	saveOffset bool,
+) (*KafkaConsumer, error) {
+	client, err := sarama.NewClient([]string{brokerCfg.Address}, saramaConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -95,20 +105,28 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 		return nil, err
 	}
 
-	offsetManager, err := sarama.NewOffsetManagerFromClient(brokerCfg.Group, client)
-	if err != nil {
-		return nil, err
-	}
+	var (
+		offsetManager          sarama.OffsetManager
+		partitionOffsetManager sarama.PartitionOffsetManager
+	)
+	nextOffset := sarama.OffsetNewest
 
-	partitionOffsetManager, err := offsetManager.ManagePartition(brokerCfg.Topic, partitions[0])
-	if err != nil {
-		return nil, err
-	}
+	if saveOffset {
+		offsetManager, err = sarama.NewOffsetManagerFromClient(brokerCfg.Group, client)
+		if err != nil {
+			return nil, err
+		}
 
-	nextOffset, _ := partitionOffsetManager.NextOffset()
-	if nextOffset < 0 {
-		// if next offset wasn't stored yet, initial state of the broker
-		nextOffset = sarama.OffsetOldest
+		partitionOffsetManager, err = offsetManager.ManagePartition(brokerCfg.Topic, partitions[0])
+		if err != nil {
+			return nil, err
+		}
+
+		nextOffset, _ = partitionOffsetManager.NextOffset()
+		if nextOffset < 0 {
+			// if next offset wasn't stored yet, initial state of the broker
+			nextOffset = sarama.OffsetOldest
+		}
 	}
 
 	partitionConsumer, err := consumer.ConsumePartition(

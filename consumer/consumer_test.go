@@ -330,3 +330,79 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
 	assert.EqualError(t, err, "organization ID is not whitelisted")
 }
+
+func newConsumerWithMockBroker(t *testing.T) (storage.Storage, *helpers.MockBroker, consumer.Consumer) {
+	mockStorage := helpers.MustGetMockStorage(t, false)
+	mockBroker := helpers.MustNewMockBroker(t)
+
+	saramaConfig := sarama.NewConfig()
+	saramaConfig.ChannelBufferSize = 1
+	saramaConfig.Version = sarama.V0_10_0_1
+	saramaConfig.Producer.Return.Successes = true
+
+	mockConsumer, err := consumer.NewWithSaramaConfig(broker.Configuration{
+		Address:      mockBroker.Address,
+		Topic:        mockBroker.TopicName,
+		Group:        mockBroker.Group,
+		Enabled:      true,
+		OrgWhitelist: nil,
+	}, mockStorage, saramaConfig, false)
+	helpers.FailOnError(t, err)
+
+	assert.NotNil(t, mockConsumer)
+
+	return mockStorage, mockBroker, mockConsumer
+}
+
+func TestKafkaConsumer_New_MockBroker(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockStorage, mockBroker, mockConsumer := newConsumerWithMockBroker(t)
+		defer helpers.MustCloseStorage(t, mockStorage)
+		defer mockBroker.MustClose(t)
+		defer helpers.MustCloseConsumer(t, mockConsumer)
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumer_New_MockBrokerNoTopicError(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockStorage := helpers.MustGetMockStorage(t, false)
+		defer helpers.MustCloseStorage(t, mockStorage)
+
+		// pass empty string instead of topic name
+		mockBroker, err := helpers.NewMockBroker(t, "")
+		helpers.FailOnError(t, err)
+		defer mockBroker.MustClose(t)
+
+		saramaConfig := sarama.NewConfig()
+		saramaConfig.ChannelBufferSize = 1
+		saramaConfig.Version = sarama.V0_10_0_1
+		saramaConfig.Producer.Return.Successes = true
+
+		mockConsumer, err := consumer.NewWithSaramaConfig(broker.Configuration{
+			Address:      mockBroker.Address,
+			Topic:        mockBroker.TopicName,
+			Group:        mockBroker.Group,
+			Enabled:      true,
+			OrgWhitelist: nil,
+		}, mockStorage, saramaConfig, false)
+		assert.EqualError(
+			t,
+			err,
+			"kafka server: The request attempted to perform an operation on an invalid topic.",
+		)
+		assert.Nil(t, mockConsumer)
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumer_Close_MockBrokerError(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockStorage, mockBroker, mockConsumer := newConsumerWithMockBroker(t)
+		defer helpers.MustCloseStorage(t, mockStorage)
+		defer mockBroker.MustClose(t)
+		helpers.MustCloseConsumer(t, mockConsumer)
+
+		// closing it second time should cause an error
+		err := mockConsumer.Close()
+		assert.EqualError(t, err, "kafka: tried to use a client that was closed")
+	}, testCaseTimeLimit)
+}
