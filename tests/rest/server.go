@@ -14,6 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package tests contains REST API tests for following endpoints:
+//
+// apiPrefix
+//
+// apiPrefix+"organizations"
+//
+// apiPrefix+"report/{organization}/{cluster}"
+//
+// apiPrefix+"clusters/{cluster}/rules/{rule_id}/like"
+//
+// apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike"
+//
+// apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote"
+//
+// apiPrefix+"organizations/{organization}/clusters"
 package tests
 
 import (
@@ -34,6 +49,9 @@ const (
 
 	// ContentTypeText represents MIME type for plain text format
 	ContentTypeText = "text/plain; charset=utf-8"
+
+	knownClusterForOrganization1   = "00000000-0000-0000-0000-000000000000"
+	unknownClusterForOrganization1 = "00000000-0000-0000-0000-000000000001"
 )
 
 // list of known organizations that are stored in test database
@@ -199,6 +217,66 @@ func checkClustersEndpointWrongMethods() {
 	}
 }
 
+func constructURLForResultForOrgCluster(organizationID string, clusterID string) string {
+	return apiURL + "report/" + organizationID + "/" + clusterID
+}
+
+// checkReportEndpointForKnownOrganizationAndKnownCluster check if the endpoint to return report works as expected
+func checkReportEndpointForKnownOrganizationAndKnownCluster() {
+	url := constructURLForResultForOrgCluster("1", knownClusterForOrganization1)
+	f := frisby.Create("Check the end point to return report for existing organization and cluster ID").Get(url)
+	f.Send()
+	f.ExpectStatus(200)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointForKnownOrganizationAndUnknownCluster check if the endpoint to return report works as expected
+func checkReportEndpointForKnownOrganizationAndUnknownCluster() {
+	url := constructURLForResultForOrgCluster("1", unknownClusterForOrganization1)
+	f := frisby.Create("Check the end point to return report for existing organization and non-existing cluster ID").Get(url)
+	f.Send()
+	f.ExpectStatus(404)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointForUnknownOrganizationAndKnownCluster check if the endpoint to return report works as expected
+func checkReportEndpointForUnknownOrganizationAndKnownCluster() {
+	url := constructURLForResultForOrgCluster("100000", knownClusterForOrganization1)
+	f := frisby.Create("Check the end point to return report for non-existing organization and non-existing cluster ID").Get(url)
+	f.Send()
+	f.ExpectStatus(404)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointForUnknownOrganizationAndUnknownCluster check if the endpoint to return report works as expected
+func checkReportEndpointForUnknownOrganizationAndUnknownCluster() {
+	url := constructURLForResultForOrgCluster("100000", unknownClusterForOrganization1)
+	f := frisby.Create("Check the end point to return report for non-existing organization and non-existing cluster ID").Get(url)
+	f.Send()
+	f.ExpectStatus(404)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointForImproperOrganization check if the endpoint to return report works as expected
+func checkReportEndpointForImproperOrganization() {
+	url := constructURLForResultForOrgCluster("foobar", knownClusterForOrganization1)
+	f := frisby.Create("Check the end point to return report for improper organization").Get(url)
+	f.Send()
+	f.ExpectStatus(400)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointWrongMethods check if the end point to return results responds correctly to other methods than HTTP GET
+func checkReportEndpointWrongMethods() {
+	url := constructURLForResultForOrgCluster("1", knownClusterForOrganization1)
+	checkGetEndpointByOtherMethods(url)
+}
+
 // checkOpenAPISpecifications checks whether OpenAPI endpoint is handled correctly
 func checkOpenAPISpecifications() {
 	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "openapi.json")
@@ -210,15 +288,30 @@ func checkOpenAPISpecifications() {
 
 // ServerTests run all tests for basic REST API endpoints
 func ServerTests() {
+	// basic tests for REST API apiPrefix
 	checkRestAPIEntryPoint()
 	checkNonExistentEntryPoint()
 	checkWrongEntryPoint()
 	checkWrongMethodsForEntryPoint()
+
+	// tests for REST API endpoints apiPrefix+"organizations"
 	checkOrganizationsEndpoint()
 	checkOrganizationsEndpointWrongMethods()
+
+	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
 	checkClustersEndpointForKnownOrganizations()
 	checkClustersEndpointForUnknownOrganizations()
 	checkClustersEndpointForImproperOrganizations()
 	checkClustersEndpointWrongMethods()
+
+	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
+	checkReportEndpointForKnownOrganizationAndKnownCluster()
+	checkReportEndpointForKnownOrganizationAndUnknownCluster()
+	checkReportEndpointForUnknownOrganizationAndKnownCluster()
+	checkReportEndpointForUnknownOrganizationAndUnknownCluster()
+	checkReportEndpointForImproperOrganization()
+	checkReportEndpointWrongMethods()
+
+	// tests for OpenAPI specification that is accessible via its endpoint as well
 	checkOpenAPISpecifications()
 }
