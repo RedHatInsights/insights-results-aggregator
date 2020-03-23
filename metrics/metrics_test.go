@@ -70,7 +70,7 @@ var (
 	testOrgWhiteList = mapset.NewSetWith(1)
 )
 
-// TestProducedMessagesMetric tests that produced messages metric works
+// TestConsumedMessagesMetric tests that consumed messages metric works
 func TestConsumedMessagesMetric(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(

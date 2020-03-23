@@ -71,6 +71,7 @@ func (producer *KafkaProducer) ProduceMessage(message string) (partition int32, 
 	return partition, offset, errout
 }
 
+// Close allow the Sarama producer to be gracefully closed
 func (producer *KafkaProducer) Close() error {
 	if err := producer.Producer.Close(); err != nil {
 		log.Error().Err(err).Msg("Producer.close()")
