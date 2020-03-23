@@ -45,14 +45,13 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-	"path/filepath"
-	"time"
-
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
+	"net/http"
+	"path/filepath"
+	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"

@@ -9,6 +9,7 @@ require (
 	github.com/Shopify/sarama v1.26.0
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/deckarep/golang-set v1.7.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gchaincl/sqlhooks v1.3.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/google/uuid v1.1.1
