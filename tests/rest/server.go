@@ -199,6 +199,56 @@ func checkClustersEndpointWrongMethods() {
 	}
 }
 
+func constructURLForResultForOrgCluster(organizationID string, clusterID string) string {
+	return apiURL + "report/" + organizationID + "/" + clusterID
+}
+
+// checkReportEndpointForKnownOrganizationAndKnownCluster check if the endpoint to return report works as expected
+func checkReportEndpointForKnownOrganizationAndKnownCluster() {
+	url := constructURLForResultForOrgCluster("1", "00000000-0000-0000-0000-000000000000")
+	f := frisby.Create("Check the end point to return report for existing organization and cluster ID").Get(url)
+	f.Send()
+	f.ExpectStatus(200)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointForKnownOrganizationAndUnknownCluster check if the endpoint to return report works as expected
+func checkReportEndpointForKnownOrganizationAndUnknownCluster() {
+	url := constructURLForResultForOrgCluster("1", "00000000-0000-0000-0000-000000000001")
+	f := frisby.Create("Check the end point to return report for existing organization and non-existing cluster ID").Get(url)
+	f.Send()
+	f.ExpectStatus(404)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointForUnknownOrganizationAndUnknownCluster check if the endpoint to return report works as expected
+func checkReportEndpointForUnknownOrganizationAndUnknownCluster() {
+	url := constructURLForResultForOrgCluster("100000", "00000000-0000-0000-0000-000000000001")
+	f := frisby.Create("Check the end point to return report for non-existing organization and non-existing cluster ID").Get(url)
+	f.Send()
+	f.ExpectStatus(404)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointForImproperOrganization check if the endpoint to return report works as expected
+func checkReportEndpointForImproperOrganization() {
+	url := constructURLForResultForOrgCluster("foobar", "00000000-0000-0000-0000-000000000001")
+	f := frisby.Create("Check the end point to return report for improper organization").Get(url)
+	f.Send()
+	f.ExpectStatus(400)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointWrongMethods check if the end point to return results responds correctly to other methods than HTTP GET
+func checkReportEndpointWrongMethods() {
+	url := constructURLForResultForOrgCluster("1", "00000000-0000-0000-0000-000000000000")
+	checkGetEndpointByOtherMethods(url)
+}
+
 // checkOpenAPISpecifications checks whether OpenAPI endpoint is handled correctly
 func checkOpenAPISpecifications() {
 	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "openapi.json")
