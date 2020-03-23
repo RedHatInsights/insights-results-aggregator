@@ -23,14 +23,11 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-
-	_ "github.com/mattn/go-sqlite3"
-
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 const (
@@ -186,7 +183,7 @@ func TestMigrationGetVersionMultipleRows(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = migration.GetDBVersion(db)
-	assert.EqualError(t, err, "migration info table contain multiple rows")
+	assert.EqualError(t, err, "migration info table contain 2 rows")
 }
 
 func TestMigrationGetVersionEmptyTable(t *testing.T) {
@@ -197,7 +194,7 @@ func TestMigrationGetVersionEmptyTable(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = migration.GetDBVersion(db)
-	assert.EqualError(t, err, "migration info table is empty")
+	assert.EqualError(t, err, "migration info table contain 0 rows")
 }
 
 func TestMigrationGetVersionInvalidType(t *testing.T) {
@@ -440,6 +437,9 @@ func updateVersionInDBCommon(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	err := migration.InitInfoTable(db)
 	helpers.FailOnError(t, err)
 
+	expects.ExpectQuery("SELECT COUNT.+FROM migration_info").WillReturnRows(
+		sqlmock.NewRows([]string{"version"}).AddRow(1),
+	)
 	expects.ExpectQuery("SELECT version FROM migration_info").WillReturnRows(
 		sqlmock.NewRows([]string{"version"}).AddRow(0),
 	)

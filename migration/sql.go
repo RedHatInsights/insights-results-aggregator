@@ -3,7 +3,8 @@ package migration
 import "database/sql"
 
 func withTransaction(db *sql.DB, txFunc func(*sql.Tx) error) (errOut error) {
-	tx, errOut := db.Begin()
+	var tx *sql.Tx
+	tx, errOut = db.Begin()
 	if errOut != nil {
 		return
 	}

@@ -25,7 +25,6 @@ package migration
 import (
 	"database/sql"
 	"fmt"
-	"log"
 )
 
 // Version represents a version of the database.
@@ -90,32 +89,15 @@ func InitInfoTable(db *sql.DB) error {
 
 // GetDBVersion reads the current version of the database from the migration info table.
 func GetDBVersion(db *sql.DB) (Version, error) {
-	rows, err := db.Query("SELECT version FROM migration_info")
+	err := validateNumberOfRows(db)
 	if err != nil {
 		return 0, err
-	}
-	defer func() {
-		err = rows.Close()
-		log.Println("GetDBVersion(): Error during closing rows")
-	}()
-
-	// Read the first (and hopefully the only) row in the table.
-	if !rows.Next() {
-		return 0, fmt.Errorf("migration info table is empty")
 	}
 
 	var version Version = 0
-	err = rows.Scan(&version)
-	if err != nil {
-		return 0, err
-	}
+	err = db.QueryRow("SELECT version FROM migration_info").Scan(&version)
 
-	// Check if another row is available (it should NOT be).
-	if rows.Next() {
-		return 0, fmt.Errorf("migration info table contain multiple rows")
-	}
-
-	return version, nil
+	return version, err
 }
 
 // SetDBVersion attempts to get the database into the specified
@@ -191,4 +173,22 @@ func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
 
 		return nil
 	})
+}
+
+func validateNumberOfRows(db *sql.DB) error {
+	numberOfRows, err := getNumberOfRows(db)
+	if err != nil {
+		return err
+	}
+	if numberOfRows != 1 {
+		return fmt.Errorf("migration info table contain %v rows", numberOfRows)
+	}
+
+	return nil
+}
+
+func getNumberOfRows(db *sql.DB) (uint, error) {
+	var count uint
+	err := db.QueryRow("SELECT COUNT(*) FROM migration_info;").Scan(&count)
+	return count, err
 }
