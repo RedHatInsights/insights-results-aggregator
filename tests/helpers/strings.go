@@ -36,8 +36,15 @@ func AssertStringsAreEqualJSON(t *testing.T, expected, got string) {
 	var obj1, obj2 interface{}
 
 	err := json.Unmarshal([]byte(expected), &obj1)
+	if err != nil {
+		err = fmt.Errorf(`expected is not JSON. value = "%v", err = "%v"`, expected, err)
+	}
 	FailOnError(t, err)
+
 	err = json.Unmarshal([]byte(got), &obj2)
+	if err != nil {
+		err = fmt.Errorf(`got is not JSON. value = "%v", err = "%v"`, got, err)
+	}
 	FailOnError(t, err)
 
 	assert.Equal(

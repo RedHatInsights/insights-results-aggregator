@@ -19,6 +19,9 @@ package server
 // to see why this trick is needed.
 var (
 	ReadOrganizationID        = readOrganizationID
+	ReadOrganizationIDs       = readOrganizationIDs
 	ReadClusterName           = readClusterName
+	ReadClusterNames          = readClusterNames
 	GetRouterPositiveIntParam = getRouterPositiveIntParam
+	ReadRuleID                = readRuleID
 )

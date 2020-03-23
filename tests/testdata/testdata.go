@@ -25,7 +25,10 @@ import (
 const (
 	OrgID            = types.OrgID(1)
 	ClusterName      = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
+	UserID           = types.UserID("1")
+	BadClusterName   = types.ClusterName("aaaa")
 	Rule1ID          = types.RuleID("test.rule1")
+	BadRuleID        = types.RuleID("rule id with spaces")
 	Rule2ID          = types.RuleID("test.rule2")
 	Rule3ID          = types.RuleID("test.rule3")
 	ErrorKey1        = "ek1"
@@ -134,6 +137,19 @@ var (
 			},
 		},
 	}
+
+	Report0Rules = types.ClusterReport(`
+{
+	"system": {
+		"metadata": {},
+		"hostname": null
+	},
+	"reports": [],
+	"fingerprints": [],
+	"skips": [],
+	"info": []
+}
+`)
 
 	Report3Rules = types.ClusterReport(`
 {

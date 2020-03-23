@@ -83,3 +83,27 @@ func TestGetRouterPositiveIntParamZeroError(t *testing.T) {
 	_, err := server.GetRouterPositiveIntParam(request, "id")
 	assert.EqualError(t, err, "Error during parsing param id with value 0. Error: positive value expected")
 }
+
+func TestReadClusterNamesMissing(t *testing.T) {
+	request, err := http.NewRequest(http.MethodGet, "", nil)
+	helpers.FailOnError(t, err)
+
+	_, err = server.ReadClusterNames(httptest.NewRecorder(), request)
+	assert.EqualError(t, err, "missing param clusters")
+}
+
+func TestReadOrganizationIDsMissing(t *testing.T) {
+	request, err := http.NewRequest(http.MethodGet, "", nil)
+	helpers.FailOnError(t, err)
+
+	_, err = server.ReadOrganizationIDs(httptest.NewRecorder(), request)
+	assert.EqualError(t, err, "missing param organizations")
+}
+
+func TestReadRuleIDMissing(t *testing.T) {
+	request, err := http.NewRequest(http.MethodGet, "", nil)
+	helpers.FailOnError(t, err)
+
+	_, err = server.ReadRuleID(httptest.NewRecorder(), request)
+	assert.EqualError(t, err, "missing param rule_id")
+}

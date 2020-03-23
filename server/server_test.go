@@ -18,19 +18,15 @@ package server_test
 
 import (
 	"context"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
-
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -45,30 +41,10 @@ var config = server.Configuration{
 	Auth:        false,
 }
 
-// TODO: remove these consts
-const (
-	testOrgID          = types.OrgID(1)
-	testClusterName    = types.ClusterName("412701a1-c036-490a-9173-a3428c25b677")
-	testRuleID         = types.RuleID("1")
-	testUserID         = types.UserID("1")
-	testBadClusterName = types.ClusterName("aaaa")
-)
-
 func checkResponseCode(t *testing.T, expected, actual int) {
 	if expected != actual {
 		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
 	}
-}
-
-// checkResponseBody checks if body is the same string as expected,
-func checkResponseBody(t *testing.T, expected string, body io.ReadCloser) {
-	result, err := ioutil.ReadAll(body)
-	helpers.FailOnError(t, err)
-
-	expected = strings.TrimSpace(expected)
-	resultStr := strings.TrimSpace(string(result))
-
-	assert.Equal(t, expected, resultStr)
 }
 
 func TestMakeURLToEndpoint(t *testing.T) {
@@ -311,18 +287,18 @@ func TestRuleFeedbackVote(t *testing.T) {
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
 				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-				UserID:       testUserID,
+				UserID:       testdata.UserID,
 			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
 			})
 
-			feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testUserID)
+			feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
 			helpers.FailOnError(t, err)
 
 			assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
 			assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
-			assert.Equal(t, testUserID, feedback.UserID)
+			assert.Equal(t, testdata.UserID, feedback.UserID)
 			assert.Equal(t, "", feedback.Message)
 			assert.Equal(t, expectedVote, feedback.UserVote)
 		}(endpoint)
@@ -333,11 +309,42 @@ func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
-		EndpointArgs: []interface{}{testBadClusterName, testRuleID},
+		EndpointArgs: []interface{}{testdata.BadClusterName, testdata.Rule1ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "invalid cluster name format: 'aaaa'"}`,
 	})
+}
+
+func TestRuleFeedbackErrorBadRuleID(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.LikeRuleEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.BadRuleID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body: `{
+			"status": "invalid rule ID, it must contain only from latin characters, number, underscores or dots"
+		}`,
+	})
+}
+
+func TestRuleFeedbackErrorBadUserID(t *testing.T) {
+	testServer := server.New(config, nil)
+
+	url := server.MakeURLToEndpoint(config.APIPrefix, server.LikeRuleEndpoint, testdata.ClusterName, testdata.Rule1ID)
+
+	req, err := http.NewRequest(http.MethodPut, url, nil)
+	helpers.FailOnError(t, err)
+
+	// put wrong identity
+	identity := "wrong type"
+	req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
+
+	response := helpers.ExecuteRequest(testServer, req, &config).Result()
+
+	assert.Equal(t, http.StatusInternalServerError, response.StatusCode, "Expected different status code")
+	helpers.CheckResponseBodyJSON(t, `{"status": "Unable to get user id"}`, response.Body)
 }
 
 func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
@@ -347,15 +354,15 @@ func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
-		EndpointArgs: []interface{}{testClusterName, testRuleID},
-		UserID:       testUserID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.UserID,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "sql: database is closed"}`,
 	})
 }
 
-func TestDeleteReportsByOrganization(t *testing.T) {
+func TestHTTPServer_deleteOrganizationsOK(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
 		Endpoint:     server.DeleteOrganizationsEndpoint,
@@ -377,7 +384,21 @@ func TestHTTPServer_deleteOrganizations_NonIntOrgID(t *testing.T) {
 	})
 }
 
-func TestDeleteReportsByClusterName(t *testing.T) {
+func TestHTTPServer_deleteOrganizations_DBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.DeleteOrganizationsEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "sql: database is closed"}`,
+	})
+}
+
+func TestHTTPServer_deleteClusters(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
 		Endpoint:     server.DeleteClustersEndpoint,
@@ -385,5 +406,33 @@ func TestDeleteReportsByClusterName(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
+	})
+}
+
+func TestHTTPServer_deleteClusters_DBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.DeleteClustersEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "sql: database is closed"}`,
+	})
+}
+
+func TestHTTPServer_deleteClusters_BadClusterName(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.DeleteClustersEndpoint,
+		EndpointArgs: []interface{}{testdata.BadClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "invalid cluster name format: 'aaaa'"}`,
 	})
 }

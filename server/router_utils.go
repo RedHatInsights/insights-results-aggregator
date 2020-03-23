@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -167,7 +168,6 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 	for _, clusterName := range splitRequestParamArray(clusterNamesParam) {
 		convertedName, err := validateClusterName(writer, clusterName)
 		if err != nil {
-			responses.Send(http.StatusBadRequest, writer, "bad organizations param, array of uuids expected")
 			return []types.ClusterName{}, err
 		}
 
@@ -196,4 +196,30 @@ func readOrganizationIDs(writer http.ResponseWriter, request *http.Request) ([]t
 	}
 
 	return organizationsConverted, nil
+}
+
+func readRuleID(writer http.ResponseWriter, request *http.Request) (types.RuleID, error) {
+	ruleID, err := getRouterParam(request, "rule_id")
+	if err != nil {
+		const message = "unable to get rule id"
+		log.Error().Err(err).Msg(message)
+		responses.Send(http.StatusInternalServerError, writer, message)
+		return types.RuleID(0), err
+	}
+
+	ruleIDValidator := regexp.MustCompile(`^[a-zA-Z_0-9.]+$`)
+
+	isRuleIDValid := ruleIDValidator.Match([]byte(ruleID))
+
+	if !isRuleIDValid {
+		err = fmt.Errorf("invalid rule ID, it must contain only from latin characters, number, underscores or dots")
+		responses.Send(
+			http.StatusBadRequest,
+			writer,
+			err.Error(),
+		)
+		return types.RuleID(0), err
+	}
+
+	return types.RuleID(ruleID), nil
 }

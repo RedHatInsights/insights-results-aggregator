@@ -227,11 +227,9 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	ruleID, err := getRouterParam(request, "rule_id")
+	ruleID, err := readRuleID(writer, request)
 	if err != nil {
-		const message = "Unable to read report for cluster"
-		log.Error().Err(err).Msg(message)
-		responses.Send(http.StatusInternalServerError, writer, message)
+		// everything has been handled already
 		return
 	}
 
@@ -243,7 +241,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err = server.Storage.VoteOnRule(clusterID, types.RuleID(ruleID), userID, userVote)
+	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
 	if err != nil {
 		responses.Send(http.StatusInternalServerError, writer, err.Error())
 	} else {

@@ -79,7 +79,7 @@ func AssertAPIRequest(
 
 		expectedResponse.BodyChecker(t, expectedResponse.Body, string(bodyBytes))
 	} else if len(expectedResponse.Body) != 0 {
-		checkResponseBodyJSON(t, expectedResponse.Body, response.Body)
+		CheckResponseBodyJSON(t, expectedResponse.Body, response.Body)
 	}
 }
 
@@ -92,10 +92,10 @@ func ExecuteRequest(testServer *server.HTTPServer, req *http.Request, config *se
 	return rr
 }
 
-// checkResponseBodyJSON checks if body is the same json as in expected
+// CheckResponseBodyJSON checks if body is the same json as in expected
 // (ignores whitespaces, newlines, etc)
 // also validates both expected and body to be a valid json
-func checkResponseBodyJSON(t *testing.T, expectedJSON string, body io.ReadCloser) {
+func CheckResponseBodyJSON(t *testing.T, expectedJSON string, body io.ReadCloser) {
 	result, err := ioutil.ReadAll(body)
 	FailOnError(t, err)
 

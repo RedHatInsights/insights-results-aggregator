@@ -15,6 +15,7 @@
 package server_test
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"testing"
@@ -58,7 +59,7 @@ func TestReadReportForClusterBadClusterName(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testBadClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "invalid cluster name format: 'aaaa'"}`,
@@ -106,6 +107,34 @@ func TestHttpServer_readReportForCluster_NoContent(t *testing.T) {
 	})
 }
 
+func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: `{
+			"status":"ok",
+			"report": {
+				"meta": {
+					"count": -1,
+					"last_checked_at": "1970-01-01T01:00:00+01:00"
+				},
+				"data":[]
+			}
+		}`,
+	})
+}
+
 func TestReadReportDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	helpers.MustCloseStorage(t, mockStorage)
@@ -117,6 +146,56 @@ func TestReadReportDBError(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status":"sql: database is closed"}`,
+	})
+}
+
+func TestHttpServer_readReportForCluster_getContentForRule_DBError(t *testing.T) {
+	connection, err := sql.Open("sqlite3", ":memory:")
+	helpers.FailOnError(t, err)
+
+	mockStorage := storage.NewFromConnection(connection, storage.DBDriverSQLite3)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err = mockStorage.Init()
+	helpers.FailOnError(t, err)
+
+	// remove table to cause db error
+	_, err = connection.Exec("DROP TABLE rule_error_key;")
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{ "status":"no such table: rule_error_key" }`,
+	})
+}
+
+func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.T) {
+	const badReport = "not-json"
+
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, badReport, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{ "status": "invalid character 'o' in literal null (expecting 'u')" }`,
 	})
 }
 
