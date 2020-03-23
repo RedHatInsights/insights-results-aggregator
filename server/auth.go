@@ -33,6 +33,7 @@ import (
 type contextKey string
 
 const (
+	// ContextKeyUser is a constant for user authentication token in request
 	ContextKeyUser        = contextKey("user")
 	malformedTokenMessage = "Malformed authentication token"
 )

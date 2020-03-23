@@ -1,3 +1,17 @@
+// Copyright 2020 Red Hat, Inc
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package server
 
 import (
@@ -6,16 +20,26 @@ import (
 )
 
 const (
-	MainEndpoint                    = ""
-	DeleteOrganizationsEndpoint     = "organizations/{organizations}"
-	DeleteClustersEndpoint          = "clusters/{clusters}"
-	OrganizationsEndpoint           = "organizations"
-	ReportEndpoint                  = "report/{organization}/{cluster}"
-	LikeRuleEndpoint                = "clusters/{cluster}/rules/{rule_id}/like"
-	DislikeRuleEndpoint             = "clusters/{cluster}/rules/{rule_id}/dislike"
-	ResetVoteOnRuleEndpoint         = "clusters/{cluster}/rules/{rule_id}/reset_vote"
+	// MainEndpoint returns status ok
+	MainEndpoint = ""
+	// DeleteOrganizationsEndpoint deletes all {organizations}(comma separated array). DEBUG only
+	DeleteOrganizationsEndpoint = "organizations/{organizations}"
+	// DeleteClustersEndpoint deletes all {clusters}(comma separated array). DEBUG only
+	DeleteClustersEndpoint = "clusters/{clusters}"
+	// OrganizationsEndpoint returns all organizations
+	OrganizationsEndpoint = "organizations"
+	// ReportEndpoint returns report for provided {organization} and {cluster}
+	ReportEndpoint = "report/{organization}/{cluster}"
+	// LikeRuleEndpoint likes rule with {rule_id} for {cluster} using current user(from auth header)
+	LikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/like"
+	// DislikeRuleEndpoint dislikes rule with {rule_id} for {cluster} using current user(from auth header)
+	DislikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/dislike"
+	// ResetVoteOnRuleEndpoint resets vote on rule with {rule_id} for {cluster} using current user(from auth header)
+	ResetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/reset_vote"
+	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
-	MetricsEndpoint                 = "metrics"
+	// MetricsEndpoint returns prometheus metrics
+	MetricsEndpoint = "metrics"
 )
 
 // MakeURLToEndpoint creates URL to endpoint, use constants from file endpoints.go
