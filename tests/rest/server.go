@@ -312,6 +312,6 @@ func ServerTests() {
 	checkReportEndpointForImproperOrganization()
 	checkReportEndpointWrongMethods()
 
-	// tests for OpenAPI specification that is accessibla via its endpoint as well
+	// tests for OpenAPI specification that is accessible via its endpoint as well
 	checkOpenAPISpecifications()
 }
