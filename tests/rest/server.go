@@ -14,6 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/* REST API tests for following endpoints:
+
+apiPrefix
+
+apiPrefix+"organizations"
+
+apiPrefix+"report/{organization}/{cluster}"
+
+apiPrefix+"clusters/{cluster}/rules/{rule_id}/like"
+
+apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike"
+
+apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote"
+
+apiPrefix+"organizations/{organization}/clusters"
+*/
 package tests
 
 import (
@@ -260,15 +276,29 @@ func checkOpenAPISpecifications() {
 
 // ServerTests run all tests for basic REST API endpoints
 func ServerTests() {
+	// basic tests for REST API apiPrefix
 	checkRestAPIEntryPoint()
 	checkNonExistentEntryPoint()
 	checkWrongEntryPoint()
 	checkWrongMethodsForEntryPoint()
+
+	// tests for REST API endpoints apiPrefix+"organizations"
 	checkOrganizationsEndpoint()
 	checkOrganizationsEndpointWrongMethods()
+
+	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
 	checkClustersEndpointForKnownOrganizations()
 	checkClustersEndpointForUnknownOrganizations()
 	checkClustersEndpointForImproperOrganizations()
 	checkClustersEndpointWrongMethods()
+
+	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
+	checkReportEndpointForKnownOrganizationAndKnownCluster()
+	checkReportEndpointForKnownOrganizationAndUnknownCluster()
+	checkReportEndpointForUnknownOrganizationAndUnknownCluster()
+	checkReportEndpointForImproperOrganization()
+	checkReportEndpointWrongMethods()
+
+	// tests for OpenAPI specification that is accessibla via its endpoint as well
 	checkOpenAPISpecifications()
 }
