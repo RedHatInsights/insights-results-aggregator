@@ -16,11 +16,13 @@ package helpers
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // FailOnError wraps result of function with one argument
 func FailOnError(t *testing.T, err error) {
-	if err != nil {
-		t.Fatal(err)
-	}
+	// TODO: get rid of this function at all
+	// TODO: and replace all occurences with assert.NoError and assert.NoErrorf
+	assert.NoError(t, err)
 }
