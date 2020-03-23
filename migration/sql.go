@@ -10,7 +10,7 @@ func withTransaction(db *sql.DB, txFunc func(*sql.Tx) error) (errOut error) {
 
 	defer func() {
 		if p := recover(); p != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			// panic again
 			panic(p)
 		} else if errOut != nil {
