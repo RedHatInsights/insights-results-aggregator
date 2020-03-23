@@ -49,6 +49,9 @@ const (
 
 	// ContentTypeText represents MIME type for plain text format
 	ContentTypeText = "text/plain; charset=utf-8"
+
+	knownClusterForOrganization1   = "00000000-0000-0000-0000-000000000000"
+	unknownClusterForOrganization1 = "00000000-0000-0000-0000-000000000001"
 )
 
 // list of known organizations that are stored in test database
@@ -220,7 +223,7 @@ func constructURLForResultForOrgCluster(organizationID string, clusterID string)
 
 // checkReportEndpointForKnownOrganizationAndKnownCluster check if the endpoint to return report works as expected
 func checkReportEndpointForKnownOrganizationAndKnownCluster() {
-	url := constructURLForResultForOrgCluster("1", "00000000-0000-0000-0000-000000000000")
+	url := constructURLForResultForOrgCluster("1", knownClusterForOrganization1)
 	f := frisby.Create("Check the end point to return report for existing organization and cluster ID").Get(url)
 	f.Send()
 	f.ExpectStatus(200)
@@ -230,8 +233,18 @@ func checkReportEndpointForKnownOrganizationAndKnownCluster() {
 
 // checkReportEndpointForKnownOrganizationAndUnknownCluster check if the endpoint to return report works as expected
 func checkReportEndpointForKnownOrganizationAndUnknownCluster() {
-	url := constructURLForResultForOrgCluster("1", "00000000-0000-0000-0000-000000000001")
+	url := constructURLForResultForOrgCluster("1", unknownClusterForOrganization1)
 	f := frisby.Create("Check the end point to return report for existing organization and non-existing cluster ID").Get(url)
+	f.Send()
+	f.ExpectStatus(404)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
+// checkReportEndpointForUnknownOrganizationAndKnownCluster check if the endpoint to return report works as expected
+func checkReportEndpointForUnknownOrganizationAndKnownCluster() {
+	url := constructURLForResultForOrgCluster("100000", knownClusterForOrganization1)
+	f := frisby.Create("Check the end point to return report for non-existing organization and non-existing cluster ID").Get(url)
 	f.Send()
 	f.ExpectStatus(404)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -240,7 +253,7 @@ func checkReportEndpointForKnownOrganizationAndUnknownCluster() {
 
 // checkReportEndpointForUnknownOrganizationAndUnknownCluster check if the endpoint to return report works as expected
 func checkReportEndpointForUnknownOrganizationAndUnknownCluster() {
-	url := constructURLForResultForOrgCluster("100000", "00000000-0000-0000-0000-000000000001")
+	url := constructURLForResultForOrgCluster("100000", unknownClusterForOrganization1)
 	f := frisby.Create("Check the end point to return report for non-existing organization and non-existing cluster ID").Get(url)
 	f.Send()
 	f.ExpectStatus(404)
@@ -250,7 +263,7 @@ func checkReportEndpointForUnknownOrganizationAndUnknownCluster() {
 
 // checkReportEndpointForImproperOrganization check if the endpoint to return report works as expected
 func checkReportEndpointForImproperOrganization() {
-	url := constructURLForResultForOrgCluster("foobar", "00000000-0000-0000-0000-000000000001")
+	url := constructURLForResultForOrgCluster("foobar", knownClusterForOrganization1)
 	f := frisby.Create("Check the end point to return report for improper organization").Get(url)
 	f.Send()
 	f.ExpectStatus(400)
@@ -260,7 +273,7 @@ func checkReportEndpointForImproperOrganization() {
 
 // checkReportEndpointWrongMethods check if the end point to return results responds correctly to other methods than HTTP GET
 func checkReportEndpointWrongMethods() {
-	url := constructURLForResultForOrgCluster("1", "00000000-0000-0000-0000-000000000000")
+	url := constructURLForResultForOrgCluster("1", knownClusterForOrganization1)
 	checkGetEndpointByOtherMethods(url)
 }
 
@@ -294,6 +307,7 @@ func ServerTests() {
 	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
 	checkReportEndpointForKnownOrganizationAndKnownCluster()
 	checkReportEndpointForKnownOrganizationAndUnknownCluster()
+	checkReportEndpointForUnknownOrganizationAndKnownCluster()
 	checkReportEndpointForUnknownOrganizationAndUnknownCluster()
 	checkReportEndpointForImproperOrganization()
 	checkReportEndpointWrongMethods()
