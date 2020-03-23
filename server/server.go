@@ -222,6 +222,11 @@ func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *h
 
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
 	clusterID, err := readClusterName(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
 	ruleID, err := getRouterParam(request, "rule_id")
 	if err != nil {
 		const message = "Unable to read report for cluster"
@@ -315,21 +320,21 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 
 	// it is possible to use special REST API endpoints in debug mode
 	if server.Config.Debug {
-		router.HandleFunc(apiPrefix+"organizations/{organizations}", server.deleteOrganizations).Methods(http.MethodDelete)
-		router.HandleFunc(apiPrefix+"clusters/{clusters}", server.deleteClusters).Methods(http.MethodDelete)
+		router.HandleFunc(apiPrefix+DeleteOrganizationsEndpoint, server.deleteOrganizations).Methods(http.MethodDelete)
+		router.HandleFunc(apiPrefix+DeleteClustersEndpoint, server.deleteClusters).Methods(http.MethodDelete)
 	}
 
 	// common REST API endpoints
-	router.HandleFunc(apiPrefix, server.mainEndpoint).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+"organizations", server.listOfOrganizations).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+"report/{organization}/{cluster}", server.readReportForCluster).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/like", server.likeRule).Methods(http.MethodPut)
-	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike", server.dislikeRule).Methods(http.MethodPut)
-	router.HandleFunc(apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote", server.resetVoteOnRule).Methods(http.MethodPut)
-	router.HandleFunc(apiPrefix+"organizations/{organization}/clusters", server.listOfClustersForOrganization).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+MainEndpoint, server.mainEndpoint).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+OrganizationsEndpoint, server.listOfOrganizations).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+ReportEndpoint, server.readReportForCluster).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+LikeRuleEndpoint, server.likeRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+DislikeRuleEndpoint, server.dislikeRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+ResetVoteOnRuleEndpoint, server.resetVoteOnRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
 
 	// Prometheus metrics
-	router.Handle(apiPrefix+"metrics", promhttp.Handler()).Methods(http.MethodGet)
+	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
 
 	// OpenAPI specs
 	router.HandleFunc(apiPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods(http.MethodGet)

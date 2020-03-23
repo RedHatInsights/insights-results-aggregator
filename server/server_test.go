@@ -18,21 +18,19 @@ package server_test
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/types"
-
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
-	"github.com/gorilla/mux"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -47,6 +45,7 @@ var config = server.Configuration{
 	Auth:        false,
 }
 
+// TODO: remove these consts
 const (
 	testOrgID          = types.OrgID(1)
 	testClusterName    = types.ClusterName("412701a1-c036-490a-9173-a3428c25b677")
@@ -54,15 +53,6 @@ const (
 	testUserID         = types.UserID("1")
 	testBadClusterName = types.ClusterName("aaaa")
 )
-
-func executeRequest(testServer *server.HTTPServer, req *http.Request) *httptest.ResponseRecorder {
-	router := testServer.Initialize(config.Address)
-
-	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, req)
-
-	return rr
-}
 
 func checkResponseCode(t *testing.T, expected, actual int) {
 	if expected != actual {
@@ -81,51 +71,42 @@ func checkResponseBody(t *testing.T, expected string, body io.ReadCloser) {
 	assert.Equal(t, expected, resultStr)
 }
 
-// checkResponseBodyJSON checks if body is the same json as in expected
-// (ignores whitespaces, newlines, etc)
-// also validates both expected and body to be a valid json
-func checkResponseBodyJSON(t *testing.T, expectedJSON string, body io.ReadCloser) {
-	result, err := ioutil.ReadAll(body)
-	helpers.FailOnError(t, err)
-
-	helpers.AssertStringsAreEqualJSON(t, expectedJSON, string(result))
+func TestMakeURLToEndpoint(t *testing.T) {
+	assert.Equal(
+		t,
+		"api/prefix/report/-55/cluster_id",
+		server.MakeURLToEndpoint("api/prefix/", server.ReportEndpoint, -55, "cluster_id"),
+	)
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/1/clusters", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
-	checkResponseBody(t, `{"clusters":[],"status":"ok"}`, response.Body)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{1},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"clusters":[],"status":"ok"}`,
+	})
 }
 
 func TestListOfClustersForOrganizationOK(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
-	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
-	if err != nil {
-		t.Fatal(err)
-	}
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
 
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/1/clusters", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
-	checkResponseBody(t, `{"clusters":["`+string(testClusterName)+`"],"status":"ok"}`, response.Body)
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"clusters":["` + string(testdata.ClusterName) + `"],"status":"ok"}`,
+	})
 }
 
 // TestListOfClustersForOrganizationDBError expects db error
@@ -134,67 +115,60 @@ func TestListOfClustersForOrganizationDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	helpers.MustCloseStorage(t, mockStorage)
 
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/1/clusters", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "sql: database is closed"}`,
+	})
 }
 
 func TestListOfClustersForOrganizationNegativeID(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/-1/clusters", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{-1},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body: `{
+			"status": "Error during parsing param organization with value -1. Error: unsigned integer expected"
+		}`,
+	})
 }
 
 func TestListOfClustersForOrganizationNonIntID(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"organizations/nonint/clusters", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{"non-int"},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body: `{
+			"status": "Error during parsing param organization with value non-int. Error: unsigned integer expected"
+		}`,
+	})
 }
 
 func TestMainEndpoint(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.MainEndpoint,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
 }
 
 func TestListOfOrganizationsEmpty(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
-	checkResponseBody(t, `{"organizations":[],"status":"ok"}`, response.Body)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.OrganizationsEndpoint,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"organizations":[],"status":"ok"}`,
+	})
 }
 
 func TestListOfOrganizationsOK(t *testing.T) {
@@ -202,153 +176,31 @@ func TestListOfOrganizationsOK(t *testing.T) {
 	defer helpers.MustCloseStorage(t, mockStorage)
 
 	err := mockStorage.WriteReportForCluster(1, "8083c377-8a05-4922-af8d-e7d0970c1f49", "{}", time.Now())
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteReportForCluster(5, "52ab955f-b769-444d-8170-4b676c5d3c85", "{}", time.Now())
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
-	checkResponseBody(t, `{"organizations":[1,5],"status":"ok"}`, response.Body)
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.OrganizationsEndpoint,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"organizations":[1, 5],"status":"ok"}`,
+	})
 }
 
 func TestListOfOrganizationsDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	helpers.MustCloseStorage(t, mockStorage)
 
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
-}
-
-func TestServerStartError(t *testing.T) {
-	testServer := server.New(server.Configuration{
-		Address:   "localhost:99999",
-		APIPrefix: "",
-	}, nil)
-
-	err := testServer.Start()
-	if err == nil {
-		t.Fatal(fmt.Errorf("should return an error"))
-	}
-}
-
-func TestGetRouterIntParamMissing(t *testing.T) {
-	request, err := http.NewRequest("GET", "organizations//clusters", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = server.GetRouterPositiveIntParam(request, "test")
-	if err == nil {
-		t.Fatal("Param should be missing")
-	}
-
-	assert.Equal(t, "missing param test", err.Error())
-}
-
-func TestReadClusterNameMissing(t *testing.T) {
-	request, err := http.NewRequest("GET", "", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = server.ReadClusterName(httptest.NewRecorder(), request)
-	if err == nil {
-		t.Fatal("Param should be missing")
-	}
-
-	assert.Equal(t, "missing param cluster", err.Error())
-}
-
-func TestReadOrganizationIDMissing(t *testing.T) {
-	request, err := http.NewRequest("GET", "", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = server.ReadOrganizationID(httptest.NewRecorder(), request)
-	if err == nil {
-		t.Fatal("Param should be missing")
-	}
-
-	assert.Equal(t, "missing param organization", err.Error())
-}
-
-func mustGetRequestWithMuxVars(
-	t *testing.T,
-	method string,
-	url string,
-	body io.Reader,
-	vars map[string]string,
-) *http.Request {
-	request, err := http.NewRequest(method, url, body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	request = mux.SetURLVars(request, vars)
-
-	return request
-}
-
-func TestGetRouterIntParamNonIntError(t *testing.T) {
-	request := mustGetRequestWithMuxVars(t, "GET", "", nil, map[string]string{
-		"id": "non int",
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.OrganizationsEndpoint,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "sql: database is closed"}`,
 	})
-
-	_, err := server.GetRouterPositiveIntParam(request, "id")
-
-	if err == nil {
-		t.Fatalf("Error expected, got %v", err)
-	}
-
-	assert.Contains(t, err.Error(), "integer expected")
-}
-
-func TestGetRouterIntParamOK(t *testing.T) {
-	request := mustGetRequestWithMuxVars(t, "GET", "", nil, map[string]string{
-		"id": "99",
-	})
-
-	id, err := server.GetRouterPositiveIntParam(request, "id")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, uint64(99), id)
-}
-
-func TestGetRouterPositiveIntParamZeroError(t *testing.T) {
-	request := mustGetRequestWithMuxVars(t, "GET", "", nil, map[string]string{
-		"id": "0",
-	})
-
-	_, err := server.GetRouterPositiveIntParam(request, "id")
-
-	if err == nil {
-		t.Fatalf("Error expected, got %v", err)
-	}
-
-	assert.Contains(t, err.Error(), "positive value expected")
 }
 
 func TestServerStart(t *testing.T) {
@@ -371,201 +223,167 @@ func TestServerStart(t *testing.T) {
 			}
 
 			// doing some request to be sure server started successfully
-			req, err := http.NewRequest("GET", config.APIPrefix, nil)
-			if err != nil {
-				panic(err)
-			}
+			req, err := http.NewRequest(http.MethodGet, config.APIPrefix, nil)
+			helpers.FailOnError(t, err)
 
-			response := executeRequest(s, req).Result()
+			response := helpers.ExecuteRequest(s, req, &config).Result()
 			checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 
 			// stopping the server
 			err = s.Stop(context.Background())
-			if err != nil {
-				panic(err)
-			}
+			helpers.FailOnError(t, err)
 		}()
 
 		err := s.Start()
 		if err != nil && err != http.ErrServerClosed {
-			panic(err)
+			t.Fatal(err)
 		}
 	}, 5*time.Second)
 }
 
+func TestServerStartError(t *testing.T) {
+	testServer := server.New(server.Configuration{
+		Address:   "localhost:99999",
+		APIPrefix: "",
+	}, nil)
+
+	err := testServer.Start()
+	assert.EqualError(t, err, "listen tcp: address 99999: invalid port")
+}
+
 func TestServeAPISpecFileOK(t *testing.T) {
 	err := os.Chdir("../")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest(
-		"GET",
-		config.APIPrefix+config.APISpecFile,
-		nil,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
+	helpers.FailOnError(t, err)
 
 	fileData, err := ioutil.ReadFile(config.APISpecFile)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	checkResponseBody(t, string(fileData), response.Body)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: config.APISpecFile,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       string(fileData),
+	})
 }
 
 func TestServeAPISpecFileError(t *testing.T) {
 	dirName, err := ioutil.TempDir("/tmp/", "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	err = os.Chdir(dirName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	err = os.Remove(dirName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest(
-		"GET",
-		config.APIPrefix+config.APISpecFile,
-		nil,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-
-	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: config.APISpecFile,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status":"Error creating absolute path of OpenAPI spec file"}`,
+	})
 }
 
 func TestRuleFeedbackVote(t *testing.T) {
-	for _, action := range []string{
-		"like", "dislike", "reset_vote",
+	for _, endpoint := range []string{
+		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
 	} {
 		var expectedVote storage.UserVote
 
-		switch action {
-		case "like":
+		switch endpoint {
+		case server.LikeRuleEndpoint:
 			expectedVote = storage.UserVoteLike
-		case "dislike":
+		case server.DislikeRuleEndpoint:
 			expectedVote = storage.UserVoteDislike
-		case "reset_vote":
+		case server.ResetVoteOnRuleEndpoint:
 			expectedVote = storage.UserVoteNone
 		default:
 			t.Fatal("not expected action")
 		}
 
-		func(action string) {
+		func(endpoint string) {
 			mockStorage := helpers.MustGetMockStorage(t, true)
 			defer helpers.MustCloseStorage(t, mockStorage)
 
-			testServer := server.New(config, mockStorage)
+			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+				Method:       http.MethodPut,
+				Endpoint:     endpoint,
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+				UserID:       testUserID,
+			}, &helpers.APIResponse{
+				StatusCode: http.StatusOK,
+				Body:       `{"status": "ok"}`,
+			})
 
-			url := fmt.Sprintf("%vclusters/%v/rules/%v/%v", config.APIPrefix, testClusterName, testRuleID, action)
-			req, err := http.NewRequest("PUT", url, nil)
+			feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testUserID)
 			helpers.FailOnError(t, err)
 
-			// authorize user
-			identity := server.Identity{
-				AccountNumber: testUserID,
-			}
-			req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
-
-			response := executeRequest(testServer, req).Result()
-
-			checkResponseCode(t, http.StatusOK, response.StatusCode)
-			checkResponseBody(t, `{"status":"ok"}`, response.Body)
-
-			feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
-			helpers.FailOnError(t, err)
-
-			assert.Equal(t, testClusterName, feedback.ClusterID)
-			assert.Equal(t, testRuleID, feedback.RuleID)
+			assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
+			assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
 			assert.Equal(t, testUserID, feedback.UserID)
 			assert.Equal(t, "", feedback.Message)
 			assert.Equal(t, expectedVote, feedback.UserVote)
-		}(action)
+		}(endpoint)
 	}
 }
 
 func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	url := fmt.Sprintf("%vclusters/%v/rules/%v/like", config.APIPrefix, testBadClusterName, testRuleID)
-	req, err := http.NewRequest("PUT", url, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.LikeRuleEndpoint,
+		EndpointArgs: []interface{}{testBadClusterName, testRuleID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "invalid cluster name format: 'aaaa'"}`,
+	})
 }
 
 func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	helpers.MustCloseStorage(t, mockStorage)
 
-	testServer := server.New(config, mockStorage)
-
-	url := fmt.Sprintf("%vclusters/%v/rules/%v/like", config.APIPrefix, testClusterName, testRuleID)
-	req, err := http.NewRequest("PUT", url, nil)
-	helpers.FailOnError(t, err)
-
-	// authorize user
-	identity := server.Identity{
-		AccountNumber: testUserID,
-	}
-	req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
-
-	response := executeRequest(testServer, req).Result()
-
-	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.LikeRuleEndpoint,
+		EndpointArgs: []interface{}{testClusterName, testRuleID},
+		UserID:       testUserID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "sql: database is closed"}`,
+	})
 }
 
 func TestDeleteReportsByOrganization(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-	testServer := server.New(config, mockStorage)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.DeleteOrganizationsEndpoint,
+		EndpointArgs: []interface{}{1},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
+}
 
-	req, err := http.NewRequest("DELETE", config.APIPrefix+"organizations/1", nil)
-	helpers.FailOnError(t, err)
-
-	resp := executeRequest(testServer, req)
-
-	checkResponseCode(t, http.StatusOK, resp.Result().StatusCode)
+func TestHTTPServer_deleteOrganizations_NonIntOrgID(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.DeleteOrganizationsEndpoint,
+		EndpointArgs: []interface{}{"non-int"},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "bad organizations param, integer array expected"}`,
+	})
 }
 
 func TestDeleteReportsByClusterName(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest("DELETE", config.APIPrefix+"clusters/2d615e74-29f8-4bfb-8269-908f1c1b1bb4", nil)
-	helpers.FailOnError(t, err)
-
-	resp := executeRequest(testServer, req)
-
-	checkResponseCode(t, http.StatusOK, resp.Result().StatusCode)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.DeleteClustersEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
 }

@@ -33,71 +33,64 @@ var configAuth = server.Configuration{
 
 // TestMissingAuthToken checks how the missing auth. token header (expected in HTTP request) is handled
 func TestMissingAuthToken(t *testing.T) {
-	server := server.New(configAuth, nil)
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.OrganizationsEndpoint,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status": "Missing auth token"}`,
+	})
 }
 
 // TestMalformedAuthToken checks whether string that is not BASE64-encoded can't be decoded
 func TestMalformedAuthToken(t *testing.T) {
-	server := server.New(configAuth, nil)
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// the following error is expected: illegal base64 data at input byte 0
-	req.Header.Set("x-rh-identity", "!")
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.OrganizationsEndpoint,
+		EndpointArgs: nil,
+		Body:         "",
+		UserID:       "",
+		XRHIdentity:  "!",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status": "Malformed authentication token"}`,
+	})
 }
 
 // TestInvalidAuthToken checks whether token header that is not properly encoded is handled correctly
 func TestInvalidAuthToken(t *testing.T) {
-	server := server.New(configAuth, nil)
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header.Set("x-rh-identity", "123456qwerty")
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:      http.MethodGet,
+		Endpoint:    server.OrganizationsEndpoint,
+		XRHIdentity: "123456qwerty",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status": "Malformed authentication token"}`,
+	})
 }
 
 // TestInvalidAuthToken checks whether token header that does not contain correct JSON
 // (encoded by BASE64) is handled correctly
 func TestInvalidJsonAuthToken(t *testing.T) {
-	server := server.New(configAuth, nil)
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header.Set("x-rh-identity", "aW52YWxpZCBqc29uCg==")
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:      http.MethodGet,
+		Endpoint:    server.OrganizationsEndpoint,
+		XRHIdentity: "aW52YWxpZCBqc29uCg==",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status": "Malformed authentication token"}`,
+	})
 }
 
 // TestBadOrganizationID checks if organization ID is checked properly
 func TestBadOrganizationID(t *testing.T) {
-	server := server.New(configAuth, helpers.MustGetMockStorage(t, true))
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations/12345/clusters", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header.Set("x-rh-identity", "eyJpZGVudGl0eSI6IHsiaW50ZXJuYWwiOiB7Im9yZ19pZCI6ICIxMjM0In19fQo=")
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
-	checkResponseBody(t, `{"clusters":[],"status":"ok"}`, response.Body)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{12345},
+		XRHIdentity:  "eyJpZGVudGl0eSI6IHsiaW50ZXJuYWwiOiB7Im9yZ19pZCI6ICIxMjM0In19fQo=",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"clusters":[],"status":"ok"}`,
+	})
 }

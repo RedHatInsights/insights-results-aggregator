@@ -21,5 +21,4 @@ var (
 	ReadOrganizationID        = readOrganizationID
 	ReadClusterName           = readClusterName
 	GetRouterPositiveIntParam = getRouterPositiveIntParam
-	ContextKeyUser            = contextKeyUser
 )
