@@ -25,6 +25,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 // Test Producer creation with a non accesible Kafka broker
@@ -56,7 +57,7 @@ func TestProducerProduceMessage(t *testing.T) {
 	}
 
 	_, _, err := producer.ProduceMessage("Hello world")
-	assert.Equal(t, err, nil)
+	helpers.FailOnError(t, err)
 }
 
 // Test ProduceMessage using a Sarama Mock producer. Asume sending fails
@@ -94,5 +95,5 @@ func TestProducerCloseSuccess(t *testing.T) {
 	}
 
 	err := prod.Close()
-	assert.Equal(t, err, nil)
+	helpers.FailOnError(t, err)
 }

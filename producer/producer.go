@@ -57,10 +57,10 @@ func New(brokerCfg broker.Configuration) (*KafkaProducer, error) {
 // ProduceMessage produces message to selected topic. That function returns
 // partition ID and offset of new message or an error value in case of any
 // problem on broker side.
-func (producer *KafkaProducer) ProduceMessage(message string) (partition int32, offset int64, errout error) {
+func (producer *KafkaProducer) ProduceMessage(message string) (int32, int64, error) {
 	brokerCfg := producer.Configuration
 	msg := &sarama.ProducerMessage{Topic: brokerCfg.PublishTopic, Value: sarama.StringEncoder(message)}
-	partition, offset, errout = producer.Producer.SendMessage(msg)
+	partition, offset, errout := producer.Producer.SendMessage(msg)
 
 	if errout != nil {
 		log.Error().Err(errout).Msg("FAILED to send message")
