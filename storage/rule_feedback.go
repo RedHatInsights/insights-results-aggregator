@@ -77,7 +77,7 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	userID types.UserID,
 	userVotePtr *UserVote,
 	messagePtr *string,
-) (outError error) {
+) error {
 	updateVote := false
 	updateMessage := false
 	userVote := UserVoteNone
@@ -103,7 +103,10 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 		return err
 	}
 	defer func() {
-		outError = statement.Close()
+		err := statement.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to close statement")
+		}
 	}()
 
 	now := time.Now()
@@ -123,7 +126,7 @@ func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote bool,
 	var query string
 
 	switch storage.dbDriverType {
-	case DBDriverSQLite3, DBDriverPostgres:
+	case DBDriverSQLite3, DBDriverPostgres, DBDriverGeneral:
 		query = `
 			INSERT INTO cluster_rule_user_feedback
 			(cluster_id, rule_id, user_id, user_vote, added_at, updated_at, message)

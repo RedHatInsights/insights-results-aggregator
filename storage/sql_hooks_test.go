@@ -25,45 +25,55 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lib/pq"
+	"github.com/mattn/go-sqlite3"
+
 	"github.com/rs/zerolog"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInitAndGetSQLDriverWithLogsOK(t *testing.T) {
+func TestInitSQLDriverWithLogs(t *testing.T) {
 	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
-	driverName, err := storage.InitAndGetSQLDriverWithLogs(storage.DBDriverSQLite3, &logger)
-	if err != nil {
-		t.Fatal(err)
-	}
 
+	driverName := storage.InitSQLDriverWithLogs(
+		&sqlite3.SQLiteDriver{},
+		"sqlite3",
+		&logger,
+	)
 	assert.Equal(t, "sqlite3WithHooks", driverName)
 
-	driverName, err = storage.InitAndGetSQLDriverWithLogs(storage.DBDriverPostgres, &logger)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	driverName = storage.InitSQLDriverWithLogs(
+		&pq.Driver{},
+		"postgres",
+		&logger,
+	)
 	assert.Equal(t, "postgresWithHooks", driverName)
 }
 
-func TestInitAndGetSQLDriverWithLogsDriverNotFound(t *testing.T) {
+// TestInitSQLDriverWithLogsMultipleCalls tests if InitSQLDriverWithLogs
+// does not panic on multiple calls and is idempotent
+func TestInitSQLDriverWithLogsMultipleCalls(t *testing.T) {
 	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
-	const nonExistingDriver = -1
-	_, err := storage.InitAndGetSQLDriverWithLogs(nonExistingDriver, &logger)
-	if err == nil || err.Error() != fmt.Sprintf("driver '%v' is not supported", nonExistingDriver) {
-		t.Fatal(fmt.Errorf("expected driver not supported error, got %+v", err))
+
+	for i := 0; i < 10; i++ {
+		driverName := storage.InitSQLDriverWithLogs(
+			&sqlite3.SQLiteDriver{},
+			"sqlite3",
+			&logger,
+		)
+		assert.Equal(t, "sqlite3WithHooks", driverName)
 	}
 }
 
 func TestSQLHooksLoggingArgsJSON(t *testing.T) {
 	const query = "SELECT 1"
-	var params = []interface{}{}
+	params := make([]interface{}, 0)
 
 	buf := new(bytes.Buffer)
 	logger := zerolog.New(buf).With().Str("type", "SQL").Logger()
-	hooks := storage.SQLHooks{&logger}
+	hooks := storage.SQLHooks{SQLQueriesLogger: &logger}
 
 	_, err := hooks.Before(context.Background(), query, params...)
 	if err != nil {
@@ -99,7 +109,7 @@ func TestSQLHooksLoggingArgsNotJSON(t *testing.T) {
 
 	buf := new(bytes.Buffer)
 	logger := zerolog.New(buf).With().Str("type", "SQL").Logger()
-	hooks := storage.SQLHooks{&logger}
+	hooks := storage.SQLHooks{SQLQueriesLogger: &logger}
 
 	_, err := hooks.Before(context.Background(), query, params...)
 	if err != nil {

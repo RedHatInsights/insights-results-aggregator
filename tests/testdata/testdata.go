@@ -160,6 +160,7 @@ var (
 	"info": []
 }
 `)
+
 	Report3RulesExpectedResponse = `
 {
   "report": {
