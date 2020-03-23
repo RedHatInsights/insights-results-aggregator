@@ -17,10 +17,12 @@ limitations under the License.
 package consumer_test
 
 import (
+	"encoding/json"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 
 	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set"
@@ -35,214 +37,129 @@ import (
 
 const (
 	testTopicName = "topic"
-	testMessage   = `{
-		"OrgID": 1,
-		"ClusterName": "aaaaaaaa-bbbb-cccc-dddd-000000000000",
-		"Report":{
-		  "fingerprints": [],
-		  "info": [],
-		  "reports": [],
-		  "skips": [],
-		  "system": {}
-		},
-		"LastChecked": "2020-01-23T16:15:59.478901889Z"
-	}`
 	// time limit for *some* tests which can stuck in forever loop
 	testCaseTimeLimit = 10 * time.Second
 )
 
 var (
 	testOrgWhiteList = mapset.NewSetWith(types.OrgID(1))
-)
-
-func closeStorage(t *testing.T, storage storage.Storage) {
-	err := storage.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestConsumerConstructorNoKafka(t *testing.T) {
-	storageCfg := storage.Configuration{
-		Driver:           "sqlite3",
-		SQLiteDataSource: ":memory:",
-	}
-	storage, err := storage.New(storageCfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer closeStorage(t, storage)
-
-	brokerCfg := broker.Configuration{
+	wrongBrokerCfg   = broker.Configuration{
 		Address: "localhost:1234",
 		Topic:   "topic",
 		Group:   "group",
 	}
-	consumer, err := consumer.New(brokerCfg, storage)
-	if err == nil {
-		t.Fatal("Error should be reported")
-	}
-	if consumer != nil {
-		t.Fatal("consumer.New should return nil instead of Consumer implementation")
-	}
+)
+
+func TestConsumerConstructorNoKafka(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, false)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	mockConsumer, err := consumer.New(wrongBrokerCfg, mockStorage)
+	assert.Error(t, err)
+	assert.Contains(
+		t, err.Error(), "kafka: client has run out of available brokers to talk to",
+	)
+	assert.Equal(
+		t,
+		(*consumer.KafkaConsumer)(nil),
+		mockConsumer,
+		"consumer.New should return nil instead of Consumer implementation",
+	)
 }
 
 func TestParseEmptyMessage(t *testing.T) {
-	const message = ``
-	_, err := consumer.ParseMessage([]byte(message))
-	if err == nil {
-		t.Fatal("Error is expected to be returned for empty message")
-	}
-	errorMessage := err.Error()
-	if !strings.HasPrefix(errorMessage, "unexpected end of JSON input") {
-		t.Fatal("Improper error message: " + errorMessage)
-	}
+	_, err := consumer.ParseMessage([]byte(""))
+	assert.EqualError(t, err, "unexpected end of JSON input")
 }
 
 func TestParseMessageWithWrongContent(t *testing.T) {
 	const message = `{"this":"is", "not":"expected content"}`
 	_, err := consumer.ParseMessage([]byte(message))
-	if err == nil {
-		t.Fatal("Error is expected to be returned for message that has improper content")
-	}
-	errorMessage := err.Error()
-	if !strings.HasPrefix(errorMessage, "missing required attribute 'OrgID'") {
-		t.Fatal("Improper error message: " + errorMessage)
-	}
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "missing required attribute")
 }
 
 func TestParseMessageWithImproperJSON(t *testing.T) {
 	const message = `"this_is_not_json_dude"`
 	_, err := consumer.ParseMessage([]byte(message))
-	if err == nil {
-		t.Fatal("Error is expected to be returned for message that does not contain valid JSON")
-	}
-	errorMessage := err.Error()
-	if !strings.HasPrefix(errorMessage, "json: cannot unmarshal") {
-		t.Fatal("Improper error message: " + errorMessage)
-	}
+	assert.EqualError(
+		t,
+		err,
+		"json: cannot unmarshal string into Go value of type consumer.incomingMessage",
+	)
 }
 
 func TestParseProperMessage(t *testing.T) {
-	const messageStr = `
-{"OrgID":1,
- "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":{
-   "fingerprints": [],
-   "info": [],
-   "reports": [],
-   "skips": [],
-   "system": {}
- }
-}
-`
-	message, err := consumer.ParseMessage([]byte(messageStr))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if int(*message.Organization) != 1 {
-		t.Fatal("OrgID is different", message.Organization)
-	}
-	if *message.ClusterName != "aaaaaaaa-bbbb-cccc-dddd-000000000000" {
-		t.Fatal("Cluster name is different", *message.ClusterName)
-	}
-	if len(*message.Report) != 5 {
-		t.Fatal("Report has different structure", *message.Report)
-	}
+	message, err := consumer.ParseMessage([]byte(testdata.ConsumerMessage))
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, types.OrgID(1), *message.Organization)
+	assert.Equal(t, testdata.ClusterName, *message.ClusterName)
+
+	var expectedReport consumer.Report
+	err = json.Unmarshal([]byte(testdata.ConsumerReport), &expectedReport)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, expectedReport, *message.Report)
 }
 
 func TestParseProperMessageWrongClusterName(t *testing.T) {
-	const message = `
-{"OrgID":1,
- "ClusterName":"this is not a UUID",
- "Report":{
-   "fingerprints": [],
-   "info": [],
-   "reports": [],
-   "skips": [],
-   "system": {}
- }
-}
-`
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "this is not a UUID",
+		"Report": ` + testdata.ConsumerReport + `
+	}`
 	_, err := consumer.ParseMessage([]byte(message))
-	if err == nil {
-		t.Fatal("Error is expected to be returned for a wrong ClusterName format")
-	}
-	errorMessage := err.Error()
-	if !strings.HasPrefix(errorMessage, "cluster name is not a UUID") {
-		t.Fatal("Improper error message: " + errorMessage)
-	}
+	assert.EqualError(t, err, "cluster name is not a UUID")
 }
 
 func TestParseMessageWithoutOrgID(t *testing.T) {
-	const message = `
-{"ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":{
-   "fingerprints": [],
-   "info": [],
-   "reports": [],
-   "skips": [],
-   "system": {}
- }
-}
-`
+	message := `{
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": ` + testdata.ConsumerReport + `
+	}`
 	_, err := consumer.ParseMessage([]byte(message))
-	if err == nil {
-		t.Fatal("Error is expected to be returned for empty message")
-	}
+	assert.EqualError(t, err, "missing required attribute 'OrgID'")
 }
 
 func TestParseMessageWithoutClusterName(t *testing.T) {
-	const message = `
-{"OrgID":1,
- "Report":{
-   "fingerprints": [],
-   "info": [],
-   "reports": [],
-   "skips": [],
-   "system": {}
- }
-}
-`
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"Report": ` + testdata.ConsumerReport + `
+	}`
 	_, err := consumer.ParseMessage([]byte(message))
-	if err == nil {
-		t.Fatal("Error is expected to be returned for empty message")
-	}
+	assert.EqualError(t, err, "missing required attribute 'ClusterName'")
 }
 
 func TestParseMessageWithoutReport(t *testing.T) {
-	const message = `
-{"OrgID":1,
- "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000"}
-`
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `"
+	}`
 	_, err := consumer.ParseMessage([]byte(message))
-	if err == nil {
-		t.Fatal("Error is expected to be returned for empty message")
-	}
+	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 
 func TestParseMessageEmptyReport(t *testing.T) {
-	const message = `
-{"OrgID":1,
- "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":{}}
-`
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": {}
+	}`
+
 	_, err := consumer.ParseMessage([]byte(message))
-	if err == nil {
-		t.Fatal("Error is expected to be returned for message with null report")
-	}
+	assert.EqualError(t, err, "Improper report structure, missing key fingerprints")
 }
 
 func TestParseMessageNullReport(t *testing.T) {
-	const message = `
-{"OrgID":1,
- "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":null}
-`
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": null
+	}`
+
 	_, err := consumer.ParseMessage([]byte(message))
-	if err == nil {
-		t.Fatal("Error is expected to be returned for message with null report")
-	}
+	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 
 func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
@@ -261,123 +178,80 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 		Storage:           s,
 	}
 }
-func TestProcessEmptyMessage(t *testing.T) {
-	storage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, storage)
 
-	c := dummyConsumer(storage, true)
+func TestProcessEmptyMessage(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	c := dummyConsumer(mockStorage, true)
 
 	message := sarama.ConsumerMessage{}
-	// messsage is empty -> nothing should be written into storage
+	// message is empty -> nothing should be written into storage
 	err := c.ProcessMessage(&message)
-	if err == nil {
-		t.Fatal("Expected unexpected end of JSON input error")
-	}
+	assert.EqualError(t, err, "unexpected end of JSON input")
 
-	cnt, err := storage.ReportsCount()
-	if err != nil {
-		t.Fatal(err)
-	}
+	count, err := mockStorage.ReportsCount()
+	helpers.FailOnError(t, err)
 
-	if cnt != 0 {
-		t.Fatal("ProcessMessage wrote anything into DB", cnt)
-	}
+	assert.Equal(
+		t,
+		0,
+		count,
+		"process message shouldn't write anything into the DB",
+	)
 }
 
 func TestProcessCorrectMessage(t *testing.T) {
-	storage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, storage)
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
-	c := dummyConsumer(storage, true)
+	c := dummyConsumer(mockStorage, true)
 
-	const messageValue = `
-{"OrgID":1,
- "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":{
-   "fingerprints": [],
-   "info": [],
-   "reports": [],
-   "skips": [],
-   "system": {}
- },
- "LastChecked":"2020-01-23T16:15:59.478901889Z"}
-`
 	message := sarama.ConsumerMessage{}
-	message.Value = []byte(messageValue)
-	// messsage is empty -> nothing should be written into storage
+	message.Value = []byte(testdata.ConsumerMessage)
+	// message is empty -> nothing should be written into storage
 	err := c.ProcessMessage(&message)
-	if err != nil {
-		t.Fatal(err)
-	}
-	cnt, err := storage.ReportsCount()
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	if cnt == 0 {
-		t.Fatal("ProcessMessage does not wrote anything into storage")
-	}
-	if cnt != 1 {
-		t.Fatal("ProcessMessage does more writes than expected")
-	}
+	count, err := mockStorage.ReportsCount()
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, 1, count)
+}
+
+func consumerProcessMessage(mockConsumer consumer.Consumer, message string) error {
+	saramaMessage := sarama.ConsumerMessage{}
+	saramaMessage.Value = []byte(message)
+	return mockConsumer.ProcessMessage(&saramaMessage)
 }
 
 func TestProcessingMessageWithClosedStorage(t *testing.T) {
-	storage := helpers.MustGetMockStorage(t, true)
+	mockStorage := helpers.MustGetMockStorage(t, true)
 
-	c := dummyConsumer(storage, false)
+	mockConsumer := dummyConsumer(mockStorage, true)
+	helpers.MustCloseStorage(t, mockStorage)
 
-	err := storage.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	const messageValue = `
-{"OrgID":1,
- "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":{
-   "fingerprints": [],
-   "info": [],
-   "reports": [],
-   "skips": [],
-   "system": {}
- },
- "LastChecked":"2020-01-23T16:15:59.478901889Z"}
-`
-
-	message := sarama.ConsumerMessage{}
-	message.Value = []byte(messageValue)
-	err = c.ProcessMessage(&message)
-	if err == nil {
-		t.Fatal(fmt.Errorf("Expected error because database was closed"))
-	}
+	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
-	storage := helpers.MustGetMockStorage(t, true)
-	defer closeStorage(t, storage)
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
 
-	c := dummyConsumer(storage, true)
+	mockConsumer := dummyConsumer(mockStorage, true)
 
-	const messageValue = `
-{"OrgID":1,
- "ClusterName":"aaaaaaaa-bbbb-cccc-dddd-000000000000",
- "Report":{
-   "fingerprints": [],
-   "info": [],
-   "reports": [],
-   "skips": [],
-   "system": {}
- },
- "LastChecked":"2020.01.23 16:15:59"}
-`
+	messageValue := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": ` + testdata.ConsumerReport + `,
+		"LastChecked": "2020.01.23 16:15:59"
+	}`
 
-	message := sarama.ConsumerMessage{}
-	message.Value = []byte(messageValue)
-	err := c.ProcessMessage(&message)
+	err := consumerProcessMessage(mockConsumer, messageValue)
 	if _, ok := err.(*time.ParseError); err == nil || !ok {
 		t.Fatal(fmt.Errorf(
-			"Expected time.ParseError error because date format is wrong. Got %+v", err,
+			"expected time.ParseError error because date format is wrong. Got %+v", err,
 		))
 	}
 }
@@ -388,7 +262,7 @@ func TestKafkaConsumerMockOK(t *testing.T) {
 			t,
 			testTopicName,
 			testOrgWhiteList,
-			[]string{testMessage},
+			[]string{testdata.ConsumerMessage},
 		)
 
 		go mockConsumer.Serve()
@@ -397,9 +271,7 @@ func TestKafkaConsumerMockOK(t *testing.T) {
 		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
 
 		err := mockConsumer.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
+		helpers.FailOnError(t, err)
 
 		assert.Equal(t, uint64(1), mockConsumer.GetNumberOfSuccessfullyConsumedMessages())
 		assert.Equal(t, uint64(0), mockConsumer.GetNumberOfErrorsConsumingMessages())
@@ -421,9 +293,7 @@ func TestKafkaConsumerMockBadMessage(t *testing.T) {
 		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
 
 		err := mockConsumer.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
+		helpers.FailOnError(t, err)
 
 		assert.Equal(t, uint64(0), mockConsumer.GetNumberOfSuccessfullyConsumedMessages())
 		assert.Equal(t, uint64(1), mockConsumer.GetNumberOfErrorsConsumingMessages())
@@ -433,24 +303,106 @@ func TestKafkaConsumerMockBadMessage(t *testing.T) {
 func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
-			t, testTopicName, testOrgWhiteList, []string{testMessage},
+			t, testTopicName, testOrgWhiteList, []string{testdata.ConsumerMessage},
 		)
 
 		err := mockConsumer.Storage.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
+		helpers.FailOnError(t, err)
 
 		go mockConsumer.Serve()
 
 		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
 
 		err = mockConsumer.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
+		helpers.FailOnError(t, err)
 
 		assert.Equal(t, uint64(0), mockConsumer.GetNumberOfSuccessfullyConsumedMessages())
 		assert.Equal(t, uint64(1), mockConsumer.GetNumberOfErrorsConsumingMessages())
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	mockConsumer := dummyConsumer(mockStorage, false)
+
+	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	assert.EqualError(t, err, "organization ID is not whitelisted")
+}
+
+func newConsumerWithMockBroker(t *testing.T) (storage.Storage, *helpers.MockBroker, consumer.Consumer) {
+	mockStorage := helpers.MustGetMockStorage(t, false)
+	mockBroker := helpers.MustNewMockBroker(t)
+
+	saramaConfig := sarama.NewConfig()
+	saramaConfig.ChannelBufferSize = 1
+	saramaConfig.Version = sarama.V0_10_0_1
+	saramaConfig.Producer.Return.Successes = true
+
+	mockConsumer, err := consumer.NewWithSaramaConfig(broker.Configuration{
+		Address:      mockBroker.Address,
+		Topic:        mockBroker.TopicName,
+		Group:        mockBroker.Group,
+		Enabled:      true,
+		OrgWhitelist: nil,
+	}, mockStorage, saramaConfig, false)
+	helpers.FailOnError(t, err)
+
+	assert.NotNil(t, mockConsumer)
+
+	return mockStorage, mockBroker, mockConsumer
+}
+
+func TestKafkaConsumer_New_MockBroker(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockStorage, mockBroker, mockConsumer := newConsumerWithMockBroker(t)
+		defer helpers.MustCloseStorage(t, mockStorage)
+		defer mockBroker.MustClose(t)
+		defer helpers.MustCloseConsumer(t, mockConsumer)
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumer_New_MockBrokerNoTopicError(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockStorage := helpers.MustGetMockStorage(t, false)
+		defer helpers.MustCloseStorage(t, mockStorage)
+
+		// pass empty string instead of topic name
+		mockBroker, err := helpers.NewMockBroker(t, "")
+		helpers.FailOnError(t, err)
+		defer mockBroker.MustClose(t)
+
+		saramaConfig := sarama.NewConfig()
+		saramaConfig.ChannelBufferSize = 1
+		saramaConfig.Version = sarama.V0_10_0_1
+		saramaConfig.Producer.Return.Successes = true
+
+		mockConsumer, err := consumer.NewWithSaramaConfig(broker.Configuration{
+			Address:      mockBroker.Address,
+			Topic:        mockBroker.TopicName,
+			Group:        mockBroker.Group,
+			Enabled:      true,
+			OrgWhitelist: nil,
+		}, mockStorage, saramaConfig, false)
+		assert.EqualError(
+			t,
+			err,
+			"kafka server: The request attempted to perform an operation on an invalid topic.",
+		)
+		assert.Nil(t, mockConsumer)
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumer_Close_MockBrokerError(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockStorage, mockBroker, mockConsumer := newConsumerWithMockBroker(t)
+		defer helpers.MustCloseStorage(t, mockStorage)
+		defer mockBroker.MustClose(t)
+		helpers.MustCloseConsumer(t, mockConsumer)
+
+		// closing it second time should cause an error
+		err := mockConsumer.Close()
+		assert.EqualError(t, err, "kafka: tried to use a client that was closed")
 	}, testCaseTimeLimit)
 }
