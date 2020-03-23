@@ -14,22 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/* REST API tests for following endpoints:
-
-apiPrefix
-
-apiPrefix+"organizations"
-
-apiPrefix+"report/{organization}/{cluster}"
-
-apiPrefix+"clusters/{cluster}/rules/{rule_id}/like"
-
-apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike"
-
-apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote"
-
-apiPrefix+"organizations/{organization}/clusters"
-*/
+// Package tests contains REST API tests for following endpoints:
+//
+// apiPrefix
+//
+// apiPrefix+"organizations"
+//
+// apiPrefix+"report/{organization}/{cluster}"
+//
+// apiPrefix+"clusters/{cluster}/rules/{rule_id}/like"
+//
+// apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike"
+//
+// apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote"
+//
+// apiPrefix+"organizations/{organization}/clusters"
 package tests
 
 import (
