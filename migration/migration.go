@@ -25,7 +25,6 @@ package migration
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 )
 
 // Version represents a version of the database.
@@ -60,53 +59,45 @@ func GetMaxVersion() Version {
 // If it already exists, no changes will be made to the database.
 // Otherwise, a new migration information table will be created and initialized.
 func InitInfoTable(db *sql.DB) error {
-	// Check if migration info table already exists.
-	countResult := db.QueryRow("SELECT COUNT(*) FROM migration_info")
-	var rowCount int
-	err := countResult.Scan(&rowCount)
-	// If it exists, it must have exactly 1 row.
-	// If it doesn't exist, the "no such table" error is expected.
-	// Otherwise, there's something wrong.
-	if err == nil {
+	return withTransaction(db, func(tx *sql.Tx) error {
+		_, err := tx.Exec("CREATE TABLE IF NOT EXISTS migration_info (version INTEGER NOT NULL);")
+		if err != nil {
+			return err
+		}
+
+		// INSERT if there's no rows in the table
+		_, err = tx.Exec(`
+			INSERT INTO migration_info (version) SELECT 0 WHERE NOT EXISTS (SELECT version FROM migration_info);
+		`)
+		if err != nil {
+			return err
+		}
+
+		var rowCount uint
+		err = tx.QueryRow("SELECT COUNT(*) FROM migration_info").Scan(&rowCount)
+		if err != nil {
+			return err
+		}
+
 		if rowCount != 1 {
 			return fmt.Errorf("unexpected number of rows in migration info table (expected: 1, reality: %d)", rowCount)
 		}
-		return nil
-	} else if !strings.Contains(err.Error(), "migration_info") {
-		// An error not related to the nonexistence of the migration_info table.
-		return err
-	}
 
-	return initInfoTab(db)
+		return nil
+	})
 }
 
 // GetDBVersion reads the current version of the database from the migration info table.
 func GetDBVersion(db *sql.DB) (Version, error) {
-	rows, err := db.Query("SELECT version FROM migration_info")
+	err := validateNumberOfRows(db)
 	if err != nil {
 		return 0, err
-	}
-	defer func() {
-		_ = rows.Close()
-	}()
-
-	// Read the first (and hopefully the only) row in the table.
-	if !rows.Next() {
-		return 0, fmt.Errorf("migration info table is empty")
 	}
 
 	var version Version = 0
-	err = rows.Scan(&version)
-	if err != nil {
-		return 0, err
-	}
+	err = db.QueryRow("SELECT version FROM migration_info").Scan(&version)
 
-	// Check if another row is available (it should NOT be).
-	if rows.Next() {
-		return 0, fmt.Errorf("migration info table contain multiple rows")
-	}
-
-	return version, nil
+	return version, err
 }
 
 // SetDBVersion attempts to get the database into the specified
@@ -129,28 +120,6 @@ func SetDBVersion(db *sql.DB, targetVer Version) error {
 	}
 
 	return execStepsInTx(db, currentVer, targetVer)
-}
-
-// initInfoTab performs the actual creation and initialization of the migration info table.
-func initInfoTab(db *sql.DB) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec("CREATE TABLE migration_info (version INTEGER NOT NULL)")
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	_, err = tx.Exec("INSERT INTO migration_info(version) VALUES(0)")
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
 }
 
 // updateVersionInDB updates the migration version number in the migration info table.
@@ -181,34 +150,45 @@ func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
 		return nil
 	}
 
-	// Begin a new transaction.
-	tx, err := db.Begin()
+	return withTransaction(db, func(tx *sql.Tx) error {
+		// Upgrade to target version.
+		for currentVer < targetVer {
+			if err := migrations[currentVer].StepUp(tx); err != nil {
+				return err
+			}
+			currentVer++
+		}
+
+		// Downgrade to target version.
+		for currentVer > targetVer {
+			if err := migrations[currentVer-1].StepDown(tx); err != nil {
+				return err
+			}
+			currentVer--
+		}
+
+		if err := updateVersionInDB(tx, currentVer); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func validateNumberOfRows(db *sql.DB) error {
+	numberOfRows, err := getNumberOfRows(db)
 	if err != nil {
 		return err
 	}
-
-	// Upgrade to target version.
-	for currentVer < targetVer {
-		if err = migrations[currentVer].StepUp(tx); err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		currentVer++
+	if numberOfRows != 1 {
+		return fmt.Errorf("migration info table contain %v rows", numberOfRows)
 	}
 
-	// Downgrade to target version.
-	for currentVer > targetVer {
-		if err = migrations[currentVer-1].StepDown(tx); err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		currentVer--
-	}
+	return nil
+}
 
-	if err = updateVersionInDB(tx, currentVer); err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
+func getNumberOfRows(db *sql.DB) (uint, error) {
+	var count uint
+	err := db.QueryRow("SELECT COUNT(*) FROM migration_info;").Scan(&count)
+	return count, err
 }
