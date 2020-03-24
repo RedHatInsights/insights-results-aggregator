@@ -257,7 +257,8 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
 ) (types.ClusterReport, types.Timestamp, error) {
-	var report, lastChecked string
+	var report string
+	var lastChecked time.Time
 
 	err := storage.connection.QueryRow(
 		"SELECT report, last_checked_at FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
@@ -272,7 +273,7 @@ func (storage DBStorage) ReadReportForCluster(
 		return "", "", err
 	}
 
-	return types.ClusterReport(report), types.Timestamp(lastChecked), nil
+	return types.ClusterReport(report), types.Timestamp(lastChecked.Format(time.RFC3339)), nil
 }
 
 // constructWhereClause constructs a dynamic WHERE .. IN clause

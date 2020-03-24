@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -93,7 +94,7 @@ func validateClusterName(writer http.ResponseWriter, clusterName string) (types.
 		message := fmt.Sprintf("invalid cluster name format: '%s'", clusterName)
 
 		log.Error().Err(err).Msg(message)
-		responses.SendInternalServerError(writer, message)
+		responses.Send(http.StatusBadRequest, writer, message)
 
 		return "", errors.New(message)
 	}
@@ -163,7 +164,7 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 		return []types.ClusterName{}, err
 	}
 
-	clusterNamesConverted := []types.ClusterName{}
+	clusterNamesConverted := make([]types.ClusterName, 0)
 	for _, clusterName := range splitRequestParamArray(clusterNamesParam) {
 		convertedName, err := validateClusterName(writer, clusterName)
 		if err != nil {
@@ -184,14 +185,41 @@ func readOrganizationIDs(writer http.ResponseWriter, request *http.Request) ([]t
 		return []types.OrgID{}, err
 	}
 
-	organizationsConverted := []types.OrgID{}
+	organizationsConverted := make([]types.OrgID, 0)
 	for _, orgStr := range splitRequestParamArray(organizationsParam) {
 		orgInt, err := strconv.ParseUint(orgStr, 10, 64)
 		if err != nil {
+			responses.Send(http.StatusBadRequest, writer, "bad organizations param, integer array expected")
 			return []types.OrgID{}, err
 		}
 		organizationsConverted = append(organizationsConverted, types.OrgID(orgInt))
 	}
 
 	return organizationsConverted, nil
+}
+
+func readRuleID(writer http.ResponseWriter, request *http.Request) (types.RuleID, error) {
+	ruleID, err := getRouterParam(request, "rule_id")
+	if err != nil {
+		const message = "unable to get rule id"
+		log.Error().Err(err).Msg(message)
+		responses.Send(http.StatusInternalServerError, writer, message)
+		return types.RuleID(0), err
+	}
+
+	ruleIDValidator := regexp.MustCompile(`^[a-zA-Z_0-9.]+$`)
+
+	isRuleIDValid := ruleIDValidator.Match([]byte(ruleID))
+
+	if !isRuleIDValid {
+		err = fmt.Errorf("invalid rule ID, it must contain only from latin characters, number, underscores or dots")
+		responses.Send(
+			http.StatusBadRequest,
+			writer,
+			err.Error(),
+		)
+		return types.RuleID(0), err
+	}
+
+	return types.RuleID(ruleID), nil
 }
