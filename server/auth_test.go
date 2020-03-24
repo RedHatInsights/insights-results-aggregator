@@ -43,8 +43,9 @@ var configAuth2 = server.Configuration{
 // TestMissingAuthToken checks how the missing auth. token header (expected in HTTP request) is handled
 func TestMissingAuthToken(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
-		Method:   http.MethodGet,
-		Endpoint: server.OrganizationsEndpoint,
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{1},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
 		Body:       `{"status": "Missing auth token"}`,
@@ -55,19 +56,21 @@ func TestMissingAuthToken(t *testing.T) {
 func TestJWTToken(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &configAuth2, &helpers.APIRequest{
 		Method:             http.MethodGet,
-		Endpoint:           server.OrganizationsEndpoint,
+		Endpoint:           server.ClustersForOrganizationEndpoint,
+		EndpointArgs:       []interface{}{1234},
 		AuthorizationToken: "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X251bWJlciI6IjUyMTM0NzYiLCJvcmdfaWQiOiIxMjM0In0.Y9nNaZXbMEO6nz2EHNaCvHxPM0IaeT7GGR-T8u8h_nr_2b5dYsCQiZGzzkBupRJruHy9K6acgJ08JN2Q28eOAEVk_ZD2EqO43rSOS6oe8uZmVo-nCecdqovHa9PqW8RcZMMxVfGXednw82kKI8j1aT_nbJ1j9JZt3hnHM4wtqydelMij7zKyZLHTWFeZbDDCuEIkeWA6AdIBCMdywdFTSTsccVcxT2rgv4mKpxY1Fn6Vu_Xo27noZW88QhPTHbzM38l9lknGrvJVggrzMTABqWEXNVHbph0lXjPWsP7pe6v5DalYEBN2r3a16A6s3jPfI86cRC6_oeXotlW6je0iKQ",
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
-		Body:       `{"organizations":[],"status":"ok"}`,
+		Body:       `{"clusters":[],"status":"ok"}`,
 	})
 }
 
 // TestJWTToken checks authorization through Authorization header
 func TestJWTTokenMalformed(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &configAuth2, &helpers.APIRequest{
-		Method:   http.MethodGet,
-		Endpoint: server.OrganizationsEndpoint,
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{1234},
 		// do not pass token itself
 		AuthorizationToken: "Bearer",
 	}, &helpers.APIResponse{
@@ -76,11 +79,12 @@ func TestJWTTokenMalformed(t *testing.T) {
 	})
 }
 
-// TestJWTToken checks authorization through Authorization header
+// TestJWTTokenMalformedJSON checks authorization through Authorization header with bad JSON in JWT token
 func TestJWTTokenMalformedJSON(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &configAuth2, &helpers.APIRequest{
-		Method:   http.MethodGet,
-		Endpoint: server.OrganizationsEndpoint,
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{1234},
 		// pass bad json
 		AuthorizationToken: "Bearer bm90LWpzb24K.bm90LWpzb24K.bm90LWpzb24K",
 	}, &helpers.APIResponse{
@@ -92,9 +96,10 @@ func TestJWTTokenMalformedJSON(t *testing.T) {
 // TestMalformedAuthToken checks whether string that is not BASE64-encoded can't be decoded
 func TestMalformedAuthToken(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
-		Method:      http.MethodGet,
-		Endpoint:    server.OrganizationsEndpoint,
-		XRHIdentity: "!",
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{1},
+		XRHIdentity:  "!",
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
 		Body:       `{"status": "Malformed authentication token"}`,
@@ -104,9 +109,10 @@ func TestMalformedAuthToken(t *testing.T) {
 // TestInvalidAuthToken checks whether token header that is not properly encoded is handled correctly
 func TestInvalidAuthToken(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
-		Method:      http.MethodGet,
-		Endpoint:    server.OrganizationsEndpoint,
-		XRHIdentity: "123456qwerty",
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{1},
+		XRHIdentity:  "123456qwerty",
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
 		Body:       `{"status": "Malformed authentication token"}`,
@@ -117,9 +123,10 @@ func TestInvalidAuthToken(t *testing.T) {
 // (encoded by BASE64) is handled correctly
 func TestInvalidJsonAuthToken(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
-		Method:      http.MethodGet,
-		Endpoint:    server.OrganizationsEndpoint,
-		XRHIdentity: "aW52YWxpZCBqc29uCg==",
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{1},
+		XRHIdentity:  "aW52YWxpZCBqc29uCg==",
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
 		Body:       `{"status": "Malformed authentication token"}`,
@@ -134,7 +141,7 @@ func TestBadOrganizationID(t *testing.T) {
 		EndpointArgs: []interface{}{12345},
 		XRHIdentity:  "eyJpZGVudGl0eSI6IHsiaW50ZXJuYWwiOiB7Im9yZ19pZCI6ICIxMjM0In19fQo=",
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusOK,
-		Body:       `{"clusters":[],"status":"ok"}`,
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status":"You have no permissions to get or change info about this organization"}`,
 	})
 }
