@@ -134,6 +134,17 @@ func NewWithSaramaConfig(
 		partitions[0],
 		nextOffset,
 	)
+	if kErr, ok := err.(sarama.KError); ok && kErr == sarama.ErrOffsetOutOfRange {
+		// try again with offset from the beginning
+		log.Error().Err(err).Msg("consuming from the beginning")
+
+		nextOffset = sarama.OffsetOldest
+		partitionConsumer, err = consumer.ConsumePartition(
+			brokerCfg.Topic,
+			partitions[0],
+			nextOffset,
+		)
+	}
 	if err != nil {
 		return nil, err
 	}
