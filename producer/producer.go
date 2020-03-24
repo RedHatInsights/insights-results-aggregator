@@ -28,31 +28,55 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 )
 
-// ProduceMessage produces message to selected topic. That function returns
-// partition ID and offset of new message or an error value in case of any
-// problem on broker side.
-func ProduceMessage(brokerCfg broker.Configuration, message string) (partition int32, offset int64, errout error) {
+// Producer represents any producer
+type Producer interface {
+	ProduceMessage(msg string) (int32, int64, error)
+	Close() error
+}
+
+// KafkaProducer is an implementation of Producer interface
+type KafkaProducer struct {
+	Configuration broker.Configuration
+	Producer      sarama.SyncProducer
+}
+
+// New constructs new implementation of Producer interface
+func New(brokerCfg broker.Configuration) (*KafkaProducer, error) {
 	producer, err := sarama.NewSyncProducer([]string{brokerCfg.Address}, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("New producer")
-		return -1, -1, err
+		return nil, err
 	}
-	defer func() {
-		if err := producer.Close(); err != nil {
-			log.Error().Err(err).Msg("Producer.close()")
-			partition = -1
-			offset = -1
-			errout = err
-		}
-	}()
 
-	msg := &sarama.ProducerMessage{Topic: brokerCfg.Topic, Value: sarama.StringEncoder(message)}
-	partition, offset, err = producer.SendMessage(msg)
-	if err != nil {
-		log.Error().Err(err).Msg("FAILED to send message")
+	return &KafkaProducer{
+		Configuration: brokerCfg,
+		Producer:      producer,
+	}, nil
+}
+
+// ProduceMessage produces message to selected topic. That function returns
+// partition ID and offset of new message or an error value in case of any
+// problem on broker side.
+func (producer *KafkaProducer) ProduceMessage(message string) (int32, int64, error) {
+	brokerCfg := producer.Configuration
+	msg := &sarama.ProducerMessage{Topic: brokerCfg.PublishTopic, Value: sarama.StringEncoder(message)}
+	partition, offset, errout := producer.Producer.SendMessage(msg)
+
+	if errout != nil {
+		log.Error().Err(errout).Msg("FAILED to send message")
 	} else {
 		log.Info().Msg(fmt.Sprintf("message sent to partition %d at offset %d\n", partition, offset))
 		metrics.ProducedMessages.Inc()
 	}
-	return partition, offset, err
+	return partition, offset, errout
+}
+
+// Close allow the Sarama producer to be gracefully closed
+func (producer *KafkaProducer) Close() error {
+	if err := producer.Producer.Close(); err != nil {
+		log.Error().Err(err).Msg("Producer.close()")
+		return err
+	}
+
+	return nil
 }
