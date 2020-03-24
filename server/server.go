@@ -221,9 +221,15 @@ func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *h
 
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
 	clusterID, err := readClusterName(writer, request)
+	if err != nil {
+		const message = "Unable to read cluster ID from request"
+		log.Error().Err(err).Msg(message)
+		responses.Send(http.StatusInternalServerError, writer, message)
+		return
+	}
 	ruleID, err := getRouterParam(request, "rule_id")
 	if err != nil {
-		const message = "Unable to read report for cluster"
+		const message = "Unable to read rule ID from request"
 		log.Error().Err(err).Msg(message)
 		responses.Send(http.StatusInternalServerError, writer, message)
 		return
