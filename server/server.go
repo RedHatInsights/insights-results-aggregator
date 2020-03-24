@@ -170,12 +170,9 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	}
 
 	report, lastChecked, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
-	if _, ok := err.(*storage.ItemNotFoundError); ok {
-		responses.Send(http.StatusNotFound, writer, err.Error())
-		return
-	} else if err != nil {
+	if err != nil {
 		log.Error().Err(err).Msg("Unable to read report for cluster")
-		responses.SendInternalServerError(writer, err.Error())
+		handleServerError(writer, err)
 		return
 	}
 
@@ -236,15 +233,15 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		const message = "Unable to get user id"
 		log.Error().Err(err).Msg(message)
-		responses.Send(http.StatusInternalServerError, writer, message)
+		responses.SendInternalServerError(writer, message)
 		return
 	}
 
 	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
 	if err != nil {
-		responses.Send(http.StatusInternalServerError, writer, err.Error())
+		responses.SendInternalServerError(writer, err.Error())
 	} else {
-		responses.Send(http.StatusOK, writer, responses.BuildOkResponse())
+		responses.SendResponse(writer, responses.BuildOkResponse())
 	}
 }
 
@@ -290,11 +287,7 @@ func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *h
 	if err != nil {
 		const message = "Error creating absolute path of OpenAPI spec file"
 		log.Error().Err(err).Msg(message)
-		responses.Send(
-			http.StatusInternalServerError,
-			writer,
-			message,
-		)
+		responses.SendInternalServerError(writer, message)
 		return
 	}
 

@@ -38,7 +38,7 @@ func TestReadReportForClusterNonIntOrgID(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
-			"status": "Error during parsing param organization with value non-int. Error: unsigned integer expected"
+			"status": "Error during parsing param 'organization' with value 'non-int'. Error: 'unsigned integer expected'"
 		}`,
 	})
 }
@@ -51,7 +51,7 @@ func TestReadReportForClusterNegativeOrgID(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
-			"status": "Error during parsing param organization with value -1. Error: unsigned integer expected"
+			"status": "Error during parsing param 'organization' with value '-1'. Error: 'unsigned integer expected'"
 		}`,
 	})
 }
@@ -63,7 +63,7 @@ func TestReadReportForClusterBadClusterName(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
-		Body:       `{"status": "invalid cluster name format: 'aaaa'"}`,
+		Body:       `{"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"}`,
 	})
 }
 
