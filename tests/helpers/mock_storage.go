@@ -15,6 +15,7 @@
 package helpers
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -75,10 +76,20 @@ func MustGetMockStorageWithExpects(t *testing.T) (storage.Storage, sqlmock.Sqlmo
 func MustGetMockStorageWithExpectsForDriver(
 	t *testing.T, driverType storage.DBDriver,
 ) (storage.Storage, sqlmock.Sqlmock) {
-	connection, expects, err := sqlmock.New()
+	db, expects := MustGetMockDBWithExpects(t)
+
+	return storage.NewFromConnection(db, driverType), expects
+}
+
+// MustGetMockDBWithExpects returns mock db
+// with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
+// before each query, so first try to use MustGetMockStorage
+// don't forget to call MustCloseMockDBWithExpects
+func MustGetMockDBWithExpects(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
+	db, expects, err := sqlmock.New()
 	FailOnError(t, err)
 
-	return storage.NewFromConnection(connection, driverType), expects
+	return db, expects
 }
 
 // MustCloseMockStorageWithExpects closes mock storage with expects and panics if it wasn't successful
@@ -91,4 +102,16 @@ func MustCloseMockStorageWithExpects(
 
 	expects.ExpectClose()
 	FailOnError(t, mockStorage.Close())
+}
+
+// MustCloseMockDBWithExpects closes mock db with expects and panics if it wasn't successful
+func MustCloseMockDBWithExpects(
+	t *testing.T, db *sql.DB, expects sqlmock.Sqlmock,
+) {
+	if err := expects.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+	expects.ExpectClose()
+	FailOnError(t, db.Close())
 }

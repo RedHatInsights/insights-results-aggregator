@@ -34,7 +34,8 @@ import (
 type contextKey string
 
 const (
-	contextKeyUser        = contextKey("user")
+	// ContextKeyUser is a constant for user authentication token in request
+	ContextKeyUser        = contextKey("user")
 	malformedTokenMessage = "Malformed authentication token"
 )
 
@@ -118,7 +119,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 		}
 
 		// Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
-		ctx := context.WithValue(r.Context(), contextKeyUser, tk.Identity)
+		ctx := context.WithValue(r.Context(), ContextKeyUser, tk.Identity)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
@@ -127,7 +128,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 
 // GetCurrentUserID retrieves current user's id from request
 func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID, error) {
-	i := request.Context().Value(contextKeyUser)
+	i := request.Context().Value(ContextKeyUser)
 
 	identity, ok := i.(Identity)
 	if !ok {

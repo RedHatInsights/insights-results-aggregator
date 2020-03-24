@@ -15,8 +15,8 @@
 package server_test
 
 import (
+	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
@@ -30,114 +30,174 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-func TestReadReportForClusterMissingOrgIdAndClusterName(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/", nil)
-	helpers.FailOnError(t, err)
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
-}
-
-func TestReadReportForClusterMissingClusterName(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/12345", nil)
-	helpers.FailOnError(t, err)
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
-}
-
 func TestReadReportForClusterNonIntOrgID(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/bad_org_id/cluster_name", nil)
-	helpers.FailOnError(t, err)
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{"non-int", testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body: `{
+			"status": "Error during parsing param organization with value non-int. Error: unsigned integer expected"
+		}`,
+	})
 }
 
 func TestReadReportForClusterNegativeOrgID(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/-1/"+string(testClusterName), nil)
-	helpers.FailOnError(t, err)
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusBadRequest, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{-1, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body: `{
+			"status": "Error during parsing param organization with value -1. Error: unsigned integer expected"
+		}`,
+	})
 }
 
 func TestReadReportForClusterBadClusterName(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	req, err := http.NewRequest("GET", config.APIPrefix+"report/12345/"+string(testBadClusterName), nil)
-	helpers.FailOnError(t, err)
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "invalid cluster name format: 'aaaa'"}`,
+	})
 }
 
 func TestReadNonExistingReport(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest(
-		"GET",
-		fmt.Sprintf("%v%v/%v", config.APIPrefix, "report/1", testClusterName),
-		nil,
-	)
-	helpers.FailOnError(t, err)
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusNotFound, response.StatusCode)
-	checkResponseBody(
-		t,
-		fmt.Sprintf(`{"status":"Item with ID 1/%v was not found in the storage"}`, testClusterName),
-		response.Body,
-	)
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusNotFound,
+		Body: fmt.Sprintf(
+			`{"status":"Item with ID %v/%v was not found in the storage"}`, testdata.OrgID, testdata.ClusterName,
+		),
+	})
 }
 
-func TestReadExistingReport(t *testing.T) {
+func TestHttpServer_readReportForCluster_NoContent(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
-	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
-	helpers.FailOnError(t, err)
-
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest(
-		"GET",
-		config.APIPrefix+"report/"+fmt.Sprint(testOrgID)+"/"+string(testClusterName),
-		nil,
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
 	)
 	helpers.FailOnError(t, err)
 
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: `{
+			"status":"ok",
+			"report": {
+				"meta": {
+					"count": 0,
+					"last_checked_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `"
+				},
+				"data":[]
+			}
+		}`,
+	})
+}
+
+func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: `{
+			"status":"ok",
+			"report": {
+				"meta": {
+					"count": -1,
+					"last_checked_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `"
+				},
+				"data":[]
+			}
+		}`,
+	})
 }
 
 func TestReadReportDBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	helpers.MustCloseStorage(t, mockStorage)
 
-	testServer := server.New(config, mockStorage)
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status":"sql: database is closed"}`,
+	})
+}
 
-	req, err := http.NewRequest(
-		"GET",
-		config.APIPrefix+"report/1/2d615e74-29f8-4bfb-8269-908f1c1b1bb4",
-		nil,
+func TestHttpServer_readReportForCluster_getContentForRule_DBError(t *testing.T) {
+	connection, err := sql.Open("sqlite3", ":memory:")
+	helpers.FailOnError(t, err)
+
+	mockStorage := storage.NewFromConnection(connection, storage.DBDriverSQLite3)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err = mockStorage.Init()
+	helpers.FailOnError(t, err)
+
+	// remove table to cause db error
+	_, err = connection.Exec("DROP TABLE rule_error_key;")
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
 	)
 	helpers.FailOnError(t, err)
 
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusInternalServerError, response.StatusCode)
-	checkResponseBody(t, `{"status":"sql: database is closed"}`, response.Body)
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{ "status":"no such table: rule_error_key" }`,
+	})
+}
+
+func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.T) {
+	const badReport = "not-json"
+
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, badReport, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{ "status": "invalid character 'o' in literal null (expecting 'u')" }`,
+	})
 }
 
 func assertReportResponsesEqual(t *testing.T, expected, got string) {
@@ -179,23 +239,13 @@ func TestReadReportWithContent(t *testing.T) {
 	err = dbStorage.LoadRuleContent(testdata.RuleContent3Rules)
 	helpers.FailOnError(t, err)
 
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest(
-		"GET",
-		fmt.Sprintf(
-			"%v%v/%v/%v",
-			config.APIPrefix, "report", testdata.OrgID, testdata.ClusterName,
-		),
-		nil,
-	)
-	helpers.FailOnError(t, err)
-
-	response := executeRequest(testServer, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
-
-	body, err := ioutil.ReadAll(response.Body)
-	helpers.FailOnError(t, err)
-
-	assertReportResponsesEqual(t, testdata.Report3RulesExpectedResponse, string(body))
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report3RulesExpectedResponse,
+		BodyChecker: assertReportResponsesEqual,
+	})
 }

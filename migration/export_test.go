@@ -17,4 +17,7 @@ limitations under the License.
 package migration
 
 // Export for testing
-var Migrations = &migrations
+var (
+	Migrations      = &migrations
+	WithTransaction = withTransaction
+)

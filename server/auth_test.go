@@ -40,86 +40,99 @@ var configAuth2 = server.Configuration{
 
 // TestMissingAuthToken checks how the missing auth. token header (expected in HTTP request) is handled
 func TestMissingAuthToken(t *testing.T) {
-	server := server.New(configAuth, nil)
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.OrganizationsEndpoint,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status": "Missing auth token"}`,
+	})
 }
 
 // TestJWTToken checks authorization through Authorization header
 func TestJWTToken(t *testing.T) {
-	server := server.New(configAuth2, helpers.MustGetMockStorage(t, true))
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.AssertAPIRequest(t, nil, &configAuth2, &helpers.APIRequest{
+		Method:             http.MethodGet,
+		Endpoint:           server.OrganizationsEndpoint,
+		AuthorizationToken: "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X251bWJlciI6IjUyMTM0NzYiLCJvcmdfaWQiOiIxMjM0In0.Y9nNaZXbMEO6nz2EHNaCvHxPM0IaeT7GGR-T8u8h_nr_2b5dYsCQiZGzzkBupRJruHy9K6acgJ08JN2Q28eOAEVk_ZD2EqO43rSOS6oe8uZmVo-nCecdqovHa9PqW8RcZMMxVfGXednw82kKI8j1aT_nbJ1j9JZt3hnHM4wtqydelMij7zKyZLHTWFeZbDDCuEIkeWA6AdIBCMdywdFTSTsccVcxT2rgv4mKpxY1Fn6Vu_Xo27noZW88QhPTHbzM38l9lknGrvJVggrzMTABqWEXNVHbph0lXjPWsP7pe6v5DalYEBN2r3a16A6s3jPfI86cRC6_oeXotlW6je0iKQ",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"organizations":[],"status":"ok"}`,
+	})
+}
 
-	req.Header.Set("Authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X251bWJlciI6IjUyMTM0NzYiLCJvcmdfaWQiOiIxMjM0In0.Y9nNaZXbMEO6nz2EHNaCvHxPM0IaeT7GGR-T8u8h_nr_2b5dYsCQiZGzzkBupRJruHy9K6acgJ08JN2Q28eOAEVk_ZD2EqO43rSOS6oe8uZmVo-nCecdqovHa9PqW8RcZMMxVfGXednw82kKI8j1aT_nbJ1j9JZt3hnHM4wtqydelMij7zKyZLHTWFeZbDDCuEIkeWA6AdIBCMdywdFTSTsccVcxT2rgv4mKpxY1Fn6Vu_Xo27noZW88QhPTHbzM38l9lknGrvJVggrzMTABqWEXNVHbph0lXjPWsP7pe6v5DalYEBN2r3a16A6s3jPfI86cRC6_oeXotlW6je0iKQ")
+// TestJWTToken checks authorization through Authorization header
+func TestJWTTokenMalformed(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, &configAuth2, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.OrganizationsEndpoint,
+		// do not pass token itself
+		AuthorizationToken: "Bearer",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status":"Invalid/Malformed auth token"}`,
+	})
+}
 
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
-	checkResponseBody(t, `{"organizations":[],"status":"ok"}`, response.Body)
+// TestJWTToken checks authorization through Authorization header
+func TestJWTTokenMalformedJSON(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, &configAuth2, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.OrganizationsEndpoint,
+		// pass bad json
+		AuthorizationToken: "Bearer bm90LWpzb24K.bm90LWpzb24K.bm90LWpzb24K",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status":"Malformed authentication token"}`,
+	})
 }
 
 // TestMalformedAuthToken checks whether string that is not BASE64-encoded can't be decoded
 func TestMalformedAuthToken(t *testing.T) {
-	server := server.New(configAuth, nil)
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// the following error is expected: illegal base64 data at input byte 0
-	req.Header.Set("x-rh-identity", "!")
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:      http.MethodGet,
+		Endpoint:    server.OrganizationsEndpoint,
+		XRHIdentity: "!",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status": "Malformed authentication token"}`,
+	})
 }
 
 // TestInvalidAuthToken checks whether token header that is not properly encoded is handled correctly
 func TestInvalidAuthToken(t *testing.T) {
-	server := server.New(configAuth, nil)
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header.Set("x-rh-identity", "123456qwerty")
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:      http.MethodGet,
+		Endpoint:    server.OrganizationsEndpoint,
+		XRHIdentity: "123456qwerty",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status": "Malformed authentication token"}`,
+	})
 }
 
 // TestInvalidAuthToken checks whether token header that does not contain correct JSON
 // (encoded by BASE64) is handled correctly
 func TestInvalidJsonAuthToken(t *testing.T) {
-	server := server.New(configAuth, nil)
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header.Set("x-rh-identity", "aW52YWxpZCBqc29uCg==")
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:      http.MethodGet,
+		Endpoint:    server.OrganizationsEndpoint,
+		XRHIdentity: "aW52YWxpZCBqc29uCg==",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status": "Malformed authentication token"}`,
+	})
 }
 
 // TestBadOrganizationID checks if organization ID is checked properly
 func TestBadOrganizationID(t *testing.T) {
-	server := server.New(configAuth, helpers.MustGetMockStorage(t, true))
-	req, err := http.NewRequest("GET", configAuth.APIPrefix+"organizations/12345/clusters", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	req.Header.Set("x-rh-identity", "eyJpZGVudGl0eSI6IHsiaW50ZXJuYWwiOiB7Im9yZ19pZCI6ICIxMjM0In19fQo=")
-
-	response := executeRequest(server, req).Result()
-	checkResponseCode(t, http.StatusOK, response.StatusCode)
-	checkResponseBody(t, `{"clusters":[],"status":"ok"}`, response.Body)
+	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{12345},
+		XRHIdentity:  "eyJpZGVudGl0eSI6IHsiaW50ZXJuYWwiOiB7Im9yZ19pZCI6ICIxMjM0In19fQo=",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"clusters":[],"status":"ok"}`,
+	})
 }

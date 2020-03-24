@@ -18,18 +18,22 @@ package migration_test
 
 import (
 	"database/sql"
+	sql_driver "database/sql/driver"
 	"fmt"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 const (
 	dbClosedErrorMsg    = "sql: database is closed"
 	noSuchTableErrorMsg = "no such table: migration_info"
-	stepErrorMsg        = "Migration Step Error"
+	stepErrorMsg        = "migration Step Error"
 )
 
 var (
@@ -56,9 +60,7 @@ var (
 
 func prepareDB(t *testing.T) *sql.DB {
 	conn, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	return conn
 }
@@ -86,53 +88,37 @@ func TestMigrationFull(t *testing.T) {
 	db := prepareDBAndInfo(t)
 
 	maxVer := migration.GetMaxVersion()
-	if maxVer == 0 {
-		t.Fatal("No migrations available")
-	}
+	assert.NotEqual(t, 0, maxVer, "no migrations available")
 
 	currentVer, err := migration.GetDBVersion(db)
-	if err != nil {
-		t.Fatal(err)
-	} else if currentVer != 0 {
-		t.Fatalf("Unexpected version: %d (expected: %d)", currentVer, 0)
-	}
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, migration.Version(0), currentVer, "unexpected version")
 
 	stepUpAndDown(t, db, maxVer, 0)
 }
 
 func stepUpAndDown(t *testing.T, db *sql.DB, upVer, downVer migration.Version) {
 	err := migration.SetDBVersion(db, upVer)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	currentVer, err := migration.GetDBVersion(db)
-	if err != nil {
-		t.Fatal(err)
-	} else if currentVer != upVer {
-		t.Fatalf("Unexpected version: %d (expected: %d)", currentVer, upVer)
-	}
+	helpers.FailOnError(t, err)
+	assert.Equal(t, upVer, currentVer, "unexpected version")
 
 	err = migration.SetDBVersion(db, 0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	currentVer, err = migration.GetDBVersion(db)
-	if err != nil {
-		t.Fatal(err)
-	} else if currentVer != downVer {
-		t.Fatalf("Unexpected version: %d (expected: %d)", currentVer, downVer)
-	}
+	helpers.FailOnError(t, err)
+	assert.Equal(t, downVer, currentVer, "unexpected version")
 }
 
 // closeDB closes the connection to DB with check whether the close operation
 // was successful or not.
 func closeDB(t *testing.T, mockDB *sql.DB) {
 	err := mockDB.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 }
 
 // TestMigrationInit checks that database migration table initialization succeeds.
@@ -140,13 +126,11 @@ func TestMigrationInit(t *testing.T) {
 	db := prepareDB(t)
 	defer closeDB(t, db)
 
-	if err := migration.InitInfoTable(db); err != nil {
-		t.Fatal(err)
-	}
+	err := migration.InitInfoTable(db)
+	helpers.FailOnError(t, err)
 
-	if _, err := migration.GetDBVersion(db); err != nil {
-		t.Fatal(err)
-	}
+	_, err = migration.GetDBVersion(db)
+	helpers.FailOnError(t, err)
 }
 
 // TestMigrationReInit checks that an attempt to re-initialize an already initialized
@@ -155,9 +139,8 @@ func TestMigrationReInit(t *testing.T) {
 	db := prepareDBAndMigrations(t)
 	defer closeDB(t, db)
 
-	if err := migration.InitInfoTable(db); err != nil {
-		t.Fatal(err)
-	}
+	err := migration.InitInfoTable(db)
+	helpers.FailOnError(t, err)
 }
 
 func TestMigrationInitNotOneRow(t *testing.T) {
@@ -165,14 +148,11 @@ func TestMigrationInitNotOneRow(t *testing.T) {
 	defer closeDB(t, db)
 
 	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10)")
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	const expectedErrStr = "unexpected number of rows in migration info table (expected: 1, reality: 2)"
-	if err := migration.InitInfoTable(db); err == nil || err.Error() != expectedErrStr {
-		t.Fatal(err)
-	}
+	err = migration.InitInfoTable(db)
+	assert.EqualError(t, err, expectedErrStr)
 }
 
 // TestMigrationGetVersion checks that the initial database migration version is 0.
@@ -181,13 +161,9 @@ func TestMigrationGetVersion(t *testing.T) {
 	defer closeDB(t, db)
 
 	version, err := migration.GetDBVersion(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	if version != 0 {
-		t.Fatalf("Unexpected database version (expected: 0, reality: %d)", version)
-	}
+	assert.Equal(t, migration.Version(0), version, "unexpected database version")
 }
 
 func TestMigrationGetVersionMissingInfoTable(t *testing.T) {
@@ -195,9 +171,8 @@ func TestMigrationGetVersionMissingInfoTable(t *testing.T) {
 	db := prepareDB(t)
 	defer closeDB(t, db)
 
-	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != noSuchTableErrorMsg {
-		t.Fatal(err)
-	}
+	_, err := migration.GetDBVersion(db)
+	assert.EqualError(t, err, noSuchTableErrorMsg)
 }
 
 func TestMigrationGetVersionMultipleRows(t *testing.T) {
@@ -205,13 +180,10 @@ func TestMigrationGetVersionMultipleRows(t *testing.T) {
 	defer closeDB(t, db)
 
 	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10)")
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != "migration info table contain multiple rows" {
-		t.Fatal(err)
-	}
+	_, err = migration.GetDBVersion(db)
+	assert.EqualError(t, err, "migration info table contain 2 rows")
 }
 
 func TestMigrationGetVersionEmptyTable(t *testing.T) {
@@ -219,13 +191,10 @@ func TestMigrationGetVersionEmptyTable(t *testing.T) {
 	defer closeDB(t, db)
 
 	_, err := db.Exec("DELETE FROM migration_info")
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != "migration info table is empty" {
-		t.Fatal(err)
-	}
+	_, err = migration.GetDBVersion(db)
+	assert.EqualError(t, err, "migration info table contain 0 rows")
 }
 
 func TestMigrationGetVersionInvalidType(t *testing.T) {
@@ -233,20 +202,15 @@ func TestMigrationGetVersionInvalidType(t *testing.T) {
 	defer closeDB(t, db)
 
 	_, err := db.Exec("CREATE TABLE migration_info ( version TEXT )")
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	_, err = db.Exec("INSERT INTO migration_info(version) VALUES('hello world')")
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	const expectedErrStr = `sql: Scan error on column index 0, name "version": ` +
 		`converting driver.Value type string ("hello world") to a uint: invalid syntax`
-	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != expectedErrStr {
-		t.Fatal(err)
-	}
+	_, err = migration.GetDBVersion(db)
+	assert.EqualError(t, err, expectedErrStr)
 }
 
 // TestMigrationSetVersion checks that it is possible to change
@@ -256,32 +220,22 @@ func TestMigrationSetVersion(t *testing.T) {
 	defer closeDB(t, db)
 
 	// Step-up from 0 to 1.
-	if err := migration.SetDBVersion(db, 1); err != nil {
-		t.Fatal(err)
-	}
+	err := migration.SetDBVersion(db, 1)
+	helpers.FailOnError(t, err)
 
 	version, err := migration.GetDBVersion(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	if version != 1 {
-		t.Fatalf("Unexpected database version (expected: 1, reality: %d)", version)
-	}
+	assert.Equal(t, migration.Version(1), version, "unexpected database version")
 
 	// Step-down from 1 to 0.
-	if err := migration.SetDBVersion(db, 0); err != nil {
-		t.Fatal(err)
-	}
+	err = migration.SetDBVersion(db, 0)
+	helpers.FailOnError(t, err)
 
 	version, err = migration.GetDBVersion(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	if version != 0 {
-		t.Fatalf("Unexpected database version (expected: 0, reality: %d)", version)
-	}
+	assert.Equal(t, migration.Version(0), version, "unexpected database version")
 }
 
 func TestMigrationNoInfoTable(t *testing.T) {
@@ -291,9 +245,9 @@ func TestMigrationNoInfoTable(t *testing.T) {
 	// Intentionally missing info table initialization here.
 
 	_, err := migration.GetDBVersion(db)
-	if err == nil || err.Error() != noSuchTableErrorMsg {
-		t.Fatal("Migration info table should be missing when not initialized")
-	}
+	assert.EqualError(
+		t, err, noSuchTableErrorMsg, "migration info table should be missing when not initialized",
+	)
 }
 
 func TestMigrationSetVersionSame(t *testing.T) {
@@ -301,23 +255,17 @@ func TestMigrationSetVersionSame(t *testing.T) {
 	defer closeDB(t, db)
 
 	// Step-up from 0 to 1.
-	if err := migration.SetDBVersion(db, 1); err != nil {
-		t.Fatal(err)
-	}
+	err := migration.SetDBVersion(db, 1)
+	helpers.FailOnError(t, err)
 
 	// Set version to.
-	if err := migration.SetDBVersion(db, 1); err != nil {
-		t.Fatal(err)
-	}
+	err = migration.SetDBVersion(db, 1)
+	helpers.FailOnError(t, err)
 
 	version, err := migration.GetDBVersion(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	if version != 1 {
-		t.Fatalf("Unexpected database version (expected: 1, reality: %d)", version)
-	}
+	assert.Equal(t, migration.Version(1), version, "unexpected database version")
 }
 
 func TestMigrationSetVersionTargetTooHigh(t *testing.T) {
@@ -325,9 +273,8 @@ func TestMigrationSetVersionTargetTooHigh(t *testing.T) {
 	defer closeDB(t, db)
 
 	// Step-up from 0 to 2 (impossible -- only 1 migration is available).
-	if err := migration.SetDBVersion(db, 2); err.Error() != "invalid target version (available version range is 0-1)" {
-		t.Fatal(err)
-	}
+	err := migration.SetDBVersion(db, 2)
+	assert.EqualError(t, err, "invalid target version (available version range is 0-1)")
 }
 
 // TestMigrationSetVersionUpError checks that an error during a step-up is correctly handled.
@@ -342,9 +289,8 @@ func TestMigrationSetVersionUpError(t *testing.T) {
 		},
 	}
 
-	if err := migration.SetDBVersion(db, 1); err == nil || err.Error() != stepErrorMsg {
-		t.Fatal(err)
-	}
+	err := migration.SetDBVersion(db, 1)
+	assert.EqualError(t, err, stepErrorMsg)
 }
 
 // TestMigrationSetVersionDownError checks that an error during a step-down is correctly handled.
@@ -360,13 +306,11 @@ func TestMigrationSetVersionDownError(t *testing.T) {
 	}
 
 	// First we need to step-up before we can step-down.
-	if err := migration.SetDBVersion(db, 1); err != nil {
-		t.Fatal(err)
-	}
+	err := migration.SetDBVersion(db, 1)
+	helpers.FailOnError(t, err)
 
-	if err := migration.SetDBVersion(db, 0); err == nil || err.Error() != stepErrorMsg {
-		t.Fatal(err)
-	}
+	err = migration.SetDBVersion(db, 0)
+	assert.EqualError(t, err, stepErrorMsg)
 }
 
 // TestMigrationSetVersionCurrentTooHighError makes sure that if the current DB version
@@ -375,14 +319,12 @@ func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
 	db := prepareDBAndMigrations(t)
 	defer closeDB(t, db)
 
-	if _, err := db.Exec("UPDATE migration_info SET version=10"); err != nil {
-		t.Fatal(err)
-	}
+	_, err := db.Exec("UPDATE migration_info SET version=10")
+	helpers.FailOnError(t, err)
 
 	const expectedErrStr = "current version (10) is outside of available migration boundaries"
-	if err := migration.SetDBVersion(db, 0); err == nil || err.Error() != expectedErrStr {
-		t.Fatal(err)
-	}
+	err = migration.SetDBVersion(db, 0)
+	assert.EqualError(t, err, expectedErrStr)
 }
 
 func TestMigrationInitClosedDB(t *testing.T) {
@@ -390,9 +332,8 @@ func TestMigrationInitClosedDB(t *testing.T) {
 	// Intentionally no `defer` here.
 	closeDB(t, db)
 
-	if err := migration.InitInfoTable(db); err == nil || err.Error() != dbClosedErrorMsg {
-		t.Fatal(err)
-	}
+	err := migration.InitInfoTable(db)
+	assert.EqualError(t, err, dbClosedErrorMsg)
 }
 
 func TestMigrationGetVersionClosedDB(t *testing.T) {
@@ -400,9 +341,8 @@ func TestMigrationGetVersionClosedDB(t *testing.T) {
 	// Intentionally no `defer` here.
 	closeDB(t, db)
 
-	if _, err := migration.GetDBVersion(db); err == nil || err.Error() != dbClosedErrorMsg {
-		t.Fatal(err)
-	}
+	_, err := migration.GetDBVersion(db)
+	assert.EqualError(t, err, dbClosedErrorMsg)
 }
 
 func TestMigrationSetVersionClosedDB(t *testing.T) {
@@ -410,9 +350,8 @@ func TestMigrationSetVersionClosedDB(t *testing.T) {
 	// Intentionally no `defer` here.
 	closeDB(t, db)
 
-	if err := migration.SetDBVersion(db, 0); err == nil || err.Error() != dbClosedErrorMsg {
-		t.Fatal(err)
-	}
+	err := migration.SetDBVersion(db, 0)
+	assert.EqualError(t, err, dbClosedErrorMsg)
 }
 
 func TestMigrationInitRollbackStep(t *testing.T) {
@@ -425,7 +364,138 @@ func TestMigrationInitRollbackStep(t *testing.T) {
 	}}
 
 	const expectedErrStr = "sql: transaction has already been committed or rolled back"
-	if err := migration.SetDBVersion(db, 1); err == nil || err.Error() != expectedErrStr {
-		t.Fatal(err)
-	}
+	err := migration.SetDBVersion(db, 1)
+	assert.EqualError(t, err, expectedErrStr)
+}
+
+func TestInitInfoTable_BeginTransactionDBError(t *testing.T) {
+	db := prepareDB(t)
+	closeDB(t, db)
+	err := migration.InitInfoTable(db)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestInitInfoTable_InitTableDBError(t *testing.T) {
+	const errStr = "create table error"
+
+	db, expects := helpers.MustGetMockDBWithExpects(t)
+	defer helpers.MustGetMockDBWithExpects(t)
+
+	expects.ExpectBegin()
+	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectRollback()
+
+	err := migration.InitInfoTable(db)
+	assert.EqualError(t, err, errStr)
+}
+
+func TestInitInfoTable_InitVersionDBError(t *testing.T) {
+	const errStr = "insert error"
+
+	db, expects := helpers.MustGetMockDBWithExpects(t)
+	defer helpers.MustGetMockDBWithExpects(t)
+
+	expects.ExpectBegin()
+	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectExec("INSERT INTO migration_info").WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectRollback()
+
+	err := migration.InitInfoTable(db)
+	assert.EqualError(t, err, errStr)
+}
+
+func TestInitInfoTable_CountDBError(t *testing.T) {
+	const errStr = "count error"
+
+	db, expects := helpers.MustGetMockDBWithExpects(t)
+	defer helpers.MustGetMockDBWithExpects(t)
+
+	expects.ExpectBegin()
+	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectExec("INSERT INTO migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectQuery("SELECT COUNT.+FROM migration_info").WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectRollback()
+
+	err := migration.InitInfoTable(db)
+	assert.EqualError(t, err, errStr)
+}
+
+func updateVersionInDBCommon(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
+	// set test migrations
+	*migration.Migrations = []migration.Migration{testMigration}
+
+	db, expects := helpers.MustGetMockDBWithExpects(t)
+
+	expects.ExpectBegin()
+	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectExec("INSERT INTO migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectQuery("SELECT COUNT.+FROM migration_info").WillReturnRows(
+		sqlmock.NewRows([]string{"version"}).AddRow(1),
+	)
+	expects.ExpectCommit()
+
+	err := migration.InitInfoTable(db)
+	helpers.FailOnError(t, err)
+
+	expects.ExpectQuery("SELECT COUNT.+FROM migration_info").WillReturnRows(
+		sqlmock.NewRows([]string{"version"}).AddRow(1),
+	)
+	expects.ExpectQuery("SELECT version FROM migration_info").WillReturnRows(
+		sqlmock.NewRows([]string{"version"}).AddRow(0),
+	)
+	expects.ExpectBegin()
+	expects.ExpectExec("CREATE TABLE migration_test_table").WillReturnResult(sql_driver.ResultNoRows)
+
+	return db, expects
+}
+
+func TestUpdateVersionInDB_RowsAffectedError(t *testing.T) {
+	const errStr = "rows affected error"
+
+	db, expects := updateVersionInDBCommon(t)
+	defer helpers.MustGetMockDBWithExpects(t)
+
+	expects.ExpectExec("UPDATE migration_info SET version").
+		WithArgs(1).
+		WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf(errStr)))
+
+	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	assert.EqualError(t, err, errStr)
+}
+
+func TestUpdateVersionInDB_MoreThan1RowAffected(t *testing.T) {
+	db, expects := updateVersionInDBCommon(t)
+	defer helpers.MustGetMockDBWithExpects(t)
+
+	expects.ExpectExec("UPDATE migration_info SET version").
+		WithArgs(1).
+		WillReturnResult(sqlmock.NewResult(1, 2))
+
+	// set test migrations
+	*migration.Migrations = []migration.Migration{testMigration}
+
+	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	assert.EqualError(
+		t, err, "unexpected number of affected rows in migration info table (expected: 1, reality: 2)",
+	)
+}
+
+func TestWithTransaction_Panic(t *testing.T) {
+	const errStr = "panic"
+
+	db, expects := helpers.MustGetMockDBWithExpects(t)
+	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+
+	expects.ExpectBegin()
+	expects.ExpectRollback()
+
+	defer func() {
+		p := recover()
+		assert.Equal(t, p, errStr, "panic is expected")
+	}()
+
+	_ = migration.WithTransaction(db, func(tx *sql.Tx) error {
+		panic(errStr)
+	})
+	t.Fatal("not expected to go here")
 }

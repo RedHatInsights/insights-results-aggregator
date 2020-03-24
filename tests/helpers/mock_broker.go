@@ -17,6 +17,7 @@ package helpers
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/nash-io/jocko/protocol"
 
@@ -104,6 +105,9 @@ func (mockBroker *MockBroker) createTopic(topicName string) error {
 			return protocol.Errs[topicErrCode.ErrorCode]
 		}
 	}
+
+	// TODO: wait for it to actually be created
+	time.Sleep(500 * time.Millisecond)
 
 	return nil
 }
