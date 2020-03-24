@@ -290,7 +290,7 @@ func constructWhereClauseForContent(reportRules types.ReportRules) string {
 
 	for i, rule := range reportRules.HitRules {
 		singleVal := ""
-		module := strings.TrimRight(rule.Module, ".report") // remove trailing .report from module name
+		module := strings.TrimSuffix(rule.Module, ".report") // remove trailing .report from module name
 
 		if i == 0 {
 			singleVal = fmt.Sprintf(`VALUES ('%v', '%v')`, rule.ErrorKey, module)
