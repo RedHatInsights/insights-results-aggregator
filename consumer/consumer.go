@@ -112,20 +112,9 @@ func NewWithSaramaConfig(
 	nextOffset := sarama.OffsetNewest
 
 	if saveOffset {
-		offsetManager, err = sarama.NewOffsetManagerFromClient(brokerCfg.Group, client)
+		offsetManager, partitionOffsetManager, nextOffset, err = getOffsetManagers(brokerCfg, client, partitions)
 		if err != nil {
 			return nil, err
-		}
-
-		partitionOffsetManager, err = offsetManager.ManagePartition(brokerCfg.Topic, partitions[0])
-		if err != nil {
-			return nil, err
-		}
-
-		nextOffset, _ = partitionOffsetManager.NextOffset()
-		if nextOffset < 0 {
-			// if next offset wasn't stored yet, initial state of the broker
-			nextOffset = sarama.OffsetOldest
 		}
 	}
 
@@ -134,6 +123,17 @@ func NewWithSaramaConfig(
 		partitions[0],
 		nextOffset,
 	)
+	if kErr, ok := err.(sarama.KError); ok && kErr == sarama.ErrOffsetOutOfRange {
+		// try again with offset from the beginning
+		log.Error().Err(err).Msg("consuming from the beginning")
+
+		nextOffset = sarama.OffsetOldest
+		partitionConsumer, err = consumer.ConsumePartition(
+			brokerCfg.Topic,
+			partitions[0],
+			nextOffset,
+		)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -147,6 +147,28 @@ func NewWithSaramaConfig(
 		partitionOffsetManager: partitionOffsetManager,
 		client:                 client,
 	}, nil
+}
+
+func getOffsetManagers(
+	brokerCfg broker.Configuration, client sarama.Client, partitions []int32,
+) (sarama.OffsetManager, sarama.PartitionOffsetManager, int64, error) {
+	offsetManager, err := sarama.NewOffsetManagerFromClient(brokerCfg.Group, client)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	partitionOffsetManager, err := offsetManager.ManagePartition(brokerCfg.Topic, partitions[0])
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	nextOffset, _ := partitionOffsetManager.NextOffset()
+	if nextOffset < 0 {
+		// if next offset wasn't stored yet, initial state of the broker
+		nextOffset = sarama.OffsetOldest
+	}
+
+	return offsetManager, partitionOffsetManager, nextOffset, nil
 }
 
 // checkReportStructure tests if the report has correct structure
