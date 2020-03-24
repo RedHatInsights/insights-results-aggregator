@@ -94,10 +94,6 @@ const (
 	DBDriverPostgres
 	// DBDriverGeneral general sql(used for mock now)
 	DBDriverGeneral
-
-	// driverNotSupportedMessage is a template for error message displayed
-	// in all situations where given DB driver is not supported
-	driverNotSupportedMessage = "driver '%v' is not supported"
 )
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
