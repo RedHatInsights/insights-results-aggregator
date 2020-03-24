@@ -331,6 +331,9 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 	assert.EqualError(t, err, "organization ID is not whitelisted")
 }
 
+// newConsumerWithMockBroker creates new mock consumer with mock broker
+// don't forget to wrap a calling test to helpers.RunTestWithTimeout,
+// because it can wait for mock broker creation forever
 func newConsumerWithMockBroker(t *testing.T) (storage.Storage, *helpers.MockBroker, consumer.Consumer) {
 	mockStorage := helpers.MustGetMockStorage(t, false)
 	mockBroker := helpers.MustNewMockBroker(t)
@@ -340,14 +343,27 @@ func newConsumerWithMockBroker(t *testing.T) (storage.Storage, *helpers.MockBrok
 	saramaConfig.Version = sarama.V0_10_0_1
 	saramaConfig.Producer.Return.Successes = true
 
-	mockConsumer, err := consumer.NewWithSaramaConfig(broker.Configuration{
-		Address:      mockBroker.Address,
-		Topic:        mockBroker.TopicName,
-		Group:        mockBroker.Group,
-		Enabled:      true,
-		OrgWhitelist: nil,
-	}, mockStorage, saramaConfig, false)
-	helpers.FailOnError(t, err)
+	var (
+		mockConsumer consumer.Consumer
+		err          error
+	)
+
+	for {
+		mockConsumer, err = consumer.NewWithSaramaConfig(broker.Configuration{
+			Address:      mockBroker.Address,
+			Topic:        mockBroker.TopicName,
+			Group:        mockBroker.Group,
+			Enabled:      true,
+			OrgWhitelist: nil,
+		}, mockStorage, saramaConfig, false)
+		// wait for topic to be created
+		if kErr, ok := err.(sarama.KError); ok && kErr == sarama.ErrUnknownTopicOrPartition {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+		helpers.FailOnError(t, err)
+		break
+	}
 
 	assert.NotNil(t, mockConsumer)
 
