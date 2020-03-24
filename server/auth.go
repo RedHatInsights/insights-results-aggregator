@@ -71,7 +71,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 		}
 		var tokenHeader string
 		// In case of testing on local machine we don't take x-rh-identity header, but instead Authorization with JWT token in it
-		if server.Config.Debug {
+		if server.Config.AuthType == "jwt" {
 			tokenHeader = r.Header.Get("Authorization") //Grab the token from the header
 			splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
 			if len(splitted) != 2 {
@@ -100,7 +100,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 		tk := &Token{}
 
 		// If we took JWT token, it has different structure then x-rh-identity
-		if server.Config.Debug {
+		if server.Config.AuthType == "jwt" {
 			jwt := &JWTPayload{}
 			err = json.Unmarshal([]byte(decoded), jwt)
 			if err != nil { //Malformed token, returns with http code 403 as usual

@@ -133,6 +133,7 @@ api_prefix = "/api/v1/"
 api_spec_file = "openapi.json"
 debug = true
 auth = true
+auth_type = "xrh"
 ```
 
 * `address` is host and port which server should listen to
@@ -140,6 +141,7 @@ auth = true
 * `api_spec_file` is the location of a required OpenAPI specifications file
 * `debug` is developer mode that enables some special API endpoints not used on production
 * `auth` turns on or turns authentication
+* `auth_type` set type of auth, it means which header to use for auth `x-rh-identity` or `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
 
 ## Local setup
 

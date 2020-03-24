@@ -23,4 +23,5 @@ type Configuration struct {
 	APISpecFile string `mapstructure:"api_spec_file" toml:"api_spec_file"`
 	Debug       bool   `mapstructure:"debug" toml:"debug"`
 	Auth        bool   `mapstructure:"auth" toml:"auth"`
+	AuthType    string `mapstructure:"auth_type" toml:"auth_type"`
 }
