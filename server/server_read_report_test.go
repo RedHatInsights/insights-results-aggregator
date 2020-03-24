@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -99,7 +100,7 @@ func TestHttpServer_readReportForCluster_NoContent(t *testing.T) {
 			"report": {
 				"meta": {
 					"count": 0,
-					"last_checked_at": "1970-01-01T01:00:00+01:00"
+					"last_checked_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `"
 				},
 				"data":[]
 			}
@@ -127,7 +128,7 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 			"report": {
 				"meta": {
 					"count": -1,
-					"last_checked_at": "1970-01-01T01:00:00+01:00"
+					"last_checked_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `"
 				},
 				"data":[]
 			}

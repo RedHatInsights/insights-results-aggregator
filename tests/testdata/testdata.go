@@ -59,7 +59,7 @@ var (
 		"Report":` + ConsumerReport + `,
 		"LastChecked": "` + LastCheckedAt.Format(time.RFC3339) + `"
 	}`
-	LastCheckedAt     = time.Unix(0, 0)
+	LastCheckedAt     = time.Unix(25, 0)
 	RuleContent3Rules = content.RuleContentDirectory{
 		"rc1": content.RuleContent{
 			Summary:    []byte("rule 1 summary"),
