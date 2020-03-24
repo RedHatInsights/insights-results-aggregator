@@ -308,12 +308,23 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(server.LogRequest)
 
+	apiPrefix := server.Config.APIPrefix
+
+	metricsURL := apiPrefix + MetricsEndpoint
+	openAPIURL := apiPrefix + filepath.Base(server.Config.APISpecFile)
+
 	// enable authentication, but only if it is setup in configuration
 	if server.Config.Auth {
-		router.Use(server.Authentication)
+		// we have to enable authentication for all endpoints, including endpoints
+		// for Prometheus metrics and OpenAPI specification, because there is not
+		// single prefix of other REST API calls. The special endpoints needs to
+		// be handled in middleware which is not optimal
+		noAuthURLs := []string{
+			metricsURL,
+			openAPIURL,
+		}
+		router.Use(func(next http.Handler) http.Handler { return server.Authentication(next, noAuthURLs) })
 	}
-
-	apiPrefix := server.Config.APIPrefix
 
 	// it is possible to use special REST API endpoints in debug mode
 	if server.Config.Debug {
@@ -334,7 +345,7 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
 
 	// OpenAPI specs
-	router.HandleFunc(apiPrefix+filepath.Base(server.Config.APISpecFile), server.serveAPISpecFile).Methods(http.MethodGet)
+	router.HandleFunc(openAPIURL, server.serveAPISpecFile).Methods(http.MethodGet)
 
 	return router
 }

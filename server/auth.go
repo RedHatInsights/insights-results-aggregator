@@ -62,8 +62,13 @@ type JWTPayload struct {
 }
 
 // Authentication middleware for checking auth rights
-func (server *HTTPServer) Authentication(next http.Handler) http.Handler {
+func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// for specific URLs it is ok to not use auth. mechanisms at all
+		if stringInSlice(r.RequestURI, noAuthURLs) {
+			next.ServeHTTP(w, r)
+			return
+		}
 		var tokenHeader string
 		// In case of testing on local machine we don't take x-rh-identity header, but instead Authorization with JWT token in it
 		if server.Config.Debug {
