@@ -39,13 +39,15 @@ import (
 // Body is a string body (leave empty to not send)
 // UserID is a user id for methods requiring user id (leave empty to not use it)
 // XRHIdentity is an authentication token (leave empty to not use it)
+// AuthorizationToken is an authentication token (leave empty to not use it)
 type APIRequest struct {
-	Method       string
-	Endpoint     string
-	EndpointArgs []interface{}
-	Body         string
-	UserID       types.UserID
-	XRHIdentity  string
+	Method             string
+	Endpoint           string
+	EndpointArgs       []interface{}
+	Body               string
+	UserID             types.UserID
+	XRHIdentity        string
+	AuthorizationToken string
 }
 
 // APIResponse is an expected api response to use in AssertAPIRequest
@@ -92,6 +94,10 @@ func AssertAPIRequest(
 
 	if len(request.XRHIdentity) != 0 {
 		req.Header.Set("x-rh-identity", request.XRHIdentity)
+	}
+
+	if len(request.AuthorizationToken) != 0 {
+		req.Header.Set("Authorization", request.AuthorizationToken)
 	}
 
 	response := ExecuteRequest(testServer, req, serverConfig).Result()
