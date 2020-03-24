@@ -36,6 +36,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/verdverm/frisby"
 )
@@ -279,10 +280,27 @@ func checkReportEndpointWrongMethods() {
 
 // checkOpenAPISpecifications checks whether OpenAPI endpoint is handled correctly
 func checkOpenAPISpecifications() {
-	f := frisby.Create("Check the wrong entry point to REST API").Get(apiURL + "openapi.json")
+	f := frisby.Create("Check the OpenAPI endpoint").Get(apiURL + "openapi.json")
 	f.Send()
 	f.ExpectStatus(200)
 	f.ExpectHeader(contentTypeHeader, "application/json")
+	f.PrintReport()
+}
+
+// checkPrometheusMetrics checks the Prometheus metrics API endpoint
+func checkPrometheusMetrics() {
+	f := frisby.Create("Check the Prometheus metrics API endpoint").Get(apiURL + "metrics")
+	f.Send()
+	f.ExpectStatus(200)
+	// the content type header set by metrics handler is a bit complicated
+	// but it must start with "text/plain" in any case
+	f.Expect(func(F *frisby.Frisby) (bool, string) {
+		header := F.Resp.Header.Get(contentTypeHeader)
+		if strings.HasPrefix(header, "text/plain") {
+			return true, "ok"
+		}
+		return false, fmt.Sprintf("Expected Header %q to be %q, but got %q", contentTypeHeader, "text/plain", header)
+	})
 	f.PrintReport()
 }
 
@@ -314,4 +332,7 @@ func ServerTests() {
 
 	// tests for OpenAPI specification that is accessible via its endpoint as well
 	checkOpenAPISpecifications()
+
+	// tests for metrics hat is accessible via its endpoint as well
+	checkPrometheusMetrics()
 }
