@@ -31,7 +31,7 @@ func TestGetRouterIntParamMissing(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = server.GetRouterPositiveIntParam(request, "test")
-	assert.EqualError(t, err, "missing param test")
+	assert.EqualError(t, err, "Missing required param from request: test")
 }
 
 func TestReadClusterNameMissing(t *testing.T) {
@@ -39,7 +39,7 @@ func TestReadClusterNameMissing(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = server.ReadClusterName(httptest.NewRecorder(), request)
-	assert.EqualError(t, err, "missing param cluster")
+	assert.EqualError(t, err, "Missing required param from request: cluster")
 }
 
 func TestReadOrganizationIDMissing(t *testing.T) {
@@ -47,7 +47,7 @@ func TestReadOrganizationIDMissing(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = server.ReadOrganizationID(httptest.NewRecorder(), request)
-	assert.EqualError(t, err, "missing param organization")
+	assert.EqualError(t, err, "Missing required param from request: organization")
 }
 
 func mustGetRequestWithMuxVars(
@@ -74,7 +74,7 @@ func TestGetRouterIntParamNonIntError(t *testing.T) {
 	assert.EqualError(
 		t,
 		err,
-		"Error during parsing param id with value non int. Error: unsigned integer expected",
+		"Error during parsing param 'id' with value 'non int'. Error: 'unsigned integer expected'",
 	)
 }
 
@@ -95,7 +95,7 @@ func TestGetRouterPositiveIntParamZeroError(t *testing.T) {
 	})
 
 	_, err := server.GetRouterPositiveIntParam(request, "id")
-	assert.EqualError(t, err, "Error during parsing param id with value 0. Error: positive value expected")
+	assert.EqualError(t, err, "Error during parsing param 'id' with value '0'. Error: 'positive value expected'")
 }
 
 func TestReadClusterNamesMissing(t *testing.T) {
@@ -103,7 +103,7 @@ func TestReadClusterNamesMissing(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = server.ReadClusterNames(httptest.NewRecorder(), request)
-	assert.EqualError(t, err, "missing param clusters")
+	assert.EqualError(t, err, "Missing required param from request: clusters")
 }
 
 func TestReadOrganizationIDsMissing(t *testing.T) {
@@ -111,7 +111,7 @@ func TestReadOrganizationIDsMissing(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = server.ReadOrganizationIDs(httptest.NewRecorder(), request)
-	assert.EqualError(t, err, "missing param organizations")
+	assert.EqualError(t, err, "Missing required param from request: organizations")
 }
 
 func TestReadRuleIDMissing(t *testing.T) {
@@ -119,5 +119,5 @@ func TestReadRuleIDMissing(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = server.ReadRuleID(httptest.NewRecorder(), request)
-	assert.EqualError(t, err, "missing param rule_id")
+	assert.EqualError(t, err, "Missing required param from request: rule_id")
 }

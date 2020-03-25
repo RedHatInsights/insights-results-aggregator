@@ -97,7 +97,7 @@ func TestListOfClustersForOrganizationDBError(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -109,7 +109,7 @@ func TestListOfClustersForOrganizationNegativeID(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
-			"status": "Error during parsing param organization with value -1. Error: unsigned integer expected"
+			"status": "Error during parsing param 'organization' with value '-1'. Error: 'unsigned integer expected'"
 		}`,
 	})
 }
@@ -122,7 +122,7 @@ func TestListOfClustersForOrganizationNonIntID(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
-			"status": "Error during parsing param organization with value non-int. Error: unsigned integer expected"
+			"status": "Error during parsing param 'organization' with value 'non-int'. Error: 'unsigned integer expected'"
 		}`,
 	})
 }
@@ -175,7 +175,7 @@ func TestListOfOrganizationsDBError(t *testing.T) {
 		Endpoint: server.OrganizationsEndpoint,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -258,7 +258,7 @@ func TestServeAPISpecFileError(t *testing.T) {
 		Endpoint: config.APISpecFile,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status":"Error creating absolute path of OpenAPI spec file"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -312,7 +312,7 @@ func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.BadClusterName, testdata.Rule1ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
-		Body:       `{"status": "invalid cluster name format: 'aaaa'"}`,
+		Body:       `{"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"}`,
 	})
 }
 
@@ -324,7 +324,7 @@ func TestRuleFeedbackErrorBadRuleID(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
-			"status": "invalid rule ID, it must contain only from latin characters, number, underscores or dots"
+			"status": "Error during parsing param 'rule_id' with value 'rule id with spaces'. Error: 'invalid rule ID, it must contain only from latin characters, number, underscores or dots'"
 		}`,
 	})
 }
@@ -344,7 +344,7 @@ func TestRuleFeedbackErrorBadUserID(t *testing.T) {
 	response := helpers.ExecuteRequest(testServer, req, &config).Result()
 
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode, "Expected different status code")
-	helpers.CheckResponseBodyJSON(t, `{"status": "Unable to get user id"}`, response.Body)
+	helpers.CheckResponseBodyJSON(t, `{"status": "Internal Server Error"}`, response.Body)
 }
 
 func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
@@ -358,7 +358,7 @@ func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
 		UserID:       testdata.UserID,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -380,7 +380,7 @@ func TestHTTPServer_deleteOrganizations_NonIntOrgID(t *testing.T) {
 		EndpointArgs: []interface{}{"non-int"},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
-		Body:       `{"status": "bad organizations param, integer array expected"}`,
+		Body:       `{"status": "Error during parsing param 'organizations' with value 'non-int'. Error: 'integer array expected'"}`,
 	})
 }
 
@@ -394,7 +394,7 @@ func TestHTTPServer_deleteOrganizations_DBError(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -419,7 +419,7 @@ func TestHTTPServer_deleteClusters_DBError(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.ClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -433,6 +433,6 @@ func TestHTTPServer_deleteClusters_BadClusterName(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.BadClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
-		Body:       `{"status": "invalid cluster name format: 'aaaa'"}`,
+		Body:       `{"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"}`,
 	})
 }
