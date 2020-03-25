@@ -97,7 +97,7 @@ func TestListOfClustersForOrganizationDBError(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -175,7 +175,7 @@ func TestListOfOrganizationsDBError(t *testing.T) {
 		Endpoint: server.OrganizationsEndpoint,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -258,7 +258,7 @@ func TestServeAPISpecFileError(t *testing.T) {
 		Endpoint: config.APISpecFile,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "Error creating absolute path of OpenAPI spec file"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -344,7 +344,7 @@ func TestRuleFeedbackErrorBadUserID(t *testing.T) {
 	response := helpers.ExecuteRequest(testServer, req, &config).Result()
 
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode, "Expected different status code")
-	helpers.CheckResponseBodyJSON(t, `{"status": "Unable to get user id"}`, response.Body)
+	helpers.CheckResponseBodyJSON(t, `{"status": "Internal Server Error"}`, response.Body)
 }
 
 func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
@@ -358,7 +358,7 @@ func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
 		UserID:       testdata.UserID,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -394,7 +394,7 @@ func TestHTTPServer_deleteOrganizations_DBError(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
@@ -419,7 +419,7 @@ func TestHTTPServer_deleteClusters_DBError(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.ClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status": "sql: database is closed"}`,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 

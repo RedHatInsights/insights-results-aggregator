@@ -146,7 +146,7 @@ func TestReadReportDBError(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{"status":"sql: database is closed"}`,
+		Body:       `{"status":"Internal Server Error"}`,
 	})
 }
 
@@ -175,7 +175,7 @@ func TestHttpServer_readReportForCluster_getContentForRule_DBError(t *testing.T)
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{ "status":"no such table: rule_error_key" }`,
+		Body:       `{ "status":"Internal Server Error" }`,
 	})
 }
 
@@ -196,7 +196,7 @@ func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
-		Body:       `{ "status": "invalid character 'o' in literal null (expecting 'u')" }`,
+		Body:       `{ "status": "Internal Server Error" }`,
 	})
 }
 

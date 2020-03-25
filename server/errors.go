@@ -20,7 +20,11 @@ import (
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/rs/zerolog/log"
 )
+
+// responseDataError is used as the error message when the responses functions return an error
+const responseDataError = "Unexpected error during response data encoding"
 
 // RouterMissingParamError missing parameter in request
 type RouterMissingParamError struct {
@@ -45,16 +49,33 @@ func (e *RouterParsingError) Error() string {
 	)
 }
 
-// handleServerError handles separate parsing errors and sends appropriate responses
+// AuthenticationError happens during auth problems, for example malformed token
+type AuthenticationError struct {
+	errString string
+}
+
+func (e *AuthenticationError) Error() string {
+	return e.errString
+}
+
+// handleServerError handles separate server errors and sends appropriate responses
 func handleServerError(writer http.ResponseWriter, err error) {
+	var respErr error
+
 	switch err := err.(type) {
 	case *RouterMissingParamError:
-		responses.SendError(writer, err.Error())
+		respErr = responses.SendError(writer, err.Error())
 	case *RouterParsingError:
-		responses.SendError(writer, err.Error())
+		respErr = responses.SendError(writer, err.Error())
 	case *storage.ItemNotFoundError:
-		responses.SendNotFound(writer, err.Error())
+		respErr = responses.SendNotFound(writer, err.Error())
+	case *AuthenticationError:
+		respErr = responses.SendForbidden(writer, err.Error())
 	default:
-		responses.SendInternalServerError(writer, err.Error())
+		respErr = responses.SendInternalServerError(writer, "Internal Server Error")
+	}
+
+	if respErr != nil {
+		log.Error().Err(respErr).Msg(responseDataError)
 	}
 }
