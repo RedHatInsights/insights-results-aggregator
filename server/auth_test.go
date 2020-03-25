@@ -29,6 +29,7 @@ var configAuth = server.Configuration{
 	APIPrefix: "/api/test/",
 	Debug:     false,
 	Auth:      true,
+	AuthType:  "xrh",
 }
 
 var configAuth2 = server.Configuration{
@@ -36,6 +37,7 @@ var configAuth2 = server.Configuration{
 	APIPrefix: "/api/test/",
 	Debug:     true,
 	Auth:      true,
+	AuthType:  "jwt",
 }
 
 // TestMissingAuthToken checks how the missing auth. token header (expected in HTTP request) is handled
