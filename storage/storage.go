@@ -278,7 +278,7 @@ func (storage DBStorage) ReadReportForCluster(
 	return types.ClusterReport(report), types.Timestamp(lastChecked.Format(time.RFC3339)), nil
 }
 
-// ReadReportForCluster reads result (health status) for selected cluster for given organization
+// ReadReportForClusterByClusterName reads result (health status) for selected cluster for given organization
 func (storage DBStorage) ReadReportForClusterByClusterName(
 	clusterName types.ClusterName,
 ) (types.ClusterReport, types.Timestamp, error) {
@@ -518,6 +518,7 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 	return nil
 }
 
+// GetRuleByID gets a rule by ID
 func (storage DBStorage) GetRuleByID(ruleID types.RuleID) (*types.Rule, error) {
 	var rule types.Rule
 
