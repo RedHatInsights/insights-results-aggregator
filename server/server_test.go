@@ -317,13 +317,15 @@ func TestRuleFeedbackVote(t *testing.T) {
 }
 
 func TestRuleFeedbackVote_CheckIfRuleExists_DBError(t *testing.T) {
-	const errStr = "db error"
+	const errStr = "Internal Server Error"
 
 	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
 	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
-	expects.ExpectQuery("SELECT cluster FROM report").
-		WillReturnRows(sqlmock.NewRows([]string{"cluster"}).AddRow("1"))
+	expects.ExpectQuery("SELECT .* FROM report").
+		WillReturnRows(
+			sqlmock.NewRows([]string{"report", "last_checked_at"}).AddRow("1", time.Now()),
+		)
 
 	expects.ExpectQuery("SELECT .* FROM rule").
 		WillReturnError(fmt.Errorf(errStr))
@@ -340,16 +342,36 @@ func TestRuleFeedbackVote_CheckIfRuleExists_DBError(t *testing.T) {
 }
 
 func TestRuleFeedbackVote_DBError(t *testing.T) {
-	const errStr = "db error"
+	const errStr = "Internal Server Error"
 
 	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
 	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
-	expects.ExpectQuery("SELECT cluster FROM report").
-		WillReturnRows(sqlmock.NewRows([]string{"cluster"}).AddRow(testdata.ClusterName))
+	expects.ExpectQuery("SELECT .* FROM report").
+		WillReturnRows(
+			sqlmock.NewRows([]string{"report", "last_checked_at"}).AddRow("1", time.Now()),
+		)
 
 	expects.ExpectQuery("SELECT .* FROM rule").
-		WillReturnRows(sqlmock.NewRows([]string{"module"}).AddRow(testdata.Rule1ID))
+		WillReturnRows(
+			sqlmock.NewRows(
+				[]string{
+					"module",
+					"name",
+					"summary",
+					"reason",
+					"resolution",
+					"more_info",
+				},
+			).AddRow(
+				testdata.Rule1ID,
+				testdata.Rule1Name,
+				testdata.Rule1Summary,
+				testdata.Rule1Reason,
+				testdata.Rule1Resolution,
+				testdata.Rule1MoreInfo,
+			),
+		)
 
 	expects.ExpectPrepare("INSERT INTO").
 		WillReturnError(fmt.Errorf(errStr))
