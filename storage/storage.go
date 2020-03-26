@@ -495,6 +495,7 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 	return nil
 }
 
+// CheckIfClusterExists checks whether cluster with this ID exists
 func (storage DBStorage) CheckIfClusterExists(clusterName types.ClusterName) (bool, error) {
 	err := storage.connection.QueryRow(
 		"SELECT cluster FROM report WHERE cluster = $2", clusterName,
@@ -506,6 +507,7 @@ func (storage DBStorage) CheckIfClusterExists(clusterName types.ClusterName) (bo
 	return err == nil, err
 }
 
+// CheckIfRuleExists checks whether rule with this ID exists
 func (storage DBStorage) CheckIfRuleExists(ruleID types.RuleID) (bool, error) {
 	err := storage.connection.QueryRow(
 		`SELECT "module" FROM rule WHERE module = $2`, ruleID,
