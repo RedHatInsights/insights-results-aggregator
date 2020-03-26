@@ -18,11 +18,14 @@ package server_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
@@ -283,6 +286,14 @@ func TestRuleFeedbackVote(t *testing.T) {
 			mockStorage := helpers.MustGetMockStorage(t, true)
 			defer helpers.MustCloseStorage(t, mockStorage)
 
+			err := mockStorage.WriteReportForCluster(
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+			)
+			helpers.FailOnError(t, err)
+
+			err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+			helpers.FailOnError(t, err)
+
 			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
@@ -302,6 +313,123 @@ func TestRuleFeedbackVote(t *testing.T) {
 			assert.Equal(t, "", feedback.Message)
 			assert.Equal(t, expectedVote, feedback.UserVote)
 		}(endpoint)
+	}
+}
+
+func TestRuleFeedbackVote_CheckIfRuleExists_DBError(t *testing.T) {
+	const errStr = "Internal Server Error"
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectQuery("SELECT .* FROM report").
+		WillReturnRows(
+			sqlmock.NewRows([]string{"report", "last_checked_at"}).AddRow("1", time.Now()),
+		)
+
+	expects.ExpectQuery("SELECT .* FROM rule").
+		WillReturnError(fmt.Errorf(errStr))
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.LikeRuleEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+}
+
+func TestRuleFeedbackVote_DBError(t *testing.T) {
+	const errStr = "Internal Server Error"
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectQuery("SELECT .* FROM report").
+		WillReturnRows(
+			sqlmock.NewRows([]string{"report", "last_checked_at"}).AddRow("1", time.Now()),
+		)
+
+	expects.ExpectQuery("SELECT .* FROM rule").
+		WillReturnRows(
+			sqlmock.NewRows(
+				[]string{
+					"module",
+					"name",
+					"summary",
+					"reason",
+					"resolution",
+					"more_info",
+				},
+			).AddRow(
+				testdata.Rule1ID,
+				testdata.Rule1Name,
+				testdata.Rule1Summary,
+				testdata.Rule1Reason,
+				testdata.Rule1Resolution,
+				testdata.Rule1MoreInfo,
+			),
+		)
+
+	expects.ExpectPrepare("INSERT INTO").
+		WillReturnError(fmt.Errorf(errStr))
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.LikeRuleEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+}
+
+func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
+	for _, endpoint := range []string{
+		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
+	} {
+		helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+			Method:       http.MethodPut,
+			Endpoint:     endpoint,
+			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+			UserID:       testdata.UserID,
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusNotFound,
+			Body: fmt.Sprintf(
+				`{"status": "Item with ID %v was not found in the storage"}`,
+				testdata.ClusterName,
+			),
+		})
+	}
+}
+
+func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	for _, endpoint := range []string{
+		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
+	} {
+		helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+			Method:       http.MethodPut,
+			Endpoint:     endpoint,
+			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+			UserID:       testdata.UserID,
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusNotFound,
+			Body: fmt.Sprintf(
+				`{"status": "Item with ID %v was not found in the storage"}`,
+				testdata.Rule1ID,
+			),
+		})
 	}
 }
 

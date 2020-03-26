@@ -45,13 +45,14 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"path/filepath"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"path/filepath"
-	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -229,6 +230,8 @@ func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *h
 }
 
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
+	// TODO: check if user has permission to vote on this cluster
+
 	clusterID, err := readClusterName(writer, request)
 	if err != nil {
 		// everything has been handled already
@@ -245,6 +248,19 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		const message = "Unable to get user id"
 		log.Error().Err(err).Msg(message)
+		handleServerError(writer, err)
+		return
+	}
+
+	// it's gonna raise an error if cluster does not exist
+	_, _, err = server.Storage.ReadReportForClusterByClusterName(clusterID)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	_, err = server.Storage.GetRuleByID(ruleID)
+	if err != nil {
 		handleServerError(writer, err)
 		return
 	}

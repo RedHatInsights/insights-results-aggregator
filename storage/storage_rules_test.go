@@ -133,6 +133,16 @@ var (
 	}
 )
 
+func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+	helpers.FailOnError(t, err)
+}
+
 func TestDBStorageLoadRuleContentActiveOK(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
@@ -449,16 +459,18 @@ func TestDBStorageVoteOnRule(t *testing.T) {
 	} {
 		mockStorage := helpers.MustGetMockStorage(t, true)
 
+		mustWriteReport3Rules(t, mockStorage)
+
 		helpers.FailOnError(t, mockStorage.VoteOnRule(
-			testClusterName, testRuleID, testUserID, vote,
+			testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
 		))
 
-		feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+		feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
 		helpers.FailOnError(t, err)
 
-		assert.Equal(t, testClusterName, feedback.ClusterID)
-		assert.Equal(t, testRuleID, feedback.RuleID)
-		assert.Equal(t, testUserID, feedback.UserID)
+		assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
+		assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
+		assert.Equal(t, testdata.UserID, feedback.UserID)
 		assert.Equal(t, "", feedback.Message)
 		assert.Equal(t, vote, feedback.UserVote)
 
@@ -466,25 +478,60 @@ func TestDBStorageVoteOnRule(t *testing.T) {
 	}
 }
 
+func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
+	for _, vote := range []storage.UserVote{
+		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
+	} {
+		mockStorage := helpers.MustGetMockStorage(t, true)
+
+		err := mockStorage.VoteOnRule(
+			testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
+		)
+		assert.EqualError(t, err, "FOREIGN KEY constraint failed")
+	}
+}
+
+func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
+	for _, vote := range []storage.UserVote{
+		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
+	} {
+		mockStorage := helpers.MustGetMockStorage(t, true)
+
+		err := mockStorage.WriteReportForCluster(
+			testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+		)
+		helpers.FailOnError(t, err)
+
+		err = mockStorage.VoteOnRule(
+			testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
+		)
+		assert.EqualError(t, err, "FOREIGN KEY constraint failed")
+	}
+}
+
 func TestDBStorageChangeVote(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
+	mustWriteReport3Rules(t, mockStorage)
+
 	helpers.FailOnError(t, mockStorage.VoteOnRule(
-		testClusterName, testRuleID, testUserID, storage.UserVoteLike,
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.UserVoteLike,
 	))
 	// just to be sure that addedAt != to updatedAt
 	time.Sleep(1 * time.Millisecond)
 	helpers.FailOnError(t, mockStorage.VoteOnRule(
-		testClusterName, testRuleID, testUserID, storage.UserVoteDislike,
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.UserVoteDislike,
 	))
 
-	feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	feedback, err := mockStorage.GetUserFeedbackOnRule(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID,
+	)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, testClusterName, feedback.ClusterID)
-	assert.Equal(t, testRuleID, feedback.RuleID)
-	assert.Equal(t, testUserID, feedback.UserID)
+	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
+	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
+	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "", feedback.Message)
 	assert.Equal(t, storage.UserVoteDislike, feedback.UserVote)
 	assert.NotEqual(t, feedback.AddedAt, feedback.UpdatedAt)
@@ -494,16 +541,20 @@ func TestDBStorageTextFeedback(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
+	mustWriteReport3Rules(t, mockStorage)
+
 	helpers.FailOnError(t, mockStorage.AddOrUpdateFeedbackOnRule(
-		testClusterName, testRuleID, testUserID, "test feedback",
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, "test feedback",
 	))
 
-	feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	feedback, err := mockStorage.GetUserFeedbackOnRule(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID,
+	)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, testClusterName, feedback.ClusterID)
-	assert.Equal(t, testRuleID, feedback.RuleID)
-	assert.Equal(t, testUserID, feedback.UserID)
+	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
+	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
+	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "test feedback", feedback.Message)
 	assert.Equal(t, storage.UserVoteNone, feedback.UserVote)
 }
@@ -512,21 +563,25 @@ func TestDBStorageFeedbackChangeMessage(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
+	mustWriteReport3Rules(t, mockStorage)
+
 	helpers.FailOnError(t, mockStorage.AddOrUpdateFeedbackOnRule(
-		testClusterName, testRuleID, testUserID, "message1",
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, "message1",
 	))
 	// just to be sure that addedAt != to updatedAt
 	time.Sleep(1 * time.Millisecond)
 	helpers.FailOnError(t, mockStorage.AddOrUpdateFeedbackOnRule(
-		testClusterName, testRuleID, testUserID, "message2",
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, "message2",
 	))
 
-	feedback, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	feedback, err := mockStorage.GetUserFeedbackOnRule(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID,
+	)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, testClusterName, feedback.ClusterID)
-	assert.Equal(t, testRuleID, feedback.RuleID)
-	assert.Equal(t, testUserID, feedback.UserID)
+	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
+	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
+	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "message2", feedback.Message)
 	assert.Equal(t, storage.UserVoteNone, feedback.UserVote)
 	assert.NotEqual(t, feedback.AddedAt, feedback.UpdatedAt)
@@ -566,6 +621,9 @@ func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
 
 	mockStorage := storage.NewFromConnection(connection, -1)
 	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err = mockStorage.Init()
+	helpers.FailOnError(t, err)
 
 	err = mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, storage.UserVoteNone)
 	assert.EqualError(t, err, "DB driver -1 is not supported")

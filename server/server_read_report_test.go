@@ -225,7 +225,6 @@ func assertReportResponsesEqual(t *testing.T, expected, got string) {
 func TestReadReportWithContent(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
-	dbStorage := mockStorage.(*storage.DBStorage)
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
@@ -236,7 +235,7 @@ func TestReadReportWithContent(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// write some rule content into the DB
-	err = dbStorage.LoadRuleContent(testdata.RuleContent3Rules)
+	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
 	helpers.FailOnError(t, err)
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{

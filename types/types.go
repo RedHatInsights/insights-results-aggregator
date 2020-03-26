@@ -71,3 +71,13 @@ type RuleID string
 
 // UserID represents type for user id
 type UserID string
+
+// Rule represents the content of rule table
+type Rule struct {
+	Module     RuleID `json:"module"`
+	Name       string `json:"name"`
+	Summary    string `json:"summary"`
+	Reason     string `json:"reason"`
+	Resolution string `json:"resolution"`
+	MoreInfo   string `json:"more_info"`
+}

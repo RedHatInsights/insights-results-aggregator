@@ -496,3 +496,76 @@ func TestDBStorageDeleteReports(t *testing.T) {
 		}()
 	}
 }
+
+func TestDBStorage_ReadReportForClusterByClusterName_OK(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	report, lastCheckedAt, err := mockStorage.ReadReportForClusterByClusterName(testdata.ClusterName)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.Report3Rules, report)
+	assert.Equal(t, types.Timestamp(testdata.LastCheckedAt.Format(time.RFC3339)), lastCheckedAt)
+}
+
+func TestDBStorage_CheckIfClusterExists_ClusterDoesNotExist(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	_, _, err := mockStorage.ReadReportForClusterByClusterName(testdata.ClusterName)
+	assert.EqualError(
+		t,
+		err,
+		fmt.Sprintf("Item with ID %v was not found in the storage", testdata.ClusterName),
+	)
+}
+
+func TestDBStorage_CheckIfClusterExists_DBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	_, _, err := mockStorage.ReadReportForClusterByClusterName(testdata.ClusterName)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestDBStorage_CheckIfRuleExists_OK(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	rule, err := mockStorage.GetRuleByID(testdata.Rule1ID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, &testdata.Rule1, rule)
+}
+
+func TestDBStorage_CheckIfRuleExists_ClusterDoesNotExist(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	_, err := mockStorage.GetRuleByID(testdata.Rule1ID)
+	assert.EqualError(
+		t,
+		err,
+		fmt.Sprintf("Item with ID %v was not found in the storage", testdata.Rule1ID),
+	)
+}
+
+func TestDBStorage_CheckIfRuleExists_DBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	_, err := mockStorage.GetRuleByID(testdata.Rule1ID)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestDBStorage_NewSQLite(t *testing.T) {
+	_, err := storage.New(storage.Configuration{
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
+	})
+	helpers.FailOnError(t, err)
+}

@@ -38,7 +38,7 @@ import (
 const (
 	testTopicName = "topic"
 	// time limit for *some* tests which can stuck in forever loop
-	testCaseTimeLimit = 10 * time.Second
+	testCaseTimeLimit = 20 * time.Second
 )
 
 var (

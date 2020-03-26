@@ -56,6 +56,7 @@ type Storage interface {
 	ListOfOrgs() ([]types.OrgID, error)
 	ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
 	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
+	ReadReportForClusterByClusterName(clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
 	WriteReportForCluster(
 		orgID types.OrgID,
 		clusterName types.ClusterName,
@@ -82,6 +83,7 @@ type Storage interface {
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
 	LoadRuleContent(contentDir content.RuleContentDirectory) error
+	GetRuleByID(ruleID types.RuleID) (*types.Rule, error)
 }
 
 // DBDriver type for db driver enum
@@ -268,6 +270,29 @@ func (storage DBStorage) ReadReportForCluster(
 	case err == sql.ErrNoRows:
 		return "", "", &ItemNotFoundError{
 			ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
+		}
+	case err != nil:
+		return "", "", err
+	}
+
+	return types.ClusterReport(report), types.Timestamp(lastChecked.Format(time.RFC3339)), nil
+}
+
+// ReadReportForClusterByClusterName reads result (health status) for selected cluster for given organization
+func (storage DBStorage) ReadReportForClusterByClusterName(
+	clusterName types.ClusterName,
+) (types.ClusterReport, types.Timestamp, error) {
+	var report string
+	var lastChecked time.Time
+
+	err := storage.connection.QueryRow(
+		"SELECT report, last_checked_at FROM report WHERE cluster = $1", clusterName,
+	).Scan(&report, &lastChecked)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return "", "", &ItemNotFoundError{
+			ItemID: fmt.Sprintf("%v", clusterName),
 		}
 	case err != nil:
 		return "", "", err
@@ -491,4 +516,32 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 	}
 
 	return nil
+}
+
+// GetRuleByID gets a rule by ID
+func (storage DBStorage) GetRuleByID(ruleID types.RuleID) (*types.Rule, error) {
+	var rule types.Rule
+
+	err := storage.connection.QueryRow(`
+		SELECT
+			"module",
+			"name",
+			"summary",
+			"reason",
+			"resolution",
+			"more_info"
+		FROM rule WHERE "module" = $1`, ruleID,
+	).Scan(
+		&rule.Module,
+		&rule.Name,
+		&rule.Summary,
+		&rule.Reason,
+		&rule.Resolution,
+		&rule.MoreInfo,
+	)
+	if err == sql.ErrNoRows {
+		return nil, &ItemNotFoundError{ItemID: ruleID}
+	}
+
+	return &rule, err
 }
