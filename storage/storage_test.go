@@ -496,3 +496,71 @@ func TestDBStorageDeleteReports(t *testing.T) {
 		}()
 	}
 }
+
+func TestDBStorage_CheckIfClusterExists_OK(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	doesClusterExist, err := mockStorage.CheckIfClusterExists(testdata.ClusterName)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, true, doesClusterExist)
+}
+
+func TestDBStorage_CheckIfClusterExists_ClusterDoesNotExist(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	doesClusterExist, err := mockStorage.CheckIfClusterExists(testdata.ClusterName)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, false, doesClusterExist)
+}
+
+func TestDBStorage_CheckIfClusterExists_DBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	_, err := mockStorage.CheckIfClusterExists(testdata.ClusterName)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestDBStorage_CheckIfRuleExists_OK(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	doesClusterExist, err := mockStorage.CheckIfRuleExists(testdata.Rule1ID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, true, doesClusterExist)
+}
+
+func TestDBStorage_CheckIfRuleExists_ClusterDoesNotExist(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	doesClusterExist, err := mockStorage.CheckIfRuleExists(testdata.Rule1ID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, false, doesClusterExist)
+}
+
+func TestDBStorage_CheckIfRuleExists_DBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	_, err := mockStorage.CheckIfRuleExists(testdata.Rule1ID)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestDBStorage_NewSQLite(t *testing.T) {
+	_, err := storage.New(storage.Configuration{
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
+	})
+	helpers.FailOnError(t, err)
+}

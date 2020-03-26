@@ -25,6 +25,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
+
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
@@ -312,6 +314,55 @@ func TestRuleFeedbackVote(t *testing.T) {
 			assert.Equal(t, expectedVote, feedback.UserVote)
 		}(endpoint)
 	}
+}
+
+func TestRuleFeedbackVote_CheckIfRuleExists_DBError(t *testing.T) {
+	const errStr = "db error"
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectQuery("SELECT cluster FROM report").
+		WillReturnRows(sqlmock.NewRows([]string{"cluster"}).AddRow("1"))
+
+	expects.ExpectQuery("SELECT .* FROM rule").
+		WillReturnError(fmt.Errorf(errStr))
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.LikeRuleEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+}
+
+func TestRuleFeedbackVote_DBError(t *testing.T) {
+	const errStr = "db error"
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectQuery("SELECT cluster FROM report").
+		WillReturnRows(sqlmock.NewRows([]string{"cluster"}).AddRow(testdata.ClusterName))
+
+	expects.ExpectQuery("SELECT .* FROM rule").
+		WillReturnRows(sqlmock.NewRows([]string{"module"}).AddRow(testdata.Rule1ID))
+
+	expects.ExpectPrepare("INSERT INTO").
+		WillReturnError(fmt.Errorf(errStr))
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.LikeRuleEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
 }
 
 func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {

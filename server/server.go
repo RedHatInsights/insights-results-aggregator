@@ -261,7 +261,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	ruleExists, err := server.Storage.CheckIfRuleExists(ruleID)
 	if err != nil {
 		log.Err(err)
-		responses.Send(http.StatusInternalServerError, writer, err)
+		responses.Send(http.StatusInternalServerError, writer, err.Error())
 		return
 	}
 	if !ruleExists {
@@ -274,9 +274,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	}
 
 	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
-	if itemNotFoundError, ok := err.(*storage.ItemNotFoundError); ok {
-		responses.Send(http.StatusNotFound, writer, itemNotFoundError.Error())
-	} else if err != nil {
+	if err != nil {
 		responses.Send(http.StatusInternalServerError, writer, err.Error())
 	} else {
 		responses.Send(http.StatusOK, writer, responses.BuildOkResponse())
