@@ -82,6 +82,8 @@ type Storage interface {
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
 	LoadRuleContent(contentDir content.RuleContentDirectory) error
+	CheckIfClusterExists(clusterName types.ClusterName) (bool, error)
+	CheckIfRuleExists(ruleID types.RuleID) (bool, error)
 }
 
 // DBDriver type for db driver enum
@@ -491,4 +493,26 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 	}
 
 	return nil
+}
+
+func (storage DBStorage) CheckIfClusterExists(clusterName types.ClusterName) (bool, error) {
+	err := storage.connection.QueryRow(
+		"SELECT cluster FROM report WHERE cluster = $2", clusterName,
+	).Scan(&clusterName)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+
+	return err == nil, err
+}
+
+func (storage DBStorage) CheckIfRuleExists(ruleID types.RuleID) (bool, error) {
+	err := storage.connection.QueryRow(
+		`SELECT "module" FROM rule WHERE module = $2`, ruleID,
+	).Scan(&ruleID)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+
+	return err == nil, err
 }

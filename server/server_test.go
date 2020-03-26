@@ -18,6 +18,7 @@ package server_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -283,6 +284,14 @@ func TestRuleFeedbackVote(t *testing.T) {
 			mockStorage := helpers.MustGetMockStorage(t, true)
 			defer helpers.MustCloseStorage(t, mockStorage)
 
+			err := mockStorage.WriteReportForCluster(
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+			)
+			helpers.FailOnError(t, err)
+
+			err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+			helpers.FailOnError(t, err)
+
 			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
@@ -302,6 +311,52 @@ func TestRuleFeedbackVote(t *testing.T) {
 			assert.Equal(t, "", feedback.Message)
 			assert.Equal(t, expectedVote, feedback.UserVote)
 		}(endpoint)
+	}
+}
+
+func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
+	for _, endpoint := range []string{
+		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
+	} {
+		helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+			Method:       http.MethodPut,
+			Endpoint:     endpoint,
+			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+			UserID:       testdata.UserID,
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusNotFound,
+			Body: fmt.Sprintf(
+				`{"status": "Item with ID %v was not found in the storage"}`,
+				testdata.ClusterName,
+			),
+		})
+	}
+}
+
+func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	for _, endpoint := range []string{
+		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
+	} {
+		helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+			Method:       http.MethodPut,
+			Endpoint:     endpoint,
+			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+			UserID:       testdata.UserID,
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusNotFound,
+			Body: fmt.Sprintf(
+				`{"status": "Item with ID %v was not found in the storage"}`,
+				testdata.Rule1ID,
+			),
+		})
 	}
 }
 

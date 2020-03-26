@@ -45,13 +45,14 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"path/filepath"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"path/filepath"
-	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -220,6 +221,8 @@ func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *h
 }
 
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
+	// TODO: check if user has permission to vote on this cluster
+
 	clusterID, err := readClusterName(writer, request)
 	if err != nil {
 		// everything has been handled already
@@ -240,8 +243,40 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
+	clusterExists, err := server.Storage.CheckIfClusterExists(clusterID)
 	if err != nil {
+		log.Err(err)
+		responses.Send(http.StatusInternalServerError, writer, err.Error())
+		return
+	}
+	if !clusterExists {
+		responses.Send(
+			http.StatusNotFound,
+			writer,
+			(&storage.ItemNotFoundError{ItemID: clusterID}).Error(),
+		)
+		return
+	}
+
+	ruleExists, err := server.Storage.CheckIfRuleExists(ruleID)
+	if err != nil {
+		log.Err(err)
+		responses.Send(http.StatusInternalServerError, writer, err)
+		return
+	}
+	if !ruleExists {
+		responses.Send(
+			http.StatusNotFound,
+			writer,
+			(&storage.ItemNotFoundError{ItemID: ruleID}).Error(),
+		)
+		return
+	}
+
+	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
+	if itemNotFoundError, ok := err.(*storage.ItemNotFoundError); ok {
+		responses.Send(http.StatusNotFound, writer, itemNotFoundError.Error())
+	} else if err != nil {
 		responses.Send(http.StatusInternalServerError, writer, err.Error())
 	} else {
 		responses.Send(http.StatusOK, writer, responses.BuildOkResponse())
