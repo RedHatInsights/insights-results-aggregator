@@ -261,7 +261,7 @@ func (server *HTTPServer) validateClusterAndRuleID(
 ) bool {
 	clusterExists, err := server.Storage.CheckIfClusterExists(clusterID)
 	if err != nil {
-		log.Err(err)
+		log.Error().Err(err)
 		responses.Send(http.StatusInternalServerError, writer, err.Error())
 		return false
 	}
@@ -276,7 +276,7 @@ func (server *HTTPServer) validateClusterAndRuleID(
 
 	ruleExists, err := server.Storage.CheckIfRuleExists(ruleID)
 	if err != nil {
-		log.Err(err)
+		log.Error().Err(err)
 		responses.Send(http.StatusInternalServerError, writer, err.Error())
 		return false
 	}
