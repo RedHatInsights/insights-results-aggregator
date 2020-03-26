@@ -94,16 +94,22 @@ func (server *HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
 }
 
 func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, _ *http.Request) {
-	responses.SendResponse(writer, responses.BuildOkResponse())
+	err := responses.SendResponse(writer, responses.BuildOkResponse())
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
 }
 
 func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, _ *http.Request) {
 	organizations, err := server.Storage.ListOfOrgs()
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get list of organizations")
-		responses.SendInternalServerError(writer, err.Error())
-	} else {
-		responses.SendResponse(writer, responses.BuildOkResponseWithData("organizations", organizations))
+		handleServerError(writer, err)
+		return
+	}
+	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("organizations", organizations))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
 	}
 }
 
@@ -118,9 +124,12 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 	clusters, err := server.Storage.ListOfClustersForOrg(organizationID)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get list of clusters")
-		responses.SendInternalServerError(writer, err.Error())
-	} else {
-		responses.SendResponse(writer, responses.BuildOkResponseWithData("clusters", clusters))
+		handleServerError(writer, err)
+		return
+	}
+	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("clusters", clusters))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
 	}
 }
 
@@ -141,7 +150,7 @@ func (server *HTTPServer) getContentForRules(
 	err := json.Unmarshal([]byte(report), &reportRules)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to parse cluster report")
-		responses.SendInternalServerError(writer, err.Error())
+		handleServerError(writer, err)
 		return nil, 0, err
 	}
 
@@ -150,7 +159,7 @@ func (server *HTTPServer) getContentForRules(
 	hitRules, err := server.Storage.GetContentForRules(reportRules)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to retrieve rules content from database")
-		responses.SendInternalServerError(writer, err.Error())
+		handleServerError(writer, err)
 		return nil, 0, err
 	}
 
@@ -171,12 +180,9 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	}
 
 	report, lastChecked, err := server.Storage.ReadReportForCluster(organizationID, clusterName)
-	if _, ok := err.(*storage.ItemNotFoundError); ok {
-		responses.Send(http.StatusNotFound, writer, err.Error())
-		return
-	} else if err != nil {
+	if err != nil {
 		log.Error().Err(err).Msg("Unable to read report for cluster")
-		responses.SendInternalServerError(writer, err.Error())
+		handleServerError(writer, err)
 		return
 	}
 
@@ -202,7 +208,10 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		Rules: rulesContent,
 	}
 
-	responses.SendResponse(writer, responses.BuildOkResponseWithData("report", response))
+	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("report", response))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
 }
 
 // likeRule likes the rule for current user
@@ -239,7 +248,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		const message = "Unable to get user id"
 		log.Error().Err(err).Msg(message)
-		responses.Send(http.StatusInternalServerError, writer, message)
+		handleServerError(writer, err)
 		return
 	}
 
@@ -250,9 +259,13 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 
 	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
 	if err != nil {
-		responses.Send(http.StatusInternalServerError, writer, err.Error())
-	} else {
-		responses.Send(http.StatusOK, writer, responses.BuildOkResponse())
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
 	}
 }
 
@@ -302,12 +315,15 @@ func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, reques
 	for _, org := range orgIds {
 		if err := server.Storage.DeleteReportsForOrg(org); err != nil {
 			log.Error().Err(err).Msg("Unable to delete reports")
-			responses.SendInternalServerError(writer, err.Error())
+			handleServerError(writer, err)
 			return
 		}
 	}
 
-	responses.SendResponse(writer, responses.BuildOkResponse())
+	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
 }
 
 func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *http.Request) {
@@ -320,12 +336,15 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 	for _, cluster := range clusterNames {
 		if err := server.Storage.DeleteReportsForCluster(cluster); err != nil {
 			log.Error().Err(err).Msg("Unable to delete reports")
-			responses.SendInternalServerError(writer, err.Error())
+			handleServerError(writer, err)
 			return
 		}
 	}
 
-	responses.SendResponse(writer, responses.BuildOkResponse())
+	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
 }
 
 // serveAPISpecFile serves an OpenAPI specifications file specified in config file
@@ -334,11 +353,7 @@ func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *h
 	if err != nil {
 		const message = "Error creating absolute path of OpenAPI spec file"
 		log.Error().Err(err).Msg(message)
-		responses.Send(
-			http.StatusInternalServerError,
-			writer,
-			message,
-		)
+		handleServerError(writer, err)
 		return
 	}
 

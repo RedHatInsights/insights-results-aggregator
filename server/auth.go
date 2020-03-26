@@ -23,12 +23,11 @@ import (
 	"encoding/json"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"strings"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-
-	"github.com/RedHatInsights/insights-operator-utils/responses"
 )
 
 type contextKey string
@@ -75,7 +74,9 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 			tokenHeader = r.Header.Get("Authorization") //Grab the token from the header
 			splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
 			if len(splitted) != 2 {
-				responses.SendForbidden(w, "Invalid/Malformed auth token")
+				const message = "Invalid/Malformed auth token"
+				log.Error().Msg(message)
+				handleServerError(w, &AuthenticationError{errString: message})
 				return
 			}
 
@@ -86,14 +87,19 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 			tokenHeader = r.Header.Get("x-rh-identity") //Grab the token from the header
 		}
 
-		if tokenHeader == "" { // Token is missing, returns with error code 403 Unauthorized
-			responses.SendForbidden(w, "Missing auth token")
+		// Token is missing, SHOULD RETURN with error code 403 Unauthorized - changes in utils necessary
+		// TODO: Change SendUnauthorized in utils to accept string instead of map interface and change here
+		if tokenHeader == "" {
+			const message = "Missing auth token"
+			log.Error().Msg(message)
+			handleServerError(w, &AuthenticationError{errString: message})
 			return
 		}
 
 		decoded, err := jwt.DecodeSegment(tokenHeader) // Decode token to JSON string
 		if err != nil {                                // Malformed token, returns with http code 403 as usual
-			responses.SendForbidden(w, malformedTokenMessage)
+			log.Error().Err(err).Msg(malformedTokenMessage)
+			handleServerError(w, &AuthenticationError{errString: malformedTokenMessage})
 			return
 		}
 
@@ -104,7 +110,8 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 			jwt := &JWTPayload{}
 			err = json.Unmarshal([]byte(decoded), jwt)
 			if err != nil { //Malformed token, returns with http code 403 as usual
-				responses.SendForbidden(w, malformedTokenMessage)
+				log.Error().Err(err).Msg(malformedTokenMessage)
+				handleServerError(w, &AuthenticationError{errString: malformedTokenMessage})
 				return
 			}
 			// Map JWT token to inner token
@@ -113,7 +120,8 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 			err = json.Unmarshal([]byte(decoded), tk)
 
 			if err != nil { //Malformed token, returns with http code 403 as usual
-				responses.SendForbidden(w, malformedTokenMessage)
+				log.Error().Err(err).Msg(malformedTokenMessage)
+				handleServerError(w, &AuthenticationError{errString: malformedTokenMessage})
 				return
 			}
 		}
