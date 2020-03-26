@@ -382,14 +382,14 @@ func (storage DBStorage) WriteReportForCluster(
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
 ) error {
-	var query string
+	var upsertQuery string
 
 	switch storage.dbDriverType {
 	case DBDriverSQLite3:
-		query = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at)
+		upsertQuery = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at)
 		 VALUES ($1, $2, $3, $4, $5)`
 	case DBDriverPostgres:
-		query = `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
+		upsertQuery = `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
 		 VALUES ($1, $2, $3, $4, $5)
 		 ON CONFLICT (org_id, cluster)
 		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`
@@ -397,7 +397,24 @@ func (storage DBStorage) WriteReportForCluster(
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
-	statement, err := storage.connection.Prepare(query)
+	// Check if there is a more recent report for the cluster already in the database.
+	rows, err := storage.connection.Query(
+		`SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3`,
+		orgID, clusterName, lastCheckedTime)
+	if err != nil {
+		return err
+	}
+	defer closeRows(rows)
+
+	// If there is one, print a warning and discard the report (don't update it).
+	if rows.Next() {
+		log.Warn().Msgf("Database already contains report for organization %d and cluster name %s more recent than %v",
+			orgID, clusterName, lastCheckedTime)
+		return nil
+	}
+
+	// Perform the report upsert.
+	statement, err := storage.connection.Prepare(upsertQuery)
 	if err != nil {
 		return err
 	}
