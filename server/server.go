@@ -243,33 +243,8 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	clusterExists, err := server.Storage.CheckIfClusterExists(clusterID)
-	if err != nil {
-		log.Err(err)
-		responses.Send(http.StatusInternalServerError, writer, err.Error())
-		return
-	}
-	if !clusterExists {
-		responses.Send(
-			http.StatusNotFound,
-			writer,
-			(&storage.ItemNotFoundError{ItemID: clusterID}).Error(),
-		)
-		return
-	}
-
-	ruleExists, err := server.Storage.CheckIfRuleExists(ruleID)
-	if err != nil {
-		log.Err(err)
-		responses.Send(http.StatusInternalServerError, writer, err.Error())
-		return
-	}
-	if !ruleExists {
-		responses.Send(
-			http.StatusNotFound,
-			writer,
-			(&storage.ItemNotFoundError{ItemID: ruleID}).Error(),
-		)
+	if !server.validateClusterAndRuleID(clusterID, ruleID, writer) {
+		// everything has been handled already
 		return
 	}
 
@@ -279,6 +254,42 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	} else {
 		responses.Send(http.StatusOK, writer, responses.BuildOkResponse())
 	}
+}
+
+func (server *HTTPServer) validateClusterAndRuleID(
+	clusterID types.ClusterName, ruleID types.RuleID, writer http.ResponseWriter,
+) bool {
+	clusterExists, err := server.Storage.CheckIfClusterExists(clusterID)
+	if err != nil {
+		log.Err(err)
+		responses.Send(http.StatusInternalServerError, writer, err.Error())
+		return false
+	}
+	if !clusterExists {
+		responses.Send(
+			http.StatusNotFound,
+			writer,
+			(&storage.ItemNotFoundError{ItemID: clusterID}).Error(),
+		)
+		return false
+	}
+
+	ruleExists, err := server.Storage.CheckIfRuleExists(ruleID)
+	if err != nil {
+		log.Err(err)
+		responses.Send(http.StatusInternalServerError, writer, err.Error())
+		return false
+	}
+	if !ruleExists {
+		responses.Send(
+			http.StatusNotFound,
+			writer,
+			(&storage.ItemNotFoundError{ItemID: ruleID}).Error(),
+		)
+		return false
+	}
+
+	return true
 }
 
 func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {
