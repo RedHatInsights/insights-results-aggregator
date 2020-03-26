@@ -33,6 +33,19 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+const (
+	// key for topic name used in structured log messages
+	topicKey = "topic"
+	// key for broker group name used in structured log messages
+	groupKey = "group"
+	// key for message offset used in structured log messages
+	offsetKey = "offset"
+	// key for organization ID used in structured log messages
+	organizationKey = "organization"
+	// key for cluster ID used in structured log messages
+	clusterKey = "cluster"
+)
+
 // Consumer represents any consumer of insights-rules messages
 type Consumer interface {
 	Serve()
@@ -53,21 +66,31 @@ type KafkaConsumer struct {
 	client                               sarama.Client
 }
 
-// report represents report send in a message consumed from any broker
-type report map[string]*json.RawMessage
+// Report represents report send in a message consumed from any broker
+type Report map[string]*json.RawMessage
 
 // incomingMessage is representation of message consumed from any broker
 type incomingMessage struct {
 	Organization *types.OrgID       `json:"OrgID"`
 	ClusterName  *types.ClusterName `json:"ClusterName"`
-	Report       *report            `json:"Report"`
+	Report       *Report            `json:"Report"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
 	LastChecked string `json:"LastChecked"`
 }
 
 // New constructs new implementation of Consumer interface
 func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsumer, error) {
-	client, err := sarama.NewClient([]string{brokerCfg.Address}, nil)
+	return NewWithSaramaConfig(brokerCfg, storage, nil, true)
+}
+
+// NewWithSaramaConfig constructs new implementation of Consumer interface with custom sarama config
+func NewWithSaramaConfig(
+	brokerCfg broker.Configuration,
+	storage storage.Storage,
+	saramaConfig *sarama.Config,
+	saveOffset bool,
+) (*KafkaConsumer, error) {
+	client, err := sarama.NewClient([]string{brokerCfg.Address}, saramaConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -82,20 +105,17 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 		return nil, err
 	}
 
-	offsetManager, err := sarama.NewOffsetManagerFromClient(brokerCfg.Group, client)
-	if err != nil {
-		return nil, err
-	}
+	var (
+		offsetManager          sarama.OffsetManager
+		partitionOffsetManager sarama.PartitionOffsetManager
+	)
+	nextOffset := sarama.OffsetNewest
 
-	partitionOffsetManager, err := offsetManager.ManagePartition(brokerCfg.Topic, partitions[0])
-	if err != nil {
-		return nil, err
-	}
-
-	nextOffset, _ := partitionOffsetManager.NextOffset()
-	if nextOffset < 0 {
-		// if next offset wasn't stored yet, initial state of the broker
-		nextOffset = sarama.OffsetOldest
+	if saveOffset {
+		offsetManager, partitionOffsetManager, nextOffset, err = getOffsetManagers(brokerCfg, client, partitions)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	partitionConsumer, err := consumer.ConsumePartition(
@@ -103,6 +123,17 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 		partitions[0],
 		nextOffset,
 	)
+	if kErr, ok := err.(sarama.KError); ok && kErr == sarama.ErrOffsetOutOfRange {
+		// try again with offset from the beginning
+		log.Error().Err(err).Msg("consuming from the beginning")
+
+		nextOffset = sarama.OffsetOldest
+		partitionConsumer, err = consumer.ConsumePartition(
+			brokerCfg.Topic,
+			partitions[0],
+			nextOffset,
+		)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -118,8 +149,30 @@ func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsume
 	}, nil
 }
 
+func getOffsetManagers(
+	brokerCfg broker.Configuration, client sarama.Client, partitions []int32,
+) (sarama.OffsetManager, sarama.PartitionOffsetManager, int64, error) {
+	offsetManager, err := sarama.NewOffsetManagerFromClient(brokerCfg.Group, client)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	partitionOffsetManager, err := offsetManager.ManagePartition(brokerCfg.Topic, partitions[0])
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
+	nextOffset, _ := partitionOffsetManager.NextOffset()
+	if nextOffset < 0 {
+		// if next offset wasn't stored yet, initial state of the broker
+		nextOffset = sarama.OffsetOldest
+	}
+
+	return offsetManager, partitionOffsetManager, nextOffset, nil
+}
+
 // checkReportStructure tests if the report has correct structure
-func checkReportStructure(r report) error {
+func checkReportStructure(r Report) error {
 	// the structure is not well defined yet, so all we should do is to check if all keys are there
 	expectedKeys := []string{"fingerprints", "info", "reports", "skips", "system"}
 	for _, expectedKey := range expectedKeys {
@@ -158,7 +211,7 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 
 	err = checkReportStructure(*deserialized.Report)
 	if err != nil {
-		log.Print("Deserialied report read from message with improper structure:")
+		log.Print("Deserialized report read from message with improper structure:")
 		log.Print(*deserialized.Report)
 		return deserialized, err
 	}
@@ -173,7 +226,7 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 		return false
 	}
 
-	orgWhitelisted := whitelist.Contains(types.OrgID(orgID))
+	orgWhitelisted := whitelist.Contains(orgID)
 
 	return orgWhitelisted
 }
@@ -195,29 +248,37 @@ func (consumer *KafkaConsumer) Serve() {
 
 func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
 	log.Info().
-		Int("offset", int(originalMessage.Offset)).
-		Str("topic", consumer.Configuration.Topic).
-		Int("organization", int(*parsedMessage.Organization)).
-		Str("cluster", string(*parsedMessage.ClusterName)).
+		Int(offsetKey, int(originalMessage.Offset)).
+		Str(topicKey, consumer.Configuration.Topic).
+		Int(organizationKey, int(*parsedMessage.Organization)).
+		Str(clusterKey, string(*parsedMessage.ClusterName)).
+		Msg(event)
+}
+
+func logUnparsedMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, event string, err error) {
+	log.Error().
+		Int(offsetKey, int(originalMessage.Offset)).
+		Str(topicKey, consumer.Configuration.Topic).
+		Err(err).
 		Msg(event)
 }
 
 func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string, err error) {
 	log.Error().
-		Int("offset", int(originalMessage.Offset)).
-		Str("topic", consumer.Configuration.Topic).
-		Int("organization", int(*parsedMessage.Organization)).
-		Str("cluster", string(*parsedMessage.ClusterName)).
+		Int(offsetKey, int(originalMessage.Offset)).
+		Str(topicKey, consumer.Configuration.Topic).
+		Int(organizationKey, int(*parsedMessage.Organization)).
+		Str(clusterKey, string(*parsedMessage.ClusterName)).
 		Err(err).
 		Msg(event)
 }
 
 // ProcessMessage processes an incoming message
 func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
-	log.Info().Int("offset", int(msg.Offset)).Str("topic", consumer.Configuration.Topic).Str("group", consumer.Configuration.Group).Msg("Consumed")
+	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 	message, err := parseMessage(msg.Value)
 	if err != nil {
-		log.Error().Err(err).Msg("Error parsing message from Kafka")
+		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
 		return err
 	}
 	metrics.ConsumedMessages.Inc()
@@ -225,7 +286,11 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	logMessageInfo(consumer, msg, message, "Read")
 
 	if ok := organizationAllowed(consumer, *message.Organization); !ok {
-		return errors.New("Organization ID is not whitelisted")
+		const cause = "organization ID is not whitelisted"
+		// now we have all required information about the incoming message,
+		// the right time to record structured log entry
+		logMessageError(consumer, msg, message, cause, err)
+		return errors.New(cause)
 	}
 
 	logMessageInfo(consumer, msg, message, "Organization whitelisted")

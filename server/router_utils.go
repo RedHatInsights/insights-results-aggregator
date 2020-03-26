@@ -15,9 +15,9 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -25,32 +25,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 
-	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
-
-// RouterMissingParamError missing parameter in URL
-type RouterMissingParamError struct {
-	paramName string
-}
-
-func (e *RouterMissingParamError) Error() string {
-	return fmt.Sprintf("missing param %v", e.paramName)
-}
-
-// RouterParsingError parsing error, for example string when we expected integer
-type RouterParsingError struct {
-	paramName  string
-	paramValue interface{}
-	errString  string
-}
-
-func (e *RouterParsingError) Error() string {
-	return fmt.Sprintf(
-		"Error during parsing param %v with value %v. Error: %v",
-		e.paramName, e.paramValue, e.errString,
-	)
-}
 
 // getRouterParam retrieves parameter from URL like `/organization/{org_id}`
 func getRouterParam(request *http.Request, paramName string) (string, error) {
@@ -73,13 +49,17 @@ func getRouterPositiveIntParam(request *http.Request, paramName string) (uint64,
 	uintValue, err := strconv.ParseUint(value, 10, 64)
 	if err != nil {
 		return 0, &RouterParsingError{
-			paramName: paramName, paramValue: value, errString: "unsigned integer expected",
+			paramName:  paramName,
+			paramValue: value,
+			errString:  "unsigned integer expected",
 		}
 	}
 
 	if uintValue == 0 {
 		return 0, &RouterParsingError{
-			paramName: paramName, paramValue: value, errString: "positive value expected",
+			paramName:  paramName,
+			paramValue: value,
+			errString:  "positive value expected",
 		}
 	}
 
@@ -87,15 +67,16 @@ func getRouterPositiveIntParam(request *http.Request, paramName string) (uint64,
 }
 
 // validateClusterName checks that the cluster name is a valid UUID.
-// Converted custer name is returned if everything is okay, otherwise an error is returned.
+// Converted cluster name is returned if everything is okay, otherwise an error is returned.
 func validateClusterName(writer http.ResponseWriter, clusterName string) (types.ClusterName, error) {
 	if _, err := uuid.Parse(clusterName); err != nil {
-		message := fmt.Sprintf("invalid cluster name format: '%s'", clusterName)
+		message := fmt.Sprintf("invalid cluster name: '%s'. Error: %s", clusterName, err.Error())
 
 		log.Error().Err(err).Msg(message)
-		responses.SendInternalServerError(writer, message)
 
-		return "", errors.New(message)
+		return "", &RouterParsingError{
+			paramName: "cluster", paramValue: clusterName, errString: err.Error(),
+		}
 	}
 
 	return types.ClusterName(clusterName), nil
@@ -109,12 +90,7 @@ func splitRequestParamArray(arrayParam string) []string {
 
 func handleOrgIDError(writer http.ResponseWriter, err error) {
 	log.Error().Err(err).Msg("Error getting organization ID from request")
-
-	if _, ok := err.(*RouterParsingError); ok {
-		responses.Send(http.StatusBadRequest, writer, err.Error())
-	} else {
-		responses.Send(http.StatusInternalServerError, writer, err.Error())
-	}
+	handleServerError(writer, err)
 }
 
 func handleClusterNameError(writer http.ResponseWriter, err error) {
@@ -122,8 +98,8 @@ func handleClusterNameError(writer http.ResponseWriter, err error) {
 	log.Error().Msg(message)
 
 	// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
-	// (not on client side)
-	responses.SendInternalServerError(writer, message)
+	// (not on client side), but let's assume it won't :)
+	handleServerError(writer, err)
 }
 
 // readClusterName retrieves cluster name from request
@@ -135,7 +111,12 @@ func readClusterName(writer http.ResponseWriter, request *http.Request) (types.C
 		return "", err
 	}
 
-	return validateClusterName(writer, clusterName)
+	validatedClusterName, err := validateClusterName(writer, clusterName)
+	if err != nil {
+		handleClusterNameError(writer, err)
+		return "", err
+	}
+	return validatedClusterName, nil
 }
 
 // readOrganizationID retrieves organization id from request
@@ -157,16 +138,16 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 		message := fmt.Sprintf("Cluster names are not provided %v", err.Error())
 		log.Error().Msg(message)
 
-		// See `readClusterName`.
-		responses.SendInternalServerError(writer, message)
+		handleServerError(writer, err)
 
 		return []types.ClusterName{}, err
 	}
 
-	clusterNamesConverted := []types.ClusterName{}
+	clusterNamesConverted := make([]types.ClusterName, 0)
 	for _, clusterName := range splitRequestParamArray(clusterNamesParam) {
 		convertedName, err := validateClusterName(writer, clusterName)
 		if err != nil {
+			handleServerError(writer, err)
 			return []types.ClusterName{}, err
 		}
 
@@ -184,14 +165,46 @@ func readOrganizationIDs(writer http.ResponseWriter, request *http.Request) ([]t
 		return []types.OrgID{}, err
 	}
 
-	organizationsConverted := []types.OrgID{}
+	organizationsConverted := make([]types.OrgID, 0)
 	for _, orgStr := range splitRequestParamArray(organizationsParam) {
 		orgInt, err := strconv.ParseUint(orgStr, 10, 64)
 		if err != nil {
+			handleServerError(writer, &RouterParsingError{
+				paramName:  "organizations",
+				paramValue: orgStr,
+				errString:  "integer array expected",
+			})
 			return []types.OrgID{}, err
 		}
 		organizationsConverted = append(organizationsConverted, types.OrgID(orgInt))
 	}
 
 	return organizationsConverted, nil
+}
+
+func readRuleID(writer http.ResponseWriter, request *http.Request) (types.RuleID, error) {
+	ruleID, err := getRouterParam(request, "rule_id")
+	if err != nil {
+		const message = "unable to get rule id"
+		log.Error().Err(err).Msg(message)
+		handleServerError(writer, err)
+		return types.RuleID(0), err
+	}
+
+	ruleIDValidator := regexp.MustCompile(`^[a-zA-Z_0-9.]+$`)
+
+	isRuleIDValid := ruleIDValidator.Match([]byte(ruleID))
+
+	if !isRuleIDValid {
+		err = fmt.Errorf("invalid rule ID, it must contain only from latin characters, number, underscores or dots")
+		log.Error().Err(err)
+		handleServerError(writer, &RouterParsingError{
+			paramName:  "rule_id",
+			paramValue: ruleID,
+			errString:  err.Error(),
+		})
+		return types.RuleID(0), err
+	}
+
+	return types.RuleID(ruleID), nil
 }

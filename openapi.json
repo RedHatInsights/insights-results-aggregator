@@ -9,6 +9,7 @@
     "/organizations": {
       "get": {
         "summary": "Returns a list of available organization IDs.",
+        "operationId": "getOrganizations",
         "description": "List of organizations for which at least one Insights report is available via the API.",
         "responses": {
           "200": {
@@ -41,6 +42,7 @@
     "/organizations/{orgId}/clusters": {
       "get": {
         "summary": "Returns a list of clusters associated with the specified organization ID.",
+        "operationId": "getClustersForOrganization",
         "parameters": [
           {
             "name": "orgId",
@@ -86,6 +88,7 @@
     "/report/{orgId}/{clusterId}": {
       "get": {
         "summary": "Returns the latest report for the given organization and cluster which contains information about rules that were hit by the cluster.",
+        "operationId": "getReportForCluster",
         "description": "The report is specified by the organization ID and the cluster ID. The latest report available for the given combination will be returned.",
         "parameters": [
           {
@@ -195,6 +198,7 @@
     "/clusters/{clusterId}/rules/{ruleId}/like": {
       "put": {
         "summary": "Puts like for the rule with cluster for current user",
+        "operationId": "addLikeToRule",
         "description": "Puts like for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
         "parameters": [
           {
@@ -240,6 +244,7 @@
     "/clusters/{clusterId}/rules/{ruleId}/dislike": {
       "put": {
         "summary": "Puts dislike for the rule with cluster for current user",
+        "operationId": "addDislikeToRule",
         "description": "Puts dislike for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
         "parameters": [
           {
@@ -285,6 +290,7 @@
     "/clusters/{clusterId}/rules/{ruleId}/reset_vote": {
       "put": {
         "summary": "Resets vote for the rule with cluster for current user",
+        "operationId": "resetVoteForRule",
         "description": "Resets vote for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
         "parameters": [
           {
@@ -330,6 +336,7 @@
     "/organizations/{orgIds}": {
       "delete": {
         "summary": "Deletes organization data from database.",
+        "operationId": "deleteOrganizations",
         "description": "[DEBUG ONLY] All database entries related to the specified organization IDs will be deleted.",
         "parameters": [
           {
@@ -357,6 +364,7 @@
     "/clusters/{clusterIds}": {
       "delete": {
         "summary": "Deletes cluster data from database.",
+        "operationId": "deleteClusters",
         "description": "[DEBUG ONLY] All database entries related to the specified cluster IDs will be deleted.",
         "parameters": [
           {

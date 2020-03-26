@@ -17,16 +17,10 @@ package helpers
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 )
 
-// FailOnError wraps result of function with one argument
-func FailOnError(t *testing.T, err error) {
-	// assert.NoError is used to show human readable output
-	assert.NoError(t, err)
-	// assert.NoError doesn't stop next test execution which can cause strange panic because
-	// there was error and some object was not constructed
-	if err != nil {
-		t.Fatal(err)
-	}
+// MustCloseConsumer closes consumer and raises error if it wasn't successful
+func MustCloseConsumer(t *testing.T, mockConsumer consumer.Consumer) {
+	FailOnError(t, mockConsumer.Close())
 }
