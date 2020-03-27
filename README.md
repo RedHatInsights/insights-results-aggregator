@@ -276,6 +276,7 @@ To run REST API tests use the following command:
 * `ineffassign` to detect and print all ineffectual assignments in Go code
 * `errcheck` for checking for all unchecked errors in go programs
 * `shellcheck` to perform static analysis for all shell scripts used in this repository
+* `abcgo` to measure ABC metrics for Go source code and check if the metrics does not exceed specified threshold
 
 Please note that all checks mentioned above have to pass for the change to be merged into master branch.
 
