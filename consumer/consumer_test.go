@@ -24,6 +24,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 
+	"bou.ke/monkey"
 	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/stretchr/testify/assert"
@@ -377,6 +378,17 @@ func TestKafkaConsumer_New_MockBroker(t *testing.T) {
 		defer mockBroker.MustClose(t)
 		defer helpers.MustCloseConsumer(t, mockConsumer)
 	}, testCaseTimeLimit)
+}
+
+func TestMonkeyPatch(t *testing.T) {
+	guard := monkey.Patch(sarama.NewClient, helpers.NewMockClient)
+	defer guard.Unpatch()
+
+	consumer, err := consumer.NewWithSaramaConfig(broker.Configuration{}, nil, nil, false)
+
+	if consumer != nil || err == nil {
+		t.Fatal("WTF!")
+	}
 }
 
 func TestKafkaConsumer_New_MockBrokerNoTopicError(t *testing.T) {

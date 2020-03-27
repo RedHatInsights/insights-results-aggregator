@@ -51,7 +51,7 @@ run: clean build ## Build the project and executes the binary
 	./insights-results-aggregator
 
 test: clean build ## Run the unit tests
-	@go test -coverprofile coverage.out $(shell go list ./... | grep -v tests)
+	@go test -gcflags -l -coverprofile coverage.out $(shell go list ./... | grep -v tests)
 
 integration_tests: ## Run all integration tests
 	@echo "Running all integration tests"
