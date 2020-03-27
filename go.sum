@@ -13,6 +13,8 @@ github.com/RedHatInsights/insights-operator-utils v0.0.0-20200128100540-06c122fd
 github.com/RedHatInsights/insights-operator-utils v0.0.0-20200128100540-06c122fd8a86/go.mod h1:c6ReBK57bYPBl3DCb03lo3Jwr+ORT/9XUdlTwzhKQP8=
 github.com/RedHatInsights/insights-operator-utils v0.0.0-20200212101518-5819e1fc31a9 h1:LK+3X6wSHRHzBV/jir+4GqsIG77hYxE5yj5ai7u8RVg=
 github.com/RedHatInsights/insights-operator-utils v0.0.0-20200212101518-5819e1fc31a9/go.mod h1:c6ReBK57bYPBl3DCb03lo3Jwr+ORT/9XUdlTwzhKQP8=
+github.com/RedHatInsights/insights-operator-utils v0.0.0-20200323131325-73813484635c h1:DK7vkE+F84PpDAAilahJHrY1DSgotzmr097ggoiP+q0=
+github.com/RedHatInsights/insights-operator-utils v0.0.0-20200323131325-73813484635c/go.mod h1:c6ReBK57bYPBl3DCb03lo3Jwr+ORT/9XUdlTwzhKQP8=
 github.com/Shopify/sarama v1.13.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/sarama v1.26.0 h1:C+zFi+/NJdfeJgZWbu+WaLgk4NcsbmqfFTKsoJmR39U=
@@ -85,6 +87,8 @@ github.com/deckarep/golang-set v1.7.1/go.mod h1:93vsz/8Wt4joVM7c2AVqh+YRMiUSc14y
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
+github.com/droptheplot/abcgo v0.0.0-20171120220436-23529565504c h1:I2n/JrkM6aUq2IjnbUvYGtd3cCLqnv7DFt4iWBrM6N0=
+github.com/droptheplot/abcgo v0.0.0-20171120220436-23529565504c/go.mod h1:wEtublsjLnIljeLoXn1uigj9wBvAcilXg18hXmGW3B0=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/eapache/go-resiliency v1.0.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-resiliency v1.1.0 h1:1NtRmCAqadE2FN4ZcN6g90TP3uk8cg9rn9eNK2197aU=
