@@ -233,14 +233,16 @@ func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 	mockStorage, expects := helpers.MustGetMockStorageWithExpectsForDriver(t, storage.DBDriverPostgres)
 	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
+	expects.ExpectBegin()
+
 	expects.ExpectQuery(`SELECT last_checked_at FROM report`).
 		WillReturnRows(expects.NewRows([]string{"last_checked_at"})).
 		RowsWillBeClosed()
 
-	expects.ExpectPrepare("INSERT INTO report").
-		WillBeClosed().
-		ExpectExec().
+	expects.ExpectExec("INSERT INTO report").
 		WillReturnResult(driver.ResultNoRows)
+
+	expects.ExpectCommit()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
