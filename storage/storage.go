@@ -84,6 +84,7 @@ type Storage interface {
 	DeleteReportsForCluster(clusterName types.ClusterName) error
 	LoadRuleContent(contentDir content.RuleContentDirectory) error
 	GetRuleByID(ruleID types.RuleID) (*types.Rule, error)
+	GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
 }
 
 // DBDriver type for db driver enum
@@ -253,6 +254,19 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 		}
 	}
 	return clusters, nil
+}
+
+// GetOrgIDByClusterID reads OrgID for specified cluster
+func (storage DBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error) {
+	row := storage.connection.QueryRow("SELECT org_id FROM report WHERE cluster = $1 ORDER BY org_id", cluster)
+
+	var orgID uint64
+	err := row.Scan(&orgID)
+	if err != nil {
+		log.Error().Err(err).Msg("GetOrgIDByClusterID")
+		return 0, err
+	}
+	return types.OrgID(orgID), nil
 }
 
 // ReadReportForCluster reads result (health status) for selected cluster for given organization

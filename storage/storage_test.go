@@ -166,6 +166,17 @@ func TestDBStorageReadReportForCluster(t *testing.T) {
 	checkReportForCluster(t, mockStorage, testOrgID, testClusterName, `{"report":{}}`)
 }
 
+// TestDBStorageGetOrgIDByClusterID check the behaviour of method GetOrgIDByClusterID
+func TestDBStorageGetOrgIDByClusterID(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	writeReportForCluster(t, mockStorage, testOrgID, testClusterName, `{"report":{}}`)
+	orgID, err := mockStorage.GetOrgIDByClusterID(testClusterName)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, orgID, testOrgID)
+}
+
 // TestDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster
 // when the table with results does not exist
 func TestDBStorageReadReportNoTable(t *testing.T) {
