@@ -397,11 +397,18 @@ func (storage DBStorage) WriteReportForCluster(
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
 	// Check if there is a more recent report for the cluster already in the database.
-	rows, err := storage.connection.Query(
+	rows, err := tx.Query(
 		`SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3`,
 		orgID, clusterName, lastCheckedTime)
 	if err != nil {
+		log.Error().Err(err).Msg("Unable to find most recent report in database")
+		_ = tx.Rollback()
 		return err
 	}
 	defer closeRows(rows)
@@ -410,32 +417,22 @@ func (storage DBStorage) WriteReportForCluster(
 	if rows.Next() {
 		log.Warn().Msgf("Database already contains report for organization %d and cluster name %s more recent than %v",
 			orgID, clusterName, lastCheckedTime)
+
+		_ = tx.Rollback()
 		return nil
 	}
 
 	// Perform the report upsert.
-	statement, err := storage.connection.Prepare(upsertQuery)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err := statement.Close()
-		if err != nil {
-			log.Error().Err(err).Msg("Unable to close statement")
-		}
-	}()
-
-	t := time.Now()
-
-	_, err = statement.Exec(orgID, clusterName, report, t, lastCheckedTime)
+	reportedAtTime := time.Now()
+	_, err = tx.Exec(upsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime)
 	if err != nil {
 		log.Print(err)
+		_ = tx.Rollback()
 		return err
 	}
 
 	metrics.WrittenReports.Inc()
-
-	return nil
+	return tx.Commit()
 }
 
 // ReportsCount reads number of all records stored in database
