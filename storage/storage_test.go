@@ -205,6 +205,56 @@ func TestDBStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
 	assert.EqualError(t, err, "writing report with DB -1 is not supported")
 }
 
+// TestDBStorageWriteReportForClusterMoreRecentInDB checks that older report
+// will not replace a more recent one when writing a report to storage.
+func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	newerTime := time.Now()
+	olderTime := newerTime.Add(-time.Hour)
+
+	// Insert newer report.
+	err := mockStorage.WriteReportForCluster(
+		testOrgID,
+		testClusterName,
+		testClusterEmptyReport,
+		newerTime,
+	)
+	assert.NoError(t, err)
+
+	// Try to insert older report.
+	// If there's a way to check for a warning being logged,
+	// it would be quite handy to add it here.
+	err = mockStorage.WriteReportForCluster(
+		testOrgID,
+		testClusterName,
+		testClusterEmptyReport,
+		olderTime,
+	)
+	assert.NoError(t, err)
+
+	_, timestamp, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
+	assert.NoError(t, err)
+	// Unfortunately, the ReadReport returns the timestamp as a different type than
+	// what has been initially inserted, so we need to format it in the same way here.
+	assert.Equal(t, types.Timestamp(newerTime.Format(time.RFC3339)), timestamp)
+}
+
+// TestDBStorageWriteReportForClusterDroppedReportTable checks the error
+// returned when trying to SELECT from a dropped/missing report table.
+func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	_, err := connection.Exec("DROP TABLE report")
+	assert.NoError(t, err)
+
+	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterEmptyReport, time.Now())
+	assert.EqualError(t, err, "no such table: report")
+}
+
 func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, false)
 	defer helpers.MustCloseStorage(t, mockStorage)
@@ -233,14 +283,16 @@ func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 	mockStorage, expects := helpers.MustGetMockStorageWithExpectsForDriver(t, storage.DBDriverPostgres)
 	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
+	expects.ExpectBegin()
+
 	expects.ExpectQuery(`SELECT last_checked_at FROM report`).
 		WillReturnRows(expects.NewRows([]string{"last_checked_at"})).
 		RowsWillBeClosed()
 
-	expects.ExpectPrepare("INSERT INTO report").
-		WillBeClosed().
-		ExpectExec().
+	expects.ExpectExec("INSERT INTO report").
 		WillReturnResult(driver.ResultNoRows)
+
+	expects.ExpectCommit()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
