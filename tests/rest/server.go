@@ -34,7 +34,6 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/verdverm/frisby"
@@ -144,50 +143,6 @@ func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
 		}
 	}
 	return response
-}
-
-// checkClustersEndpointForKnownOrganizations check if the end point to return list of clusters responds correctly to HTTP GET command
-func checkClustersEndpointForKnownOrganizations() {
-	for _, knownOrganization := range knownOrganizations {
-		url := constructURLForOrganizationsClusters(knownOrganization)
-		f := frisby.Create("Check the end point to return list of clusters for known organization by HTTP GET method").Get(url)
-		f.Send()
-		f.ExpectStatus(200)
-		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
-		f.PrintReport()
-	}
-}
-
-// checkClustersEndpointForUnknownOrganizations check if the end point to return list of clusters responds correctly to HTTP GET command
-func checkClustersEndpointForUnknownOrganizations() {
-	for _, unknownOrganization := range unknownOrganizations {
-		url := constructURLForOrganizationsClusters(unknownOrganization)
-		f := frisby.Create("Check the end point to return list of clusters for unknown organization by HTTP GET method").Get(url)
-		f.Send()
-		f.ExpectStatus(200)
-		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
-		f.PrintReport()
-	}
-}
-
-// checkClustersEndpointForImproperOrganizations check if the end point to return list of clusters responds correctly to HTTP GET command
-func checkClustersEndpointForImproperOrganizations() {
-	for _, improperOrganization := range improperOrganizations {
-		url := constructURLForOrganizationsClusters(improperOrganization)
-		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
-		f.Send()
-		f.ExpectStatus(400)
-		f.PrintReport()
-	}
-}
-
-// checkClustersEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
-func checkClustersEndpointWrongMethods() {
-	for _, knownOrganization := range knownOrganizations {
-		orgID := strconv.Itoa(knownOrganization)
-		url := apiURL + "organizations/" + orgID + "/clusters"
-		checkGetEndpointByOtherMethods(url)
-	}
 }
 
 func constructURLForResultForOrgCluster(organizationID string, clusterID string) string {
