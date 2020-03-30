@@ -31,7 +31,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/content"
@@ -59,7 +58,7 @@ var (
 	consumerInstance consumer.Consumer
 )
 
-func startStorageConnection() (*storage.DBStorage, error) {
+func createStorage() (*storage.DBStorage, error) {
 	storageCfg := getStorageConfiguration()
 
 	dbStorage, err := storage.New(storageCfg)
@@ -80,19 +79,10 @@ func closeStorage(storage *storage.DBStorage) {
 	}
 }
 
-// closeConsumer closes specified consumer instance with proper error checking
-// whether the close operation was successful or not.
-func closeConsumer(consumerInstance consumer.Consumer) {
-	err := consumerInstance.Close()
-	if err != nil {
-		log.Error().Err(err).Msg("Error during closing consumer")
-	}
-}
-
 // prepareDB migrates the DB to the latest version
 // and loads all available rule content into it.
 func prepareDB() int {
-	dbStorage, err := startStorageConnection()
+	dbStorage, err := createStorage()
 	if err != nil {
 		return ExitStatusPrepareDbError
 	}
@@ -108,8 +98,8 @@ func prepareDB() int {
 
 	ruleContentDirPath := getContentPathConfiguration()
 	contentDir, err := content.ParseRuleContentDir(ruleContentDirPath)
-	if err != nil {
-		log.Error().Err(err).Msg("Rules parsing error")
+	if osPathError, ok := err.(*os.PathError); ok {
+		log.Error().Err(osPathError).Msg("No rules directory")
 		return ExitStatusPrepareDbError
 	}
 
@@ -123,7 +113,7 @@ func prepareDB() int {
 
 // startConsumer starts consumer and returns exit code, 0 is no error
 func startConsumer() int {
-	dbStorage, err := startStorageConnection()
+	dbStorage, err := createStorage()
 	if err != nil {
 		return ExitStatusConsumerError
 	}
@@ -143,7 +133,6 @@ func startConsumer() int {
 		return ExitStatusConsumerError
 	}
 
-	defer closeConsumer(consumerInstance)
 	consumerInstance.Serve()
 
 	return ExitStatusOK
@@ -151,7 +140,7 @@ func startConsumer() int {
 
 // startServer starts the server and returns error code
 func startServer() int {
-	dbStorage, err := startStorageConnection()
+	dbStorage, err := createStorage()
 	if err != nil {
 		return ExitStatusServerError
 	}
@@ -177,6 +166,7 @@ func startService() int {
 	if prepDbExitCode != 0 {
 		log.Info().Msg(fmt.Sprintf(databasePreparationMessage, prepDbExitCode))
 		exitCode += prepDbExitCode
+		return exitCode
 	}
 
 	waitGroup.Add(1)
@@ -206,7 +196,7 @@ func startService() int {
 func waitForServiceToStart() {
 	for {
 		isStarted := true
-		if viper.Sub("broker").GetBool("enabled") && consumerInstance == nil {
+		if getBrokerConfiguration().Enabled && consumerInstance == nil {
 			isStarted = false
 		}
 		if serverInstance == nil {
@@ -250,6 +240,11 @@ func main() {
 	}
 
 	errCode := startService()
+	if errCode != 0 {
+		os.Exit(errCode)
+	}
+
+	errCode = stopService()
 	if errCode != 0 {
 		os.Exit(errCode)
 	}

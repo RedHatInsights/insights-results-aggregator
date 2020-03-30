@@ -2,6 +2,8 @@
 address = "localhost:29092"
 topic = "platform.results.ccx"
 group = "aggregator"
+enabled = false
+save_offset = false
 
 [content]
 path = "/rules-content"

@@ -78,9 +78,14 @@ type incomingMessage struct {
 	LastChecked string `json:"LastChecked"`
 }
 
+// DefaultSaramaConfig is a config which will be used by default
+// here you can use specific version of a protocol for example
+// useful for testing
+var DefaultSaramaConfig *sarama.Config
+
 // New constructs new implementation of Consumer interface
 func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsumer, error) {
-	return NewWithSaramaConfig(brokerCfg, storage, nil, true)
+	return NewWithSaramaConfig(brokerCfg, storage, DefaultSaramaConfig, brokerCfg.SaveOffset)
 }
 
 // NewWithSaramaConfig constructs new implementation of Consumer interface with custom sarama config
