@@ -28,10 +28,14 @@ var (
 	GetContentPathConfiguration = getContentPathConfiguration
 	GetStorageConfiguration     = getStorageConfiguration
 	GetOrganizationWhitelist    = getOrganizationWhitelist
-	StartStorageConnection      = startStorageConnection
+	CreateStorage               = createStorage
 	StartService                = startService
 	StopService                 = stopService
 	WaitForServiceToStart       = waitForServiceToStart
 	LoadWhitelistFromCSV        = loadWhitelistFromCSV
 	ConfigFileEnvVariableName   = configFileEnvVariableName
+	CloseStorage                = closeStorage
+	PrepareDB                   = prepareDB
+	StartConsumer               = startConsumer
+	StartServer                 = startServer
 )

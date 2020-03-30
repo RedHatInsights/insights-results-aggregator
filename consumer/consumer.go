@@ -78,9 +78,11 @@ type incomingMessage struct {
 	LastChecked string `json:"LastChecked"`
 }
 
+var DefaultSaramaConfig *sarama.Config
+
 // New constructs new implementation of Consumer interface
 func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsumer, error) {
-	return NewWithSaramaConfig(brokerCfg, storage, nil, true)
+	return NewWithSaramaConfig(brokerCfg, storage, DefaultSaramaConfig, brokerCfg.SaveOffset)
 }
 
 // NewWithSaramaConfig constructs new implementation of Consumer interface with custom sarama config

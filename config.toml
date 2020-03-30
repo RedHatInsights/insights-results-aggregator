@@ -3,6 +3,7 @@ address = "localhost:29092"
 topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = true
+save_offset = true
 
 [content]
 path = "/rules-content"

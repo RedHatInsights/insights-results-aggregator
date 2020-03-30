@@ -17,7 +17,7 @@ limitations under the License.
 package broker
 
 import (
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 )
 
 // Configuration represents configuration of Kafka broker
@@ -28,4 +28,5 @@ type Configuration struct {
 	Group        string     `mapstructure:"group" toml:"group"`
 	Enabled      bool       `mapstructure:"enabled" toml:"enabled"`
 	OrgWhitelist mapset.Set `mapstructure:"org_white_list" toml:"org_white_list"`
+	SaveOffset   bool       `mapstructure:"save_offset" toml:"save_offset"`
 }

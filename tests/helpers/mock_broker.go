@@ -17,6 +17,9 @@ package helpers
 import (
 	"context"
 	"testing"
+	"time"
+
+	"github.com/Shopify/sarama"
 
 	"github.com/nash-io/jocko/protocol"
 
@@ -83,6 +86,8 @@ func NewMockBroker(t *testing.T, topicName string) (*MockBroker, error) {
 		}
 	}
 
+	time.Sleep(500 * time.Millisecond)
+
 	return mockBroker, nil
 }
 
@@ -122,4 +127,14 @@ func (mockBroker *MockBroker) Close() error {
 	}
 
 	return mockBroker.server.Shutdown()
+}
+
+// GetSaramaConfig returns config for client with appropriate version to connect to this broker
+func (mockBroker *MockBroker) GetSaramaConfig() *sarama.Config {
+	saramaConfig := sarama.NewConfig()
+	saramaConfig.ChannelBufferSize = 1
+	saramaConfig.Version = sarama.V0_10_0_1
+	saramaConfig.Producer.Return.Successes = true
+
+	return saramaConfig
 }
