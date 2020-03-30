@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	testsTimeout = 20 * time.Second
+	testsTimeout = 60 * time.Second
 )
 
 func setEnvSettings(t *testing.T, settings map[string]string) {

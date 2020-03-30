@@ -78,6 +78,9 @@ type incomingMessage struct {
 	LastChecked string `json:"LastChecked"`
 }
 
+// DefaultSaramaConfig is a config which will be used by default
+// here you can use specific version of a protocol for example
+// useful for testing
 var DefaultSaramaConfig *sarama.Config
 
 // New constructs new implementation of Consumer interface
