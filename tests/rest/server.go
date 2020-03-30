@@ -32,9 +32,6 @@ limitations under the License.
 package tests
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/verdverm/frisby"
 )
 
@@ -122,32 +119,6 @@ func checkGetEndpointByOtherMethods(endpoint string) {
 // check whether other HTTP methods are rejected correctly for the REST API entry point
 func checkWrongMethodsForEntryPoint() {
 	checkGetEndpointByOtherMethods(apiURL)
-}
-
-// checkOpenAPISpecifications checks whether OpenAPI endpoint is handled correctly
-func checkOpenAPISpecifications() {
-	f := frisby.Create("Check the OpenAPI endpoint").Get(apiURL + "openapi.json")
-	f.Send()
-	f.ExpectStatus(200)
-	f.ExpectHeader(contentTypeHeader, "application/json")
-	f.PrintReport()
-}
-
-// checkPrometheusMetrics checks the Prometheus metrics API endpoint
-func checkPrometheusMetrics() {
-	f := frisby.Create("Check the Prometheus metrics API endpoint").Get(apiURL + "metrics")
-	f.Send()
-	f.ExpectStatus(200)
-	// the content type header set by metrics handler is a bit complicated
-	// but it must start with "text/plain" in any case
-	f.Expect(func(F *frisby.Frisby) (bool, string) {
-		header := F.Resp.Header.Get(contentTypeHeader)
-		if strings.HasPrefix(header, "text/plain") {
-			return true, "ok"
-		}
-		return false, fmt.Sprintf("Expected Header %q to be %q, but got %q", contentTypeHeader, "text/plain", header)
-	})
-	f.PrintReport()
 }
 
 // ServerTests run all tests for basic REST API endpoints
