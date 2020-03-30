@@ -365,6 +365,18 @@ func (server *HTTPServer) addCORSHeaders(nextHandler http.Handler) http.Handler 
 		})
 }
 
+// handleOptionsMethod - middleware for handling OPTIONS method
+func (server *HTTPServer) handleOptionsMethod(nextHandler http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+			} else {
+				nextHandler.ServeHTTP(w, r)
+			}
+		})
+}
+
 // Initialize perform the server initialization
 func (server *HTTPServer) Initialize(address string) http.Handler {
 	log.Print("Initializing HTTP server at", address)
@@ -394,11 +406,7 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 
 	if server.Config.EnableCORS {
 		router.Use(server.addCORSHeaders)
-		router.Methods("OPTIONS").HandlerFunc(
-			func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				return
-			})
+		router.Use(server.handleOptionsMethod)
 	}
 
 	// it is possible to use special REST API endpoints in debug mode
@@ -410,10 +418,10 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 
 	// common REST API endpoints
 	router.HandleFunc(apiPrefix+MainEndpoint, server.mainEndpoint).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+ReportEndpoint, server.readReportForCluster).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+LikeRuleEndpoint, server.likeRule).Methods(http.MethodPut)
-	router.HandleFunc(apiPrefix+DislikeRuleEndpoint, server.dislikeRule).Methods(http.MethodPut)
-	router.HandleFunc(apiPrefix+ResetVoteOnRuleEndpoint, server.resetVoteOnRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+ReportEndpoint, server.readReportForCluster).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc(apiPrefix+LikeRuleEndpoint, server.likeRule).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+DislikeRuleEndpoint, server.dislikeRule).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+ResetVoteOnRuleEndpoint, server.resetVoteOnRule).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
 
 	// Prometheus metrics
@@ -439,7 +447,7 @@ func (server *HTTPServer) Start() error {
 		err = server.Serv.ListenAndServe()
 	}
 	if err != nil && err != http.ErrServerClosed {
-		log.Error().Err(err).Msg("Unable to start HTTP server")
+		log.Error().Err(err).Msg("Unable to start HTTP/S server")
 		return err
 	}
 

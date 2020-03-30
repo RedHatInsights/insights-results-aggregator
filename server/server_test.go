@@ -53,12 +53,6 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 	}
 }
 
-func checkHeaders(t *testing.T, expected, actual string) {
-	if expected != actual {
-		t.Errorf("Expected response headers %s. Got %s\n", expected, actual)
-	}
-}
-
 func TestMakeURLToEndpoint(t *testing.T) {
 	assert.Equal(
 		t,
@@ -71,27 +65,22 @@ func TestAddCORSHeaders(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
-	err := mockStorage.WriteReportForCluster(testOrgID, testClusterName, "{}", time.Now())
-	if err != nil {
-		t.Fatal(err)
-	}
+	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, "{}", time.Now())
+	helpers.FailOnError(t, err)
 
-	testServer := server.New(config, mockStorage)
-
-	req, err := http.NewRequest(
-		"OPTIONS",
-		config.APIPrefix+"report/"+fmt.Sprint(testOrgID)+"/"+string(testClusterName),
-		nil,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	response := executeRequest(testServer, req).Result()
-	checkHeaders(t, "*", response.Header.Get("Access-Control-Allow-Origin"))
-	checkHeaders(t, "POST, GET, OPTIONS, PUT, DELETE", response.Header.Get("Access-Control-Allow-Methods"))
-	checkHeaders(t, "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization", response.Header.Get("Access-Control-Allow-Headers"))
-	checkHeaders(t, "true", response.Header.Get("Access-Control-Allow-Credentials"))
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodOptions,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Headers: map[string]string{
+			"Access-Control-Allow-Origin":      "*",
+			"Access-Control-Allow-Methods":     "POST, GET, OPTIONS, PUT, DELETE",
+			"Access-Control-Allow-Headers":     "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
+			"Access-Control-Allow-Credentials": "true",
+		},
+	})
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {

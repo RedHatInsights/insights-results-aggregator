@@ -59,6 +59,7 @@ type APIResponse struct {
 	StatusCode  int
 	Body        string
 	BodyChecker func(t *testing.T, expected, got string)
+	Headers     map[string]string
 }
 
 // AssertAPIRequest creates new server with provided mockStorage
@@ -102,6 +103,9 @@ func AssertAPIRequest(
 
 	response := ExecuteRequest(testServer, req, serverConfig).Result()
 
+	if len(expectedResponse.Headers) != 0 {
+		checkResponseHeaders(t, expectedResponse.Headers, response.Header)
+	}
 	if expectedResponse.StatusCode != 0 {
 		assert.Equal(t, expectedResponse.StatusCode, response.StatusCode, "Expected different status code")
 	}
@@ -133,4 +137,11 @@ func CheckResponseBodyJSON(t *testing.T, expectedJSON string, body io.ReadCloser
 	FailOnError(t, err)
 
 	AssertStringsAreEqualJSON(t, expectedJSON, string(result))
+}
+
+// checkResponseHeaders checks if headers are the same as in expected
+func checkResponseHeaders(t *testing.T, expectedHeaders map[string]string, actualHeaders http.Header) {
+	for key, value := range expectedHeaders {
+		assert.Equal(t, value, actualHeaders.Get(key), "Expected different headers")
+	}
 }

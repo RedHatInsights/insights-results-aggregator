@@ -64,41 +64,21 @@ type JWTPayload struct {
 // Authentication middleware for checking auth rights
 func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		// for specific URLs it is ok to not use auth. mechanisms at all
-		if stringInSlice(r.RequestURI, noAuthURLs) {
+		if stringInSlice(r.RequestURI, noAuthURLs) || r.Method == "OPTIONS" {
 			next.ServeHTTP(w, r)
 			return
 		}
-		var tokenHeader string
-		// In case of testing on local machine we don't take x-rh-identity header, but instead Authorization with JWT token in it
-		if server.Config.AuthType == "jwt" {
-			tokenHeader = r.Header.Get("Authorization") //Grab the token from the header
-			splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
-			if len(splitted) != 2 {
-				const message = "Invalid/Malformed auth token"
-				log.Error().Msg(message)
-				handleServerError(w, &AuthenticationError{errString: message})
-				return
-			}
 
-			// Here we take JWT token which include 3 parts, we need only second one
-			splitted = strings.Split(splitted[1], ".")
-			tokenHeader = splitted[1]
-		} else {
-			tokenHeader = r.Header.Get("x-rh-identity") //Grab the token from the header
-		}
-
-		// Token is missing, SHOULD RETURN with error code 403 Unauthorized - changes in utils necessary
-		// TODO: Change SendUnauthorized in utils to accept string instead of map interface and change here
-		if tokenHeader == "" {
-			const message = "Missing auth token"
-			log.Error().Msg(message)
-			handleServerError(w, &AuthenticationError{errString: message})
+		token, isTokenValid := server.getAuthTokenHeader(w, r)
+		if !isTokenValid {
+			// everything has been handled already
 			return
 		}
 
-		decoded, err := jwt.DecodeSegment(tokenHeader) // Decode token to JSON string
-		if err != nil {                                // Malformed token, returns with http code 403 as usual
+		decoded, err := jwt.DecodeSegment(token) // Decode token to JSON string
+		if err != nil {                          // Malformed token, returns with http code 403 as usual
 			log.Error().Err(err).Msg(malformedTokenMessage)
 			handleServerError(w, &AuthenticationError{errString: malformedTokenMessage})
 			return
@@ -145,4 +125,35 @@ func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID,
 	}
 
 	return identity.AccountNumber, nil
+}
+
+func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Request) (string, bool) {
+	var tokenHeader string
+	// In case of testing on local machine we don't take x-rh-identity header, but instead Authorization with JWT token in it
+	if server.Config.AuthType == "jwt" {
+		tokenHeader = r.Header.Get("Authorization") //Grab the token from the header
+		splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
+		if len(splitted) != 2 {
+			const message = "Invalid/Malformed auth token"
+			log.Error().Msg(message)
+			handleServerError(w, &AuthenticationError{errString: message})
+			return "", false
+		}
+
+		// Here we take JWT token which include 3 parts, we need only second one
+		splitted = strings.Split(splitted[1], ".")
+		tokenHeader = splitted[1]
+	} else {
+		tokenHeader = r.Header.Get("x-rh-identity") //Grab the token from the header
+	}
+	// Token is missing, SHOULD RETURN with error code 403 Unauthorized - changes in utils necessary
+	// TODO: Change SendUnauthorized in utils to accept string instead of map interface and change here
+	if tokenHeader == "" {
+		const message = "Missing auth token"
+		log.Error().Msg(message)
+		handleServerError(w, &AuthenticationError{errString: message})
+		return "", false
+	}
+
+	return tokenHeader, true
 }

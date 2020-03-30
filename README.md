@@ -144,8 +144,8 @@ enable_cors = true
 * `debug` is developer mode that enables some special API endpoints not used on production
 * `auth` turns on or turns authentication
 * `auth_type` set type of auth, it means which header to use for auth `x-rh-identity` or `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
-* `use_https` is turns on TLS server
-* `enable_cors` is turns on CORS header, that allows to connect from different hosts (**don't use it in production**)
+* `use_https` is option to turn on TLS server
+* `enable_cors` is option to turn on CORS header, that allows to connect from different hosts (**don't use it in production**)
 
 Please note that if `auth` configuration option is turned off, not all REST API endpoints will be usable. Whole REST API schema is satisfied only for `auth = true`.
 

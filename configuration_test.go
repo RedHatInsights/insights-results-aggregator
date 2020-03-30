@@ -298,31 +298,7 @@ func mustSetEnv(t *testing.T, key, val string) {
 }
 
 func TestLoadConfigurationFromEnv(t *testing.T) {
-	os.Clearenv()
-
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS", "localhost:9093")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC", "platform.results.ccx")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP", "aggregator")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED", "true")
-
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS", ":8080")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX", "/api/v1/")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE", "openapi.json")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG", "true")
-
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_WHITELIST", "org_whitelist.csv")
-
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "sqlite3")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE", ":memory:")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_USERNAME", "user")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "password")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_HOST", "localhost")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PORT", "5432")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_DB_NAME", "aggregator")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
-
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
+	setEnvVariables(t)
 
 	mustLoadConfiguration("/non_existing_path")
 
@@ -371,4 +347,32 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 
 	contentPath := main.GetContentPathConfiguration()
 	assert.Equal(t, contentPath, "/rules-content")
+}
+
+func setEnvVariables(t *testing.T) {
+	os.Clearenv()
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS", "localhost:9093")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC", "platform.results.ccx")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP", "aggregator")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED", "true")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS", ":8080")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX", "/api/v1/")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE", "openapi.json")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG", "true")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_WHITELIST", "org_whitelist.csv")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "sqlite3")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE", ":memory:")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_USERNAME", "user")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "password")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_HOST", "localhost")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PORT", "5432")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_DB_NAME", "aggregator")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
 }
