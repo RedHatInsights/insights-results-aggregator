@@ -22,14 +22,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-
 	mapset "github.com/deckarep/golang-set"
 	"github.com/stretchr/testify/assert"
 
 	main "github.com/RedHatInsights/insights-results-aggregator"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -54,18 +53,21 @@ func TestLoadConfiguration(t *testing.T) {
 
 // TestLoadConfigurationEnvVariable tests loading the config. file for testing from an environment variable
 func TestLoadConfigurationEnvVariable(t *testing.T) {
-	err := os.Setenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "tests/config1")
-	helpers.FailOnError(t, err)
+	os.Clearenv()
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "tests/config1")
 
 	mustLoadConfiguration("foobar")
 }
 
 // TestLoadingConfigurationFailure tests loading a non-existent configuration file
 func TestLoadingConfigurationFailure(t *testing.T) {
+	os.Clearenv()
+
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "non existing file")
 
 	err := main.LoadConfiguration("")
-	assert.EqualError(t, err, `fatal error config file: Config File "non existing file" Not Found in "[]"`)
+	assert.Contains(t, err.Error(), `fatal error config file: Config File "non existing file" Not Found in`)
 }
 
 // TestLoadBrokerConfiguration tests loading the broker configuration sub-tree

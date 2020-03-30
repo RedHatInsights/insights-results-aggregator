@@ -18,10 +18,12 @@ package content_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/RedHatInsights/insights-results-aggregator/content"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 const errYAMLBadToken = "yaml: line 14: found character that cannot start any token"
@@ -29,28 +31,20 @@ const errYAMLBadToken = "yaml: line 14: found character that cannot start any to
 // TestContentParseOK checks whether reading from directory of correct content works as expected
 func TestContentParseOK(t *testing.T) {
 	con, err := content.ParseRuleContentDir("../tests/content/ok/")
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	rule1Content, exists := con["rule1"]
-	if !exists {
-		t.Fatal("'rule1' content is missing")
-	}
+	assert.True(t, exists, "'rule1' content is missing")
 
 	_, exists = rule1Content.ErrorKeys["err_key"]
-	if !exists {
-		t.Fatal("'err_key' error content is missing")
-	}
+	assert.True(t, exists, "'err_key' error content is missing")
 }
 
 // TestContentParseInvalidDir checks how incorrect (non-existing) directory is handled
 func TestContentParseInvalidDir(t *testing.T) {
 	const invalidDirPath = "../tests/content/not-a-real-dir/"
 	_, err := content.ParseRuleContentDir(invalidDirPath)
-	if err == nil || err.Error() != fmt.Sprintf("open %s: no such file or directory", invalidDirPath) {
-		t.Fatal(err)
-	}
+	assert.EqualError(t, err, fmt.Sprintf("open %s: no such file or directory", invalidDirPath))
 }
 
 // TestContentParseNotDirectory1 checks how incorrect (non-existing) directory is handled
@@ -58,9 +52,7 @@ func TestContentParseNotDirectory1(t *testing.T) {
 	// this is not a proper directory
 	const notADirPath = "../tests/tests.toml"
 	_, err := content.ParseRuleContentDir(notADirPath)
-	if err == nil || err.Error() != "readdirent: not a directory" {
-		t.Fatal(err)
-	}
+	assert.EqualError(t, err, "readdirent: not a directory")
 }
 
 // TestContentParseNotDirectory2 checks how incorrect (non-existing) directory is handled
@@ -68,31 +60,23 @@ func TestContentParseInvalidDir2(t *testing.T) {
 	// this is not a proper directory
 	const notADirPath = "/dev/null"
 	_, err := content.ParseRuleContentDir(notADirPath)
-	if err == nil || err.Error() != "readdirent: not a directory" {
-		t.Fatal(err)
-	}
+	assert.EqualError(t, err, "readdirent: not a directory")
 }
 
 // TestContentParseMissingFile checks how missing file(s) in content directory are handled
 func TestContentParseMissingFile(t *testing.T) {
 	_, err := content.ParseRuleContentDir("../tests/content/missing/")
-	if err == nil || !strings.HasSuffix(err.Error(), ": no such file or directory") {
-		t.Fatal(err)
-	}
+	assert.Contains(t, err.Error(), ": no such file or directory")
 }
 
 // TestContentParseBadPluginYAML tests handling bad/incorrect plugin.yaml file
 func TestContentParseBadPluginYAML(t *testing.T) {
 	_, err := content.ParseRuleContentDir("../tests/content/bad_plugin/")
-	if err == nil || err.Error() != errYAMLBadToken {
-		t.Fatal(err)
-	}
+	assert.EqualError(t, err, errYAMLBadToken)
 }
 
 // TestContentParseBadMetadataYAML tests handling bad/incorrect metadata.yaml file
 func TestContentParseBadMetadataYAML(t *testing.T) {
 	_, err := content.ParseRuleContentDir("../tests/content/bad_metadata/")
-	if err == nil || err.Error() != errYAMLBadToken {
-		t.Fatal(err)
-	}
+	assert.EqualError(t, err, errYAMLBadToken)
 }
