@@ -70,3 +70,22 @@ func checkClustersEndpointWrongMethods() {
 		checkGetEndpointByOtherMethods(url)
 	}
 }
+
+// checkClustersEndpointSpecialOrganizationIds is an implementation of several reproducers
+func checkClustersEndpointSpecialOrganizationIds() {
+	const MaxInt = int(^uint(0) >> 1)
+
+	var orgIDs []int = []int{
+		2147483647, // maxint32
+		2147483648, // reproducer for https://github.com/RedHatInsights/insights-results-aggregator/issues/383
+		MaxInt,
+	}
+	for _, orgID := range orgIDs {
+		url := constructURLForOrganizationsClusters(orgID)
+		f := frisby.Create("Check the end point to return list of clusters for organization with special ID by HTTP GET method").Get(url)
+		f.Send()
+		f.ExpectStatus(200)
+		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+		f.PrintReport()
+	}
+}

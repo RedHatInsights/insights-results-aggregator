@@ -138,6 +138,7 @@ func ServerTests() {
 	checkClustersEndpointForUnknownOrganizations()
 	checkClustersEndpointForImproperOrganizations()
 	checkClustersEndpointWrongMethods()
+	checkClustersEndpointSpecialOrganizationIds()
 
 	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
 	checkReportEndpointForKnownOrganizationAndKnownCluster()
