@@ -61,6 +61,9 @@ rest_api_tests: ## Run REST API tests
 	@echo "Running REST API tests"
 	@./test.sh rest_api
 
+rules_content: ## Update tests/content/ok directory with latest rules content
+	./update_rules_content.sh
+
 sqlite_db:
 	mv aggregator.db aggragator.db.backup
 	local_storage/create_database_sqlite.sh
