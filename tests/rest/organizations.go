@@ -17,11 +17,33 @@ limitations under the License.
 package tests
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
 	"github.com/verdverm/frisby"
 )
+
+// OrganizationsResponse represents response containing list of organizations
+type OrganizationsResponse struct {
+	Organizations []int  `json:"organizations"`
+	Status        string `json:"status"`
+}
+
+// readOrganizationsFromResponse reads and parses information about organization from response body
+func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
+	response := OrganizationsResponse{}
+	text, err := f.Resp.Content()
+	if err != nil {
+		f.AddError(err.Error())
+	} else {
+		err := json.Unmarshal(text, &response)
+		if err != nil {
+			f.AddError(err.Error())
+		}
+	}
+	return response
+}
 
 // checkOrganizationsEndpoint check if the end point to return list of organizations responds correctly to HTTP GET command
 func checkOrganizationsEndpoint() {

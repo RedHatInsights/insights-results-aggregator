@@ -32,7 +32,6 @@ limitations under the License.
 package tests
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -123,26 +122,6 @@ func checkGetEndpointByOtherMethods(endpoint string) {
 // check whether other HTTP methods are rejected correctly for the REST API entry point
 func checkWrongMethodsForEntryPoint() {
 	checkGetEndpointByOtherMethods(apiURL)
-}
-
-// OrganizationsResponse represents response containing list of organizations
-type OrganizationsResponse struct {
-	Organizations []int  `json:"organizations"`
-	Status        string `json:"status"`
-}
-
-func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
-	response := OrganizationsResponse{}
-	text, err := f.Resp.Content()
-	if err != nil {
-		f.AddError(err.Error())
-	} else {
-		err := json.Unmarshal(text, &response)
-		if err != nil {
-			f.AddError(err.Error())
-		}
-	}
-	return response
 }
 
 // checkOpenAPISpecifications checks whether OpenAPI endpoint is handled correctly
