@@ -94,7 +94,7 @@ func TestNewStorageWithLoggingError(t *testing.T) {
 	})
 
 	err := s.Init()
-	assert.EqualError(t, err, "dial tcp [::1]:1234: connect: connection refused")
+	assert.Contains(t, err.Error(), "connect: connection refused")
 }
 
 // TestDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
