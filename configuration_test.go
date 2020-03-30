@@ -47,10 +47,7 @@ func removeFile(t *testing.T, filename string) {
 
 // TestLoadConfiguration loads a configuration file for testing
 func TestLoadConfiguration(t *testing.T) {
-	err := os.Unsetenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE")
-	if err != nil {
-		t.Fatal(err)
-	}
+	os.Clearenv()
 
 	mustLoadConfiguration("tests/config1")
 }

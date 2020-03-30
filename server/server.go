@@ -45,13 +45,14 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"path/filepath"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"path/filepath"
-	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -113,7 +114,7 @@ func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, _ *htt
 }
 
 func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
-	organizationID, err := readOrganizationID(writer, request)
+	organizationID, err := readOrganizationID(writer, request, server.Config.Auth)
 
 	if err != nil {
 		// everything has been handled already
@@ -166,7 +167,7 @@ func (server *HTTPServer) getContentForRules(
 }
 
 func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
-	organizationID, err := readOrganizationID(writer, request)
+	organizationID, err := readOrganizationID(writer, request, server.Config.Auth)
 	if err != nil {
 		// everything has been handled already
 		return
@@ -228,6 +229,23 @@ func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *h
 	server.voteOnRule(writer, request, storage.UserVoteNone)
 }
 
+func (server *HTTPServer) checkVotePermissions(writer http.ResponseWriter, request *http.Request, clusterID types.ClusterName) error {
+	if server.Config.Auth {
+		orgID, err := server.Storage.GetOrgIDByClusterID(clusterID)
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to get org id")
+			handleServerError(writer, err)
+			return err
+		}
+
+		err = checkPermissions(writer, request, orgID, server.Config.Auth)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
 	clusterID, err := readClusterName(writer, request)
 	if err != nil {
@@ -246,6 +264,25 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		const message = "Unable to get user id"
 		log.Error().Err(err).Msg(message)
 		handleServerError(writer, err)
+		return
+	}
+
+	// it's gonna raise an error if cluster does not exist
+	_, _, err = server.Storage.ReadReportForClusterByClusterName(clusterID)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	_, err = server.Storage.GetRuleByID(ruleID)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	err = server.checkVotePermissions(writer, request, clusterID)
+	if err != nil {
+		// everything has been handled already
 		return
 	}
 
@@ -343,13 +380,13 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 
 	// it is possible to use special REST API endpoints in debug mode
 	if server.Config.Debug {
+		router.HandleFunc(apiPrefix+OrganizationsEndpoint, server.listOfOrganizations).Methods(http.MethodGet)
 		router.HandleFunc(apiPrefix+DeleteOrganizationsEndpoint, server.deleteOrganizations).Methods(http.MethodDelete)
 		router.HandleFunc(apiPrefix+DeleteClustersEndpoint, server.deleteClusters).Methods(http.MethodDelete)
 	}
 
 	// common REST API endpoints
 	router.HandleFunc(apiPrefix+MainEndpoint, server.mainEndpoint).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+OrganizationsEndpoint, server.listOfOrganizations).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ReportEndpoint, server.readReportForCluster).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+LikeRuleEndpoint, server.likeRule).Methods(http.MethodPut)
 	router.HandleFunc(apiPrefix+DislikeRuleEndpoint, server.dislikeRule).Methods(http.MethodPut)

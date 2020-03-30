@@ -40,7 +40,7 @@ const (
 
 // Internal contains information about organization ID
 type Internal struct {
-	OrgID string `json:"org_id"`
+	OrgID types.OrgID `json:"org_id,string"`
 }
 
 // Identity contains internal user info
@@ -57,7 +57,7 @@ type Token struct {
 // JWTPayload is structure that contain data from parsed JWT token
 type JWTPayload struct {
 	AccountNumber types.UserID `json:"account_number"`
-	OrgID         string       `json:"org_id"`
+	OrgID         types.OrgID  `json:"org_id,string"`
 }
 
 // Authentication middleware for checking auth rights

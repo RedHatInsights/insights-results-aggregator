@@ -25,13 +25,17 @@ import (
 
 // GetMockStorage creates mocked storage based on in-memory Sqlite instance
 func GetMockStorage(init bool) (storage.Storage, error) {
-	mockStorage, err := storage.New(storage.Configuration{
-		Driver:           "sqlite3",
-		SQLiteDataSource: ":memory:",
-	})
+	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		return nil, err
 	}
+
+	_, err = db.Exec("PRAGMA foreign_keys = ON;")
+	if err != nil {
+		return nil, err
+	}
+
+	mockStorage := storage.NewFromConnection(db, storage.DBDriverSQLite3)
 
 	// initialize the database by all required tables
 	if init {

@@ -3,9 +3,10 @@ address = "localhost:29093"
 topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = false
+save_offset = false
 
 [content]
-path = "/rules-content"
+path = "./tests/content/ok/"
 
 [processing]
 org_whitelist = "org_whitelist.csv"

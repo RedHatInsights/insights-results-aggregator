@@ -17,27 +17,41 @@ limitations under the License.
 package main_test
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	main "github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/RedHatInsights/insights-results-aggregator/consumer"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 const (
-	testsTimeout = 5 * time.Second
+	testsTimeout = 60 * time.Second
 )
 
-func TestStartStorageConnection(t *testing.T) {
+func setEnvSettings(t *testing.T, settings map[string]string) {
+	os.Clearenv()
+
+	for key, val := range settings {
+		mustSetEnv(t, key, val)
+	}
+
+	mustLoadConfiguration("/non_existing_path")
+}
+
+func TestCreateStorage(t *testing.T) {
 	TestLoadConfiguration(t)
 
-	_, err := main.StartStorageConnection()
-	if err != nil {
-		t.Fatal("Cannot create storage object", err)
-	}
+	_, err := main.CreateStorage()
+	helpers.FailOnError(t, err)
 }
 
 func TestStartService(t *testing.T) {
@@ -54,4 +68,195 @@ func TestStartService(t *testing.T) {
 		errCode := main.StopService()
 		assert.Equal(t, 0, errCode)
 	}, testsTimeout)
+}
+
+func TestStartServiceWithMockBroker(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		mockBroker := helpers.MustNewMockBroker(t)
+		defer mockBroker.MustClose(t)
+
+		setEnvSettings(t, map[string]string{
+			"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": mockBroker.Address,
+			"INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC":   mockBroker.TopicName,
+			"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
+
+			"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       ":8080",
+			"INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX":    "/api/v1/",
+			"INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE": "openapi.json",
+			"INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG":         "true",
+
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+
+			"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
+		})
+
+		consumer.DefaultSaramaConfig = mockBroker.GetSaramaConfig()
+
+		go func() {
+			exitCode := main.StartService()
+			if exitCode != 0 {
+				panic(fmt.Errorf("StartService exited with a code %v", exitCode))
+			}
+		}()
+
+		main.WaitForServiceToStart()
+		errCode := main.StopService()
+		assert.Equal(t, 0, errCode)
+	}, testsTimeout)
+}
+
+func TestStartService_DBError(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		buf := new(bytes.Buffer)
+		log.Logger = zerolog.New(buf)
+
+		mockBroker := helpers.MustNewMockBroker(t)
+		defer mockBroker.MustClose(t)
+
+		setEnvSettings(t, map[string]string{
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
+		})
+
+		consumer.DefaultSaramaConfig = mockBroker.GetSaramaConfig()
+
+		exitCode := main.StartService()
+		assert.Equal(t, main.ExitStatusPrepareDbError, exitCode)
+		assert.Contains(t, buf.String(), "unable to open database file: no such file or directory")
+	}, testsTimeout)
+}
+
+func TestCreateStorage_BadDriver(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "non-existing-driver",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
+	})
+
+	_, err := main.CreateStorage()
+	assert.EqualError(t, err, "driver non-existing-driver is not supported")
+}
+
+func TestCloseStorage_Error(t *testing.T) {
+	const errStr = "close error"
+
+	buf := new(bytes.Buffer)
+	log.Logger = zerolog.New(buf)
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	expects.ExpectClose().WillReturnError(fmt.Errorf(errStr))
+
+	main.CloseStorage(mockStorage.(*storage.DBStorage))
+
+	assert.Contains(t, buf.String(), errStr)
+}
+
+func TestPrepareDB_DBError(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "non-existing-driver",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
+	})
+
+	errCode := main.PrepareDB()
+	assert.Equal(t, main.ExitStatusPrepareDbError, errCode)
+}
+
+func TestPrepareDB(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+
+		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
+	})
+
+	errCode := main.PrepareDB()
+	assert.Equal(t, main.ExitStatusOK, errCode)
+}
+
+func TestPrepareDB_NoRulesDirectory(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+
+		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "/non-existing-path",
+	})
+
+	errCode := main.PrepareDB()
+	assert.Equal(t, main.ExitStatusPrepareDbError, errCode)
+}
+
+func TestPrepareDB_BadRules(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+
+		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/bad_metadata_status/",
+	})
+
+	errCode := main.PrepareDB()
+	assert.Equal(t, main.ExitStatusPrepareDbError, errCode)
+}
+
+func TestStartConsumer_DBError(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "non-existing-driver",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "bad-data-source",
+	})
+
+	errCode := main.StartConsumer()
+	assert.Equal(t, main.ExitStatusConsumerError, errCode)
+}
+
+func TestStartConsumer_BadBrokerAddress(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+
+		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:1",
+		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
+	})
+
+	errCode := main.StartConsumer()
+	assert.Equal(t, main.ExitStatusConsumerError, errCode)
+}
+
+func TestStartServer_DBError(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "non-existing-driver",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "bad-data-source",
+	})
+
+	errCode := main.StartServer()
+	assert.Equal(t, main.ExitStatusServerError, errCode)
+}
+
+func TestStartServer_BadServerAddress(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+
+		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       "non-existing-host:1",
+		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE": "openapi.json",
+	})
+
+	errCode := main.StartServer()
+	assert.Equal(t, main.ExitStatusServerError, errCode)
+}
+
+func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+
+		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:1",
+		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
+
+		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       "non-existing-host:1",
+		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE": "openapi.json",
+
+		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
+	})
+
+	errCode := main.StartService()
+	assert.Equal(t, main.ExitStatusConsumerError+main.ExitStatusServerError, errCode)
 }

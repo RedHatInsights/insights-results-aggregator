@@ -31,6 +31,9 @@ const (
 	BadRuleID        = types.RuleID("rule id with spaces")
 	Rule2ID          = types.RuleID("test.rule2")
 	Rule3ID          = types.RuleID("test.rule3")
+	Rule1Name        = "rule 1 name"
+	Rule2Name        = "rule 2 name"
+	Rule3Name        = "rule 3 name"
 	ErrorKey1        = "ek1"
 	ErrorKey2        = "ek2"
 	ErrorKey3        = "ek3"
@@ -43,9 +46,29 @@ const (
 	Rule1CreatedAt   = "1970-01-01T00:00:00Z"
 	Rule2CreatedAt   = "1970-01-02T00:00:00Z"
 	Rule3CreatedAt   = "1970-01-03T00:00:00Z"
+	Rule1Summary     = "rule 1 summary"
+	Rule2Summary     = "rule 2 summary"
+	Rule3Summary     = "rule 3 summary"
+	Rule1Reason      = "rule 1 reason"
+	Rule2Reason      = "rule 2 reason"
+	Rule3Reason      = "rule 3 reason"
+	Rule1Resolution  = "rule 1 resolution"
+	Rule2Resolution  = "rule 2 resolution"
+	Rule3Resolution  = "rule 3 resolution"
+	Rule1MoreInfo    = "rule 1 more info"
+	Rule2MoreInfo    = "rule 2 more info"
+	Rule3MoreInfo    = "rule 3 more info"
 )
 
 var (
+	Rule1 = types.Rule{
+		Module:     Rule1ID,
+		Name:       Rule1Name,
+		Summary:    Rule1Summary,
+		Reason:     Rule1Reason,
+		Resolution: Rule1Resolution,
+		MoreInfo:   Rule1MoreInfo,
+	}
 	ConsumerReport = `{
 		"fingerprints": [],
 		"info": [],

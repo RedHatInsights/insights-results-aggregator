@@ -56,6 +56,7 @@ type Storage interface {
 	ListOfOrgs() ([]types.OrgID, error)
 	ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
 	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
+	ReadReportForClusterByClusterName(clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
 	WriteReportForCluster(
 		orgID types.OrgID,
 		clusterName types.ClusterName,
@@ -82,6 +83,8 @@ type Storage interface {
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
 	LoadRuleContent(contentDir content.RuleContentDirectory) error
+	GetRuleByID(ruleID types.RuleID) (*types.Rule, error)
+	GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
 }
 
 // DBDriver type for db driver enum
@@ -253,6 +256,19 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 	return clusters, nil
 }
 
+// GetOrgIDByClusterID reads OrgID for specified cluster
+func (storage DBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error) {
+	row := storage.connection.QueryRow("SELECT org_id FROM report WHERE cluster = $1 ORDER BY org_id", cluster)
+
+	var orgID uint64
+	err := row.Scan(&orgID)
+	if err != nil {
+		log.Error().Err(err).Msg("GetOrgIDByClusterID")
+		return 0, err
+	}
+	return types.OrgID(orgID), nil
+}
+
 // ReadReportForCluster reads result (health status) for selected cluster for given organization
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
@@ -268,6 +284,29 @@ func (storage DBStorage) ReadReportForCluster(
 	case err == sql.ErrNoRows:
 		return "", "", &ItemNotFoundError{
 			ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
+		}
+	case err != nil:
+		return "", "", err
+	}
+
+	return types.ClusterReport(report), types.Timestamp(lastChecked.Format(time.RFC3339)), nil
+}
+
+// ReadReportForClusterByClusterName reads result (health status) for selected cluster for given organization
+func (storage DBStorage) ReadReportForClusterByClusterName(
+	clusterName types.ClusterName,
+) (types.ClusterReport, types.Timestamp, error) {
+	var report string
+	var lastChecked time.Time
+
+	err := storage.connection.QueryRow(
+		"SELECT report, last_checked_at FROM report WHERE cluster = $1", clusterName,
+	).Scan(&report, &lastChecked)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return "", "", &ItemNotFoundError{
+			ItemID: fmt.Sprintf("%v", clusterName),
 		}
 	case err != nil:
 		return "", "", err
@@ -357,14 +396,14 @@ func (storage DBStorage) WriteReportForCluster(
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
 ) error {
-	var query string
+	var upsertQuery string
 
 	switch storage.dbDriverType {
 	case DBDriverSQLite3:
-		query = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at)
+		upsertQuery = `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at)
 		 VALUES ($1, $2, $3, $4, $5)`
 	case DBDriverPostgres:
-		query = `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
+		upsertQuery = `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
 		 VALUES ($1, $2, $3, $4, $5)
 		 ON CONFLICT (org_id, cluster)
 		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`
@@ -372,28 +411,42 @@ func (storage DBStorage) WriteReportForCluster(
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
-	statement, err := storage.connection.Prepare(query)
+	tx, err := storage.connection.Begin()
 	if err != nil {
 		return err
 	}
-	defer func() {
-		err := statement.Close()
-		if err != nil {
-			log.Error().Err(err).Msg("Unable to close statement")
-		}
-	}()
 
-	t := time.Now()
+	// Check if there is a more recent report for the cluster already in the database.
+	rows, err := tx.Query(
+		`SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3`,
+		orgID, clusterName, lastCheckedTime)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to find most recent report in database")
+		_ = tx.Rollback()
+		return err
+	}
+	defer closeRows(rows)
 
-	_, err = statement.Exec(orgID, clusterName, report, t, lastCheckedTime)
+	// If there is one, print a warning and discard the report (don't update it).
+	if rows.Next() {
+		log.Warn().Msgf("Database already contains report for organization %d and cluster name %s more recent than %v",
+			orgID, clusterName, lastCheckedTime)
+
+		_ = tx.Rollback()
+		return nil
+	}
+
+	// Perform the report upsert.
+	reportedAtTime := time.Now()
+	_, err = tx.Exec(upsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime)
 	if err != nil {
 		log.Print(err)
+		_ = tx.Rollback()
 		return err
 	}
 
 	metrics.WrittenReports.Inc()
-
-	return nil
+	return tx.Commit()
 }
 
 // ReportsCount reads number of all records stored in database
@@ -491,4 +544,32 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 	}
 
 	return nil
+}
+
+// GetRuleByID gets a rule by ID
+func (storage DBStorage) GetRuleByID(ruleID types.RuleID) (*types.Rule, error) {
+	var rule types.Rule
+
+	err := storage.connection.QueryRow(`
+		SELECT
+			"module",
+			"name",
+			"summary",
+			"reason",
+			"resolution",
+			"more_info"
+		FROM rule WHERE "module" = $1`, ruleID,
+	).Scan(
+		&rule.Module,
+		&rule.Name,
+		&rule.Summary,
+		&rule.Reason,
+		&rule.Resolution,
+		&rule.MoreInfo,
+	)
+	if err == sql.ErrNoRows {
+		return nil, &ItemNotFoundError{ItemID: ruleID}
+	}
+
+	return &rule, err
 }

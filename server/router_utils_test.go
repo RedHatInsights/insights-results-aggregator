@@ -46,7 +46,7 @@ func TestReadOrganizationIDMissing(t *testing.T) {
 	request, err := http.NewRequest(http.MethodGet, "", nil)
 	helpers.FailOnError(t, err)
 
-	_, err = server.ReadOrganizationID(httptest.NewRecorder(), request)
+	_, err = server.ReadOrganizationID(httptest.NewRecorder(), request, false)
 	assert.EqualError(t, err, "Missing required param from request: organization")
 }
 

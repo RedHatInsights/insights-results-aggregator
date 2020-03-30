@@ -209,6 +209,18 @@ To migrate the database to a certain version, in either direction (both upgrade 
 
 See `/migration/migration.go` documentation for an overview of all available DB migration functionality.
 
+## REST API schema based on OpenAPI 3.0
+
+Aggregator service provides information about its REST API schema via endpoint `api/v1/openapi.json`. OpenAPI 3.0 is used to describe the schema; it can be read by human and consumed by computers.
+
+For example, if aggregator is started locally, it is possible to read schema based on OpenAPI 3.0 specification by using the following command:
+
+```
+curl localhost:8080/api/v1/openapi.json
+```
+
+Please note that OpenAPI schema is accessible w/o the need to provide authorization tokens.
+
 ## Prometheus API
 
 It is possible to use `/api/v1/metrics` REST API endpoint to read all metrics exposed to Prometheus or to any tool that is compatible with it.
@@ -276,6 +288,7 @@ To run REST API tests use the following command:
 * `ineffassign` to detect and print all ineffectual assignments in Go code
 * `errcheck` for checking for all unchecked errors in go programs
 * `shellcheck` to perform static analysis for all shell scripts used in this repository
+* `abcgo` to measure ABC metrics for Go source code and check if the metrics does not exceed specified threshold
 
 Please note that all checks mentioned above have to pass for the change to be merged into master branch.
 

@@ -15,6 +15,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -121,14 +122,29 @@ func readClusterName(writer http.ResponseWriter, request *http.Request) (types.C
 
 // readOrganizationID retrieves organization id from request
 // if it's not possible, it writes http error to the writer and returns error
-func readOrganizationID(writer http.ResponseWriter, request *http.Request) (types.OrgID, error) {
+func readOrganizationID(writer http.ResponseWriter, request *http.Request, auth bool) (types.OrgID, error) {
 	organizationID, err := getRouterPositiveIntParam(request, "organization")
 	if err != nil {
 		handleOrgIDError(writer, err)
 		return 0, err
 	}
+	err = checkPermissions(writer, request, types.OrgID(organizationID), auth)
 
-	return types.OrgID(organizationID), nil
+	return types.OrgID(organizationID), err
+}
+
+func checkPermissions(writer http.ResponseWriter, request *http.Request, orgID types.OrgID, auth bool) error {
+	identityContext := request.Context().Value(ContextKeyUser)
+	if identityContext != nil && auth {
+		identity := identityContext.(Identity)
+		if identity.Internal.OrgID != orgID {
+			const message = "You have no permissions to get or change info about this organization"
+			log.Error().Msg(message)
+			handleServerError(writer, &AuthenticationError{errString: message})
+			return errors.New(message)
+		}
+	}
+	return nil
 }
 
 // readClusterNames does the same as `readClusterName`, except for multiple clusters.
