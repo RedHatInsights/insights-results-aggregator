@@ -260,7 +260,10 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	}
 
 	userID, err := server.GetCurrentUserID(request)
-	if err != nil {
+	if authErr, ok := err.(*AuthenticationError); ok {
+		handleServerError(writer, authErr)
+		return
+	} else if err != nil {
 		const message = "Unable to get user id"
 		log.Error().Err(err).Msg(message)
 		handleServerError(writer, err)
