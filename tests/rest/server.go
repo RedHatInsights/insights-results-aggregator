@@ -32,6 +32,8 @@ limitations under the License.
 package tests
 
 import (
+	"encoding/json"
+
 	"github.com/verdverm/frisby"
 )
 
@@ -49,6 +51,11 @@ const (
 	unknownClusterForOrganization1 = "00000000-0000-0000-0000-000000000001"
 )
 
+// StatusOnlyResponse represents response containing just a status
+type StatusOnlyResponse struct {
+	Status string `json:"status"`
+}
+
 // list of known organizations that are stored in test database
 var knownOrganizations []int = []int{1, 2, 3, 4}
 
@@ -57,6 +64,21 @@ var unknownOrganizations []int = []int{5, 6, 7, 8}
 
 // list of improper organization IDs
 var improperOrganizations []int = []int{-1000, -1, 0}
+
+// readStatusFromResponse reads and parses status from response body
+func readStatusFromResponse(f *frisby.Frisby) StatusOnlyResponse {
+	response := StatusOnlyResponse{}
+	text, err := f.Resp.Content()
+	if err != nil {
+		f.AddError(err.Error())
+	} else {
+		err := json.Unmarshal(text, &response)
+		if err != nil {
+			f.AddError(err.Error())
+		}
+	}
+	return response
+}
 
 // checkRestAPIEntryPoint check if the entry point (usually /api/v1/) responds correctly to HTTP GET command
 func checkRestAPIEntryPoint() {
@@ -147,6 +169,7 @@ func ServerTests() {
 	checkReportEndpointForUnknownOrganizationAndUnknownCluster()
 	checkReportEndpointForImproperOrganization()
 	checkReportEndpointWrongMethods()
+	reproducerForIssue384()
 
 	// tests for OpenAPI specification that is accessible via its endpoint as well
 	checkOpenAPISpecifications()
