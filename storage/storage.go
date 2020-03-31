@@ -470,7 +470,7 @@ func (storage DBStorage) DeleteReportsForCluster(clusterName types.ClusterName) 
 }
 
 // loadRuleErrorKeyContent inserts the error key contents of all available rules into the database.
-func loadRuleErrorKeyContent(tx *sql.Tx, ruleModuleName string, errorKeys map[string]content.RuleErrorKeyContent) error {
+func loadRuleErrorKeyContent(tx *sql.Tx, ruleConfig content.GlobalRuleConfig, ruleModuleName string, errorKeys map[string]content.RuleErrorKeyContent) error {
 	for errName, errProperties := range errorKeys {
 		var errIsActiveStatus bool
 		switch strings.ToLower(errProperties.Metadata.Status) {
@@ -490,7 +490,9 @@ func loadRuleErrorKeyContent(tx *sql.Tx, ruleModuleName string, errorKeys map[st
 			ruleModuleName,
 			errProperties.Metadata.Condition,
 			errProperties.Metadata.Description,
-			errProperties.Metadata.Impact,
+			// This will panic if the impact string does not exist as a key in the impact
+			// dictionary, which is correct because we cannot continue if that happens.
+			ruleConfig.Impact[errProperties.Metadata.Impact],
 			errProperties.Metadata.Likelihood,
 			errProperties.Metadata.PublishDate,
 			errIsActiveStatus,
@@ -518,7 +520,7 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 		return err
 	}
 
-	for _, rule := range contentDir {
+	for _, rule := range contentDir.Rules {
 		_, err := tx.Exec(`INSERT INTO rule(module, "name", summary, reason, resolution, more_info)
 				VALUES($1, $2, $3, $4, $5, $6)`,
 			rule.Plugin.PythonModule,
@@ -533,7 +535,7 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 			return err
 		}
 
-		if err := loadRuleErrorKeyContent(tx, rule.Plugin.PythonModule, rule.ErrorKeys); err != nil {
+		if err := loadRuleErrorKeyContent(tx, contentDir.Config, rule.Plugin.PythonModule, rule.ErrorKeys); err != nil {
 			_ = tx.Rollback()
 			return err
 		}

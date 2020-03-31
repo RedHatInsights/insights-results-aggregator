@@ -36,94 +36,110 @@ import (
 )
 
 var (
+	ruleConfigOne       = content.GlobalRuleConfig{Impact: map[string]int{"One": 1}}
 	ruleContentActiveOK = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": {
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "active",
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{
+				Summary:    []byte("summary"),
+				Reason:     []byte("reason"),
+				Resolution: []byte("resolution"),
+				MoreInfo:   []byte("more info"),
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: []byte("generic"),
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "active",
+						},
 					},
 				},
 			},
 		},
 	}
 	ruleContentInactiveOK = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": {
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "inactive",
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{
+				Summary:    []byte("summary"),
+				Reason:     []byte("reason"),
+				Resolution: []byte("resolution"),
+				MoreInfo:   []byte("more info"),
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: []byte("generic"),
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "inactive",
+						},
 					},
 				},
 			},
 		},
 	}
 	ruleContentBadStatus = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": {
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "bad",
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{
+				Summary:    []byte("summary"),
+				Reason:     []byte("reason"),
+				Resolution: []byte("resolution"),
+				MoreInfo:   []byte("more info"),
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: []byte("generic"),
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "bad",
+						},
 					},
 				},
 			},
 		},
 	}
 	ruleContentNull = content.RuleContentDirectory{
-		"rc": content.RuleContent{},
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{},
+		},
 	}
 	ruleContentExample1 = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("summary"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			Plugin: content.RulePluginInfo{
-				Name:         "test rule",
-				NodeID:       string(testClusterName),
-				ProductCode:  "product code",
-				PythonModule: string(testRuleID),
-			},
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": {
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "active",
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{
+				Summary:    []byte("summary"),
+				Reason:     []byte("summary"),
+				Resolution: []byte("resolution"),
+				MoreInfo:   []byte("more info"),
+				Plugin: content.RulePluginInfo{
+					Name:         "test rule",
+					NodeID:       string(testClusterName),
+					ProductCode:  "product code",
+					PythonModule: string(testRuleID),
+				},
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: []byte("generic"),
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "active",
+						},
 					},
 				},
 			},
