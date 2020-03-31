@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/verdverm/frisby"
 )
@@ -45,21 +46,45 @@ func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
 	return response
 }
 
-// checkOrganizationsEndpoint check if the end point to return list of organizations responds correctly to HTTP GET command
-func checkOrganizationsEndpoint() {
-	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations")
+// computes size of response with list of organization identifiers
+func contentSizeForOrganizationResponse(orgIDs ...int) int {
+	r := OrganizationsResponse{
+		Organizations: orgIDs,
+		Status:        "ok",
+	}
+	m, err := json.Marshal(r)
+
+	// actually it should not happen
+	if err != nil {
+		panic(err)
+	}
+
+	// don't forget '\n' at the end of JSON
+	return len(string(m)) + 1
+}
+
+// checkOrganizationsEndpointWithPostfix check if the end point to return list of organizations responds correctly to HTTP GET command
+func checkOrganizationsEndpointWithPostfix(postfix string) {
+	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations" + postfix)
 	f.Send()
 	f.ExpectStatus(200)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.ExpectHeader(contentLengthHeader, strconv.Itoa(contentSizeForOrganizationResponse(1, 2, 3, 4)))
+
 	organizationsResponse := readOrganizationsFromResponse(f)
 	if organizationsResponse.Status != "ok" {
 		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", organizationsResponse.Status))
 	}
+
 	expectedOrglist := []int{1, 2, 3, 4}
 	if !reflect.DeepEqual(organizationsResponse.Organizations, expectedOrglist) {
 		f.AddError(fmt.Sprintf("Expected the following organizations %v, but got %v instead", expectedOrglist, organizationsResponse.Organizations))
 	}
 	f.PrintReport()
+}
+
+// checkOrganizationsEndpoint check if the end point to return list of organizations responds correctly to HTTP GET command
+func checkOrganizationsEndpoint(postfix string) {
 }
 
 // checkOrganizationsEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
