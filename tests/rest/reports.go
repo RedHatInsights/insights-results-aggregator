@@ -17,6 +17,8 @@ limitations under the License.
 package tests
 
 import (
+	"fmt"
+
 	"github.com/verdverm/frisby"
 )
 
@@ -64,6 +66,16 @@ func checkReportEndpointForUnknownOrganizationAndUnknownCluster() {
 	f.PrintReport()
 }
 
+// reproducerForIssue384 checks whether the issue https://github.com/RedHatInsights/insights-results-aggregator/issues/384 has been fixed
+func reproducerForIssue384() {
+	url := constructURLForReportForOrgCluster("000000000000000000000000000000000000", "1")
+	f := frisby.Create("Reproducer for issue #384 (https://github.com/RedHatInsights/insights-results-aggregator/issues/384)").Get(url)
+	f.Send()
+	f.ExpectStatus(400)
+	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	f.PrintReport()
+}
+
 // checkReportEndpointForImproperOrganization check if the endpoint to return report works as expected
 func checkReportEndpointForImproperOrganization() {
 	url := constructURLForReportForOrgCluster("foobar", knownClusterForOrganization1)
@@ -71,6 +83,12 @@ func checkReportEndpointForImproperOrganization() {
 	f.Send()
 	f.ExpectStatus(400)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+
+	statusResponse := readStatusFromResponse(f)
+	if statusResponse.Status == "ok" {
+		f.AddError(fmt.Sprintf("Expected error status, but got '%s' instead", statusResponse.Status))
+	}
+
 	f.PrintReport()
 }
 
