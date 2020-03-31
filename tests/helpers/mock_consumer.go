@@ -93,6 +93,7 @@ func WaitForMockConsumerToHaveNConsumedMessages(mockConsumer *consumer.KafkaCons
 	}
 }
 
+// GetHandlersMapForMockConsumer returns handlers for mock broker to successfully create a new consumer
 func GetHandlersMapForMockConsumer(t *testing.T, mockBroker *sarama.MockBroker, topicName string) map[string]sarama.MockResponse {
 	return map[string]sarama.MockResponse{
 		"MetadataRequest": sarama.NewMockMetadataResponse(t).
