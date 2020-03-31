@@ -25,8 +25,7 @@ SCRIPT_DIR="$(dirname $(realpath $0))"
 CONTENT_DIR="${SCRIPT_DIR}/rules-content"
 
 CLONE_TEMP_DIR="${SCRIPT_DIR}/.tmp"
-EXTERNAL_RULES_CONTENT="${CLONE_TEMP_DIR}/content/external/rules/"
-RULES_CONFIG="${CLONE_TEMP_DIR}/content/config.yaml"
+RULES_CONTENT="${CLONE_TEMP_DIR}/content/"
 
 echo "Attempting to clone repository into ${CLONE_TEMP_DIR}"
 
@@ -45,7 +44,7 @@ then
     exit 1
 fi
 
-mv "${EXTERNAL_RULES_CONTENT}" "${CONTENT_DIR}" && mv "${RULES_CONFIG}" "${CONTENT_DIR}"
+mv "${RULES_CONTENT}" "${CONTENT_DIR}"
 
 if [ $? -ne 0 ]
 then

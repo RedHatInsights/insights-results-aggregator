@@ -54,6 +54,42 @@ CREATE TABLE report (
 )
 ```
 
+### Tables rule and rule_error_key
+
+These tables represent the content for Insights rules to be displayed by OCM.
+The table `rule` represents more general information about the rule, whereas the `rule_error_key`
+contains information about the specific type of error which occured. The combination of these two create a unique rule.
+Very trivialized example could be:
+- rule "REQUIREMENTS_CHECK"
+    - error_key "REQUIREMENTS_CHECK_LOW_MEMORY"
+    - error_key "REQUIREMENTS_CHECK_MISSING_SYSTEM_PACKAGE"
+
+```sql
+CREATE TABLE rule (
+    module        VARCHAR PRIMARY KEY,
+    name          VARCHAR NOT NULL,
+    summary       VARCHAR NOT NULL,
+    reason        VARCHAR NOT NULL,
+    resolution    VARCHAR NOT NULL,
+    more_info     VARCHAR NOT NULL
+)
+```
+
+```sql
+CREATE TABLE rule_error_key (
+    error_key     VARCHAR NOT NULL,
+    rule_module   VARCHAR NOT NULL REFERENCES rule(module),
+    condition     VARCHAR NOT NULL,
+    description   VARCHAR NOT NULL,
+    impact        INTEGER NOT NULL,
+    likelihood    INTEGER NOT NULL,
+    publish_date  TIMESTAMP NOT NULL,
+    active        BOOLEAN NOT NULL,
+    generic       VARCHAR NOT NULL,
+    PRIMARY KEY(error_key, rule_module)
+)
+```
+
 #### Table cluster_rule_user_feedback
 
 ```sql
@@ -63,14 +99,20 @@ CREATE TABLE report (
 -- -1 is dislike
 CREATE TABLE cluster_rule_user_feedback (
     cluster_id VARCHAR NOT NULL,
-    rule_id INTEGER  NOT NULL,
+    rule_id VARCHAR NOT NULL,
     user_id VARCHAR NOT NULL,
+    message VARCHAR NOT NULL,
     user_vote SMALLINT NOT NULL,
     added_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    message VARCHAR NOT NULL,
 
-    PRIMARY KEY(cluster_id, rule_id, user_id)
+    PRIMARY KEY(cluster_id, rule_id, user_id),
+    FOREIGN KEY (cluster_id)
+        REFERENCES report(cluster)
+        ON DELETE CASCADE,
+    FOREIGN KEY (rule_id)
+        REFERENCES rule(module)
+        ON DELETE CASCADE
 )
 ```
 
@@ -178,6 +220,27 @@ or you can use integration tests suite. More details are [here](https://gitlab.c
 ### Kafka producer
 
 It is possible to use the script `produce_insights_results` from `utils` to produce several Insights results into Kafka topic. Its dependency is Kafkacat that needs to be installed on the same machine. You can find installation instructions [on this page](https://github.com/edenhill/kafkacat).
+
+
+### Rules content
+
+The generated cluster reports from Insights results contain three lists of rules that were either __skipped__ (because of missing requirements, etc.), __passed__ (the rule got executed but no issue was found), or __hit__ (the rule got executed and found the issue it was looking for) by the cluster, where each rule is represented as a dictionary containing identifying information about the rule itself.
+
+The __hit__ rules are the rules that the customer is interested in and therefore the information about them (their __content__) needs to be displayed in OCM. The content for the rules is present in another repository, alongside the actual rule implementations, which is primarily maintained by the support-facing team.
+For that reason, the `insights-results-aggregator` is setup in a way, that the content we're interested in is copied to the Docker image from the repository during image build and we have a push webhook on master branch set up in that repository, signalling our app to be rebuilt.
+
+This content is then processed upon application start-up, correctly parsed by the package `content` and saved into the database (see DB structure).
+
+When a request for a cluster report comes from OCM, the report is parsed (TODO: parse reports only once when consuming them) and content for all the hit rules is returned.
+
+##### Local environment with rules content
+The rules content parser is configured by default to expect the content in a root directory `/rules-content`.
+This can be changed either by an environment variable `INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH` or by modifying the config file entry:
+```
+[content]
+path = "/rules-content"
+```
+To get the latest rules content locally, you can `make rules_content`, which just runs the script `update_rules_content.sh` mimicking the Dockerfile behavior (NOTE: you need to be in RH VPN to be able to access that repository, but it is not private). The script copies the content into a .gitignored folder `rules-content`, so all that's necessary is to change the expected path.
 
 ## Database
 
