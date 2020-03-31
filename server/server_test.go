@@ -17,6 +17,7 @@ limitations under the License.
 package server_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -26,14 +27,14 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-
-	"github.com/RedHatInsights/insights-results-aggregator/storage"
-
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/stretchr/testify/assert"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 )
 
 var config = server.Configuration{
@@ -434,6 +435,9 @@ func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
 }
 
 func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
+	buf := new(bytes.Buffer)
+	log.Logger = zerolog.New(buf)
+
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
@@ -442,6 +446,8 @@ func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"}`,
 	})
+
+	assert.Contains(t, buf.String(), "invalid cluster name: 'aaaa'. Error: invalid UUID length: 4")
 }
 
 func TestRuleFeedbackErrorBadRuleID(t *testing.T) {
