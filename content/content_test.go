@@ -33,18 +33,27 @@ func TestContentParseOK(t *testing.T) {
 	con, err := content.ParseRuleContentDir("../tests/content/ok/")
 	helpers.FailOnError(t, err)
 
-	rule1Content, exists := con["rule1"]
+	rule1Content, exists := con.Rules["rule1"]
 	assert.True(t, exists, "'rule1' content is missing")
 
 	_, exists = rule1Content.ErrorKeys["err_key"]
 	assert.True(t, exists, "'err_key' error content is missing")
 }
 
+// TestContentParseOKNoContent checks that parsing content when there is no rule
+// content available, but the file structure is otherwise okay, succeeds.
+func TestContentParseOKNoContent(t *testing.T) {
+	con, err := content.ParseRuleContentDir("../tests/content/ok_no_content/")
+	helpers.FailOnError(t, err)
+
+	assert.Empty(t, con.Rules)
+}
+
 // TestContentParseInvalidDir checks how incorrect (non-existing) directory is handled
 func TestContentParseInvalidDir(t *testing.T) {
-	const invalidDirPath = "../tests/content/not-a-real-dir/"
+	const invalidDirPath = "../tests/content/not-a-real-dir"
 	_, err := content.ParseRuleContentDir(invalidDirPath)
-	assert.EqualError(t, err, fmt.Sprintf("open %s: no such file or directory", invalidDirPath))
+	assert.EqualError(t, err, fmt.Sprintf("open %s/config.yaml: no such file or directory", invalidDirPath))
 }
 
 // TestContentParseNotDirectory1 checks how incorrect (non-existing) directory is handled
@@ -52,7 +61,7 @@ func TestContentParseNotDirectory1(t *testing.T) {
 	// this is not a proper directory
 	const notADirPath = "../tests/tests.toml"
 	_, err := content.ParseRuleContentDir(notADirPath)
-	assert.EqualError(t, err, "readdirent: not a directory")
+	assert.EqualError(t, err, fmt.Sprintf("open %s/config.yaml: not a directory", notADirPath))
 }
 
 // TestContentParseNotDirectory2 checks how incorrect (non-existing) directory is handled
@@ -60,7 +69,7 @@ func TestContentParseInvalidDir2(t *testing.T) {
 	// this is not a proper directory
 	const notADirPath = "/dev/null"
 	_, err := content.ParseRuleContentDir(notADirPath)
-	assert.EqualError(t, err, "readdirent: not a directory")
+	assert.EqualError(t, err, fmt.Sprintf("open %s/config.yaml: not a directory", notADirPath))
 }
 
 // TestContentParseMissingFile checks how missing file(s) in content directory are handled

@@ -35,8 +35,8 @@ FROM registry.access.redhat.com/ubi8-minimal
 
 COPY --from=builder /go/insights-results-aggregator/insights-results-aggregator .
 COPY --from=builder /go/insights-results-aggregator/openapi.json /openapi/openapi.json
-# copy just the content of the external rules, not the whole repository
-COPY --from=builder /rules-content/content/external/rules/ /rules-content
+# copy just the rule content instead of the whole repository
+COPY --from=builder /rules-content/content/ /rules-content
 
 RUN chmod a+x /insights-results-aggregator
 
