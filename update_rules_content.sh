@@ -21,10 +21,10 @@ function clean_up() {
 trap clean_up EXIT
 
 RULES_REPO="https://gitlab.cee.redhat.com/ccx/ccx-rules-ocp.git"
-CONTENT_DIR="$( cd "$(dirname "$0")" && pwd )/tests/content"
-OK_RULES_DIR="${CONTENT_DIR}/ok"
+SCRIPT_DIR="$(dirname $(realpath $0))"
+CONTENT_DIR="${SCRIPT_DIR}/rules-content"
 
-CLONE_TEMP_DIR="${CONTENT_DIR}/tmp"
+CLONE_TEMP_DIR="${SCRIPT_DIR}/.tmp"
 EXTERNAL_RULES_CONTENT="${CLONE_TEMP_DIR}/content/external/rules/"
 RULES_CONFIG="${CLONE_TEMP_DIR}/content/config.yaml"
 
@@ -37,7 +37,7 @@ then
     exit 1
 fi
 
-rm -rf "$OK_RULES_DIR"
+rm -rf "${CONTENT_DIR}"
 
 if [ $? -ne 0 ]
 then
@@ -45,7 +45,7 @@ then
     exit 1
 fi
 
-mv "${EXTERNAL_RULES_CONTENT}" "${OK_RULES_DIR}" && mv "${RULES_CONFIG}" "${OK_RULES_DIR}"
+mv "${EXTERNAL_RULES_CONTENT}" "${CONTENT_DIR}" && mv "${RULES_CONFIG}" "${CONTENT_DIR}"
 
 if [ $? -ne 0 ]
 then
@@ -55,5 +55,5 @@ fi
 
 rm -rf "${CLONE_TEMP_DIR}"
 
-echo "tests/content/ok/ updated with latest rules"
+echo "${CONTENT_DIR} updated with latest rules"
 exit 0
