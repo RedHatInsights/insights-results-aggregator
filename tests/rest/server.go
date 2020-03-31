@@ -192,6 +192,7 @@ func ServerTests() {
 	reproducerForIssue384()
 
 	// tests for REST API endpoints for voting about rules
+	reproducerForIssue385()
 
 	// tests for OpenAPI specification that is accessible via its endpoint as well
 	checkOpenAPISpecifications()
