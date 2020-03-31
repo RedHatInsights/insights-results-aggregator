@@ -22,10 +22,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"strings"
+
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -138,6 +139,10 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 // GetCurrentUserID retrieves current user's id from request
 func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID, error) {
 	i := request.Context().Value(ContextKeyUser)
+
+	if i == nil {
+		return "", &AuthenticationError{errString: "user id is not provided"}
+	}
 
 	identity, ok := i.(Identity)
 	if !ok {
