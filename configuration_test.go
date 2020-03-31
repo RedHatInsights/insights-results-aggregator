@@ -239,6 +239,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		Address:     ":8080",
 		APIPrefix:   "/api/v1/",
 		APISpecFile: "openapi.json",
+		AuthType:    "xrh",
 		Debug:       true,
 	}, main.GetServerConfiguration())
 
@@ -330,6 +331,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		Address:     ":8080",
 		APIPrefix:   "/api/v1/",
 		APISpecFile: "openapi.json",
+		AuthType:    "xrh",
 		Debug:       true,
 	}, main.GetServerConfiguration())
 

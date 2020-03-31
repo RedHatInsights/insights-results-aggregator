@@ -374,6 +374,8 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 		noAuthURLs := []string{
 			metricsURL,
 			openAPIURL,
+			metricsURL + "?", // to be able to test using Frisby
+			openAPIURL + "?", // to be able to test using Frisby
 		}
 		router.Use(func(next http.Handler) http.Handler { return server.Authentication(next, noAuthURLs) })
 	}
