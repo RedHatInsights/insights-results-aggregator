@@ -59,11 +59,11 @@ func contentSizeForOrganizationResponse(orgIDs ...int) int {
 		panic(err)
 	}
 
-	// don't forget '\n' at the end of JSON
+	// don't forget there is '\n' at the end of JSON
 	return len(string(m)) + 1
 }
 
-// checkOrganizationsEndpointWithPostfix check if the end point to return list of organizations responds correctly to HTTP GET command
+// checkOrganizationsEndpointWithPostfix checks if the end point to return list of organizations responds correctly to HTTP GET command
 func checkOrganizationsEndpointWithPostfix(postfix string) {
 	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations" + postfix)
 	f.Send()
@@ -83,8 +83,14 @@ func checkOrganizationsEndpointWithPostfix(postfix string) {
 	f.PrintReport()
 }
 
-// checkOrganizationsEndpoint check if the end point to return list of organizations responds correctly to HTTP GET command
-func checkOrganizationsEndpoint(postfix string) {
+// checkOrganizationsEndpoint checks if the end point to return list of organizations responds correctly to HTTP GET command
+func checkOrganizationsEndpoint() {
+	var postfixes []string = []string{"", "?", "?a=b", "?orgID=1234", "?orgID=1234&cluster=4567"}
+
+	// postfixes should be ignored
+	for _, postfix := range postfixes {
+		checkOrganizationsEndpointWithPostfix(postfix)
+	}
 }
 
 // checkOrganizationsEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
