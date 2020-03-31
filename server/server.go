@@ -259,14 +259,9 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	userID, err := server.GetCurrentUserID(request)
-	if authErr, ok := err.(*AuthenticationError); ok {
-		handleServerError(writer, authErr)
-		return
-	} else if err != nil {
-		const message = "Unable to get user id"
-		log.Error().Err(err).Msg(message)
-		handleServerError(writer, err)
+	userID, successful := server.readUserID(err, request, writer)
+	if !successful {
+		// everything has been handled already
 		return
 	}
 
@@ -299,6 +294,21 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
+}
+
+func (server *HTTPServer) readUserID(err error, request *http.Request, writer http.ResponseWriter) (types.UserID, bool) {
+	userID, err := server.GetCurrentUserID(request)
+	if authErr, ok := err.(*AuthenticationError); ok {
+		handleServerError(writer, authErr)
+		return "", false
+	} else if err != nil {
+		const message = "Unable to get user id"
+		log.Error().Err(err).Msg(message)
+		handleServerError(writer, err)
+		return "", false
+	}
+
+	return userID, true
 }
 
 func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {
