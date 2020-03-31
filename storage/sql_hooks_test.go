@@ -25,6 +25,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 
@@ -76,9 +78,7 @@ func TestSQLHooksLoggingArgsJSON(t *testing.T) {
 	hooks := storage.SQLHooks{SQLQueriesLogger: &logger}
 
 	_, err := hooks.Before(context.Background(), query, params...)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	assert.Contains(
 		t,
@@ -91,9 +91,7 @@ func TestSQLHooksLoggingArgsJSON(t *testing.T) {
 		query,
 		params...,
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	assert.Contains(
 		t,
@@ -112,9 +110,7 @@ func TestSQLHooksLoggingArgsNotJSON(t *testing.T) {
 	hooks := storage.SQLHooks{SQLQueriesLogger: &logger}
 
 	_, err := hooks.Before(context.Background(), query, params...)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	assert.Contains(
 		t,
@@ -127,9 +123,7 @@ func TestSQLHooksLoggingArgsNotJSON(t *testing.T) {
 		query,
 		params...,
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	assert.Contains(
 		t,

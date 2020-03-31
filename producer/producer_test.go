@@ -30,6 +30,8 @@ import (
 
 // Test Producer creation with a non accesible Kafka broker
 func TestNewProducerBadBroker(t *testing.T) {
+	const expectedErr = "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
+
 	brokerCfg := broker.Configuration{
 		Address:      "localhost:1234",
 		PublishTopic: "topic",
@@ -37,11 +39,10 @@ func TestNewProducerBadBroker(t *testing.T) {
 	}
 
 	_, err := producer.New(brokerCfg)
-	assert.EqualError(t, err,
-		"kafka: client has run out of available brokers to talk to (Is your cluster reachable?)")
+	assert.EqualError(t, err, expectedErr)
 }
 
-// Test ProduceMessage using a Sarama Mock producer. Asume sending success
+// Test ProduceMessage using a Sarama Mock producer. Assume sending success
 func TestProducerProduceMessage(t *testing.T) {
 	brokerCfg := broker.Configuration{
 		Address:      "localhost:1234",
@@ -51,17 +52,19 @@ func TestProducerProduceMessage(t *testing.T) {
 
 	mockProducer := mocks.NewSyncProducer(t, nil)
 	mockProducer.ExpectSendMessageAndSucceed()
-	producer := producer.KafkaProducer{
+	kafkaProducer := producer.KafkaProducer{
 		Configuration: brokerCfg,
 		Producer:      mockProducer,
 	}
 
-	_, _, err := producer.ProduceMessage("Hello world")
+	_, _, err := kafkaProducer.ProduceMessage("Hello world")
 	helpers.FailOnError(t, err)
 }
 
-// Test ProduceMessage using a Sarama Mock producer. Asume sending fails
+// Test ProduceMessage using a Sarama Mock producer. Assume sending fails
 func TestProducerProduceMessageFails(t *testing.T) {
+	expectedErr := errors.New("unable to send the message")
+
 	brokerCfg := broker.Configuration{
 		Address:      "localhost:1234",
 		PublishTopic: "topic",
@@ -69,14 +72,14 @@ func TestProducerProduceMessageFails(t *testing.T) {
 	}
 
 	mockProducer := mocks.NewSyncProducer(t, nil)
-	expectedErr := errors.New("Unable to send the message")
 	mockProducer.ExpectSendMessageAndFail(expectedErr)
-	producer := producer.KafkaProducer{
+
+	kafkaProducer := producer.KafkaProducer{
 		Configuration: brokerCfg,
 		Producer:      mockProducer,
 	}
 
-	_, _, err := producer.ProduceMessage("Hello world")
+	_, _, err := kafkaProducer.ProduceMessage("Hello world")
 	assert.EqualError(t, err, expectedErr.Error())
 }
 
