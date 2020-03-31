@@ -68,6 +68,7 @@ type RuleContentDirectory map[string]RuleContent
 func readFilesIntoByteArrayPointers(baseDir string, fileMap map[string]*[]byte) error {
 	for name, ptr := range fileMap {
 		var err error
+		// #nosec G304
 		*ptr, err = ioutil.ReadFile(path.Join(baseDir, name))
 		if err != nil {
 			return err
