@@ -95,8 +95,7 @@ func handleOrgIDError(writer http.ResponseWriter, err error) {
 }
 
 func handleClusterNameError(writer http.ResponseWriter, err error) {
-	message := fmt.Sprintf("Cluster name is not provided %v", err.Error())
-	log.Error().Msg(message)
+	log.Error().Msg(err.Error())
 
 	// query parameter 'cluster' can't be found in request, which might be caused by issue in Gorilla mux
 	// (not on client side), but let's assume it won't :)
