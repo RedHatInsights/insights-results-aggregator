@@ -143,7 +143,7 @@ auth_type = "xrh"
 * `auth` turns on or turns authentication
 * `auth_type` set type of auth, it means which header to use for auth `x-rh-identity` or `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
 
-Please note that if `auth` is turned off, not all REST API endpoints will be usable. Whole REST API schema is satisfied only for `auth = true`.
+Please note that if `auth` configuration option is turned off, not all REST API endpoints will be usable. Whole REST API schema is satisfied only for `auth = true`.
 
 ## Local setup
 
