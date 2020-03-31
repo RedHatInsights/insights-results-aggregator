@@ -285,6 +285,7 @@ To run REST API tests use the following command:
 * `golint` as a linter for all Go sources stored in this repository
 * `gocyclo` to report all functions and methods with too high cyclomatic complexity. The cyclomatic complexity of a function is calculated according to the following rules: 1 is the base complexity of a function +1 for each 'if', 'for', 'case', '&&' or '||' Go Report Card warns on functions with cyclomatic complexity > 9
 * `goconst` to find repeated strings that could be replaced by a constant
+* `gosec` to inspect source code for security problems by scanning the Go AST
 * `ineffassign` to detect and print all ineffectual assignments in Go code
 * `errcheck` for checking for all unchecked errors in go programs
 * `shellcheck` to perform static analysis for all shell scripts used in this repository
