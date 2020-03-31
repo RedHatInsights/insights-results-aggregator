@@ -46,7 +46,7 @@ func TestContentParseOKNoContent(t *testing.T) {
 	con, err := content.ParseRuleContentDir("../tests/content/ok_no_content/")
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, 0, len(con.Rules))
+	assert.Empty(t, con.Rules)
 }
 
 // TestContentParseInvalidDir checks how incorrect (non-existing) directory is handled
