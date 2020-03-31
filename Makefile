@@ -41,11 +41,15 @@ goconst: ## Run goconst checker
 	@echo "Running goconst checker"
 	./goconst.sh
 
+gosec: ## Run gosec checker
+	@echo "Running gosec checker"
+	./gosec.sh
+
 abcgo: ## Run ABC metrics checker
 	@echo "Run ABC metrics checker"
 	./abcgo.sh
 
-style: fmt vet lint cyclo shellcheck errcheck goconst ineffassign abcgo ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
+style: fmt vet lint cyclo shellcheck errcheck goconst gosec ineffassign abcgo ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
 
 run: clean build ## Build the project and executes the binary
 	./insights-results-aggregator
