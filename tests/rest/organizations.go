@@ -66,6 +66,7 @@ func contentSizeForOrganizationResponse(orgIDs ...int) int {
 // checkOrganizationsEndpointWithPostfix checks if the end point to return list of organizations responds correctly to HTTP GET command
 func checkOrganizationsEndpointWithPostfix(postfix string) {
 	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations" + postfix)
+	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(200)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)

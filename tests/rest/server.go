@@ -32,7 +32,9 @@ limitations under the License.
 package tests
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 
 	"github.com/verdverm/frisby"
 )
@@ -41,6 +43,8 @@ const (
 	apiURL              = "http://localhost:8080/api/v1/"
 	contentTypeHeader   = "Content-Type"
 	contentLengthHeader = "Content-Length"
+
+	authHeaderName = "x-rh-identity"
 
 	// ContentTypeJSON represents MIME type for JSON format
 	ContentTypeJSON = "application/json; charset=utf-8"
@@ -66,6 +70,18 @@ var unknownOrganizations []int = []int{5, 6, 7, 8}
 // list of improper organization IDs
 var improperOrganizations []int = []int{-1000, -1, 0}
 
+// setAuthHeaderForOrganization set authorization header to request
+func setAuthHeaderForOrganization(f *frisby.Frisby, orgID int) {
+	plainHeader := fmt.Sprintf("{\"identity\": {\"internal\": {\"org_id\": \"%d\"}}}", orgID)
+	encodedHeader := base64.StdEncoding.EncodeToString([]byte(plainHeader))
+	f.SetHeader(authHeaderName, encodedHeader)
+}
+
+// setAuthHeader set authorization header to request for organization 1
+func setAuthHeader(f *frisby.Frisby) {
+	setAuthHeaderForOrganization(f, 1)
+}
+
 // readStatusFromResponse reads and parses status from response body
 func readStatusFromResponse(f *frisby.Frisby) StatusOnlyResponse {
 	response := StatusOnlyResponse{}
@@ -84,6 +100,7 @@ func readStatusFromResponse(f *frisby.Frisby) StatusOnlyResponse {
 // checkRestAPIEntryPoint check if the entry point (usually /api/v1/) responds correctly to HTTP GET command
 func checkRestAPIEntryPoint() {
 	f := frisby.Create("Check the entry point to REST API using HTTP GET method").Get(apiURL)
+	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(200)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -93,6 +110,7 @@ func checkRestAPIEntryPoint() {
 // checkNonExistentEntryPoint check whether non-existing endpoints are handled properly (HTTP code 404 etc.)
 func checkNonExistentEntryPoint() {
 	f := frisby.Create("Check the non-existent entry point to REST API").Get(apiURL + "foobar")
+	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(404)
 	f.ExpectHeader(contentTypeHeader, ContentTypeText)
@@ -104,6 +122,7 @@ func checkWrongEntryPoint() {
 	postfixes := [...]string{"..", "../", "...", "..?", "..?foobar"}
 	for _, postfix := range postfixes {
 		f := frisby.Create("Check the wrong entry point to REST API with postfix '" + postfix + "'").Get(apiURL + postfix)
+		setAuthHeader(f)
 		f.Send()
 		f.ExpectStatus(404)
 		f.ExpectHeader(contentTypeHeader, ContentTypeText)
@@ -171,6 +190,8 @@ func ServerTests() {
 	checkReportEndpointForImproperOrganization()
 	checkReportEndpointWrongMethods()
 	reproducerForIssue384()
+
+	// tests for REST API endpoints for voting about rules
 
 	// tests for OpenAPI specification that is accessible via its endpoint as well
 	checkOpenAPISpecifications()

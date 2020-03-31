@@ -30,6 +30,7 @@ func constructURLForReportForOrgCluster(organizationID string, clusterID string)
 func checkReportEndpointForKnownOrganizationAndKnownCluster() {
 	url := constructURLForReportForOrgCluster("1", knownClusterForOrganization1)
 	f := frisby.Create("Check the end point to return report for existing organization and cluster ID").Get(url)
+	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(200)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -40,6 +41,7 @@ func checkReportEndpointForKnownOrganizationAndKnownCluster() {
 func checkReportEndpointForKnownOrganizationAndUnknownCluster() {
 	url := constructURLForReportForOrgCluster("1", unknownClusterForOrganization1)
 	f := frisby.Create("Check the end point to return report for existing organization and non-existing cluster ID").Get(url)
+	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(404)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -50,6 +52,7 @@ func checkReportEndpointForKnownOrganizationAndUnknownCluster() {
 func checkReportEndpointForUnknownOrganizationAndKnownCluster() {
 	url := constructURLForReportForOrgCluster("100000", knownClusterForOrganization1)
 	f := frisby.Create("Check the end point to return report for non-existing organization and non-existing cluster ID").Get(url)
+	setAuthHeaderForOrganization(f, 100000)
 	f.Send()
 	f.ExpectStatus(404)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -60,6 +63,7 @@ func checkReportEndpointForUnknownOrganizationAndKnownCluster() {
 func checkReportEndpointForUnknownOrganizationAndUnknownCluster() {
 	url := constructURLForReportForOrgCluster("100000", unknownClusterForOrganization1)
 	f := frisby.Create("Check the end point to return report for non-existing organization and non-existing cluster ID").Get(url)
+	setAuthHeaderForOrganization(f, 100000)
 	f.Send()
 	f.ExpectStatus(404)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -70,6 +74,7 @@ func checkReportEndpointForUnknownOrganizationAndUnknownCluster() {
 func reproducerForIssue384() {
 	url := constructURLForReportForOrgCluster("000000000000000000000000000000000000", "1")
 	f := frisby.Create("Reproducer for issue #384 (https://github.com/RedHatInsights/insights-results-aggregator/issues/384)").Get(url)
+	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(400)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -80,6 +85,7 @@ func reproducerForIssue384() {
 func checkReportEndpointForImproperOrganization() {
 	url := constructURLForReportForOrgCluster("foobar", knownClusterForOrganization1)
 	f := frisby.Create("Check the end point to return report for improper organization").Get(url)
+	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(400)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)

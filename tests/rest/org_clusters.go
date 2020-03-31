@@ -32,6 +32,7 @@ func checkClustersEndpointForKnownOrganizations() {
 	for _, knownOrganization := range knownOrganizations {
 		url := constructURLForOrganizationsClusters(knownOrganization)
 		f := frisby.Create("Check the end point to return list of clusters for known organization by HTTP GET method").Get(url)
+		setAuthHeaderForOrganization(f, knownOrganization)
 		f.Send()
 		f.ExpectStatus(200)
 		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -44,6 +45,7 @@ func checkClustersEndpointForUnknownOrganizations() {
 	for _, unknownOrganization := range unknownOrganizations {
 		url := constructURLForOrganizationsClusters(unknownOrganization)
 		f := frisby.Create("Check the end point to return list of clusters for unknown organization by HTTP GET method").Get(url)
+		setAuthHeaderForOrganization(f, unknownOrganization)
 		f.Send()
 		f.ExpectStatus(200)
 		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -56,8 +58,14 @@ func checkClustersEndpointForImproperOrganizations() {
 	for _, improperOrganization := range improperOrganizations {
 		url := constructURLForOrganizationsClusters(improperOrganization)
 		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
+		setAuthHeaderForOrganization(f, improperOrganization)
 		f.Send()
-		f.ExpectStatus(400)
+		if improperOrganization == 0 {
+			f.ExpectStatus(400)
+		} else {
+			// negative values are not unmarshalled properly
+			f.ExpectStatus(403)
+		}
 		f.PrintReport()
 	}
 }
@@ -73,16 +81,14 @@ func checkClustersEndpointWrongMethods() {
 
 // checkClustersEndpointSpecialOrganizationIds is an implementation of several reproducers
 func checkClustersEndpointSpecialOrganizationIds() {
-	const MaxInt = int(^uint(0) >> 1)
-
 	var orgIDs []int = []int{
 		2147483647, // maxint32
 		2147483648, // reproducer for https://github.com/RedHatInsights/insights-results-aggregator/issues/383
-		MaxInt,
 	}
 	for _, orgID := range orgIDs {
 		url := constructURLForOrganizationsClusters(orgID)
 		f := frisby.Create("Check the end point to return list of clusters for organization with special ID by HTTP GET method").Get(url)
+		setAuthHeaderForOrganization(f, orgID)
 		f.Send()
 		f.ExpectStatus(200)
 		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
