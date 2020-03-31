@@ -19,6 +19,8 @@ package consumer_test
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"testing"
 	"time"
 
@@ -39,6 +41,7 @@ const (
 	testTopicName = "topic"
 	// time limit for *some* tests which can stuck in forever loop
 	testCaseTimeLimit = 60 * time.Second
+	saramaLogPrefix   = "[sarama]"
 )
 
 var (
@@ -331,96 +334,47 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 	assert.EqualError(t, err, "organization ID is not whitelisted")
 }
 
-// newConsumerWithMockBroker creates new mock consumer with mock broker
-// don't forget to wrap a calling test to helpers.RunTestWithTimeout,
-// because it can wait for mock broker creation forever
-func newConsumerWithMockBroker(t *testing.T) (storage.Storage, *helpers.MockBroker, consumer.Consumer) {
-	mockStorage := helpers.MustGetMockStorage(t, false)
-	mockBroker := helpers.MustNewMockBroker(t)
-
-	saramaConfig := sarama.NewConfig()
-	saramaConfig.ChannelBufferSize = 1
-	saramaConfig.Version = sarama.V0_10_0_1
-	saramaConfig.Producer.Return.Successes = true
-
-	var (
-		mockConsumer consumer.Consumer
-		err          error
-	)
-
-	for {
-		mockConsumer, err = consumer.NewWithSaramaConfig(broker.Configuration{
-			Address:      mockBroker.Address,
-			Topic:        mockBroker.TopicName,
-			Group:        mockBroker.Group,
-			Enabled:      true,
-			OrgWhitelist: nil,
-		}, mockStorage, saramaConfig, false)
-		// wait for topic to be created
-		if kErr, ok := err.(sarama.KError); ok && kErr == sarama.ErrUnknownTopicOrPartition {
-			time.Sleep(500 * time.Millisecond)
-			continue
-		}
-		helpers.FailOnError(t, err)
-		break
-	}
-
-	assert.NotNil(t, mockConsumer)
-
-	return mockStorage, mockBroker, mockConsumer
-}
-
-// TODO: fix, this test runs out of time
-//func TestKafkaConsumer_New_MockBroker(t *testing.T) {
-//	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-//		mockStorage, mockBroker, mockConsumer := newConsumerWithMockBroker(t)
-//		defer helpers.MustCloseStorage(t, mockStorage)
-//		defer mockBroker.MustClose(t)
-//		defer helpers.MustCloseConsumer(t, mockConsumer)
-//	}, testCaseTimeLimit)
-//}
-
-func TestKafkaConsumer_New_MockBrokerNoTopicError(t *testing.T) {
+func TestKafkaConsumer_New(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		mockStorage := helpers.MustGetMockStorage(t, false)
-		defer helpers.MustCloseStorage(t, mockStorage)
+		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
 
-		// pass empty string instead of topic name
-		mockBroker, err := helpers.NewMockBroker(t, "")
+		mockBroker := sarama.NewMockBroker(t, 0)
+		defer mockBroker.Close()
+
+		mockBroker.SetHandlerByMap(helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
+
+		mockConsumer, err := consumer.New(broker.Configuration{
+			Address:    mockBroker.Addr(),
+			Topic:      testTopicName,
+			Enabled:    true,
+			SaveOffset: true,
+		}, nil)
 		helpers.FailOnError(t, err)
-		defer mockBroker.MustClose(t)
 
-		saramaConfig := sarama.NewConfig()
-		saramaConfig.ChannelBufferSize = 1
-		saramaConfig.Version = sarama.V0_10_0_1
-		saramaConfig.Producer.Return.Successes = true
-
-		mockConsumer, err := consumer.NewWithSaramaConfig(broker.Configuration{
-			Address:      mockBroker.Address,
-			Topic:        mockBroker.TopicName,
-			Group:        mockBroker.Group,
-			Enabled:      true,
-			OrgWhitelist: nil,
-		}, mockStorage, saramaConfig, false)
-		assert.EqualError(
-			t,
-			err,
-			"kafka server: The request attempted to perform an operation on an invalid topic.",
-		)
-		assert.Nil(t, mockConsumer)
+		err = mockConsumer.Close()
+		helpers.FailOnError(t, err)
 	}, testCaseTimeLimit)
 }
 
-// TODO: fix, this test runs out of time very rarely
-//func TestKafkaConsumer_Close_MockBrokerError(t *testing.T) {
-//	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-//		mockStorage, mockBroker, mockConsumer := newConsumerWithMockBroker(t)
-//		defer helpers.MustCloseStorage(t, mockStorage)
-//		defer mockBroker.MustClose(t)
-//		helpers.MustCloseConsumer(t, mockConsumer)
-//
-//		// closing it second time should cause an error
-//		err := mockConsumer.Close()
-//		assert.EqualError(t, err, "kafka: tried to use a client that was closed")
-//	}, testCaseTimeLimit)
-//}
+func TestKafkaConsumer_New_FindCoordinatorRequestError(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
+
+		mockBroker := sarama.NewMockBroker(t, 0)
+		defer mockBroker.Close()
+
+		handlersMap := helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName)
+		handlersMap["FindCoordinatorRequest"] = sarama.NewMockFindCoordinatorResponse(t).
+			SetError(sarama.CoordinatorGroup, "", sarama.ErrUnknown)
+
+		mockBroker.SetHandlerByMap(handlersMap)
+
+		_, err := consumer.New(broker.Configuration{
+			Address:    mockBroker.Addr(),
+			Topic:      testTopicName,
+			Enabled:    true,
+			SaveOffset: true,
+		}, nil)
+		assert.EqualError(t, err, "kafka server: Unexpected (unknown?) server error.")
+	}, testCaseTimeLimit)
+}
