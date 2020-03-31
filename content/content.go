@@ -20,6 +20,7 @@ package content
 import (
 	"io/ioutil"
 	"path"
+	"path/filepath"
 
 	"github.com/go-yaml/yaml"
 )
@@ -78,8 +79,7 @@ type RuleContentDirectory struct {
 func readFilesIntoByteArrayPointers(baseDir string, fileMap map[string]*[]byte) error {
 	for name, ptr := range fileMap {
 		var err error
-		// #nosec G304
-		*ptr, err = ioutil.ReadFile(path.Join(baseDir, name))
+		*ptr, err = ioutil.ReadFile(filepath.Clean(path.Join(baseDir, name)))
 		if err != nil {
 			return err
 		}
@@ -156,7 +156,7 @@ func parseRuleContent(ruleDirPath string) (RuleContent, error) {
 // parseGlobalContentConfig reads the configuration file used to store
 // metadata used by all rule content, such as impact dictionary.
 func parseGlobalContentConfig(configPath string) (GlobalRuleConfig, error) {
-	configBytes, err := ioutil.ReadFile(configPath)
+	configBytes, err := ioutil.ReadFile(filepath.Clean(configPath))
 	if err != nil {
 		return GlobalRuleConfig{}, err
 	}
