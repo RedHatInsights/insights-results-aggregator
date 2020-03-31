@@ -28,6 +28,7 @@ import (
 	main "github.com/RedHatInsights/insights-results-aggregator"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -40,9 +41,7 @@ func mustLoadConfiguration(path string) {
 
 func removeFile(t *testing.T, filename string) {
 	err := os.Remove(filename)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 }
 
 // TestLoadConfiguration loads a configuration file for testing
@@ -54,22 +53,21 @@ func TestLoadConfiguration(t *testing.T) {
 
 // TestLoadConfigurationEnvVariable tests loading the config. file for testing from an environment variable
 func TestLoadConfigurationEnvVariable(t *testing.T) {
-	err := os.Setenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "tests/config1")
-	if err != nil {
-		t.Fatal(err)
-	}
+	os.Clearenv()
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "tests/config1")
 
 	mustLoadConfiguration("foobar")
 }
 
 // TestLoadingConfigurationFailure tests loading a non-existent configuration file
 func TestLoadingConfigurationFailure(t *testing.T) {
+	os.Clearenv()
+
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "non existing file")
 
 	err := main.LoadConfiguration("")
-	if err == nil {
-		t.Fatalf("error expected, got %v", err)
-	}
+	assert.Contains(t, err.Error(), `fatal error config file: Config File "non existing file" Not Found in`)
 }
 
 // TestLoadBrokerConfiguration tests loading the broker configuration sub-tree
@@ -176,9 +174,7 @@ func TestLoadWhitelistFromCSVExtraParam(t *testing.T) {
 `
 	r := strings.NewReader(extraParamCSV)
 	_, err := main.LoadWhitelistFromCSV(r)
-	if err == nil {
-		t.Errorf("Invalid CSV got loaded")
-	}
+	assert.EqualError(t, err, "error reading CSV file: record on line 2: wrong number of fields")
 }
 
 // TestLoadWhitelistFromCSVNonInt tests non-integer ID in CSV
@@ -189,9 +185,7 @@ str
 `
 	r := strings.NewReader(nonIntIDCSV)
 	_, err := main.LoadWhitelistFromCSV(r)
-	if err == nil {
-		t.Errorf("Non-integer organization ID got parsed")
-	}
+	assert.EqualError(t, err, "organization ID on line 2 in whitelist CSV is not numerical. Found value: str")
 }
 
 func TestLoadConfigurationFromFile(t *testing.T) {
@@ -226,9 +220,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 	`
 
 	tmpFilename, err := GetTmpConfigFile(config)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	defer removeFile(t, tmpFilename)
 
@@ -295,9 +287,7 @@ func GetTmpConfigFile(configData string) (string, error) {
 
 func mustSetEnv(t *testing.T, key, val string) {
 	err := os.Setenv(key, val)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 }
 
 func TestLoadConfigurationFromEnv(t *testing.T) {
