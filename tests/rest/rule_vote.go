@@ -131,20 +131,16 @@ func checkItemNotFound(url string, message string) {
 
 // reproducerForIssue385 checks whether the issue https://github.com/RedHatInsights/insights-results-aggregator/issues/385 has been fixed
 func reproducerForIssue385() {
-	url := constructURLVoteForRule("000000000000000000000000000000000000", 0)
-	f := frisby.Create("Reproducer for issue #385 (https://github.com/RedHatInsights/insights-results-aggregator/issues/385)").Put(url)
-	setAuthHeader(f)
-	f.Send()
-	f.ExpectStatus(400)
-	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+	const message = "Reproducer for issue #385 (https://github.com/RedHatInsights/insights-results-aggregator/issues/385)"
+	// vote
+	url := constructURLVoteForRule(improperClusterID, anyRule)
+	checkInvalidUUIDFormat(url, message)
 
-	statusResponse := readStatusFromResponse(f)
-	if statusResponse.Status == "ok" {
-		f.AddError(fmt.Sprintf("Expected error status, but got '%s' instead", statusResponse.Status))
-	}
-	if !strings.Contains(statusResponse.Status, "Error: 'invalid UUID format'") {
-		f.AddError("Unexpected error reported")
-	}
+	// unvote
+	url = constructURLUnvoteForRule(improperClusterID, anyRule)
+	checkInvalidUUIDFormat(url, message)
 
-	f.PrintReport()
+	// reset vote
+	url = constructURLResetVoteForRule(improperClusterID, anyRule)
+	checkInvalidUUIDFormat(url, message)
 }
