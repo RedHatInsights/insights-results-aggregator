@@ -155,6 +155,7 @@ func TestLoadOrganizationWhitelist(t *testing.T) {
 		types.OrgID(2),
 		types.OrgID(3),
 		types.OrgID(11789772),
+		types.OrgID(656485),
 	)
 
 	orgWhitelist := main.GetOrganizationWhitelist()
@@ -206,6 +207,8 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		api_prefix = "/api/v1/"
 		api_spec_file = "openapi.json"
 		debug = true
+		use_https = false
+		enable_cors = true
 
 		[storage]
 		db_driver = "sqlite3"
@@ -241,6 +244,8 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		APISpecFile: "openapi.json",
 		AuthType:    "xrh",
 		Debug:       true,
+		UseHTTPS:    false,
+		EnableCORS:  true,
 	}, main.GetServerConfiguration())
 
 	orgWhiteList := main.GetOrganizationWhitelist()
@@ -252,6 +257,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 			types.OrgID(2),
 			types.OrgID(3),
 			types.OrgID(11789772),
+			types.OrgID(656485),
 		)),
 		"organization_white_list is wrong",
 	)
@@ -292,6 +298,58 @@ func mustSetEnv(t *testing.T, key, val string) {
 }
 
 func TestLoadConfigurationFromEnv(t *testing.T) {
+	setEnvVariables(t)
+
+	mustLoadConfiguration("/non_existing_path")
+
+	brokerCfg := main.GetBrokerConfiguration()
+
+	assert.Equal(t, "localhost:9093", brokerCfg.Address)
+	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
+	assert.Equal(t, "aggregator", brokerCfg.Group)
+	assert.Equal(t, true, brokerCfg.Enabled)
+
+	assert.Equal(t, server.Configuration{
+		Address:     ":8080",
+		APIPrefix:   "/api/v1/",
+		APISpecFile: "openapi.json",
+		AuthType:    "xrh",
+		Debug:       true,
+		UseHTTPS:    false,
+		EnableCORS:  true,
+	}, main.GetServerConfiguration())
+
+	orgWhiteList := main.GetOrganizationWhitelist()
+
+	assert.True(
+		t,
+		orgWhiteList.Equal(mapset.NewSetWith(
+			types.OrgID(1),
+			types.OrgID(2),
+			types.OrgID(3),
+			types.OrgID(11789772),
+			types.OrgID(656485),
+		)),
+		"organization_white_list is wrong",
+	)
+
+	assert.Equal(t, storage.Configuration{
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
+		LogSQLQueries:    true,
+		PGUsername:       "user",
+		PGPassword:       "password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "params",
+	}, main.GetStorageConfiguration())
+
+	contentPath := main.GetContentPathConfiguration()
+	assert.Equal(t, contentPath, "/rules-content")
+}
+
+func setEnvVariables(t *testing.T) {
 	os.Clearenv()
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS", "localhost:9093")
@@ -317,49 +375,4 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
-
-	mustLoadConfiguration("/non_existing_path")
-
-	brokerCfg := main.GetBrokerConfiguration()
-
-	assert.Equal(t, "localhost:9093", brokerCfg.Address)
-	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
-	assert.Equal(t, "aggregator", brokerCfg.Group)
-	assert.Equal(t, true, brokerCfg.Enabled)
-
-	assert.Equal(t, server.Configuration{
-		Address:     ":8080",
-		APIPrefix:   "/api/v1/",
-		APISpecFile: "openapi.json",
-		AuthType:    "xrh",
-		Debug:       true,
-	}, main.GetServerConfiguration())
-
-	orgWhiteList := main.GetOrganizationWhitelist()
-
-	assert.True(
-		t,
-		orgWhiteList.Equal(mapset.NewSetWith(
-			types.OrgID(1),
-			types.OrgID(2),
-			types.OrgID(3),
-			types.OrgID(11789772),
-		)),
-		"organization_white_list is wrong",
-	)
-
-	assert.Equal(t, storage.Configuration{
-		Driver:           "sqlite3",
-		SQLiteDataSource: ":memory:",
-		LogSQLQueries:    true,
-		PGUsername:       "user",
-		PGPassword:       "password",
-		PGHost:           "localhost",
-		PGPort:           5432,
-		PGDBName:         "aggregator",
-		PGParams:         "params",
-	}, main.GetStorageConfiguration())
-
-	contentPath := main.GetContentPathConfiguration()
-	assert.Equal(t, contentPath, "/rules-content")
 }

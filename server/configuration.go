@@ -24,4 +24,6 @@ type Configuration struct {
 	Debug       bool   `mapstructure:"debug" toml:"debug"`
 	Auth        bool   `mapstructure:"auth" toml:"auth"`
 	AuthType    string `mapstructure:"auth_type" toml:"auth_type"`
+	UseHTTPS    bool   `mapstructure:"use_https" toml:"use_https"`
+	EnableCORS  bool   `mapstructure:"enable_cors" toml:"enable_cors"`
 }
