@@ -29,6 +29,8 @@ const (
 
 	anyRule   = "0" // we don't care
 	knownRule = "foo"
+
+	unexpectedErrorStatusMessage = "Expected error status, but got '%s' instead"
 )
 
 var knownClustersForOrganization1 []string = []string{
@@ -102,7 +104,7 @@ func checkInvalidUUIDFormat(url string, message string) {
 
 	statusResponse := readStatusFromResponse(f)
 	if statusResponse.Status == "ok" {
-		f.AddError(fmt.Sprintf("Expected error status, but got '%s' instead", statusResponse.Status))
+		f.AddError(fmt.Sprintf(unexpectedErrorStatusMessage, statusResponse.Status))
 	}
 	if !strings.Contains(statusResponse.Status, "Error: 'invalid UUID ") {
 		f.AddError(fmt.Sprintf("Unexpected error reported: %v", statusResponse.Status))
@@ -120,7 +122,7 @@ func checkItemNotFound(url string, message string) {
 
 	statusResponse := readStatusFromResponse(f)
 	if statusResponse.Status == "ok" {
-		f.AddError(fmt.Sprintf("Expected error status, but got '%s' instead", statusResponse.Status))
+		f.AddError(fmt.Sprintf(unexpectedErrorStatusMessage, statusResponse.Status))
 	}
 	if !strings.Contains(statusResponse.Status, "was not found in the storage") {
 		f.AddError(fmt.Sprintf("Unexpected error reported: %v", statusResponse.Status))
