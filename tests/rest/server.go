@@ -192,6 +192,24 @@ func ServerTests() {
 	reproducerForIssue384()
 
 	// tests for REST API endpoints for voting about rules
+	checkLikeKnownRuleForKnownCluster()
+	checkDislikeKnownRuleForKnownCluster()
+	checkResetKnownRuleForKnownCluster()
+	checkLikeKnownRuleForUnknownCluster()
+	checkDislikeKnownRuleForUnknownCluster()
+	checkResetKnownRuleForUnknownCluster()
+	checkLikeKnownRuleForImproperCluster()
+	checkDislikeKnownRuleForImproperCluster()
+	checkResetKnownRuleForImproperCluster()
+	checkLikeUnknownRuleForKnownCluster()
+	checkDislikeUnknownRuleForKnownCluster()
+	checkResetUnknownRuleForKnownCluster()
+	checkLikeUnknownRuleForUnknownCluster()
+	checkDislikeUnknownRuleForUnknownCluster()
+	checkResetUnknownRuleForUnknownCluster()
+	checkLikeUnknownRuleForImproperCluster()
+	checkDislikeUnknownRuleForImproperCluster()
+	checkResetUnknownRuleForImproperCluster()
 	reproducerForIssue385()
 
 	// tests for OpenAPI specification that is accessible via its endpoint as well
