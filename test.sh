@@ -86,9 +86,11 @@ function start_service() {
 function test_rest_api() {
 	start_service
 	# Retry populating the database with mock data N times.
+        # Wait 2 seconds between the retry starts to settle down
 	# Wait 1 second between attempts.
 	# Without this, the DB could be locked because
 	# the migrations have not yet finished.
+	sleep 2
 	for i in {1..5}
 	do
 		populate_db_with_mock_data 2> /dev/null && break || sleep 1
