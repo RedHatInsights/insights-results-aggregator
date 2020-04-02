@@ -43,10 +43,23 @@ orgID = sys.argv[1]
 clusterName = sys.argv[2]
 lastChecked = datetime.datetime.utcnow().isoformat() + "Z"
 
+def remove_internal_rules(data, key, selector):
+    if "reports" in data:
+        reports = data[key]
+        new = []
+        for report in reports:
+            if not report[selector].startswith("ccx_rules_ocp.internal."):
+                print("adding", report[selector])
+                new.append(report)
+        data[key] = new
+
 for filename in files:
     if filename.startswith("s_") and filename.endswith(".json"):
         with open(filename) as fin:
             data = json.load(fin)
+            remove_internal_rules(data, "reports", "component")
+            remove_internal_rules(data, "pass", "component")
+            remove_internal_rules(data, "skips", "rule_fqdn") # oh my...
 
             outfilename = "r_" + filename[2:]
             report = {}
