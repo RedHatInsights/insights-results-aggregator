@@ -20,19 +20,27 @@ package content
 import (
 	"io/ioutil"
 	"path"
+	"path/filepath"
 
 	"github.com/go-yaml/yaml"
 )
 
+// GlobalRuleConfig represents the file that contains
+// metadata globally applicable to any/all rule content.
+type GlobalRuleConfig struct {
+	Impact map[string]int `yaml:"impact"`
+}
+
 // ErrorKeyMetadata is a Go representation of the `metadata.yaml`
 // file inside of an error key content directory.
 type ErrorKeyMetadata struct {
-	Condition   string `yaml:"condition"`
-	Description string `yaml:"description"`
-	Impact      int    `yaml:"impact"`
-	Likelihood  int    `yaml:"likelihood"`
-	PublishDate string `yaml:"publish_date"`
-	Status      string `yaml:"status"`
+	Condition   string   `yaml:"condition"`
+	Description string   `yaml:"description"`
+	Impact      string   `yaml:"impact"`
+	Likelihood  int      `yaml:"likelihood"`
+	PublishDate string   `yaml:"publish_date"`
+	Status      string   `yaml:"status"`
+	Tags        []string `yaml:"tags"`
 }
 
 // RuleErrorKeyContent wraps content of a single error key.
@@ -61,14 +69,17 @@ type RuleContent struct {
 }
 
 // RuleContentDirectory contains content for all available rules in a directory.
-type RuleContentDirectory map[string]RuleContent
+type RuleContentDirectory struct {
+	Config GlobalRuleConfig
+	Rules  map[string]RuleContent
+}
 
 // readFilesIntoByteArrayPointers reads the contents of the specified files
 // in the base directory and saves them via the specified byte slice pointers.
 func readFilesIntoByteArrayPointers(baseDir string, fileMap map[string]*[]byte) error {
 	for name, ptr := range fileMap {
 		var err error
-		*ptr, err = ioutil.ReadFile(path.Join(baseDir, name))
+		*ptr, err = ioutil.ReadFile(filepath.Clean(path.Join(baseDir, name)))
 		if err != nil {
 			return err
 		}
@@ -142,24 +153,66 @@ func parseRuleContent(ruleDirPath string) (RuleContent, error) {
 	return ruleContent, nil
 }
 
-// ParseRuleContentDir finds all rule content in a directory and parses it.
-func ParseRuleContentDir(dirPath string) (RuleContentDirectory, error) {
-	entries, err := ioutil.ReadDir(dirPath)
+// parseGlobalContentConfig reads the configuration file used to store
+// metadata used by all rule content, such as impact dictionary.
+func parseGlobalContentConfig(configPath string) (GlobalRuleConfig, error) {
+	configBytes, err := ioutil.ReadFile(filepath.Clean(configPath))
 	if err != nil {
-		return RuleContentDirectory{}, err
+		return GlobalRuleConfig{}, err
 	}
 
-	contentDir := RuleContentDirectory{}
+	conf := GlobalRuleConfig{}
+	err = yaml.Unmarshal(configBytes, &conf)
+	return conf, err
+}
+
+// parseRulesInDir finds all rules and their content in the specified
+// directory and stores the content in the provided map.
+func parseRulesInDir(dirPath string, contentMap *map[string]RuleContent) error {
+	entries, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		return err
+	}
 
 	for _, e := range entries {
 		if e.IsDir() {
 			name := e.Name()
 			ruleContent, err := parseRuleContent(path.Join(dirPath, name))
 			if err != nil {
-				return RuleContentDirectory{}, err
+				return err
 			}
 
-			contentDir[name] = ruleContent
+			(*contentMap)[name] = ruleContent
+		}
+	}
+
+	return nil
+}
+
+// ParseRuleContentDir finds all rule content in a directory and parses it.
+func ParseRuleContentDir(contentDirPath string) (RuleContentDirectory, error) {
+	globalConfig, err := parseGlobalContentConfig(path.Join(contentDirPath, "config.yaml"))
+	if err != nil {
+		return RuleContentDirectory{}, err
+	}
+
+	contentDir := RuleContentDirectory{
+		Config: globalConfig,
+		Rules:  map[string]RuleContent{},
+	}
+
+	externalContentDir := path.Join(contentDirPath, "external")
+	externalEntries, err := ioutil.ReadDir(externalContentDir)
+	if err != nil {
+		return contentDir, err
+	}
+
+	for _, e := range externalEntries {
+		if e.IsDir() {
+			subdirPath := path.Join(externalContentDir, e.Name())
+			if err := parseRulesInDir(subdirPath, &contentDir.Rules); err != nil {
+				return contentDir, err
+			}
 		}
 	}
 

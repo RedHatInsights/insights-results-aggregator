@@ -32,12 +32,19 @@ limitations under the License.
 package tests
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+
 	"github.com/verdverm/frisby"
 )
 
 const (
-	apiURL            = "http://localhost:8080/api/v1/"
-	contentTypeHeader = "Content-Type"
+	apiURL              = "http://localhost:8080/api/v1/"
+	contentTypeHeader   = "Content-Type"
+	contentLengthHeader = "Content-Length"
+
+	authHeaderName = "x-rh-identity"
 
 	// ContentTypeJSON represents MIME type for JSON format
 	ContentTypeJSON = "application/json; charset=utf-8"
@@ -49,6 +56,11 @@ const (
 	unknownClusterForOrganization1 = "00000000-0000-0000-0000-000000000001"
 )
 
+// StatusOnlyResponse represents response containing just a status
+type StatusOnlyResponse struct {
+	Status string `json:"status"`
+}
+
 // list of known organizations that are stored in test database
 var knownOrganizations []int = []int{1, 2, 3, 4}
 
@@ -58,9 +70,37 @@ var unknownOrganizations []int = []int{5, 6, 7, 8}
 // list of improper organization IDs
 var improperOrganizations []int = []int{-1000, -1, 0}
 
+// setAuthHeaderForOrganization set authorization header to request
+func setAuthHeaderForOrganization(f *frisby.Frisby, orgID int) {
+	plainHeader := fmt.Sprintf("{\"identity\": {\"internal\": {\"org_id\": \"%d\"}}}", orgID)
+	encodedHeader := base64.StdEncoding.EncodeToString([]byte(plainHeader))
+	f.SetHeader(authHeaderName, encodedHeader)
+}
+
+// setAuthHeader set authorization header to request for organization 1
+func setAuthHeader(f *frisby.Frisby) {
+	setAuthHeaderForOrganization(f, 1)
+}
+
+// readStatusFromResponse reads and parses status from response body
+func readStatusFromResponse(f *frisby.Frisby) StatusOnlyResponse {
+	response := StatusOnlyResponse{}
+	text, err := f.Resp.Content()
+	if err != nil {
+		f.AddError(err.Error())
+	} else {
+		err := json.Unmarshal(text, &response)
+		if err != nil {
+			f.AddError(err.Error())
+		}
+	}
+	return response
+}
+
 // checkRestAPIEntryPoint check if the entry point (usually /api/v1/) responds correctly to HTTP GET command
 func checkRestAPIEntryPoint() {
 	f := frisby.Create("Check the entry point to REST API using HTTP GET method").Get(apiURL)
+	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(200)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
@@ -70,6 +110,7 @@ func checkRestAPIEntryPoint() {
 // checkNonExistentEntryPoint check whether non-existing endpoints are handled properly (HTTP code 404 etc.)
 func checkNonExistentEntryPoint() {
 	f := frisby.Create("Check the non-existent entry point to REST API").Get(apiURL + "foobar")
+	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(404)
 	f.ExpectHeader(contentTypeHeader, ContentTypeText)
@@ -81,6 +122,7 @@ func checkWrongEntryPoint() {
 	postfixes := [...]string{"..", "../", "...", "..?", "..?foobar"}
 	for _, postfix := range postfixes {
 		f := frisby.Create("Check the wrong entry point to REST API with postfix '" + postfix + "'").Get(apiURL + postfix)
+		setAuthHeader(f)
 		f.Send()
 		f.ExpectStatus(404)
 		f.ExpectHeader(contentTypeHeader, ContentTypeText)
@@ -147,6 +189,28 @@ func ServerTests() {
 	checkReportEndpointForUnknownOrganizationAndUnknownCluster()
 	checkReportEndpointForImproperOrganization()
 	checkReportEndpointWrongMethods()
+	reproducerForIssue384()
+
+	// tests for REST API endpoints for voting about rules
+	checkLikeKnownRuleForKnownCluster()
+	checkDislikeKnownRuleForKnownCluster()
+	checkResetKnownRuleForKnownCluster()
+	checkLikeKnownRuleForUnknownCluster()
+	checkDislikeKnownRuleForUnknownCluster()
+	checkResetKnownRuleForUnknownCluster()
+	checkLikeKnownRuleForImproperCluster()
+	checkDislikeKnownRuleForImproperCluster()
+	checkResetKnownRuleForImproperCluster()
+	checkLikeUnknownRuleForKnownCluster()
+	checkDislikeUnknownRuleForKnownCluster()
+	checkResetUnknownRuleForKnownCluster()
+	checkLikeUnknownRuleForUnknownCluster()
+	checkDislikeUnknownRuleForUnknownCluster()
+	checkResetUnknownRuleForUnknownCluster()
+	checkLikeUnknownRuleForImproperCluster()
+	checkDislikeUnknownRuleForImproperCluster()
+	checkResetUnknownRuleForImproperCluster()
+	reproducerForIssue385()
 
 	// tests for OpenAPI specification that is accessible via its endpoint as well
 	checkOpenAPISpecifications()

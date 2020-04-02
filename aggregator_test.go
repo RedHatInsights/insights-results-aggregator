@@ -23,12 +23,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	main "github.com/RedHatInsights/insights-results-aggregator"
-	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
@@ -71,13 +71,17 @@ func TestStartService(t *testing.T) {
 }
 
 func TestStartServiceWithMockBroker(t *testing.T) {
+	const topicName = "topic"
+
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		mockBroker := helpers.MustNewMockBroker(t)
-		defer mockBroker.MustClose(t)
+		mockBroker := sarama.NewMockBroker(t, 0)
+		defer mockBroker.Close()
+
+		mockBroker.SetHandlerByMap(helpers.GetHandlersMapForMockConsumer(t, mockBroker, topicName))
 
 		setEnvSettings(t, map[string]string{
-			"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": mockBroker.Address,
-			"INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC":   mockBroker.TopicName,
+			"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": mockBroker.Addr(),
+			"INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC":   topicName,
 			"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
 
 			"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       ":8080",
@@ -90,8 +94,6 @@ func TestStartServiceWithMockBroker(t *testing.T) {
 
 			"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
 		})
-
-		consumer.DefaultSaramaConfig = mockBroker.GetSaramaConfig()
 
 		go func() {
 			exitCode := main.StartService()
@@ -111,15 +113,10 @@ func TestStartService_DBError(t *testing.T) {
 		buf := new(bytes.Buffer)
 		log.Logger = zerolog.New(buf)
 
-		mockBroker := helpers.MustNewMockBroker(t)
-		defer mockBroker.MustClose(t)
-
 		setEnvSettings(t, map[string]string{
 			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
 			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
 		})
-
-		consumer.DefaultSaramaConfig = mockBroker.GetSaramaConfig()
 
 		exitCode := main.StartService()
 		assert.Equal(t, main.ExitStatusPrepareDbError, exitCode)

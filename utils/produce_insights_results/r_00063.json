@@ -1,0 +1,139 @@
+{
+    "OrgID": 11789772,
+    "ClusterName": "5d5892d3-1f74-4ccf-91af-548dfc9767aa",
+    "LastChecked": "2020-04-02T09:00:05.268294Z",
+    "Report": {
+        "system": {
+            "metadata": {},
+            "hostname": null
+        },
+        "reports": [
+            {
+                "rule_id": "nodes_requirements_check|NODES_MINIMUM_REQUIREMENTS_NOT_MET",
+                "component": "ccx_rules_ocp.external.rules.nodes_requirements_check.report",
+                "type": "rule",
+                "key": "NODES_MINIMUM_REQUIREMENTS_NOT_MET",
+                "details": {
+                    "nodes": [
+                        {
+                            "name": "masterY",
+                            "role": "master",
+                            "memory": 8.16,
+                            "memory_req": 16
+                        },
+                        {
+                            "name": "masterA",
+                            "role": "master",
+                            "memory": 8.16,
+                            "memory_req": 16
+                        },
+                        {
+                            "name": "masterZ",
+                            "role": "master",
+                            "memory": 8.16,
+                            "memory_req": 16
+                        }
+                    ],
+                    "link": "https://docs.openshift.com/container-platform/4.1/installing/installing_bare_metal/installing-bare-metal.html#minimum-resource-requirements_installing-bare-metal",
+                    "type": "rule",
+                    "error_key": "NODES_MINIMUM_REQUIREMENTS_NOT_MET"
+                },
+                "tags": [],
+                "links": {
+                    "docs": [
+                        "https://docs.openshift.com/container-platform/4.1/installing/installing_bare_metal/installing-bare-metal.html#minimum-resource-requirements_installing-bare-metal"
+                    ]
+                }
+            }
+        ],
+        "fingerprints": [],
+        "skips": [
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.check_ocs_version.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.OperatorsOcsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.check_pods_scc.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.PodsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.operator_phase_check.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.OperatorsOcsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.pvc_phase_check.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.PersistentVolumeClaimsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.ceph_check_mon_clock_skew.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.ocs.ceph_check_mon_clock_skew.get_mon_reporting_clock_skew'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.bug_rules.bug_1766907.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.models.proxy.Proxy'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.rules.cluster_wide_proxy_auth_check.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.external.rules.cluster_wide_proxy_auth_check.cluster_wide_proxy'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.bug_rules.bug_1798049.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.utils.affected_version.ensure_is_affected_condition.<locals>.version_condition'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.bug_rules.bug_1801300.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather.DeploymentsMG'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.bug_rules.bug_1802248.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather.DeploymentsMG'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.rules.image_registry_pv_no_access.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.common.conditions.image_registry.DegradedImageRegistryOperator', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPod', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPersistentVolumeClaim'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.rules.image_registry_pv_low_capacity.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.common.conditions.image_registry.DegradedImageRegistryOperator', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPod', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPersistentVolumeClaim'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.rules.image_registry_no_volume_set_check.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.common.conditions.image_registry.DegradedImageRegistryOperator', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPod', 'ccx_rules_ocp.common.conditions.image_registry.isImageRegistryPodEmptyDirVolume', 'ccx_rules_ocp.common.conditions.image_registry.isImageRegistryPodPersistentVolume'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.rules.image_registry_pv_not_bound.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.common.conditions.image_registry.DegradedImageRegistryOperator', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPod', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPersistentVolumeClaim'] Any: ",
+                "type": "skip"
+            }
+        ],
+        "info": [],
+        "pass": []
+    }
+}

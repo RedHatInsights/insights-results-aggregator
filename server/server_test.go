@@ -17,6 +17,7 @@ limitations under the License.
 package server_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -26,14 +27,14 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-
-	"github.com/RedHatInsights/insights-results-aggregator/storage"
-
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/stretchr/testify/assert"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 )
 
 var config = server.Configuration{
@@ -42,6 +43,8 @@ var config = server.Configuration{
 	APISpecFile: "openapi.json",
 	Debug:       true,
 	Auth:        false,
+	UseHTTPS:    false,
+	EnableCORS:  true,
 }
 
 func checkResponseCode(t *testing.T, expected, actual int) {
@@ -56,6 +59,28 @@ func TestMakeURLToEndpoint(t *testing.T) {
 		"api/prefix/report/-55/cluster_id",
 		server.MakeURLToEndpoint("api/prefix/", server.ReportEndpoint, -55, "cluster_id"),
 	)
+}
+
+func TestAddCORSHeaders(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, "{}", time.Now())
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodOptions,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Headers: map[string]string{
+			"Access-Control-Allow-Origin":      "*",
+			"Access-Control-Allow-Methods":     "POST, GET, OPTIONS, PUT, DELETE",
+			"Access-Control-Allow-Headers":     "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
+			"Access-Control-Allow-Credentials": "true",
+		},
+	})
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
@@ -434,6 +459,9 @@ func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
 }
 
 func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
+	buf := new(bytes.Buffer)
+	log.Logger = zerolog.New(buf)
+
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
@@ -442,6 +470,8 @@ func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"}`,
 	})
+
+	assert.Contains(t, buf.String(), "invalid cluster name: 'aaaa'. Error: invalid UUID length: 4")
 }
 
 func TestRuleFeedbackErrorBadRuleID(t *testing.T) {

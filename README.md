@@ -54,6 +54,42 @@ CREATE TABLE report (
 )
 ```
 
+### Tables rule and rule_error_key
+
+These tables represent the content for Insights rules to be displayed by OCM.
+The table `rule` represents more general information about the rule, whereas the `rule_error_key`
+contains information about the specific type of error which occured. The combination of these two create a unique rule.
+Very trivialized example could be:
+- rule "REQUIREMENTS_CHECK"
+    - error_key "REQUIREMENTS_CHECK_LOW_MEMORY"
+    - error_key "REQUIREMENTS_CHECK_MISSING_SYSTEM_PACKAGE"
+
+```sql
+CREATE TABLE rule (
+    module        VARCHAR PRIMARY KEY,
+    name          VARCHAR NOT NULL,
+    summary       VARCHAR NOT NULL,
+    reason        VARCHAR NOT NULL,
+    resolution    VARCHAR NOT NULL,
+    more_info     VARCHAR NOT NULL
+)
+```
+
+```sql
+CREATE TABLE rule_error_key (
+    error_key     VARCHAR NOT NULL,
+    rule_module   VARCHAR NOT NULL REFERENCES rule(module),
+    condition     VARCHAR NOT NULL,
+    description   VARCHAR NOT NULL,
+    impact        INTEGER NOT NULL,
+    likelihood    INTEGER NOT NULL,
+    publish_date  TIMESTAMP NOT NULL,
+    active        BOOLEAN NOT NULL,
+    generic       VARCHAR NOT NULL,
+    PRIMARY KEY(error_key, rule_module)
+)
+```
+
 #### Table cluster_rule_user_feedback
 
 ```sql
@@ -63,14 +99,20 @@ CREATE TABLE report (
 -- -1 is dislike
 CREATE TABLE cluster_rule_user_feedback (
     cluster_id VARCHAR NOT NULL,
-    rule_id INTEGER  NOT NULL,
+    rule_id VARCHAR NOT NULL,
     user_id VARCHAR NOT NULL,
+    message VARCHAR NOT NULL,
     user_vote SMALLINT NOT NULL,
     added_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    message VARCHAR NOT NULL,
 
-    PRIMARY KEY(cluster_id, rule_id, user_id)
+    PRIMARY KEY(cluster_id, rule_id, user_id),
+    FOREIGN KEY (cluster_id)
+        REFERENCES report(cluster)
+        ON DELETE CASCADE,
+    FOREIGN KEY (rule_id)
+        REFERENCES rule(module)
+        ON DELETE CASCADE
 )
 ```
 
@@ -134,6 +176,8 @@ api_spec_file = "openapi.json"
 debug = true
 auth = true
 auth_type = "xrh"
+use_https = true
+enable_cors = true
 ```
 
 * `address` is host and port which server should listen to
@@ -142,6 +186,10 @@ auth_type = "xrh"
 * `debug` is developer mode that enables some special API endpoints not used on production
 * `auth` turns on or turns authentication
 * `auth_type` set type of auth, it means which header to use for auth `x-rh-identity` or `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
+* `use_https` is option to turn on TLS server
+* `enable_cors` is option to turn on CORS header, that allows to connect from different hosts (**don't use it in production**)
+
+Please note that if `auth` configuration option is turned off, not all REST API endpoints will be usable. Whole REST API schema is satisfied only for `auth = true`.
 
 ## Local setup
 
@@ -176,6 +224,27 @@ or you can use integration tests suite. More details are [here](https://gitlab.c
 ### Kafka producer
 
 It is possible to use the script `produce_insights_results` from `utils` to produce several Insights results into Kafka topic. Its dependency is Kafkacat that needs to be installed on the same machine. You can find installation instructions [on this page](https://github.com/edenhill/kafkacat).
+
+
+### Rules content
+
+The generated cluster reports from Insights results contain three lists of rules that were either __skipped__ (because of missing requirements, etc.), __passed__ (the rule got executed but no issue was found), or __hit__ (the rule got executed and found the issue it was looking for) by the cluster, where each rule is represented as a dictionary containing identifying information about the rule itself.
+
+The __hit__ rules are the rules that the customer is interested in and therefore the information about them (their __content__) needs to be displayed in OCM. The content for the rules is present in another repository, alongside the actual rule implementations, which is primarily maintained by the support-facing team.
+For that reason, the `insights-results-aggregator` is setup in a way, that the content we're interested in is copied to the Docker image from the repository during image build and we have a push webhook on master branch set up in that repository, signalling our app to be rebuilt.
+
+This content is then processed upon application start-up, correctly parsed by the package `content` and saved into the database (see DB structure).
+
+When a request for a cluster report comes from OCM, the report is parsed (TODO: parse reports only once when consuming them) and content for all the hit rules is returned.
+
+##### Local environment with rules content
+The rules content parser is configured by default to expect the content in a root directory `/rules-content`.
+This can be changed either by an environment variable `INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH` or by modifying the config file entry:
+```
+[content]
+path = "/rules-content"
+```
+To get the latest rules content locally, you can `make rules_content`, which just runs the script `update_rules_content.sh` mimicking the Dockerfile behavior (NOTE: you need to be in RH VPN to be able to access that repository, but it is not private). The script copies the content into a .gitignored folder `rules-content`, so all that's necessary is to change the expected path.
 
 ## Database
 
@@ -235,6 +304,35 @@ Currently, the following metrics are exposed:
 
 Additionally it is possible to consume all metrics provided by Go runtime. There metrics start with `go_` and `process_` prefixes.
 
+## Authentication
+
+Authentication is working through `x-rh-identity` token which is provided by 3scale. `x-rh-identity` is base64 encoded JSON, that includes data about user and organization, like:
+```JSON
+{
+  "identity": {
+    "account_number": "0369233",
+    "type": "User",
+    "user": {
+      "username": "jdoe",
+      "email": "jdoe@acme.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "is_active": true,
+      "is_org_admin": false,
+      "is_internal": false,
+      "locale": "en_US"
+    },
+    "internal": {
+      "org_id": "3340851",
+      "auth_type": "basic-auth",
+      "auth_time": 6300
+    }
+  }
+}
+```
+
+If aggregator didn't get identity token or got invalid one, then it returns error with status code `403` - Forbidden.
+
 ## Contribution
 
 Please look into document [CONTRIBUTING.md](CONTRIBUTING.md) that contains all information about how to contribute to this project.
@@ -285,6 +383,7 @@ To run REST API tests use the following command:
 * `golint` as a linter for all Go sources stored in this repository
 * `gocyclo` to report all functions and methods with too high cyclomatic complexity. The cyclomatic complexity of a function is calculated according to the following rules: 1 is the base complexity of a function +1 for each 'if', 'for', 'case', '&&' or '||' Go Report Card warns on functions with cyclomatic complexity > 9
 * `goconst` to find repeated strings that could be replaced by a constant
+* `gosec` to inspect source code for security problems by scanning the Go AST
 * `ineffassign` to detect and print all ineffectual assignments in Go code
 * `errcheck` for checking for all unchecked errors in go programs
 * `shellcheck` to perform static analysis for all shell scripts used in this repository
@@ -293,3 +392,34 @@ To run REST API tests use the following command:
 Please note that all checks mentioned above have to pass for the change to be merged into master branch.
 
 History of checks performed by CI is available at [RedHatInsights / insights-results-aggregator](https://travis-ci.org/RedHatInsights/insights-results-aggregator).
+
+## Utilitites
+
+Utilities are stored in `utils` subdirectory.
+
+### `anonymize.py`
+
+Anonymize input data produced by OCP rules engine.
+
+All input files that ends with '.json' are read by this script and
+if they contain 'info' key, the value stored under this key is
+replaced by empty list, because these informations might contain
+sensitive data. Output file names are in format 's_number.json', ie.
+the original file name is not preserved as it also might contain
+sensitive data.
+
+### `2report.py`
+
+Converts outputs from OCP rule engine into proper reports.
+
+All input files that with filename 's_\*.json' (usually anonymized
+outputs from OCP rule engine' are converted into proper 'report'
+that can be:
+
+1. Published into Kafka topic
+1. Stored directly into aggregator database
+
+It is done by inserting organization ID, clusterName and lastChecked
+attributes and by rearanging output structure. Output files will
+have following names: 'r_\*.json'.
+

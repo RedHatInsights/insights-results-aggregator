@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -259,11 +259,9 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	userID, err := server.GetCurrentUserID(request)
-	if err != nil {
-		const message = "Unable to get user id"
-		log.Error().Err(err).Msg(message)
-		handleServerError(writer, err)
+	userID, successful := server.readUserID(err, request, writer)
+	if !successful {
+		// everything has been handled already
 		return
 	}
 
@@ -296,6 +294,18 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
+}
+
+func (server *HTTPServer) readUserID(err error, request *http.Request, writer http.ResponseWriter) (types.UserID, bool) {
+	userID, err := server.GetCurrentUserID(request)
+	if err != nil {
+		const message = "Unable to get user id"
+		log.Error().Err(err).Msg(message)
+		handleServerError(writer, err)
+		return "", false
+	}
+
+	return userID, true
 }
 
 func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {
@@ -353,6 +363,30 @@ func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *h
 	http.ServeFile(writer, request, absPath)
 }
 
+// addCORSHeaders - middleware for adding headers that should be in any response
+func (server *HTTPServer) addCORSHeaders(nextHandler http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			nextHandler.ServeHTTP(w, r)
+		})
+}
+
+// handleOptionsMethod - middleware for handling OPTIONS method
+func (server *HTTPServer) handleOptionsMethod(nextHandler http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+			} else {
+				nextHandler.ServeHTTP(w, r)
+			}
+		})
+}
+
 // Initialize perform the server initialization
 func (server *HTTPServer) Initialize(address string) http.Handler {
 	log.Print("Initializing HTTP server at", address)
@@ -374,8 +408,15 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 		noAuthURLs := []string{
 			metricsURL,
 			openAPIURL,
+			metricsURL + "?", // to be able to test using Frisby
+			openAPIURL + "?", // to be able to test using Frisby
 		}
 		router.Use(func(next http.Handler) http.Handler { return server.Authentication(next, noAuthURLs) })
+	}
+
+	if server.Config.EnableCORS {
+		router.Use(server.addCORSHeaders)
+		router.Use(server.handleOptionsMethod)
 	}
 
 	// it is possible to use special REST API endpoints in debug mode
@@ -387,10 +428,10 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 
 	// common REST API endpoints
 	router.HandleFunc(apiPrefix+MainEndpoint, server.mainEndpoint).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+ReportEndpoint, server.readReportForCluster).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+LikeRuleEndpoint, server.likeRule).Methods(http.MethodPut)
-	router.HandleFunc(apiPrefix+DislikeRuleEndpoint, server.dislikeRule).Methods(http.MethodPut)
-	router.HandleFunc(apiPrefix+ResetVoteOnRuleEndpoint, server.resetVoteOnRule).Methods(http.MethodPut)
+	router.HandleFunc(apiPrefix+ReportEndpoint, server.readReportForCluster).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc(apiPrefix+LikeRuleEndpoint, server.likeRule).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+DislikeRuleEndpoint, server.dislikeRule).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+ResetVoteOnRuleEndpoint, server.resetVoteOnRule).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
 
 	// Prometheus metrics
@@ -408,10 +449,15 @@ func (server *HTTPServer) Start() error {
 	log.Print("Starting HTTP server at", address)
 	router := server.Initialize(address)
 	server.Serv = &http.Server{Addr: address, Handler: router}
+	var err error
 
-	err := server.Serv.ListenAndServe()
+	if server.Config.UseHTTPS {
+		err = server.Serv.ListenAndServeTLS("server.crt", "server.key")
+	} else {
+		err = server.Serv.ListenAndServe()
+	}
 	if err != nil && err != http.ErrServerClosed {
-		log.Error().Err(err).Msg("Unable to start HTTP server")
+		log.Error().Err(err).Msg("Unable to start HTTP/S server")
 		return err
 	}
 

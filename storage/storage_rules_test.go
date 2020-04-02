@@ -19,8 +19,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -38,94 +36,110 @@ import (
 )
 
 var (
+	ruleConfigOne       = content.GlobalRuleConfig{Impact: map[string]int{"One": 1}}
 	ruleContentActiveOK = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": {
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "active",
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{
+				Summary:    []byte("summary"),
+				Reason:     []byte("reason"),
+				Resolution: []byte("resolution"),
+				MoreInfo:   []byte("more info"),
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: []byte("generic"),
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "active",
+						},
 					},
 				},
 			},
 		},
 	}
 	ruleContentInactiveOK = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": {
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "inactive",
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{
+				Summary:    []byte("summary"),
+				Reason:     []byte("reason"),
+				Resolution: []byte("resolution"),
+				MoreInfo:   []byte("more info"),
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: []byte("generic"),
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "inactive",
+						},
 					},
 				},
 			},
 		},
 	}
 	ruleContentBadStatus = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("reason"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": {
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "bad",
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{
+				Summary:    []byte("summary"),
+				Reason:     []byte("reason"),
+				Resolution: []byte("resolution"),
+				MoreInfo:   []byte("more info"),
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: []byte("generic"),
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "bad",
+						},
 					},
 				},
 			},
 		},
 	}
 	ruleContentNull = content.RuleContentDirectory{
-		"rc": content.RuleContent{},
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{},
+		},
 	}
 	ruleContentExample1 = content.RuleContentDirectory{
-		"rc": content.RuleContent{
-			Summary:    []byte("summary"),
-			Reason:     []byte("summary"),
-			Resolution: []byte("resolution"),
-			MoreInfo:   []byte("more info"),
-			Plugin: content.RulePluginInfo{
-				Name:         "test rule",
-				NodeID:       string(testClusterName),
-				ProductCode:  "product code",
-				PythonModule: string(testRuleID),
-			},
-			ErrorKeys: map[string]content.RuleErrorKeyContent{
-				"ek": {
-					Generic: []byte("generic"),
-					Metadata: content.ErrorKeyMetadata{
-						Condition:   "condition",
-						Description: "description",
-						Impact:      1,
-						Likelihood:  1,
-						PublishDate: "1970-01-01 00:00:00",
-						Status:      "active",
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": content.RuleContent{
+				Summary:    []byte("summary"),
+				Reason:     []byte("summary"),
+				Resolution: []byte("resolution"),
+				MoreInfo:   []byte("more info"),
+				Plugin: content.RulePluginInfo{
+					Name:         "test rule",
+					NodeID:       string(testClusterName),
+					ProductCode:  "product code",
+					PythonModule: string(testRuleID),
+				},
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: []byte("generic"),
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "active",
+						},
 					},
 				},
 			},
@@ -156,9 +170,7 @@ func TestDBStorageLoadRuleContentDBError(t *testing.T) {
 	helpers.MustCloseStorage(t, mockStorage)
 
 	err := mockStorage.LoadRuleContent(ruleContentActiveOK)
-	if err == nil {
-		t.Fatalf("error expected, got %+v", err)
-	}
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
@@ -228,9 +240,7 @@ func TestDBStorageLoadRuleContentNull(t *testing.T) {
 	defer helpers.MustCloseStorage(t, mockStorage)
 
 	err := mockStorage.LoadRuleContent(ruleContentNull)
-	if err == nil || err.Error() != "NOT NULL constraint failed: rule.summary" {
-		t.Fatal(err)
-	}
+	assert.EqualError(t, err, "NOT NULL constraint failed: rule.summary")
 }
 
 func TestDBStorageLoadRuleContentBadStatus(t *testing.T) {
@@ -238,9 +248,7 @@ func TestDBStorageLoadRuleContentBadStatus(t *testing.T) {
 	defer helpers.MustCloseStorage(t, mockStorage)
 
 	err := mockStorage.LoadRuleContent(ruleContentBadStatus)
-	if err == nil || err.Error() != "invalid rule error key status: 'bad'" {
-		t.Fatal(err)
-	}
+	assert.EqualError(t, err, "invalid rule error key status: 'bad'")
 }
 
 func TestDBStorageGetContentForRulesEmpty(t *testing.T) {
@@ -268,9 +276,7 @@ func TestDBStorageGetContentForRulesDBError(t *testing.T) {
 		PassedRules:  nil,
 		TotalCount:   0,
 	})
-	if err == nil {
-		t.Fatalf("error expected, got %+v", err)
-	}
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 func TestDBStorageGetContentForRulesOK(t *testing.T) {
@@ -332,14 +338,10 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 
 	assert.Len(t, res, 3)
 
-	// db doesn't and shouldn't guarantee order
-	sort.Slice(res, func(firstIndex, secondIndex int) bool {
-		return res[firstIndex].ErrorKey < res[secondIndex].ErrorKey
-	})
-
 	// TODO: check risk of change when it will be returned correctly
 	// total risk is `(impact + likelihood) / 2`
-	assert.Equal(t, []types.RuleContentResponse{
+	// db doesn't and shouldn't guarantee order so we're using ElementsMatch
+	assert.ElementsMatch(t, []types.RuleContentResponse{
 		{
 			ErrorKey:     "ek1",
 			RuleModule:   "test.rule1",
@@ -602,9 +604,7 @@ func TestDBStorageFeedbackErrorDBError(t *testing.T) {
 	helpers.MustCloseStorage(t, mockStorage)
 
 	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
-	if err == nil || !strings.Contains(err.Error(), "database is closed") {
-		t.Fatalf("expected sql database is closed error, got %T, %+v", err, err)
-	}
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 func TestDBStorageVoteOnRuleDBError(t *testing.T) {

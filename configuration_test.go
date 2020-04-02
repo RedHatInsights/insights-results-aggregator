@@ -28,6 +28,7 @@ import (
 	main "github.com/RedHatInsights/insights-results-aggregator"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -40,9 +41,7 @@ func mustLoadConfiguration(path string) {
 
 func removeFile(t *testing.T, filename string) {
 	err := os.Remove(filename)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 }
 
 // TestLoadConfiguration loads a configuration file for testing
@@ -54,22 +53,21 @@ func TestLoadConfiguration(t *testing.T) {
 
 // TestLoadConfigurationEnvVariable tests loading the config. file for testing from an environment variable
 func TestLoadConfigurationEnvVariable(t *testing.T) {
-	err := os.Setenv("INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "tests/config1")
-	if err != nil {
-		t.Fatal(err)
-	}
+	os.Clearenv()
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "tests/config1")
 
 	mustLoadConfiguration("foobar")
 }
 
 // TestLoadingConfigurationFailure tests loading a non-existent configuration file
 func TestLoadingConfigurationFailure(t *testing.T) {
+	os.Clearenv()
+
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "non existing file")
 
 	err := main.LoadConfiguration("")
-	if err == nil {
-		t.Fatalf("error expected, got %v", err)
-	}
+	assert.Contains(t, err.Error(), `fatal error config file: Config File "non existing file" Not Found in`)
 }
 
 // TestLoadBrokerConfiguration tests loading the broker configuration sub-tree
@@ -157,6 +155,7 @@ func TestLoadOrganizationWhitelist(t *testing.T) {
 		types.OrgID(2),
 		types.OrgID(3),
 		types.OrgID(11789772),
+		types.OrgID(656485),
 	)
 
 	orgWhitelist := main.GetOrganizationWhitelist()
@@ -176,9 +175,7 @@ func TestLoadWhitelistFromCSVExtraParam(t *testing.T) {
 `
 	r := strings.NewReader(extraParamCSV)
 	_, err := main.LoadWhitelistFromCSV(r)
-	if err == nil {
-		t.Errorf("Invalid CSV got loaded")
-	}
+	assert.EqualError(t, err, "error reading CSV file: record on line 2: wrong number of fields")
 }
 
 // TestLoadWhitelistFromCSVNonInt tests non-integer ID in CSV
@@ -189,9 +186,7 @@ str
 `
 	r := strings.NewReader(nonIntIDCSV)
 	_, err := main.LoadWhitelistFromCSV(r)
-	if err == nil {
-		t.Errorf("Non-integer organization ID got parsed")
-	}
+	assert.EqualError(t, err, "organization ID on line 2 in whitelist CSV is not numerical. Found value: str")
 }
 
 func TestLoadConfigurationFromFile(t *testing.T) {
@@ -212,6 +207,8 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		api_prefix = "/api/v1/"
 		api_spec_file = "openapi.json"
 		debug = true
+		use_https = false
+		enable_cors = true
 
 		[storage]
 		db_driver = "sqlite3"
@@ -226,9 +223,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 	`
 
 	tmpFilename, err := GetTmpConfigFile(config)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	defer removeFile(t, tmpFilename)
 
@@ -247,7 +242,10 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		Address:     ":8080",
 		APIPrefix:   "/api/v1/",
 		APISpecFile: "openapi.json",
+		AuthType:    "xrh",
 		Debug:       true,
+		UseHTTPS:    false,
+		EnableCORS:  true,
 	}, main.GetServerConfiguration())
 
 	orgWhiteList := main.GetOrganizationWhitelist()
@@ -259,6 +257,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 			types.OrgID(2),
 			types.OrgID(3),
 			types.OrgID(11789772),
+			types.OrgID(656485),
 		)),
 		"organization_white_list is wrong",
 	)
@@ -295,12 +294,62 @@ func GetTmpConfigFile(configData string) (string, error) {
 
 func mustSetEnv(t *testing.T, key, val string) {
 	err := os.Setenv(key, val)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 }
 
 func TestLoadConfigurationFromEnv(t *testing.T) {
+	setEnvVariables(t)
+
+	mustLoadConfiguration("/non_existing_path")
+
+	brokerCfg := main.GetBrokerConfiguration()
+
+	assert.Equal(t, "localhost:9093", brokerCfg.Address)
+	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
+	assert.Equal(t, "aggregator", brokerCfg.Group)
+	assert.Equal(t, true, brokerCfg.Enabled)
+
+	assert.Equal(t, server.Configuration{
+		Address:     ":8080",
+		APIPrefix:   "/api/v1/",
+		APISpecFile: "openapi.json",
+		AuthType:    "xrh",
+		Debug:       true,
+		UseHTTPS:    false,
+		EnableCORS:  true,
+	}, main.GetServerConfiguration())
+
+	orgWhiteList := main.GetOrganizationWhitelist()
+
+	assert.True(
+		t,
+		orgWhiteList.Equal(mapset.NewSetWith(
+			types.OrgID(1),
+			types.OrgID(2),
+			types.OrgID(3),
+			types.OrgID(11789772),
+			types.OrgID(656485),
+		)),
+		"organization_white_list is wrong",
+	)
+
+	assert.Equal(t, storage.Configuration{
+		Driver:           "sqlite3",
+		SQLiteDataSource: ":memory:",
+		LogSQLQueries:    true,
+		PGUsername:       "user",
+		PGPassword:       "password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "params",
+	}, main.GetStorageConfiguration())
+
+	contentPath := main.GetContentPathConfiguration()
+	assert.Equal(t, contentPath, "/rules-content")
+}
+
+func setEnvVariables(t *testing.T) {
 	os.Clearenv()
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS", "localhost:9093")
@@ -326,48 +375,4 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
-
-	mustLoadConfiguration("/non_existing_path")
-
-	brokerCfg := main.GetBrokerConfiguration()
-
-	assert.Equal(t, "localhost:9093", brokerCfg.Address)
-	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
-	assert.Equal(t, "aggregator", brokerCfg.Group)
-	assert.Equal(t, true, brokerCfg.Enabled)
-
-	assert.Equal(t, server.Configuration{
-		Address:     ":8080",
-		APIPrefix:   "/api/v1/",
-		APISpecFile: "openapi.json",
-		Debug:       true,
-	}, main.GetServerConfiguration())
-
-	orgWhiteList := main.GetOrganizationWhitelist()
-
-	assert.True(
-		t,
-		orgWhiteList.Equal(mapset.NewSetWith(
-			types.OrgID(1),
-			types.OrgID(2),
-			types.OrgID(3),
-			types.OrgID(11789772),
-		)),
-		"organization_white_list is wrong",
-	)
-
-	assert.Equal(t, storage.Configuration{
-		Driver:           "sqlite3",
-		SQLiteDataSource: ":memory:",
-		LogSQLQueries:    true,
-		PGUsername:       "user",
-		PGPassword:       "password",
-		PGHost:           "localhost",
-		PGPort:           5432,
-		PGDBName:         "aggregator",
-		PGParams:         "params",
-	}, main.GetStorageConfiguration())
-
-	contentPath := main.GetContentPathConfiguration()
-	assert.Equal(t, contentPath, "/rules-content")
 }

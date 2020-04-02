@@ -41,11 +41,15 @@ goconst: ## Run goconst checker
 	@echo "Running goconst checker"
 	./goconst.sh
 
+gosec: ## Run gosec checker
+	@echo "Running gosec checker"
+	./gosec.sh
+
 abcgo: ## Run ABC metrics checker
 	@echo "Run ABC metrics checker"
 	./abcgo.sh
 
-style: fmt vet lint cyclo shellcheck errcheck goconst ineffassign abcgo ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
+style: fmt vet lint cyclo shellcheck errcheck goconst gosec ineffassign abcgo ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
 
 run: clean build ## Build the project and executes the binary
 	./insights-results-aggregator
@@ -60,6 +64,9 @@ integration_tests: ## Run all integration tests
 rest_api_tests: ## Run REST API tests
 	@echo "Running REST API tests"
 	@./test.sh rest_api
+
+rules_content: ## Update tests/content/ok directory with latest rules content
+	./update_rules_content.sh
 
 sqlite_db:
 	mv aggregator.db aggragator.db.backup

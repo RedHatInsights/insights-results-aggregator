@@ -1,6 +1,6 @@
 {
-    "OrgID": 1,
-    "ClusterName": "aaaaaaaa-bbbb-cccc-dddd-000000000000",
+    "OrgID": 656485,
+    "ClusterName": "b0c2d108-0603-41c3-9a8f-0a37eba5df49",
     "LastChecked": "2020-01-23T16:15:59.478901889Z",
     "Report": {
         "fingerprints": [],
@@ -8,7 +8,7 @@
             {
                 "component": "ocp.rules.cluster_id.report",
                 "details": {
-                    "cluster_id": "aaaaaaaa-bbbb-cccc-dddd-000000000000",
+                    "cluster_id": "b0c2d108-0603-41c3-9a8f-0a37eba5df49",
                     "grafana_link": "N/A",
                     "info_key": "GRAFANA_LINK",
                     "type": "info"
@@ -37,16 +37,16 @@
         ],
         "reports": [
             {
-                "component": "ocp.rules.version_check.report",
+                "component": "ccx_rules_ocp.external.rules.cluster_wide_proxy_auth_check.report",
                 "details": {
                     "current": "4.3.0-0.ci-2020-01-06-150524",
                     "desired": "4.3.0-0.ci-2020-01-11-070221",
-                    "error_key": "CLUSTER_VERSION_DESIRED",
+                    "error_key": "AUTH_OPERATOR_PROXY_ERROR",
                     "type": "rule"
                 },
-                "key": "CLUSTER_VERSION_DESIRED",
+                "key": "AUTH_OPERATOR_PROXY_ERROR",
                 "links": {},
-                "rule_id": "version_check|CLUSTER_VERSION_DESIRED",
+                "rule_id": "version_check|AUTH_OPERATOR_PROXY_ERROR",
                 "tags": [],
                 "type": "rule"
             }

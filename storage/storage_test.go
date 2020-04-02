@@ -45,6 +45,12 @@ const (
 	testUserID             = types.UserID("1")
 )
 
+func assertNumberOfReports(t *testing.T, mockStorage storage.Storage, expectedNumberOfReports int) {
+	numberOfReports, err := mockStorage.ReportsCount()
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedNumberOfReports, numberOfReports)
+}
+
 func checkReportForCluster(
 	t *testing.T,
 	s storage.Storage,
@@ -71,42 +77,15 @@ func writeReportForCluster(
 	helpers.FailOnError(t, err)
 }
 
-func expectErrorEmptyTable(t *testing.T, err error) {
-	if err == nil {
-		t.Fatal("Error is expected to be reported because table does not exist")
-	}
-}
-
-func expectErrorClosedStorage(t *testing.T, err error) {
-	if err == nil {
-		t.Fatal("Error is expected to be reported because storage has been closed")
-	}
-}
-
-// TestNewStorage checks whether constructor for new storage returns error for improper storage configuration
-func TestNewStorage(t *testing.T) {
-	_, err := storage.New(storage.Configuration{
-		Driver:           "",
-		SQLiteDataSource: "",
-	})
-
-	if err == nil {
-		t.Fatal("Error needs to be reported for improper storage")
-	}
-}
-
 // TestNewStorage checks whether constructor for new storage returns error for improper storage configuration
 func TestNewStorageError(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
 		Driver: "non existing driver",
 	})
-
-	if err == nil {
-		t.Fatal("Error expected")
-	}
+	assert.EqualError(t, err, "driver non existing driver is not supported")
 }
 
-// TestNewStorageWithLogging tests creatign new storage with logs
+// TestNewStorageWithLogging tests creating new storage with logs
 func TestNewStorageWithLoggingError(t *testing.T) {
 	s, _ := storage.New(storage.Configuration{
 		Driver:        "postgres",
@@ -114,17 +93,8 @@ func TestNewStorageWithLoggingError(t *testing.T) {
 		LogSQLQueries: true,
 	})
 
-	if err := s.Init(); err == nil {
-		t.Fatal("Error needs to be reported for improper storage")
-	}
-
-	_, err := storage.New(storage.Configuration{
-		Driver:        "non existing driver",
-		LogSQLQueries: true,
-	})
-	if err == nil {
-		t.Fatal(fmt.Errorf("error expected"))
-	}
+	err := s.Init()
+	assert.Contains(t, err.Error(), "connect: connection refused")
 }
 
 // TestDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
@@ -137,13 +107,13 @@ func TestDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
 
-	assert.Equal(
+	assert.EqualError(
 		t,
+		err,
 		fmt.Sprintf(
 			"Item with ID %+v/%+v was not found in the storage",
 			testOrgID, testClusterName,
 		),
-		err.Error(),
 	)
 }
 
@@ -154,7 +124,7 @@ func TestDBStorageReadReportForClusterClosedStorage(t *testing.T) {
 	helpers.MustCloseStorage(t, mockStorage)
 
 	_, _, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
-	expectErrorClosedStorage(t, err)
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 // TestDBStorageReadReportForCluster check the behaviour of method ReadReportForCluster
@@ -184,7 +154,7 @@ func TestDBStorageReadReportNoTable(t *testing.T) {
 	defer helpers.MustCloseStorage(t, mockStorage)
 
 	_, _, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
-	expectErrorEmptyTable(t, err)
+	assert.EqualError(t, err, "no such table: report")
 }
 
 // TestDBStorageWriteReportForClusterClosedStorage check the behaviour of method WriteReportForCluster
@@ -199,7 +169,7 @@ func TestDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 		testClusterEmptyReport,
 		time.Now(),
 	)
-	expectErrorClosedStorage(t, err)
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 // TestDBStorageWriteReportForClusterClosedStorage check the behaviour of method WriteReportForCluster
@@ -232,7 +202,7 @@ func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testClusterEmptyReport,
 		newerTime,
 	)
-	assert.NoError(t, err)
+	helpers.FailOnError(t, err)
 
 	// Try to insert older report.
 	// If there's a way to check for a warning being logged,
@@ -243,10 +213,11 @@ func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testClusterEmptyReport,
 		olderTime,
 	)
-	assert.NoError(t, err)
+	helpers.FailOnError(t, err)
 
 	_, timestamp, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
-	assert.NoError(t, err)
+	helpers.FailOnError(t, err)
+
 	// Unfortunately, the ReadReport returns the timestamp as a different type than
 	// what has been initially inserted, so we need to format it in the same way here.
 	assert.Equal(t, types.Timestamp(newerTime.Format(time.RFC3339)), timestamp)
@@ -260,7 +231,7 @@ func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 
 	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
 	_, err := connection.Exec("DROP TABLE report")
-	assert.NoError(t, err)
+	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterEmptyReport, time.Now())
 	assert.EqualError(t, err, "no such table: report")
@@ -320,11 +291,9 @@ func TestDBStorageListOfOrgs(t *testing.T) {
 	writeReportForCluster(t, mockStorage, 3, "a1bf5b15-5229-4042-9825-c69dc36b57f5", testClusterEmptyReport)
 
 	result, err := mockStorage.ListOfOrgs()
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	assert.Equal(t, []types.OrgID{1, 3}, result)
+	assert.ElementsMatch(t, []types.OrgID{1, 3}, result)
 }
 
 func TestDBStorageListOfOrgsNoTable(t *testing.T) {
@@ -332,7 +301,7 @@ func TestDBStorageListOfOrgsNoTable(t *testing.T) {
 	defer helpers.MustCloseStorage(t, mockStorage)
 
 	_, err := mockStorage.ListOfOrgs()
-	expectErrorEmptyTable(t, err)
+	assert.EqualError(t, err, "no such table: report")
 }
 
 // TestDBStorageListOfOrgsClosedStorage check the behaviour of method ListOfOrgs
@@ -342,7 +311,7 @@ func TestDBStorageListOfOrgsClosedStorage(t *testing.T) {
 	helpers.MustCloseStorage(t, mockStorage)
 
 	_, err := mockStorage.ListOfOrgs()
-	expectErrorClosedStorage(t, err)
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 // TestDBStorageListOfClustersFor check the behaviour of method ListOfClustersForOrg
@@ -357,19 +326,15 @@ func TestDBStorageListOfClustersForOrg(t *testing.T) {
 	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testClusterEmptyReport)
 
 	result, err := mockStorage.ListOfClustersForOrg(1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
-	assert.Equal(t, []types.ClusterName{
+	assert.ElementsMatch(t, []types.ClusterName{
 		"eabb4fbf-edfa-45d0-9352-fb05332fdb82",
 		"edf5f242-0c12-4307-8c9f-29dcd289d045",
 	}, result)
 
 	result, err = mockStorage.ListOfClustersForOrg(5)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	assert.Equal(t, []types.ClusterName{"4016d01b-62a1-4b49-a36e-c1c5a3d02750"}, result)
 }
@@ -379,7 +344,7 @@ func TestDBStorageListOfClustersNoTable(t *testing.T) {
 	defer helpers.MustCloseStorage(t, mockStorage)
 
 	_, err := mockStorage.ListOfClustersForOrg(5)
-	expectErrorEmptyTable(t, err)
+	assert.EqualError(t, err, "no such table: report")
 }
 
 // TestDBStorageListOfClustersClosedStorage check the behaviour of method ListOfOrgs
@@ -389,7 +354,7 @@ func TestDBStorageListOfClustersClosedStorage(t *testing.T) {
 	helpers.MustCloseStorage(t, mockStorage)
 
 	_, err := mockStorage.ListOfClustersForOrg(5)
-	expectErrorClosedStorage(t, err)
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 // TestMockDBReportsCount check the behaviour of method ReportsCount
@@ -397,21 +362,11 @@ func TestMockDBReportsCount(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
-	cnt, err := mockStorage.ReportsCount()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, cnt, 0)
+	assertNumberOfReports(t, mockStorage, 0)
 
 	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testClusterEmptyReport)
 
-	cnt, err = mockStorage.ReportsCount()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, cnt, 1)
+	assertNumberOfReports(t, mockStorage, 1)
 }
 
 func TestMockDBReportsCountNoTable(t *testing.T) {
@@ -419,7 +374,7 @@ func TestMockDBReportsCountNoTable(t *testing.T) {
 	defer helpers.MustCloseStorage(t, mockStorage)
 
 	_, err := mockStorage.ReportsCount()
-	expectErrorEmptyTable(t, err)
+	assert.EqualError(t, err, "no such table: report")
 }
 
 func TestMockDBReportsCountClosedStorage(t *testing.T) {
@@ -428,7 +383,7 @@ func TestMockDBReportsCountClosedStorage(t *testing.T) {
 	helpers.MustCloseStorage(t, mockStorage)
 
 	_, err := mockStorage.ReportsCount()
-	expectErrorClosedStorage(t, err)
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 func TestDBStorageNewPostgresqlError(t *testing.T) {
@@ -439,9 +394,7 @@ func TestDBStorageNewPostgresqlError(t *testing.T) {
 	})
 
 	err := s.Init()
-	if err == nil {
-		t.Fatal(fmt.Errorf("error expected, got %v", err))
-	}
+	assert.Contains(t, err.Error(), "no such host")
 }
 
 func mustWriteReport(
@@ -457,9 +410,7 @@ func mustWriteReport(
 	`
 
 	statement, err := connection.Prepare(query)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	_, err = statement.Exec(
 		orgID,
@@ -468,14 +419,10 @@ func mustWriteReport(
 		time.Now(),
 		time.Now(),
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	err = statement.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 }
 
 func TestDBStorageListOfOrgsLogError(t *testing.T) {
@@ -490,18 +437,19 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	mustWriteReport(t, connection, -1, testClusterName, testClusterEmptyReport)
 
 	_, err := s.ListOfOrgs()
-	if err != nil {
-		t.Fatal(err)
-	}
+	helpers.FailOnError(t, err)
 
 	assert.Contains(t, buf.String(), "sql: Scan error")
 }
 
 func TestDBStorageCloseError(t *testing.T) {
 	const errString = "unable to close the database"
+
 	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+
 	expects.ExpectClose().WillReturnError(fmt.Errorf(errString))
 	err := mockStorage.Close()
+
 	assert.EqualError(t, err, errString)
 }
 
@@ -522,12 +470,6 @@ func TestDBStorageListOfClustersForOrgScanError(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	assert.Contains(t, buf.String(), "converting NULL to string is unsupported")
-}
-
-func assertNumberOfReports(t *testing.T, mockStorage storage.Storage, expectedNumberOfReports int) {
-	numberOfReports, err := mockStorage.ReportsCount()
-	helpers.FailOnError(t, err)
-	assert.Equal(t, expectedNumberOfReports, numberOfReports)
 }
 
 func TestDBStorageDeleteReports(t *testing.T) {
