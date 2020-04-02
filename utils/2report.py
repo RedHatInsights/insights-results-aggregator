@@ -20,7 +20,7 @@ All input files that with filename 's_*.json' (usually anonymized
 outputs from OCP rule engine' are converted into proper 'report'
 that can be:
     1. published into Kafka topic
-    1. stored dirrectly into aggregator database
+    2. stored directly into aggregator database
 
 It is done by inserting organization ID, clusterName and lastChecked
 attributes and by rearanging output structure. Output files will
