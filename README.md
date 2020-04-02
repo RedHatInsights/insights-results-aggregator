@@ -392,3 +392,18 @@ To run REST API tests use the following command:
 Please note that all checks mentioned above have to pass for the change to be merged into master branch.
 
 History of checks performed by CI is available at [RedHatInsights / insights-results-aggregator](https://travis-ci.org/RedHatInsights/insights-results-aggregator).
+
+## Utilitites
+
+Utilities are stored in `utils` subdirectory.
+
+### `anonymize.py`
+
+Anonymize input data produced by OCP rules engine.
+
+All input files that ends with '.json' are read by this script and
+if they contain 'info' key, the value stored under this key is
+replaced by empty list, because these informations might contain
+sensitive data. Output file names are in format 's_number.json', ie.
+the original file name is not preserved as it also migth contain
+sensitive data.
