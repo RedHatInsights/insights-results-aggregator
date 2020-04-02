@@ -16,14 +16,15 @@
 
 """Converts outputs from OCP rule engine into proper reports.
 
-All input files that with filename 's_*.json' (usually anonymized
-outputs from OCP rule engine' are converted into proper 'report'
+All input files that have filename 's_*.json' (usually anonymized
+outputs from OCP rule engine') are converted into proper 'report'
 that can be:
-    1. published into Kafka topic
-    2. stored directly into aggregator database
+
+    1. Published into Kafka topic
+    2. Stored directly into aggregator database
 
 It is done by inserting organization ID, clusterName and lastChecked
-attributes and by rearanging output structure. Output files will
+attributes and by rearranging output structure. Output files will
 have following names: 'r_*.json'.
 """
 

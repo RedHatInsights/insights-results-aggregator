@@ -405,5 +405,21 @@ All input files that ends with '.json' are read by this script and
 if they contain 'info' key, the value stored under this key is
 replaced by empty list, because these informations might contain
 sensitive data. Output file names are in format 's_number.json', ie.
-the original file name is not preserved as it also migth contain
+the original file name is not preserved as it also might contain
 sensitive data.
+
+### `2report.py`
+
+Converts outputs from OCP rule engine into proper reports.
+
+All input files that with filename 's_\*.json' (usually anonymized
+outputs from OCP rule engine' are converted into proper 'report'
+that can be:
+
+1. Published into Kafka topic
+1. Stored directly into aggregator database
+
+It is done by inserting organization ID, clusterName and lastChecked
+attributes and by rearanging output structure. Output files will
+have following names: 'r_\*.json'.
+
