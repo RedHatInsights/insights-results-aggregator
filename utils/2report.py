@@ -63,7 +63,7 @@ for filename in files:
 
             outfilename = "r_" + filename[2:]
             report = {}
-            report["OrgID"] = orgID
+            report["OrgID"] = int(orgID)
             report["ClusterName"] = clusterName
             report["LastChecked"] = lastChecked
             report["Report"] = data
