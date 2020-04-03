@@ -38,4 +38,5 @@ var (
 	PrepareDB                   = prepareDB
 	StartConsumer               = startConsumer
 	StartServer                 = startServer
+	PrintVersionInfo            = printVersionInfo
 )
