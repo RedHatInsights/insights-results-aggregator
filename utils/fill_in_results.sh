@@ -103,7 +103,7 @@ function anonymize() {
 
 # Convert OCP rules results into JSONs compatible with aggregator
 function convert_to_report() {
-    cwd=$(pwd)
+    cwd="$PWD"
     cd "$1" || exit
 
     echo -e "${BLUE}Converting OCP rules results into JSONs compatible with aggregator${NC}"
@@ -135,13 +135,17 @@ then
     exit 1
 fi
 
+# $1 - tarball with Insights operator results taken from external sources
+# $2 - organization ID
+# $3 - cluster name
+
 check_insights_availability
-decompress_input exernal-rules-archives-2020-03-31.tar
+decompress_input "$1"
 mkdir -p ${WORKDIR}
 move_input_to_workdir ${WORKDIR}
 cleanup_temp_directories ${WORKDIR}
 apply_ocp_rules ${WORKDIR}
 clean_tarballs ${WORKDIR}
 anonymize ${WORKDIR}
-convert_to_report ${WORKDIR} 1 2
+convert_to_report ${WORKDIR} "$2" "$3"
 cleanup_workdir ${WORKDIR}
