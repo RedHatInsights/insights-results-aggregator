@@ -195,8 +195,8 @@ func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusInternalServerError,
-		Body:       `{ "status": "Internal Server Error" }`,
+		StatusCode: http.StatusBadRequest,
+		Body:       `{ "status": "invalid character 'o' in literal null (expecting 'u')" }`,
 	})
 }
 
