@@ -398,8 +398,8 @@ History of checks performed by CI is available at [RedHatInsights / insights-res
 Data to be consumed by aggregator through Kafka broker is prepared in `utils/produce_insights_results/` subdirectory.
 Several types of data are available there:
 
-* `r_\*.json` - real data analyzed from test clusters
-* `result\*.json` - artifically created data
+* `r_*.json` - real data analyzed from test clusters
+* `result*.json` - artifically created data
 * `big_resuts.json` - file with most reports created by joining several real data (no cluster is in the state when all rules fail)
 * `big_results_no_skips.json` - the same, but no skipped rules are stored
 * `no_hits.json` - data with no rule hits (ie. the cluster is healthy)
