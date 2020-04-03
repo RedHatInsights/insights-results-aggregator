@@ -47,6 +47,7 @@ var migrations = []Migration{
 	mig2,
 	mig3,
 	mig4,
+	mig5,
 }
 
 // GetMaxVersion returns the highest available migration version.

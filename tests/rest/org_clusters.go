@@ -17,14 +17,65 @@ limitations under the License.
 package tests
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/verdverm/frisby"
 )
+
+// ClustersResponse represents response containing list of clusters for given organization
+type ClustersResponse struct {
+	Clusters []string `json:"clusters"`
+	Status   string   `json:"status"`
+}
 
 func constructURLForOrganizationsClusters(organization int) string {
 	orgID := strconv.Itoa(organization)
 	return apiURL + "organizations/" + orgID + "/clusters"
+}
+
+// readClustersFromResponse reads and parses information about clusters from response body
+func readClustersFromResponse(f *frisby.Frisby) ClustersResponse {
+	response := ClustersResponse{}
+	text, err := f.Resp.Content()
+	if err != nil {
+		f.AddError(err.Error())
+	} else {
+		err := json.Unmarshal(text, &response)
+		if err != nil {
+			f.AddError(err.Error())
+		}
+	}
+	return response
+}
+
+// checkOkStatusResponse tests whether the response (JSON) contains status attribute set to 'ok'
+func checkOkStatusResponse(f *frisby.Frisby, response ClustersResponse) {
+	if response.Status != "ok" {
+		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", response.Status))
+	}
+}
+
+// checkEmptyListOfClusters tests whether list of clusters returned from the server is empty
+func checkEmptyListOfClusters(f *frisby.Frisby, response ClustersResponse) {
+	if len(response.Clusters) != 0 {
+		f.AddError("List of clusters needs to be empty for unknown organization")
+	}
+}
+
+// checkNonEmptyListOfClusters tests whether list of clusters returned from the server is not empty and that the list are correct
+func checkNonEmptyListOfClusters(f *frisby.Frisby, response ClustersResponse) {
+	if len(response.Clusters) == 0 {
+		f.AddError("Clusters are not read")
+	}
+	for _, cluster := range response.Clusters {
+		_, err := uuid.Parse(cluster)
+		if err != nil {
+			f.AddError(fmt.Sprintf("cluster name is not a UUID: %s", cluster))
+		}
+	}
 }
 
 // checkClustersEndpointForKnownOrganizations check if the end point to return list of clusters responds correctly to HTTP GET command
@@ -36,6 +87,9 @@ func checkClustersEndpointForKnownOrganizations() {
 		f.Send()
 		f.ExpectStatus(200)
 		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+		response := readClustersFromResponse(f)
+		checkOkStatusResponse(f, response)
+		checkNonEmptyListOfClusters(f, response)
 		f.PrintReport()
 	}
 }
@@ -49,6 +103,9 @@ func checkClustersEndpointForUnknownOrganizations() {
 		f.Send()
 		f.ExpectStatus(200)
 		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+		response := readClustersFromResponse(f)
+		checkOkStatusResponse(f, response)
+		checkEmptyListOfClusters(f, response)
 		f.PrintReport()
 	}
 }
@@ -92,6 +149,9 @@ func checkClustersEndpointSpecialOrganizationIds() {
 		f.Send()
 		f.ExpectStatus(200)
 		f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
+		response := readClustersFromResponse(f)
+		checkOkStatusResponse(f, response)
+		checkEmptyListOfClusters(f, response)
 		f.PrintReport()
 	}
 }

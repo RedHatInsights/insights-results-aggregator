@@ -8,7 +8,7 @@ clean: ## Run go clean
 	@go clean
 
 build: ## Run go build
-	@go build
+	./build.sh
 
 fmt: ## Run go fmt -w for all sources
 	@echo "Running go formatting"

@@ -245,6 +245,10 @@ func (consumer *KafkaConsumer) Serve() {
 		if err != nil {
 			log.Error().Err(err).Msg("Error processing message consumed from Kafka")
 			consumer.numberOfErrorsConsumingMessages++
+
+			if err := consumer.Storage.WriteConsumerError(msg, err); err != nil {
+				log.Error().Err(err).Msg("Unable to write consumer error to storage")
+			}
 		} else {
 			consumer.numberOfSuccessfullyConsumedMessages++
 		}
