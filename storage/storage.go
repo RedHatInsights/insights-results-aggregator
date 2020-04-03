@@ -625,6 +625,7 @@ func (storage DBStorage) CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) err
 	return err
 }
 
+// GetConnection returns db connection(useful for testing)
 func (storage DBStorage) GetConnection() *sql.DB {
 	return storage.connection
 }
