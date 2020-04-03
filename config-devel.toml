@@ -6,7 +6,7 @@ enabled = true
 save_offset = true
 
 [content]
-path = "/rules-content"
+path = "./tests/content/ok/"
 
 [processing]
 org_whitelist = "org_whitelist.csv"
@@ -16,7 +16,8 @@ address = ":8080"
 api_prefix = "/api/insights-results-aggregator/v1/"
 api_spec_file = "openapi.json"
 debug = true
-auth = false
+auth = true
+auth_type = "x-rh-identity"
 use_https = false
 enable_cors = true
 

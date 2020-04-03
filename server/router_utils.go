@@ -223,3 +223,15 @@ func readRuleID(writer http.ResponseWriter, request *http.Request) (types.RuleID
 
 	return types.RuleID(ruleID), nil
 }
+
+func readErrorKey(writer http.ResponseWriter, request *http.Request) (types.ErrorKey, error) {
+	errorKey, err := getRouterParam(request, "error_key")
+	if err != nil {
+		const message = "unable to get error_key"
+		log.Error().Err(err).Msg(message)
+		handleServerError(writer, err)
+		return types.ErrorKey(0), err
+	}
+
+	return types.ErrorKey(errorKey), nil
+}

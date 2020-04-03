@@ -85,6 +85,8 @@ type Storage interface {
 	LoadRuleContent(contentDir content.RuleContentDirectory) error
 	GetRuleByID(ruleID types.RuleID) (*types.Rule, error)
 	GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
+	CreateRule(ruleData types.Rule) error
+	CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) error
 }
 
 // DBDriver type for db driver enum
@@ -574,4 +576,55 @@ func (storage DBStorage) GetRuleByID(ruleID types.RuleID) (*types.Rule, error) {
 	}
 
 	return &rule, err
+}
+
+// CreateRule creates rule with provided ruleData in the DB
+func (storage DBStorage) CreateRule(ruleData types.Rule) error {
+	_, err := storage.connection.Exec(`
+		INSERT INTO rule("module", "name", "summary", "reason", "resolution", "more_info")
+		VALUES($1, $2, $3, $4, $5, $6);
+	`,
+		ruleData.Module,
+		ruleData.Name,
+		ruleData.Summary,
+		ruleData.Reason,
+		ruleData.Resolution,
+		ruleData.MoreInfo,
+	)
+
+	return err
+}
+
+// CreateRuleErrorKey creates rule_error_key with provided data in the DB
+func (storage DBStorage) CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) error {
+	_, err := storage.connection.Exec(`
+		INSERT INTO rule_error_key(
+			"error_key",
+			"rule_module",
+			"condition",
+			"description",
+			"impact",
+			"likelihood",
+			"publish_date",
+			"active",
+			"generic"
+		)
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9);
+	`,
+		ruleErrorKey.ErrorKey,
+		ruleErrorKey.RuleModule,
+		ruleErrorKey.Condition,
+		ruleErrorKey.Description,
+		ruleErrorKey.Impact,
+		ruleErrorKey.Likelihood,
+		ruleErrorKey.PublishDate,
+		ruleErrorKey.Active,
+		ruleErrorKey.Generic,
+	)
+
+	return err
+}
+
+func (storage DBStorage) GetConnection() *sql.DB {
+	return storage.connection
 }
