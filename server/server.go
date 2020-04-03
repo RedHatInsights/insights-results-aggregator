@@ -517,6 +517,15 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 		router.Use(server.handleOptionsMethod)
 	}
 
+	server.addEndpointsToRouter(router)
+
+	return router
+}
+
+func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
+	apiPrefix := server.Config.APIPrefix
+	openAPIURL := apiPrefix + filepath.Base(server.Config.APISpecFile)
+
 	// it is possible to use special REST API endpoints in debug mode
 	if server.Config.Debug {
 		router.HandleFunc(apiPrefix+OrganizationsEndpoint, server.listOfOrganizations).Methods(http.MethodGet)
@@ -540,8 +549,6 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 
 	// OpenAPI specs
 	router.HandleFunc(openAPIURL, server.serveAPISpecFile).Methods(http.MethodGet)
-
-	return router
 }
 
 // Start starts server
