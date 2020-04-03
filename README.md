@@ -393,6 +393,18 @@ Please note that all checks mentioned above have to pass for the change to be me
 
 History of checks performed by CI is available at [RedHatInsights / insights-results-aggregator](https://travis-ci.org/RedHatInsights/insights-results-aggregator).
 
+## Mock data for aggregator
+
+Data to be consumed by aggregator through Kafka broker is prepared in `utils/produce_insights_results/` subdirectory.
+Several types of data are available there:
+
+* `r_*.json` - real data analyzed from test clusters
+* `result*.json` - artifically created data
+* `big_resuts.json` - file with most reports created by joining several real data (no cluster is in the state when all rules fail)
+* `big_results_no_skips.json` - the same, but no skipped rules are stored
+* `no_hits.json` - data with no rule hits (ie. the cluster is healthy)
+* `no_hits_no_skips.json` - data with no rule hits and no skips (ie. there's no health check performed)
+
 ## Utilitites
 
 Utilities are stored in `utils` subdirectory.
