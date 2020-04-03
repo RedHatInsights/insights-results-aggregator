@@ -161,3 +161,28 @@ func TestAllMigrations_Migration3TableClusterRuleUserFeedbackDoesNotExist(t *tes
 	err = migration.SetDBVersion(db, 0)
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
+
+func TestMigration5TableAlreadyExists(t *testing.T) {
+	db := prepareDBAndInfo(t)
+	defer closeDB(t, db)
+
+	_, err := db.Exec(`CREATE TABLE consumer_error(c INTEGER)`)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, migration.GetMaxVersion())
+	assert.EqualError(t, err, "table consumer_error already exists")
+}
+
+func TestMigration5NoSuchTable(t *testing.T) {
+	db := prepareDBAndInfo(t)
+	defer closeDB(t, db)
+
+	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`DROP TABLE consumer_error`)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, 0)
+	assert.EqualError(t, err, "no such table: consumer_error")
+}
