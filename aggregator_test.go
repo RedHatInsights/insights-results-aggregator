@@ -257,3 +257,8 @@ func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
 	errCode := main.StartService()
 	assert.Equal(t, main.ExitStatusConsumerError+main.ExitStatusServerError, errCode)
 }
+
+// TestPrintVersionInfo is dummy ATM - we'll check versions etc. in integration tests
+func TestPrintVersionInfo(t *testing.T) {
+	main.PrintVersionInfo()
+}

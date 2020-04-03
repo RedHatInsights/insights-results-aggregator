@@ -56,6 +56,18 @@ const (
 var (
 	serverInstance   *server.HTTPServer
 	consumerInstance consumer.Consumer
+
+	// BuildVersion contains the major.minor version of the CLI client
+	BuildVersion string = "*not set*"
+
+	// BuildTime contains timestamp when the CLI client has been built
+	BuildTime string = "*not set*"
+
+	// BuildBranch contains Git branch used to build this application
+	BuildBranch string = "*not set*"
+
+	// BuildCommit contains Git commit used to build this application
+	BuildCommit string = "*not set*"
 )
 
 func createStorage() (*storage.DBStorage, error) {
@@ -233,7 +245,20 @@ func stopService() int {
 	return errCode
 }
 
+func initInfoLog(msg string) {
+	log.Info().Str("type", "init").Msg(msg)
+}
+
+func printVersionInfo() {
+	initInfoLog("Version: " + BuildVersion)
+	initInfoLog("Build time: " + BuildTime)
+	initInfoLog("Branch: " + BuildBranch)
+	initInfoLog("Commit: " + BuildCommit)
+}
+
 func main() {
+	printVersionInfo()
+
 	err := loadConfiguration(defaultConfigFilename)
 	if err != nil {
 		panic(err)
