@@ -34,6 +34,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 
@@ -85,6 +86,7 @@ type Storage interface {
 	LoadRuleContent(contentDir content.RuleContentDirectory) error
 	GetRuleByID(ruleID types.RuleID) (*types.Rule, error)
 	GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
+	WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
 }
 
 // DBDriver type for db driver enum
@@ -574,4 +576,14 @@ func (storage DBStorage) GetRuleByID(ruleID types.RuleID) (*types.Rule, error) {
 	}
 
 	return &rule, err
+}
+
+// WriteConsumerError writes a report about a consumer error into the storage.
+func (storage DBStorage) WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error {
+	_, err := storage.connection.Exec(`
+		INSERT INTO consumer_error (topic, partition, offset, key, produced_at, consumed_at, message, error)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		msg.Topic, msg.Partition, msg.Offset, msg.Key, msg.Timestamp, time.Now().UTC(), msg.Value, consumerErr.Error())
+
+	return err
 }
