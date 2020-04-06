@@ -6,6 +6,47 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/openapi.json": {
+      "get": {
+        "summary": "Returns the OpenAPI specification JSON.",
+        "operationId": "getOpenApi",
+        "responses": {
+          "200": {
+            "description": "A JSON containing the OpenAPI specification for this service.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "openapi": {
+                      "type": "string"
+                    },
+                    "info": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "paths": {
+                      "type": "object",
+                      "description": "Available paths and their descriptions."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/metrics": {
       "get": {
         "summary": "Read all metrics exposed by this service",
@@ -16,8 +57,7 @@
           "200": {
             "description": "Default response containing all metrics in semi-structured text format",
             "content": {
-                "text/plain": {
-                }
+              "text/plain": {}
             }
           }
         }
