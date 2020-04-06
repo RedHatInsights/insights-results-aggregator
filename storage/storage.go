@@ -635,7 +635,7 @@ func (storage DBStorage) GetConnection() *sql.DB {
 // WriteConsumerError writes a report about a consumer error into the storage.
 func (storage DBStorage) WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error {
 	_, err := storage.connection.Exec(`
-		INSERT INTO consumer_error (topic, partition, offset, key, produced_at, consumed_at, message, error)
+		INSERT INTO consumer_error (topic, partition, topic_offset, key, produced_at, consumed_at, message, error)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		msg.Topic, msg.Partition, msg.Offset, msg.Key, msg.Timestamp, time.Now().UTC(), msg.Value, consumerErr.Error())
 
