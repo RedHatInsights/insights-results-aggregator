@@ -607,7 +607,7 @@ func TestDBStorageWriteConsumerError(t *testing.T) {
 	row := conn.QueryRow(`
 		SELECT key, message, produced_at, consumed_at, error
 		FROM consumer_error
-		WHERE topic = $1 AND partition = $2 AND offset = $3
+		WHERE topic = $1 AND partition = $2 AND topic_offset = $3
 	`, testTopic, testPartition, testOffset)
 
 	var storageKey []byte
