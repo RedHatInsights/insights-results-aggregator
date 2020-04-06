@@ -350,6 +350,56 @@
         }
       }
     },
+    "/clusters/{clusterId}/rules/{ruleId}/get_vote": {
+      "get": {
+        "summary": "Returns vote for the rule with cluster for current user",
+        "operationId": "getVoteForRule",
+        "description": "[DEBUG ONLY] Returns vote for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "vote": {
+                      "type": "integer",
+                      "example": "1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/organizations/{orgIds}": {
       "delete": {
         "summary": "Deletes organization data from database.",
@@ -403,6 +453,90 @@
         "responses": {
           "200": {
             "description": "Deletion was successful."
+          }
+        }
+      }
+    },
+    "/rules/{ruleId}": {
+      "post": {
+        "summary": "Creates or updates rule with provided ruleId",
+        "operationId": "createOrUpdateRule",
+        "description": "[DEBUG ONLY] Creates or updates rule with provided data in body",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule to be created or updated",
+            "schema": {
+              "type": "string",
+              "example": "some.python.module"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules/{ruleId}/error_keys/{errorKey}": {
+      "post": {
+        "summary": "Creates or updates rule_error_key with provided ruleId and errorKey",
+        "operationId": "createOrUpdateRuleErrorKey",
+        "description": "[DEBUG ONLY] Creates or updates rule_error_key with provided data in body",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule to be created or updated",
+            "schema": {
+              "type": "string",
+              "example": "some.python.module"
+            }
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "errorKey to be created",
+            "schema": {
+              "type": "string",
+              "example": "ek"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
