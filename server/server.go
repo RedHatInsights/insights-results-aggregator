@@ -353,47 +353,6 @@ func (server *HTTPServer) createRuleErrorKey(writer http.ResponseWriter, request
 	}
 }
 
-func (server *HTTPServer) readVoteOnRuleParams(writer http.ResponseWriter, request *http.Request) (types.ClusterName, types.RuleID, types.UserID, bool) {
-	clusterID, err := readClusterName(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return "", "", "", false
-	}
-
-	ruleID, err := readRuleID(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return "", "", "", false
-	}
-
-	userID, successful := server.readUserID(err, request, writer)
-	if !successful {
-		// everything has been handled already
-		return "", "", "", false
-	}
-
-	// it's gonna raise an error if cluster does not exist
-	_, _, err = server.Storage.ReadReportForClusterByClusterName(clusterID)
-	if err != nil {
-		handleServerError(writer, err)
-		return "", "", "", false
-	}
-
-	_, err = server.Storage.GetRuleByID(ruleID)
-	if err != nil {
-		handleServerError(writer, err)
-		return "", "", "", false
-	}
-
-	err = server.checkVotePermissions(writer, request, clusterID)
-	if err != nil {
-		// everything has been handled already
-		return "", "", "", false
-	}
-
-	return clusterID, ruleID, userID, true
-}
-
 func (server *HTTPServer) readUserID(err error, request *http.Request, writer http.ResponseWriter) (types.UserID, bool) {
 	userID, err := server.GetCurrentUserID(request)
 	if err != nil {
