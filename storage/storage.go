@@ -584,7 +584,15 @@ func (storage DBStorage) GetRuleByID(ruleID types.RuleID) (*types.Rule, error) {
 func (storage DBStorage) CreateRule(ruleData types.Rule) error {
 	_, err := storage.connection.Exec(`
 		INSERT INTO rule("module", "name", "summary", "reason", "resolution", "more_info")
-		VALUES($1, $2, $3, $4, $5, $6);
+		VALUES($1, $2, $3, $4, $5, $6)
+		ON CONFLICT ("module")
+		DO UPDATE SET
+			"name" = $2,
+			"summary" = $3,
+			"reason" = $4,
+			"resolution" = $5,
+			"more_info" = $6
+		;
 	`,
 		ruleData.Module,
 		ruleData.Name,
@@ -611,7 +619,17 @@ func (storage DBStorage) CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) err
 			"active",
 			"generic"
 		)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9);
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT ("error_key", "rule_module")
+		DO UPDATE SET
+			"condition" = $3,
+			"description" = $4,
+			"impact" = $5,
+			"likelihood" = $6,
+			"publish_date" = $7,
+			"active" = $8,
+			"generic" = $9
+		;
 	`,
 		ruleErrorKey.ErrorKey,
 		ruleErrorKey.RuleModule,
