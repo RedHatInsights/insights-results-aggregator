@@ -480,7 +480,7 @@
     "/rules/{ruleId}/error_keys/{errorKey}": {
       "post": {
         "summary": "Creates or updates rule_error_key with provided ruleId and errorKey",
-        "operationId": "createOrUpdateRule",
+        "operationId": "createOrUpdateRuleErrorKey",
         "description": "[DEBUG ONLY] Creates or updates rule_error_key with provided data in body",
         "parameters": [
           {
