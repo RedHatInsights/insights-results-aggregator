@@ -24,15 +24,15 @@ var mig5 = Migration{
 	StepUp: func(tx *sql.Tx) error {
 		_, err := tx.Exec(`
 			CREATE TABLE consumer_error (
-				topic           VARCHAR NOT NULL,
-				partition       INTEGER NOT NULL,
-				offset          INTEGER NOT NULL,
-				key             VARCHAR,
-				produced_at     TIMESTAMP NOT NULL,
-				consumed_at     TIMESTAMP NOT NULL,
-				message         VARCHAR,
-				error           VARCHAR NOT NULL,
-				PRIMARY KEY(topic, partition, offset)
+				"topic"           VARCHAR NOT NULL,
+				"partition"       INTEGER NOT NULL,
+				"offset"          INTEGER NOT NULL,
+				"key"             VARCHAR,
+				"produced_at"     TIMESTAMP NOT NULL,
+				"consumed_at"     TIMESTAMP NOT NULL,
+				"message"         VARCHAR,
+				"error"           VARCHAR NOT NULL,
+				PRIMARY KEY("topic", "partition", "offset")
 			)`)
 		return err
 	},
