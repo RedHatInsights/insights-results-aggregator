@@ -6,6 +6,23 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/metrics": {
+      "get": {
+        "summary": "Read all metrics exposed by this service",
+        "description": "",
+        "parameters": [],
+        "operationId": "getMetrics",
+        "responses": {
+          "200": {
+            "description": "Default response containing all metrics in semi-structured text format",
+            "content": {
+                "text/plain": {
+                }
+            }
+          }
+        }
+      }
+    },
     "/organizations": {
       "get": {
         "summary": "Returns a list of available organization IDs.",
