@@ -680,3 +680,90 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 	// TODO: uncomment when issues upthere resolved
 	//assert.Contains(t, buf.String(), errStr)
 }
+
+func TestDBStorage_CreateRule(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.CreateRule(types.Rule{
+		Module:     "module",
+		Name:       "name",
+		Summary:    "summary",
+		Reason:     "reason",
+		Resolution: "resolution",
+		MoreInfo:   "more_info",
+	})
+	helpers.FailOnError(t, err)
+}
+
+func TestDBStorage_CreateRule_DBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.CreateRule(types.Rule{
+		Module:     "module",
+		Name:       "name",
+		Summary:    "summary",
+		Reason:     "reason",
+		Resolution: "resolution",
+		MoreInfo:   "more_info",
+	})
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestDBStorage_CreateRuleErrorKey(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	err := mockStorage.CreateRule(types.Rule{
+		Module:     "module",
+		Name:       "name",
+		Summary:    "summary",
+		Reason:     "reason",
+		Resolution: "resolution",
+		MoreInfo:   "more_info",
+	})
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRuleErrorKey(types.RuleErrorKey{
+		ErrorKey:    "error_key",
+		RuleModule:  "module",
+		Condition:   "condition",
+		Description: "description",
+		Impact:      1,
+		Likelihood:  2,
+		PublishDate: testdata.LastCheckedAt,
+		Active:      true,
+		Generic:     "generic",
+	})
+	helpers.FailOnError(t, err)
+}
+
+func TestDBStorage_CreateRuleErrorKey_DBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+
+	err := mockStorage.CreateRule(types.Rule{
+		Module:     "module",
+		Name:       "name",
+		Summary:    "summary",
+		Reason:     "reason",
+		Resolution: "resolution",
+		MoreInfo:   "more_info",
+	})
+	helpers.FailOnError(t, err)
+
+	helpers.MustCloseStorage(t, mockStorage)
+
+	err = mockStorage.CreateRuleErrorKey(types.RuleErrorKey{
+		ErrorKey:    "error_key",
+		RuleModule:  "rule_module",
+		Condition:   "condition",
+		Description: "description",
+		Impact:      1,
+		Likelihood:  2,
+		PublishDate: testdata.LastCheckedAt,
+		Active:      true,
+		Generic:     "generic",
+	})
+	assert.EqualError(t, err, "sql: database is closed")
+}

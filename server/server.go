@@ -247,50 +247,107 @@ func (server *HTTPServer) checkVotePermissions(writer http.ResponseWriter, reque
 }
 
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
-	clusterID, err := readClusterName(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	ruleID, err := readRuleID(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	userID, successful := server.readUserID(err, request, writer)
+	clusterID, ruleID, userID, successful := server.readVoteOnRuleParams(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
 	}
 
-	// it's gonna raise an error if cluster does not exist
-	_, _, err = server.Storage.ReadReportForClusterByClusterName(clusterID)
-	if err != nil {
-		handleServerError(writer, err)
-		return
-	}
-
-	_, err = server.Storage.GetRuleByID(ruleID)
-	if err != nil {
-		handleServerError(writer, err)
-		return
-	}
-
-	err = server.checkVotePermissions(writer, request, clusterID)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
+	err := server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
 	if err != nil {
 		handleServerError(writer, err)
 		return
 	}
 
 	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *http.Request) {
+	clusterID, ruleID, userID, successful := server.readVoteOnRuleParams(writer, request)
+	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	userFeedbackOnRule, err := server.Storage.GetUserFeedbackOnRule(clusterID, ruleID, userID)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("vote", userFeedbackOnRule.UserVote))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+func (server *HTTPServer) createRule(writer http.ResponseWriter, request *http.Request) {
+	ruleID, err := readRuleID(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	var rule types.Rule
+
+	err = json.NewDecoder(request.Body).Decode(&rule)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	rule.Module = ruleID
+
+	err = server.Storage.CreateRule(rule)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendResponse(writer, responses.BuildOkResponseWithData(
+		"rule", rule,
+	))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+func (server *HTTPServer) createRuleErrorKey(writer http.ResponseWriter, request *http.Request) {
+	ruleID, err := readRuleID(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	errorKey, err := readErrorKey(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	var ruleErrorKey types.RuleErrorKey
+
+	err = json.NewDecoder(request.Body).Decode(&ruleErrorKey)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	ruleErrorKey.RuleModule = ruleID
+	ruleErrorKey.ErrorKey = errorKey
+
+	err = server.Storage.CreateRuleErrorKey(ruleErrorKey)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendResponse(writer, responses.BuildOkResponseWithData(
+		"rule_error_key", ruleErrorKey,
+	))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -419,11 +476,23 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 		router.Use(server.handleOptionsMethod)
 	}
 
+	server.addEndpointsToRouter(router)
+
+	return router
+}
+
+func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
+	apiPrefix := server.Config.APIPrefix
+	openAPIURL := apiPrefix + filepath.Base(server.Config.APISpecFile)
+
 	// it is possible to use special REST API endpoints in debug mode
 	if server.Config.Debug {
 		router.HandleFunc(apiPrefix+OrganizationsEndpoint, server.listOfOrganizations).Methods(http.MethodGet)
 		router.HandleFunc(apiPrefix+DeleteOrganizationsEndpoint, server.deleteOrganizations).Methods(http.MethodDelete)
 		router.HandleFunc(apiPrefix+DeleteClustersEndpoint, server.deleteClusters).Methods(http.MethodDelete)
+		router.HandleFunc(apiPrefix+GetVoteOnRuleEndpoint, server.getVoteOnRule).Methods(http.MethodGet)
+		router.HandleFunc(apiPrefix+RuleEndpoint, server.createRule).Methods(http.MethodPost)
+		router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.createRuleErrorKey).Methods(http.MethodPost)
 	}
 
 	// common REST API endpoints
@@ -439,8 +508,6 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 
 	// OpenAPI specs
 	router.HandleFunc(openAPIURL, server.serveAPISpecFile).Methods(http.MethodGet)
-
-	return router
 }
 
 // Start starts server
