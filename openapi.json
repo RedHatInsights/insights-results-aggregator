@@ -3,7 +3,7 @@
   "info": {
     "title": "Insights Results Aggregator",
     "description": "Aggregation service for the results of running Insights rules.",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "paths": {
     "/organizations": {
