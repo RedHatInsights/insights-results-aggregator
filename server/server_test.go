@@ -911,3 +911,228 @@ func TestHTTPServer_CreateRuleErrorKey_BadRuleData(t *testing.T) {
 		Body:       `{"status": "invalid character 'o' in literal null (expecting 'u')"}`,
 	})
 }
+
+func TestHTTPServer_DeleteRule(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RuleEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID},
+		Body: fmt.Sprintf(`{
+			"module": "%v",
+			"name": "%v",
+			"summary": "%v",
+			"reason": "%v",
+			"resolution": "%v",
+			"more_info": "%v"
+		}`,
+			testdata.Rule1ID,
+			testdata.Rule1Name,
+			testdata.Rule1Summary,
+			testdata.Rule1Reason,
+			testdata.Rule1Resolution,
+			testdata.Rule1MoreInfo,
+		),
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: `{
+			"status": "ok",
+			"rule": ` + fmt.Sprintf(`{
+				"module": "%v",
+				"name": "%v",
+				"summary": "%v",
+				"reason": "%v",
+				"resolution": "%v",
+				"more_info": "%v"
+			}`,
+			testdata.Rule1ID,
+			testdata.Rule1Name,
+			testdata.Rule1Summary,
+			testdata.Rule1Reason,
+			testdata.Rule1Resolution,
+			testdata.Rule1MoreInfo,
+		) + `
+		}`,
+	})
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.RuleEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
+}
+
+func TestHTTPServer_DeleteRule_BadRuleID(t *testing.T) {
+	const errMessage = "Error during parsing param 'rule_id' with value 'rule id with spaces'." +
+		" Error: 'invalid rule ID, it must contain only from latin characters, number, underscores or dots'"
+
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.RuleEndpoint,
+		EndpointArgs: []interface{}{testdata.BadRuleID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "` + errMessage + `"}`,
+	})
+}
+
+func TestHTTPServer_DeleteRule_DBError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	connection := mockStorage.(*storage.DBStorage).GetConnection()
+
+	_, err := connection.Exec(`DROP TABLE rule;`)
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.RuleEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID},
+		Body: fmt.Sprintf(`{
+			"module": "%v",
+			"name": "%v",
+			"summary": "%v",
+			"reason": "%v",
+			"resolution": "%v",
+			"more_info": "%v"
+		}`,
+			testdata.Rule1ID,
+			testdata.Rule1Name,
+			testdata.Rule1Summary,
+			testdata.Rule1Reason,
+			testdata.Rule1Resolution,
+			testdata.Rule1MoreInfo,
+		),
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "Internal Server Error"}`,
+	})
+}
+
+func TestHTTPServer_DeleteRuleErrorKey(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RuleEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID},
+		Body: fmt.Sprintf(`{
+			"module": "%v",
+			"name": "%v",
+			"summary": "%v",
+			"reason": "%v",
+			"resolution": "%v",
+			"more_info": "%v"
+		}`,
+			testdata.Rule1ID,
+			testdata.Rule1Name,
+			testdata.Rule1Summary,
+			testdata.Rule1Reason,
+			testdata.Rule1Resolution,
+			testdata.Rule1MoreInfo,
+		),
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: `{
+			"status": "ok",
+			"rule": ` + fmt.Sprintf(`{
+				"module": "%v",
+				"name": "%v",
+				"summary": "%v",
+				"reason": "%v",
+				"resolution": "%v",
+				"more_info": "%v"
+			}`,
+			testdata.Rule1ID,
+			testdata.Rule1Name,
+			testdata.Rule1Summary,
+			testdata.Rule1Reason,
+			testdata.Rule1Resolution,
+			testdata.Rule1MoreInfo,
+		) + `
+		}`,
+	})
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
+		Body: fmt.Sprintf(`{
+			"error_key": "%v",
+			"rule_module": "%v",
+			"condition": "%v",
+			"description": "%v",
+			"impact": %v,
+			"likelihood": %v,
+			"publish_date": "%v",
+			"active": %v,
+			"generic": "%v"
+		}`,
+			"ek",
+			"module",
+			"",
+			"",
+			1,
+			2,
+			testdata.LastCheckedAt.Format(time.RFC3339),
+			true,
+			"",
+		),
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: `{
+			"status": "ok",
+			"rule_error_key": ` + fmt.Sprintf(`{
+				"error_key": "%v",
+				"rule_module": "%v",
+				"condition": "%v",
+				"description": "%v",
+				"impact": %v,
+				"likelihood": %v,
+				"publish_date": "%v",
+				"active": %v,
+				"generic": "%v"
+			}`,
+			"ek",
+			testdata.Rule1ID,
+			"",
+			"",
+			1,
+			2,
+			testdata.LastCheckedAt.Format(time.RFC3339),
+			true,
+			"",
+		) + `
+		}`,
+	})
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
+}
+
+func TestHTTPServer_DeleteRuleErrorKey_BadRuleKey(t *testing.T) {
+	const errMessage = "Error during parsing param 'rule_id' with value 'rule id with spaces'." +
+		" Error: 'invalid rule ID, it must contain only from latin characters, number, underscores or dots'"
+
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodDelete,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.BadRuleID, "ek"},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "` + errMessage + `"}`,
+	})
+}

@@ -87,7 +87,9 @@ type Storage interface {
 	GetRuleByID(ruleID types.RuleID) (*types.Rule, error)
 	GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
 	CreateRule(ruleData types.Rule) error
+	DeleteRule(ruleID types.RuleID) error
 	CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) error
+	DeleteRuleErrorKey(ruleID types.RuleID, errorKey types.ErrorKey) error
 	WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
 }
 
@@ -605,6 +607,25 @@ func (storage DBStorage) CreateRule(ruleData types.Rule) error {
 	return err
 }
 
+// DeleteRule deletes rule with provided ruleData in the DB
+func (storage DBStorage) DeleteRule(ruleID types.RuleID) error {
+	res, err := storage.connection.Exec(`DELETE FROM rule WHERE "module" = $1;`, ruleID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return &ItemNotFoundError{ItemID: ruleID}
+	}
+
+	return nil
+}
+
 // CreateRuleErrorKey creates rule_error_key with provided data in the DB
 func (storage DBStorage) CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) error {
 	_, err := storage.connection.Exec(`
@@ -643,6 +664,29 @@ func (storage DBStorage) CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) err
 	)
 
 	return err
+}
+
+// DeleteRuleErrorKey creates rule_error_key with provided data in the DB
+func (storage DBStorage) DeleteRuleErrorKey(ruleID types.RuleID, errorKey types.ErrorKey) error {
+	res, err := storage.connection.Exec(
+		`DELETE FROM rule_error_key WHERE "error_key" = $1 AND "rule_module" = $2`,
+		errorKey,
+		ruleID,
+	)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return &ItemNotFoundError{ItemID: fmt.Sprintf("%v/%v", ruleID, errorKey)}
+	}
+
+	return nil
 }
 
 // GetConnection returns db connection(useful for testing)

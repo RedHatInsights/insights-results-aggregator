@@ -315,6 +315,25 @@ func (server *HTTPServer) createRule(writer http.ResponseWriter, request *http.R
 	}
 }
 
+func (server *HTTPServer) deleteRule(writer http.ResponseWriter, request *http.Request) {
+	ruleID, err := readRuleID(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	err = server.Storage.DeleteRule(ruleID)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
 func (server *HTTPServer) createRuleErrorKey(writer http.ResponseWriter, request *http.Request) {
 	ruleID, err := readRuleID(writer, request)
 	if err != nil {
@@ -348,6 +367,31 @@ func (server *HTTPServer) createRuleErrorKey(writer http.ResponseWriter, request
 	err = responses.SendResponse(writer, responses.BuildOkResponseWithData(
 		"rule_error_key", ruleErrorKey,
 	))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+func (server *HTTPServer) deleteRuleErrorKey(writer http.ResponseWriter, request *http.Request) {
+	ruleID, err := readRuleID(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	errorKey, err := readErrorKey(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	err = server.Storage.DeleteRuleErrorKey(ruleID, errorKey)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendResponse(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -493,6 +537,8 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 		router.HandleFunc(apiPrefix+GetVoteOnRuleEndpoint, server.getVoteOnRule).Methods(http.MethodGet)
 		router.HandleFunc(apiPrefix+RuleEndpoint, server.createRule).Methods(http.MethodPost)
 		router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.createRuleErrorKey).Methods(http.MethodPost)
+		router.HandleFunc(apiPrefix+RuleEndpoint, server.deleteRule).Methods(http.MethodDelete)
+		router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.deleteRuleErrorKey).Methods(http.MethodDelete)
 	}
 
 	// common REST API endpoints

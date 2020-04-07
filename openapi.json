@@ -532,6 +532,41 @@
             }
           }
         }
+      },
+      "delete": {
+        "summary": "Deletes a rule with provided ruleId",
+        "operationId": "deleteRule",
+        "description": "[DEBUG ONLY] Deletes a rule with provided ruleId",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule to be deleted",
+            "schema": {
+              "type": "string",
+              "example": "some.python.module"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/rules/{ruleId}/error_keys/{errorKey}": {
@@ -539,6 +574,51 @@
         "summary": "Creates or updates rule_error_key with provided ruleId and errorKey",
         "operationId": "createOrUpdateRuleErrorKey",
         "description": "[DEBUG ONLY] Creates or updates rule_error_key with provided data in body",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule to be created or updated",
+            "schema": {
+              "type": "string",
+              "example": "some.python.module"
+            }
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "errorKey to be created",
+            "schema": {
+              "type": "string",
+              "example": "ek"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes rule_error_key with provided ruleId and errorKey",
+        "operationId": "deleteRuleErrorKey",
+        "description": "[DEBUG ONLY] Deletes rule_error_key with provided ruleId and errorKey",
         "parameters": [
           {
             "name": "ruleId",
