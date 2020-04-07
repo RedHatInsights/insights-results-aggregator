@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package types contains declaration of various data types (usually structures)
+// used elsewhere in the aggregator code.
 package types
 
 import "time"
