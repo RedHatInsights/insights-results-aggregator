@@ -38,9 +38,9 @@ const (
 	ResetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/reset_vote"
 	// GetVoteOnRuleEndpoint is an endpoint to get vote on rule. DEBUG only
 	GetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/get_vote"
-	// RuleEndpoint is an endpoint to create a rule. DEBUG only
+	// RuleEndpoint is an endpoint to create&delete a rule. DEBUG only
 	RuleEndpoint = "rules/{rule_id}"
-	// RuleErrorKeyEndpoint is an endpoint to create a rule_error_key. DEBUG only
+	// RuleErrorKeyEndpoint is an endpoint to create&delete a rule_error_key. DEBUG only
 	RuleErrorKeyEndpoint = "rules/{rule_id}/error_keys/{error_key}"
 	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
