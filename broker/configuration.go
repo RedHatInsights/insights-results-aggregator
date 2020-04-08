@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package broker contains data types, interfaces, and methods related to
+// brokers that can be used to consume input messages by aggegator.
 package broker
 
 import (
