@@ -56,6 +56,7 @@ var config struct {
 	Content struct {
 		ContentPath string `mapstructure:"path" toml:"path"`
 	} `mapstructure:"content" toml:"content"`
+	CloudWatch logger.Configuration `mapstructure:"cloudwatch" toml:"cloudwatch"`
 }
 
 // loadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
