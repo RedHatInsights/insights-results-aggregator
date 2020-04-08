@@ -753,6 +753,17 @@ func TestHTTPServer_CreateRule_BadRuleData(t *testing.T) {
 	})
 }
 
+func TestHTTPServer_CreateRule_NoBody(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RuleEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "client didn't provide request body"}`,
+	})
+}
+
 func TestHTTPServer_CreateRule_DBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
@@ -909,6 +920,17 @@ func TestHTTPServer_CreateRuleErrorKey_BadRuleData(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "invalid character 'o' in literal null (expecting 'u')"}`,
+	})
+}
+
+func TestHTTPServer_CreateRuleErrorKey_NoBody(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "client didn't provide request body"}`,
 	})
 }
 
