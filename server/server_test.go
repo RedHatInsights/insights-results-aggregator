@@ -764,6 +764,22 @@ func TestHTTPServer_CreateRule_NoBody(t *testing.T) {
 	})
 }
 
+func TestHTTPServer_CreateRule_BadJSONBody(t *testing.T) {
+	for _, body := range []string{
+		`{"module": []}`, `[]`,
+	} {
+		helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+			Method:       http.MethodPost,
+			Endpoint:     server.RuleEndpoint,
+			EndpointArgs: []interface{}{testdata.Rule1ID},
+			Body:         body,
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusBadRequest,
+			Body:       `{"status": "bad type in json data"}`,
+		})
+	}
+}
+
 func TestHTTPServer_CreateRule_DBError(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
@@ -931,6 +947,34 @@ func TestHTTPServer_CreateRuleErrorKey_NoBody(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "client didn't provide request body"}`,
+	})
+}
+
+func TestHTTPServer_CreateRuleErrorKey_BadJSONBody(t *testing.T) {
+	for _, body := range []string{
+		`{"rule_module": []}`, `[]`,
+	} {
+		helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+			Method:       http.MethodPost,
+			Endpoint:     server.RuleErrorKeyEndpoint,
+			EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
+			Body:         body,
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusBadRequest,
+			Body:       `{"status": "bad type in json data"}`,
+		})
+	}
+}
+
+func TestHTTPServer_CreateRuleErrorKey_RuleDoesNotExist(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
+		Body:         fmt.Sprintf(`{"rule_modlue": "%v"}`, testdata.Rule1ID),
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusNotFound,
+		Body:       fmt.Sprintf(`{"status": "Item with ID %v was not found in the storage"}`, testdata.Rule1ID),
 	})
 }
 
