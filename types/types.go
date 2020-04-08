@@ -14,7 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package types contains declaration of various data types (usually structures)
+// used elsewhere in the aggregator code.
 package types
+
+import "time"
 
 // OrgID represents organization ID
 type OrgID uint32
@@ -69,6 +73,9 @@ type RuleContentResponse struct {
 // RuleID represents type for rule id
 type RuleID string
 
+// ErrorKey represents type for error key
+type ErrorKey string
+
 // UserID represents type for user id
 type UserID string
 
@@ -80,4 +87,17 @@ type Rule struct {
 	Reason     string `json:"reason"`
 	Resolution string `json:"resolution"`
 	MoreInfo   string `json:"more_info"`
+}
+
+// RuleErrorKey represents the content of rule_error_key table
+type RuleErrorKey struct {
+	ErrorKey    ErrorKey  `json:"error_key"`
+	RuleModule  RuleID    `json:"rule_module"`
+	Condition   string    `json:"condition"`
+	Description string    `json:"description"`
+	Impact      int       `json:"impact"`
+	Likelihood  int       `json:"likelihood"`
+	PublishDate time.Time `json:"publish_date"`
+	Active      bool      `json:"active"`
+	Generic     string    `json:"generic"`
 }

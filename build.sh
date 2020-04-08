@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2020 Red Hat, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,5 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-status: "inactive"
-publish_date: "2020-04-03T16:13:30+02:00"
+
+# this is improper - we need to start using tags in GitHub properly
+version=0.5
+
+buildtime=$(date)
+branch=$(git rev-parse --abbrev-ref HEAD)
+commit=$(git rev-parse HEAD)
+
+go build -ldflags="-X 'main.BuildTime=$buildtime' -X 'main.BuildVersion=$version' -X 'main.BuildBranch=$branch' -X 'main.BuildCommit=$commit'"
+exit $?

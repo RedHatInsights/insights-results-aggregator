@@ -15,12 +15,14 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/rs/zerolog/log"
 )
 
 // responseDataError is used as the error message when the responses functions return an error
@@ -60,6 +62,8 @@ func (e *AuthenticationError) Error() string {
 
 // handleServerError handles separate server errors and sends appropriate responses
 func handleServerError(writer http.ResponseWriter, err error) {
+	log.Error().Err(err).Msg("handleServerError()")
+
 	var respErr error
 
 	switch err := err.(type) {
@@ -71,6 +75,8 @@ func handleServerError(writer http.ResponseWriter, err error) {
 		respErr = responses.SendNotFound(writer, err.Error())
 	case *AuthenticationError:
 		respErr = responses.SendForbidden(writer, err.Error())
+	case *json.SyntaxError:
+		respErr = responses.Send(http.StatusBadRequest, writer, err.Error())
 	default:
 		respErr = responses.SendInternalServerError(writer, "Internal Server Error")
 	}

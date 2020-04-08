@@ -45,13 +45,14 @@ lastChecked = datetime.datetime.utcnow().isoformat() + "Z"
 
 def remove_internal_rules(data, key, selector):
     if "reports" in data:
-        reports = data[key]
-        new = []
-        for report in reports:
-            if not report[selector].startswith("ccx_rules_ocp.internal."):
-                print("adding", report[selector])
-                new.append(report)
-        data[key] = new
+        if key in data:
+            reports = data[key]
+            new = []
+            for report in reports:
+                if not report[selector].startswith("ccx_rules_ocp.internal."):
+                    print("adding", report[selector])
+                    new.append(report)
+            data[key] = new
 
 for filename in files:
     if filename.startswith("s_") and filename.endswith(".json"):

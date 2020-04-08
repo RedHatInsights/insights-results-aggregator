@@ -25,6 +25,7 @@ require (
 	github.com/prometheus/client_model v0.1.0
 	github.com/prometheus/common v0.7.0
 	github.com/rs/zerolog v1.18.0
+	github.com/securego/gosec v0.0.0-20200401082031-e946c8c39989 // indirect
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.5.1
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a

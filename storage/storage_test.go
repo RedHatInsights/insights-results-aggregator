@@ -26,6 +26,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
+	"github.com/Shopify/sarama"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -577,4 +578,49 @@ func TestDBStorage_NewSQLite(t *testing.T) {
 		SQLiteDataSource: ":memory:",
 	})
 	helpers.FailOnError(t, err)
+}
+
+func TestDBStorageWriteConsumerError(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	testTopic := "topic"
+	var testPartition int32 = 2
+	var testOffset int64 = 10
+	testKey := []byte("key")
+	testMessage := []byte("value")
+	testProducedAt := time.Now().Add(-time.Hour).UTC()
+	testError := fmt.Errorf("Consumer error")
+
+	err := mockStorage.WriteConsumerError(&sarama.ConsumerMessage{
+		Topic:     testTopic,
+		Partition: testPartition,
+		Offset:    testOffset,
+		Key:       testKey,
+		Value:     testMessage,
+		Timestamp: testProducedAt,
+	}, testError)
+
+	assert.NoError(t, err)
+
+	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	row := conn.QueryRow(`
+		SELECT key, message, produced_at, consumed_at, error
+		FROM consumer_error
+		WHERE topic = $1 AND partition = $2 AND topic_offset = $3
+	`, testTopic, testPartition, testOffset)
+
+	var storageKey []byte
+	var storageMessage []byte
+	var storageProducedAt time.Time
+	var storageConsumedAt time.Time
+	var storageError string
+	err = row.Scan(&storageKey, &storageMessage, &storageProducedAt, &storageConsumedAt, &storageError)
+	assert.NoError(t, err)
+
+	assert.Equal(t, testKey, storageKey)
+	assert.Equal(t, testMessage, storageMessage)
+	assert.Equal(t, testProducedAt, storageProducedAt)
+	assert.True(t, time.Now().UTC().After(storageConsumedAt))
+	assert.Equal(t, testError.Error(), storageError)
 }

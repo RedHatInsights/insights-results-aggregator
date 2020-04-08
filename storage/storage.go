@@ -34,6 +34,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 
@@ -85,6 +86,11 @@ type Storage interface {
 	LoadRuleContent(contentDir content.RuleContentDirectory) error
 	GetRuleByID(ruleID types.RuleID) (*types.Rule, error)
 	GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
+	CreateRule(ruleData types.Rule) error
+	DeleteRule(ruleID types.RuleID) error
+	CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) error
+	DeleteRuleErrorKey(ruleID types.RuleID, errorKey types.ErrorKey) error
+	WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
 }
 
 // DBDriver type for db driver enum
@@ -574,4 +580,126 @@ func (storage DBStorage) GetRuleByID(ruleID types.RuleID) (*types.Rule, error) {
 	}
 
 	return &rule, err
+}
+
+// CreateRule creates rule with provided ruleData in the DB
+func (storage DBStorage) CreateRule(ruleData types.Rule) error {
+	_, err := storage.connection.Exec(`
+		INSERT INTO rule("module", "name", "summary", "reason", "resolution", "more_info")
+		VALUES($1, $2, $3, $4, $5, $6)
+		ON CONFLICT ("module")
+		DO UPDATE SET
+			"name" = $2,
+			"summary" = $3,
+			"reason" = $4,
+			"resolution" = $5,
+			"more_info" = $6
+		;
+	`,
+		ruleData.Module,
+		ruleData.Name,
+		ruleData.Summary,
+		ruleData.Reason,
+		ruleData.Resolution,
+		ruleData.MoreInfo,
+	)
+
+	return err
+}
+
+// DeleteRule deletes rule with provided ruleData in the DB
+func (storage DBStorage) DeleteRule(ruleID types.RuleID) error {
+	res, err := storage.connection.Exec(`DELETE FROM rule WHERE "module" = $1;`, ruleID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return &ItemNotFoundError{ItemID: ruleID}
+	}
+
+	return nil
+}
+
+// CreateRuleErrorKey creates rule_error_key with provided data in the DB
+func (storage DBStorage) CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) error {
+	_, err := storage.connection.Exec(`
+		INSERT INTO rule_error_key(
+			"error_key",
+			"rule_module",
+			"condition",
+			"description",
+			"impact",
+			"likelihood",
+			"publish_date",
+			"active",
+			"generic"
+		)
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT ("error_key", "rule_module")
+		DO UPDATE SET
+			"condition" = $3,
+			"description" = $4,
+			"impact" = $5,
+			"likelihood" = $6,
+			"publish_date" = $7,
+			"active" = $8,
+			"generic" = $9
+		;
+	`,
+		ruleErrorKey.ErrorKey,
+		ruleErrorKey.RuleModule,
+		ruleErrorKey.Condition,
+		ruleErrorKey.Description,
+		ruleErrorKey.Impact,
+		ruleErrorKey.Likelihood,
+		ruleErrorKey.PublishDate,
+		ruleErrorKey.Active,
+		ruleErrorKey.Generic,
+	)
+
+	return err
+}
+
+// DeleteRuleErrorKey creates rule_error_key with provided data in the DB
+func (storage DBStorage) DeleteRuleErrorKey(ruleID types.RuleID, errorKey types.ErrorKey) error {
+	res, err := storage.connection.Exec(
+		`DELETE FROM rule_error_key WHERE "error_key" = $1 AND "rule_module" = $2`,
+		errorKey,
+		ruleID,
+	)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return &ItemNotFoundError{ItemID: fmt.Sprintf("%v/%v", ruleID, errorKey)}
+	}
+
+	return nil
+}
+
+// GetConnection returns db connection(useful for testing)
+func (storage DBStorage) GetConnection() *sql.DB {
+	return storage.connection
+}
+
+// WriteConsumerError writes a report about a consumer error into the storage.
+func (storage DBStorage) WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error {
+	_, err := storage.connection.Exec(`
+		INSERT INTO consumer_error (topic, partition, topic_offset, key, produced_at, consumed_at, message, error)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		msg.Topic, msg.Partition, msg.Offset, msg.Key, msg.Timestamp, time.Now().UTC(), msg.Value, consumerErr.Error())
+
+	return err
 }

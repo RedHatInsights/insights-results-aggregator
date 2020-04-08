@@ -3,14 +3,71 @@
   "info": {
     "title": "Insights Results Aggregator",
     "description": "Aggregation service for the results of running Insights rules.",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "paths": {
+    "/openapi.json": {
+      "get": {
+        "summary": "Returns the OpenAPI specification JSON.",
+        "operationId": "getOpenApi",
+        "responses": {
+          "200": {
+            "description": "A JSON containing the OpenAPI specification for this service.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "openapi": {
+                      "type": "string"
+                    },
+                    "info": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "paths": {
+                      "type": "object",
+                      "description": "Available paths and their descriptions."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Read all metrics exposed by this service",
+        "description": "",
+        "parameters": [],
+        "operationId": "getMetrics",
+        "responses": {
+          "200": {
+            "description": "Default response containing all metrics in semi-structured text format",
+            "content": {
+              "text/plain": {}
+            }
+          }
+        }
+      }
+    },
     "/organizations": {
       "get": {
         "summary": "Returns a list of available organization IDs.",
         "operationId": "getOrganizations",
-        "description": "List of organizations for which at least one Insights report is available via the API.",
+        "description": "[DEBUG ONLY] List of organizations for which at least one Insights report is available via the API.",
         "responses": {
           "200": {
             "description": "A JSON array of organization IDs.",
@@ -36,7 +93,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "debug"
+        ]
       }
     },
     "/organizations/{orgId}/clusters": {
@@ -238,7 +298,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule"
+        ]
       }
     },
     "/clusters/{clusterId}/rules/{ruleId}/dislike": {
@@ -284,7 +347,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule"
+        ]
       }
     },
     "/clusters/{clusterId}/rules/{ruleId}/reset_vote": {
@@ -330,7 +396,64 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule"
+        ]
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/get_vote": {
+      "get": {
+        "summary": "Returns vote for the rule with cluster for current user",
+        "operationId": "getVoteForRule",
+        "description": "[DEBUG ONLY] Returns vote for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "vote": {
+                      "type": "integer",
+                      "example": "1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ]
       }
     },
     "/organizations/{orgIds}": {
@@ -358,7 +481,10 @@
           "200": {
             "description": "Deletion was successful."
           }
-        }
+        },
+        "tags": [
+          "debug"
+        ]
       }
     },
     "/clusters/{clusterIds}": {
@@ -387,7 +513,208 @@
           "200": {
             "description": "Deletion was successful."
           }
+        },
+        "tags": [
+          "debug"
+        ]
+      }
+    },
+    "/rules/{ruleId}": {
+      "post": {
+        "summary": "Creates or updates rule with provided ruleId",
+        "operationId": "createOrUpdateRule",
+        "description": "[DEBUG ONLY] Creates or updates rule with provided data in body",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule to be created or updated",
+            "schema": {
+              "type": "string",
+              "example": "some.python.module"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "description": "Rule data",
+          "required": true
         }
+      },
+      "delete": {
+        "summary": "Deletes a rule with provided ruleId",
+        "operationId": "deleteRule",
+        "description": "[DEBUG ONLY] Deletes a rule with provided ruleId",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule to be deleted",
+            "schema": {
+              "type": "string",
+              "example": "some.python.module"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ]
+      }
+    },
+    "/rules/{ruleId}/error_keys/{errorKey}": {
+      "post": {
+        "summary": "Creates or updates rule_error_key with provided ruleId and errorKey",
+        "operationId": "createOrUpdateRuleErrorKey",
+        "description": "[DEBUG ONLY] Creates or updates rule_error_key with provided data in body",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule to be created or updated",
+            "schema": {
+              "type": "string",
+              "example": "some.python.module"
+            }
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "errorKey to be created",
+            "schema": {
+              "type": "string",
+              "example": "ek"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "description": "Rule error key data",
+          "required": true
+        }
+      },
+      "delete": {
+        "summary": "Deletes rule_error_key with provided ruleId and errorKey",
+        "operationId": "deleteRuleErrorKey",
+        "description": "[DEBUG ONLY] Deletes rule_error_key with provided ruleId and errorKey",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule to be created or updated",
+            "schema": {
+              "type": "string",
+              "example": "some.python.module"
+            }
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "errorKey to be created",
+            "schema": {
+              "type": "string",
+              "example": "ek"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ]
       }
     }
   }
