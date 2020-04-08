@@ -345,6 +345,13 @@ func (server *HTTPServer) createRuleErrorKey(writer http.ResponseWriter, request
 		return
 	}
 
+	// it's gonna raise an error if rule does not exist
+	_, err = server.Storage.GetRuleByID(ruleID)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
 	errorKey, err := readErrorKey(writer, request)
 	if err != nil {
 		// everything has been handled already

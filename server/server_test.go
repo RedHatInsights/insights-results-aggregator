@@ -684,8 +684,8 @@ func TestHTTPServer_deleteClusters_BadClusterName(t *testing.T) {
 	})
 }
 
-func TestHTTPServer_CreateRule(t *testing.T) {
-	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+func createRule(t *testing.T, mockStorage storage.Storage) {
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.RuleEndpoint,
 		EndpointArgs: []interface{}{testdata.Rule1ID},
@@ -727,6 +727,10 @@ func TestHTTPServer_CreateRule(t *testing.T) {
 	})
 }
 
+func TestHTTPServer_CreateRule(t *testing.T) {
+	createRule(t, nil)
+}
+
 func TestHTTPServer_CreateRule_BadRuleID(t *testing.T) {
 	const errMessage = "Error during parsing param 'rule_id' with value 'rule id with spaces'." +
 		" Error: 'invalid rule ID, it must contain only from latin characters, number, underscores or dots'"
@@ -762,6 +766,22 @@ func TestHTTPServer_CreateRule_NoBody(t *testing.T) {
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "client didn't provide request body"}`,
 	})
+}
+
+func TestHTTPServer_CreateRule_BadJSONBody(t *testing.T) {
+	for _, body := range []string{
+		`{"module": []}`, `[]`,
+	} {
+		helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+			Method:       http.MethodPost,
+			Endpoint:     server.RuleEndpoint,
+			EndpointArgs: []interface{}{testdata.Rule1ID},
+			Body:         body,
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusBadRequest,
+			Body:       `{"status": "bad type in json data"}`,
+		})
+	}
 }
 
 func TestHTTPServer_CreateRule_DBError(t *testing.T) {
@@ -802,46 +822,7 @@ func TestHTTPServer_CreateRuleErrorKey(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, true)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
-		Method:       http.MethodPost,
-		Endpoint:     server.RuleEndpoint,
-		EndpointArgs: []interface{}{testdata.Rule1ID},
-		Body: fmt.Sprintf(`{
-			"module": "%v",
-			"name": "%v",
-			"summary": "%v",
-			"reason": "%v",
-			"resolution": "%v",
-			"more_info": "%v"
-		}`,
-			testdata.Rule1ID,
-			testdata.Rule1Name,
-			testdata.Rule1Summary,
-			testdata.Rule1Reason,
-			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
-		),
-	}, &helpers.APIResponse{
-		StatusCode: http.StatusOK,
-		Body: `{
-			"status": "ok",
-			"rule": ` + fmt.Sprintf(`{
-				"module": "%v",
-				"name": "%v",
-				"summary": "%v",
-				"reason": "%v",
-				"resolution": "%v",
-				"more_info": "%v"
-			}`,
-			testdata.Rule1ID,
-			testdata.Rule1Name,
-			testdata.Rule1Summary,
-			testdata.Rule1Reason,
-			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
-		) + `
-		}`,
-	})
+	createRule(t, mockStorage)
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPost,
@@ -911,8 +892,13 @@ func TestHTTPServer_CreateRuleErrorKey_BadRuleKey(t *testing.T) {
 	})
 }
 
-func TestHTTPServer_CreateRuleErrorKey_BadRuleData(t *testing.T) {
-	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+func TestHTTPServer_CreateRuleErrorKey_BadRuleErrorKeyData(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	createRule(t, mockStorage)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.RuleErrorKeyEndpoint,
 		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
@@ -924,13 +910,51 @@ func TestHTTPServer_CreateRuleErrorKey_BadRuleData(t *testing.T) {
 }
 
 func TestHTTPServer_CreateRuleErrorKey_NoBody(t *testing.T) {
-	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	createRule(t, mockStorage)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.RuleErrorKeyEndpoint,
 		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "client didn't provide request body"}`,
+	})
+}
+
+func TestHTTPServer_CreateRuleErrorKey_BadJSONBody(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	createRule(t, mockStorage)
+
+	for _, body := range []string{
+		`{"rule_module": []}`, `[]`,
+	} {
+		helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+			Method:       http.MethodPost,
+			Endpoint:     server.RuleErrorKeyEndpoint,
+			EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
+			Body:         body,
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusBadRequest,
+			Body:       `{"status": "bad type in json data"}`,
+		})
+	}
+}
+
+func TestHTTPServer_CreateRuleErrorKey_RuleDoesNotExist(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
+		Body:         fmt.Sprintf(`{"rule_modlue": "%v"}`, testdata.Rule1ID),
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusNotFound,
+		Body:       fmt.Sprintf(`{"status": "Item with ID %v was not found in the storage"}`, testdata.Rule1ID),
 	})
 }
 
