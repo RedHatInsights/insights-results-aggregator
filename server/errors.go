@@ -60,6 +60,13 @@ func (e *AuthenticationError) Error() string {
 	return e.errString
 }
 
+// NoBodyError error meaning that client didn't provide body when it's required
+type NoBodyError struct{}
+
+func (*NoBodyError) Error() string {
+	return "client didn't provide request body"
+}
+
 // handleServerError handles separate server errors and sends appropriate responses
 func handleServerError(writer http.ResponseWriter, err error) {
 	log.Error().Err(err).Msg("handleServerError()")
@@ -67,16 +74,14 @@ func handleServerError(writer http.ResponseWriter, err error) {
 	var respErr error
 
 	switch err := err.(type) {
-	case *RouterMissingParamError:
+	case *RouterMissingParamError, *RouterParsingError, *json.SyntaxError, *NoBodyError:
 		respErr = responses.SendError(writer, err.Error())
-	case *RouterParsingError:
-		respErr = responses.SendError(writer, err.Error())
+	case *json.UnmarshalTypeError:
+		respErr = responses.SendError(writer, "bad type in json data")
 	case *storage.ItemNotFoundError:
 		respErr = responses.SendNotFound(writer, err.Error())
 	case *AuthenticationError:
 		respErr = responses.SendForbidden(writer, err.Error())
-	case *json.SyntaxError:
-		respErr = responses.Send(http.StatusBadRequest, writer, err.Error())
 	default:
 		respErr = responses.SendInternalServerError(writer, "Internal Server Error")
 	}

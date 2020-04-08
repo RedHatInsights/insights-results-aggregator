@@ -45,6 +45,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -295,6 +296,9 @@ func (server *HTTPServer) createRule(writer http.ResponseWriter, request *http.R
 
 	err = json.NewDecoder(request.Body).Decode(&rule)
 	if err != nil {
+		if err == io.EOF {
+			err = &NoBodyError{}
+		}
 		handleServerError(writer, err)
 		return
 	}
@@ -341,6 +345,13 @@ func (server *HTTPServer) createRuleErrorKey(writer http.ResponseWriter, request
 		return
 	}
 
+	// it's gonna raise an error if rule does not exist
+	_, err = server.Storage.GetRuleByID(ruleID)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
 	errorKey, err := readErrorKey(writer, request)
 	if err != nil {
 		// everything has been handled already
@@ -351,6 +362,9 @@ func (server *HTTPServer) createRuleErrorKey(writer http.ResponseWriter, request
 
 	err = json.NewDecoder(request.Body).Decode(&ruleErrorKey)
 	if err != nil {
+		if err == io.EOF {
+			err = &NoBodyError{}
+		}
 		handleServerError(writer, err)
 		return
 	}
