@@ -67,7 +67,7 @@
       "get": {
         "summary": "Returns a list of available organization IDs.",
         "operationId": "getOrganizations",
-        "description": "List of organizations for which at least one Insights report is available via the API.",
+        "description": "[DEBUG ONLY] List of organizations for which at least one Insights report is available via the API.",
         "responses": {
           "200": {
             "description": "A JSON array of organization IDs.",
@@ -93,7 +93,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "debug"
+        ]
       }
     },
     "/organizations/{orgId}/clusters": {
@@ -295,7 +298,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule"
+        ]
       }
     },
     "/clusters/{clusterId}/rules/{ruleId}/dislike": {
@@ -341,7 +347,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule"
+        ]
       }
     },
     "/clusters/{clusterId}/rules/{ruleId}/reset_vote": {
@@ -387,7 +396,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule"
+        ]
       }
     },
     "/clusters/{clusterId}/rules/{ruleId}/get_vote": {
@@ -437,7 +449,11 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ]
       }
     },
     "/organizations/{orgIds}": {
@@ -465,7 +481,10 @@
           "200": {
             "description": "Deletion was successful."
           }
-        }
+        },
+        "tags": [
+          "debug"
+        ]
       }
     },
     "/clusters/{clusterIds}": {
@@ -494,7 +513,10 @@
           "200": {
             "description": "Deletion was successful."
           }
-        }
+        },
+        "tags": [
+          "debug"
+        ]
       }
     },
     "/rules/{ruleId}": {
@@ -531,6 +553,19 @@
               }
             }
           }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "description": "Rule data",
+          "required": true
         }
       },
       "delete": {
@@ -566,7 +601,11 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ]
       }
     },
     "/rules/{ruleId}/error_keys/{errorKey}": {
@@ -613,6 +652,19 @@
               }
             }
           }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "description": "Rule error key data",
+          "required": true
         }
       },
       "delete": {
@@ -658,7 +710,11 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ]
       }
     }
   }
