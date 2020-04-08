@@ -75,7 +75,7 @@ func handleServerError(writer http.ResponseWriter, err error) {
 
 	switch err := err.(type) {
 	case *RouterMissingParamError, *RouterParsingError, *json.SyntaxError, *NoBodyError:
-		respErr = responses.Send(http.StatusBadRequest, writer, err.Error())
+		respErr = responses.SendError(writer, err.Error())
 	case *storage.ItemNotFoundError:
 		respErr = responses.SendNotFound(writer, err.Error())
 	case *AuthenticationError:
