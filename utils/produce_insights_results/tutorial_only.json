@@ -1,0 +1,58 @@
+{
+    "OrgID": 11789772,
+    "ClusterName": "5d5892d3-1f74-4ccf-91af-548dfc9767aa",
+    "LastChecked": "2020-04-09T06:16:02.512755Z",
+    "Report": {
+        "system": {
+            "metadata": {},
+            "hostname": null
+        },
+        "reports": [
+            {
+                "rule_id": "tutorial_rule|TUTORIAL_ERROR",
+                "component": "ccx_rules_ocp.external.tutorial_rule.report",
+                "type": "rule",
+                "key": "TUTORIAL_ERROR",
+                "details": {
+                    "type": "rule",
+                    "error_key": "TUTORIAL_ERROR"
+                },
+                "tags": [],
+                "links": {}
+            }
+        ],
+        "fingerprints": [],
+        "skips": [
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.check_ocs_version.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.OperatorsOcsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.check_pods_scc.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.PodsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.operator_phase_check.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.OperatorsOcsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.pvc_phase_check.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.PersistentVolumeClaimsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.ceph_check_mon_clock_skew.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.ocs.ceph_check_mon_clock_skew.get_mon_reporting_clock_skew'] Any: ",
+                "type": "skip"
+            }
+        ]
+    }
+}
