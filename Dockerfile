@@ -37,6 +37,8 @@ COPY --from=builder /go/insights-results-aggregator/insights-results-aggregator 
 COPY --from=builder /go/insights-results-aggregator/openapi.json /openapi/openapi.json
 # copy just the rule content instead of the whole repository
 COPY --from=builder /rules-content/content/ /rules-content
+# copy tutorial/fake rule hit on all reports
+COPY rules/tutorial/content/ /rules-content/external/rules
 
 RUN chmod a+x /insights-results-aggregator
 

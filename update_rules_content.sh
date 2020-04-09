@@ -23,6 +23,7 @@ trap clean_up EXIT
 RULES_REPO="https://gitlab.cee.redhat.com/ccx/ccx-rules-ocp.git"
 SCRIPT_DIR="$(dirname $(realpath $0))"
 CONTENT_DIR="${SCRIPT_DIR}/rules-content"
+TUTORIAL_RULE_CONTENT_DIR="${SCRIPT_DIR}/rules/tutorial/content"
 
 CLONE_TEMP_DIR="${SCRIPT_DIR}/.tmp"
 RULES_CONTENT="${CLONE_TEMP_DIR}/content/"
@@ -53,6 +54,8 @@ then
 fi
 
 rm -rf "${CLONE_TEMP_DIR}"
+
+cp -a "${TUTORIAL_RULE_CONTENT_DIR}/." "${CONTENT_DIR}/external/rules/"
 
 echo "${CONTENT_DIR} updated with latest rules"
 exit 0
