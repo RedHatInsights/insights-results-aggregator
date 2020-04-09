@@ -1,0 +1,6 @@
+condition:
+description: Introducing Insights for Red Hat OpenShift Container Platform
+impact:
+likelihood: 1
+publish_date: '2020-08-04 00:42:00'
+status: active

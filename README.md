@@ -416,6 +416,12 @@ Please note that all checks mentioned above have to pass for the change to be me
 
 History of checks performed by CI is available at [RedHatInsights / insights-results-aggregator](https://travis-ci.org/RedHatInsights/insights-results-aggregator).
 
+## Rules
+
+### Tutorial rule
+
+Directory `rules/tutorial/` contains tutorial rule that is 'hit' by any cluster.
+
 ## Mock data for aggregator
 
 Data to be consumed by aggregator through Kafka broker is prepared in `utils/produce_insights_results/` subdirectory.

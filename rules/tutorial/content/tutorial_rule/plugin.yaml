@@ -1,0 +1,4 @@
+name: Introducing Insights for Red Hat OpenShift Container Platform
+node_id:
+product_code: OCP4
+python_module: ccx_rules_ocm.tutorial_rule
