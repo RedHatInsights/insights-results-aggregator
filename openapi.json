@@ -231,7 +231,9 @@
                               },
                               "risk_of_change": {
                                 "type": "integer",
+                                "description": "Risk of change - values paired with corresponding UI elements. 0 returned when not defined, therefore to hide the UI.",
                                 "enum": [
+                                  0,
                                   1,
                                   2,
                                   3,
