@@ -461,3 +461,6 @@ It performs several operations:
 ./fill_in_results.sh external-rules-archives-2020-03-31.tar 11789772 5d5892d3-1f74-4ccf-91af-548dfc9767aa
 ```
 
+### `stat.py`
+
+This script can be used to display statistic about rules that really 'hit' problems on clusters. Can be used against test data or production data if needed.
