@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Display statistic about rules that really 'hit' problems on clusters."""
+
 import collections
 import json
 from os import listdir
@@ -20,7 +22,7 @@ from os.path import isfile, join
 
 files = [f for f in listdir(".") if isfile(join(".", f))]
 
-rule_names=(
+rule_names = (
     'ccx_rules_ocp.external.bug_rules.bug_1766907.report',
     'ccx_rules_ocp.external.bug_rules.bug_1798049.report',
     'ccx_rules_ocp.external.bug_rules.bug_1801300.report',
@@ -88,4 +90,5 @@ for filename in files:
 print("Rule, passed, reported, skipped")
 
 for rule in rule_names:
-    print(rule, passed_cnt[rule], reported_cnt[rule], skipped_cnt[rule], sep=",")
+    print(rule, passed_cnt[rule], reported_cnt[rule], skipped_cnt[rule],
+          sep=",")
