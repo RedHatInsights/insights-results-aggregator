@@ -142,7 +142,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "prod"
+        ]
       }
     },
     "/report/{orgId}/{clusterId}": {
@@ -254,7 +257,10 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "prod"
+        ]
       }
     },
     "/clusters/{clusterId}/rules/{ruleId}/like": {
@@ -302,7 +308,8 @@
           }
         },
         "tags": [
-          "rule"
+          "rule",
+          "prod"
         ]
       }
     },
@@ -351,7 +358,8 @@
           }
         },
         "tags": [
-          "rule"
+          "rule",
+          "prod"
         ]
       }
     },
@@ -400,7 +408,8 @@
           }
         },
         "tags": [
-          "rule"
+          "rule",
+          "prod"
         ]
       }
     },
