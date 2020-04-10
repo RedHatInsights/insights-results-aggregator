@@ -207,6 +207,15 @@ save_offset = true
 The offset is stored in the same kafka broker. If it turned off,
 consuming will be started from the most recent message (DEFAULT: false)
 
+Option names in env configuration:
+
+* `address` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
+* `topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC
+* `publish_topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__PUBLISH_TOPIC
+* `group` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP
+* `enabled` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
+* `save_offset` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SAVE_OFFSET
+
 ## Server configuration
 
 Server configuration is in section `[server]` in config file.
