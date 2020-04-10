@@ -184,6 +184,29 @@ the actual driver will be postgres with password "your secret password"
 It's very useful for deploying docker containers and keeping some of your configuration
 outside of main config file(like passwords).
 
+## Broker configuration
+
+Broker configuration is in section `[broker]` in config file
+
+```toml
+[broker]
+address = "localhost:9092"
+topic = "topic"
+publish_topic = "topic"
+group = "aggregator"
+enabled = true
+save_offset = true
+```
+
+* `address` is address of kafka broker (DEFAULT: "")
+* `topic` is a topic to consume message from (DEFAULT: "")
+* `publish_topic` is a topic to publish messages to(see package producer) (DEFAULT: "")
+* `group` is a kafka group (DEFAULT: "")
+* `enabled` is option to turn broker on (DEFAULT: false)
+* `save_offset` is option to turn on saving offset of successfully consumed messages.
+Offset is stored in the same kafka broker. If it turned off,
+consuming will be started from the most recent message (DEFAULT: false)
+
 ## Server configuration
 
 Server configuration is in section `[server]` in config file.
