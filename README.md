@@ -198,13 +198,13 @@ enabled = true
 save_offset = true
 ```
 
-* `address` is address of kafka broker (DEFAULT: "")
-* `topic` is a topic to consume message from (DEFAULT: "")
+* `address` is an address of kafka broker (DEFAULT: "")
+* `topic` is a topic to consume messages from (DEFAULT: "")
 * `publish_topic` is a topic to publish messages to(see package producer) (DEFAULT: "")
 * `group` is a kafka group (DEFAULT: "")
-* `enabled` is option to turn broker on (DEFAULT: false)
-* `save_offset` is option to turn on saving offset of successfully consumed messages.
-Offset is stored in the same kafka broker. If it turned off,
+* `enabled` is an option to turn broker on (DEFAULT: false)
+* `save_offset` is an option to turn on saving offset of successfully consumed messages.
+The offset is stored in the same kafka broker. If it turned off,
 consuming will be started from the most recent message (DEFAULT: false)
 
 ## Server configuration
