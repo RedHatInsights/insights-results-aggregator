@@ -379,7 +379,7 @@ func TestInitInfoTable_InitTableDBError(t *testing.T) {
 	const errStr = "create table error"
 
 	db, expects := helpers.MustGetMockDBWithExpects(t)
-	defer helpers.MustGetMockDBWithExpects(t)
+	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
 	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnError(fmt.Errorf(errStr))
@@ -393,7 +393,7 @@ func TestInitInfoTable_InitVersionDBError(t *testing.T) {
 	const errStr = "insert error"
 
 	db, expects := helpers.MustGetMockDBWithExpects(t)
-	defer helpers.MustGetMockDBWithExpects(t)
+	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
 	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
@@ -408,7 +408,7 @@ func TestInitInfoTable_CountDBError(t *testing.T) {
 	const errStr = "count error"
 
 	db, expects := helpers.MustGetMockDBWithExpects(t)
-	defer helpers.MustGetMockDBWithExpects(t)
+	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
 	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
@@ -453,7 +453,7 @@ func TestUpdateVersionInDB_RowsAffectedError(t *testing.T) {
 	const errStr = "rows affected error"
 
 	db, expects := updateVersionInDBCommon(t)
-	defer helpers.MustGetMockDBWithExpects(t)
+	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectExec("UPDATE migration_info SET version").
 		WithArgs(1).
@@ -465,7 +465,7 @@ func TestUpdateVersionInDB_RowsAffectedError(t *testing.T) {
 
 func TestUpdateVersionInDB_MoreThan1RowAffected(t *testing.T) {
 	db, expects := updateVersionInDBCommon(t)
-	defer helpers.MustGetMockDBWithExpects(t)
+	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectExec("UPDATE migration_info SET version").
 		WithArgs(1).
