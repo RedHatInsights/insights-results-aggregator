@@ -15,8 +15,12 @@
 package migration_test
 
 import (
+	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
@@ -158,6 +162,111 @@ func TestAllMigrations_Migration3TableClusterRuleUserFeedbackDoesNotExist(t *tes
 	helpers.FailOnError(t, err)
 
 	// try to set to the first version
+	err = migration.SetDBVersion(db, 0)
+	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
+}
+
+func TestAllMigrations_Migration4_StepUp_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
+	db := prepareDBAndInfo(t)
+	defer closeDB(t, db)
+
+	err := migration.SetDBVersion(db, 3)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, migration.GetMaxVersion())
+	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
+}
+
+func GetTxForMigration(t *testing.T) (*sql.Tx, *sql.DB, sqlmock.Sqlmock) {
+	db, expects := helpers.MustGetMockDBWithExpects(t)
+
+	expects.ExpectBegin()
+
+	tx, err := db.Begin()
+	helpers.FailOnError(t, err)
+
+	return tx, db, expects
+}
+
+func TestAllMigrations_Migration4_CreateTableError(t *testing.T) {
+	expectedErr := fmt.Errorf("create table error")
+	mig4 := migration.Mig4
+
+	for _, method := range []func(*sql.Tx) error{mig4.StepUp, mig4.StepDown} {
+		func(method func(*sql.Tx) error) {
+			tx, db, expects := GetTxForMigration(t)
+			defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+
+			expects.ExpectExec("ALTER TABLE").
+				WillReturnResult(driver.ResultNoRows)
+			expects.ExpectExec("CREATE TABLE").
+				WillReturnError(expectedErr)
+
+			err := method(tx)
+			assert.EqualError(t, err, expectedErr.Error())
+		}(method)
+	}
+}
+
+func TestAllMigrations_Migration4_InsertError(t *testing.T) {
+	expectedErr := fmt.Errorf("insert error")
+	mig4 := migration.Mig4
+
+	for _, method := range []func(*sql.Tx) error{mig4.StepUp, mig4.StepDown} {
+		func(method func(*sql.Tx) error) {
+			tx, db, expects := GetTxForMigration(t)
+			defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+
+			expects.ExpectExec("ALTER TABLE").
+				WillReturnResult(driver.ResultNoRows)
+			expects.ExpectExec("CREATE TABLE").
+				WillReturnResult(driver.ResultNoRows)
+			expects.ExpectExec("INSERT INTO").
+				WillReturnError(expectedErr)
+
+			err := method(tx)
+			assert.EqualError(t, err, expectedErr.Error())
+		}(method)
+	}
+}
+
+func TestAllMigrations_Migration4_DropTableError(t *testing.T) {
+	expectedErr := fmt.Errorf("drop table error")
+	mig4 := migration.Mig4
+
+	for _, method := range []func(*sql.Tx) error{mig4.StepUp, mig4.StepDown} {
+		func(method func(*sql.Tx) error) {
+			tx, db, expects := GetTxForMigration(t)
+			defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+
+			expects.ExpectExec("ALTER TABLE").
+				WillReturnResult(driver.ResultNoRows)
+			expects.ExpectExec("CREATE TABLE").
+				WillReturnResult(driver.ResultNoRows)
+			expects.ExpectExec("INSERT INTO").
+				WillReturnResult(driver.ResultNoRows)
+			expects.ExpectExec("DROP TABLE").
+				WillReturnError(expectedErr)
+
+			err := method(tx)
+			assert.EqualError(t, err, expectedErr.Error())
+		}(method)
+	}
+}
+
+func TestAllMigrations_Migration4_StepDown_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
+	db := prepareDBAndInfo(t)
+	defer closeDB(t, db)
+
+	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
+	helpers.FailOnError(t, err)
+
 	err = migration.SetDBVersion(db, 0)
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }

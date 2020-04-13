@@ -20,4 +20,5 @@ package migration
 var (
 	Migrations      = &migrations
 	WithTransaction = withTransaction
+	Mig4            = mig4
 )
