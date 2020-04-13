@@ -27,6 +27,17 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
+func GetTxForMigration(t *testing.T) (*sql.Tx, *sql.DB, sqlmock.Sqlmock) {
+	db, expects := helpers.MustGetMockDBWithExpects(t)
+
+	expects.ExpectBegin()
+
+	tx, err := db.Begin()
+	helpers.FailOnError(t, err)
+
+	return tx, db, expects
+}
+
 func TestAllMigrations(t *testing.T) {
 	db := prepareDB(t)
 	defer closeDB(t, db)
@@ -58,7 +69,7 @@ func TestMigrationsOneByOne(t *testing.T) {
 	}
 }
 
-func TestAllMigrations_Migration1TableReportAlreadyExists(t *testing.T) {
+func TestMigration1_TableReportAlreadyExists(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -69,7 +80,7 @@ func TestAllMigrations_Migration1TableReportAlreadyExists(t *testing.T) {
 	assert.EqualError(t, err, "table report already exists")
 }
 
-func TestAllMigrations_Migration1TableReportDoesNotExist(t *testing.T) {
+func TestMigration1_TableReportDoesNotExist(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -85,7 +96,7 @@ func TestAllMigrations_Migration1TableReportDoesNotExist(t *testing.T) {
 	assert.EqualError(t, err, "no such table: report")
 }
 
-func TestAllMigrations_Migration2TableRuleAlreadyExists(t *testing.T) {
+func TestMigration2_TableRuleAlreadyExists(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -96,7 +107,7 @@ func TestAllMigrations_Migration2TableRuleAlreadyExists(t *testing.T) {
 	assert.EqualError(t, err, "table rule already exists")
 }
 
-func TestAllMigrations_Migration2TableRuleDoesNotExist(t *testing.T) {
+func TestMigration2_TableRuleDoesNotExist(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -112,7 +123,7 @@ func TestAllMigrations_Migration2TableRuleDoesNotExist(t *testing.T) {
 	assert.EqualError(t, err, "no such table: rule")
 }
 
-func TestAllMigrations_Migration2TableRuleErrorKeyAlreadyExists(t *testing.T) {
+func TestMigration2_TableRuleErrorKeyAlreadyExists(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -123,7 +134,7 @@ func TestAllMigrations_Migration2TableRuleErrorKeyAlreadyExists(t *testing.T) {
 	assert.EqualError(t, err, "table rule_error_key already exists")
 }
 
-func TestAllMigrations_Migration2TableRuleErrorKeyDoesNotExist(t *testing.T) {
+func TestMigration2_TableRuleErrorKeyDoesNotExist(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -139,7 +150,7 @@ func TestAllMigrations_Migration2TableRuleErrorKeyDoesNotExist(t *testing.T) {
 	assert.EqualError(t, err, "no such table: rule_error_key")
 }
 
-func TestAllMigrations_Migration3TableClusterRuleUserFeedbackAlreadyExists(t *testing.T) {
+func TestMigration3_TableClusterRuleUserFeedbackAlreadyExists(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -150,7 +161,7 @@ func TestAllMigrations_Migration3TableClusterRuleUserFeedbackAlreadyExists(t *te
 	assert.EqualError(t, err, "table cluster_rule_user_feedback already exists")
 }
 
-func TestAllMigrations_Migration3TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
+func TestMigration3_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -166,7 +177,7 @@ func TestAllMigrations_Migration3TableClusterRuleUserFeedbackDoesNotExist(t *tes
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
 
-func TestAllMigrations_Migration4_StepUp_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
+func TestMigration4_StepUp_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -180,18 +191,21 @@ func TestAllMigrations_Migration4_StepUp_TableClusterRuleUserFeedbackDoesNotExis
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
 
-func GetTxForMigration(t *testing.T) (*sql.Tx, *sql.DB, sqlmock.Sqlmock) {
-	db, expects := helpers.MustGetMockDBWithExpects(t)
+func TestMigration4_StepDown_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
+	db := prepareDBAndInfo(t)
+	defer closeDB(t, db)
 
-	expects.ExpectBegin()
-
-	tx, err := db.Begin()
+	err := migration.SetDBVersion(db, migration.GetMaxVersion())
 	helpers.FailOnError(t, err)
 
-	return tx, db, expects
+	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, 0)
+	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
 
-func TestAllMigrations_Migration4_CreateTableError(t *testing.T) {
+func TestMigration4_CreateTableError(t *testing.T) {
 	expectedErr := fmt.Errorf("create table error")
 	mig4 := migration.Mig4
 
@@ -211,7 +225,7 @@ func TestAllMigrations_Migration4_CreateTableError(t *testing.T) {
 	}
 }
 
-func TestAllMigrations_Migration4_InsertError(t *testing.T) {
+func TestMigration4_InsertError(t *testing.T) {
 	expectedErr := fmt.Errorf("insert error")
 	mig4 := migration.Mig4
 
@@ -233,7 +247,7 @@ func TestAllMigrations_Migration4_InsertError(t *testing.T) {
 	}
 }
 
-func TestAllMigrations_Migration4_DropTableError(t *testing.T) {
+func TestMigration4_DropTableError(t *testing.T) {
 	expectedErr := fmt.Errorf("drop table error")
 	mig4 := migration.Mig4
 
@@ -257,21 +271,7 @@ func TestAllMigrations_Migration4_DropTableError(t *testing.T) {
 	}
 }
 
-func TestAllMigrations_Migration4_StepDown_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
-
-	err := migration.SetDBVersion(db, migration.GetMaxVersion())
-	helpers.FailOnError(t, err)
-
-	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
-	helpers.FailOnError(t, err)
-
-	err = migration.SetDBVersion(db, 0)
-	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
-}
-
-func TestMigration5TableAlreadyExists(t *testing.T) {
+func TestMigration5_TableAlreadyExists(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
@@ -282,7 +282,7 @@ func TestMigration5TableAlreadyExists(t *testing.T) {
 	assert.EqualError(t, err, "table consumer_error already exists")
 }
 
-func TestMigration5NoSuchTable(t *testing.T) {
+func TestMigration5_NoSuchTable(t *testing.T) {
 	db := prepareDBAndInfo(t)
 	defer closeDB(t, db)
 
