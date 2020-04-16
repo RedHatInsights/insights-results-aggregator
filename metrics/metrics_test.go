@@ -16,6 +16,7 @@ package metrics_test
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -25,7 +26,18 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
+	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
+)
+
+const (
+	testTopicName     = "ccx.ocp.results"
+	testCaseTimeLimit = 10 * time.Second
+)
+
+var (
+	testOrgWhiteList = mapset.NewSetWith(testdata.OrgID)
 )
 
 func getCounterValue(counter prometheus.Counter) float64 {
@@ -38,34 +50,20 @@ func getCounterValue(counter prometheus.Counter) float64 {
 	return pb.GetCounter().GetValue()
 }
 
-const (
-	testTopicName     = "ccx.ocp.results"
-	testOrgID         = 1
-	testClusterName   = "c506a085-201d-4886-9d54-dbc28b97be57"
-	testCaseTimeLimit = 10 * time.Second
-)
+func getCounterVecValue(counterVec *prometheus.CounterVec, labels map[string]string) float64 {
+	counter, err := counterVec.GetMetricWith(labels)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to get counter from counterVec %v", err))
+	}
 
-var (
-	testMessage = `{
-		"OrgID": ` + fmt.Sprint(testOrgID) + `,
-		"ClusterName": "` + testClusterName + `",
-		"Report": {
-		  "fingerprints": [],
-		  "info": [],
-		  "reports": [],
-		  "skips": [],
-		  "system": {}
-		},
-		"LastChecked": "2020-01-23T16:15:59.478901889Z"
-	}`
-	testOrgWhiteList = mapset.NewSetWith(1)
-)
+	return getCounterValue(counter)
+}
 
 // TestConsumedMessagesMetric tests that consumed messages metric works
 func TestConsumedMessagesMetric(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
-			t, testTopicName, testOrgWhiteList, []string{testMessage, testMessage},
+			t, testTopicName, testOrgWhiteList, []string{testdata.ConsumerMessage, testdata.ConsumerMessage},
 		)
 
 		assert.Equal(t, 0.0, getCounterValue(metrics.ConsumedMessages))
@@ -82,3 +80,48 @@ func TestConsumedMessagesMetric(t *testing.T) {
 // TODO: metrics.APIResponsesTime
 // TODO: metrics.ProducedMessages
 // TODO: metrics.WrittenReports
+
+func TestApiResponseStatusCodesMetric_StatusOK(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		assert.Equal(t, 0.0, getCounterVecValue(metrics.APIResponseStatusCodes, map[string]string{
+			"status_code": fmt.Sprint(http.StatusOK),
+		}))
+
+		for i := 0; i < 15; i++ {
+			helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
+				Method:   http.MethodGet,
+				Endpoint: server.MainEndpoint,
+			}, &helpers.APIResponse{
+				StatusCode: http.StatusOK,
+				Body:       `{"status": "ok"}`,
+			})
+		}
+
+		assert.Equal(t, 15.0, getCounterVecValue(metrics.APIResponseStatusCodes, map[string]string{
+			"status_code": fmt.Sprint(http.StatusOK),
+		}))
+	}, testCaseTimeLimit)
+}
+
+func TestApiResponseStatusCodesMetric_StatusBadRequest(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		assert.Equal(t, 0.0, getCounterVecValue(metrics.APIResponseStatusCodes, map[string]string{
+			"status_code": fmt.Sprint(http.StatusBadRequest),
+		}))
+
+		helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
+			Method:       http.MethodGet,
+			Endpoint:     server.ReportEndpoint,
+			EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusBadRequest,
+			Body: `{
+				"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"
+			}`,
+		})
+
+		assert.Equal(t, 1.0, getCounterVecValue(metrics.APIResponseStatusCodes, map[string]string{
+			"status_code": fmt.Sprint(http.StatusBadRequest),
+		}))
+	}, testCaseTimeLimit)
+}

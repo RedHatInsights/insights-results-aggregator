@@ -48,15 +48,12 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	"time"
 
+	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 
-	"github.com/RedHatInsights/insights-operator-utils/responses"
-	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -74,24 +71,6 @@ func New(config Configuration, storage storage.Storage) *HTTPServer {
 		Config:  config,
 		Storage: storage,
 	}
-}
-
-func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHandler http.Handler) {
-	log.Print("Request URI: " + request.RequestURI)
-	log.Print("Request method: " + request.Method)
-	metrics.APIRequests.With(prometheus.Labels{"url": request.RequestURI}).Inc()
-	startTime := time.Now()
-	nextHandler.ServeHTTP(writer, request)
-	duration := time.Since(startTime)
-	metrics.APIResponsesTime.With(prometheus.Labels{"url": request.RequestURI}).Observe(float64(duration.Microseconds()))
-}
-
-// LogRequest - middleware for logging requests
-func (server *HTTPServer) LogRequest(nextHandler http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(writer http.ResponseWriter, request *http.Request) {
-			logRequestHandler(writer, request, nextHandler)
-		})
 }
 
 func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, _ *http.Request) {
