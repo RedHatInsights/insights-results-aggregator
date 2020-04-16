@@ -525,3 +525,7 @@ It performs several operations:
 ### `stat.py`
 
 This script can be used to display statistic about rules that really 'hit' problems on clusters. Can be used against test data or production data if needed.
+
+### `gen_broken_messages.py`
+
+This script read input message (that should be coorect) and generates bunch of new messages. Each generated message is broken in some way so it is possible to use such messages to test how broken messages are handled on aggregator (ie. consumer) side.
