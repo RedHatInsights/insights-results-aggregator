@@ -19,6 +19,7 @@ package content
 
 import (
 	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 
@@ -177,12 +178,27 @@ func parseRulesInDir(dirPath string, contentMap *map[string]RuleContent) error {
 	for _, e := range entries {
 		if e.IsDir() {
 			name := e.Name()
-			ruleContent, err := parseRuleContent(path.Join(dirPath, name))
-			if err != nil {
-				return err
-			}
+			subdirPath := path.Join(dirPath, name)
 
-			(*contentMap)[name] = ruleContent
+			// Check if this directory directly contains a rule content.
+			// This check is done for the subdirectories instead of the top directory
+			// upon which this function is called because the very top level directory
+			// should never directly contain any rule content and because the name
+			// of the directory is much easier to access here without an extra call.
+			if pluginYaml, err := os.Stat(path.Join(subdirPath, "plugin.yaml")); err == nil && os.FileMode.IsRegular(pluginYaml.Mode()) {
+				ruleContent, err := parseRuleContent(subdirPath)
+				if err != nil {
+					return err
+				}
+
+				// TODO: Add name uniqueness check.
+				(*contentMap)[name] = ruleContent
+			} else {
+				// Otherwise, descend into the sub-directory and see if there is any rule content.
+				if err := parseRulesInDir(subdirPath, contentMap); err != nil {
+					return err
+				}
+			}
 		}
 	}
 
@@ -202,19 +218,7 @@ func ParseRuleContentDir(contentDirPath string) (RuleContentDirectory, error) {
 	}
 
 	externalContentDir := path.Join(contentDirPath, "external")
-	externalEntries, err := ioutil.ReadDir(externalContentDir)
-	if err != nil {
-		return contentDir, err
-	}
+	err = parseRulesInDir(externalContentDir, &contentDir.Rules)
 
-	for _, e := range externalEntries {
-		if e.IsDir() {
-			subdirPath := path.Join(externalContentDir, e.Name())
-			if err := parseRulesInDir(subdirPath, &contentDir.Rules); err != nil {
-				return contentDir, err
-			}
-		}
-	}
-
-	return contentDir, nil
+	return contentDir, err
 }
