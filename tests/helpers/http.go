@@ -62,9 +62,19 @@ type APIResponse struct {
 	Headers     map[string]string
 }
 
+var defaultServerConfig = server.Configuration{
+	Address:     ":8080",
+	APIPrefix:   "/api/test/",
+	APISpecFile: "openapi.json",
+	Debug:       true,
+	Auth:        false,
+	UseHTTPS:    false,
+	EnableCORS:  true,
+}
+
 // AssertAPIRequest creates new server with provided mockStorage
 // (which you can keep nil so it will be created automatically)
-// and provided serverConfig
+// and provided serverConfig(you can leave it empty to use the default one)
 // sends api request and checks api response (see docs for APIRequest and APIResponse)
 func AssertAPIRequest(
 	t *testing.T,
@@ -77,11 +87,35 @@ func AssertAPIRequest(
 		mockStorage = MustGetMockStorage(t, true)
 		defer MustCloseStorage(t, mockStorage)
 	}
+	if serverConfig == nil {
+		serverConfig = &defaultServerConfig
+	}
 
 	testServer := server.New(*serverConfig, mockStorage)
 
 	url := server.MakeURLToEndpoint(serverConfig.APIPrefix, request.Endpoint, request.EndpointArgs...)
 
+	req := makeRequest(t, request, url)
+
+	response := ExecuteRequest(testServer, req, serverConfig).Result()
+
+	if len(expectedResponse.Headers) != 0 {
+		checkResponseHeaders(t, expectedResponse.Headers, response.Header)
+	}
+	if expectedResponse.StatusCode != 0 {
+		assert.Equal(t, expectedResponse.StatusCode, response.StatusCode, "Expected different status code")
+	}
+	if expectedResponse.BodyChecker != nil {
+		bodyBytes, err := ioutil.ReadAll(response.Body)
+		FailOnError(t, err)
+
+		expectedResponse.BodyChecker(t, expectedResponse.Body, string(bodyBytes))
+	} else if len(expectedResponse.Body) != 0 {
+		CheckResponseBodyJSON(t, expectedResponse.Body, response.Body)
+	}
+}
+
+func makeRequest(t *testing.T, request *APIRequest, url string) *http.Request {
 	req, err := http.NewRequest(request.Method, url, strings.NewReader(request.Body))
 	FailOnError(t, err)
 
@@ -101,22 +135,7 @@ func AssertAPIRequest(
 		req.Header.Set("Authorization", request.AuthorizationToken)
 	}
 
-	response := ExecuteRequest(testServer, req, serverConfig).Result()
-
-	if len(expectedResponse.Headers) != 0 {
-		checkResponseHeaders(t, expectedResponse.Headers, response.Header)
-	}
-	if expectedResponse.StatusCode != 0 {
-		assert.Equal(t, expectedResponse.StatusCode, response.StatusCode, "Expected different status code")
-	}
-	if expectedResponse.BodyChecker != nil {
-		bodyBytes, err := ioutil.ReadAll(response.Body)
-		FailOnError(t, err)
-
-		expectedResponse.BodyChecker(t, expectedResponse.Body, string(bodyBytes))
-	} else if len(expectedResponse.Body) != 0 {
-		CheckResponseBodyJSON(t, expectedResponse.Body, response.Body)
-	}
+	return req
 }
 
 // ExecuteRequest executes http request on a testServer
