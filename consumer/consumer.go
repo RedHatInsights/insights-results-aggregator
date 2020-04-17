@@ -248,10 +248,21 @@ func (consumer *KafkaConsumer) Serve() {
 
 			if err := consumer.Storage.WriteConsumerError(msg, err); err != nil {
 				log.Error().Err(err).Msg("Unable to write consumer error to storage")
+			} else {
+				// if error is written, we don't want to deal with this message again
+				consumer.saveLastMessageOffset(msg.Offset)
 			}
 		} else {
 			consumer.numberOfSuccessfullyConsumedMessages++
+			consumer.saveLastMessageOffset(msg.Offset)
 		}
+	}
+}
+
+func (consumer *KafkaConsumer) saveLastMessageOffset(lastMessageOffset int64) {
+	// remember offset
+	if consumer.partitionOffsetManager != nil {
+		consumer.partitionOffsetManager.MarkOffset(lastMessageOffset+1, "")
 	}
 }
 
@@ -333,12 +344,6 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	logMessageInfo(consumer, msg, message, "Stored")
 
 	// message has been parsed and stored into storage
-
-	// remember offset
-	if consumer.partitionOffsetManager != nil {
-		consumer.partitionOffsetManager.MarkOffset(msg.Offset+1, "")
-	}
-
 	return nil
 }
 

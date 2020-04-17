@@ -1,0 +1,599 @@
+# Copyright 2020 Red Hat, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#just copypasted from insights content repo
+content_fields:
+    - generic
+    - more_info
+    - reason
+    - resolution
+    - summary
+
+plugin_fields:
+    - name
+
+metadata_fields:
+    - category
+    - cves
+    - description
+    - impact
+    - likelihood
+    - node_id
+    - product_code
+    - publish_date
+    - python_module
+    - reboot_required
+    - resolution_risk
+    - role
+    - severity
+    - status
+    - tags
+
+derived_fields:
+    - rule_id
+    - error_key
+    - plugin
+
+interpolated_fields:
+    - reason
+    - resolution
+
+non_null_fields:
+    - product_code
+    - role
+
+non_blank_fields:
+    - generic
+    - reason
+    - resolution
+    - summary
+
+categories:
+    - Stability
+    - Availability
+    - Security
+    - Performance
+
+severities:
+    - INFO
+    - WARN
+    - ERROR
+    - CRITICAL
+    - NULL
+
+system_types:
+    rhel:
+        - host
+    docker:
+        - container
+        - host
+        - image
+    osp:
+        - compute
+        - controller
+        - director
+    rhev:
+        - hypervisor
+        - manager
+    ceph:
+        - osd
+        - mon
+    ocp:
+        - cluster
+
+impact:
+    Application Crash: 2
+    Application Failure: 2
+    Application Not Connectable: 2
+    Authentication Bypass: 3
+    Best Practice: 1
+    Boot Failure: 3
+    Cluster Availability: 2
+    Compatibility Error: 2
+    Container Creation Failure: 2
+    Container Inoperation: 3
+    Data Loss: 4
+    Data Corruption: 3
+    Database Performance Loss: 2
+    Database Inconsistency: 4
+    Database Availability: 2
+    Decreased Security: 2
+    Denial Of Service: 3
+    Diagnostics Failure: 1
+    Docker Metadata Inconsistency: 2
+    Filesystem Corruption: 2
+    Hardening: 1
+    Hung Task: 3
+    Inaccessible Storage: 3
+    Inconsistent Network Interface Name: 2
+    Information Disclosure: 3
+    Insecure Encryption: 2
+    Invalid Configuration: 1
+    Kernel Panic: 3
+    Link Down: 3
+    Long Restart Time: 2
+    Malware Detected: 3
+    Man In The Middle: 4
+    Management Availability: 2
+    Mount Failure: 3
+    Network Connection Hang: 3
+    Network Connectivity Loss: 3
+    Network Interface Hang: 3
+    Network Performance Loss: 2
+    Network Setup Failure: 3
+    NFS Mount Stuck: 2
+    Offline Storage: 2
+    OpenShift Performance Loss: 2
+    OpenStack Performance Loss: 2
+    Packet Loss: 2
+    Privilege Escalation: 3
+    Product Supportability: 2
+    Remote Code Execution: 4
+    RHV Upgrade Failure: 3
+    Service Crash: 2
+    Service Inoperation: 2
+    Statistics: 1
+    Storage Excessive Consumption: 2
+    Storage Performance Loss: 2
+    Support Unavailable: 1
+    Suspicious Activity: 2
+    System Performance Loss: 2
+    System Stability Loss: 3
+    Unapplied Configuration: 2
+    Undercloud Upgrade Failure: 3
+    Unmount Failure: 2
+    Unsupported Hardware: 2
+    Unsupported Packet: 1
+    Unsupported Functionality: 3
+    Unsupported Filesystem: 2
+    VM Clone Failure: 2
+    VM Crash: 2
+    VM Migration Failure: 3
+    VM Performance Loss: 2
+    VM Start Failure: 3
+    Kdump Failure: 1
+    Application Hang: 2
+    Service Inoperative: 2
+    null: 1  # Default for when no impact is set
+    Volume Type Variation: 1
+    Instance Type Variation: 1
+    High Cost with Over-provisioned Instance Type Node: 1
+    Low Density Node: 1
+
+resolution_risk:
+    Activate SELinux: 4
+    Adjust Service Status: 1
+    Adjust Time: 3
+    Apply kpatch for Kernel: 3
+    Apply kmod: 3
+    BIOS Parameter Adjustment: 2
+    Ceph Parameter Tuning: 2
+    Change AWS Instance: 2
+    Change Package Version: 3
+    Clean Database: 4
+    Clean Disk Space: 3
+    Configure SELinux: 2
+    Configure Audit: 2
+    Configure fstab: 3
+    Configure Users or Groups: 3
+    Contact Red Hat Support: 1
+    Docker Parameter Tuning: 2
+    Eliminate Orphaned Semaphores: 2
+    Hardware Vendor Analysis: 1
+    Hardware Vendor Firmware Update: 3
+    Inspect Hardware: 1
+    Install Package: 1
+    Limits Tuning: 2
+    Migrate Filesystem: 2
+    Network Parameter Tuning: 2
+    OpenStack Parameter Tuning: 2
+    Openshift Parameter Tuning: 2
+    Openshift Configuration Tuning: 2
+    Pacemaker Parameter Tuning: 2
+    RHV Storage Tuning: 3
+    Rebuild RPM Database: 3
+    Rebuild Initramfs: 3
+    Reinstall Kernel: 2
+    Reinstall Package: 1
+    Remount Filesystem: 4
+    Remove Package: 3
+    Restart Container: 2
+    Restart libvirtd: 3
+    Software Vendor Analysis: 1
+    Storage Parameter Tuning: 2
+    Sysctl Parameter Tuning: 2
+    Systemd Daemon Reload: 3
+    Update Ceph Configuration: 2
+    Update Ceph Deployment: 4
+    Update Certificate: 1
+    Update Cluster Configuration: 2
+    Update Commonly Used Library: 4
+    Update Database Configuration: 2
+    Update File Permission: 4
+    Update Firewall: 3
+    Update Grub Configuration: 4
+    Update IPMIlan Configuration: 2
+    Update JBoss Configuration: 2
+    Update LVM Configuration: 4
+    Update Module Parameter: 2
+    Update Network Configuration: 3
+    Update OpenStack Configuration: 2
+    Update Openshift Configuration: 2
+    Update Package: 1
+    Update RHV Configuration: 2
+    Update Registration Info: 1
+    Update Service Configuration: 3
+    Update Storage Configuration: 3
+    Update Third-party Software: 2
+    Update Kernel Boot Options: 3
+    Upgrade Kernel: 3
+    Upgrade Openshift: 2
+    Upgrade RHV Hypervisor: 2
+    Upgrade RHV Manager: 3
+    Upgrade Satellite: 3
+    Upgrade RHEL: 3
+    Use Unprivileged User: 4
+    null: 1  # Default for when no risk is set
+
+tags:
+    ceph:
+        - sbr_ceph
+        - ceph
+        - mon
+        - osd
+        - ecpools
+        - pg
+        - failure_domain
+        - rbd
+    gluster:
+        - gluster
+    container:
+        - sbr_container
+        - sbr_shift
+        - docker
+        - container
+        - images
+        - registry
+        - kubernetes
+        - openshift
+        - pod
+        - glusterfs
+        - cri-o
+        - etcd
+    idm:
+        - sbr_idm
+        - idm
+        - ipa
+        - ldap
+        - 389ds
+        - sssd
+    java:
+        - java
+        - openjdk
+        - tomcat
+        - jboss
+        - amq
+    kernel:
+        - sbr_kernel
+        - kernel
+        - kdump
+        - kpatch
+        - panic
+        - leapsecond
+        - cgroup
+        - crash
+        - cpu
+        - memory
+        - nmi
+        - numa
+        - hugepages
+        - irq
+        - ieqbalance
+        - oom
+        - splunk
+        - swap
+        - udev
+        - xeon
+        - grub
+        - watchdog
+        - cciss
+        - firmware
+        - device-mapper
+        - hugepage
+        - thp
+        - irqbalance
+        - ksm
+        - memory_leak
+        - locking
+        - mlx5_ib
+        - mlx5_core
+        - fnic
+        - lpfc
+        - enic
+        - qede
+        - nvme
+        - cdc-wdm
+        - skylake
+    networking:
+        - sbr_networking
+        - networking
+        - bonding
+        - be2net
+        - bna
+        - bnx2fc
+        - qla2xxx
+        - e1000
+        - gre
+        - i40e
+        - i40evf
+        - iptables
+        - ipv6
+        - firewall
+        - bnx2x
+        - qlcnic
+        - vlan
+        - vxlan
+        - lacp
+        - bridge
+        - openvswitch
+        - tcp
+        - tg3
+        - teaming
+        - team
+        - ip_tunnel
+        - wifi
+        - hp-ilo
+        - ixgbe
+        - sctp
+        - sfc
+        - heartbeat
+        - ifb
+        - infiniband
+        - ipsec
+        - esp
+        - veth
+        - vmxnet3
+        - ib_ipoib
+        - ModemManager
+        - NetworkManager
+        - driver
+        - igb
+        - ptp
+        - sr-iov
+        - mlx4_en
+        - lpfc
+        - azure
+        - hv_netvsc
+        - skyhawk
+    openstack:
+        - sbr_stack
+        - openstack
+        - pacemaker
+        - rabbitmq
+        - cinder
+        - fence_ipmilan
+        - hp_ilo
+        - neutron
+        - heat
+        - nova
+        - haproxy
+        - corosync
+        - mariadb
+        - ovs
+        - dpdk
+        - opflex
+        - swift
+        - ceilometer
+        - panko
+        - keystone
+        - gnocchi
+        - undercloud
+        - octavia
+    other:
+        - tuning
+        - performance
+        - race_condition
+        - corruption
+        - log
+        - time
+        - git
+        - configuration
+        - uptime
+        - time
+        - reboot
+        - freeipmi
+        - ipmitool
+        - initscripts
+        - incident
+        - certificate
+        - ansible
+        - systemz
+        - cache
+        - insights_registration
+        - rhel8
+        - tuned
+        - kickstart
+        - symbolic
+        - leapp
+        - ppc64
+    rhev:
+        - sbr_virtualization
+        - rhv
+        - rhev
+        - rhevm
+        - virtualization
+        - vm
+        - vmware
+        - hypervisor
+        - libvirt
+        - vdsm
+        - cluster
+        - ovirt
+        - virtlogd
+        - kvm
+        - datacenter
+    security:
+        - sbr_security
+        - security
+        - cve
+        - bash
+        - openssl
+        - selinux
+        - hardening
+        - cis
+        - dnssec
+        - rhsec
+        - remote_execution
+        - audit
+        - sudo
+        - ssl
+        - ssh
+        - compromised
+        - gpg
+        - kerberos
+    services:
+        - sbr_services
+        - ntp
+        - ntpd
+        - dhcp
+        - dns
+        - galera
+        - httpoxy
+        - chrony
+        - cockpit
+        - samba
+        - systemd
+        - tzdata
+        - openssh
+        - postgresql
+        - avahi
+        - nscd
+        - xinetd
+        - mongodb
+        - mysql
+        - cups
+        - rhsm
+        - rpm
+        - memcached
+        - printers
+        - mail
+        - rsyslog
+        - insights_client
+        - rpcbind
+        - nis
+        - cachefilesd
+    special:
+        - drown
+        - badlock
+        - challengeack
+        - shellshock
+        - malware
+    storage:
+        - sbr_storage
+        - storage
+        - sbr_filesystem
+        - nas
+        - filesystem
+        - multipath
+        - nfs
+        - lvm
+        - cifs
+        - san
+        - data_loss
+        - scsi
+        - emulex
+        - ext4
+        - fc
+        - netapp
+        - qlogic
+        - readonly
+        - xfs
+        - iscsi
+        - cmirror
+        - nfs4
+        - nfs3
+        - srp
+        - dm_raid
+        - btrfs
+        - fcoe
+        - bind
+        - gfs2
+        - failover
+        - timeout
+        - vdo
+    sysmgmt:
+        - sbr_sysmgmt
+        - sysmgmt
+        - satellite_client
+        - satellite6
+        - satellite5
+        - yum
+        - rhn
+        - rhms
+        - osad
+        - sam
+        - taskomatic
+        - goferd
+        - qpidd
+        - capsule
+        - rhnsd
+        - pulp
+        - celery
+        - workers
+        - puppet4
+        - candlepin
+        - epel
+    3rd_party:
+        - sap
+        - hp
+        - hp_asrd
+        - intel
+        - oracle_rac
+        - oracle_db
+        - oracle_jdk
+        - hardware
+        - amd
+        - netapp
+        - aws
+        - xen
+        - db2
+        - hpdsa
+        - ibm
+        - ibm_power
+        - vxfs
+        - s390x
+    webservers:
+        - sbr_webservers
+        - webservers
+        - httpd
+        - nginx
+        - apache
+    ocp:
+        - volume_type
+        - volume
+        - instance_type
+        - pods
+        - cpu_cores
+        - image
+    Microsoft:
+        - mssql
+        - microsoft
+        - sqlserver
+        - azure
+        - hyperv
+    clusterha:
+        - sbr_clusterha
+        - clusterha
+        - stonith
+        - quorum

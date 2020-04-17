@@ -24,7 +24,6 @@ import (
 migration4 adds foreign keys to cluster_rule_user_feedback
 */
 
-// TODO: write tests for this one
 var mig4 = Migration{
 	StepUp: func(tx *sql.Tx) error {
 		// it's better to use ALTER TABLE table_name ADD CONSTRAINT but sqlite doesn't support it

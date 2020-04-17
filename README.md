@@ -60,9 +60,10 @@ These tables represent the content for Insights rules to be displayed by OCM.
 The table `rule` represents more general information about the rule, whereas the `rule_error_key`
 contains information about the specific type of error which occured. The combination of these two create a unique rule.
 Very trivialized example could be:
-- rule "REQUIREMENTS_CHECK"
-    - error_key "REQUIREMENTS_CHECK_LOW_MEMORY"
-    - error_key "REQUIREMENTS_CHECK_MISSING_SYSTEM_PACKAGE"
+
+* rule "REQUIREMENTS_CHECK"
+  * error_key "REQUIREMENTS_CHECK_LOW_MEMORY"
+  * error_key "REQUIREMENTS_CHECK_MISSING_SYSTEM_PACKAGE"
 
 ```sql
 CREATE TABLE rule (
@@ -93,7 +94,7 @@ CREATE TABLE rule_error_key (
 #### Table cluster_rule_user_feedback
 
 ```sql
--- user_vote is user's vote, 
+-- user_vote is user's vote,
 -- 0 is none,
 -- 1 is like,
 -- -1 is dislike
@@ -113,6 +114,25 @@ CREATE TABLE cluster_rule_user_feedback (
     FOREIGN KEY (rule_id)
         REFERENCES rule(module)
         ON DELETE CASCADE
+)
+```
+
+#### Table consumer_error
+
+Errors that happen while processing a message consumed from Kafka are logged into this table. This allows easier debugging of various issues, especially those related to unexpected input data format.
+
+```sql
+CREATE TABLE consumer_error (
+    topic           VARCHAR NOT NULL,
+    partition       INTEGER NOT NULL,
+    topic_offset    INTEGER NOT NULL,
+    key             VARCHAR,
+    produced_at     TIMESTAMP NOT NULL,
+    consumed_at     TIMESTAMP NOT NULL,
+    message         VARCHAR,
+    error           VARCHAR NOT NULL,
+
+    PRIMARY KEY(topic, partition, topic_offset)
 )
 ```
 
@@ -163,6 +183,38 @@ the actual driver will be postgres with password "your secret password"
 
 It's very useful for deploying docker containers and keeping some of your configuration
 outside of main config file(like passwords).
+
+## Broker configuration
+
+Broker configuration is in section `[broker]` in config file
+
+```toml
+[broker]
+address = "localhost:9092"
+topic = "topic"
+publish_topic = "topic"
+group = "aggregator"
+enabled = true
+save_offset = true
+```
+
+* `address` is an address of kafka broker (DEFAULT: "")
+* `topic` is a topic to consume messages from (DEFAULT: "")
+* `publish_topic` is a topic to publish messages to(see package producer) (DEFAULT: "")
+* `group` is a kafka group (DEFAULT: "")
+* `enabled` is an option to turn broker on (DEFAULT: false)
+* `save_offset` is an option to turn on saving offset of successfully consumed messages.
+The offset is stored in the same kafka broker. If it turned off,
+consuming will be started from the most recent message (DEFAULT: false)
+
+Option names in env configuration:
+
+* `address` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
+* `topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC
+* `publish_topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__PUBLISH_TOPIC
+* `group` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP
+* `enabled` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
+* `save_offset` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SAVE_OFFSET
 
 ## Server configuration
 
@@ -225,7 +277,6 @@ or you can use integration tests suite. More details are [here](https://gitlab.c
 
 It is possible to use the script `produce_insights_results` from `utils` to produce several Insights results into Kafka topic. Its dependency is Kafkacat that needs to be installed on the same machine. You can find installation instructions [on this page](https://github.com/edenhill/kafkacat).
 
-
 ### Rules content
 
 The generated cluster reports from Insights results contain three lists of rules that were either __skipped__ (because of missing requirements, etc.), __passed__ (the rule got executed but no issue was found), or __hit__ (the rule got executed and found the issue it was looking for) by the cluster, where each rule is represented as a dictionary containing identifying information about the rule itself.
@@ -237,13 +288,16 @@ This content is then processed upon application start-up, correctly parsed by th
 
 When a request for a cluster report comes from OCM, the report is parsed (TODO: parse reports only once when consuming them) and content for all the hit rules is returned.
 
-##### Local environment with rules content
+#### Local environment with rules content
+
 The rules content parser is configured by default to expect the content in a root directory `/rules-content`.
 This can be changed either by an environment variable `INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH` or by modifying the config file entry:
-```
+
+```toml
 [content]
 path = "/rules-content"
 ```
+
 To get the latest rules content locally, you can `make rules_content`, which just runs the script `update_rules_content.sh` mimicking the Dockerfile behavior (NOTE: you need to be in RH VPN to be able to access that repository, but it is not private). The script copies the content into a .gitignored folder `rules-content`, so all that's necessary is to change the expected path.
 
 ## Database
@@ -284,7 +338,7 @@ Aggregator service provides information about its REST API schema via endpoint `
 
 For example, if aggregator is started locally, it is possible to read schema based on OpenAPI 3.0 specification by using the following command:
 
-```
+```shell
 curl localhost:8080/api/v1/openapi.json
 ```
 
@@ -307,6 +361,7 @@ Additionally it is possible to consume all metrics provided by Go runtime. There
 ## Authentication
 
 Authentication is working through `x-rh-identity` token which is provided by 3scale. `x-rh-identity` is base64 encoded JSON, that includes data about user and organization, like:
+
 ```JSON
 {
   "identity": {
@@ -393,17 +448,27 @@ Please note that all checks mentioned above have to pass for the change to be me
 
 History of checks performed by CI is available at [RedHatInsights / insights-results-aggregator](https://travis-ci.org/RedHatInsights/insights-results-aggregator).
 
+## Rules
+
+### Tutorial rule
+
+Directory `rules/tutorial/` contains tutorial rule that is 'hit' by any cluster.
+
 ## Mock data for aggregator
 
 Data to be consumed by aggregator through Kafka broker is prepared in `utils/produce_insights_results/` subdirectory.
 Several types of data are available there:
 
-* `r_*.json` - real data analyzed from test clusters
+* `r_[0-9]*.json` - real data analyzed from test clusters
+* `r_tutorial_[0-9]*.json` - real data analyzed from test clusters with added tutorial rule result
 * `result*.json` - artifically created data
 * `big_resuts.json` - file with most reports created by joining several real data (no cluster is in the state when all rules fail)
+* `big_results_tutorial.json` - the same, but with tutorial rule result
 * `big_results_no_skips.json` - the same, but no skipped rules are stored
+* `big_results_no_skips_tutorial.json` - the same, but with tutorial rule result
 * `no_hits.json` - data with no rule hits (ie. the cluster is healthy)
 * `no_hits_no_skips.json` - data with no rule hits and no skips (ie. there's no health check performed)
+* `tutorial_only.json` - report with only tutorial rule hit
 
 ## Utilitites
 
@@ -447,13 +512,25 @@ It performs several operations:
 
 #### Usage
 
-```
+```shell
 ./fill_in_results.sh archive.tar.bz org_id cluster_name
 ```
 
 #### A real example
 
-```
+```shell
 ./fill_in_results.sh external-rules-archives-2020-03-31.tar 11789772 5d5892d3-1f74-4ccf-91af-548dfc9767aa
 ```
 
+### `stat.py`
+
+This script can be used to display statistic about rules that really 'hit' problems on clusters. Can be used against test data or production data if needed.
+
+### `gen_broken_messages.py`
+
+This script read input message (that should be coorect) and generates bunch of new messages. Each generated message is broken in some way so it is possible to use such messages to test how broken messages are handled on aggregator (ie. consumer) side.
+
+Types of input message mutation:
+* any item (identified by its key) can be removed
+* new items with random key and content can be added
+* any item can be replaced by new random content

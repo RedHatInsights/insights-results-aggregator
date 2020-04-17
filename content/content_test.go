@@ -89,3 +89,10 @@ func TestContentParseBadMetadataYAML(t *testing.T) {
 	_, err := content.ParseRuleContentDir("../tests/content/bad_metadata/")
 	assert.EqualError(t, err, errYAMLBadToken)
 }
+
+// TestContentParseBadMetadataYAML tests handling bad/incorrect metadata.yaml file
+func TestContentParseNoExternal(t *testing.T) {
+	noExternalPath := "../tests/content/no_external"
+	_, err := content.ParseRuleContentDir(noExternalPath)
+	assert.EqualError(t, err, fmt.Sprintf("open %s/external: no such file or directory", noExternalPath))
+}

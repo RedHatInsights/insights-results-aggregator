@@ -46,6 +46,12 @@ var APIResponsesTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Buckets: prometheus.LinearBuckets(0, 20, 20),
 }, []string{"url"})
 
+// APIResponseStatusCodes collects the information about api response status codes
+var APIResponseStatusCodes = promauto.NewCounterVec(prometheus.CounterOpts{
+	Name: "api_endpoints_status_codes",
+	Help: "API endpoints status codes",
+}, []string{"status_code"})
+
 // ConsumedMessages shows number of messages consumed from Kafka by aggregator
 var ConsumedMessages = promauto.NewCounter(prometheus.CounterOpts{
 	Name: "consumed_messages",
