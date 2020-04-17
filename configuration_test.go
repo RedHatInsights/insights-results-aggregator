@@ -195,6 +195,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		topic = "platform.results.ccx"
 		group = "aggregator"
 		enabled = true
+		enable_org_whitelist = true
 
 		[content]
 		path = "/rules-content"

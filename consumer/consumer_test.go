@@ -173,6 +173,9 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 	}
 	if whitelist {
 		brokerCfg.OrgWhitelist = mapset.NewSetWith(types.OrgID(1))
+		brokerCfg.OrgWhitelistEnabled = true
+	} else {
+		brokerCfg.OrgWhitelistEnabled = false
 	}
 	return &consumer.KafkaConsumer{
 		Configuration:     brokerCfg,
@@ -324,16 +327,6 @@ func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
 	}, testCaseTimeLimit)
 }
 
-func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
-
-	mockConsumer := dummyConsumer(mockStorage, false)
-
-	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
-	assert.EqualError(t, err, "organization ID is not whitelisted")
-}
-
 func TestKafkaConsumer_New(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
@@ -377,4 +370,58 @@ func TestKafkaConsumer_New_FindCoordinatorRequestError(t *testing.T) {
 		}, nil)
 		assert.EqualError(t, err, "kafka server: Unexpected (unknown?) server error.")
 	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumer_ProcessMessage_OrganizationWhitelistDisabled(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	mockConsumer := dummyConsumer(mockStorage, false)
+
+	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	helpers.FailOnError(t, err)
+}
+
+func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	brokerCfg := broker.Configuration{
+		Address:             "localhost:1234",
+		Topic:               "topic",
+		Group:               "group",
+		OrgWhitelist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
+		OrgWhitelistEnabled: true,
+	}
+	mockConsumer := &consumer.KafkaConsumer{
+		Configuration:     brokerCfg,
+		Consumer:          nil,
+		PartitionConsumer: nil,
+		Storage:           mockStorage,
+	}
+
+	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	assert.EqualError(t, err, "organization ID is not whitelisted")
+}
+
+func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testing.T) {
+	mockStorage := helpers.MustGetMockStorage(t, true)
+	defer helpers.MustCloseStorage(t, mockStorage)
+
+	brokerCfg := broker.Configuration{
+		Address:             "localhost:1234",
+		Topic:               "topic",
+		Group:               "group",
+		OrgWhitelist:        nil,
+		OrgWhitelistEnabled: true,
+	}
+	mockConsumer := &consumer.KafkaConsumer{
+		Configuration:     brokerCfg,
+		Consumer:          nil,
+		PartitionConsumer: nil,
+		Storage:           mockStorage,
+	}
+
+	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	assert.EqualError(t, err, "organization ID is not whitelisted")
 }
