@@ -1,0 +1,338 @@
+{
+    "OrgID": 11789772,
+    "ClusterName": "5d5892d3-1f74-4ccf-91af-548dfc9767aa",
+    "LastChecked": "2020-04-02T09:00:05.268294Z",
+    "Report": {
+        "system": {
+            "metadata": {},
+            "hostname": null
+        },
+        "reports": [
+            {
+                "rule_id": "tutorial_rule|TUTORIAL_ERROR",
+                "component": "ccx_rules_ocp.external.rules.tutorial_rule.report",
+                "type": "rule",
+                "key": "TUTORIAL_ERROR",
+                "details": {
+                    "type": "rule",
+                    "error_key": "TUTORIAL_ERROR"
+                },
+                "tags": [],
+                "links": {}
+            },
+            {
+                "rule_id": "nodes_requirements_check|NODES_MINIMUM_REQUIREMENTS_NOT_MET",
+                "component": "ccx_rules_ocp.external.rules.nodes_requirements_check.report",
+                "type": "rule",
+                "key": "NODES_MINIMUM_REQUIREMENTS_NOT_MET",
+                "details": {
+                    "nodes": [
+                        {
+                            "name": "foo1",
+                            "role": "master",
+                            "memory": 8.16,
+                            "memory_req": 16
+                        }
+                    ],
+                    "link": "https://docs.openshift.com/container-platform/4.1/installing/installing_bare_metal/installing-bare-metal.html#minimum-resource-requirements_installing-bare-metal",
+                    "type": "rule",
+                    "error_key": "NODES_MINIMUM_REQUIREMENTS_NOT_MET"
+                },
+                "tags": [],
+                "links": {
+                    "docs": [
+                        "https://docs.openshift.com/container-platform/4.1/installing/installing_bare_metal/installing-bare-metal.html#minimum-resource-requirements_installing-bare-metal"
+                    ]
+                }
+            },
+            {
+                "rule_id": "bug_1766907|BUGZILLA_BUG_1766907",
+                "component": "ccx_rules_ocp.external.bug_rules.bug_1766907.report",
+                "type": "rule",
+                "key": "BUGZILLA_BUG_1766907",
+                "details": {
+                    "type": "rule",
+                    "error_key": "BUGZILLA_BUG_1766907"
+                },
+                "tags": [],
+                "links": {
+                    "kcs": [
+                        "https://access.redhat.com/solutions/4631541"
+                    ],
+                    "doc": [],
+                    "bz": [
+                        "https://bugzilla.redhat.com/show_bug.cgi?id=1766907"
+                    ]
+                }
+            },
+            {
+                "rule_id": "nodes_kubelet_version_check|NODE_KUBELET_VERSION",
+                "component": "ccx_rules_ocp.external.rules.nodes_kubelet_version_check.report",
+                "type": "rule",
+                "key": "NODE_KUBELET_VERSION",
+                "details": {
+                    "nodes_with_different_version": [
+                        {
+                            "Node": "oc1",
+                            "Kubelet Version": "v1.14.6+0a21dd3b3",
+                            "role": "worker"
+                        },
+                        {
+                            "Node": "oc2",
+                            "Kubelet Version": "v1.14.6+0a21dd3b3",
+                            "role": "worker"
+                        },
+                        {
+                            "Node": "oc3",
+                            "Kubelet Version": "v1.14.6+d39ad8449",
+                            "role": "worker"
+                        }
+                    ],
+                    "kcs_link": "https://access.redhat.com/solutions/4602641",
+                    "type": "rule",
+                    "error_key": "NODE_KUBELET_VERSION"
+                },
+                "tags": [],
+                "links": {
+                    "kcs": [
+                        "https://access.redhat.com/solutions/4602641"
+                    ]
+                }
+            },
+            {
+                "rule_id": "samples_op_failed_image_import_check|SAMPLES_FAILED_IMAGE_IMPORT_ERR",
+                "component": "ccx_rules_ocp.external.rules.samples_op_failed_image_import_check.report",
+                "type": "rule",
+                "key": "SAMPLES_FAILED_IMAGE_IMPORT_ERR",
+                "details": {
+                    "info": {
+                        "name": "openshift-samples",
+                        "condition": "Degraded",
+                        "reason": "FailedImageImports",
+                        "message": "Samples installed at 4.2.0, with image import failures for these imagestreams: php ",
+                        "lastTransitionTime": "2020-03-19T08:32:53Z"
+                    },
+                    "kcs": "https://access.redhat.com/solutions/4563171",
+                    "type": "rule",
+                    "error_key": "SAMPLES_FAILED_IMAGE_IMPORT_ERR"
+                },
+                "tags": [],
+                "links": {
+                    "kcs": [
+                        "https://access.redhat.com/solutions/4563171"
+                    ]
+                }
+            },
+            {
+                "rule_id": "cluster_wide_proxy_auth_check|AUTH_OPERATOR_PROXY_ERROR",
+                "component": "ccx_rules_ocp.external.rules.cluster_wide_proxy_auth_check.report",
+                "type": "rule",
+                "key": "AUTH_OPERATOR_PROXY_ERROR",
+                "details": {
+                    "op": {
+                        "available": {
+                            "message": null,
+                            "reason": "NoData",
+                            "status": null,
+                            "last_trans_time": "2020-03-31T08:39:51Z"
+                        },
+                        "degraded": {
+                            "message": "WellKnownEndpointDegraded: failed to GET well-known https://10.237.112.145:6443/.well-known/oauth-authorization-server: Tunnel or SSL Forbidden",
+                            "reason": "WellKnownEndpointDegradedError",
+                            "status": true,
+                            "last_trans_time": "2020-03-31T08:42:33Z"
+                        },
+                        "name": "authentication",
+                        "progressing": {
+                            "message": null,
+                            "reason": "NoData",
+                            "status": null,
+                            "last_trans_time": "2020-03-31T08:39:51Z"
+                        },
+                        "upgradeable": {
+                            "message": null,
+                            "reason": "AsExpected",
+                            "status": true,
+                            "last_trans_time": "2020-03-31T08:39:51Z"
+                        },
+                        "version": null
+                    },
+                    "kcs": "https://access.redhat.com/solutions/4569191",
+                    "type": "rule",
+                    "error_key": "AUTH_OPERATOR_PROXY_ERROR"
+                },
+                "tags": [],
+                "links": {
+                    "kcs": [
+                        "https://access.redhat.com/solutions/4569191"
+                    ]
+                }
+            }
+        ],
+        "fingerprints": [],
+        "skips": [
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.check_ocs_version.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.OperatorsOcsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.check_pods_scc.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.PodsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.operator_phase_check.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.OperatorsOcsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.pvc_phase_check.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather_ocs.PersistentVolumeClaimsMGOCS'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.ocs.ceph_check_mon_clock_skew.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.ocs.ceph_check_mon_clock_skew.get_mon_reporting_clock_skew'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.bug_rules.bug_1801300.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather.DeploymentsMG'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.bug_rules.bug_1802248.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_ocp_core.specs.must_gather.DeploymentsMG'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.rules.image_registry_pv_no_access.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.common.conditions.image_registry.DegradedImageRegistryOperator', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPod', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPersistentVolumeClaim'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.rules.image_registry_pv_low_capacity.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.common.conditions.image_registry.DegradedImageRegistryOperator', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPod', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPersistentVolumeClaim'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.rules.image_registry_no_volume_set_check.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.common.conditions.image_registry.DegradedImageRegistryOperator', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPod', 'ccx_rules_ocp.common.conditions.image_registry.isImageRegistryPodEmptyDirVolume', 'ccx_rules_ocp.common.conditions.image_registry.isImageRegistryPodPersistentVolume'] Any: ",
+                "type": "skip"
+            },
+            {
+                "rule_fqdn": "ccx_rules_ocp.external.rules.image_registry_pv_not_bound.report",
+                "reason": "MISSING_REQUIREMENTS",
+                "details": "All: ['ccx_rules_ocp.common.conditions.image_registry.DegradedImageRegistryOperator', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPod', 'ccx_rules_ocp.common.conditions.image_registry.ImageRegistryPersistentVolumeClaim'] Any: ",
+                "type": "skip"
+            }
+        ],
+        "info": [],
+        "pass": []
+    },
+    "qs9faz2jsh": {
+        "qqq3rgklmt": [
+            94142.51329181346,
+            94128,
+            false,
+            58362,
+            "eu[#3>NB^otu+<hnWS;y"
+        ],
+        "bvy0i5gqmn": {
+            "iudgx0xs96": "oHJKw]\\X@^fz8kt[}1n6",
+            "c06x7fo2n1": "i<@lpD-8J`5x_o0tPtiE",
+            "sssp10v7g8": "ygFy1rKG[^P_Xf2YVN'5",
+            "gahyf7j83b": "y-bOt>;M~f8E`vhu><lU",
+            "y0roggksnx": "o&MZcys&7!XE05,pq)_9"
+        },
+        "hssu6gcvno": {
+            "sv0s8q62p0": "w)h*%gE`kc5;}VKO@!7&",
+            "luk7ad98pq": "c&Tp),.Hq\",zsd5G2r+d",
+            "fx6vnv8e69": "p.Vb{zzr*55[<*M>hUgf",
+            "h92ffi29o3": "rZ>z]4/`<gPSK)WWhAET",
+            "enp2i0ivz6": "e;gqy:f*n|%AnR:\\jHZs"
+        },
+        "rr0bmrmde6": 79506,
+        "dxszikfpk6": "v6yzO:E+*\"YqH8)!k?6O"
+    },
+    "zo5retezoq": {
+        "l7m25li6u6": [
+            79198,
+            97596.7324385066,
+            34258,
+            true,
+            "pdP&6qvHR,TUxwQ.m^lm"
+        ],
+        "zohi7usyc8": [
+            "h.e5WCbHE>a#_)QjJTQ'",
+            false,
+            68057,
+            47259,
+            "ae?\"KM/i0@>s}6F.1.m0"
+        ],
+        "bls9cz2a1l": "j=mpY?_'zdJLY(C.(;!>",
+        "i0b8efcuwr": "g[/g-|SWDsa-\".j[IBkT",
+        "gpimhgkpdn": "s}G[+rMB%fli\\C4<^IV!"
+    },
+    "lu4vvv8cr7": [
+        [
+            "q#NK|G,v0YcL#bZNzU9\\",
+            "iw09J16RyyV)r.;hSu-I",
+            "pYH[1%!YtditqAXF<>}2",
+            "qHnoX#s=Ts$)._W0yz-r",
+            82517
+        ],
+        {
+            "relv4awwtf": 16673,
+            "i09r5010ok": "y@t)`I;i[AFXOu\\P6{EX",
+            "n8kxr9ngvs": "aT7'zrdH|7T5+'%1c4/)",
+            "j1lhgiihry": 89842,
+            "fi38w0snsh": "jQwi]c1mj49ufk)ToW}Y"
+        },
+        [
+            "g/^epS4L.k=4wR>D9ap]",
+            "o%'vtw~o#jJ/:8(R$BLZ",
+            false,
+            "mnO6].v9.%`{DF^u|@H,",
+            "n{ubd[T\\70u6Oo<v5R!!"
+        ],
+        9236,
+        82423.97121723546
+    ],
+    "nbtznnzm06": [
+        {
+            "stece4w4h7": "eGE*UX/5^iV@05ooReRB",
+            "npl3819wed": "qgMF|VFZi?:aU!%aJt5R",
+            "jfggenwk4h": "yn&E6q[6~^ASr9PaY9lJ",
+            "az8x9vclzi": 96524,
+            "yepj0vl0ak": "y=%Ylh4K8$\"\\a2^7y07G"
+        },
+        34427.68584401222,
+        [
+            false,
+            "eb3=pQnSYp[r)$5&0JHu",
+            false,
+            false,
+            true
+        ],
+        [
+            "a%^.[A$E([!a1;Pz-%|V",
+            "yshC`tx_`BB}7~pWYkOB",
+            21651.207148731533,
+            "m~{Vf*d>c*n!qdh/CJ(j",
+            39643.18850650215
+        ],
+        false
+    ]
+}
