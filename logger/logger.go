@@ -14,5 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Implementation of a CloudWatch logger
+// Package logger contains the configuration structures needed to configure
+// the access to CloudWatch server to sending the log messages there
 package logger

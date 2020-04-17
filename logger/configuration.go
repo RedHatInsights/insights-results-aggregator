@@ -14,14 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Configuration for CloudWatch logger
 package logger
 
 // Configuration represents configuration of CloudWatch logger
 type Configuration struct {
-	AWS_access_id  string `mapstructure:"aws_access_id" toml:"aws_access_id"`
-	AWS_secret_key string `mapstructure:"aws_secret_key" toml:"aws_secret_key"`
-	AWS_region     string `mapstructure:"aws_region" toml:"aws_region"`
-	LogGroup       string `mapstructure:"log_group" toml:"log_group"`
-	StreamName     string `mapstructure:"stream_name" toml:"stream_name"`
+	AWSAccessID  string `mapstructure:"aws_access_id" toml:"aws_access_id"`
+	AWSSecretKey string `mapstructure:"aws_secret_key" toml:"aws_secret_key"`
+	AWSRegion    string `mapstructure:"aws_region" toml:"aws_region"`
+	LogGroup     string `mapstructure:"log_group" toml:"log_group"`
+	StreamName   string `mapstructure:"stream_name" toml:"stream_name"`
 }
