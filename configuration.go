@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/logger"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -134,6 +135,10 @@ func getOrganizationWhitelist() mapset.Set {
 
 func getStorageConfiguration() storage.Configuration {
 	return config.Storage
+}
+
+func getCloudWatchConfiguration() logger.Configuration {
+	return config.CloudWatch
 }
 
 func getServerConfiguration() server.Configuration {

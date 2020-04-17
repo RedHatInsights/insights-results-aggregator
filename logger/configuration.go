@@ -17,10 +17,6 @@ limitations under the License.
 // Configuration for CloudWatch logger
 package logger
 
-import (
-	mapset "github.com/deckarep/golang-set"
-)
-
 // Configuration represents configuration of CloudWatch logger
 type Configuration struct {
 	AWS_access_id  string `mapstructure:"aws_access_id" toml:"aws_access_id"`
