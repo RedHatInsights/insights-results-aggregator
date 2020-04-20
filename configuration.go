@@ -51,7 +51,7 @@ var config struct {
 	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
 	Server     server.Configuration `mapstructure:"server" toml:"server"`
 	Processing struct {
-		OrgWhiteListFile string `mapstructure:"org_white_list_file" toml:"org_white_list_file"`
+		OrgWhiteListFile string `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
 	} `mapstructure:"processing"`
 	Storage storage.Configuration `mapstructure:"storage" toml:"storage"`
 	Content struct {
@@ -116,6 +116,10 @@ func getBrokerConfiguration() broker.Configuration {
 }
 
 func getOrganizationWhitelist() mapset.Set {
+	if !config.Broker.OrgWhitelistEnabled {
+		return nil
+	}
+
 	if len(config.Processing.OrgWhiteListFile) == 0 {
 		config.Processing.OrgWhiteListFile = defaultOrgWhiteListFileName
 	}

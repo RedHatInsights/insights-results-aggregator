@@ -4,12 +4,13 @@ topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = false
 save_offset = false
+enable_org_whitelist = true
 
 [content]
 path = "./tests/content/ok/"
 
 [processing]
-org_whitelist = "org_whitelist.csv"
+org_whitelist_file = "org_whitelist.csv"
 
 [server]
 address = ":8080"
