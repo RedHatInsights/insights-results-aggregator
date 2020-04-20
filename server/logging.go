@@ -55,8 +55,8 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 	duration := time.Since(startTime)
 
 	metrics.APIResponsesTime.With(
-		prometheus.Labels{"url": request.RequestURI},
-	).Observe(float64(duration.Microseconds()))
+		prometheus.Labels{"endpoint": endpoint},
+	).Observe(duration.Seconds())
 }
 
 // LogRequest - middleware for logging requests
