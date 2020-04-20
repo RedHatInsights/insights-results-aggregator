@@ -115,7 +115,7 @@ function test_rest_api() {
 function test_openapi() {
 	echo "Testing OpenAPI specifications file"
 	# shellcheck disable=2181
-	docker run --rm -v "${PWD}":/local/ openapitools/openapi-generator-cli validate -i ./local/openapi.json
+	docker run --rm -v "${PWD}":/local/:Z openapitools/openapi-generator-cli validate -i ./local/openapi.json
 
 	if [ $? -eq 0 ]
 	then

@@ -24,11 +24,12 @@ import (
 
 // Configuration represents configuration of Kafka broker
 type Configuration struct {
-	Address      string     `mapstructure:"address" toml:"address"`
-	Topic        string     `mapstructure:"topic" toml:"topic"`
-	PublishTopic string     `mapstructure:"publish_topic" toml:"publish_topic"`
-	Group        string     `mapstructure:"group" toml:"group"`
-	Enabled      bool       `mapstructure:"enabled" toml:"enabled"`
-	OrgWhitelist mapset.Set `mapstructure:"org_white_list" toml:"org_white_list"`
-	SaveOffset   bool       `mapstructure:"save_offset" toml:"save_offset"`
+	Address             string     `mapstructure:"address" toml:"address"`
+	Topic               string     `mapstructure:"topic" toml:"topic"`
+	PublishTopic        string     `mapstructure:"publish_topic" toml:"publish_topic"`
+	Group               string     `mapstructure:"group" toml:"group"`
+	Enabled             bool       `mapstructure:"enabled" toml:"enabled"`
+	OrgWhitelist        mapset.Set `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
+	OrgWhitelistEnabled bool       `mapstructure:"enable_org_whitelist" toml:"enable_org_whitelist"`
+	SaveOffset          bool       `mapstructure:"save_offset" toml:"save_offset"`
 }

@@ -4,12 +4,13 @@ topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = true
 save_offset = true
+enable_org_whitelist = false
 
 [content]
 path = "./tests/content/ok/"
 
 [processing]
-org_whitelist = "org_whitelist.csv"
+org_whitelist_file = "org_whitelist.csv"
 
 [server]
 address = ":8080"
@@ -30,3 +31,10 @@ pg_port = 55432
 pg_db_name = "aggregator"
 pg_params = "sslmode=disable"
 log_sql_queries = true
+
+[cloudwatch]
+aws_access_id = "a key id"
+aws_secret_key = "tshhhh it is a secret"
+aws_region = "us-east-1"
+log_group = "platform-dev"
+stream_name = "insights-results-aggregator"

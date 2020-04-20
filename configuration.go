@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/logger"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -50,12 +51,13 @@ var config struct {
 	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
 	Server     server.Configuration `mapstructure:"server" toml:"server"`
 	Processing struct {
-		OrgWhiteListFile string `mapstructure:"org_white_list_file" toml:"org_white_list_file"`
+		OrgWhiteListFile string `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
 	} `mapstructure:"processing"`
 	Storage storage.Configuration `mapstructure:"storage" toml:"storage"`
 	Content struct {
 		ContentPath string `mapstructure:"path" toml:"path"`
 	} `mapstructure:"content" toml:"content"`
+	CloudWatch logger.Configuration `mapstructure:"cloudwatch" toml:"cloudwatch"`
 }
 
 // loadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
@@ -114,6 +116,10 @@ func getBrokerConfiguration() broker.Configuration {
 }
 
 func getOrganizationWhitelist() mapset.Set {
+	if !config.Broker.OrgWhitelistEnabled {
+		return nil
+	}
+
 	if len(config.Processing.OrgWhiteListFile) == 0 {
 		config.Processing.OrgWhiteListFile = defaultOrgWhiteListFileName
 	}
@@ -133,6 +139,10 @@ func getOrganizationWhitelist() mapset.Set {
 
 func getStorageConfiguration() storage.Configuration {
 	return config.Storage
+}
+
+func getCloudWatchConfiguration() logger.Configuration {
+	return config.CloudWatch
 }
 
 func getServerConfiguration() server.Configuration {

@@ -25,8 +25,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -256,21 +258,72 @@ func printVersionInfo() {
 	initInfoLog("Commit: " + BuildCommit)
 }
 
-func main() {
-	printVersionInfo()
+const helpMessageTemplate = `
+Aggregator service for insights results
 
+Usage:
+
+    %+v [command]
+
+The commands are:
+
+    <EMPTY>             starts aggregator
+    start-service       starts aggregator
+    help                prints help
+    print-help          prints help
+    print-config        prints current configuration set by files & env variables
+    print-version-info  prints version info
+
+`
+
+func printHelp() int {
+	fmt.Printf(helpMessageTemplate, os.Args[0])
+	return 0
+}
+
+func printConfig() int {
+	configBytes, err := json.MarshalIndent(config, "", "    ")
+
+	if err != nil {
+		log.Error().Err(err)
+		return 1
+	}
+
+	fmt.Println(string(configBytes))
+
+	return 0
+}
+
+func main() {
 	err := loadConfiguration(defaultConfigFilename)
 	if err != nil {
 		panic(err)
 	}
 
-	errCode := startService()
-	if errCode != 0 {
-		os.Exit(errCode)
+	command := "start-service"
+
+	if len(os.Args) >= 2 {
+		command = strings.ToLower(strings.TrimSpace(os.Args[1]))
 	}
 
-	errCode = stopService()
-	if errCode != 0 {
-		os.Exit(errCode)
+	switch command {
+	case "start-service":
+		printVersionInfo()
+
+		errCode := startService()
+		if errCode != 0 {
+			os.Exit(errCode)
+		}
+
+		os.Exit(stopService())
+	case "help", "print-help":
+		os.Exit(printHelp())
+	case "print-config":
+		os.Exit(printConfig())
+	case "print-version-info":
+		printVersionInfo()
+	default:
+		fmt.Printf("\nCommand '%v' not found\n", command)
+		os.Exit(printHelp())
 	}
 }

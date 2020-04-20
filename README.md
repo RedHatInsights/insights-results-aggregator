@@ -31,7 +31,7 @@ Aggregator service consists of three main parts:
 4. That results are consumed by Insights rules aggregator service that caches them
 5. The service provides such data via REST API to other tools, like OpenShift Cluster Manager web UI, OpenShift console, etc.
 
-Please note that results are filtered - only results for organizations listed in `org_whitelist.csv` are processed and cached in aggregator.
+Optionally, an organization whitelist can be enabled by the configuration variable `enable_org_whitelist`, which enables processing of a .csv file containing organization IDs (path specified by the config variable `org_whitelist`) and allows report processing only for these organizations. This feature is disbabled by default, and might be removed altogether in the near future.
 
 ### DB structure
 
