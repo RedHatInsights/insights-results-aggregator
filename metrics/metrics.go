@@ -37,7 +37,7 @@ import (
 var APIRequests = promauto.NewCounterVec(prometheus.CounterOpts{
 	Name: "api_endpoints_requests",
 	Help: "The total number of requests per endpoint",
-}, []string{"url"})
+}, []string{"endpoint"})
 
 // APIResponsesTime collects the information about api response time per endpoint
 var APIResponsesTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
