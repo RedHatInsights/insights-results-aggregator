@@ -47,7 +47,7 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 
 	metrics.APIResponsesTime.With(
 		prometheus.Labels{"url": request.RequestURI},
-	).Observe(float64(duration.Microseconds()))
+	).Observe(duration.Seconds())
 }
 
 // LogRequest - middleware for logging requests
