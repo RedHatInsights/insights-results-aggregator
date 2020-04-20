@@ -201,7 +201,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		path = "/rules-content"
 
 		[processing]
-		org_whitelist = "org_whitelist.csv"
+		org_whitelist_file = "org_whitelist.csv"
 
 		[server]
 		address = ":8080"

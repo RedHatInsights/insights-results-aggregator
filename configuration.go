@@ -51,7 +51,7 @@ var config struct {
 	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
 	Server     server.Configuration `mapstructure:"server" toml:"server"`
 	Processing struct {
-		OrgWhiteListFile string `mapstructure:"org_whitelist" toml:"org_whitelist"`
+		OrgWhiteListFile string `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
 	} `mapstructure:"processing"`
 	Storage storage.Configuration `mapstructure:"storage" toml:"storage"`
 	Content struct {
