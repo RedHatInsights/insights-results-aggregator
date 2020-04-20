@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 
@@ -39,6 +40,14 @@ func (writer loggingResponseWriter) WriteHeader(statusCode int) {
 func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHandler http.Handler) {
 	log.Print("Request URI: " + request.RequestURI)
 	log.Print("Request method: " + request.Method)
+
+	route := mux.CurrentRoute(request)
+	endpoint, err := route.GetPathTemplate()
+	if err != nil {
+		log.Error().Err(err)
+		endpoint = ""
+	}
+
 	metrics.APIRequests.With(prometheus.Labels{"url": request.RequestURI}).Inc()
 
 	startTime := time.Now()
@@ -46,7 +55,7 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 	duration := time.Since(startTime)
 
 	metrics.APIResponsesTime.With(
-		prometheus.Labels{"url": request.RequestURI},
+		prometheus.Labels{"endpoint": endpoint},
 	).Observe(duration.Seconds())
 }
 
