@@ -30,3 +30,10 @@ pg_port = 55432
 pg_db_name = "aggregator"
 pg_params = "sslmode=disable"
 log_sql_queries = true
+
+[cloudwatch]
+aws_access_id = "a key id"
+aws_secret_key = "tshhhh it is a secret"
+aws_region = "us-east-1"
+log_group = "platform-dev"
+stream_name = "insights-results-aggregator"

@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/logger"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -56,6 +57,7 @@ var config struct {
 	Content struct {
 		ContentPath string `mapstructure:"path" toml:"path"`
 	} `mapstructure:"content" toml:"content"`
+	CloudWatch logger.Configuration `mapstructure:"cloudwatch" toml:"cloudwatch"`
 }
 
 // loadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
@@ -133,6 +135,10 @@ func getOrganizationWhitelist() mapset.Set {
 
 func getStorageConfiguration() storage.Configuration {
 	return config.Storage
+}
+
+func getCloudWatchConfiguration() logger.Configuration {
+	return config.CloudWatch
 }
 
 func getServerConfiguration() server.Configuration {
