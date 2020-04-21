@@ -57,7 +57,8 @@ var config struct {
 	Content struct {
 		ContentPath string `mapstructure:"path" toml:"path"`
 	} `mapstructure:"content" toml:"content"`
-	CloudWatch logger.Configuration `mapstructure:"cloudwatch" toml:"cloudwatch"`
+	Logging    logger.LoggingConfiguration    `mapstructure:"logging" toml:"logging"`
+	CloudWatch logger.CloudWatchConfiguration `mapstructure:"cloudwatch" toml:"cloudwatch"`
 }
 
 // loadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
@@ -141,7 +142,11 @@ func getStorageConfiguration() storage.Configuration {
 	return config.Storage
 }
 
-func getCloudWatchConfiguration() logger.Configuration {
+func getLoggingConfiguration() logger.LoggingConfiguration {
+	return config.Logging
+}
+
+func getCloudWatchConfiguration() logger.CloudWatchConfiguration {
 	return config.CloudWatch
 }
 

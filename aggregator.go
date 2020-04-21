@@ -36,6 +36,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/content"
+	"github.com/RedHatInsights/insights-results-aggregator/logger"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
@@ -300,30 +301,41 @@ func main() {
 		panic(err)
 	}
 
+	err = logger.InitZerolog(getLoggingConfiguration(), getCloudWatchConfiguration())
+	if err != nil {
+		panic(err)
+	}
+
 	command := "start-service"
 
 	if len(os.Args) >= 2 {
 		command = strings.ToLower(strings.TrimSpace(os.Args[1]))
 	}
 
+	os.Exit(handleCommand(command))
+}
+
+func handleCommand(command string) int {
 	switch command {
 	case "start-service":
 		printVersionInfo()
 
 		errCode := startService()
 		if errCode != 0 {
-			os.Exit(errCode)
+			return errCode
 		}
 
-		os.Exit(stopService())
+		return stopService()
 	case "help", "print-help":
-		os.Exit(printHelp())
+		return printHelp()
 	case "print-config":
-		os.Exit(printConfig())
+		return printConfig()
 	case "print-version-info":
 		printVersionInfo()
 	default:
 		fmt.Printf("\nCommand '%v' not found\n", command)
-		os.Exit(printHelp())
+		return printHelp()
 	}
+
+	return 0
 }
