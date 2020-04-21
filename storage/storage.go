@@ -121,7 +121,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 		return nil, err
 	}
 
-	log.Printf(
+	log.Info().Msgf(
 		"Making connection to data storage, driver=%s datasource=%s",
 		driverName, dataSource,
 	)
@@ -190,7 +190,7 @@ func (storage DBStorage) Init() error {
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.
 func (storage DBStorage) Close() error {
-	log.Print("Closing connection to data storage")
+	log.Info().Msg("Closing connection to data storage")
 	if storage.connection != nil {
 		err := storage.connection.Close()
 		if err != nil {
@@ -446,7 +446,7 @@ func (storage DBStorage) WriteReportForCluster(
 	reportedAtTime := time.Now()
 	_, err = tx.Exec(upsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime)
 	if err != nil {
-		log.Print(err)
+		log.Err(err).Msgf("Unable to upsert the cluster report (org: %v, cluster: %v)", orgID, clusterName)
 		_ = tx.Rollback()
 		return err
 	}

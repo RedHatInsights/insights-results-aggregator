@@ -483,7 +483,7 @@ func (server *HTTPServer) handleOptionsMethod(nextHandler http.Handler) http.Han
 
 // Initialize perform the server initialization
 func (server *HTTPServer) Initialize(address string) http.Handler {
-	log.Print("Initializing HTTP server at", address)
+	log.Info().Msgf("Initializing HTTP server at '%s'", address)
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(server.LogRequest)
@@ -552,7 +552,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 // Start starts server
 func (server *HTTPServer) Start() error {
 	address := server.Config.Address
-	log.Print("Starting HTTP server at", address)
+	log.Info().Msgf("Starting HTTP server at '%s'", address)
 	router := server.Initialize(address)
 	server.Serv = &http.Server{Addr: address, Handler: router}
 	var err error

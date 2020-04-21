@@ -178,7 +178,7 @@ func startService() int {
 
 	prepDbExitCode := prepareDB()
 	if prepDbExitCode != 0 {
-		log.Info().Msg(fmt.Sprintf(databasePreparationMessage, prepDbExitCode))
+		log.Info().Msgf(databasePreparationMessage, prepDbExitCode)
 		exitCode += prepDbExitCode
 		return exitCode
 	}
@@ -188,7 +188,7 @@ func startService() int {
 	go func() {
 		consumerExitCode := startConsumer()
 		if consumerExitCode != 0 {
-			log.Info().Msg(fmt.Sprintf(consumerExitedErrorMessage, prepDbExitCode))
+			log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
 			exitCode += consumerExitCode
 		}
 
@@ -198,7 +198,7 @@ func startService() int {
 	// server can be started in current thread
 	serverExitCode := startServer()
 	if serverExitCode != 0 {
-		log.Info().Msg(fmt.Sprintf(consumerExitedErrorMessage, prepDbExitCode))
+		log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
 		exitCode += serverExitCode
 	}
 

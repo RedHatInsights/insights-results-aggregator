@@ -19,8 +19,6 @@ limitations under the License.
 package producer
 
 import (
-	"fmt"
-
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
 
@@ -65,7 +63,7 @@ func (producer *KafkaProducer) ProduceMessage(message string) (int32, int64, err
 	if errout != nil {
 		log.Error().Err(errout).Msg("FAILED to send message")
 	} else {
-		log.Info().Msg(fmt.Sprintf("message sent to partition %d at offset %d\n", partition, offset))
+		log.Info().Msgf("message sent to partition %d at offset %d\n", partition, offset)
 		metrics.ProducedMessages.Inc()
 	}
 	return partition, offset, errout
