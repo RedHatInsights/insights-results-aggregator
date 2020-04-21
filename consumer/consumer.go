@@ -216,8 +216,7 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 
 	err = checkReportStructure(*deserialized.Report)
 	if err != nil {
-		log.Print("Deserialized report read from message with improper structure:")
-		log.Print(*deserialized.Report)
+		log.Err(err).Msgf("Deserialized report read from message with improper structure: %v", *deserialized.Report)
 		return deserialized, err
 	}
 
@@ -238,7 +237,7 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 
 // Serve starts listening for messages and processing them. It blocks current thread
 func (consumer *KafkaConsumer) Serve() {
-	log.Printf("Consumer has been started, waiting for messages send to topic %s", consumer.Configuration.Topic)
+	log.Info().Msgf("Consumer has been started, waiting for messages send to topic '%s'", consumer.Configuration.Topic)
 
 	for msg := range consumer.PartitionConsumer.Messages() {
 		err := consumer.ProcessMessage(msg)

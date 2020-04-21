@@ -38,8 +38,7 @@ func (writer loggingResponseWriter) WriteHeader(statusCode int) {
 }
 
 func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHandler http.Handler) {
-	log.Print("Request URI: " + request.RequestURI)
-	log.Print("Request method: " + request.Method)
+	log.Info().Msgf("Request received - URI: %s, Method: %s", request.RequestURI, request.Method)
 
 	route := mux.CurrentRoute(request)
 	endpoint, err := route.GetPathTemplate()
