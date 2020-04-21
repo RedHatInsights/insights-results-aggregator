@@ -534,3 +534,14 @@ Types of input message mutation:
 * any item (identified by its key) can be removed
 * new items with random key and content can be added
 * any item can be replaced by new random content
+
+### `affected_clusters.py`
+
+This script can be used to analyze data exported from `report` table by
+the following command typed into PSQL console:
+
+    \copy report to 'reports.csv csv
+
+Script displays two tables:
+    1. org id + cluster name (list of affected clusters)
+    2. org id + number of affected clusters (usually the only information reguired by management)
