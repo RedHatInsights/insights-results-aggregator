@@ -62,7 +62,8 @@ type APIResponse struct {
 	Headers     map[string]string
 }
 
-var defaultServerConfig = server.Configuration{
+// DefaultServerConfig is a default config used by AssertAPIRequest
+var DefaultServerConfig = server.Configuration{
 	Address:     ":8080",
 	APIPrefix:   "/api/test/",
 	APISpecFile: "openapi.json",
@@ -88,7 +89,7 @@ func AssertAPIRequest(
 		defer MustCloseStorage(t, mockStorage)
 	}
 	if serverConfig == nil {
-		serverConfig = &defaultServerConfig
+		serverConfig = &DefaultServerConfig
 	}
 
 	testServer := server.New(*serverConfig, mockStorage)

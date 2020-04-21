@@ -48,7 +48,7 @@ func logRequestHandler(writer http.ResponseWriter, request *http.Request, nextHa
 		endpoint = ""
 	}
 
-	metrics.APIRequests.With(prometheus.Labels{"url": request.RequestURI}).Inc()
+	metrics.APIRequests.With(prometheus.Labels{"endpoint": endpoint}).Inc()
 
 	startTime := time.Now()
 	nextHandler.ServeHTTP(&loggingResponseWriter{ResponseWriter: writer}, request)

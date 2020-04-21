@@ -76,13 +76,42 @@ func TestConsumedMessagesMetric(t *testing.T) {
 	}, testCaseTimeLimit)
 }
 
-// TODO: metrics.APIRequests
+func TestAPIRequestsMetrics(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		// resetting since go runs tests in 1 process
+		metrics.APIRequests.Reset()
+
+		endpoint := helpers.DefaultServerConfig.APIPrefix + server.ReportEndpoint
+
+		assert.Equal(t, 0.0, getCounterVecValue(metrics.APIRequests, map[string]string{
+			"endpoint": endpoint,
+		}))
+
+		helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
+			Method:       http.MethodGet,
+			Endpoint:     server.ReportEndpoint,
+			EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
+		}, &helpers.APIResponse{
+			StatusCode: http.StatusBadRequest,
+			Body: `{
+				"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"
+			}`,
+		})
+
+		assert.Equal(t, 1.0, getCounterVecValue(metrics.APIRequests, map[string]string{
+			"endpoint": endpoint,
+		}))
+	}, testCaseTimeLimit)
+}
+
 // TODO: metrics.APIResponsesTime
 // TODO: metrics.ProducedMessages
 // TODO: metrics.WrittenReports
 
 func TestApiResponseStatusCodesMetric_StatusOK(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		metrics.APIResponseStatusCodes.Reset()
+
 		assert.Equal(t, 0.0, getCounterVecValue(metrics.APIResponseStatusCodes, map[string]string{
 			"status_code": fmt.Sprint(http.StatusOK),
 		}))
@@ -105,6 +134,8 @@ func TestApiResponseStatusCodesMetric_StatusOK(t *testing.T) {
 
 func TestApiResponseStatusCodesMetric_StatusBadRequest(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		metrics.APIResponseStatusCodes.Reset()
+
 		assert.Equal(t, 0.0, getCounterVecValue(metrics.APIResponseStatusCodes, map[string]string{
 			"status_code": fmt.Sprint(http.StatusBadRequest),
 		}))
