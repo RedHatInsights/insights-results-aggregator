@@ -22,11 +22,11 @@ import (
 	"io"
 	"os"
 
+	"github.com/RedHatInsights/cloudwatch"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	cloudwatch "github.com/discobean/ejholmes-cloudwatch"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
