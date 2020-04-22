@@ -303,6 +303,7 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 			RuleModule:   string(testRuleID),
 			Description:  "description",
 			Generic:      "generic",
+			Resolution:   "resolution",
 			CreatedAt:    "1970-01-01T00:00:00Z",
 			TotalRisk:    1,
 			RiskOfChange: 0,
@@ -347,6 +348,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			RuleModule:   "test.rule1",
 			Description:  "rule 1 description",
 			Generic:      "rule 1 details",
+			Resolution:   "rule 1 resolution",
 			CreatedAt:    "1970-01-01T00:00:00Z",
 			TotalRisk:    3,
 			RiskOfChange: 0,
@@ -356,6 +358,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			RuleModule:   "test.rule2",
 			Description:  "rule 2 description",
 			Generic:      "rule 2 details",
+			Resolution:   "rule 2 resolution with `markdown`",
 			CreatedAt:    "1970-01-02T00:00:00Z",
 			TotalRisk:    4,
 			RiskOfChange: 0,
@@ -365,6 +368,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			RuleModule:   "test.rule3",
 			Description:  "rule 3 description",
 			Generic:      "rule 3 details",
+			Resolution:   "rule 3 resolution with link [cloud](https://cloud.redhat.com/)",
 			CreatedAt:    "1970-01-03T00:00:00Z",
 			TotalRisk:    2,
 			RiskOfChange: 0,
@@ -384,6 +388,7 @@ func TestDBStorageGetContentForRulesScanError(t *testing.T) {
 		"rule_module",
 		"description",
 		"generic",
+		"resolution",
 		"publish_date",
 		"impact",
 		"likelihood",
@@ -395,7 +400,7 @@ func TestDBStorageGetContentForRulesScanError(t *testing.T) {
 	}
 
 	// return bad values
-	expects.ExpectQuery("SELECT .* FROM rule_error_key").WillReturnRows(
+	expects.ExpectQuery("SELECT (.*) FROM rule (.*) rule_error_key").WillReturnRows(
 		sqlmock.NewRows(columns).AddRow(values...),
 	)
 
@@ -427,17 +432,18 @@ func TestDBStorageGetContentForRulesRowsError(t *testing.T) {
 		"rule_module",
 		"description",
 		"generic",
+		"resolution",
 		"publish_date",
 		"impact",
 		"likelihood",
 	}
 
 	values := []driver.Value{
-		"ek", "rule_module", "desc", "generic", 0, 0, 0,
+		"ek", "rule_module", "desc", "resolution", "generic", 0, 0, 0,
 	}
 
 	// return bad values
-	expects.ExpectQuery("SELECT .* FROM rule_error_key").WillReturnRows(
+	expects.ExpectQuery("SELECT (.*) FROM rule (.*) rule_error_key").WillReturnRows(
 		sqlmock.NewRows(columns).AddRow(values...).RowError(0, fmt.Errorf(rowErr)),
 	)
 
