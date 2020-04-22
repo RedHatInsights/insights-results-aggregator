@@ -23,7 +23,7 @@ type LoggingConfiguration struct {
 
 	// LoggingToCloudWatchEnabled enables logging to CloudWatch
 	// (configuration for CloudWatch is in CloudWatchConfiguration)
-	LoggingToCloudWatchEnabled bool `mapstructure:"log_to_cloud_watch" toml:"logging_to_cloud_watch_enabled"`
+	LoggingToCloudWatchEnabled bool `mapstructure:"logging_to_cloud_watch_enabled" toml:"logging_to_cloud_watch_enabled"`
 }
 
 // CloudWatchConfiguration represents configuration of CloudWatch logger

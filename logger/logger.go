@@ -26,6 +26,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+
+	//cloudwatch "github.com/discobean/ejholmes-cloudwatch"
 	"github.com/ejholmes/cloudwatch"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -45,7 +47,10 @@ func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConf
 	if loggingConf.LoggingToCloudWatchEnabled {
 		awsLogLevel := aws.LogOff
 		if cloudWatchConf.Debug {
-			awsLogLevel = aws.LogDebug
+			awsLogLevel = aws.LogDebugWithSigning |
+				aws.LogDebugWithSigning |
+				aws.LogDebugWithHTTPBody |
+				aws.LogDebugWithEventStreamBody
 		}
 
 		awsConf := aws.NewConfig().
