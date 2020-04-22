@@ -11,8 +11,8 @@ require (
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/deckarep/golang-set v1.7.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/discobean/ejholmes-cloudwatch v0.0.0-20181111235653-96db5c4f959a
 	github.com/droptheplot/abcgo v0.0.0-20171120220436-23529565504c // indirect
-	github.com/ejholmes/cloudwatch v0.0.0-20170420022600-c2bae568a254
 	github.com/gchaincl/sqlhooks v1.3.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/google/uuid v1.1.1
