@@ -7,15 +7,18 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/RedHatInsights/insights-operator-utils v0.0.0-20200323131325-73813484635c
 	github.com/Shopify/sarama v1.26.0
+	github.com/aws/aws-sdk-go v1.27.0
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/deckarep/golang-set v1.7.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/discobean/ejholmes-cloudwatch v0.0.0-20181111235653-96db5c4f959a
 	github.com/droptheplot/abcgo v0.0.0-20171120220436-23529565504c // indirect
 	github.com/gchaincl/sqlhooks v1.3.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/gordonklaus/ineffassign v0.0.0-20200309095847-7953dde2c7bf // indirect
 	github.com/gorilla/mux v1.7.3
+	github.com/jcxplorer/cwlogger v0.0.0-20170704082755-4e30a5a47e6a
 	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/koalaman/shellcheck v0.7.1 // indirect
 	github.com/lib/pq v1.3.0

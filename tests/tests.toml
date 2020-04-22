@@ -6,12 +6,6 @@ enabled = false
 save_offset = false
 enable_org_whitelist = true
 
-[content]
-path = "./tests/content/ok/"
-
-[processing]
-org_whitelist_file = "org_whitelist.csv"
-
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
@@ -22,12 +16,18 @@ auth_type = "xrh"
 use_https = false
 enable_cors = true
 
+[processing]
+org_whitelist_file = "org_whitelist.csv"
+
 [storage]
 db_driver = "sqlite3"
 sqlite_datasource = "./test.db"
-pg_username = ""
-pg_password = ""
-pg_host = ""
-pg_port = 0
-pg_db_name = ""
-pg_params = ""
+
+[content]
+path = "./tests/content/ok/"
+
+[logging]
+debug = false
+logging_to_cloud_watch_enabled = false
+
+[cloudwatch]

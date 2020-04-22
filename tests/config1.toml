@@ -6,17 +6,6 @@ enabled = false
 save_offset = false
 enable_org_whitelist = true
 
-[content]
-path = "/rules-content"
-
-[logging]
-
-[metrics]
-enabled = true
-
-[processing]
-org_whitelist_file = "org_whitelist.csv"
-
 [server]
 address = ":8080"
 api_prefix = "/api/v1/"
@@ -25,6 +14,9 @@ auth = false
 auth_type = "xrh"
 use_https = false
 enable_cors = true
+
+[processing]
+org_whitelist_file = "org_whitelist.csv"
 
 [storage]
 db_driver = "sqlite3"
@@ -35,3 +27,12 @@ pg_host = "localhost"
 pg_port = 5432
 pg_db_name = "aggregator"
 pg_params = ""
+
+[content]
+path = "/rules-content"
+
+[logging]
+debug = false
+logging_to_cloud_watch_enabled = false
+
+[cloudwatch]
