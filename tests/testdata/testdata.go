@@ -43,9 +43,6 @@ const (
 	Rule1Details     = "rule 1 details"
 	Rule2Details     = "rule 2 details"
 	Rule3Details     = "rule 3 details"
-	Rule1Resolution  = "rule 1 resolution"
-	Rule2Resolution  = "rule 2 resolution with `markdown`"
-	Rule3Resolution  = "rule 3 resolution with link [cloud](https://cloud.redhat.com/)"
 	Rule1CreatedAt   = "1970-01-01T00:00:00Z"
 	Rule2CreatedAt   = "1970-01-02T00:00:00Z"
 	Rule3CreatedAt   = "1970-01-03T00:00:00Z"
@@ -55,6 +52,9 @@ const (
 	Rule1Reason      = "rule 1 reason"
 	Rule2Reason      = "rule 2 reason"
 	Rule3Reason      = "rule 3 reason"
+	Rule1Resolution  = "rule 1 resolution"
+	Rule2Resolution  = "rule 2 resolution"
+	Rule3Resolution  = "rule 3 resolution"
 	Rule1MoreInfo    = "rule 1 more info"
 	Rule2MoreInfo    = "rule 2 more info"
 	Rule3MoreInfo    = "rule 3 more info"
@@ -117,7 +117,7 @@ var (
 			"rc2": content.RuleContent{
 				Summary:    []byte("rule 2 summary"),
 				Reason:     []byte("rule 2 reason"),
-				Resolution: []byte("rule 2 resolution with `markdown`"),
+				Resolution: []byte("rule 2 resolution"),
 				MoreInfo:   []byte("rule 2 more info"),
 				Plugin: content.RulePluginInfo{
 					Name:         "rule 2 name",
@@ -142,7 +142,7 @@ var (
 			"rc3": content.RuleContent{
 				Summary:    []byte("rule 3 summary"),
 				Reason:     []byte("rule 3 reason"),
-				Resolution: []byte("rule 3 resolution with link [cloud](https://cloud.redhat.com/)"),
+				Resolution: []byte("rule 3 resolution"),
 				MoreInfo:   []byte("rule 3 more info"),
 				Plugin: content.RulePluginInfo{
 					Name:         "rule 3 name",
@@ -217,8 +217,7 @@ var (
       {
 		"rule_id": "` + string(Rule1ID) + `",
         "description": "` + Rule1Description + `",
-		"details": "` + Rule1Details + `",
-		"resolution": "` + Rule1Resolution + `",
+        "details": "` + Rule1Details + `",
         "created_at": "` + Rule1CreatedAt + `",
         "total_risk": 3,
         "risk_of_change": 0
@@ -226,8 +225,7 @@ var (
       {
 		"rule_id": "` + string(Rule2ID) + `",
         "description": "` + Rule2Description + `",
-		"details": "` + Rule2Details + `",
-		"resolution": "` + Rule2Resolution + `",
+        "details": "` + Rule2Details + `",
         "created_at": "` + Rule2CreatedAt + `",
         "total_risk": 4,
         "risk_of_change": 0
@@ -235,8 +233,7 @@ var (
       {
 		"rule_id": "` + string(Rule3ID) + `",
         "description": "` + Rule3Description + `",
-		"details": "` + Rule3Details + `",
-		"resolution": "` + Rule3Resolution + `",
+        "details": "` + Rule3Details + `",
         "created_at": "` + Rule3CreatedAt + `",
         "total_risk": 2,
         "risk_of_change": 0

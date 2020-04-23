@@ -35,8 +35,9 @@ type Timestamp string
 
 // RuleOnReport represents a single (hit) rule of the string encoded report
 type RuleOnReport struct {
-	Module   string `json:"component"`
-	ErrorKey string `json:"key"`
+	Module   string      `json:"component"`
+	ErrorKey string      `json:"key"`
+	Details  interface{} `json:"details"`
 }
 
 // ReportRules is a helper struct for easy JSON unmarshalling of string encoded report
@@ -65,10 +66,10 @@ type RuleContentResponse struct {
 	RuleModule   string `json:"rule_id"`
 	Description  string `json:"description"`
 	Generic      string `json:"details"`
-	Resolution   string `json:"resolution"`
 	CreatedAt    string `json:"created_at"`
 	TotalRisk    int    `json:"total_risk"`
 	RiskOfChange int    `json:"risk_of_change"`
+	TemplateData string `json:"extra_data"`
 }
 
 // RuleID represents type for rule id

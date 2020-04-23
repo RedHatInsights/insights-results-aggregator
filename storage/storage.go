@@ -29,6 +29,7 @@ package storage
 import (
 	"database/sql"
 	sql_driver "database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -345,11 +346,35 @@ func constructWhereClauseForContent(reportRules types.ReportRules) string {
 	return statement
 }
 
+func getExtraDataFromReportRules(rules []types.RuleContentResponse, reportRules types.ReportRules) []types.RuleContentResponse {
+	if len(reportRules.HitRules) == 0 {
+		return rules
+	}
+
+	for _, ruleContent := range rules {
+		module := ruleContent.RuleModule
+		//errorKey := ruleContent.ErrorKey
+
+		for _, hitRule := range reportRules.HitRules {
+			moduleOnReport := strings.TrimSuffix(hitRule.Module, ".report")
+			if module == moduleOnReport {
+				templateData, err := json.Marshal(hitRule.Details)
+				if err != nil {
+					log.Error().Err(err).Msg("Error while marshalling rule details from the report")
+					continue
+				}
+				ruleContent.TemplateData = string(templateData)
+			}
+		}
+	}
+	return rules
+}
+
 // GetContentForRules retrieves content for rules that were hit in the report
 func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]types.RuleContentResponse, error) {
 	rules := make([]types.RuleContentResponse, 0)
 
-	query := `SELECT rek.error_key, rek.rule_module, rek.description, rek.generic, r.resolution, rek.publish_date,
+	query := `SELECT rek.error_key, rek.rule_module, rek.description, rek.generic || r.resolution, rek.publish_date,
 		rek.impact, rek.likelihood
 		FROM rule r
 		INNER JOIN rule_error_key rek
@@ -375,7 +400,6 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 			&rule.RuleModule,
 			&rule.Description,
 			&rule.Generic,
-			&rule.Resolution,
 			&rule.CreatedAt,
 			&impact,
 			&likelihood,
@@ -394,6 +418,8 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 		log.Error().Err(err).Msg("SQL rows error while retrieving content for rules")
 		return rules, err
 	}
+
+	rules = getExtraDataFromReportRules(rules, reportRules)
 
 	return rules, nil
 }

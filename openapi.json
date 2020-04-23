@@ -216,10 +216,6 @@
                                 "type": "string",
                                 "description": "Details of the rule - templates rendered on frontend."
                               },
-                              "resolution": {
-                                "type": "string",
-                                "description": "Resolution of the issue, possibly linking to a resolution article in the knowledge base."
-                              },
                               "created_at": {
                                 "type": "string",
                                 "format": "date",
