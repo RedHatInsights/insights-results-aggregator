@@ -1,3 +1,6 @@
 Red Hat Insights for OpenShift is a proactive management solution. It provides ongoing infrastructure analyses of your Red Hat OpenShift Container Platform 4.2 and later installations. Red Hat Insights helps you identify, prioritize, and resolve risks to security, performance, availability, and stability before they become urgent issues.
 Red Hat Insights for OpenShift uses the Remote Health Monitoring feature of OpenShift 4. The health checks are created by Red Hat subject matter experts and assessed according to severity and impact.
 This is an example  recommendation that you can safely ignore. To disable it, click  the triple-dot menu button next to the header, and select Disable.
+
+[Knowledgebase Article](https://access.redhat.com/search/#/knowledgebase)
+
