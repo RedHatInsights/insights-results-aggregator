@@ -351,9 +351,8 @@ func getExtraDataFromReportRules(rules []types.RuleContentResponse, reportRules 
 		return rules
 	}
 
-	for _, ruleContent := range rules {
+	for i, ruleContent := range rules {
 		module := ruleContent.RuleModule
-		//errorKey := ruleContent.ErrorKey
 
 		for _, hitRule := range reportRules.HitRules {
 			moduleOnReport := strings.TrimSuffix(hitRule.Module, ".report")
@@ -363,7 +362,7 @@ func getExtraDataFromReportRules(rules []types.RuleContentResponse, reportRules 
 					log.Error().Err(err).Msg("Error while marshalling rule details from the report")
 					continue
 				}
-				ruleContent.TemplateData = string(templateData)
+				rules[i].TemplateData = string(templateData)
 			}
 		}
 	}
