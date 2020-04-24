@@ -50,17 +50,15 @@ func GetMockStorage(init bool) (storage.Storage, error) {
 
 // MustGetMockStorage creates mocked storage based on in-memory Sqlite instance
 // produces t.Fatal(err) on error
-func MustGetMockStorage(t *testing.T, init bool) storage.Storage {
+func MustGetMockStorage(t testing.TB, init bool) storage.Storage {
 	mockStorage, err := GetMockStorage(init)
-	if err != nil {
-		t.Fatal(err)
-	}
+	FailOnError(t, err)
 
 	return mockStorage
 }
 
 // MustCloseStorage closes storage and panics if it wasn't successful
-func MustCloseStorage(t *testing.T, s storage.Storage) {
+func MustCloseStorage(t testing.TB, s storage.Storage) {
 	FailOnError(t, s.Close())
 }
 

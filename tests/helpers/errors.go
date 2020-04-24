@@ -21,7 +21,7 @@ import (
 )
 
 // FailOnError wraps result of function with one argument
-func FailOnError(t *testing.T, err error) {
+func FailOnError(t testing.TB, err error) {
 	// assert.NoError is used to show human readable output
 	assert.NoError(t, err)
 	// assert.NoError doesn't stop next test execution which can cause strange panic because
