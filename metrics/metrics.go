@@ -58,6 +58,12 @@ var ConsumedMessages = promauto.NewCounter(prometheus.CounterOpts{
 	Help: "The total number of messages consumed from Kafka",
 })
 
+// ConsumingErrors shows the total number of errors during consuming messages from Kafka
+var ConsumingErrors = promauto.NewCounter(prometheus.CounterOpts{
+	Name: "consuming_errors",
+	Help: "The total number of errors during consuming messages from Kafka",
+})
+
 // ProducedMessages shows number of messages produced by producer package
 // probably it will be used only in tests
 var ProducedMessages = promauto.NewCounter(prometheus.CounterOpts{
