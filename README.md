@@ -545,3 +545,7 @@ the following command typed into PSQL console:
 Script displays two tables:
     1. org id + cluster name (list of affected clusters)
     2. org id + number of affected clusters (usually the only information reguired by management)
+
+### `json_check.py`
+
+Simple checker if all JSONs have the correct syntax (not scheme).
