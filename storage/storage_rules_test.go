@@ -302,10 +302,11 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 			ErrorKey:     "ek",
 			RuleModule:   string(testRuleID),
 			Description:  "description",
-			Generic:      "generic",
+			Generic:      "genericresolution",
 			CreatedAt:    "1970-01-01T00:00:00Z",
 			TotalRisk:    1,
 			RiskOfChange: 0,
+			TemplateData: nil,
 		},
 	}, res)
 }
@@ -346,28 +347,31 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			ErrorKey:     "ek1",
 			RuleModule:   "test.rule1",
 			Description:  "rule 1 description",
-			Generic:      "rule 1 details",
+			Generic:      "rule 1 detailsrule 1 resolution",
 			CreatedAt:    "1970-01-01T00:00:00Z",
 			TotalRisk:    3,
 			RiskOfChange: 0,
+			TemplateData: nil,
 		},
 		{
 			ErrorKey:     "ek2",
 			RuleModule:   "test.rule2",
 			Description:  "rule 2 description",
-			Generic:      "rule 2 details",
+			Generic:      "rule 2 detailsrule 2 resolution",
 			CreatedAt:    "1970-01-02T00:00:00Z",
 			TotalRisk:    4,
 			RiskOfChange: 0,
+			TemplateData: nil,
 		},
 		{
 			ErrorKey:     "ek3",
 			RuleModule:   "test.rule3",
 			Description:  "rule 3 description",
-			Generic:      "rule 3 details",
+			Generic:      "rule 3 detailsrule 3 resolution",
 			CreatedAt:    "1970-01-03T00:00:00Z",
 			TotalRisk:    2,
 			RiskOfChange: 0,
+			TemplateData: nil,
 		},
 	}, res)
 }
@@ -395,7 +399,7 @@ func TestDBStorageGetContentForRulesScanError(t *testing.T) {
 	}
 
 	// return bad values
-	expects.ExpectQuery("SELECT .* FROM rule_error_key").WillReturnRows(
+	expects.ExpectQuery("SELECT (.*) FROM rule (.*) rule_error_key").WillReturnRows(
 		sqlmock.NewRows(columns).AddRow(values...),
 	)
 
@@ -437,7 +441,7 @@ func TestDBStorageGetContentForRulesRowsError(t *testing.T) {
 	}
 
 	// return bad values
-	expects.ExpectQuery("SELECT .* FROM rule_error_key").WillReturnRows(
+	expects.ExpectQuery("SELECT (.*) FROM rule (.*) rule_error_key").WillReturnRows(
 		sqlmock.NewRows(columns).AddRow(values...).RowError(0, fmt.Errorf(rowErr)),
 	)
 

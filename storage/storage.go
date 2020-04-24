@@ -345,13 +345,33 @@ func constructWhereClauseForContent(reportRules types.ReportRules) string {
 	return statement
 }
 
+func getExtraDataFromReportRules(rules []types.RuleContentResponse, reportRules types.ReportRules) []types.RuleContentResponse {
+	if len(reportRules.HitRules) == 0 {
+		return rules
+	}
+
+	for i, ruleContent := range rules {
+		module := ruleContent.RuleModule
+
+		for _, hitRule := range reportRules.HitRules {
+			moduleOnReport := strings.TrimSuffix(hitRule.Module, ".report")
+			if module == moduleOnReport {
+				rules[i].TemplateData = hitRule.Details
+			}
+		}
+	}
+	return rules
+}
+
 // GetContentForRules retrieves content for rules that were hit in the report
 func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]types.RuleContentResponse, error) {
 	rules := make([]types.RuleContentResponse, 0)
 
-	query := `SELECT error_key, rule_module, description, generic, publish_date,
-		impact, likelihood
-		FROM rule_error_key
+	query := `SELECT rek.error_key, rek.rule_module, rek.description, rek.generic || r.resolution, rek.publish_date,
+		rek.impact, rek.likelihood
+		FROM rule r
+		INNER JOIN rule_error_key rek
+		ON r.module = rek.rule_module
 		WHERE %v`
 
 	whereInStatement := constructWhereClauseForContent(reportRules)
@@ -391,6 +411,8 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 		log.Error().Err(err).Msg("SQL rows error while retrieving content for rules")
 		return rules, err
 	}
+
+	rules = getExtraDataFromReportRules(rules, reportRules)
 
 	return rules, nil
 }
