@@ -170,6 +170,7 @@ func getOffsetManagers(
 	nextOffset, _ := partitionOffsetManager.NextOffset()
 	if nextOffset < 0 {
 		// if next offset wasn't stored yet, initial state of the broker
+		log.Info().Msg("saved offset was not found, consuming from the beginning")
 		nextOffset = sarama.OffsetOldest
 	}
 
