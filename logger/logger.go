@@ -49,8 +49,28 @@ func (writer UnJSONWriter) Write(bytes []byte) (int, error) {
 		return writer.Writer.Write(bytes)
 	}
 
+	// uppercase the keys
+	for key := range obj {
+		val := obj[key]
+		delete(obj, key)
+		obj[strings.ToUpper(key)] = val
+	}
+
 	stringifiedObj := ""
 
+	processKeyIfExists := func(key string) {
+		if val, ok := obj[key]; ok {
+			stringifiedObj += fmt.Sprintf("%+v=%+v; ", strings.ToUpper(key), val)
+			delete(obj, key)
+		}
+	}
+
+	processKeyIfExists("LEVEL")
+	processKeyIfExists("TIME")
+	processKeyIfExists("ERROR")
+	processKeyIfExists("MESSAGE")
+
+	// process the rest
 	for key, val := range obj {
 		stringifiedObj += fmt.Sprintf("%+v=%+v; ", strings.ToUpper(key), val)
 	}
