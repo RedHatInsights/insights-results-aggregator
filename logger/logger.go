@@ -19,8 +19,11 @@ limitations under the License.
 package logger
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/RedHatInsights/cloudwatch"
 	"github.com/aws/aws-sdk-go/aws"
@@ -30,6 +33,50 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+// UnJSONWriter converts JSON objects to not JSON to fix RHIOPS-729.
+// TODO: delete when RHIOPS-729 is fixed
+type UnJSONWriter struct {
+	io.Writer
+}
+
+func (writer UnJSONWriter) Write(bytes []byte) (int, error) {
+	var obj map[string]interface{}
+
+	err := json.Unmarshal(bytes, &obj)
+	if err != nil {
+		// it's not JSON object, so we don't do anything
+		return writer.Writer.Write(bytes)
+	}
+
+	// uppercase the keys
+	for key := range obj {
+		val := obj[key]
+		delete(obj, key)
+		obj[strings.ToUpper(key)] = val
+	}
+
+	stringifiedObj := ""
+
+	processKeyIfExists := func(key string) {
+		if val, ok := obj[key]; ok {
+			stringifiedObj += fmt.Sprintf("%+v=%+v; ", strings.ToUpper(key), val)
+			delete(obj, key)
+		}
+	}
+
+	processKeyIfExists("LEVEL")
+	processKeyIfExists("TIME")
+	processKeyIfExists("ERROR")
+	processKeyIfExists("MESSAGE")
+
+	// process the rest
+	for key, val := range obj {
+		stringifiedObj += fmt.Sprintf("%+v=%+v; ", strings.ToUpper(key), val)
+	}
+
+	return writer.Write([]byte(stringifiedObj))
+}
 
 // InitZerolog initializes zerolog with provided configs to use proper stdout and/or CloudWatch logging
 func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConfiguration) error {
@@ -66,7 +113,7 @@ func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConf
 			return err
 		}
 
-		writers = append(writers, cloudWatchWriter)
+		writers = append(writers, &UnJSONWriter{Writer: cloudWatchWriter})
 	}
 
 	logsWriter := io.MultiWriter(writers...)
