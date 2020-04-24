@@ -20,21 +20,26 @@ import (
 	"database/sql"
 )
 
-var mig1 = Migration{
+var mig0005CreateConsumerError = Migration{
 	StepUp: func(tx *sql.Tx) error {
 		_, err := tx.Exec(`
-			CREATE TABLE report (
-				org_id          INTEGER NOT NULL,
-				cluster         VARCHAR NOT NULL UNIQUE,
-				report          VARCHAR NOT NULL,
-				reported_at     TIMESTAMP,
-				last_checked_at TIMESTAMP,
-				PRIMARY KEY(org_id, cluster)
-			)`)
+			CREATE TABLE consumer_error (
+				topic           VARCHAR NOT NULL,
+				partition       INTEGER NOT NULL,
+				topic_offset    INTEGER NOT NULL,
+				key             VARCHAR,
+				produced_at     TIMESTAMP NOT NULL,
+				consumed_at     TIMESTAMP NOT NULL,
+				message         VARCHAR,
+				error           VARCHAR NOT NULL,
+
+				PRIMARY KEY(topic, partition, topic_offset)
+			)
+		`)
 		return err
 	},
 	StepDown: func(tx *sql.Tx) error {
-		_, err := tx.Exec(`DROP TABLE report`)
+		_, err := tx.Exec(`DROP TABLE consumer_error`)
 		return err
 	},
 }

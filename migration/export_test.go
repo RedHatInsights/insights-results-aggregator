@@ -18,7 +18,7 @@ package migration
 
 // Export for testing
 var (
-	Migrations      = &migrations
-	WithTransaction = withTransaction
-	Mig4            = mig4
+	Migrations                           = &migrations
+	WithTransaction                      = withTransaction
+	Mig0004ModifyClusterRuleUserFeedback = mig0004ModifyClusterRuleUserFeedback
 )

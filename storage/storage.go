@@ -83,6 +83,21 @@ type Storage interface {
 	GetContentForRules(rules types.ReportRules) ([]types.RuleContentResponse, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
+	ToggleRuleForCluster(
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		userID types.UserID,
+		ruleToggle RuleToggle,
+	) error
+	ListDisabledRulesForCluster(
+		clusterID types.ClusterName,
+		userID types.UserID,
+	) ([]types.DisabledRuleResponse, error)
+	DeleteFromRuleClusterToggle(
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		userID types.UserID,
+	) error
 	LoadRuleContent(contentDir content.RuleContentDirectory) error
 	GetRuleByID(ruleID types.RuleID) (*types.Rule, error)
 	GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
@@ -423,7 +438,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 	whereInStatement := constructWhereClauseForContent(reportRules)
 	query = fmt.Sprintf(query, whereInStatement)
 
-	rows, err := storage.connection.Query(query)
+	rows, err := storage.connection.Query(query, RuleToggleDisable)
 
 	if err != nil {
 		return rules, err

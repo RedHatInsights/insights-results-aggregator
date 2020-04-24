@@ -20,26 +20,24 @@ import (
 	"database/sql"
 )
 
-var mig5 = Migration{
+var mig0006CreateClusterRuleToggle = Migration{
 	StepUp: func(tx *sql.Tx) error {
 		_, err := tx.Exec(`
-			CREATE TABLE consumer_error (
-				topic           VARCHAR NOT NULL,
-				partition       INTEGER NOT NULL,
-				topic_offset    INTEGER NOT NULL,
-				key             VARCHAR,
-				produced_at     TIMESTAMP NOT NULL,
-				consumed_at     TIMESTAMP NOT NULL,
-				message         VARCHAR,
-				error           VARCHAR NOT NULL,
-
-				PRIMARY KEY(topic, partition, topic_offset)
-			)
-		`)
+			CREATE TABLE cluster_rule_toggle (
+				cluster_id VARCHAR NOT NULL,
+				rule_id VARCHAR NOT NULL,
+				user_id VARCHAR NOT NULL,
+				disabled SMALLINT NOT NULL,
+				disabled_at TIMESTAMP NULL,
+				enabled_at TIMESTAMP NULL,
+				updated_at TIMESTAMP NOT NULL,
+				
+				PRIMARY KEY(cluster_id, rule_id, user_id)
+			)`)
 		return err
 	},
 	StepDown: func(tx *sql.Tx) error {
-		_, err := tx.Exec(`DROP TABLE consumer_error`)
+		_, err := tx.Exec(`DROP TABLE cluster_rule_toggle`)
 		return err
 	},
 }

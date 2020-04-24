@@ -20,7 +20,7 @@ import (
 	"database/sql"
 )
 
-var mig2 = Migration{
+var mig0002CreateRuleContent = Migration{
 	StepUp: func(tx *sql.Tx) error {
 		_, err := tx.Exec(`
 			CREATE TABLE rule (

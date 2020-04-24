@@ -207,7 +207,7 @@ func TestMigration4_StepDown_TableClusterRuleUserFeedbackDoesNotExist(t *testing
 
 func TestMigration4_CreateTableError(t *testing.T) {
 	expectedErr := fmt.Errorf("create table error")
-	mig4 := migration.Mig4
+	mig4 := migration.Mig0004ModifyClusterRuleUserFeedback
 
 	for _, method := range []func(*sql.Tx) error{mig4.StepUp, mig4.StepDown} {
 		func(method func(*sql.Tx) error) {
@@ -227,7 +227,7 @@ func TestMigration4_CreateTableError(t *testing.T) {
 
 func TestMigration4_InsertError(t *testing.T) {
 	expectedErr := fmt.Errorf("insert error")
-	mig4 := migration.Mig4
+	mig4 := migration.Mig0004ModifyClusterRuleUserFeedback
 
 	for _, method := range []func(*sql.Tx) error{mig4.StepUp, mig4.StepDown} {
 		func(method func(*sql.Tx) error) {
@@ -249,7 +249,7 @@ func TestMigration4_InsertError(t *testing.T) {
 
 func TestMigration4_DropTableError(t *testing.T) {
 	expectedErr := fmt.Errorf("drop table error")
-	mig4 := migration.Mig4
+	mig4 := migration.Mig0004ModifyClusterRuleUserFeedback
 
 	for _, method := range []func(*sql.Tx) error{mig4.StepUp, mig4.StepDown} {
 		func(method func(*sql.Tx) error) {
