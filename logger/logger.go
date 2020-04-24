@@ -75,7 +75,16 @@ func (writer UnJSONWriter) Write(bytes []byte) (int, error) {
 		stringifiedObj += fmt.Sprintf("%+v=%+v; ", strings.ToUpper(key), val)
 	}
 
-	return writer.Write([]byte(stringifiedObj))
+	written, err := writer.Write([]byte(stringifiedObj))
+	if err != nil {
+		return written, err
+	}
+
+	if written < len(stringifiedObj) {
+		return written, fmt.Errorf("too few bytes were written")
+	}
+
+	return len(bytes), nil
 }
 
 // InitZerolog initializes zerolog with provided configs to use proper stdout and/or CloudWatch logging
