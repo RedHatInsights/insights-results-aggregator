@@ -269,6 +269,8 @@ func (consumer *KafkaConsumer) saveLastMessageOffset(lastMessageOffset int64) {
 	// remember offset
 	if consumer.partitionOffsetManager != nil {
 		consumer.partitionOffsetManager.MarkOffset(lastMessageOffset+1, "")
+	} else {
+		log.Warn().Msgf(`not saving offset "%+v" because it's disabled'`, lastMessageOffset)
 	}
 }
 
