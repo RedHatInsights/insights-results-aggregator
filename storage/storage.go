@@ -29,7 +29,6 @@ package storage
 import (
 	"database/sql"
 	sql_driver "database/sql/driver"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -357,12 +356,7 @@ func getExtraDataFromReportRules(rules []types.RuleContentResponse, reportRules 
 		for _, hitRule := range reportRules.HitRules {
 			moduleOnReport := strings.TrimSuffix(hitRule.Module, ".report")
 			if module == moduleOnReport {
-				templateData, err := json.Marshal(hitRule.Details)
-				if err != nil {
-					log.Error().Err(err).Msg("Error while marshalling rule details from the report")
-					continue
-				}
-				rules[i].TemplateData = string(templateData)
+				rules[i].TemplateData = hitRule.Details
 			}
 		}
 	}

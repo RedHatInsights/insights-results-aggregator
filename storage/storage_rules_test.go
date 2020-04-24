@@ -306,7 +306,7 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 			CreatedAt:    "1970-01-01T00:00:00Z",
 			TotalRisk:    1,
 			RiskOfChange: 0,
-			TemplateData: "null",
+			TemplateData: nil,
 		},
 	}, res)
 }
@@ -351,7 +351,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			CreatedAt:    "1970-01-01T00:00:00Z",
 			TotalRisk:    3,
 			RiskOfChange: 0,
-			TemplateData: "null",
+			TemplateData: nil,
 		},
 		{
 			ErrorKey:     "ek2",
@@ -361,7 +361,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			CreatedAt:    "1970-01-02T00:00:00Z",
 			TotalRisk:    4,
 			RiskOfChange: 0,
-			TemplateData: "null",
+			TemplateData: nil,
 		},
 		{
 			ErrorKey:     "ek3",
@@ -371,7 +371,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			CreatedAt:    "1970-01-03T00:00:00Z",
 			TotalRisk:    2,
 			RiskOfChange: 0,
-			TemplateData: "null",
+			TemplateData: nil,
 		},
 	}, res)
 }
