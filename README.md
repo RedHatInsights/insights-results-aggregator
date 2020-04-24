@@ -528,7 +528,7 @@ This script can be used to display statistic about rules that really 'hit' probl
 
 ### `gen_broken_messages.py`
 
-This script read input message (that should be coorect) and generates bunch of new messages. Each generated message is broken in some way so it is possible to use such messages to test how broken messages are handled on aggregator (ie. consumer) side.
+This script read input message (that should be correct) and generates bunch of new messages. Each generated message is broken in some way so it is possible to use such messages to test how broken messages are handled on aggregator (ie. consumer) side.
 
 Types of input message mutation:
 * any item (identified by its key) can be removed
@@ -545,3 +545,7 @@ the following command typed into PSQL console:
 Script displays two tables:
     1. org id + cluster name (list of affected clusters)
     2. org id + number of affected clusters (usually the only information reguired by management)
+
+### `json_check.py`
+
+Simple checker if all JSONs have the correct syntax (not scheme).
