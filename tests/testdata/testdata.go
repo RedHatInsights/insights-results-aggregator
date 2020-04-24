@@ -208,42 +208,42 @@ var (
 
 	Report3RulesExpectedResponse = `
 {
-  "report": {
-    "meta": {
-      "count": 3,
-      "last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
-    },
-    "data": [
-      {
-		"rule_id": "` + string(Rule1ID) + `",
-        "description": "` + Rule1Description + `",
-        "details": "` + Rule1Details + Rule1Resolution + `",
-        "created_at": "` + Rule1CreatedAt + `",
-        "total_risk": 3,
-		"risk_of_change": 0,
-		"extra_data": null
-      },
-      {
-		"rule_id": "` + string(Rule2ID) + `",
-        "description": "` + Rule2Description + `",
-        "details": "` + Rule2Details + Rule2Resolution + `",
-        "created_at": "` + Rule2CreatedAt + `",
-        "total_risk": 4,
-		"risk_of_change": 0,
-		"extra_data": null
-      },
-      {
-		"rule_id": "` + string(Rule3ID) + `",
-        "description": "` + Rule3Description + `",
-        "details": "` + Rule3Details + Rule3Resolution + `",
-        "created_at": "` + Rule3CreatedAt + `",
-        "total_risk": 2,
-		"risk_of_change": 0,
-		"extra_data": null
-      }
-    ]
-  },
-  "status": "ok"
+	"report": {
+		"meta": {
+			"count": 3,
+			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
+		},
+		"data": [
+			{
+				"rule_id": "` + string(Rule1ID) + `",
+				"description": "` + Rule1Description + `",
+				"details": "` + Rule1Details + Rule1Resolution + `",
+				"created_at": "` + Rule1CreatedAt + `",
+				"total_risk": 3,
+				"risk_of_change": 0,
+				"extra_data": null
+			},
+			{
+				"rule_id": "` + string(Rule2ID) + `",
+				"description": "` + Rule2Description + `",
+				"details": "` + Rule2Details + Rule2Resolution + `",
+				"created_at": "` + Rule2CreatedAt + `",
+				"total_risk": 4,
+				"risk_of_change": 0,
+				"extra_data": null
+			},
+			{
+				"rule_id": "` + string(Rule3ID) + `",
+				"description": "` + Rule3Description + `",
+				"details": "` + Rule3Details + Rule3Resolution + `",
+				"created_at": "` + Rule3CreatedAt + `",
+				"total_risk": 2,
+				"risk_of_change": 0,
+				"extra_data": null
+			}
+		]
+	},
+	"status": "ok"
 }
 `
 )
