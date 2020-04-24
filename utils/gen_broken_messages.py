@@ -16,7 +16,7 @@
 
 """Generate messages to be consumed by aggregator that are broken in some way.
 
-This script read input message (that should be coorect) and generates bunch of
+This script read input message (that should be correct) and generates bunch of
 new messages. Each generated message is broken in some way so it is possible
 to use such messages to test how broken messages are handled on aggregator
 (ie. consumer) side.
