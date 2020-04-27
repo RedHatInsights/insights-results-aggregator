@@ -40,6 +40,8 @@ const (
 	groupKey = "group"
 	// key for message offset used in structured log messages
 	offsetKey = "offset"
+	// key for message partition used in structured log messages
+	partitionKey = "partition"
 	// key for organization ID used in structured log messages
 	organizationKey = "organization"
 	// key for cluster ID used in structured log messages
@@ -248,6 +250,13 @@ func (consumer *KafkaConsumer) Serve() {
 		startTime := time.Now()
 		err := consumer.ProcessMessage(msg)
 		messageProcessingDuration := time.Since(startTime)
+
+		log.Info().
+			Int(offsetKey, int(msg.Offset)).
+			Int(partitionKey, int(msg.Partition)).
+			Str(topicKey, msg.Topic).
+			Msgf("processing of message took '%v' seconds", messageProcessingDuration.Seconds())
+
 		if err != nil {
 			metrics.FailedMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
 			metrics.ConsumingErrors.Inc()
@@ -281,6 +290,7 @@ func (consumer *KafkaConsumer) saveLastMessageOffset(lastMessageOffset int64) {
 func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
 	log.Info().
 		Int(offsetKey, int(originalMessage.Offset)).
+		Int(partitionKey, int(originalMessage.Partition)).
 		Str(topicKey, consumer.Configuration.Topic).
 		Int(organizationKey, int(*parsedMessage.Organization)).
 		Str(clusterKey, string(*parsedMessage.ClusterName)).
