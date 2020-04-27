@@ -117,6 +117,24 @@ CREATE TABLE cluster_rule_user_feedback (
 )
 ```
 
+#### Table cluster_rule_toggle
+
+```sql
+CREATE TABLE cluster_rule_toggle (
+    cluster_id VARCHAR NOT NULL,
+    rule_id VARCHAR NOT NULL,
+    user_id VARCHAR NOT NULL,
+    disabled SMALLINT NOT NULL,
+    disabled_at TIMESTAMP NULL,
+    enabled_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NOT NULL,
+    
+    CHECK (disabled >= 0 AND disabled <= 1),
+
+    PRIMARY KEY(cluster_id, rule_id, user_id)
+)
+```
+
 #### Table consumer_error
 
 Errors that happen while processing a message consumed from Kafka are logged into this table. This allows easier debugging of various issues, especially those related to unexpected input data format.

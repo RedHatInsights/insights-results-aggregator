@@ -144,3 +144,22 @@ func (*NoopStorage) DeleteRuleErrorKey(_ types.RuleID, _ types.ErrorKey) error {
 func (*NoopStorage) WriteConsumerError(_ *sarama.ConsumerMessage, _ error) error {
 	return nil
 }
+
+// ToggleRuleForCluster noop
+func (*NoopStorage) ToggleRuleForCluster(
+	_ types.ClusterName, _ types.RuleID, _ types.UserID, _ RuleToggle,
+) error {
+	return nil
+}
+
+// ListDisabledRulesForCluster noop
+func (*NoopStorage) ListDisabledRulesForCluster(_ types.ClusterName, _ types.UserID) ([]types.DisabledRuleResponse, error) {
+	return nil, nil
+}
+
+// DeleteFromRuleClusterToggle noop
+func (*NoopStorage) DeleteFromRuleClusterToggle(
+	_ types.ClusterName, _ types.RuleID, _ types.UserID,
+) error {
+	return nil
+}

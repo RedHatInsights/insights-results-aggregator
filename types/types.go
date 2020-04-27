@@ -68,6 +68,7 @@ type RuleContentResponse struct {
 	Generic      string      `json:"details"`
 	Reason       string      `json:"reason"`
 	Resolution   string      `json:"resolution"`
+	TotalRisk    int         `json:"total_risk"`
 	RiskOfChange int         `json:"risk_of_change"`
 	RuleModule   string      `json:"rule_id"`
 	TemplateData interface{} `json:"extra_data"`
