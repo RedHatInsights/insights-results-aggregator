@@ -305,16 +305,16 @@ To get the latest rules content locally, you can `make rules_content`, which jus
 Aggregator is configured to use SQLite3 DB by default, but it also supports PostgreSQL.
 In CI and QA environments, the configuration is overridden by environment variables to use PostgreSQL.
 
-To establish connection to PostgreSQL, the following configuration options need to be changed in `storage` section of `config.toml`:
+To establish connection to the PostgreSQL instance provided by the minimal stack in `docker-compose.yml` for local setup, the following configuration options need to be changed in `storage` section of `config.toml`:
 
 ```toml
 [storage]
 db_driver = "postgres"
-pg_username = "postgres"
-pg_password = "postgres"
+pg_username = "user"
+pg_password = "password"
 pg_host = "localhost"
-pg_port = 5432
-pg_db_name = "controller"
+pg_port = 55432
+pg_db_name = "aggregator"
 pg_params = "sslmode=disable"
 ```
 
