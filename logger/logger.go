@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/RedHatInsights/cloudwatch"
+	"github.com/Shopify/sarama"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -129,5 +130,15 @@ func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConf
 
 	log.Logger = zerolog.New(logsWriter).With().Timestamp().Logger()
 
+	// zerolog doesn't implement Println required by sarama
+	sarama.Logger = &SaramaZerologger{Logger: log.Logger}
+
 	return nil
+}
+
+// SaramaZerologger is a wrapper to make sarama log to zerolog
+type SaramaZerologger struct{ zerolog.Logger }
+
+func (logger *SaramaZerologger) Println(v ...interface{}) {
+	logger.Print(v...)
 }
