@@ -158,5 +158,5 @@ func (logger *SaramaZerologger) Println(v ...interface{}) {
 }
 
 func (logger *SaramaZerologger) constructError() *zerolog.Event {
-	return logger.zerologger.Error().Str("package", "sarama")
+	return logger.zerologger.Info().Str("package", "sarama")
 }
