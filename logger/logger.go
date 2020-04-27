@@ -140,6 +140,7 @@ func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConf
 // those logs can be filtered by key "package" with value "sarama"
 type SaramaZerologger struct{ zerologger zerolog.Logger }
 
+// Print wraps print method
 func (logger *SaramaZerologger) Print(params ...interface{}) {
 	var messages []string
 	for _, item := range params {
@@ -149,10 +150,12 @@ func (logger *SaramaZerologger) Print(params ...interface{}) {
 	logger.constructError().Msg(strings.Join(messages, " "))
 }
 
+// Printf wraps printf method
 func (logger *SaramaZerologger) Printf(format string, params ...interface{}) {
 	logger.constructError().Msgf(format, params...)
 }
 
+// Println wraps println method
 func (logger *SaramaZerologger) Println(v ...interface{}) {
 	logger.Print(v...)
 }
