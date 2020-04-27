@@ -64,6 +64,24 @@ var ConsumingErrors = promauto.NewCounter(prometheus.CounterOpts{
 	Help: "The total number of errors during consuming messages from Kafka",
 })
 
+// SuccessfulMessagesProcessingTime collects the time to process message successfully
+var SuccessfulMessagesProcessingTime = promauto.NewHistogram(prometheus.HistogramOpts{
+	Name: "successful_messages_processing_time",
+	Help: "Time to process successfully message",
+})
+
+// FailedMessagesProcessingTime collects the time of processing message when it failed
+var FailedMessagesProcessingTime = promauto.NewHistogram(prometheus.HistogramOpts{
+	Name: "failed_messages_processing_time",
+	Help: "Time to process message fail",
+})
+
+// LastCheckedTimestampLagMinutes shows how slow we get messages from clusters
+var LastCheckedTimestampLagMinutes = promauto.NewHistogram(prometheus.HistogramOpts{
+	Name: "last_checked_timestamp_lag_minutes",
+	Help: "Shows how slow we get messages from clusters",
+})
+
 // ProducedMessages shows number of messages produced by producer package
 // probably it will be used only in tests
 var ProducedMessages = promauto.NewCounter(prometheus.CounterOpts{

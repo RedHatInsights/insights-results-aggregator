@@ -245,8 +245,11 @@ func (consumer *KafkaConsumer) Serve() {
 	for msg := range consumer.PartitionConsumer.Messages() {
 		metrics.ConsumedMessages.Inc()
 
+		startTime := time.Now()
 		err := consumer.ProcessMessage(msg)
+		messageProcessingDuration := time.Since(startTime)
 		if err != nil {
+			metrics.FailedMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
 			metrics.ConsumingErrors.Inc()
 
 			log.Error().Err(err).Msg("Error processing message consumed from Kafka")
@@ -259,6 +262,7 @@ func (consumer *KafkaConsumer) Serve() {
 				consumer.saveLastMessageOffset(msg.Offset)
 			}
 		} else {
+			metrics.SuccessfulMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
 			consumer.numberOfSuccessfullyConsumedMessages++
 			consumer.saveLastMessageOffset(msg.Offset)
 		}
@@ -341,6 +345,13 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 		logMessageError(consumer, msg, message, "Error parsing date from message", err)
 		return err
 	}
+
+	lastCheckedTimestampLagMinutes := time.Now().Sub(lastCheckedTime).Minutes()
+	if lastCheckedTimestampLagMinutes < 0 {
+		logMessageError(consumer, msg, message, "got a message from the future", nil)
+	}
+
+	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
 
 	logMessageInfo(consumer, msg, message, "Time ok")
 
