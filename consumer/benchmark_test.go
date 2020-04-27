@@ -1,57 +1,107 @@
 package consumer_test
 
 import (
+	"database/sql"
+	"os"
 	"testing"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 
+	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 )
 
-func BenchmarkKafkaConsumer_ProcessMessage_NoStorage(b *testing.B) {
+func benchmarkProcessingMessage(b *testing.B, s storage.Storage, messageProducer func() string) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
-	mockConsumer := &consumer.KafkaConsumer{
-		Storage: &storage.NoopStorage{},
+	kafkaConsumer := &consumer.KafkaConsumer{
+		Storage: s,
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		mustConsumerProcessMessage(b, mockConsumer, testdata.ConsumerMessage)
+		mustConsumerProcessMessage(b, kafkaConsumer, messageProducer())
 	}
 }
 
-func BenchmarkKafkaConsumer_ProcessMessage_SameMessageSQLiteStorage(b *testing.B) {
-	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+func getNoopStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
+	return &storage.NoopStorage{}, nil
+}
 
-	mockStorage := helpers.MustGetMockStorage(b, true)
-	defer helpers.MustCloseStorage(b, mockStorage)
+func getSQLiteMemoryStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
+	return helpers.MustGetMockStorage(b, true), nil
+}
 
-	mockConsumer := &consumer.KafkaConsumer{
-		Storage: mockStorage,
-	}
+func getSQLiteFileStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
+	const dbFile = "./test.db"
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		mustConsumerProcessMessage(b, mockConsumer, testdata.ConsumerMessage)
+	db, err := sql.Open("sqlite3", dbFile)
+	helpers.FailOnError(b, err)
+
+	_, err = db.Exec("PRAGMA foreign_keys = ON;")
+	helpers.FailOnError(b, err)
+
+	sqliteStorage := storage.NewFromConnection(db, storage.DBDriverSQLite3)
+
+	err = sqliteStorage.Init()
+	helpers.FailOnError(b, err)
+
+	return sqliteStorage, func(b *testing.B) {
+		os.Remove(dbFile)
 	}
 }
 
-func BenchmarkKafkaConsumer_ProcessMessage_DifferentMessagesSQLiteStorage(b *testing.B) {
-	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+func getPostgresStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
+	err := conf.LoadConfiguration("../config-devel")
+	helpers.FailOnError(b, err)
 
-	mockStorage := helpers.MustGetMockStorage(b, true)
-	defer helpers.MustCloseStorage(b, mockStorage)
+	postgresStorage, err := storage.New(conf.GetStorageConfiguration())
+	helpers.FailOnError(b, err)
 
-	mockConsumer := &consumer.KafkaConsumer{
-		Storage: mockStorage,
+	return postgresStorage, nil
+}
+
+func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
+	var testCases = []struct {
+		Name            string
+		StorageProducer func(*testing.B) (storage.Storage, func(*testing.B))
+		RandomMessages  bool
+	}{
+		{"NoopStorage", getNoopStorage, false},
+		{"NoopStorage", getNoopStorage, true},
+		{"Postgres", getPostgresStorage, false},
+		{"Postgres", getPostgresStorage, true},
+		{"SQLiteInMemory", getSQLiteMemoryStorage, false},
+		{"SQLiteInMemory", getSQLiteMemoryStorage, true},
+		{"SQLiteFile", getSQLiteFileStorage, false},
+		{"SQLiteFile", getSQLiteFileStorage, true},
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		mustConsumerProcessMessage(b, mockConsumer, testdata.GetRandomConsumerMessage())
+	for _, testCase := range testCases {
+		if testCase.RandomMessages {
+			testCase.Name += "/RandomMessages"
+		}
+
+		b.Run(testCase.Name, func(b *testing.B) {
+			benchStorage, cleaner := testCase.StorageProducer(b)
+			if cleaner != nil {
+				defer cleaner(b)
+			}
+			defer helpers.MustCloseStorage(b, benchStorage)
+
+			if testCase.RandomMessages {
+				benchmarkProcessingMessage(b, benchStorage, func() string {
+					return testdata.GetRandomConsumerMessage()
+				})
+			} else {
+				benchmarkProcessingMessage(b, benchStorage, func() string {
+					return testdata.ConsumerMessage
+				})
+			}
+		})
 	}
 }

@@ -252,7 +252,7 @@ var (
 )
 
 func GetRandomConsumerMessage() string {
-	orgID := rand.Uint32()
+	orgID := rand.Intn(999999)
 	clusterName := uuid.New()
 	timeRandomRange := 100000
 	lastCheckedAt := time.Now().Add(-time.Duration(rand.Intn(timeRandomRange)) * time.Second)
