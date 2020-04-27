@@ -56,7 +56,7 @@ func TestLoadConfiguration(t *testing.T) {
 func TestLoadConfigurationEnvVariable(t *testing.T) {
 	os.Clearenv()
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "tests/config1")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "../tests/config1")
 
 	mustLoadConfiguration("foobar")
 }
@@ -73,6 +73,7 @@ func TestLoadingConfigurationFailure(t *testing.T) {
 
 // TestLoadBrokerConfiguration tests loading the broker configuration sub-tree
 func TestLoadBrokerConfiguration(t *testing.T) {
+	helpers.FailOnError(t, os.Chdir(".."))
 	TestLoadConfiguration(t)
 
 	brokerCfg := conf.GetBrokerConfiguration()
@@ -115,7 +116,7 @@ func TestLoadStorageConfiguration(t *testing.T) {
 func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 	os.Clearenv()
 
-	const configPath = "tests/config1"
+	const configPath = "../tests/config1"
 
 	mustLoadConfiguration(configPath)
 
@@ -231,7 +232,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 
 	os.Clearenv()
 	mustSetEnv(t, conf.ConfigFileEnvVariableName, tmpFilename)
-	mustLoadConfiguration("tests/config1")
+	mustLoadConfiguration("../tests/config1")
 
 	brokerCfg := conf.GetBrokerConfiguration()
 
