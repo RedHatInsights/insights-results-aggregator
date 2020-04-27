@@ -1,4 +1,4 @@
-.PHONY: help clean build fmt lint vet run test style cyclo
+.PHONY: help clean build fmt lint vet run test cover style cyclo
 
 SOURCES:=$(shell find . -name '*.go')
 
@@ -60,6 +60,9 @@ run: clean build ## Build the project and executes the binary
 
 test: clean build ## Run the unit tests
 	@go test -coverprofile coverage.out $(shell go list ./... | grep -v tests)
+
+cover: test
+	@go tool cover -html=coverage.out
 
 integration_tests: ## Run all integration tests
 	@echo "Running all integration tests"
