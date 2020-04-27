@@ -159,7 +159,6 @@ but it can be overwritten by `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE` env var.
 Also each key in config can be overwritten by corresponding env var. For example if you have config
 
 ```toml
-...
 [storage]
 db_driver = "sqlite3"
 sqlite_datasource = "./aggregator.db"
@@ -169,7 +168,6 @@ pg_host = "localhost"
 pg_port = 5432
 pg_db_name = "aggregator"
 pg_params = ""
-...
 ```
 
 and environment variables
@@ -469,6 +467,12 @@ Please note that all checks mentioned above have to pass for the change to be me
 History of checks performed by CI is available at [RedHatInsights / insights-results-aggregator](https://travis-ci.org/RedHatInsights/insights-results-aggregator).
 
 ## Rules
+
+The user has the ability to disable a rule/health check recommendation that they're not interested in to stop it from showing in OCM. The user also has the ability to re-enable the rule, in case they later become interested in it, or in the case of an accidental disable, for exapmle.
+
+This is made possible by using these two endpoints:
+`clusters/{cluster}/rules/{rule_id}/disable`
+`clusters/{cluster}/rules/{rule_id}/enable`
 
 ### Tutorial rule
 
