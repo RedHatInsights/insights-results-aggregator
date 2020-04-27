@@ -131,14 +131,32 @@ func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConf
 	log.Logger = zerolog.New(logsWriter).With().Timestamp().Logger()
 
 	// zerolog doesn't implement Println required by sarama
-	sarama.Logger = &SaramaZerologger{Logger: log.Logger}
+	sarama.Logger = &SaramaZerologger{zerologger: log.Logger}
 
 	return nil
 }
 
 // SaramaZerologger is a wrapper to make sarama log to zerolog
-type SaramaZerologger struct{ zerolog.Logger }
+// those logs can be filtered by key "package" with value "sarama"
+type SaramaZerologger struct{ zerologger zerolog.Logger }
+
+func (logger *SaramaZerologger) Print(params ...interface{}) {
+	var messages []string
+	for _, item := range params {
+		messages = append(messages, fmt.Sprint(item))
+	}
+
+	logger.constructError().Msg(strings.Join(messages, " "))
+}
+
+func (logger *SaramaZerologger) Printf(format string, params ...interface{}) {
+	logger.constructError().Msgf(format, params...)
+}
 
 func (logger *SaramaZerologger) Println(v ...interface{}) {
 	logger.Print(v...)
+}
+
+func (logger *SaramaZerologger) constructError() *zerolog.Event {
+	return logger.zerologger.Error().Str("package", "sarama")
 }
