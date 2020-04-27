@@ -354,8 +354,8 @@ func (server *HTTPServer) listDisabledRulesForCluster(writer http.ResponseWriter
 		return
 	}
 
-	userID, successful := server.readUserID(err, request, writer)
-	if !successful {
+	userID, err := server.readUserID(err, request, writer)
+	if err != nil {
 		log.Error().Err(err).Msg("Bad request param cluster")
 		handleServerError(writer, err)
 		return
@@ -505,16 +505,16 @@ func (server *HTTPServer) deleteRuleErrorKey(writer http.ResponseWriter, request
 	}
 }
 
-func (server *HTTPServer) readUserID(err error, request *http.Request, writer http.ResponseWriter) (types.UserID, bool) {
+func (server *HTTPServer) readUserID(err error, request *http.Request, writer http.ResponseWriter) (types.UserID, error) {
 	userID, err := server.GetCurrentUserID(request)
 	if err != nil {
 		const message = "Unable to get user id"
 		log.Error().Err(err).Msg(message)
 		handleServerError(writer, err)
-		return "", false
+		return "", err
 	}
 
-	return userID, true
+	return userID, nil
 }
 
 func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {

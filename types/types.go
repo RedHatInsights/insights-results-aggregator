@@ -72,6 +72,7 @@ type RuleContentResponse struct {
 	RuleModule   string      `json:"rule_id"`
 	TemplateData interface{} `json:"extra_data"`
 	TotalRisk    int         `json:"total_risk"`
+	Disabled     bool        `json:"disabled"`
 }
 
 // DisabledRuleResponse represents a single disabled rule displaying only identifying information

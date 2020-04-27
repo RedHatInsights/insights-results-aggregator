@@ -328,6 +328,7 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 			TotalRisk:    1,
 			RiskOfChange: 0,
 			TemplateData: nil,
+			Disabled:     false,
 		},
 	}, res)
 }
@@ -375,6 +376,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			TotalRisk:    3,
 			RiskOfChange: 0,
 			TemplateData: nil,
+			Disabled:     false,
 		},
 		{
 			ErrorKey:     "ek2",
@@ -387,6 +389,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			TotalRisk:    4,
 			RiskOfChange: 0,
 			TemplateData: nil,
+			Disabled:     false,
 		},
 		{
 			ErrorKey:     "ek3",
@@ -399,6 +402,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			TotalRisk:    2,
 			RiskOfChange: 0,
 			TemplateData: nil,
+			Disabled:     false,
 		},
 	}, res)
 }
@@ -420,6 +424,7 @@ func TestDBStorageGetContentForRulesScanError(t *testing.T) {
 		"publish_date",
 		"impact",
 		"likelihood",
+		"disabled",
 	}
 
 	values := make([]driver.Value, 0)

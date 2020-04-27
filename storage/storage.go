@@ -438,7 +438,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 	whereInStatement := constructWhereClauseForContent(reportRules)
 	query = fmt.Sprintf(query, whereInStatement)
 
-	rows, err := storage.connection.Query(query, RuleToggleDisable)
+	rows, err := storage.connection.Query(query)
 
 	if err != nil {
 		return rules, err
@@ -459,6 +459,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 			&rule.CreatedAt,
 			&impact,
 			&likelihood,
+			&rule.Disabled,
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("SQL error while retrieving content for rule")

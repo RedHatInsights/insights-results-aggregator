@@ -226,7 +226,8 @@ var (
 				"created_at": "` + Rule1CreatedAt + `",
 				"total_risk": 3,
 				"risk_of_change": 0,
-				"extra_data": null
+				"extra_data": null,
+				"disabled": false
 			},
 			{
 				"rule_id": "` + string(Rule2ID) + `",
@@ -237,7 +238,8 @@ var (
 				"created_at": "` + Rule2CreatedAt + `",
 				"total_risk": 4,
 				"risk_of_change": 0,
-				"extra_data": null
+				"extra_data": null,
+				"disabled": false
 			},
 			{
 				"rule_id": "` + string(Rule3ID) + `",
@@ -248,7 +250,8 @@ var (
 				"created_at": "` + Rule3CreatedAt + `",
 				"total_risk": 2,
 				"risk_of_change": 0,
-				"extra_data": null
+				"extra_data": null,
+				"disabled": false
 			}
 		]
 	},
