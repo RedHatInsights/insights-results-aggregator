@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/RedHatInsights/cloudwatch"
+	"github.com/Shopify/sarama"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -129,5 +130,36 @@ func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConf
 
 	log.Logger = zerolog.New(logsWriter).With().Timestamp().Logger()
 
+	// zerolog doesn't implement Println required by sarama
+	sarama.Logger = &SaramaZerologger{zerologger: log.Logger}
+
 	return nil
+}
+
+// SaramaZerologger is a wrapper to make sarama log to zerolog
+// those logs can be filtered by key "package" with value "sarama"
+type SaramaZerologger struct{ zerologger zerolog.Logger }
+
+// Print wraps print method
+func (logger *SaramaZerologger) Print(params ...interface{}) {
+	var messages []string
+	for _, item := range params {
+		messages = append(messages, fmt.Sprint(item))
+	}
+
+	logger.constructError().Msg(strings.Join(messages, " "))
+}
+
+// Printf wraps printf method
+func (logger *SaramaZerologger) Printf(format string, params ...interface{}) {
+	logger.constructError().Msgf(format, params...)
+}
+
+// Println wraps println method
+func (logger *SaramaZerologger) Println(v ...interface{}) {
+	logger.Print(v...)
+}
+
+func (logger *SaramaZerologger) constructError() *zerolog.Event {
+	return logger.zerologger.Info().Str("package", "sarama")
 }
