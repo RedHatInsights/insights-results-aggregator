@@ -23,7 +23,7 @@ go get -u github.com/droptheplot/abcgo
 echo -e "${BLUE}ABC metric${NC}"
 abcgo -path .
 
-threshold=40
+threshold=45
 echo -e "${BLUE}Functions with ABC metrics greater than ${threshold}${NC}:"
 
 if [[ $(abcgo -path . -sort -format raw | awk "\$4>${threshold}" | tee /dev/tty | wc -l) -ne 0 ]]
