@@ -27,7 +27,7 @@ import (
 // AssertStringsAreEqualJSON checks whether strings represent the same JSON
 // (whitespaces and order of elements doesn't matter)
 // and asserts error otherwise
-func AssertStringsAreEqualJSON(t *testing.T, expected, got string) {
+func AssertStringsAreEqualJSON(t testing.TB, expected, got string) {
 	replacer := strings.NewReplacer("\n", "", "\t", "")
 
 	expected = replacer.Replace(expected)
