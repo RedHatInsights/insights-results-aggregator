@@ -46,6 +46,8 @@ const (
 	organizationKey = "organization"
 	// key for cluster ID used in structured log messages
 	clusterKey = "cluster"
+	// key for duration message type used in structured log messages
+	durationKey = "duration"
 )
 
 // Consumer represents any consumer of insights-rules messages
@@ -277,7 +279,7 @@ func (consumer *KafkaConsumer) Serve() {
 		}
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
-		log.Info().Int64("duration", duration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
+		log.Info().Int64(durationKey, duration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
 	}
 }
 
@@ -388,15 +390,15 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	tStored := time.Now()
 
 	duration := tRead.Sub(tStart)
-	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("read")
+	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("read")
 	duration = tWhitelisted.Sub(tRead)
-	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("whitelisting")
+	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("whitelisting")
 	duration = tMarshalled.Sub(tWhitelisted)
-	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("marshalling")
+	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("marshalling")
 	duration = tTimeCheck.Sub(tMarshalled)
-	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("time_check")
+	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("time_check")
 	duration = tStored.Sub(tTimeCheck)
-	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("db_store")
+	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("db_store")
 	// message has been parsed and stored into storage
 	return nil
 }
