@@ -216,6 +216,14 @@
                                 "type": "string",
                                 "description": "Details of the rule - templates rendered on frontend."
                               },
+                              "reason": {
+                                "type": "string",
+                                "description": "Reason for the issue, giving the user more accurate description of the cause."
+                              },
+                              "resolution": {
+                                "type": "string",
+                                "description": "Resolution steps of the issue, possibly linking to a resolution article in the knowledge base."
+                              },
                               "created_at": {
                                 "type": "string",
                                 "format": "date",
