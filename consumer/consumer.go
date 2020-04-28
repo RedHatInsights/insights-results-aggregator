@@ -389,18 +389,20 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	logMessageInfo(consumer, msg, message, "Stored")
 	tStored := time.Now()
 
-	duration := tRead.Sub(tStart)
-	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("read")
-	duration = tWhitelisted.Sub(tRead)
-	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("whitelisting")
-	duration = tMarshalled.Sub(tWhitelisted)
-	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("marshalling")
-	duration = tTimeCheck.Sub(tMarshalled)
-	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("time_check")
-	duration = tStored.Sub(tTimeCheck)
-	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("db_store")
+	// log durations for every message consumption steps
+	logDuration(tStart, tRead, msg.Offset, "read")
+	logDuration(tRead, tWhitelisted, msg.Offset, "whitelisting")
+	logDuration(tWhitelisted, tMarshalled, msg.Offset, "marshalling")
+	logDuration(tMarshalled, tTimeCheck, msg.Offset, "time_check")
+	logDuration(tTimeCheck, tStored, msg.Offset, "db_store")
+
 	// message has been parsed and stored into storage
 	return nil
+}
+
+func logDuration(tStart time.Time, tEnd time.Time, offset int64, key string) {
+	duration := tEnd.Sub(tStart)
+	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, offset).Msg(key)
 }
 
 // Close method closes all resources used by consumer
