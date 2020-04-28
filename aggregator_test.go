@@ -73,6 +73,10 @@ func TestStartService(t *testing.T) {
 		os.Clearenv()
 
 		mustLoadConfiguration("./tests/tests")
+		setEnvSettings(t, map[string]string{
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+		})
 
 		go func() {
 			main.StartService()
