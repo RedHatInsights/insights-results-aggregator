@@ -62,14 +62,16 @@ type ReportResponseMeta struct {
 
 // RuleContentResponse represents a single rule in the response of /report endpoint
 type RuleContentResponse struct {
-	ErrorKey     string      `json:"-"`
-	RuleModule   string      `json:"rule_id"`
-	Description  string      `json:"description"`
-	Generic      string      `json:"details"`
 	CreatedAt    string      `json:"created_at"`
-	TotalRisk    int         `json:"total_risk"`
+	Description  string      `json:"description"`
+	ErrorKey     string      `json:"-"`
+	Generic      string      `json:"details"`
+	Reason       string      `json:"reason"`
+	Resolution   string      `json:"resolution"`
 	RiskOfChange int         `json:"risk_of_change"`
+	RuleModule   string      `json:"rule_id"`
 	TemplateData interface{} `json:"extra_data"`
+	TotalRisk    int         `json:"total_risk"`
 }
 
 // RuleID represents type for rule id
