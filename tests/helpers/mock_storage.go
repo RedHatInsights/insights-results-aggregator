@@ -16,50 +16,31 @@ package helpers
 
 import (
 	"database/sql"
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/uuid"
 
+	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
 
-// GetMockStorage creates mocked storage based on in-memory Sqlite instance
-func GetMockStorage(init bool) (storage.Storage, error) {
-	db, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		return nil, err
-	}
+const sqlite3 = "sqlite3"
 
-	_, err = db.Exec("PRAGMA foreign_keys = ON;")
-	if err != nil {
-		return nil, err
-	}
-
-	mockStorage := storage.NewFromConnection(db, storage.DBDriverSQLite3)
-
-	// initialize the database by all required tables
-	if init {
-		err = mockStorage.Init()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return mockStorage, nil
-}
-
-// MustGetMockStorage creates mocked storage based on in-memory Sqlite instance
+// MustGetMockStorage creates mocked storage based on in-memory Sqlite instance by default
+// or on postgresql with config taken from config-devel.toml
+// if env variable INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB is set to "postgres"
+// INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS is set to db admin's password
 // produces t.Fatal(err) on error
-func MustGetMockStorage(t testing.TB, init bool) storage.Storage {
-	mockStorage, err := GetMockStorage(init)
-	FailOnError(t, err)
+func MustGetMockStorage(tb testing.TB, init bool) (storage.Storage, func()) {
+	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
+		return MustGetPostgresStorage(tb, init)
+	}
 
-	return mockStorage
-}
-
-// MustCloseStorage closes storage and panics if it wasn't successful
-func MustCloseStorage(t testing.TB, s storage.Storage) {
-	FailOnError(t, s.Close())
+	return MustGetSQLiteMemoryStorage(tb, init)
 }
 
 // MustGetMockStorageWithExpects returns mock db storage
@@ -116,4 +97,87 @@ func MustCloseMockDBWithExpects(
 
 	expects.ExpectClose()
 	FailOnError(t, db.Close())
+}
+
+// MustGetSQLiteMemoryStorage creates test sqlite storage in file
+func MustGetSQLiteMemoryStorage(tb testing.TB, init bool) (storage.Storage, func()) {
+	sqliteStorage := mustGetSqliteStorage(tb, ":memory:", init)
+
+	return sqliteStorage, func() {
+		MustCloseStorage(tb, sqliteStorage)
+	}
+}
+
+// MustGetSQLiteFileStorage creates test sqlite storage in file
+func MustGetSQLiteFileStorage(tb testing.TB, init bool) (storage.Storage, func()) {
+	dbFilename := fmt.Sprintf("/tmp/insights-results-aggregator.test.%v.db", uuid.New().String())
+
+	sqliteStorage := mustGetSqliteStorage(tb, dbFilename, init)
+
+	return sqliteStorage, func() {
+		MustCloseStorage(tb, sqliteStorage)
+		FailOnError(tb, os.Remove(dbFilename))
+	}
+}
+
+func mustGetSqliteStorage(tb testing.TB, datasource string, init bool) storage.Storage {
+	db, err := sql.Open(sqlite3, datasource)
+	FailOnError(tb, err)
+
+	_, err = db.Exec("PRAGMA foreign_keys = ON;")
+	FailOnError(tb, err)
+
+	sqliteStorage := storage.NewFromConnection(db, storage.DBDriverSQLite3)
+
+	if init {
+		FailOnError(tb, sqliteStorage.Init())
+	}
+
+	return sqliteStorage
+}
+
+// MustGetPostgresStorage creates test postgres storage with credentials from config-devel
+func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) {
+	dbAdminPassword := os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS")
+
+	err := conf.LoadConfiguration("../config-devel")
+	FailOnError(tb, err)
+
+	// force postgres and replace db name with test one
+	storageConf := &conf.Config.Storage
+	storageConf.Driver = "postgres"
+	storageConf.PGDBName += "_test_db_" + strings.ReplaceAll(uuid.New().String(), "-", "_")
+
+	connString := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s sslmode=disable",
+		storageConf.PGHost, storageConf.PGPort, "postgres", dbAdminPassword,
+	)
+
+	adminConn, err := sql.Open(storageConf.Driver, connString)
+	FailOnError(tb, err)
+
+	query := "CREATE DATABASE " + storageConf.PGDBName + ";"
+	_, err = adminConn.Exec(query)
+	FailOnError(tb, err)
+
+	postgresStorage, err := storage.New(conf.GetStorageConfiguration())
+	FailOnError(tb, err)
+
+	if init {
+		FailOnError(tb, postgresStorage.Init())
+	}
+
+	return postgresStorage, func() {
+		MustCloseStorage(tb, postgresStorage)
+
+		_, err := adminConn.Exec("DROP DATABASE " + conf.Config.Storage.PGDBName)
+		FailOnError(tb, err)
+
+		FailOnError(tb, adminConn.Close())
+	}
+}
+
+// MustCloseStorage closes the storage and calls t.Fatal on error
+func MustCloseStorage(tb testing.TB, s storage.Storage) {
+	FailOnError(tb, s.Close())
 }
