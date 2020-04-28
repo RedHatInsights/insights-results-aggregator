@@ -320,6 +320,8 @@ func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMe
 
 // ProcessMessage processes an incoming message
 func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
+	tStart := time.Now()
+
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 	message, err := parseMessage(msg.Value)
 	if err != nil {
@@ -328,6 +330,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	}
 
 	logMessageInfo(consumer, msg, message, "Read")
+	tRead := time.Now()
 
 	if consumer.Configuration.OrgWhitelistEnabled {
 		logMessageInfo(consumer, msg, message, "Checking organization ID against whitelist")
@@ -344,6 +347,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	} else {
 		logMessageInfo(consumer, msg, message, "Organization whitelisting disabled")
 	}
+	tWhitelisted := time.Now()
 
 	reportAsStr, err := json.Marshal(*message.Report)
 	if err != nil {
@@ -352,6 +356,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	}
 
 	logMessageInfo(consumer, msg, message, "Marshalled")
+	tMarshalled := time.Now()
 
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
 	if err != nil {
@@ -367,6 +372,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
 
 	logMessageInfo(consumer, msg, message, "Time ok")
+	tTimeCheck := time.Now()
 
 	err = consumer.Storage.WriteReportForCluster(
 		*message.Organization,
@@ -379,7 +385,18 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 		return err
 	}
 	logMessageInfo(consumer, msg, message, "Stored")
+	tStored := time.Now()
 
+	duration := tRead.Sub(tStart)
+	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("read")
+	duration = tWhitelisted.Sub(tRead)
+	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("whitelisting")
+	duration = tMarshalled.Sub(tWhitelisted)
+	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("marshalling")
+	duration = tTimeCheck.Sub(tMarshalled)
+	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("time_check")
+	duration = tStored.Sub(tTimeCheck)
+	log.Info().Int64("duration", duration.Microseconds()).Int64(offsetKey, msg.Offset).Msg("db_store")
 	// message has been parsed and stored into storage
 	return nil
 }
