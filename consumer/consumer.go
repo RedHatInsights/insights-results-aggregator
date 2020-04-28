@@ -240,6 +240,7 @@ func (consumer *KafkaConsumer) Serve() {
 	log.Info().Msgf("Consumer has been started, waiting for messages send to topic '%s'", consumer.Configuration.Topic)
 
 	for msg := range consumer.PartitionConsumer.Messages() {
+		startTime := time.Now()
 		err := consumer.ProcessMessage(msg)
 		if err != nil {
 			log.Error().Err(err).Msg("Error processing message consumed from Kafka")
@@ -255,6 +256,9 @@ func (consumer *KafkaConsumer) Serve() {
 			consumer.numberOfSuccessfullyConsumedMessages++
 			consumer.saveLastMessageOffset(msg.Offset)
 		}
+		endTime := time.Now()
+		duration := endTime.Sub(startTime)
+		log.Info().Int64("duration", duration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
 	}
 }
 
