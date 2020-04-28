@@ -25,9 +25,11 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
 
+const sqlite3 = "sqlite3"
+
 // GetMockStorage creates mocked storage based on in-memory Sqlite instance
 func GetMockStorage(init bool) (storage.Storage, error) {
-	db, err := sql.Open("sqlite3", ":memory:")
+	db, err := sql.Open(sqlite3, ":memory:")
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +126,7 @@ func MustCloseMockDBWithExpects(
 func MustGetSQLiteFileStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
 	const dbFile = "./test.db"
 
-	db, err := sql.Open("sqlite3", dbFile)
+	db, err := sql.Open(sqlite3, dbFile)
 	FailOnError(b, err)
 
 	_, err = db.Exec("PRAGMA foreign_keys = ON;")

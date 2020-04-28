@@ -61,9 +61,9 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 
 	var testCases []TestCase
 
-	numberOfTestCases := []uint{1, 10, 100, 1000}
+	numberOfTestCases := []uint{1, 10, 100}
 	if testing.Short() {
-		numberOfTestCases = []uint{1, 10}
+		numberOfTestCases = []uint{1, 5}
 	}
 
 	for _, n := range numberOfTestCases {

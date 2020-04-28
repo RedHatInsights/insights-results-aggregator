@@ -252,6 +252,8 @@ var (
 )
 
 func GetRandomConsumerMessage() string {
+	// disable Use of weak random number generator for the whole method
+	/* #nosec G404 */
 	orgID := rand.Intn(999999)
 	clusterName := uuid.New()
 	timeRandomRange := 100000
@@ -270,6 +272,8 @@ func GetRandomConsumerMessage() string {
 }
 
 func GetRandomRuleID(length uint) string {
+	// disable Use of weak random number generator for the whole method
+	/* #nosec G404 */
 	var result string
 
 	for i := uint(0); i < length; i++ {
@@ -281,5 +285,7 @@ func GetRandomRuleID(length uint) string {
 }
 
 func GetRandomUserID() string {
+	// disable Use of weak random number generator for the whole method
+	/* #nosec G404 */
 	return fmt.Sprint(rand.Int())
 }
