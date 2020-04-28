@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	main "github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
@@ -36,6 +37,18 @@ import (
 const (
 	testsTimeout = 60 * time.Second
 )
+
+func mustSetEnv(t *testing.T, key, val string) {
+	err := os.Setenv(key, val)
+	helpers.FailOnError(t, err)
+}
+
+func mustLoadConfiguration(path string) {
+	err := conf.LoadConfiguration(path)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func setEnvSettings(t *testing.T, settings map[string]string) {
 	os.Clearenv()
@@ -48,7 +61,8 @@ func setEnvSettings(t *testing.T, settings map[string]string) {
 }
 
 func TestCreateStorage(t *testing.T) {
-	TestLoadConfiguration(t)
+	os.Clearenv()
+	mustLoadConfiguration("tests/config1")
 
 	_, err := main.CreateStorage()
 	helpers.FailOnError(t, err)

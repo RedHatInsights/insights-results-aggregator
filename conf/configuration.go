@@ -14,8 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Implementation of configuration loading for aggregator
-package main
+package conf
 
 import (
 	"bytes"
@@ -46,8 +45,8 @@ const (
 	defaultContentPath          = "/rules-content"
 )
 
-// config has exactly the same structure as *.toml file
-var config struct {
+// Config has exactly the same structure as *.toml file
+var Config struct {
 	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
 	Server     server.Configuration `mapstructure:"server" toml:"server"`
 	Processing struct {
@@ -61,8 +60,8 @@ var config struct {
 	CloudWatch logger.CloudWatchConfiguration `mapstructure:"cloudwatch" toml:"cloudwatch"`
 }
 
-// loadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
-func loadConfiguration(defaultConfigFile string) error {
+// LoadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
+func LoadConfiguration(defaultConfigFile string) error {
 	configFile, specified := os.LookupEnv(configFileEnvVariableName)
 	if specified {
 		// we need to separate the directory name and filename without extension
@@ -82,7 +81,7 @@ func loadConfiguration(defaultConfigFile string) error {
 		// viper is not smart enough to understand the structure of config by itself
 		fakeTomlConfigWriter := new(bytes.Buffer)
 
-		err := toml.NewEncoder(fakeTomlConfigWriter).Encode(config)
+		err := toml.NewEncoder(fakeTomlConfigWriter).Encode(Config)
 		if err != nil {
 			return err
 		}
@@ -107,25 +106,26 @@ func loadConfiguration(defaultConfigFile string) error {
 	viper.SetEnvPrefix(envPrefix)
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "__"))
 
-	return viper.Unmarshal(&config)
+	return viper.Unmarshal(&Config)
 }
 
-func getBrokerConfiguration() broker.Configuration {
-	config.Broker.OrgWhitelist = getOrganizationWhitelist()
+// GetBrokerConfiguration returns broker configuration
+func GetBrokerConfiguration() broker.Configuration {
+	Config.Broker.OrgWhitelist = getOrganizationWhitelist()
 
-	return config.Broker
+	return Config.Broker
 }
 
 func getOrganizationWhitelist() mapset.Set {
-	if !config.Broker.OrgWhitelistEnabled {
+	if !Config.Broker.OrgWhitelistEnabled {
 		return nil
 	}
 
-	if len(config.Processing.OrgWhiteListFile) == 0 {
-		config.Processing.OrgWhiteListFile = defaultOrgWhiteListFileName
+	if len(Config.Processing.OrgWhiteListFile) == 0 {
+		Config.Processing.OrgWhiteListFile = defaultOrgWhiteListFileName
 	}
 
-	orgWhiteListFileData, err := ioutil.ReadFile(config.Processing.OrgWhiteListFile)
+	orgWhiteListFileData, err := ioutil.ReadFile(Config.Processing.OrgWhiteListFile)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Organization whitelist file could not be opened")
 	}
@@ -138,34 +138,38 @@ func getOrganizationWhitelist() mapset.Set {
 	return whitelist
 }
 
-func getStorageConfiguration() storage.Configuration {
-	return config.Storage
+// GetStorageConfiguration returns storage configuration
+func GetStorageConfiguration() storage.Configuration {
+	return Config.Storage
 }
 
-func getLoggingConfiguration() logger.LoggingConfiguration {
-	return config.Logging
+// GetLoggingConfiguration returns logging configuration
+func GetLoggingConfiguration() logger.LoggingConfiguration {
+	return Config.Logging
 }
 
-func getCloudWatchConfiguration() logger.CloudWatchConfiguration {
-	return config.CloudWatch
+// GetCloudWatchConfiguration returns cloudwatch configuration
+func GetCloudWatchConfiguration() logger.CloudWatchConfiguration {
+	return Config.CloudWatch
 }
 
-func getServerConfiguration() server.Configuration {
-	err := checkIfFileExists(config.Server.APISpecFile)
+// GetServerConfiguration returns server configuration
+func GetServerConfiguration() server.Configuration {
+	err := checkIfFileExists(Config.Server.APISpecFile)
 	if err != nil {
 		log.Fatal().Err(err).Msg("All customer facing APIs MUST serve the current OpenAPI specification")
 	}
 
-	return config.Server
+	return Config.Server
 }
 
-// getContentPathConfiguration get the path to the content files from the configuration
-func getContentPathConfiguration() string {
-	if len(config.Content.ContentPath) == 0 {
-		config.Content.ContentPath = defaultContentPath
+// GetContentPathConfiguration get the path to the content files from the configuration
+func GetContentPathConfiguration() string {
+	if len(Config.Content.ContentPath) == 0 {
+		Config.Content.ContentPath = defaultContentPath
 	}
 
-	return config.Content.ContentPath
+	return Config.Content.ContentPath
 }
 
 // checkIfFileExists returns nil if path doesn't exist or isn't a file, otherwise it returns corresponding error

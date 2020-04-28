@@ -21,4 +21,7 @@ package consumer
 // Please look into the following blogpost:
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
-var ParseMessage = parseMessage
+var (
+	ParseMessage         = parseMessage
+	CheckReportStructure = checkReportStructure
+)

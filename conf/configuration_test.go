@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main_test
+package conf_test
 
 import (
 	"io/ioutil"
@@ -22,10 +22,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/RedHatInsights/insights-results-aggregator/conf"
+
 	mapset "github.com/deckarep/golang-set"
 	"github.com/stretchr/testify/assert"
 
-	main "github.com/RedHatInsights/insights-results-aggregator"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -33,7 +34,7 @@ import (
 )
 
 func mustLoadConfiguration(path string) {
-	err := main.LoadConfiguration(path)
+	err := conf.LoadConfiguration(path)
 	if err != nil {
 		panic(err)
 	}
@@ -55,7 +56,7 @@ func TestLoadConfiguration(t *testing.T) {
 func TestLoadConfigurationEnvVariable(t *testing.T) {
 	os.Clearenv()
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "tests/config1")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "../tests/config1")
 
 	mustLoadConfiguration("foobar")
 }
@@ -66,15 +67,16 @@ func TestLoadingConfigurationFailure(t *testing.T) {
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "non existing file")
 
-	err := main.LoadConfiguration("")
+	err := conf.LoadConfiguration("")
 	assert.Contains(t, err.Error(), `fatal error config file: Config File "non existing file" Not Found in`)
 }
 
 // TestLoadBrokerConfiguration tests loading the broker configuration sub-tree
 func TestLoadBrokerConfiguration(t *testing.T) {
+	helpers.FailOnError(t, os.Chdir(".."))
 	TestLoadConfiguration(t)
 
-	brokerCfg := main.GetBrokerConfiguration()
+	brokerCfg := conf.GetBrokerConfiguration()
 
 	assert.Equal(t, "localhost:29092", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
@@ -85,7 +87,7 @@ func TestLoadBrokerConfiguration(t *testing.T) {
 func TestLoadServerConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
 
-	serverCfg := main.GetServerConfiguration()
+	serverCfg := conf.GetServerConfiguration()
 
 	assert.Equal(t, ":8080", serverCfg.Address)
 	assert.Equal(t, "/api/v1/", serverCfg.APIPrefix)
@@ -95,7 +97,7 @@ func TestLoadServerConfiguration(t *testing.T) {
 func TestLoadContentPathConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
 
-	contentPath := main.GetContentPathConfiguration()
+	contentPath := conf.GetContentPathConfiguration()
 
 	assert.Equal(t, "/rules-content", contentPath)
 }
@@ -104,7 +106,7 @@ func TestLoadContentPathConfiguration(t *testing.T) {
 func TestLoadStorageConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
 
-	storageCfg := main.GetStorageConfiguration()
+	storageCfg := conf.GetStorageConfiguration()
 
 	assert.Equal(t, "sqlite3", storageCfg.Driver)
 	assert.Equal(t, ":memory:", storageCfg.SQLiteDataSource)
@@ -114,11 +116,11 @@ func TestLoadStorageConfiguration(t *testing.T) {
 func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 	os.Clearenv()
 
-	const configPath = "tests/config1"
+	const configPath = "../tests/config1"
 
 	mustLoadConfiguration(configPath)
 
-	storageCfg := main.GetStorageConfiguration()
+	storageCfg := conf.GetStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "sqlite3",
 		SQLiteDataSource: ":memory:",
@@ -135,7 +137,7 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 
 	mustLoadConfiguration(configPath)
 
-	storageCfg = main.GetStorageConfiguration()
+	storageCfg = conf.GetStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "postgres",
 		SQLiteDataSource: ":memory:",
@@ -158,7 +160,7 @@ func TestLoadOrganizationWhitelist(t *testing.T) {
 		types.OrgID(656485),
 	)
 
-	orgWhitelist := main.GetOrganizationWhitelist()
+	orgWhitelist := conf.GetOrganizationWhitelist()
 	if equal := orgWhitelist.Equal(expectedWhitelist); !equal {
 		t.Errorf(
 			"Org whitelist did not load properly. Order of elements does not matter. Expected %v. Got %v",
@@ -174,7 +176,7 @@ func TestLoadWhitelistFromCSVExtraParam(t *testing.T) {
 3
 `
 	r := strings.NewReader(extraParamCSV)
-	_, err := main.LoadWhitelistFromCSV(r)
+	_, err := conf.LoadWhitelistFromCSV(r)
 	assert.EqualError(t, err, "error reading CSV file: record on line 2: wrong number of fields")
 }
 
@@ -185,7 +187,7 @@ str
 3
 `
 	r := strings.NewReader(nonIntIDCSV)
-	_, err := main.LoadWhitelistFromCSV(r)
+	_, err := conf.LoadWhitelistFromCSV(r)
 	assert.EqualError(t, err, "organization ID on line 2 in whitelist CSV is not numerical. Found value: str")
 }
 
@@ -229,10 +231,10 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 	defer removeFile(t, tmpFilename)
 
 	os.Clearenv()
-	mustSetEnv(t, main.ConfigFileEnvVariableName, tmpFilename)
-	mustLoadConfiguration("tests/config1")
+	mustSetEnv(t, conf.ConfigFileEnvVariableName, tmpFilename)
+	mustLoadConfiguration("../tests/config1")
 
-	brokerCfg := main.GetBrokerConfiguration()
+	brokerCfg := conf.GetBrokerConfiguration()
 
 	assert.Equal(t, "localhost:29092", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
@@ -247,9 +249,9 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		Debug:       true,
 		UseHTTPS:    false,
 		EnableCORS:  true,
-	}, main.GetServerConfiguration())
+	}, conf.GetServerConfiguration())
 
-	orgWhiteList := main.GetOrganizationWhitelist()
+	orgWhiteList := conf.GetOrganizationWhitelist()
 
 	assert.True(
 		t,
@@ -273,7 +275,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		PGPort:           5432,
 		PGDBName:         "aggregator",
 		PGParams:         "params",
-	}, main.GetStorageConfiguration())
+	}, conf.GetStorageConfiguration())
 }
 
 func GetTmpConfigFile(configData string) (string, error) {
@@ -303,7 +305,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 
 	mustLoadConfiguration("/non_existing_path")
 
-	brokerCfg := main.GetBrokerConfiguration()
+	brokerCfg := conf.GetBrokerConfiguration()
 
 	assert.Equal(t, "localhost:9093", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
@@ -318,9 +320,9 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		Debug:       true,
 		UseHTTPS:    false,
 		EnableCORS:  true,
-	}, main.GetServerConfiguration())
+	}, conf.GetServerConfiguration())
 
-	orgWhiteList := main.GetOrganizationWhitelist()
+	orgWhiteList := conf.GetOrganizationWhitelist()
 
 	assert.True(
 		t,
@@ -344,9 +346,9 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		PGPort:           5432,
 		PGDBName:         "aggregator",
 		PGParams:         "params",
-	}, main.GetStorageConfiguration())
+	}, conf.GetStorageConfiguration())
 
-	contentPath := main.GetContentPathConfiguration()
+	contentPath := conf.GetContentPathConfiguration()
 	assert.Equal(t, contentPath, "/rules-content")
 }
 

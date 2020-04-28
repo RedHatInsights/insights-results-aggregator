@@ -16,7 +16,10 @@ package testdata
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -247,3 +250,21 @@ var (
 }
 `
 )
+
+func GetRandomConsumerMessage() string {
+	orgID := rand.Intn(999999)
+	clusterName := uuid.New()
+	timeRandomRange := 100000
+	lastCheckedAt := time.Now().Add(-time.Duration(rand.Intn(timeRandomRange)) * time.Second)
+	// TODO: generate some real looking consumer report here
+	consumerReport := ConsumerReport
+
+	consumerMessage := `{
+		"OrgID": ` + fmt.Sprint(orgID) + `,
+		"ClusterName": "` + clusterName.String() + `",
+		"Report":` + consumerReport + `,
+		"LastChecked": "` + lastCheckedAt.Format(time.RFC3339) + `"
+	}`
+
+	return consumerMessage
+}

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package conf
 
 // Export for testing
 //
@@ -22,13 +22,7 @@ package main
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
 var (
-	CreateStorage         = createStorage
-	StartService          = startService
-	StopService           = stopService
-	WaitForServiceToStart = waitForServiceToStart
-	CloseStorage          = closeStorage
-	PrepareDB             = prepareDB
-	StartConsumer         = startConsumer
-	StartServer           = startServer
-	PrintVersionInfo      = printVersionInfo
+	GetOrganizationWhitelist  = getOrganizationWhitelist
+	LoadWhitelistFromCSV      = loadWhitelistFromCSV
+	ConfigFileEnvVariableName = configFileEnvVariableName
 )

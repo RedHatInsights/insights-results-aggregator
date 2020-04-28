@@ -53,6 +53,16 @@ var (
 	}
 )
 
+func consumerProcessMessage(mockConsumer consumer.Consumer, message string) error {
+	saramaMessage := sarama.ConsumerMessage{}
+	saramaMessage.Value = []byte(message)
+	return mockConsumer.ProcessMessage(&saramaMessage)
+}
+
+func mustConsumerProcessMessage(t testing.TB, mockConsumer consumer.Consumer, message string) {
+	helpers.FailOnError(t, consumerProcessMessage(mockConsumer, message))
+}
+
 func TestConsumerConstructorNoKafka(t *testing.T) {
 	mockStorage := helpers.MustGetMockStorage(t, false)
 	defer helpers.MustCloseStorage(t, mockStorage)
@@ -223,12 +233,6 @@ func TestProcessCorrectMessage(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, 1, count)
-}
-
-func consumerProcessMessage(mockConsumer consumer.Consumer, message string) error {
-	saramaMessage := sarama.ConsumerMessage{}
-	saramaMessage.Value = []byte(message)
-	return mockConsumer.ProcessMessage(&saramaMessage)
 }
 
 func TestProcessingMessageWithClosedStorage(t *testing.T) {

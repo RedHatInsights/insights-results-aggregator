@@ -34,6 +34,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/logger"
@@ -74,7 +75,7 @@ var (
 )
 
 func createStorage() (*storage.DBStorage, error) {
-	storageCfg := getStorageConfiguration()
+	storageCfg := conf.GetStorageConfiguration()
 
 	dbStorage, err := storage.New(storageCfg)
 	if err != nil {
@@ -111,7 +112,7 @@ func prepareDB() int {
 		return ExitStatusPrepareDbError
 	}
 
-	ruleContentDirPath := getContentPathConfiguration()
+	ruleContentDirPath := conf.GetContentPathConfiguration()
 	contentDir, err := content.ParseRuleContentDir(ruleContentDirPath)
 	if osPathError, ok := err.(*os.PathError); ok {
 		log.Error().Err(osPathError).Msg("No rules directory")
@@ -134,7 +135,7 @@ func startConsumer() int {
 	}
 	defer closeStorage(dbStorage)
 
-	brokerCfg := getBrokerConfiguration()
+	brokerCfg := conf.GetBrokerConfiguration()
 
 	// if broker is disabled, simply don't start it
 	if !brokerCfg.Enabled {
@@ -161,7 +162,7 @@ func startServer() int {
 	}
 	defer closeStorage(dbStorage)
 
-	serverCfg := getServerConfiguration()
+	serverCfg := conf.GetServerConfiguration()
 	serverInstance = server.New(serverCfg, dbStorage)
 	err = serverInstance.Start()
 	if err != nil {
@@ -211,7 +212,7 @@ func startService() int {
 func waitForServiceToStart() {
 	for {
 		isStarted := true
-		if getBrokerConfiguration().Enabled && consumerInstance == nil {
+		if conf.GetBrokerConfiguration().Enabled && consumerInstance == nil {
 			isStarted = false
 		}
 		if serverInstance == nil {
@@ -283,7 +284,7 @@ func printHelp() int {
 }
 
 func printConfig() int {
-	configBytes, err := json.MarshalIndent(config, "", "    ")
+	configBytes, err := json.MarshalIndent(conf.Config, "", "    ")
 
 	if err != nil {
 		log.Error().Err(err)
@@ -296,12 +297,12 @@ func printConfig() int {
 }
 
 func main() {
-	err := loadConfiguration(defaultConfigFilename)
+	err := conf.LoadConfiguration(defaultConfigFilename)
 	if err != nil {
 		panic(err)
 	}
 
-	err = logger.InitZerolog(getLoggingConfiguration(), getCloudWatchConfiguration())
+	err = logger.InitZerolog(conf.GetLoggingConfiguration(), conf.GetCloudWatchConfiguration())
 	if err != nil {
 		panic(err)
 	}
