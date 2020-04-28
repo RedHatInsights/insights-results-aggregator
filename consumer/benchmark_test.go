@@ -15,9 +15,7 @@
 package consumer_test
 
 import (
-	"database/sql"
 	"io/ioutil"
-	"os"
 	"path"
 	"strings"
 	"testing"
@@ -26,7 +24,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -44,41 +41,20 @@ func benchmarkProcessingMessage(b *testing.B, s storage.Storage, messageProducer
 	}
 }
 
-func getNoopStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
-	return &storage.NoopStorage{}, nil
+func getNoopStorage(*testing.B) (storage.Storage, func()) {
+	return &storage.NoopStorage{}, func() {}
 }
 
-func getSQLiteMemoryStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
-	return helpers.MustGetMockStorage(b, true), nil
+func getSQLiteMemoryStorage(b *testing.B) (storage.Storage, func()) {
+	return helpers.MustGetMockStorage(b, true)
 }
 
-func getSQLiteFileStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
-	const dbFile = "./test.db"
-
-	db, err := sql.Open("sqlite3", dbFile)
-	helpers.FailOnError(b, err)
-
-	_, err = db.Exec("PRAGMA foreign_keys = ON;")
-	helpers.FailOnError(b, err)
-
-	sqliteStorage := storage.NewFromConnection(db, storage.DBDriverSQLite3)
-
-	err = sqliteStorage.Init()
-	helpers.FailOnError(b, err)
-
-	return sqliteStorage, func(b *testing.B) {
-		helpers.FailOnError(b, os.Remove(dbFile))
-	}
+func getSQLiteFileStorage(b *testing.B) (storage.Storage, func()) {
+	return helpers.MustGetSQLiteFileStorage(b, true)
 }
 
-func getPostgresStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
-	err := conf.LoadConfiguration("../config-devel")
-	helpers.FailOnError(b, err)
-
-	postgresStorage, err := storage.New(conf.GetStorageConfiguration())
-	helpers.FailOnError(b, err)
-
-	return postgresStorage, nil
+func getPostgresStorage(b *testing.B) (storage.Storage, func()) {
+	return helpers.MustGetPostgresStorage(b, true)
 }
 
 func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
@@ -86,7 +62,7 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 
 	var testCases = []struct {
 		Name            string
-		StorageProducer func(*testing.B) (storage.Storage, func(*testing.B))
+		StorageProducer func(*testing.B) (storage.Storage, func())
 		RandomMessages  bool
 	}{
 		{"NoopStorage", getNoopStorage, false},
@@ -106,9 +82,8 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 
 		b.Run(testCase.Name, func(b *testing.B) {
 			benchStorage, cleaner := testCase.StorageProducer(b)
-			if cleaner != nil {
-				defer cleaner(b)
-			}
+			defer cleaner()
+
 			defer helpers.MustCloseStorage(b, benchStorage)
 
 			if testCase.RandomMessages {
@@ -168,7 +143,7 @@ func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
 
 	var testCases = []struct {
 		Name            string
-		StorageProducer func(*testing.B) (storage.Storage, func(*testing.B))
+		StorageProducer func(*testing.B) (storage.Storage, func())
 	}{
 		{"NoopStorage", getNoopStorage},
 		{"SQLiteInMemory", getSQLiteMemoryStorage},
@@ -181,9 +156,8 @@ func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
 
 		b.Run(testCase.Name, func(b *testing.B) {
 			benchStorage, cleaner := testCase.StorageProducer(b)
-			if cleaner != nil {
-				defer cleaner(b)
-			}
+			defer cleaner()
+
 			defer helpers.MustCloseStorage(b, benchStorage)
 
 			kafkaConsumer := &consumer.KafkaConsumer{

@@ -34,20 +34,20 @@ func MustGetMockKafkaConsumerWithExpectedMessages(
 	topic string,
 	orgWhiteList mapset.Set,
 	messages []string,
-) *consumer.KafkaConsumer {
-	mockConsumer, err := GetMockKafkaConsumerWithExpectedMessages(t, topic, orgWhiteList, messages)
+) (*consumer.KafkaConsumer, func()) {
+	mockConsumer, closer, err := GetMockKafkaConsumerWithExpectedMessages(t, topic, orgWhiteList, messages)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return mockConsumer
+	return mockConsumer, closer
 }
 
 // GetMockKafkaConsumerWithExpectedMessages creates mocked kafka consumer
 // which produces list of messages automatically
 func GetMockKafkaConsumerWithExpectedMessages(
 	t *testing.T, topic string, orgWhiteList mapset.Set, messages []string,
-) (*consumer.KafkaConsumer, error) {
+) (*consumer.KafkaConsumer, func(), error) {
 	mockConsumer := sarama_mocks.NewConsumer(t, nil)
 
 	for _, message := range messages {
@@ -60,10 +60,10 @@ func GetMockKafkaConsumerWithExpectedMessages(
 		topic, 0, sarama.OffsetOldest,
 	)
 	if err != nil {
-		return nil, err
+		return nil, func() {}, err
 	}
 
-	mockStorage := MustGetMockStorage(t, true)
+	mockStorage, closer := MustGetMockStorage(t, true)
 
 	return &consumer.KafkaConsumer{
 		Configuration: broker.Configuration{
@@ -76,7 +76,7 @@ func GetMockKafkaConsumerWithExpectedMessages(
 		Consumer:          mockConsumer,
 		PartitionConsumer: mockPartitionConsumer,
 		Storage:           mockStorage,
-	}, nil
+	}, closer, nil
 }
 
 // WaitForMockConsumerToHaveNConsumedMessages waits until mockConsumer has at least N

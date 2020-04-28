@@ -85,8 +85,9 @@ func AssertAPIRequest(
 	expectedResponse *APIResponse,
 ) {
 	if mockStorage == nil {
-		mockStorage = MustGetMockStorage(t, true)
-		defer MustCloseStorage(t, mockStorage)
+		var closer func()
+		mockStorage, closer = MustGetMockStorage(t, true)
+		defer closer()
 	}
 	if serverConfig == nil {
 		serverConfig = &DefaultServerConfig

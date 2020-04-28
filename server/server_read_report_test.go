@@ -81,8 +81,8 @@ func TestReadNonExistingReport(t *testing.T) {
 }
 
 func TestHttpServer_readReportForCluster_NoContent(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
@@ -109,8 +109,8 @@ func TestHttpServer_readReportForCluster_NoContent(t *testing.T) {
 }
 
 func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.LastCheckedAt,
@@ -137,8 +137,8 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 }
 
 func TestReadReportDBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -182,8 +182,8 @@ func TestHttpServer_readReportForCluster_getContentForRule_DBError(t *testing.T)
 func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.T) {
 	const badReport = "not-json"
 
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, badReport, testdata.LastCheckedAt,
@@ -223,8 +223,8 @@ func assertReportResponsesEqual(t *testing.T, expected, got string) {
 }
 
 func TestReadReportWithContent(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,

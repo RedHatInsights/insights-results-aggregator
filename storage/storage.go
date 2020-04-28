@@ -221,6 +221,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 	orgs := make([]types.OrgID, 0)
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
+	err = convertDBError(err)
 	if err != nil {
 		return orgs, err
 	}
@@ -244,6 +245,7 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 	clusters := make([]types.ClusterName, 0)
 
 	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster", orgID)
+	err = convertDBError(err)
 	if err != nil {
 		return clusters, err
 	}
@@ -285,6 +287,7 @@ func (storage DBStorage) ReadReportForCluster(
 	err := storage.connection.QueryRow(
 		"SELECT report, last_checked_at FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
 	).Scan(&report, &lastChecked)
+	err = convertDBError(err)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -295,7 +298,7 @@ func (storage DBStorage) ReadReportForCluster(
 		return "", "", err
 	}
 
-	return types.ClusterReport(report), types.Timestamp(lastChecked.Format(time.RFC3339)), nil
+	return types.ClusterReport(report), types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), nil
 }
 
 // ReadReportForClusterByClusterName reads result (health status) for selected cluster for given organization
@@ -318,7 +321,7 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 		return "", "", err
 	}
 
-	return types.ClusterReport(report), types.Timestamp(lastChecked.Format(time.RFC3339)), nil
+	return types.ClusterReport(report), types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), nil
 }
 
 // constructWhereClause constructs a dynamic WHERE .. IN clause
@@ -481,6 +484,7 @@ func (storage DBStorage) WriteReportForCluster(
 func (storage DBStorage) ReportsCount() (int, error) {
 	count := -1
 	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
+	err = convertDBError(err)
 
 	return count, err
 }

@@ -40,7 +40,7 @@ var (
 	ruleContentActiveOK = content.RuleContentDirectory{
 		Config: ruleConfigOne,
 		Rules: map[string]content.RuleContent{
-			"rc": content.RuleContent{
+			"rc": {
 				Summary:    []byte("summary"),
 				Reason:     []byte("reason"),
 				Resolution: []byte("resolution"),
@@ -64,7 +64,7 @@ var (
 	ruleContentInactiveOK = content.RuleContentDirectory{
 		Config: ruleConfigOne,
 		Rules: map[string]content.RuleContent{
-			"rc": content.RuleContent{
+			"rc": {
 				Summary:    []byte("summary"),
 				Reason:     []byte("reason"),
 				Resolution: []byte("resolution"),
@@ -88,7 +88,7 @@ var (
 	ruleContentBadStatus = content.RuleContentDirectory{
 		Config: ruleConfigOne,
 		Rules: map[string]content.RuleContent{
-			"rc": content.RuleContent{
+			"rc": {
 				Summary:    []byte("summary"),
 				Reason:     []byte("reason"),
 				Resolution: []byte("resolution"),
@@ -112,13 +112,13 @@ var (
 	ruleContentNull = content.RuleContentDirectory{
 		Config: ruleConfigOne,
 		Rules: map[string]content.RuleContent{
-			"rc": content.RuleContent{},
+			"rc": {},
 		},
 	}
 	ruleContentExample1 = content.RuleContentDirectory{
 		Config: ruleConfigOne,
 		Rules: map[string]content.RuleContent{
-			"rc": content.RuleContent{
+			"rc": {
 				Summary:    []byte("summary"),
 				Reason:     []byte("summary"),
 				Resolution: []byte("resolution"),
@@ -158,24 +158,24 @@ func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 }
 
 func TestDBStorageLoadRuleContentActiveOK(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentActiveOK)
 	helpers.FailOnError(t, err)
 }
 
 func TestDBStorageLoadRuleContentDBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentActiveOK)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
 func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
 	// create a table with a bad type
@@ -228,32 +228,32 @@ func TestDBStorageLoadRuleContentCommitDBError(t *testing.T) {
 }
 
 func TestDBStorageLoadRuleContentInactiveOK(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentInactiveOK)
 	helpers.FailOnError(t, err)
 }
 
 func TestDBStorageLoadRuleContentNull(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentNull)
 	assert.EqualError(t, err, "NOT NULL constraint failed: rule.summary")
 }
 
 func TestDBStorageLoadRuleContentBadStatus(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentBadStatus)
 	assert.EqualError(t, err, "invalid rule error key status: 'bad'")
 }
 
 func TestDBStorageGetContentForRulesEmpty(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	res, err := mockStorage.GetContentForRules(types.ReportRules{
 		HitRules:     nil,
@@ -267,8 +267,8 @@ func TestDBStorageGetContentForRulesEmpty(t *testing.T) {
 }
 
 func TestDBStorageGetContentForRulesDBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	_, err := mockStorage.GetContentForRules(types.ReportRules{
 		HitRules:     nil,
@@ -280,8 +280,8 @@ func TestDBStorageGetContentForRulesDBError(t *testing.T) {
 }
 
 func TestDBStorageGetContentForRulesOK(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentExample1)
 	helpers.FailOnError(t, err)
@@ -312,8 +312,8 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 }
 
 func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
 	helpers.FailOnError(t, err)
@@ -463,24 +463,27 @@ func TestDBStorageVoteOnRule(t *testing.T) {
 	for _, vote := range []storage.UserVote{
 		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
 	} {
-		mockStorage := helpers.MustGetMockStorage(t, true)
+		func(vote storage.UserVote) {
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
 
-		mustWriteReport3Rules(t, mockStorage)
+			mustWriteReport3Rules(t, mockStorage)
 
-		helpers.FailOnError(t, mockStorage.VoteOnRule(
-			testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
-		))
+			helpers.FailOnError(t, mockStorage.VoteOnRule(
+				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
+			))
 
-		feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
-		helpers.FailOnError(t, err)
+			feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+			helpers.FailOnError(t, err)
 
-		assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
-		assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
-		assert.Equal(t, testdata.UserID, feedback.UserID)
-		assert.Equal(t, "", feedback.Message)
-		assert.Equal(t, vote, feedback.UserVote)
+			assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
+			assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
+			assert.Equal(t, testdata.UserID, feedback.UserID)
+			assert.Equal(t, "", feedback.Message)
+			assert.Equal(t, vote, feedback.UserVote)
 
-		helpers.FailOnError(t, mockStorage.Close())
+			helpers.FailOnError(t, mockStorage.Close())
+		}(vote)
 	}
 }
 
@@ -488,12 +491,15 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 	for _, vote := range []storage.UserVote{
 		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
 	} {
-		mockStorage := helpers.MustGetMockStorage(t, true)
+		func(vote storage.UserVote) {
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
 
-		err := mockStorage.VoteOnRule(
-			testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
-		)
-		assert.EqualError(t, err, "FOREIGN KEY constraint failed")
+			err := mockStorage.VoteOnRule(
+				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
+			)
+			assert.EqualError(t, err, "FOREIGN KEY constraint failed")
+		}(vote)
 	}
 }
 
@@ -501,23 +507,26 @@ func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
 	for _, vote := range []storage.UserVote{
 		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
 	} {
-		mockStorage := helpers.MustGetMockStorage(t, true)
+		func(vote storage.UserVote) {
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
 
-		err := mockStorage.WriteReportForCluster(
-			testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
-		)
-		helpers.FailOnError(t, err)
+			err := mockStorage.WriteReportForCluster(
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+			)
+			helpers.FailOnError(t, err)
 
-		err = mockStorage.VoteOnRule(
-			testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
-		)
-		assert.EqualError(t, err, "FOREIGN KEY constraint failed")
+			err = mockStorage.VoteOnRule(
+				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
+			)
+			assert.EqualError(t, err, "FOREIGN KEY constraint failed")
+		}(vote)
 	}
 }
 
 func TestDBStorageChangeVote(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
 
@@ -544,8 +553,8 @@ func TestDBStorageChangeVote(t *testing.T) {
 }
 
 func TestDBStorageTextFeedback(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
 
@@ -566,8 +575,8 @@ func TestDBStorageTextFeedback(t *testing.T) {
 }
 
 func TestDBStorageFeedbackChangeMessage(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
 
@@ -594,8 +603,8 @@ func TestDBStorageFeedbackChangeMessage(t *testing.T) {
 }
 
 func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
 	if _, ok := err.(*storage.ItemNotFoundError); err == nil || !ok {
@@ -604,16 +613,16 @@ func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
 }
 
 func TestDBStorageFeedbackErrorDBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
 func TestDBStorageVoteOnRuleDBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	err := mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, storage.UserVoteNone)
 	assert.EqualError(t, err, "sql: database is closed")
@@ -634,8 +643,8 @@ func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
 }
 
 func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, false)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, false)
+	defer closer()
 	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
 	// create a table with a bad type
@@ -686,8 +695,8 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 }
 
 func TestDBStorage_CreateRule(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.CreateRule(types.Rule{
 		Module:     "module",
@@ -701,8 +710,8 @@ func TestDBStorage_CreateRule(t *testing.T) {
 }
 
 func TestDBStorage_CreateRule_DBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	err := mockStorage.CreateRule(types.Rule{
 		Module:     "module",
@@ -716,8 +725,8 @@ func TestDBStorage_CreateRule_DBError(t *testing.T) {
 }
 
 func TestDBStorage_CreateRuleErrorKey(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.CreateRule(types.Rule{
 		Module:     "module",
@@ -744,7 +753,7 @@ func TestDBStorage_CreateRuleErrorKey(t *testing.T) {
 }
 
 func TestDBStorage_CreateRuleErrorKey_DBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 
 	err := mockStorage.CreateRule(types.Rule{
 		Module:     "module",
@@ -756,7 +765,7 @@ func TestDBStorage_CreateRuleErrorKey_DBError(t *testing.T) {
 	})
 	helpers.FailOnError(t, err)
 
-	helpers.MustCloseStorage(t, mockStorage)
+	closer()
 
 	err = mockStorage.CreateRuleErrorKey(types.RuleErrorKey{
 		ErrorKey:    "error_key",
@@ -773,8 +782,8 @@ func TestDBStorage_CreateRuleErrorKey_DBError(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRule(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.CreateRule(types.Rule{
 		Module: "module",
@@ -786,24 +795,24 @@ func TestDBStorage_DeleteRule(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRule_NotFound(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.DeleteRule("module")
 	assert.EqualError(t, err, "Item with ID module was not found in the storage")
 }
 
 func TestDBStorage_DeleteRule_DBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	err := mockStorage.DeleteRule("module")
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
 func TestDBStorage_DeleteRuleErrorKey(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.CreateRule(types.Rule{
 		Module:     "module",
@@ -833,15 +842,15 @@ func TestDBStorage_DeleteRuleErrorKey(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRuleErrorKey_NotFound(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.DeleteRuleErrorKey("module", "error_key")
 	assert.EqualError(t, err, "Item with ID module/error_key was not found in the storage")
 }
 
 func TestDBStorage_DeleteRuleErrorKey_DBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 
 	err := mockStorage.CreateRule(types.Rule{
 		Module:     "module",
@@ -866,7 +875,7 @@ func TestDBStorage_DeleteRuleErrorKey_DBError(t *testing.T) {
 	})
 	helpers.FailOnError(t, err)
 
-	helpers.MustCloseStorage(t, mockStorage)
+	closer()
 
 	err = mockStorage.DeleteRuleErrorKey("module", "error_key")
 	assert.EqualError(t, err, "sql: database is closed")

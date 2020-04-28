@@ -30,100 +30,88 @@ const (
 	insertQuery = "INSERT INTO benchmark_tab (name, value) VALUES ($1, $2);"
 )
 
-func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB) {
-	mockStorage, err := helpers.GetMockStorage(false)
-	if err != nil {
-		b.Fatal(err)
-	}
+func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {
+	mockStorage, closer := helpers.MustGetMockStorage(b, false)
 
 	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
-	if _, err := conn.Exec("CREATE TABLE benchmark_tab (id SERIAL, name VARCHAR(256), value VARCHAR(4096));"); err != nil {
-		b.Fatal(err)
-	}
+	_, err := conn.Exec("CREATE TABLE benchmark_tab (id SERIAL, name VARCHAR(256), value VARCHAR(4096));")
+	helpers.FailOnError(b, err)
 
 	b.ResetTimer()
 	b.StartTimer()
 
-	return mockStorage, conn
+	return mockStorage, conn, closer
 }
 
-func mustCleanupAfterBenchmark(b *testing.B, stor storage.Storage, conn *sql.DB) {
+func mustCleanupAfterBenchmark(b *testing.B, stor storage.Storage, conn *sql.DB, closer func()) {
 	b.StopTimer()
 
-	if _, err := conn.Exec("DROP TABLE benchmark_tab;"); err != nil {
-		b.Fatal(err)
-	}
+	_, err := conn.Exec("DROP TABLE benchmark_tab;")
+	helpers.FailOnError(b, err)
 
-	if err := stor.Close(); err != nil {
-		b.Fatal(err)
-	}
+	err = stor.Close()
+	helpers.FailOnError(b, err)
+
+	closer()
 }
 
 // BenchmarkStorageExecDirectlySingle executes a single INSERT statement directly.
 func BenchmarkStorageExecDirectlySingle(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
-		if _, err := conn.Exec(insertQuery, "John Doe", "Hello World!"); err != nil {
-			b.Fatal(err)
-		}
+		_, err := conn.Exec(insertQuery, "John Doe", "Hello World!")
+		helpers.FailOnError(b, err)
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }
 
 // BenchmarkStoragePrepareExecSingle prepares an INSERT statement and then executes it once.
 func BenchmarkStoragePrepareExecSingle(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		stmt, err := conn.Prepare(insertQuery)
-		if err != nil {
-			b.Fatal(err)
-		}
+		helpers.FailOnError(b, err)
 
-		if _, err := stmt.Exec("John Doe", "Hello World!"); err != nil {
-			b.Fatal(err)
-		}
+		_, err = stmt.Exec("John Doe", "Hello World!")
+		helpers.FailOnError(b, err)
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }
 
 // BenchmarkStorageExecDirectlyMany executes the INSERT query row by row,
 // each in a separate sql.DB.Exec() call.
 func BenchmarkStorageExecDirectlyMany(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for rowId := 0; rowId < rowCount; rowId++ {
-			if _, err := conn.Exec(insertQuery, "John Doe", "Hello World!"); err != nil {
-				b.Fatal(err)
-			}
+			_, err := conn.Exec(insertQuery, "John Doe", "Hello World!")
+			helpers.FailOnError(b, err)
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }
 
 // BenchmarkStoragePrepareExecMany executes the same exact INSERT statements,
 // but it prepares them beforehand and only supplies the parameters with each call.
 func BenchmarkStoragePrepareExecMany(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		stmt, err := conn.Prepare(insertQuery)
-		if err != nil {
-			b.Fatal(err)
-		}
+		helpers.FailOnError(b, err)
 
 		for rowId := 0; rowId < rowCount; rowId++ {
-			if _, err := stmt.Exec("John Doe", "Hello World!"); err != nil {
-				b.Fatal(err)
-			}
+			_, err := stmt.Exec("John Doe", "Hello World!")
+			helpers.FailOnError(b, err)
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }

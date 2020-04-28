@@ -18,6 +18,9 @@ package storage
 
 import (
 	"fmt"
+	"regexp"
+
+	"github.com/rs/zerolog/log"
 )
 
 // ItemNotFoundError shows that item with id ItemID wasn't found in the storage
@@ -28,4 +31,52 @@ type ItemNotFoundError struct {
 // Error returns error string
 func (e *ItemNotFoundError) Error() string {
 	return fmt.Sprintf("Item with ID %+v was not found in the storage", e.ItemID)
+}
+
+type TableNotFoundError struct {
+	tableName string
+}
+
+func (err *TableNotFoundError) Error() string {
+	return fmt.Sprintf("no such table: %v", err.tableName)
+}
+
+// convertDBError converts dbs error to the
+func convertDBError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	errString := err.Error()
+
+	sqliteRegex := regexp.MustCompile(`no such table: (.+)`)
+
+	if sqliteRegex.MatchString(errString) {
+		matches := sqliteRegex.FindStringSubmatch(errString)
+		if len(matches) < 2 {
+			log.Error().
+				Str("errString", errString).
+				Msg("convertDBError unable to find table name")
+
+			return &TableNotFoundError{tableName: ""}
+		}
+
+		return &TableNotFoundError{tableName: matches[1]}
+	}
+
+	postgresRegex := regexp.MustCompile(`pq: relation "(.+)" does not exist`)
+	if postgresRegex.MatchString(errString) {
+		matches := postgresRegex.FindStringSubmatch(errString)
+		if len(matches) < 2 {
+			log.Error().
+				Str("errString", errString).
+				Msg("convertDBError unable to find table name")
+
+			return &TableNotFoundError{tableName: ""}
+		}
+
+		return &TableNotFoundError{tableName: matches[1]}
+	}
+
+	return err
 }
