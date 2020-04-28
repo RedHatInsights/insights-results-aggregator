@@ -275,6 +275,9 @@ func (consumer *KafkaConsumer) Serve() {
 			consumer.numberOfSuccessfullyConsumedMessages++
 			consumer.saveLastMessageOffset(msg.Offset)
 		}
+		endTime := time.Now()
+		duration := endTime.Sub(startTime)
+		log.Info().Int64("duration", duration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
 	}
 }
 
