@@ -21,7 +21,7 @@ org_whitelist_file = "org_whitelist.csv"
 
 [storage]
 db_driver = "sqlite3"
-sqlite_datasource = "./test.db"
+sqlite_datasource = ":memory:"
 
 [content]
 path = "./tests/content/ok/"
