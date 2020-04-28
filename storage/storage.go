@@ -367,12 +367,23 @@ func getExtraDataFromReportRules(rules []types.RuleContentResponse, reportRules 
 func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]types.RuleContentResponse, error) {
 	rules := make([]types.RuleContentResponse, 0)
 
-	query := `SELECT rek.error_key, rek.rule_module, rek.description, rek.generic || r.resolution, rek.publish_date,
-		rek.impact, rek.likelihood
-		FROM rule r
-		INNER JOIN rule_error_key rek
-		ON r.module = rek.rule_module
-		WHERE %v`
+	query := `
+	SELECT 
+		rek.error_key,
+		rek.rule_module,
+		rek.description,
+		rek.generic,
+		r.reason,
+		r.resolution,
+		rek.publish_date,
+		rek.impact,
+		rek.likelihood
+	FROM
+		rule r
+	INNER JOIN
+		rule_error_key rek ON r.module = rek.rule_module
+	WHERE %v
+	`
 
 	whereInStatement := constructWhereClauseForContent(reportRules)
 	query = fmt.Sprintf(query, whereInStatement)
@@ -393,6 +404,8 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 			&rule.RuleModule,
 			&rule.Description,
 			&rule.Generic,
+			&rule.Reason,
+			&rule.Resolution,
 			&rule.CreatedAt,
 			&impact,
 			&likelihood,
