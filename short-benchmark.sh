@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 if [ $# -eq 0 ]
 then
     echo
@@ -23,4 +22,5 @@ then
     exit 1
 fi
 
-./benchmark.sh "$1" | grep -E "^$1" | sort -n -k 2,2
+go test -run NO_TEST -bench="$1" -short ./...
+exit $?

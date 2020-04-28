@@ -268,3 +268,18 @@ func GetRandomConsumerMessage() string {
 
 	return consumerMessage
 }
+
+func GetRandomRuleID(length uint) string {
+	var result string
+
+	for i := uint(0); i < length; i++ {
+		char := rune('a' + rand.Intn('z'-'a'))
+		result += string(char)
+	}
+
+	return result
+}
+
+func GetRandomUserID() string {
+	return fmt.Sprint(rand.Int())
+}

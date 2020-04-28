@@ -16,10 +16,12 @@ package helpers
 
 import (
 	"database/sql"
+	"os"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 
+	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
 
@@ -116,4 +118,35 @@ func MustCloseMockDBWithExpects(
 
 	expects.ExpectClose()
 	FailOnError(t, db.Close())
+}
+
+// MustGetSQLiteFileStorage creates test sqlite storage in file
+func MustGetSQLiteFileStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
+	const dbFile = "./test.db"
+
+	db, err := sql.Open("sqlite3", dbFile)
+	FailOnError(b, err)
+
+	_, err = db.Exec("PRAGMA foreign_keys = ON;")
+	FailOnError(b, err)
+
+	sqliteStorage := storage.NewFromConnection(db, storage.DBDriverSQLite3)
+
+	err = sqliteStorage.Init()
+	FailOnError(b, err)
+
+	return sqliteStorage, func(b *testing.B) {
+		FailOnError(b, os.Remove(dbFile))
+	}
+}
+
+// MustGetPostgresStorage creates test postgres storage with credentials from config-devel
+func MustGetPostgresStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
+	err := conf.LoadConfiguration("../config-devel")
+	FailOnError(b, err)
+
+	postgresStorage, err := storage.New(conf.GetStorageConfiguration())
+	FailOnError(b, err)
+
+	return postgresStorage, func(*testing.B) {}
 }

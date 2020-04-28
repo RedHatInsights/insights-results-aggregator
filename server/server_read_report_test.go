@@ -200,7 +200,7 @@ func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.
 	})
 }
 
-func assertReportResponsesEqual(t *testing.T, expected, got string) {
+func assertReportResponsesEqual(t testing.TB, expected, got string) {
 	var expectedResponse, gotResponse struct {
 		Status string               `json:"status"`
 		Report types.ReportResponse `json:"report"`
