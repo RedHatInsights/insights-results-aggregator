@@ -46,6 +46,8 @@ const (
 	organizationKey = "organization"
 	// key for cluster ID used in structured log messages
 	clusterKey = "cluster"
+	// key for duration message type used in structured log messages
+	durationKey = "duration"
 )
 
 // Consumer represents any consumer of insights-rules messages
@@ -277,7 +279,7 @@ func (consumer *KafkaConsumer) Serve() {
 		}
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
-		log.Info().Int64("duration", duration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
+		log.Info().Int64(durationKey, duration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
 	}
 }
 
@@ -320,6 +322,8 @@ func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMe
 
 // ProcessMessage processes an incoming message
 func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
+	tStart := time.Now()
+
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 	message, err := parseMessage(msg.Value)
 	if err != nil {
@@ -328,6 +332,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	}
 
 	logMessageInfo(consumer, msg, message, "Read")
+	tRead := time.Now()
 
 	if consumer.Configuration.OrgWhitelistEnabled {
 		logMessageInfo(consumer, msg, message, "Checking organization ID against whitelist")
@@ -344,6 +349,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	} else {
 		logMessageInfo(consumer, msg, message, "Organization whitelisting disabled")
 	}
+	tWhitelisted := time.Now()
 
 	reportAsStr, err := json.Marshal(*message.Report)
 	if err != nil {
@@ -352,6 +358,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	}
 
 	logMessageInfo(consumer, msg, message, "Marshalled")
+	tMarshalled := time.Now()
 
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
 	if err != nil {
@@ -367,6 +374,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
 
 	logMessageInfo(consumer, msg, message, "Time ok")
+	tTimeCheck := time.Now()
 
 	err = consumer.Storage.WriteReportForCluster(
 		*message.Organization,
@@ -379,9 +387,22 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 		return err
 	}
 	logMessageInfo(consumer, msg, message, "Stored")
+	tStored := time.Now()
+
+	// log durations for every message consumption steps
+	logDuration(tStart, tRead, msg.Offset, "read")
+	logDuration(tRead, tWhitelisted, msg.Offset, "whitelisting")
+	logDuration(tWhitelisted, tMarshalled, msg.Offset, "marshalling")
+	logDuration(tMarshalled, tTimeCheck, msg.Offset, "time_check")
+	logDuration(tTimeCheck, tStored, msg.Offset, "db_store")
 
 	// message has been parsed and stored into storage
 	return nil
+}
+
+func logDuration(tStart time.Time, tEnd time.Time, offset int64, key string) {
+	duration := tEnd.Sub(tStart)
+	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, offset).Msg(key)
 }
 
 // Close method closes all resources used by consumer
