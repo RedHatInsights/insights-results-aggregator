@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// To run the benchmarks defined in this file, you can use the following command:
-// go test -benchmem -run=^$ github.com/RedHatInsights/insights-results-aggregator/storage -bench '^BenchmarkStorage' -benchtime=5s
-
 package storage_test
 
 import (
@@ -31,11 +28,7 @@ const (
 )
 
 func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB) {
-	mockStorage, err := helpers.GetMockStorage(false)
-	if err != nil {
-		b.Fatal(err)
-	}
-
+	mockStorage := helpers.MustGetMockStorage(b, false)
 	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
 	if _, err := conn.Exec("CREATE TABLE benchmark_tab (id SERIAL, name VARCHAR(256), value VARCHAR(4096));"); err != nil {
@@ -60,8 +53,8 @@ func mustCleanupAfterBenchmark(b *testing.B, stor storage.Storage, conn *sql.DB)
 	}
 }
 
-// BenchmarkStorageExecDirectlySingle executes a single INSERT statement directly.
-func BenchmarkStorageExecDirectlySingle(b *testing.B) {
+// BenchmarkStorageGenericInsertExecDirectlySingle executes a single INSERT statement directly.
+func BenchmarkStorageGenericInsertExecDirectlySingle(b *testing.B) {
 	stor, conn := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
@@ -73,8 +66,8 @@ func BenchmarkStorageExecDirectlySingle(b *testing.B) {
 	mustCleanupAfterBenchmark(b, stor, conn)
 }
 
-// BenchmarkStoragePrepareExecSingle prepares an INSERT statement and then executes it once.
-func BenchmarkStoragePrepareExecSingle(b *testing.B) {
+// BenchmarkStorageGenericInsertPrepareExecSingle prepares an INSERT statement and then executes it once.
+func BenchmarkStorageGenericInsertPrepareExecSingle(b *testing.B) {
 	stor, conn := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
@@ -91,9 +84,9 @@ func BenchmarkStoragePrepareExecSingle(b *testing.B) {
 	mustCleanupAfterBenchmark(b, stor, conn)
 }
 
-// BenchmarkStorageExecDirectlyMany executes the INSERT query row by row,
+// BenchmarkStorageGenericInsertExecDirectlyMany executes the INSERT query row by row,
 // each in a separate sql.DB.Exec() call.
-func BenchmarkStorageExecDirectlyMany(b *testing.B) {
+func BenchmarkStorageGenericInsertExecDirectlyMany(b *testing.B) {
 	stor, conn := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
@@ -107,9 +100,9 @@ func BenchmarkStorageExecDirectlyMany(b *testing.B) {
 	mustCleanupAfterBenchmark(b, stor, conn)
 }
 
-// BenchmarkStoragePrepareExecMany executes the same exact INSERT statements,
+// BenchmarkStorageGenericInsertPrepareExecMany executes the same exact INSERT statements,
 // but it prepares them beforehand and only supplies the parameters with each call.
-func BenchmarkStoragePrepareExecMany(b *testing.B) {
+func BenchmarkStorageGenericInsertPrepareExecMany(b *testing.B) {
 	stor, conn := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
