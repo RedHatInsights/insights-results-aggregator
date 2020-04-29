@@ -20,18 +20,35 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/rs/zerolog"
 )
 
 const (
-	rowCount    = 10000
+	rowCount    = 1000
 	insertQuery = "INSERT INTO benchmark_tab (name, value) VALUES ($1, $2);"
+	upsertQuery = "INSERT INTO benchmark_tab (id, name, value) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET name=$2, value=$3;"
+	// SQLite alternative to the upsert query above:
+	// upsertQuery = "REPLACE INTO benchmark_tab (id, name, value) VALUES ($1, $2, $3);"
 )
 
 func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB) {
-	mockStorage := helpers.MustGetMockStorage(b, false)
+	// Postgres queries are very verbose at DEBUG log level, so it's better
+	// to silence them this way to make benchmark results easier to find.
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+
+	mockStorage, _ := helpers.MustGetPostgresStorage(b)
+	// Alternative using the file-based SQLite DB storage:
+	// mockStorage, _ := helpers.MustGetSQLiteFileStorage(b)
+	// Old version using the in-memory SQLite DB storage:
+	// mockStorage := helpers.MustGetMockStorage(b, false)
+
 	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
-	if _, err := conn.Exec("CREATE TABLE benchmark_tab (id SERIAL, name VARCHAR(256), value VARCHAR(4096));"); err != nil {
+	if _, err := conn.Exec("DROP TABLE IF EXISTS benchmark_tab;"); err != nil {
+		b.Fatal(err)
+	}
+
+	if _, err := conn.Exec("CREATE TABLE benchmark_tab (id SERIAL PRIMARY KEY, name VARCHAR(256), value VARCHAR(4096));"); err != nil {
 		b.Fatal(err)
 	}
 
@@ -113,6 +130,38 @@ func BenchmarkStorageGenericInsertPrepareExecMany(b *testing.B) {
 
 		for rowId := 0; rowId < rowCount; rowId++ {
 			if _, err := stmt.Exec("John Doe", "Hello World!"); err != nil {
+				b.Fatal(err)
+			}
+		}
+	}
+
+	mustCleanupAfterBenchmark(b, stor, conn)
+}
+
+// BenchmarkStorageUpsertWithoutConflict inserts many non-conflicting
+// rows into the benchmark table using the upsert query.
+func BenchmarkStorageUpsertWithoutConflict(b *testing.B) {
+	stor, conn := mustPrepareBenchmark(b)
+
+	for benchIter := 0; benchIter < b.N; benchIter++ {
+		for rowId := 0; rowId < rowCount; rowId++ {
+			if _, err := conn.Exec(upsertQuery, (benchIter*rowCount)+rowId+1, "John Doe", "Hello World!"); err != nil {
+				b.Fatal(err)
+			}
+		}
+	}
+
+	mustCleanupAfterBenchmark(b, stor, conn)
+}
+
+// BenchmarkStorageUpsertConflict insert many mutually conflicting
+// rows into the benchmark table using the uspert query.
+func BenchmarkStorageUpsertConflict(b *testing.B) {
+	stor, conn := mustPrepareBenchmark(b)
+
+	for benchIter := 0; benchIter < b.N; benchIter++ {
+		for rowId := 0; rowId < rowCount; rowId++ {
+			if _, err := conn.Exec(upsertQuery, 1, "John Doe", "Hello World!"); err != nil {
 				b.Fatal(err)
 			}
 		}
