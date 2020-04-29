@@ -18,6 +18,8 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/rs/zerolog"
+
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
@@ -55,6 +57,8 @@ func mustCleanupAfterBenchmark(b *testing.B, stor storage.Storage, conn *sql.DB)
 
 // BenchmarkStorageGenericInsertExecDirectlySingle executes a single INSERT statement directly.
 func BenchmarkStorageGenericInsertExecDirectlySingle(b *testing.B) {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+
 	stor, conn := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
@@ -68,6 +72,8 @@ func BenchmarkStorageGenericInsertExecDirectlySingle(b *testing.B) {
 
 // BenchmarkStorageGenericInsertPrepareExecSingle prepares an INSERT statement and then executes it once.
 func BenchmarkStorageGenericInsertPrepareExecSingle(b *testing.B) {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+
 	stor, conn := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
@@ -87,6 +93,8 @@ func BenchmarkStorageGenericInsertPrepareExecSingle(b *testing.B) {
 // BenchmarkStorageGenericInsertExecDirectlyMany executes the INSERT query row by row,
 // each in a separate sql.DB.Exec() call.
 func BenchmarkStorageGenericInsertExecDirectlyMany(b *testing.B) {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+
 	stor, conn := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
@@ -103,6 +111,8 @@ func BenchmarkStorageGenericInsertExecDirectlyMany(b *testing.B) {
 // BenchmarkStorageGenericInsertPrepareExecMany executes the same exact INSERT statements,
 // but it prepares them beforehand and only supplies the parameters with each call.
 func BenchmarkStorageGenericInsertPrepareExecMany(b *testing.B) {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+
 	stor, conn := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
