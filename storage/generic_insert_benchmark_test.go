@@ -145,7 +145,7 @@ func BenchmarkStorageUpsertWithoutConflict(b *testing.B) {
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for rowId := 0; rowId < rowCount; rowId++ {
-			if _, err := conn.Exec(upsertQuery, rowId+1, "John Doe", "Hello World!"); err != nil {
+			if _, err := conn.Exec(upsertQuery, (benchIter*rowCount)+rowId+1, "John Doe", "Hello World!"); err != nil {
 				b.Fatal(err)
 			}
 		}
