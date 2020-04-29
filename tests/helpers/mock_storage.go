@@ -142,6 +142,24 @@ func MustGetSQLiteFileStorage(b *testing.B) (storage.Storage, func(*testing.B)) 
 	}
 }
 
+// MustGetSQLiteMemoryStorage creates test sqlite storage in memory
+func MustGetSQLiteMemoryStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
+	db, err := sql.Open(sqlite3, ":memory:")
+	FailOnError(b, err)
+
+	_, err = db.Exec("PRAGMA foreign_keys = ON")
+	FailOnError(b, err)
+
+	sqliteStorage := storage.NewFromConnection(db, storage.DBDriverSQLite3)
+
+	err = sqliteStorage.Init()
+	FailOnError(b, err)
+
+	return sqliteStorage, func(b *testing.B) {
+		MustCloseStorage(b, sqliteStorage)
+	}
+}
+
 // MustGetPostgresStorage creates test postgres storage with credentials from config-devel
 func MustGetPostgresStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
 	err := conf.LoadConfiguration("../config-devel")
