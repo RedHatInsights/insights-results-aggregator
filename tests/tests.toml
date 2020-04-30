@@ -28,6 +28,7 @@ path = "./tests/content/ok/"
 
 [logging]
 debug = false
+log_level = ""
 logging_to_cloud_watch_enabled = false
 
 [cloudwatch]

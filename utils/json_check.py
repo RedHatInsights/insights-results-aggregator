@@ -17,25 +17,37 @@
 from pathlib import Path
 from json import load
 from sys import exit
+from argparse import ArgumentParser
 
-passes = 0
-failures = 0
 
-files = list(Path(".").rglob("*.json"))
+def main():
+    parser = ArgumentParser()
+    parser.add_argument("-v", "--verbose", dest="verbose", help="make it verbose")
+    args = parser.parse_args()
 
-for file in files:
-    try:
-        with file.open() as fin:
-            obj = load(fin)
-            print("{} is valid".format(file))
-            passes += 1
-    except ValueError as e:
-        print("{} is invalid".format(file))
-        failures += 1
-        print(e)
+    passes = 0
+    failures = 0
 
-print("{} passes".format(passes))
-print("{} failures".format(failures))
+    files = list(Path(".").rglob("*.json"))
 
-if failures > 0:
-    exit(1)
+    for file in files:
+        try:
+            with file.open() as fin:
+                obj = load(fin)
+                if args.verbose:
+                    print("{} is valid".format(file))
+
+                passes += 1
+        except ValueError as e:
+            print("{} is invalid".format(file))
+            failures += 1
+            print(e)
+
+    print("{} passes".format(passes))
+    print("{} failures".format(failures))
+
+    if failures > 0:
+        exit(1)
+
+if __name__ == "__main__":
+    main()

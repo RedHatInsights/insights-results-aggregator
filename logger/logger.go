@@ -90,6 +90,8 @@ func (writer UnJSONWriter) Write(bytes []byte) (int, error) {
 
 // InitZerolog initializes zerolog with provided configs to use proper stdout and/or CloudWatch logging
 func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConfiguration) error {
+	setGlobalLogLevel(loggingConf)
+
 	var writers []io.Writer
 
 	if loggingConf.Debug {
@@ -134,6 +136,23 @@ func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConf
 	sarama.Logger = &SaramaZerologger{zerologger: log.Logger}
 
 	return nil
+}
+
+func setGlobalLogLevel(configuration LoggingConfiguration) {
+	logLevel := strings.ToLower(strings.TrimSpace(configuration.LogLevel))
+
+	switch logLevel {
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "warn", "warning":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	}
 }
 
 // SaramaZerologger is a wrapper to make sarama log to zerolog

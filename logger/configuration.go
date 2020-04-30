@@ -21,6 +21,16 @@ type LoggingConfiguration struct {
 	// Debug enables pretty colored logging
 	Debug bool `mapstructure:"debug" toml:"debug"`
 
+	// LogLevel sets logging level to show. Possible values are:
+	// "debug"
+	// "info"
+	// "warn", "warning"
+	// "error"
+	// "fatal"
+	//
+	// logging level won't be changed if value is not one of listed above
+	LogLevel string `mapstructure:"log_level" toml:"log_level"`
+
 	// LoggingToCloudWatchEnabled enables logging to CloudWatch
 	// (configuration for CloudWatch is in CloudWatchConfiguration)
 	LoggingToCloudWatchEnabled bool `mapstructure:"logging_to_cloud_watch_enabled" toml:"logging_to_cloud_watch_enabled"`
