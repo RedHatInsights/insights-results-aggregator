@@ -402,9 +402,9 @@ The following tests can be run to test your code in `insights-results-aggregator
 Detailed information about each type of test is included in the corresponding subsection:
 
 1. Unit tests: checks behaviour of all units in source code (methods, functions)
-2. REST API Tests: test the real REST API of locally deployed application with database initialized with test data only
-3. Integration tests: the integration tests for `insights-results-aggregator` service
-4. Metrics tests: test whether Prometheus metrics are exposed as expected
+1. REST API Tests: test the real REST API of locally deployed application with database initialized with test data only
+1. Integration tests: the integration tests for `insights-results-aggregator` service
+1. Metrics tests: test whether Prometheus metrics are exposed as expected
 
 ### Unit tests
 
