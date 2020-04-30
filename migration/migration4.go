@@ -16,92 +16,42 @@ limitations under the License.
 
 package migration
 
-import (
-	"database/sql"
-)
-
 /*
-migration4 adds foreign keys to cluster_rule_user_feedback
+	migration4 adds foreign keys to cluster_rule_user_feedback
 */
 
-var mig4 = Migration{
-	StepUp: func(tx *sql.Tx) error {
-		// it's better to use ALTER TABLE table_name ADD CONSTRAINT but sqlite doesn't support it
+var mig4 = NewUpdateTableMigration(
+	"cluster_rule_user_feedback",
+	`
+		CREATE TABLE cluster_rule_user_feedback (
+			cluster_id VARCHAR NOT NULL,
+			rule_id VARCHAR NOT NULL,
+			user_id VARCHAR NOT NULL,
+			message VARCHAR NOT NULL,
+			user_vote SMALLINT NOT NULL,
+			added_at TIMESTAMP NOT NULL,
+			updated_at TIMESTAMP NOT NULL,
 
-		_, err := tx.Exec(`ALTER TABLE cluster_rule_user_feedback RENAME TO cluster_rule_user_feedback_tmp;`)
-		if err != nil {
-			return err
-		}
+			PRIMARY KEY(cluster_id, rule_id, user_id)
+		);
+	`,
+	`
+		CREATE TABLE cluster_rule_user_feedback (
+			cluster_id VARCHAR NOT NULL,
+			rule_id VARCHAR NOT NULL,
+			user_id VARCHAR NOT NULL,
+			message VARCHAR NOT NULL,
+			user_vote SMALLINT NOT NULL,
+			added_at TIMESTAMP NOT NULL,
+			updated_at TIMESTAMP NOT NULL,
 
-		_, err = tx.Exec(`
-			CREATE TABLE cluster_rule_user_feedback (
-				cluster_id VARCHAR NOT NULL,
-				rule_id VARCHAR NOT NULL,
-				user_id VARCHAR NOT NULL,
-				message VARCHAR NOT NULL,
-				user_vote SMALLINT NOT NULL,
-				added_at TIMESTAMP NOT NULL,
-				updated_at TIMESTAMP NOT NULL,
-
-				PRIMARY KEY(cluster_id, rule_id, user_id),
-				FOREIGN KEY (cluster_id)
-					REFERENCES report(cluster)
-					ON DELETE CASCADE,
-				FOREIGN KEY (rule_id)
-					REFERENCES rule(module)
-					ON DELETE CASCADE
-			);
-		`)
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.Exec(`INSERT INTO cluster_rule_user_feedback SELECT * FROM cluster_rule_user_feedback_tmp;`)
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.Exec(`DROP TABLE cluster_rule_user_feedback_tmp;`)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	},
-	StepDown: func(tx *sql.Tx) error {
-		_, err := tx.Exec(`ALTER TABLE cluster_rule_user_feedback RENAME TO cluster_rule_user_feedback_tmp;`)
-		if err != nil {
-			return err
-		}
-
-		// create one without foreign keys
-		_, err = tx.Exec(`
-			CREATE TABLE cluster_rule_user_feedback (
-				cluster_id VARCHAR NOT NULL,
-				rule_id VARCHAR NOT NULL,
-				user_id VARCHAR NOT NULL,
-				message VARCHAR NOT NULL,
-				user_vote SMALLINT NOT NULL,
-				added_at TIMESTAMP NOT NULL,
-				updated_at TIMESTAMP NOT NULL,
-
-				PRIMARY KEY(cluster_id, rule_id, user_id)
-			);
-		`)
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.Exec(`INSERT INTO cluster_rule_user_feedback SELECT * FROM cluster_rule_user_feedback_tmp;`)
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.Exec(`DROP TABLE cluster_rule_user_feedback_tmp;`)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	},
-}
+			PRIMARY KEY(cluster_id, rule_id, user_id),
+			FOREIGN KEY (cluster_id)
+				REFERENCES report(cluster)
+				ON DELETE CASCADE,
+			FOREIGN KEY (rule_id)
+				REFERENCES rule(module)
+				ON DELETE CASCADE
+		);
+	`,
+)

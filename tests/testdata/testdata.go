@@ -85,7 +85,7 @@ var (
 		"Report":` + ConsumerReport + `,
 		"LastChecked": "` + LastCheckedAt.Format(time.RFC3339) + `"
 	}`
-	LastCheckedAt     = time.Unix(25, 0)
+	LastCheckedAt     = time.Unix(25, 0).UTC()
 	RuleContent3Rules = content.RuleContentDirectory{
 		Config: content.GlobalRuleConfig{Impact: map[string]int{
 			"Two": 2,

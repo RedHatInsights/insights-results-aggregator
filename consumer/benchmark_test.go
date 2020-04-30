@@ -41,12 +41,8 @@ func benchmarkProcessingMessage(b *testing.B, s storage.Storage, messageProducer
 	}
 }
 
-func getNoopStorage(*testing.B) (storage.Storage, func(*testing.B)) {
-	return &storage.NoopStorage{}, nil
-}
-
-func getSQLiteMemoryStorage(b *testing.B) (storage.Storage, func(*testing.B)) {
-	return helpers.MustGetMockStorage(b, true), nil
+func getNoopStorage(testing.TB, bool) (storage.Storage, func()) {
+	return &storage.NoopStorage{}, func() {}
 }
 
 func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
@@ -54,13 +50,13 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 
 	var testCases = []struct {
 		Name            string
-		StorageProducer func(*testing.B) (storage.Storage, func(*testing.B))
+		StorageProducer func(testing.TB, bool) (storage.Storage, func())
 		RandomMessages  bool
 	}{
 		{"NoopStorage", getNoopStorage, false},
 		{"NoopStorage", getNoopStorage, true},
-		{"SQLiteInMemory", getSQLiteMemoryStorage, false},
-		{"SQLiteInMemory", getSQLiteMemoryStorage, true},
+		{"SQLiteInMemory", helpers.MustGetSQLiteMemoryStorage, false},
+		{"SQLiteInMemory", helpers.MustGetSQLiteMemoryStorage, true},
 		{"Postgres", helpers.MustGetPostgresStorage, false},
 		{"Postgres", helpers.MustGetPostgresStorage, true},
 		{"SQLiteFile", helpers.MustGetSQLiteFileStorage, false},
@@ -73,9 +69,9 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 		}
 
 		b.Run(testCase.Name, func(b *testing.B) {
-			benchStorage, cleaner := testCase.StorageProducer(b)
+			benchStorage, cleaner := testCase.StorageProducer(b, true)
 			if cleaner != nil {
-				defer cleaner(b)
+				defer cleaner()
 			}
 			defer helpers.MustCloseStorage(b, benchStorage)
 
@@ -130,21 +126,16 @@ func getMessagesFromDir(b *testing.B, dataDir string) []string {
 }
 
 func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
-	if testing.Short() {
-		b.Skip("Skipping test because -short flag was passed")
-		return
-	}
-
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	messages := getMessagesFromDir(b, "../utils/produce_insights_results/")
 
 	var testCases = []struct {
 		Name            string
-		StorageProducer func(*testing.B) (storage.Storage, func(*testing.B))
+		StorageProducer func(testing.TB, bool) (storage.Storage, func())
 	}{
 		{"NoopStorage", getNoopStorage},
-		{"SQLiteInMemory", getSQLiteMemoryStorage},
+		{"SQLiteInMemory", helpers.MustGetSQLiteMemoryStorage},
 		{"Postgres", helpers.MustGetPostgresStorage},
 		{"SQLiteFile", helpers.MustGetSQLiteFileStorage},
 	}
@@ -153,9 +144,9 @@ func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
 		testCase.Name += "/" + testCase.Name
 
 		b.Run(testCase.Name, func(b *testing.B) {
-			benchStorage, cleaner := testCase.StorageProducer(b)
+			benchStorage, cleaner := testCase.StorageProducer(b, true)
 			if cleaner != nil {
-				defer cleaner(b)
+				defer cleaner()
 			}
 			defer helpers.MustCloseStorage(b, benchStorage)
 

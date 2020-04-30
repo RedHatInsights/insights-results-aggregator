@@ -221,6 +221,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 	orgs := make([]types.OrgID, 0)
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
+	err = convertDBError(err)
 	if err != nil {
 		return orgs, err
 	}
@@ -244,6 +245,7 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 	clusters := make([]types.ClusterName, 0)
 
 	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster", orgID)
+	err = convertDBError(err)
 	if err != nil {
 		return clusters, err
 	}
@@ -285,6 +287,7 @@ func (storage DBStorage) ReadReportForCluster(
 	err := storage.connection.QueryRow(
 		"SELECT report, last_checked_at FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
 	).Scan(&report, &lastChecked)
+	err = convertDBError(err)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -295,7 +298,7 @@ func (storage DBStorage) ReadReportForCluster(
 		return "", "", err
 	}
 
-	return types.ClusterReport(report), types.Timestamp(lastChecked.Format(time.RFC3339)), nil
+	return types.ClusterReport(report), types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), nil
 }
 
 // ReadReportForClusterByClusterName reads result (health status) for selected cluster for given organization
@@ -318,7 +321,7 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 		return "", "", err
 	}
 
-	return types.ClusterReport(report), types.Timestamp(lastChecked.Format(time.RFC3339)), nil
+	return types.ClusterReport(report), types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), nil
 }
 
 // constructWhereClause constructs a dynamic WHERE .. IN clause
@@ -461,6 +464,7 @@ func (storage DBStorage) WriteReportForCluster(
 	rows, err := tx.Query(
 		`SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3`,
 		orgID, clusterName, lastCheckedTime)
+	err = convertDBError(err)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to find most recent report in database")
 		_ = tx.Rollback()
@@ -494,6 +498,7 @@ func (storage DBStorage) WriteReportForCluster(
 func (storage DBStorage) ReportsCount() (int, error) {
 	count := -1
 	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
+	err = convertDBError(err)
 
 	return count, err
 }
@@ -562,14 +567,16 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 	}
 
 	for _, rule := range contentDir.Rules {
-		_, err := tx.Exec(`INSERT INTO rule(module, "name", summary, reason, resolution, more_info)
+		_, err := tx.Exec(`
+				INSERT INTO rule(module, "name", summary, reason, resolution, more_info)
 				VALUES($1, $2, $3, $4, $5, $6)`,
 			rule.Plugin.PythonModule,
 			rule.Plugin.Name,
 			rule.Summary,
 			rule.Reason,
 			rule.Resolution,
-			rule.MoreInfo)
+			rule.MoreInfo,
+		)
 
 		if err != nil {
 			_ = tx.Rollback()

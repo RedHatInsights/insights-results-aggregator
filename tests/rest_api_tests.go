@@ -26,11 +26,15 @@ package main
 import (
 	"os"
 
-	tests "github.com/RedHatInsights/insights-results-aggregator/tests/rest"
+	"github.com/rs/zerolog"
 	"github.com/verdverm/frisby"
+
+	tests "github.com/RedHatInsights/insights-results-aggregator/tests/rest"
 )
 
 func main() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+
 	tests.ServerTests()
 	frisby.Global.PrintReport()
 	os.Exit(frisby.Global.NumErrored)

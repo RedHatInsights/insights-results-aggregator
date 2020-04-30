@@ -34,24 +34,22 @@ import (
 )
 
 func BenchmarkHTTPServer_VoteEndpoints_WithSQLiteMemoryStorage(b *testing.B) {
-	mockStorage := helpers.MustGetMockStorage(b, true)
-	defer helpers.MustCloseStorage(b, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(b, true)
+	defer closer()
 
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
 }
 
 func BenchmarkHTTPServer_VoteEndpoints_WithSQLiteFileStorage(b *testing.B) {
-	mockStorage, cleaner := helpers.MustGetSQLiteFileStorage(b)
-	defer cleaner(b)
-	defer helpers.MustCloseStorage(b, mockStorage)
+	mockStorage, cleaner := helpers.MustGetSQLiteFileStorage(b, true)
+	defer cleaner()
 
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
 }
 
 func BenchmarkHTTPServer_VoteEndpoints_WithPostgresStorage(b *testing.B) {
-	mockStorage, cleaner := helpers.MustGetPostgresStorage(b)
-	defer cleaner(b)
-	defer helpers.MustCloseStorage(b, mockStorage)
+	mockStorage, cleaner := helpers.MustGetPostgresStorage(b, true)
+	defer cleaner()
 
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
 }

@@ -23,6 +23,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/prometheus/client_golang/prometheus"
 	prom_models "github.com/prometheus/client_model/go"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -33,12 +34,16 @@ import (
 
 const (
 	testTopicName     = "ccx.ocp.results"
-	testCaseTimeLimit = 10 * time.Second
+	testCaseTimeLimit = 30 * time.Second
 )
 
 var (
 	testOrgWhiteList = mapset.NewSetWith(testdata.OrgID)
 )
+
+func init() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
 
 func getCounterValue(counter prometheus.Counter) float64 {
 	pb := &prom_models.Metric{}
@@ -62,9 +67,10 @@ func getCounterVecValue(counterVec *prometheus.CounterVec, labels map[string]str
 // TestConsumedMessagesMetric tests that consumed messages metric works
 func TestConsumedMessagesMetric(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		mockConsumer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+		mockConsumer, closer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t, testTopicName, testOrgWhiteList, []string{testdata.ConsumerMessage, testdata.ConsumerMessage},
 		)
+		defer closer()
 
 		assert.Equal(t, 0.0, getCounterValue(metrics.ConsumedMessages))
 

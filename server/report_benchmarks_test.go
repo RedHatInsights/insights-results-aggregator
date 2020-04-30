@@ -42,14 +42,14 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 
 	type testCase struct {
 		storageName     string
-		storageProvider func(*testing.B) (storage.Storage, func(*testing.B))
+		storageProvider func(testing.TB, bool) (storage.Storage, func())
 		N               uint
 	}
 
 	var testCases []testCase
 
 	for _, n := range []uint{1, 10, 100, 1000} {
-		for storageName, storageProvider := range map[string]func(*testing.B) (storage.Storage, func(*testing.B)){
+		for storageName, storageProvider := range map[string]func(testing.TB, bool) (storage.Storage, func()){
 			"SQLiteMemory": helpers.MustGetSQLiteMemoryStorage,
 			"SQLiteFile":   helpers.MustGetSQLiteFileStorage,
 			"Postgres":     helpers.MustGetPostgresStorage,
@@ -64,8 +64,8 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 
 	for _, testCase := range testCases {
 		func() {
-			mockStorage, cleaner := testCase.storageProvider(b)
-			defer cleaner(b)
+			mockStorage, cleaner := testCase.storageProvider(b, true)
+			defer cleaner()
 
 			testReportDataItems := initTestReports(b, 1, mockStorage, sameReportProvider)
 			// write rule data because reports won't be returned without that

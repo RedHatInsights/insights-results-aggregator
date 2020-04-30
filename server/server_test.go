@@ -47,6 +47,10 @@ var config = server.Configuration{
 	EnableCORS:  true,
 }
 
+func init() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
+
 func checkResponseCode(t *testing.T, expected, actual int) {
 	if expected != actual {
 		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
@@ -62,8 +66,8 @@ func TestMakeURLToEndpoint(t *testing.T) {
 }
 
 func TestAddCORSHeaders(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, "{}", time.Now())
 	helpers.FailOnError(t, err)
@@ -95,8 +99,8 @@ func TestListOfClustersForNonExistingOrganization(t *testing.T) {
 }
 
 func TestListOfClustersForOrganizationOK(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
@@ -116,8 +120,8 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 // TestListOfClustersForOrganizationDBError expects db error
 // because the storage is closed before the query
 func TestListOfClustersForOrganizationDBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -176,8 +180,8 @@ func TestListOfOrganizationsEmpty(t *testing.T) {
 }
 
 func TestListOfOrganizationsOK(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.WriteReportForCluster(1, "8083c377-8a05-4922-af8d-e7d0970c1f49", "{}", time.Now())
 	helpers.FailOnError(t, err)
@@ -195,8 +199,8 @@ func TestListOfOrganizationsOK(t *testing.T) {
 }
 
 func TestListOfOrganizationsDBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:   http.MethodGet,
@@ -308,8 +312,8 @@ func TestRuleFeedbackVote(t *testing.T) {
 		}
 
 		func(endpoint string) {
-			mockStorage := helpers.MustGetMockStorage(t, true)
-			defer helpers.MustCloseStorage(t, mockStorage)
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
 				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
@@ -432,8 +436,8 @@ func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
 }
 
 func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
@@ -501,8 +505,8 @@ func TestHTTPServer_GetVoteOnRule_BadRuleID(t *testing.T) {
 }
 
 func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
@@ -546,8 +550,8 @@ func TestRuleFeedbackErrorBadUserID(t *testing.T) {
 }
 
 func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
@@ -578,8 +582,8 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 		}
 
 		func(endpoint string) {
-			mockStorage := helpers.MustGetMockStorage(t, true)
-			defer helpers.MustCloseStorage(t, mockStorage)
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
 				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
@@ -635,8 +639,8 @@ func TestHTTPServer_deleteOrganizations_NonIntOrgID(t *testing.T) {
 }
 
 func TestHTTPServer_deleteOrganizations_DBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
@@ -660,8 +664,8 @@ func TestHTTPServer_deleteClusters(t *testing.T) {
 }
 
 func TestHTTPServer_deleteClusters_DBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
@@ -785,12 +789,18 @@ func TestHTTPServer_CreateRule_BadJSONBody(t *testing.T) {
 }
 
 func TestHTTPServer_CreateRule_DBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	connection := mockStorage.(*storage.DBStorage).GetConnection()
 
-	_, err := connection.Exec(`DROP TABLE rule;`)
+	query := "DROP TABLE rule"
+	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
+		query += " CASCADE"
+	}
+	query += ";"
+
+	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
@@ -819,8 +829,8 @@ func TestHTTPServer_CreateRule_DBError(t *testing.T) {
 }
 
 func TestHTTPServer_CreateRuleErrorKey(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	createRule(t, mockStorage)
 
@@ -893,8 +903,8 @@ func TestHTTPServer_CreateRuleErrorKey_BadRuleKey(t *testing.T) {
 }
 
 func TestHTTPServer_CreateRuleErrorKey_BadRuleErrorKeyData(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	createRule(t, mockStorage)
 
@@ -910,8 +920,8 @@ func TestHTTPServer_CreateRuleErrorKey_BadRuleErrorKeyData(t *testing.T) {
 }
 
 func TestHTTPServer_CreateRuleErrorKey_NoBody(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	createRule(t, mockStorage)
 
@@ -926,8 +936,8 @@ func TestHTTPServer_CreateRuleErrorKey_NoBody(t *testing.T) {
 }
 
 func TestHTTPServer_CreateRuleErrorKey_BadJSONBody(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	createRule(t, mockStorage)
 
@@ -959,8 +969,8 @@ func TestHTTPServer_CreateRuleErrorKey_RuleDoesNotExist(t *testing.T) {
 }
 
 func TestHTTPServer_DeleteRule(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPost,
@@ -1028,12 +1038,18 @@ func TestHTTPServer_DeleteRule_BadRuleID(t *testing.T) {
 }
 
 func TestHTTPServer_DeleteRule_DBError(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	connection := mockStorage.(*storage.DBStorage).GetConnection()
 
-	_, err := connection.Exec(`DROP TABLE rule;`)
+	query := "DROP TABLE rule"
+	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
+		query += " CASCADE"
+	}
+	query += ";"
+
+	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
@@ -1062,8 +1078,8 @@ func TestHTTPServer_DeleteRule_DBError(t *testing.T) {
 }
 
 func TestHTTPServer_DeleteRuleErrorKey(t *testing.T) {
-	mockStorage := helpers.MustGetMockStorage(t, true)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPost,

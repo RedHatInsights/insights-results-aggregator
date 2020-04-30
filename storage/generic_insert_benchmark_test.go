@@ -18,9 +18,10 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/rs/zerolog"
+
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -31,12 +32,12 @@ const (
 	// upsertQuery = "REPLACE INTO benchmark_tab (id, name, value) VALUES ($1, $2, $3);"
 )
 
-func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB) {
+func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {
 	// Postgres queries are very verbose at DEBUG log level, so it's better
 	// to silence them this way to make benchmark results easier to find.
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
-	mockStorage, _ := helpers.MustGetPostgresStorage(b)
+	mockStorage, closer := helpers.MustGetPostgresStorage(b, false)
 	// Alternative using the file-based SQLite DB storage:
 	// mockStorage, _ := helpers.MustGetSQLiteFileStorage(b)
 	// Old version using the in-memory SQLite DB storage:
@@ -44,128 +45,113 @@ func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB) {
 
 	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
-	if _, err := conn.Exec("DROP TABLE IF EXISTS benchmark_tab;"); err != nil {
-		b.Fatal(err)
-	}
+	_, err := conn.Exec("DROP TABLE IF EXISTS benchmark_tab;")
+	helpers.FailOnError(b, err)
 
-	if _, err := conn.Exec("CREATE TABLE benchmark_tab (id SERIAL PRIMARY KEY, name VARCHAR(256), value VARCHAR(4096));"); err != nil {
-		b.Fatal(err)
-	}
+	_, err = conn.Exec("CREATE TABLE benchmark_tab (id SERIAL PRIMARY KEY, name VARCHAR(256), value VARCHAR(4096));")
+	helpers.FailOnError(b, err)
 
 	b.ResetTimer()
 	b.StartTimer()
 
-	return mockStorage, conn
+	return mockStorage, conn, closer
 }
 
-func mustCleanupAfterBenchmark(b *testing.B, stor storage.Storage, conn *sql.DB) {
+func mustCleanupAfterBenchmark(b *testing.B, stor storage.Storage, conn *sql.DB, closer func()) {
 	b.StopTimer()
 
-	if _, err := conn.Exec("DROP TABLE benchmark_tab;"); err != nil {
-		b.Fatal(err)
-	}
+	_, err := conn.Exec("DROP TABLE benchmark_tab;")
+	helpers.FailOnError(b, err)
 
-	if err := stor.Close(); err != nil {
-		b.Fatal(err)
-	}
+	closer()
 }
 
 // BenchmarkStorageGenericInsertExecDirectlySingle executes a single INSERT statement directly.
 func BenchmarkStorageGenericInsertExecDirectlySingle(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
-		if _, err := conn.Exec(insertQuery, "John Doe", "Hello World!"); err != nil {
-			b.Fatal(err)
-		}
+		_, err := conn.Exec(insertQuery, "John Doe", "Hello World!")
+		helpers.FailOnError(b, err)
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }
 
 // BenchmarkStorageGenericInsertPrepareExecSingle prepares an INSERT statement and then executes it once.
 func BenchmarkStorageGenericInsertPrepareExecSingle(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		stmt, err := conn.Prepare(insertQuery)
-		if err != nil {
-			b.Fatal(err)
-		}
+		helpers.FailOnError(b, err)
 
-		if _, err := stmt.Exec("John Doe", "Hello World!"); err != nil {
-			b.Fatal(err)
-		}
+		_, err = stmt.Exec("John Doe", "Hello World!")
+		helpers.FailOnError(b, err)
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }
 
 // BenchmarkStorageGenericInsertExecDirectlyMany executes the INSERT query row by row,
 // each in a separate sql.DB.Exec() call.
 func BenchmarkStorageGenericInsertExecDirectlyMany(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for rowId := 0; rowId < rowCount; rowId++ {
-			if _, err := conn.Exec(insertQuery, "John Doe", "Hello World!"); err != nil {
-				b.Fatal(err)
-			}
+			_, err := conn.Exec(insertQuery, "John Doe", "Hello World!")
+			helpers.FailOnError(b, err)
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }
 
 // BenchmarkStorageGenericInsertPrepareExecMany executes the same exact INSERT statements,
 // but it prepares them beforehand and only supplies the parameters with each call.
 func BenchmarkStorageGenericInsertPrepareExecMany(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		stmt, err := conn.Prepare(insertQuery)
-		if err != nil {
-			b.Fatal(err)
-		}
+		helpers.FailOnError(b, err)
 
 		for rowId := 0; rowId < rowCount; rowId++ {
-			if _, err := stmt.Exec("John Doe", "Hello World!"); err != nil {
-				b.Fatal(err)
-			}
+			_, err := stmt.Exec("John Doe", "Hello World!")
+			helpers.FailOnError(b, err)
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }
 
 // BenchmarkStorageUpsertWithoutConflict inserts many non-conflicting
 // rows into the benchmark table using the upsert query.
 func BenchmarkStorageUpsertWithoutConflict(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for rowId := 0; rowId < rowCount; rowId++ {
-			if _, err := conn.Exec(upsertQuery, (benchIter*rowCount)+rowId+1, "John Doe", "Hello World!"); err != nil {
-				b.Fatal(err)
-			}
+			_, err := conn.Exec(upsertQuery, (benchIter*rowCount)+rowId+1, "John Doe", "Hello World!")
+			helpers.FailOnError(b, err)
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }
 
 // BenchmarkStorageUpsertConflict insert many mutually conflicting
 // rows into the benchmark table using the uspert query.
 func BenchmarkStorageUpsertConflict(b *testing.B) {
-	stor, conn := mustPrepareBenchmark(b)
+	stor, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for rowId := 0; rowId < rowCount; rowId++ {
-			if _, err := conn.Exec(upsertQuery, 1, "John Doe", "Hello World!"); err != nil {
-				b.Fatal(err)
-			}
+			_, err := conn.Exec(upsertQuery, 1, "John Doe", "Hello World!")
+			helpers.FailOnError(b, err)
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn)
+	mustCleanupAfterBenchmark(b, stor, conn, closer)
 }

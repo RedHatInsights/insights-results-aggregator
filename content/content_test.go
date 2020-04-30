@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/content"
@@ -27,6 +28,10 @@ import (
 )
 
 const errYAMLBadToken = "yaml: line 14: found character that cannot start any token"
+
+func init() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
 
 // TestContentParseOK checks whether reading from directory of correct content works as expected
 func TestContentParseOK(t *testing.T) {
