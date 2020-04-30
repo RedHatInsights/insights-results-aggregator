@@ -21,12 +21,17 @@ import (
 	"testing"
 
 	"github.com/Shopify/sarama/mocks"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
+
+func init() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
 
 // Test Producer creation with a non accesible Kafka broker
 func TestNewProducerBadBroker(t *testing.T) {

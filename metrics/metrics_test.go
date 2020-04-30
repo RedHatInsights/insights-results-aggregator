@@ -23,6 +23,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/prometheus/client_golang/prometheus"
 	prom_models "github.com/prometheus/client_model/go"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -39,6 +40,10 @@ const (
 var (
 	testOrgWhiteList = mapset.NewSetWith(testdata.OrgID)
 )
+
+func init() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
 
 func getCounterValue(counter prometheus.Counter) float64 {
 	pb := &prom_models.Metric{}

@@ -21,20 +21,20 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/Shopify/sarama"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -45,6 +45,10 @@ const (
 	testRuleID             = types.RuleID("ccx_rules_ocp.external.rules.nodes_kubelet_version_check")
 	testUserID             = types.UserID("1")
 )
+
+func init() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
 
 func assertNumberOfReports(t *testing.T, mockStorage storage.Storage, expectedNumberOfReports int) {
 	numberOfReports, err := mockStorage.ReportsCount()
@@ -193,7 +197,7 @@ func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	newerTime := time.Now()
+	newerTime := time.Now().UTC()
 	olderTime := newerTime.Add(-time.Hour)
 
 	// Insert newer report.
@@ -231,7 +235,7 @@ func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 	defer closer()
 
 	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
-	_, err := connection.Exec("DROP TABLE report")
+	_, err := connection.Exec("DROP TABLE report CASCADE;")
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterEmptyReport, time.Now())
@@ -243,8 +247,7 @@ func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	defer closer()
 	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
-	// create a table with a bad type
-	_, err := connection.Exec(`
+	query := `
 		CREATE TABLE report (
 			org_id          INTEGER NOT NULL,
 			cluster         INTEGER NOT NULL UNIQUE CHECK(typeof(cluster) = 'integer'),
@@ -253,13 +256,34 @@ func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 			last_checked_at TIMESTAMP,
 			PRIMARY KEY(org_id, cluster)
 		)
-	`)
+	`
+
+	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
+		query = `
+			CREATE TABLE report (
+				org_id          INTEGER NOT NULL,
+				cluster         INTEGER NOT NULL UNIQUE,
+				report          VARCHAR NOT NULL,
+				reported_at     TIMESTAMP,
+				last_checked_at TIMESTAMP,
+				PRIMARY KEY(org_id, cluster)
+			)
+		`
+	}
+
+	// create a table with a bad type
+	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
 	)
-	assert.EqualError(t, err, "CHECK constraint failed: report")
+	assert.Error(t, err)
+	const sqliteErrMessage = "CHECK constraint failed: report"
+	const postgresErrMessage = "pq: invalid input syntax for integer"
+	if err.Error() != sqliteErrMessage && !strings.HasPrefix(err.Error(), postgresErrMessage) {
+		t.Fatalf("expected on of: \n%v\n%v\ngot:\n%v", sqliteErrMessage, postgresErrMessage, err.Error())
+	}
 }
 
 func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {

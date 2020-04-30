@@ -451,6 +451,7 @@ func (storage DBStorage) WriteReportForCluster(
 	rows, err := tx.Query(
 		`SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3`,
 		orgID, clusterName, lastCheckedTime)
+	err = convertDBError(err)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to find most recent report in database")
 		_ = tx.Rollback()
@@ -553,14 +554,16 @@ func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory
 	}
 
 	for _, rule := range contentDir.Rules {
-		_, err := tx.Exec(`INSERT INTO rule(module, "name", summary, reason, resolution, more_info)
+		_, err := tx.Exec(`
+				INSERT INTO rule(module, "name", summary, reason, resolution, more_info)
 				VALUES($1, $2, $3, $4, $5, $6)`,
 			rule.Plugin.PythonModule,
 			rule.Plugin.Name,
 			rule.Summary,
 			rule.Reason,
 			rule.Resolution,
-			rule.MoreInfo)
+			rule.MoreInfo,
+		)
 
 		if err != nil {
 			_ = tx.Rollback()

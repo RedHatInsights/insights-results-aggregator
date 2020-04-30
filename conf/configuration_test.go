@@ -22,16 +22,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RedHatInsights/insights-results-aggregator/conf"
-
 	mapset "github.com/deckarep/golang-set"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
+
+func init() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
 
 func mustLoadConfiguration(path string) {
 	err := conf.LoadConfiguration(path)

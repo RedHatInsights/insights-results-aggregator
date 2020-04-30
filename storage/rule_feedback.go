@@ -112,6 +112,7 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	now := time.Now()
 
 	_, err = statement.Exec(clusterID, ruleID, userID, userVote, now, now, message)
+	err = convertDBError(err)
 	if err != nil {
 		log.Error().Err(err).Msg("addOrUpdateUserFeedbackOnRuleForCluster")
 		return err

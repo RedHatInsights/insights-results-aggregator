@@ -33,12 +33,28 @@ func (e *ItemNotFoundError) Error() string {
 	return fmt.Sprintf("Item with ID %+v was not found in the storage", e.ItemID)
 }
 
+// TableNotFoundError table now found error
 type TableNotFoundError struct {
 	tableName string
 }
 
+// Error returns error string
 func (err *TableNotFoundError) Error() string {
 	return fmt.Sprintf("no such table: %v", err.tableName)
+}
+
+// ForeignKeyError something violates foreign key error
+// tableName and foreignKeyName can be empty for DBs not supporting it (SQLite)
+type ForeignKeyError struct {
+	tableName      string
+	foreignKeyName string
+}
+
+// Error returns error string
+func (err *ForeignKeyError) Error() string {
+	return fmt.Sprintf(
+		`operation violates foreign key "%v" on table "%v"`, err.foreignKeyName, err.tableName,
+	)
 }
 
 // convertDBError converts dbs error to the
@@ -47,6 +63,13 @@ func convertDBError(err error) error {
 		return nil
 	}
 
+	err = convertNoTableError(err)
+	err = convertForeignKeyError(err)
+
+	return err
+}
+
+func convertNoTableError(err error) error {
 	errString := err.Error()
 
 	sqliteRegex := regexp.MustCompile(`no such table: (.+)`)
@@ -76,6 +99,35 @@ func convertDBError(err error) error {
 		}
 
 		return &TableNotFoundError{tableName: matches[1]}
+	}
+
+	return err
+}
+
+func convertForeignKeyError(err error) error {
+	errString := err.Error()
+
+	if errString == "FOREIGN KEY constraint failed" {
+		return &ForeignKeyError{}
+	}
+
+	postgresRegex := regexp.MustCompile(
+		`pq: .+? on table "(.+?)" violates foreign key constraint "(.+?)"`,
+	)
+	if postgresRegex.MatchString(errString) {
+		matches := postgresRegex.FindStringSubmatch(errString)
+		if len(matches) < 3 {
+			log.Error().
+				Str("errString", errString).
+				Msg("convertDBError unable to find table name")
+
+			return &ForeignKeyError{}
+		}
+
+		return &ForeignKeyError{
+			tableName:      matches[1],
+			foreignKeyName: matches[2],
+		}
 	}
 
 	return err

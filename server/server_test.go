@@ -47,6 +47,10 @@ var config = server.Configuration{
 	EnableCORS:  true,
 }
 
+func init() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
+
 func checkResponseCode(t *testing.T, expected, actual int) {
 	if expected != actual {
 		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
@@ -790,7 +794,7 @@ func TestHTTPServer_CreateRule_DBError(t *testing.T) {
 
 	connection := mockStorage.(*storage.DBStorage).GetConnection()
 
-	_, err := connection.Exec(`DROP TABLE rule;`)
+	_, err := connection.Exec(`DROP TABLE rule CASCADE;`)
 	helpers.FailOnError(t, err)
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
@@ -1033,7 +1037,7 @@ func TestHTTPServer_DeleteRule_DBError(t *testing.T) {
 
 	connection := mockStorage.(*storage.DBStorage).GetConnection()
 
-	_, err := connection.Exec(`DROP TABLE rule;`)
+	_, err := connection.Exec(`DROP TABLE rule CASCADE;`)
 	helpers.FailOnError(t, err)
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{

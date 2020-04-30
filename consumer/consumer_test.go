@@ -24,16 +24,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
-
 	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -52,6 +52,10 @@ var (
 		Group:   "group",
 	}
 )
+
+func init() {
+	zerolog.SetGlobalLevel(zerolog.WarnLevel)
+}
 
 func consumerProcessMessage(mockConsumer consumer.Consumer, message string) error {
 	saramaMessage := sarama.ConsumerMessage{}
