@@ -91,9 +91,7 @@ func convertNoTableError(err error) error {
 	if postgresRegex.MatchString(errString) {
 		matches := postgresRegex.FindStringSubmatch(errString)
 		if len(matches) < 2 {
-			log.Error().
-				Str("errString", errString).
-				Msg("convertDBError unable to find table name")
+			logRegexError(errString, "convertDBError unable to find table name")
 
 			return &TableNotFoundError{tableName: ""}
 		}
@@ -117,9 +115,7 @@ func convertForeignKeyError(err error) error {
 	if postgresRegex.MatchString(errString) {
 		matches := postgresRegex.FindStringSubmatch(errString)
 		if len(matches) < 3 {
-			log.Error().
-				Str("errString", errString).
-				Msg("convertDBError unable to find table name")
+			logRegexError(errString, "convertDBError unable to find table and constraint name")
 
 			return &ForeignKeyError{}
 		}
@@ -131,4 +127,10 @@ func convertForeignKeyError(err error) error {
 	}
 
 	return err
+}
+
+func logRegexError(errString, msg string) {
+	log.Error().
+		Str("errString", errString).
+		Msg(msg)
 }

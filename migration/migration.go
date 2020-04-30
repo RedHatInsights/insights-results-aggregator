@@ -48,6 +48,7 @@ var migrations = []Migration{
 	mig3,
 	mig4,
 	mig5,
+	mig0006AddOnDeleteCascade,
 }
 
 // GetMaxVersion returns the highest available migration version.
@@ -193,4 +194,74 @@ func getNumberOfRows(db *sql.DB) (uint, error) {
 	var count uint
 	err := db.QueryRow("SELECT COUNT(*) FROM migration_info;").Scan(&count)
 	return count, err
+}
+
+// NewUpdateTableMigration generates a migration which changes tables schema and copies data
+// (should work in most of cases like adding a field, altering it and so on)
+func NewUpdateTableMigration(tableName, previousSchema, newSchema string) Migration {
+	return Migration{
+		StepUp: func(tx *sql.Tx) error {
+			return upgradeTable(tx, tableName, newSchema)
+		},
+		StepDown: func(tx *sql.Tx) error {
+			return downgradeTableTable(tx, tableName, previousSchema)
+		},
+	}
+}
+
+func upgradeTable(tx *sql.Tx, tableName, newTableDefinition string) error {
+	// disable "G202 (CWE-89): SQL string concatenation"
+	// #nosec G202
+	_, err := tx.Exec(`ALTER TABLE ` + tableName + ` RENAME TO tmp;`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(newTableDefinition)
+	if err != nil {
+		return err
+	}
+
+	// disable "G202 (CWE-89): SQL string concatenation"
+	// #nosec G202
+	_, err = tx.Exec(`INSERT INTO ` + tableName + ` SELECT * FROM tmp;`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`DROP TABLE tmp;`)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func downgradeTableTable(tx *sql.Tx, tableName, oldTableDefinition string) error {
+	// disable "G202 (CWE-89): SQL string concatenation"
+	// #nosec G202
+	_, err := tx.Exec(`ALTER TABLE ` + tableName + ` RENAME TO tmp;`)
+	if err != nil {
+		return err
+	}
+
+	// create one without foreign keys
+	_, err = tx.Exec(oldTableDefinition)
+	if err != nil {
+		return err
+	}
+
+	// disable "G202 (CWE-89): SQL string concatenation"
+	// #nosec G202
+	_, err = tx.Exec(`INSERT INTO ` + tableName + ` SELECT * FROM tmp;`)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`DROP TABLE tmp;`)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

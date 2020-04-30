@@ -221,7 +221,7 @@ func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
 
 	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
 	assert.Error(t, err)
-	const sqliteErrMessage = "CHECK constraint failed: report"
+	const sqliteErrMessage = "CHECK constraint failed: rule_error_key"
 	const postgresErrMessage = "pq: invalid input syntax for integer"
 	if err.Error() != sqliteErrMessage && !strings.HasPrefix(err.Error(), postgresErrMessage) {
 		t.Fatalf("expected on of: \n%v\n%v", sqliteErrMessage, postgresErrMessage)
@@ -704,7 +704,7 @@ func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 
 	err = mockStorage.VoteOnRule("non int", testRuleID, testUserID, storage.UserVoteNone)
 	assert.Error(t, err)
-	const sqliteErrMessage = "CHECK constraint failed: report"
+	const sqliteErrMessage = "CHECK constraint failed: cluster_rule_user_feedback"
 	const postgresErrMessage = "pq: invalid input syntax for integer"
 	if err.Error() != sqliteErrMessage && !strings.HasPrefix(err.Error(), postgresErrMessage) {
 		t.Fatalf("expected on of: \n%v\n%v\ngot:\n%v", sqliteErrMessage, postgresErrMessage, err.Error())

@@ -235,7 +235,14 @@ func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 	defer closer()
 
 	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
-	_, err := connection.Exec("DROP TABLE report CASCADE;")
+
+	query := "DROP TABLE report"
+	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
+		query += " CASCADE"
+	}
+	query += ";"
+
+	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteReportForCluster(testOrgID, testClusterName, testClusterEmptyReport, time.Now())

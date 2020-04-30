@@ -794,7 +794,13 @@ func TestHTTPServer_CreateRule_DBError(t *testing.T) {
 
 	connection := mockStorage.(*storage.DBStorage).GetConnection()
 
-	_, err := connection.Exec(`DROP TABLE rule CASCADE;`)
+	query := "DROP TABLE rule"
+	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
+		query += " CASCADE"
+	}
+	query += ";"
+
+	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
@@ -1037,7 +1043,13 @@ func TestHTTPServer_DeleteRule_DBError(t *testing.T) {
 
 	connection := mockStorage.(*storage.DBStorage).GetConnection()
 
-	_, err := connection.Exec(`DROP TABLE rule CASCADE;`)
+	query := "DROP TABLE rule"
+	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
+		query += " CASCADE"
+	}
+	query += ";"
+
+	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{

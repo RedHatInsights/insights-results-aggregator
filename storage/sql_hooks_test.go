@@ -37,6 +37,8 @@ import (
 )
 
 func TestInitSQLDriverWithLogs(t *testing.T) {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
 	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
 
 	driverName := storage.InitSQLDriverWithLogs(
@@ -57,6 +59,8 @@ func TestInitSQLDriverWithLogs(t *testing.T) {
 // TestInitSQLDriverWithLogsMultipleCalls tests if InitSQLDriverWithLogs
 // does not panic on multiple calls and is idempotent
 func TestInitSQLDriverWithLogsMultipleCalls(t *testing.T) {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
 	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
 
 	for i := 0; i < 10; i++ {
@@ -70,6 +74,8 @@ func TestInitSQLDriverWithLogsMultipleCalls(t *testing.T) {
 }
 
 func TestSQLHooksLoggingArgsJSON(t *testing.T) {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
 	const query = "SELECT 1"
 	params := make([]interface{}, 0)
 
@@ -101,6 +107,8 @@ func TestSQLHooksLoggingArgsJSON(t *testing.T) {
 }
 
 func TestSQLHooksLoggingArgsNotJSON(t *testing.T) {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
 	// just for better test coverage :)
 	const query = "SELECT 1"
 	var params = []interface{}{math.Inf(1)}

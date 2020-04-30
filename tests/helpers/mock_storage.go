@@ -29,6 +29,7 @@ import (
 )
 
 const sqlite3 = "sqlite3"
+const postgres = "postgres"
 
 // MustGetMockStorage creates mocked storage based on in-memory Sqlite instance by default
 // or on postgresql with config taken from config-devel.toml
@@ -36,7 +37,7 @@ const sqlite3 = "sqlite3"
 // INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS is set to db admin's password
 // produces t.Fatal(err) on error
 func MustGetMockStorage(tb testing.TB, init bool) (storage.Storage, func()) {
-	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
+	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == postgres {
 		return MustGetPostgresStorage(tb, init)
 	}
 
@@ -145,12 +146,12 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) 
 
 	// force postgres and replace db name with test one
 	storageConf := &conf.Config.Storage
-	storageConf.Driver = "postgres"
+	storageConf.Driver = postgres
 	storageConf.PGDBName += "_test_db_" + strings.ReplaceAll(uuid.New().String(), "-", "_")
 
 	connString := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s sslmode=disable",
-		storageConf.PGHost, storageConf.PGPort, "postgres", dbAdminPassword,
+		storageConf.PGHost, storageConf.PGPort, postgres, dbAdminPassword,
 	)
 
 	adminConn, err := sql.Open(storageConf.Driver, connString)
