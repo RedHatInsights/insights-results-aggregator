@@ -84,7 +84,7 @@ func TestStartService(t *testing.T) {
 
 		main.WaitForServiceToStart()
 		errCode := main.StopService()
-		assert.Equal(t, 0, errCode)
+		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)
 }
 
@@ -115,14 +115,14 @@ func TestStartServiceWithMockBroker(t *testing.T) {
 
 		go func() {
 			exitCode := main.StartService()
-			if exitCode != 0 {
+			if exitCode != main.ExitStatusOK {
 				panic(fmt.Errorf("StartService exited with a code %v", exitCode))
 			}
 		}()
 
 		main.WaitForServiceToStart()
 		errCode := main.StopService()
-		assert.Equal(t, 0, errCode)
+		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)
 }
 
