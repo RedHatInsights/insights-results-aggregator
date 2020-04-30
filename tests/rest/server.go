@@ -62,13 +62,13 @@ type StatusOnlyResponse struct {
 }
 
 // list of known organizations that are stored in test database
-var knownOrganizations []int = []int{1, 2, 3, 4}
+var knownOrganizations = []int{1, 2, 3, 4}
 
 // list of unknown organizations that are not stored in test database
-var unknownOrganizations []int = []int{5, 6, 7, 8}
+var unknownOrganizations = []int{5, 6, 7, 8}
 
 // list of improper organization IDs
-var improperOrganizations []int = []int{-1000, -1, 0}
+var improperOrganizations = []int{-1000, -1, 0}
 
 // setAuthHeaderForOrganization set authorization header to request
 func setAuthHeaderForOrganization(f *frisby.Frisby, orgID int) {
@@ -117,7 +117,7 @@ func checkNonExistentEntryPoint() {
 	f.PrintReport()
 }
 
-// checkWrongEntryPoint check whether wrongly scecified URLs are handled correctly
+// checkWrongEntryPoint check whether wrongly specified URLs are handled correctly
 func checkWrongEntryPoint() {
 	postfixes := [...]string{"..", "../", "...", "..?", "..?foobar"}
 	for _, postfix := range postfixes {
@@ -133,7 +133,7 @@ func checkWrongEntryPoint() {
 // sendAndExpectStatus sends the request to the server and checks whether expected HTTP code (status) is returned
 func sendAndExpectStatus(f *frisby.Frisby, expectedStatus int) {
 	f.Send()
-	f.ExpectStatus(405)
+	f.ExpectStatus(expectedStatus)
 	f.PrintReport()
 }
 

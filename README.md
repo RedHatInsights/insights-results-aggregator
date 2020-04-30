@@ -396,7 +396,10 @@ Please look also at [Definitiot of Done](DoD.md) document with further informati
 
 ## Testing
 
-The following tests can be run to test your code in `insights-results-aggregator`. Detailed information about each type of test is included in the corresponding subsection:
+tl;dr: `make before_commit` will run most of the checks by magic
+
+The following tests can be run to test your code in `insights-results-aggregator`.
+Detailed information about each type of test is included in the corresponding subsection:
 
 1. Unit tests: checks behaviour of all units in source code (methods, functions)
 1. REST API Tests: test the real REST API of locally deployed application with database initialized with test data only
@@ -412,6 +415,8 @@ To run unit tests use the following command:
 
 `make test`
 
+If you have postgres running on port from `./config-devel.toml` file it will also run tests against it
+
 ### All integration tests
 
 `make integration_tests`
@@ -424,9 +429,9 @@ To run REST API tests use the following command:
 
 `make rest_api_tests`
 
-#### Only metrics tests
+By default all logs from the application aren't shown, if you want to see them, run:
 
-`make metrics_tests`
+`./test.sh rest_api --verbose`
 
 ## CI
 

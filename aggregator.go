@@ -274,6 +274,7 @@ The commands are:
     help                prints help
     print-help          prints help
     print-config        prints current configuration set by files & env variables
+    print-env			prints env variables
     print-version-info  prints version info
 
 `
@@ -292,6 +293,14 @@ func printConfig() int {
 	}
 
 	fmt.Println(string(configBytes))
+
+	return ExitStatusOK
+}
+
+func printEnv() int {
+	for _, keyVal := range os.Environ() {
+		fmt.Println(keyVal)
+	}
 
 	return ExitStatusOK
 }
@@ -331,6 +340,8 @@ func handleCommand(command string) int {
 		return printHelp()
 	case "print-config":
 		return printConfig()
+	case "print-env":
+		return printEnv()
 	case "print-version-info":
 		printVersionInfo()
 	default:

@@ -15,15 +15,21 @@
 
 
 THRESHOLD=85
-ERR_MESSAGE="Code coverage have to be at least $THRESHOLD%"
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
 go_tool_cover_output=$(go tool cover -func=coverage.out)
 
-echo "$go_tool_cover_output"
+if [[ $* == *verbose* ]]; then
+    echo "$go_tool_cover_output"
+fi
 
 if (( $(echo "$go_tool_cover_output" | tail -n 1 | awk '{print $NF}' | grep -E "^[0-9]+" -o) >= THRESHOLD )); then
+    echo -e "${GREEN}[OK]${NC} Code coverage is OK"
     exit 0
 else
-    echo -e "\\033[31m$ERR_MESSAGE\\e[0m"
+    echo "$go_tool_cover_output"
+    echo -e "${RED}[FAIL]${NC} Code coverage have to be at least $THRESHOLD%"
     exit 1
 fi

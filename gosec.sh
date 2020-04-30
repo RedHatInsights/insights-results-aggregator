@@ -18,17 +18,28 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+GO_SEC_ARGS=""
+
+VERBOSE=false
+if [[ $* == *verbose* ]]; then
+    VERBOSE=true
+fi
+
+if [[ $* != *verbose* ]]; then
+    GO_SEC_ARGS="-quiet"
+fi
+
 cd "$(dirname "$0")" || exit
 
 echo -e "${BLUE}Security issues detection${NC}"
 
-go get github.com/securego/gosec/cmd/gosec
+go get github.com/securego/gosec/cmd/gosec 2> /dev/null
 
-if ! gosec ./...
+if ! gosec $GO_SEC_ARGS ./...
 then
-    echo -e "${RED}Potential security issues detected!${NC}"
+    echo -e "${RED}[FAIL]${NC} Potential security issues detected!"
     exit 1
 else
-    echo -e "${GREEN}No potential security issues has been detected${NC}"
+    echo -e "${GREEN}[OK]${NC} No potential security issues has been detected"
     exit 0
 fi

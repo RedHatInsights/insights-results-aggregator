@@ -15,6 +15,14 @@
 
 COLORS_RED='\033[0;31m'
 COLORS_RESET='\033[0m'
+LOG_LEVEL="fatal"
+VERBOSE=false
+
+if [[ $* == *verbose* ]]; then
+    # print all possible logs
+    LOG_LEVEL=""
+    VERBOSE=true
+fi
 
 function cleanup() {
     print_descendent_pids() {
@@ -68,7 +76,9 @@ function populate_db_with_mock_data() {
 function start_service() {
     echo "Starting a service"
     # TODO: stop parent(this script) if service died
-    INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests ./insights-results-aggregator ||
+    INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL=$LOG_LEVEL \
+        INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests \
+        ./insights-results-aggregator ||
         echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
     # shellcheck disable=2181
     if [ $? -ne 0 ]; then
@@ -101,7 +111,13 @@ function test_rest_api() {
         echo -e "${COLORS_RED}server is not running(for some reason)${COLORS_RESET}"
         exit 1
     }
-    ./rest-api-tests
+
+    if [ "$VERBOSE" = true ]; then
+        ./rest-api-tests 2>&1
+    else
+        ./rest-api-tests 2>&1 | grep -v -E "^Pass "
+    fi
+
     return $?
 }
 
