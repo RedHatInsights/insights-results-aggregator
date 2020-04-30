@@ -163,3 +163,12 @@ func (*NoopStorage) DeleteFromRuleClusterToggle(
 ) error {
 	return nil
 }
+
+// GetFromClusterRuleToggle noop
+func (*NoopStorage) GetFromClusterRuleToggle(
+	types.ClusterName,
+	types.RuleID,
+	types.UserID,
+) (*ClusterRuleToggle, error) {
+	return nil, nil
+}

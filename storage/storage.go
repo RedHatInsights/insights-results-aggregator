@@ -93,6 +93,11 @@ type Storage interface {
 		clusterID types.ClusterName,
 		userID types.UserID,
 	) ([]types.DisabledRuleResponse, error)
+	GetFromClusterRuleToggle(
+		types.ClusterName,
+		types.RuleID,
+		types.UserID,
+	) (*ClusterRuleToggle, error)
 	DeleteFromRuleClusterToggle(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
@@ -427,12 +432,17 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 		r.resolution,
 		rek.publish_date,
 		rek.impact,
-		rek.likelihood
+		rek.likelihood,
+		COALESCE(crt.disabled, 0) as disabled
 	FROM
 		rule r
 	INNER JOIN
 		rule_error_key rek ON r.module = rek.rule_module
+	LEFT JOIN
+		cluster_rule_toggle crt ON rek.rule_module = crt.rule_id
 	WHERE %v
+	ORDER BY
+		disabled ASC
 	`
 
 	whereInStatement := constructWhereClauseForContent(reportRules)

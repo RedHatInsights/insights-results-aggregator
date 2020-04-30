@@ -19,6 +19,7 @@ package server_test
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -614,6 +615,102 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 			})
 		}(endpoint)
 	}
+}
+
+func TestRuleToggle(t *testing.T) {
+	for _, endpoint := range []string{
+		server.DisableRuleForClusterEndpoint, server.EnableRuleForClusterEndpoint,
+	} {
+		var expectedState storage.RuleToggle
+
+		switch endpoint {
+		case server.DisableRuleForClusterEndpoint:
+			expectedState = storage.RuleToggleDisable
+		case server.EnableRuleForClusterEndpoint:
+			expectedState = storage.RuleToggleEnable
+		default:
+			t.Fatal("no such endpoint")
+		}
+
+		func(endpoint string) {
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
+
+			err := mockStorage.WriteReportForCluster(
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+			)
+			helpers.FailOnError(t, err)
+
+			err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+			helpers.FailOnError(t, err)
+
+			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+				Method:       http.MethodPut,
+				Endpoint:     endpoint,
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+				UserID:       testdata.UserID,
+			}, &helpers.APIResponse{
+				StatusCode: http.StatusOK,
+				Body:       `{"status": "ok"}`,
+			})
+
+			toggledRule, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+			helpers.FailOnError(t, err)
+
+			assert.Equal(t, testdata.ClusterName, toggledRule.ClusterID)
+			assert.Equal(t, testdata.Rule1ID, toggledRule.RuleID)
+			assert.Equal(t, testdata.UserID, toggledRule.UserID)
+			assert.Equal(t, expectedState, toggledRule.Disabled)
+			if toggledRule.Disabled == storage.RuleToggleDisable {
+				assert.Equal(t, sql.NullTime{}, toggledRule.EnabledAt)
+			} else {
+				assert.Equal(t, sql.NullTime{}, toggledRule.DisabledAt)
+			}
+		}(endpoint)
+	}
+}
+
+func TestRuleToggleClosedStorage(t *testing.T) {
+	const errStr = "Internal Server Error"
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectQuery("SELECT .* FROM report").
+		WillReturnRows(
+			sqlmock.NewRows([]string{"report", "last_checked_at"}).AddRow("1", time.Now()),
+		)
+
+	expects.ExpectQuery("SELECT .* FROM rule").
+		WillReturnRows(
+			sqlmock.NewRows(
+				[]string{
+					"module",
+					"name",
+					"summary",
+					"reason",
+					"resolution",
+					"more_info",
+				},
+			).AddRow(
+				testdata.Rule1ID,
+				testdata.Rule1Name,
+				testdata.Rule1Summary,
+				testdata.Rule1Reason,
+				testdata.Rule1Resolution,
+				testdata.Rule1MoreInfo,
+			),
+		)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.DisableRuleForClusterEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "Internal Server Error"}`,
+	})
 }
 
 func TestHTTPServer_deleteOrganizationsOK(t *testing.T) {

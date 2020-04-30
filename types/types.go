@@ -72,7 +72,6 @@ type RuleContentResponse struct {
 	RiskOfChange int         `json:"risk_of_change"`
 	RuleModule   string      `json:"rule_id"`
 	TemplateData interface{} `json:"extra_data"`
-	TotalRisk    int         `json:"total_risk"`
 	Disabled     bool        `json:"disabled"`
 }
 

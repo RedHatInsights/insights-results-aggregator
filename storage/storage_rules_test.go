@@ -495,6 +495,107 @@ func TestDBStorageGetContentForRulesRowsError(t *testing.T) {
 	assert.Contains(t, buf.String(), "SQL rows error while retrieving content for rules")
 }
 
+func TestDBStorageToggleRule(t *testing.T) {
+	for _, state := range []storage.RuleToggle{
+		storage.RuleToggleDisable, storage.RuleToggleEnable,
+	} {
+		func(state storage.RuleToggle) {
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
+
+			mustWriteReport3Rules(t, mockStorage)
+
+			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, state,
+			))
+
+			_, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+			helpers.FailOnError(t, err)
+		}(state)
+	}
+}
+
+func TestDBStorageToggleRuleAndGet(t *testing.T) {
+	for _, state := range []storage.RuleToggle{
+		storage.RuleToggleDisable, storage.RuleToggleEnable,
+	} {
+		func(state storage.RuleToggle) {
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
+
+			mustWriteReport3Rules(t, mockStorage)
+
+			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, state,
+			))
+
+			toggledRule, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+			helpers.FailOnError(t, err)
+
+			assert.Equal(t, testdata.ClusterName, toggledRule.ClusterID)
+			assert.Equal(t, testdata.Rule1ID, toggledRule.RuleID)
+			assert.Equal(t, testdata.UserID, toggledRule.UserID)
+			assert.Equal(t, state, toggledRule.Disabled)
+			if toggledRule.Disabled == storage.RuleToggleDisable {
+				assert.Equal(t, sql.NullTime{}, toggledRule.EnabledAt)
+			} else {
+				assert.Equal(t, sql.NullTime{}, toggledRule.DisabledAt)
+			}
+
+			helpers.FailOnError(t, mockStorage.Close())
+		}(state)
+	}
+}
+
+func TestDBStorageToggleRulesAndList(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	assert.Len(t, toggledRules, 2)
+}
+
+func TestDBStorageDeleteDisabledRule(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	assert.Len(t, toggledRules, 2)
+
+	helpers.FailOnError(t, mockStorage.DeleteFromRuleClusterToggle(
+		testdata.ClusterName, testdata.Rule2ID, testdata.UserID,
+	))
+
+	toggledRules, err = mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	assert.Len(t, toggledRules, 1)
+}
+
 func TestDBStorageVoteOnRule(t *testing.T) {
 	for _, vote := range []storage.UserVote{
 		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,

@@ -345,40 +345,6 @@ func (server *HTTPServer) deleteFromRuleClusterToggle(writer http.ResponseWriter
 	}
 }
 
-// listDisabledRulesForCluster lists rules that have been disabled for the specified cluster
-func (server *HTTPServer) listDisabledRulesForCluster(writer http.ResponseWriter, request *http.Request) {
-	clusterID, err := readClusterName(writer, request)
-	if err != nil {
-		log.Error().Err(err).Msg("Bad request param cluster")
-		handleServerError(writer, err)
-		return
-	}
-
-	userID, err := server.readUserID(err, request, writer)
-	if err != nil {
-		log.Error().Err(err).Msg("Bad request param cluster")
-		handleServerError(writer, err)
-		return
-	}
-
-	err = server.checkUserClusterPermissions(writer, request, clusterID)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	disabledRules, err := server.Storage.ListDisabledRulesForCluster(clusterID, userID)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to list disabled rules for cluster")
-		handleServerError(writer, err)
-	}
-
-	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("rules", disabledRules))
-	if err != nil {
-		log.Error().Err(err).Msg(responseDataError)
-	}
-}
-
 func (server *HTTPServer) createRule(writer http.ResponseWriter, request *http.Request) {
 	ruleID, err := readRuleID(writer, request)
 	if err != nil {
@@ -644,6 +610,9 @@ func (server *HTTPServer) addDebugEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.createRuleErrorKey).Methods(http.MethodPost)
 	router.HandleFunc(apiPrefix+RuleEndpoint, server.deleteRule).Methods(http.MethodDelete)
 	router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.deleteRuleErrorKey).Methods(http.MethodDelete)
+
+	// endpoints for pprof - needed for profiling, ie. usually in debug mode
+	router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 }
 
 func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
@@ -652,17 +621,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 
 	// it is possible to use special REST API endpoints in debug mode
 	if server.Config.Debug {
-		router.HandleFunc(apiPrefix+OrganizationsEndpoint, server.listOfOrganizations).Methods(http.MethodGet)
-		router.HandleFunc(apiPrefix+DeleteOrganizationsEndpoint, server.deleteOrganizations).Methods(http.MethodDelete)
-		router.HandleFunc(apiPrefix+DeleteClustersEndpoint, server.deleteClusters).Methods(http.MethodDelete)
-		router.HandleFunc(apiPrefix+GetVoteOnRuleEndpoint, server.getVoteOnRule).Methods(http.MethodGet)
-		router.HandleFunc(apiPrefix+RuleEndpoint, server.createRule).Methods(http.MethodPost)
-		router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.createRuleErrorKey).Methods(http.MethodPost)
-		router.HandleFunc(apiPrefix+RuleEndpoint, server.deleteRule).Methods(http.MethodDelete)
-		router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.deleteRuleErrorKey).Methods(http.MethodDelete)
-
-		// endpoints for pprof - needed for profiling, ie. usually in debug mode
-		router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
+		server.addDebugEndpointsToRouter(router)
 	}
 
 	// common REST API endpoints
@@ -674,7 +633,6 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc(apiPrefix+ListDisabledRulesForClusterEndpoint, server.listDisabledRulesForCluster).Methods(http.MethodGet)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)

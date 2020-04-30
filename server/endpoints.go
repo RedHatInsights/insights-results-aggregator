@@ -48,8 +48,6 @@ const (
 	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/disable"
 	// EnableRuleForClusterEndpoint re-enables a rule for specified cluster
 	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/enable"
-	// ListDisabledRulesForClusterEndpoint lists all disabled rules for specified cluster
-	ListDisabledRulesForClusterEndpoint = "clusters/{cluster}/rules/disabled"
 
 	// MetricsEndpoint returns prometheus metrics
 	MetricsEndpoint = "metrics"

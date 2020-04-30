@@ -40,9 +40,9 @@ type ClusterRuleToggle struct {
 	RuleID     types.RuleID
 	UserID     types.UserID
 	Disabled   RuleToggle
-	DisabledAt time.Time
-	EnabledAt  time.Time
-	UpdatedAt  time.Time
+	DisabledAt sql.NullTime
+	EnabledAt  sql.NullTime
+	UpdatedAt  sql.NullTime
 }
 
 // ToggleRuleForCluster toggles rule for specified cluster
@@ -105,11 +105,20 @@ func (storage DBStorage) ListDisabledRulesForCluster(
 
 	rules := make([]types.DisabledRuleResponse, 0)
 
-	query := `SELECT rek.rule_module, rek.description, rek.generic, crt.disabled_at
-		FROM cluster_rule_toggle crt
-		INNER JOIN rule_error_key rek
-		ON crt.rule_id = rek.rule_module 
-		WHERE crt.disabled = $1 AND crt.cluster_id = $2 AND crt.user_id = $3
+	query := `
+	SELECT
+		rek.rule_module,
+		rek.description,
+		rek.generic,
+		crt.disabled_at
+	FROM
+		cluster_rule_toggle crt
+	INNER JOIN
+		rule_error_key rek ON crt.rule_id = rek.rule_module
+	WHERE
+		crt.disabled = $1 AND
+		crt.cluster_id = $2 AND
+		crt.user_id = $3
 	`
 
 	rows, err := storage.connection.Query(query, RuleToggleDisable, clusterID, userID)
@@ -136,10 +145,62 @@ func (storage DBStorage) ListDisabledRulesForCluster(
 	return rules, nil
 }
 
+// GetFromClusterRuleToggle gets a rule from cluster_rule_toggle
+func (storage DBStorage) GetFromClusterRuleToggle(
+	clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+) (*ClusterRuleToggle, error) {
+	var disabledRule ClusterRuleToggle
+
+	query := `
+	SELECT
+		cluster_id,
+		rule_id,
+		user_id,
+		disabled,
+		disabled_at,
+		enabled_at,
+		updated_at
+	FROM
+		cluster_rule_toggle
+	WHERE
+		cluster_id = $1 AND
+		rule_id = $2 AND
+		user_id = $3
+	`
+
+	err := storage.connection.QueryRow(
+		query,
+		clusterID,
+		ruleID,
+		userID,
+	).Scan(
+		&disabledRule.ClusterID,
+		&disabledRule.RuleID,
+		&disabledRule.UserID,
+		&disabledRule.Disabled,
+		&disabledRule.DisabledAt,
+		&disabledRule.EnabledAt,
+		&disabledRule.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, &ItemNotFoundError{ItemID: ruleID}
+	}
+
+	return &disabledRule, err
+}
+
 // DeleteFromRuleClusterToggle deletes a record from the table rule_cluster_toggle. Only exposed in debug mode.
 func (storage DBStorage) DeleteFromRuleClusterToggle(
 	clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
 ) error {
-
-	return nil
+	query := `
+	DELETE FROM
+		cluster_rule_toggle
+	WHERE
+		cluster_id = $1 AND
+		rule_id = $2 AND
+		user_id = $3
+	`
+	_, err := storage.connection.Exec(query, clusterID, ruleID, userID)
+	return err
 }
