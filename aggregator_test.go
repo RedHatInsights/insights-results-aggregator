@@ -73,6 +73,10 @@ func TestStartService(t *testing.T) {
 		os.Clearenv()
 
 		mustLoadConfiguration("./tests/tests")
+		setEnvSettings(t, map[string]string{
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+		})
 
 		go func() {
 			main.StartService()
@@ -80,7 +84,7 @@ func TestStartService(t *testing.T) {
 
 		main.WaitForServiceToStart()
 		errCode := main.StopService()
-		assert.Equal(t, 0, errCode)
+		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)
 }
 
@@ -111,14 +115,14 @@ func TestStartServiceWithMockBroker(t *testing.T) {
 
 		go func() {
 			exitCode := main.StartService()
-			if exitCode != 0 {
+			if exitCode != main.ExitStatusOK {
 				panic(fmt.Errorf("StartService exited with a code %v", exitCode))
 			}
 		}()
 
 		main.WaitForServiceToStart()
 		errCode := main.StopService()
-		assert.Equal(t, 0, errCode)
+		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)
 }
 

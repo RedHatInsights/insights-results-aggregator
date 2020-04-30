@@ -58,7 +58,7 @@ CREATE TABLE report (
 
 These tables represent the content for Insights rules to be displayed by OCM.
 The table `rule` represents more general information about the rule, whereas the `rule_error_key`
-contains information about the specific type of error which occured. The combination of these two create a unique rule.
+contains information about the specific type of error which occurred. The combination of these two create a unique rule.
 Very trivialized example could be:
 
 * rule "REQUIREMENTS_CHECK"

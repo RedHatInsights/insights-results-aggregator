@@ -121,7 +121,7 @@ var (
 		Rules: map[string]content.RuleContent{
 			"rc": {
 				Summary:    []byte("summary"),
-				Reason:     []byte("summary"),
+				Reason:     []byte("reason"),
 				Resolution: []byte("resolution"),
 				MoreInfo:   []byte("more info"),
 				Plugin: content.RulePluginInfo{
@@ -321,7 +321,9 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 			ErrorKey:     "ek",
 			RuleModule:   string(testRuleID),
 			Description:  "description",
-			Generic:      "genericresolution",
+			Generic:      "generic",
+			Reason:       "reason",
+			Resolution:   "resolution",
 			CreatedAt:    "1970-01-01T00:00:00Z",
 			TotalRisk:    1,
 			RiskOfChange: 0,
@@ -366,7 +368,9 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			ErrorKey:     "ek1",
 			RuleModule:   "test.rule1",
 			Description:  "rule 1 description",
-			Generic:      "rule 1 detailsrule 1 resolution",
+			Generic:      "rule 1 details",
+			Reason:       "rule 1 reason",
+			Resolution:   "rule 1 resolution",
 			CreatedAt:    "1970-01-01T00:00:00Z",
 			TotalRisk:    3,
 			RiskOfChange: 0,
@@ -376,7 +380,9 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			ErrorKey:     "ek2",
 			RuleModule:   "test.rule2",
 			Description:  "rule 2 description",
-			Generic:      "rule 2 detailsrule 2 resolution",
+			Generic:      "rule 2 details",
+			Reason:       "rule 2 reason",
+			Resolution:   "rule 2 resolution",
 			CreatedAt:    "1970-01-02T00:00:00Z",
 			TotalRisk:    4,
 			RiskOfChange: 0,
@@ -386,7 +392,9 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			ErrorKey:     "ek3",
 			RuleModule:   "test.rule3",
 			Description:  "rule 3 description",
-			Generic:      "rule 3 detailsrule 3 resolution",
+			Generic:      "rule 3 details",
+			Reason:       "rule 3 reason",
+			Resolution:   "rule 3 resolution",
 			CreatedAt:    "1970-01-03T00:00:00Z",
 			TotalRisk:    2,
 			RiskOfChange: 0,
@@ -407,6 +415,8 @@ func TestDBStorageGetContentForRulesScanError(t *testing.T) {
 		"rule_module",
 		"description",
 		"generic",
+		"reason",
+		"resolution",
 		"publish_date",
 		"impact",
 		"likelihood",
@@ -450,13 +460,15 @@ func TestDBStorageGetContentForRulesRowsError(t *testing.T) {
 		"rule_module",
 		"description",
 		"generic",
+		"reason",
+		"resolution",
 		"publish_date",
 		"impact",
 		"likelihood",
 	}
 
 	values := []driver.Value{
-		"ek", "rule_module", "desc", "generic", 0, 0, 0,
+		"ek", "rule_module", "desc", "generic", "reason", "resolution", 0, 0, 0,
 	}
 
 	// return bad values

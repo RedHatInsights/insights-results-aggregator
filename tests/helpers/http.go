@@ -58,7 +58,7 @@ type APIRequest struct {
 type APIResponse struct {
 	StatusCode  int
 	Body        string
-	BodyChecker func(t *testing.T, expected, got string)
+	BodyChecker func(t testing.TB, expected, got string)
 	Headers     map[string]string
 }
 
@@ -78,7 +78,7 @@ var DefaultServerConfig = server.Configuration{
 // and provided serverConfig(you can leave it empty to use the default one)
 // sends api request and checks api response (see docs for APIRequest and APIResponse)
 func AssertAPIRequest(
-	t *testing.T,
+	t testing.TB,
 	mockStorage storage.Storage,
 	serverConfig *server.Configuration,
 	request *APIRequest,
@@ -117,7 +117,7 @@ func AssertAPIRequest(
 	}
 }
 
-func makeRequest(t *testing.T, request *APIRequest, url string) *http.Request {
+func makeRequest(t testing.TB, request *APIRequest, url string) *http.Request {
 	req, err := http.NewRequest(request.Method, url, strings.NewReader(request.Body))
 	FailOnError(t, err)
 
@@ -153,7 +153,7 @@ func ExecuteRequest(testServer *server.HTTPServer, req *http.Request, config *se
 // CheckResponseBodyJSON checks if body is the same json as in expected
 // (ignores whitespaces, newlines, etc)
 // also validates both expected and body to be a valid json
-func CheckResponseBodyJSON(t *testing.T, expectedJSON string, body io.ReadCloser) {
+func CheckResponseBodyJSON(t testing.TB, expectedJSON string, body io.ReadCloser) {
 	result, err := ioutil.ReadAll(body)
 	FailOnError(t, err)
 
@@ -161,7 +161,7 @@ func CheckResponseBodyJSON(t *testing.T, expectedJSON string, body io.ReadCloser
 }
 
 // checkResponseHeaders checks if headers are the same as in expected
-func checkResponseHeaders(t *testing.T, expectedHeaders map[string]string, actualHeaders http.Header) {
+func checkResponseHeaders(t testing.TB, expectedHeaders map[string]string, actualHeaders http.Header) {
 	for key, value := range expectedHeaders {
 		assert.Equal(t, value, actualHeaders.Get(key), "Expected different headers")
 	}

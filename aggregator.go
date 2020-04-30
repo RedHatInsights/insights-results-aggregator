@@ -127,7 +127,7 @@ func prepareDB() int {
 	return ExitStatusOK
 }
 
-// startConsumer starts consumer and returns exit code, 0 is no error
+// startConsumer starts consumer and returns exit code, ExitStatusOK is no error
 func startConsumer() int {
 	dbStorage, err := createStorage()
 	if err != nil {
@@ -176,10 +176,10 @@ func startServer() int {
 // startService starts service and returns error code
 func startService() int {
 	var waitGroup sync.WaitGroup
-	exitCode := 0
+	exitCode := ExitStatusOK
 
 	prepDbExitCode := prepareDB()
-	if prepDbExitCode != 0 {
+	if prepDbExitCode != ExitStatusOK {
 		log.Info().Msgf(databasePreparationMessage, prepDbExitCode)
 		exitCode += prepDbExitCode
 		return exitCode
@@ -189,7 +189,7 @@ func startService() int {
 	// consumer is run in its own thread
 	go func() {
 		consumerExitCode := startConsumer()
-		if consumerExitCode != 0 {
+		if consumerExitCode != ExitStatusOK {
 			log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
 			exitCode += consumerExitCode
 		}
@@ -199,7 +199,7 @@ func startService() int {
 
 	// server can be started in current thread
 	serverExitCode := startServer()
-	if serverExitCode != 0 {
+	if serverExitCode != ExitStatusOK {
 		log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
 		exitCode += serverExitCode
 	}
@@ -228,7 +228,7 @@ func waitForServiceToStart() {
 }
 
 func stopService() int {
-	errCode := 0
+	errCode := ExitStatusOK
 
 	if serverInstance != nil {
 		err := serverInstance.Stop(context.TODO())
@@ -280,7 +280,7 @@ The commands are:
 
 func printHelp() int {
 	fmt.Printf(helpMessageTemplate, os.Args[0])
-	return 0
+	return ExitStatusOK
 }
 
 func printConfig() int {
@@ -293,7 +293,7 @@ func printConfig() int {
 
 	fmt.Println(string(configBytes))
 
-	return 0
+	return ExitStatusOK
 }
 
 func main() {
@@ -322,7 +322,7 @@ func handleCommand(command string) int {
 		printVersionInfo()
 
 		errCode := startService()
-		if errCode != 0 {
+		if errCode != ExitStatusOK {
 			return errCode
 		}
 
@@ -338,5 +338,5 @@ func handleCommand(command string) int {
 		return printHelp()
 	}
 
-	return 0
+	return ExitStatusOK
 }

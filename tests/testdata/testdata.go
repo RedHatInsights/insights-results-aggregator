@@ -220,7 +220,9 @@ var (
 			{
 				"rule_id": "` + string(Rule1ID) + `",
 				"description": "` + Rule1Description + `",
-				"details": "` + Rule1Details + Rule1Resolution + `",
+				"details": "` + Rule1Details + `",
+				"reason": "` + Rule1Reason + `",
+				"resolution": "` + Rule1Resolution + `",
 				"created_at": "` + Rule1CreatedAt + `",
 				"total_risk": 3,
 				"risk_of_change": 0,
@@ -229,7 +231,9 @@ var (
 			{
 				"rule_id": "` + string(Rule2ID) + `",
 				"description": "` + Rule2Description + `",
-				"details": "` + Rule2Details + Rule2Resolution + `",
+				"details": "` + Rule2Details + `",
+				"reason": "` + Rule2Reason + `",
+				"resolution": "` + Rule2Resolution + `",
 				"created_at": "` + Rule2CreatedAt + `",
 				"total_risk": 4,
 				"risk_of_change": 0,
@@ -238,7 +242,9 @@ var (
 			{
 				"rule_id": "` + string(Rule3ID) + `",
 				"description": "` + Rule3Description + `",
-				"details": "` + Rule3Details + Rule3Resolution + `",
+				"details": "` + Rule3Details + `",
+				"reason": "` + Rule3Reason + `",
+				"resolution": "` + Rule3Resolution + `",
 				"created_at": "` + Rule3CreatedAt + `",
 				"total_risk": 2,
 				"risk_of_change": 0,
@@ -252,6 +258,8 @@ var (
 )
 
 func GetRandomConsumerMessage() string {
+	// disable Use of weak random number generator for the whole method
+	/* #nosec G404 */
 	orgID := rand.Intn(999999)
 	clusterName := uuid.New()
 	timeRandomRange := 100000
@@ -267,4 +275,33 @@ func GetRandomConsumerMessage() string {
 	}`
 
 	return consumerMessage
+}
+
+func GetRandomRuleID(length uint) types.RuleID {
+	// disable Use of weak random number generator for the whole method
+	/* #nosec G404 */
+	var result types.RuleID
+
+	for i := uint(0); i < length; i++ {
+		char := rune('a' + rand.Intn('z'-'a'))
+		result += types.RuleID(char)
+	}
+
+	return result
+}
+
+func GetRandomUserID() types.UserID {
+	// disable Use of weak random number generator for the whole method
+	/* #nosec G404 */
+	return types.UserID(fmt.Sprint(rand.Intn(999999)))
+}
+
+func GetRandomOrgID() types.OrgID {
+	// disable Use of weak random number generator for the whole method
+	/* #nosec G404 */
+	return types.OrgID(rand.Intn(999999))
+}
+
+func GetRandomClusterID() types.ClusterName {
+	return types.ClusterName(uuid.New().String())
 }

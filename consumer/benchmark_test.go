@@ -41,20 +41,8 @@ func benchmarkProcessingMessage(b *testing.B, s storage.Storage, messageProducer
 	}
 }
 
-func getNoopStorage(*testing.B) (storage.Storage, func()) {
+func getNoopStorage(testing.TB, bool) (storage.Storage, func()) {
 	return &storage.NoopStorage{}, func() {}
-}
-
-func getSQLiteMemoryStorage(b *testing.B) (storage.Storage, func()) {
-	return helpers.MustGetMockStorage(b, true)
-}
-
-func getSQLiteFileStorage(b *testing.B) (storage.Storage, func()) {
-	return helpers.MustGetSQLiteFileStorage(b, true)
-}
-
-func getPostgresStorage(b *testing.B) (storage.Storage, func()) {
-	return helpers.MustGetPostgresStorage(b, true)
 }
 
 func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
@@ -62,17 +50,17 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 
 	var testCases = []struct {
 		Name            string
-		StorageProducer func(*testing.B) (storage.Storage, func())
+		StorageProducer func(testing.TB, bool) (storage.Storage, func())
 		RandomMessages  bool
 	}{
 		{"NoopStorage", getNoopStorage, false},
 		{"NoopStorage", getNoopStorage, true},
-		{"SQLiteInMemory", getSQLiteMemoryStorage, false},
-		{"SQLiteInMemory", getSQLiteMemoryStorage, true},
-		{"Postgres", getPostgresStorage, false},
-		{"Postgres", getPostgresStorage, true},
-		{"SQLiteFile", getSQLiteFileStorage, false},
-		{"SQLiteFile", getSQLiteFileStorage, true},
+		{"SQLiteInMemory", helpers.MustGetSQLiteMemoryStorage, false},
+		{"SQLiteInMemory", helpers.MustGetSQLiteMemoryStorage, true},
+		{"Postgres", helpers.MustGetPostgresStorage, false},
+		{"Postgres", helpers.MustGetPostgresStorage, true},
+		{"SQLiteFile", helpers.MustGetSQLiteFileStorage, false},
+		{"SQLiteFile", helpers.MustGetSQLiteFileStorage, true},
 	}
 
 	for _, testCase := range testCases {
@@ -81,9 +69,10 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 		}
 
 		b.Run(testCase.Name, func(b *testing.B) {
-			benchStorage, cleaner := testCase.StorageProducer(b)
-			defer cleaner()
-
+			benchStorage, cleaner := testCase.StorageProducer(b, true)
+			if cleaner != nil {
+				defer cleaner()
+			}
 			defer helpers.MustCloseStorage(b, benchStorage)
 
 			if testCase.RandomMessages {
@@ -143,21 +132,22 @@ func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
 
 	var testCases = []struct {
 		Name            string
-		StorageProducer func(*testing.B) (storage.Storage, func())
+		StorageProducer func(testing.TB, bool) (storage.Storage, func())
 	}{
 		{"NoopStorage", getNoopStorage},
-		{"SQLiteInMemory", getSQLiteMemoryStorage},
-		{"Postgres", getPostgresStorage},
-		{"SQLiteFile", getSQLiteFileStorage},
+		{"SQLiteInMemory", helpers.MustGetSQLiteMemoryStorage},
+		{"Postgres", helpers.MustGetPostgresStorage},
+		{"SQLiteFile", helpers.MustGetSQLiteFileStorage},
 	}
 
 	for _, testCase := range testCases {
 		testCase.Name += "/" + testCase.Name
 
 		b.Run(testCase.Name, func(b *testing.B) {
-			benchStorage, cleaner := testCase.StorageProducer(b)
-			defer cleaner()
-
+			benchStorage, cleaner := testCase.StorageProducer(b, true)
+			if cleaner != nil {
+				defer cleaner()
+			}
 			defer helpers.MustCloseStorage(b, benchStorage)
 
 			kafkaConsumer := &consumer.KafkaConsumer{

@@ -13,6 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [ $# -eq 0 ]
+then
+    echo
+    echo "No arguments supplied. Expected prefix for benchmark function name."
+    echo "For example 'Benchmark' to choose all of them"
+    echo
+    exit 1
+fi
 
-go test -run NO_TEST -bench=. ./...
+go test -run NO_TEST -bench="$1" ./...
 exit $?
