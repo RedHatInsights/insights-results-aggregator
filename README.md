@@ -554,3 +554,13 @@ Script displays two tables:
 ### `json_check.py`
 
 Simple checker if all JSONs have the correct syntax (not scheme).
+
+Usage:
+
+```
+usage: json_check.py [-h] [-v]
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -v, --verbose  make it verbose
+```
