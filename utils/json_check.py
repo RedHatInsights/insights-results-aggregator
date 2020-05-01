@@ -22,7 +22,8 @@ from argparse import ArgumentParser
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("-v", "--verbose", dest="verbose", help="make it verbose")
+    parser.add_argument("-v", "--verbose", dest="verbose", help="make it verbose",
+                        action="store_true", default=None)
     args = parser.parse_args()
 
     passes = 0
@@ -34,7 +35,7 @@ def main():
         try:
             with file.open() as fin:
                 obj = load(fin)
-                if args.verbose:
+                if args.verbose is not None:
                     print("{} is valid".format(file))
 
                 passes += 1
