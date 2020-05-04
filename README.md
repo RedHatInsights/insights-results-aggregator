@@ -358,6 +358,21 @@ Currently, the following metrics are exposed:
 
 Additionally it is possible to consume all metrics provided by Go runtime. There metrics start with `go_` and `process_` prefixes.
 
+## pprof interface in debug mode
+
+In debug mode, standard Golang pprof interface is available at `/debug/pprof/`
+
+Common usage (for using pprof against local instance):
+
+```
+go tool pprof localhost:8080/debug/pprof/profile
+```
+
+A practical example is available here:
+https://medium.com/@paulborile/profiling-a-golang-rest-api-server-635fa0ed45f3
+
+
+
 ## Authentication
 
 Authentication is working through `x-rh-identity` token which is provided by 3scale. `x-rh-identity` is base64 encoded JSON, that includes data about user and organization, like:

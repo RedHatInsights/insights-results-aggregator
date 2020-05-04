@@ -47,6 +47,10 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	// we just have to import this package in order to expose pprof interface in debug mode
+	// disable "G108 (CWE-): Profiling endpoint is automatically exposed on /debug/pprof"
+	// #nosec G108
+	_ "net/http/pprof"
 	"path/filepath"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
@@ -532,6 +536,9 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 		router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.createRuleErrorKey).Methods(http.MethodPost)
 		router.HandleFunc(apiPrefix+RuleEndpoint, server.deleteRule).Methods(http.MethodDelete)
 		router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.deleteRuleErrorKey).Methods(http.MethodDelete)
+
+		// endpoints for pprof - needed for profiling, ie. usually in debug mode
+		router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 	}
 
 	// common REST API endpoints
