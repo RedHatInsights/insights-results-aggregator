@@ -383,6 +383,11 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 		lastCheckedTime,
 	)
 	if err != nil {
+		if err == storage.ErrOldReport {
+			logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
+			return nil
+		}
+
 		logMessageError(consumer, msg, message, "Error writing report to database", err)
 		return err
 	}
