@@ -47,6 +47,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	// we just have to import this package in order to expose pprof interface in debug mode
 	_ "net/http/pprof"
 	"path/filepath"
 
