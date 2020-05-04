@@ -17,11 +17,16 @@ limitations under the License.
 package storage
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 
 	"github.com/rs/zerolog/log"
 )
+
+// ErrOldReport is an error returned if a more recent already
+// exists on the storage while attempting to write a report for a cluster.
+var ErrOldReport = errors.New("More recent report already exists in storage")
 
 // ItemNotFoundError shows that item with id ItemID wasn't found in the storage
 type ItemNotFoundError struct {

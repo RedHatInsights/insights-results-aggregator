@@ -210,22 +210,13 @@ func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// Try to insert older report.
-	// If there's a way to check for a warning being logged,
-	// it would be quite handy to add it here.
 	err = mockStorage.WriteReportForCluster(
 		testOrgID,
 		testClusterName,
 		testClusterEmptyReport,
 		olderTime,
 	)
-	helpers.FailOnError(t, err)
-
-	_, timestamp, err := mockStorage.ReadReportForCluster(testOrgID, testClusterName)
-	helpers.FailOnError(t, err)
-
-	// Unfortunately, the ReadReport returns the timestamp as a different type than
-	// what has been initially inserted, so we need to format it in the same way here.
-	assert.Equal(t, types.Timestamp(newerTime.Format(time.RFC3339)), timestamp)
+	assert.Equal(t, storage.ErrOldReport, err)
 }
 
 // TestDBStorageWriteReportForClusterDroppedReportTable checks the error
