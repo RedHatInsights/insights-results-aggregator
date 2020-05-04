@@ -205,7 +205,9 @@ func (storage DBStorage) Init() error {
 		)
 
 		if err := rows.Scan(&clusterName, &lastChecked); err != nil {
-			_ = rows.Close()
+			if closeErr := rows.Close(); closeErr != nil {
+				log.Error().Err(closeErr).Msg("Unable to close the DB rows handle")
+			}
 			return err
 		}
 
