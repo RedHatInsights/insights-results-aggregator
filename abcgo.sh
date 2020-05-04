@@ -15,10 +15,12 @@
 
 threshold=45
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+BLUE=$(tput setaf 4)
+RED_BG=$(tput setab 1)
+GREEN_BG=$(tput setab 2)
+NC=$(tput sgr0) # No Color
 
 VERBOSE=false
 
@@ -36,10 +38,10 @@ fi
 
 if [[ $(abcgo -path . -sort -format raw | awk "\$4>${threshold}" | tee /dev/tty | wc -l) -ne 0 ]]
 then
-    echo -e "${RED}[FAIL]${NC} Functions with too high ABC metrics detected!"
+    echo -e "${RED_BG}[FAIL]${NC} Functions with too high ABC metrics detected!"
     exit 1
 else
-    echo -e "${GREEN}[OK]${NC} ABC metrics are ok for all functions in all packages"
+    echo -e "${GREEN_BG}[OK]${NC} ABC metrics are ok for all functions in all packages"
     exit 0
 fi
 
