@@ -20,7 +20,7 @@ package migration
 	migration4 adds foreign keys to cluster_rule_user_feedback
 */
 
-var mig4 = NewUpdateTableMigration(
+var mig0004ModifyClusterRuleUserFeedback = NewUpdateTableMigration(
 	"cluster_rule_user_feedback",
 	`
 		CREATE TABLE cluster_rule_user_feedback (

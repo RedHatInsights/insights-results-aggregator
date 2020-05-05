@@ -213,7 +213,8 @@ func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *h
 	server.voteOnRule(writer, request, storage.UserVoteNone)
 }
 
-func (server *HTTPServer) checkVotePermissions(writer http.ResponseWriter, request *http.Request, clusterID types.ClusterName) error {
+// checkUserClusterPermissions retrieves organization ID by checking the owner of cluster ID, checks if it matches the one from request
+func (server *HTTPServer) checkUserClusterPermissions(writer http.ResponseWriter, request *http.Request, clusterID types.ClusterName) error {
 	if server.Config.Auth {
 		orgID, err := server.Storage.GetOrgIDByClusterID(clusterID)
 		if err != nil {
@@ -231,13 +232,19 @@ func (server *HTTPServer) checkVotePermissions(writer http.ResponseWriter, reque
 }
 
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
-	clusterID, ruleID, userID, successful := server.readVoteOnRuleParams(writer, request)
-	if !successful {
+	clusterID, ruleID, userID, err := server.readClusterRuleUserParams(writer, request)
+	if err != nil {
 		// everything has been handled already
 		return
 	}
 
-	err := server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
+	err = server.checkUserClusterPermissions(writer, request, clusterID)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote)
 	if err != nil {
 		handleServerError(writer, err)
 		return
@@ -250,8 +257,14 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 }
 
 func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *http.Request) {
-	clusterID, ruleID, userID, successful := server.readVoteOnRuleParams(writer, request)
-	if !successful {
+	clusterID, ruleID, userID, err := server.readClusterRuleUserParams(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	err = server.checkUserClusterPermissions(writer, request, clusterID)
+	if err != nil {
 		// everything has been handled already
 		return
 	}
@@ -263,6 +276,70 @@ func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *htt
 	}
 
 	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("vote", userFeedbackOnRule.UserVote))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+// disableRuleForCluster disables a rule for specified cluster, excluding it from reports
+func (server *HTTPServer) disableRuleForCluster(writer http.ResponseWriter, request *http.Request) {
+	server.toggleRuleForCluster(writer, request, storage.RuleToggleDisable)
+}
+
+// enableRuleForCluster enables a previously disabled rule, showing it on reports again
+func (server *HTTPServer) enableRuleForCluster(writer http.ResponseWriter, request *http.Request) {
+	server.toggleRuleForCluster(writer, request, storage.RuleToggleEnable)
+}
+
+// toggleRuleForCluster contains shared functionality for enable/disable
+func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, request *http.Request, toggleRule storage.RuleToggle) {
+	clusterID, ruleID, userID, err := server.readClusterRuleUserParams(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	err = server.checkUserClusterPermissions(writer, request, clusterID)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	err = server.Storage.ToggleRuleForCluster(clusterID, ruleID, userID, toggleRule)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to toggle rule for selected cluster")
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+// deleteRuleForClusterToggle is debug endpoint for deleting the record in the rule_cluster_toggle table
+func (server *HTTPServer) deleteFromRuleClusterToggle(writer http.ResponseWriter, request *http.Request) {
+	clusterID, ruleID, userID, err := server.readClusterRuleUserParams(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	err = server.checkUserClusterPermissions(writer, request, clusterID)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	err = server.Storage.DeleteFromRuleClusterToggle(clusterID, ruleID, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to delete from rule_cluster_toggle")
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendResponse(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -394,16 +471,16 @@ func (server *HTTPServer) deleteRuleErrorKey(writer http.ResponseWriter, request
 	}
 }
 
-func (server *HTTPServer) readUserID(err error, request *http.Request, writer http.ResponseWriter) (types.UserID, bool) {
+func (server *HTTPServer) readUserID(err error, request *http.Request, writer http.ResponseWriter) (types.UserID, error) {
 	userID, err := server.GetCurrentUserID(request)
 	if err != nil {
 		const message = "Unable to get user id"
 		log.Error().Err(err).Msg(message)
 		handleServerError(writer, err)
-		return "", false
+		return "", err
 	}
 
-	return userID, true
+	return userID, nil
 }
 
 func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {
@@ -522,23 +599,29 @@ func (server *HTTPServer) Initialize(address string) http.Handler {
 	return router
 }
 
+func (server *HTTPServer) addDebugEndpointsToRouter(router *mux.Router) {
+	apiPrefix := server.Config.APIPrefix
+
+	router.HandleFunc(apiPrefix+OrganizationsEndpoint, server.listOfOrganizations).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+DeleteOrganizationsEndpoint, server.deleteOrganizations).Methods(http.MethodDelete)
+	router.HandleFunc(apiPrefix+DeleteClustersEndpoint, server.deleteClusters).Methods(http.MethodDelete)
+	router.HandleFunc(apiPrefix+GetVoteOnRuleEndpoint, server.getVoteOnRule).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+RuleEndpoint, server.createRule).Methods(http.MethodPost)
+	router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.createRuleErrorKey).Methods(http.MethodPost)
+	router.HandleFunc(apiPrefix+RuleEndpoint, server.deleteRule).Methods(http.MethodDelete)
+	router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.deleteRuleErrorKey).Methods(http.MethodDelete)
+
+	// endpoints for pprof - needed for profiling, ie. usually in debug mode
+	router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
+}
+
 func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	apiPrefix := server.Config.APIPrefix
 	openAPIURL := apiPrefix + filepath.Base(server.Config.APISpecFile)
 
 	// it is possible to use special REST API endpoints in debug mode
 	if server.Config.Debug {
-		router.HandleFunc(apiPrefix+OrganizationsEndpoint, server.listOfOrganizations).Methods(http.MethodGet)
-		router.HandleFunc(apiPrefix+DeleteOrganizationsEndpoint, server.deleteOrganizations).Methods(http.MethodDelete)
-		router.HandleFunc(apiPrefix+DeleteClustersEndpoint, server.deleteClusters).Methods(http.MethodDelete)
-		router.HandleFunc(apiPrefix+GetVoteOnRuleEndpoint, server.getVoteOnRule).Methods(http.MethodGet)
-		router.HandleFunc(apiPrefix+RuleEndpoint, server.createRule).Methods(http.MethodPost)
-		router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.createRuleErrorKey).Methods(http.MethodPost)
-		router.HandleFunc(apiPrefix+RuleEndpoint, server.deleteRule).Methods(http.MethodDelete)
-		router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.deleteRuleErrorKey).Methods(http.MethodDelete)
-
-		// endpoints for pprof - needed for profiling, ie. usually in debug mode
-		router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
+		server.addDebugEndpointsToRouter(router)
 	}
 
 	// common REST API endpoints
@@ -548,6 +631,8 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+DislikeRuleEndpoint, server.dislikeRule).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ResetVoteOnRuleEndpoint, server.resetVoteOnRule).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)

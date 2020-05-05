@@ -183,6 +183,104 @@ var (
 }
 `)
 
+	Report2Rules = types.ClusterReport(`
+{
+	"system": {
+		"metadata": {},
+		"hostname": null
+	},
+	"reports": [
+		{
+			"component": "` + string(Rule1ID) + `.report",
+			"key": "` + ErrorKey1 + `"
+		},
+		{
+			"component": "` + string(Rule2ID) + `.report",
+			"key": "` + ErrorKey2 + `"
+		}
+	],
+	"fingerprints": [],
+	"skips": [],
+	"info": []
+}
+`)
+
+	Report2RulesDisabledRule1ExpectedResponse = `
+{
+	"report": {
+		"meta": {
+			"count": 2,
+			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
+		},
+		"data": [
+			{
+				"rule_id": "` + string(Rule2ID) + `",
+				"description": "` + Rule2Description + `",
+				"details": "` + Rule2Details + `",
+				"reason": "` + Rule2Reason + `",
+				"resolution": "` + Rule2Resolution + `",
+				"created_at": "` + Rule2CreatedAt + `",
+				"total_risk": 4,
+				"risk_of_change": 0,
+				"extra_data": null,
+				"disabled": false
+			},
+			{
+				"rule_id": "` + string(Rule1ID) + `",
+				"description": "` + Rule1Description + `",
+				"details": "` + Rule1Details + `",
+				"reason": "` + Rule1Reason + `",
+				"resolution": "` + Rule1Resolution + `",
+				"created_at": "` + Rule1CreatedAt + `",
+				"total_risk": 3,
+				"risk_of_change": 0,
+				"extra_data": null,
+				"disabled": true
+			}
+		]
+	},
+	"status": "ok"
+}
+`
+
+	Report2RulesEnabledRule1ExpectedResponse = `
+{
+	"report": {
+		"meta": {
+			"count": 2,
+			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
+		},
+		"data": [
+			{
+				"rule_id": "` + string(Rule1ID) + `",
+				"description": "` + Rule1Description + `",
+				"details": "` + Rule1Details + `",
+				"reason": "` + Rule1Reason + `",
+				"resolution": "` + Rule1Resolution + `",
+				"created_at": "` + Rule1CreatedAt + `",
+				"total_risk": 3,
+				"risk_of_change": 0,
+				"extra_data": null,
+				"disabled": false
+			},
+			{
+				"rule_id": "` + string(Rule2ID) + `",
+				"description": "` + Rule2Description + `",
+				"details": "` + Rule2Details + `",
+				"reason": "` + Rule2Reason + `",
+				"resolution": "` + Rule2Resolution + `",
+				"created_at": "` + Rule2CreatedAt + `",
+				"total_risk": 4,
+				"risk_of_change": 0,
+				"extra_data": null,
+				"disabled": false
+			}
+		]
+	},
+	"status": "ok"
+}
+`
+
 	Report3Rules = types.ClusterReport(`
 {
 	"system": {
@@ -226,7 +324,8 @@ var (
 				"created_at": "` + Rule1CreatedAt + `",
 				"total_risk": 3,
 				"risk_of_change": 0,
-				"extra_data": null
+				"extra_data": null,
+				"disabled": false
 			},
 			{
 				"rule_id": "` + string(Rule2ID) + `",
@@ -237,7 +336,8 @@ var (
 				"created_at": "` + Rule2CreatedAt + `",
 				"total_risk": 4,
 				"risk_of_change": 0,
-				"extra_data": null
+				"extra_data": null,
+				"disabled": false
 			},
 			{
 				"rule_id": "` + string(Rule3ID) + `",
@@ -248,7 +348,8 @@ var (
 				"created_at": "` + Rule3CreatedAt + `",
 				"total_risk": 2,
 				"risk_of_change": 0,
-				"extra_data": null
+				"extra_data": null,
+				"disabled": false
 			}
 		]
 	},

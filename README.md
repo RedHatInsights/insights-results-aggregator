@@ -117,6 +117,24 @@ CREATE TABLE cluster_rule_user_feedback (
 )
 ```
 
+#### Table cluster_rule_toggle
+
+```sql
+CREATE TABLE cluster_rule_toggle (
+    cluster_id VARCHAR NOT NULL,
+    rule_id VARCHAR NOT NULL,
+    user_id VARCHAR NOT NULL,
+    disabled SMALLINT NOT NULL,
+    disabled_at TIMESTAMP NULL,
+    enabled_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NOT NULL,
+    
+    CHECK (disabled >= 0 AND disabled <= 1),
+
+    PRIMARY KEY(cluster_id, rule_id, user_id)
+)
+```
+
 #### Table consumer_error
 
 Errors that happen while processing a message consumed from Kafka are logged into this table. This allows easier debugging of various issues, especially those related to unexpected input data format.
@@ -159,7 +177,6 @@ but it can be overwritten by `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE` env var.
 Also each key in config can be overwritten by corresponding env var. For example if you have config
 
 ```toml
-...
 [storage]
 db_driver = "sqlite3"
 sqlite_datasource = "./aggregator.db"
@@ -169,7 +186,6 @@ pg_host = "localhost"
 pg_port = 5432
 pg_db_name = "aggregator"
 pg_params = ""
-...
 ```
 
 and environment variables
@@ -305,16 +321,16 @@ To get the latest rules content locally, you can `make rules_content`, which jus
 Aggregator is configured to use SQLite3 DB by default, but it also supports PostgreSQL.
 In CI and QA environments, the configuration is overridden by environment variables to use PostgreSQL.
 
-To establish connection to PostgreSQL, the following configuration options need to be changed in `storage` section of `config.toml`:
+To establish connection to the PostgreSQL instance provided by the minimal stack in `docker-compose.yml` for local setup, the following configuration options need to be changed in `storage` section of `config.toml`:
 
 ```toml
 [storage]
 db_driver = "postgres"
-pg_username = "postgres"
-pg_password = "postgres"
+pg_username = "user"
+pg_password = "password"
 pg_host = "localhost"
-pg_port = 5432
-pg_db_name = "controller"
+pg_port = 55432
+pg_db_name = "aggregator"
 pg_params = "sslmode=disable"
 ```
 
@@ -469,6 +485,12 @@ Please note that all checks mentioned above have to pass for the change to be me
 History of checks performed by CI is available at [RedHatInsights / insights-results-aggregator](https://travis-ci.org/RedHatInsights/insights-results-aggregator).
 
 ## Rules
+
+The user has the ability to disable a rule/health check recommendation that they're not interested in to stop it from showing in OCM. The user also has the ability to re-enable the rule, in case they later become interested in it, or in the case of an accidental disable, for exapmle.
+
+This is made possible by using these two endpoints:
+`clusters/{cluster}/rules/{rule_id}/disable`
+`clusters/{cluster}/rules/{rule_id}/enable`
 
 ### Tutorial rule
 

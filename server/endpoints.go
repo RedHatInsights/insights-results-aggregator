@@ -44,6 +44,11 @@ const (
 	RuleErrorKeyEndpoint = "rules/{rule_id}/error_keys/{error_key}"
 	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
+	// DisableRuleForClusterEndpoint disables a rule for specified cluster
+	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/disable"
+	// EnableRuleForClusterEndpoint re-enables a rule for specified cluster
+	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/enable"
+
 	// MetricsEndpoint returns prometheus metrics
 	MetricsEndpoint = "metrics"
 )

@@ -43,12 +43,13 @@ type Migration struct {
 // migrations is a list of migrations that, when applied in their order,
 // create the most recent version of the database from scratch.
 var migrations = []Migration{
-	mig1,
-	mig2,
-	mig3,
-	mig4,
-	mig5,
+	mig0001CreateReport,
+	mig0002CreateRuleContent,
+	mig0003CreateClusterRuleUserFeedback,
+	mig0004ModifyClusterRuleUserFeedback,
+	mig0005CreateConsumerError,
 	mig0006AddOnDeleteCascade,
+	mig0007CreateClusterRuleToggle,
 }
 
 // GetMaxVersion returns the highest available migration version.
