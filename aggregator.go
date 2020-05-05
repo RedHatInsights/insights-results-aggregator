@@ -53,7 +53,7 @@ const (
 	ExitStatusServerError
 	defaultConfigFilename = "config"
 
-	databasePreparationMessage = "database preparation existed with error code %v"
+	databasePreparationMessage = "database preparation exited with error code %v"
 	consumerExitedErrorMessage = "consumer exited with error code %v"
 )
 
