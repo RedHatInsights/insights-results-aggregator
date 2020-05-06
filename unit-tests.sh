@@ -18,8 +18,8 @@ CONFIG_FILE=config-devel.toml
 POSTGRES_PORT=$(grep -i pg_port $CONFIG_FILE | grep -E -o '[0-9]+')
 
 function run_unit_tests() {
-    files=$(go list ./... | grep -v tests)
-    if ! go test -coverprofile coverage.out "$files"
+    # shellcheck disable=SC2046
+    if ! go test -coverprofile coverage.out $(go list ./... | grep -v tests | tr '\n' ' ')
     then
         echo "unit tests failed"
         exit 1
