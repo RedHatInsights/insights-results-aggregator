@@ -78,7 +78,7 @@ func New(config Configuration, storage storage.Storage) *HTTPServer {
 }
 
 func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, _ *http.Request) {
-	err := responses.SendResponse(writer, responses.BuildOkResponse())
+	err := responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -91,7 +91,7 @@ func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, _ *htt
 		handleServerError(writer, err)
 		return
 	}
-	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("organizations", organizations))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("organizations", organizations))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -111,7 +111,7 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 		handleServerError(writer, err)
 		return
 	}
-	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("clusters", clusters))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("clusters", clusters))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -192,7 +192,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		Rules: rulesContent,
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("report", response))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("report", response))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -250,7 +250,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	err = responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -275,7 +275,7 @@ func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponseWithData("vote", userFeedbackOnRule.UserVote))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("vote", userFeedbackOnRule.UserVote))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -312,7 +312,7 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	err = responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -339,7 +339,7 @@ func (server *HTTPServer) deleteFromRuleClusterToggle(writer http.ResponseWriter
 		return
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	err = responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -371,7 +371,7 @@ func (server *HTTPServer) createRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponseWithData(
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(
 		"rule", rule,
 	))
 	if err != nil {
@@ -392,7 +392,7 @@ func (server *HTTPServer) deleteRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	err = responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -438,7 +438,7 @@ func (server *HTTPServer) createRuleErrorKey(writer http.ResponseWriter, request
 		return
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponseWithData(
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(
 		"rule_error_key", ruleErrorKey,
 	))
 	if err != nil {
@@ -465,7 +465,7 @@ func (server *HTTPServer) deleteRuleErrorKey(writer http.ResponseWriter, request
 		return
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	err = responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -498,7 +498,7 @@ func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, reques
 		}
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	err = responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -519,7 +519,7 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 		}
 	}
 
-	err = responses.SendResponse(writer, responses.BuildOkResponse())
+	err = responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
