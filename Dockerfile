@@ -12,35 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.13 AS builder
+FROM registry.redhat.io/rhel8/go-toolset:1.13 AS builder
 
 COPY . insights-results-aggregator
 
 ARG GITHUB_API_TOKEN
 
-ENV RULES_CONTENT_DIR=/rules-content \
+ENV RULES_CONTENT_DIR=/tmp/rules-content \
     RULES_REPO=https://github.com/RedHatInsights/ccx-rules-ocp/ \
-    GIT_ASKPASS=/git-askpass.sh
+    GIT_ASKPASS=/tmp/git-askpass.sh
 
 # clone rules content repository and build the aggregator
 RUN umask 0022 && \
     mkdir -p $RULES_CONTENT_DIR && \
     echo "echo $GITHUB_API_TOKEN" > $GIT_ASKPASS && \
-    chmod +x /git-askpass.sh && \
+    chmod +x /tmp/git-askpass.sh && \
     git -C $RULES_CONTENT_DIR clone $RULES_REPO $RULES_CONTENT_DIR && \
     cd insights-results-aggregator && \
-    make build
+    make build && \
+    chmod a+x insights-results-aggregator
 
-FROM registry.access.redhat.com/ubi8-minimal
+FROM registry.redhat.io/ubi8-minimal
 
-COPY --from=builder /go/insights-results-aggregator/insights-results-aggregator .
-COPY --from=builder /go/insights-results-aggregator/openapi.json /openapi/openapi.json
+COPY --from=builder /opt/app-root/src/insights-results-aggregator/insights-results-aggregator .
+COPY --from=builder /opt/app-root/src/insights-results-aggregator/openapi.json /openapi/openapi.json
 # copy just the rule content instead of the whole repository
-COPY --from=builder /rules-content/content/ /rules-content
+COPY --from=builder /tmp/rules-content/content/ /rules-content
 # copy tutorial/fake rule hit on all reports
 COPY rules/tutorial/content/ /rules-content/external/rules
-
-RUN chmod a+x /insights-results-aggregator
 
 USER 1001
 
