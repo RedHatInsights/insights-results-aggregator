@@ -21,7 +21,7 @@ function clean_up() {
 trap clean_up EXIT
 
 RULES_REPO="https://gitlab.cee.redhat.com/ccx/ccx-rules-ocp.git"
-SCRIPT_DIR="$(dirname $(realpath $0))"
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 CONTENT_DIR="${SCRIPT_DIR}/rules-content"
 TUTORIAL_RULE_CONTENT_DIR="${SCRIPT_DIR}/rules/tutorial/content"
 
@@ -30,24 +30,19 @@ RULES_CONTENT="${CLONE_TEMP_DIR}/content/"
 
 echo "Attempting to clone repository into ${CLONE_TEMP_DIR}"
 
-git clone "${RULES_REPO}" "${CLONE_TEMP_DIR}"
-if [ $? -ne 0 ]
+if ! git clone "${RULES_REPO}" "${CLONE_TEMP_DIR}"
 then
     echo "Couldn't clone rules repository"
     exit 1
 fi
 
-rm -rf "${CONTENT_DIR}"
-
-if [ $? -ne 0 ]
+if ! rm -rf "${CONTENT_DIR}"
 then
     echo "Couldn't remove previous content"
     exit 1
 fi
 
-mv "${RULES_CONTENT}" "${CONTENT_DIR}"
-
-if [ $? -ne 0 ]
+if ! mv "${RULES_CONTENT}" "${CONTENT_DIR}"
 then
     echo "Couldn't move rules content from cloned repository"
     exit 1
