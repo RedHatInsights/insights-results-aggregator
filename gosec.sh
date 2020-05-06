@@ -20,11 +20,6 @@ NC=$(tput sgr0) # No Color
 
 GO_SEC_ARGS=""
 
-VERBOSE=false
-if [[ $* == *verbose* ]]; then
-    VERBOSE=true
-fi
-
 if [[ $* != *verbose* ]]; then
     GO_SEC_ARGS="-quiet"
 fi

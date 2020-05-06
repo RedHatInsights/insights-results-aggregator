@@ -15,8 +15,6 @@
 
 threshold=45
 
-RED=$(tput setaf 1)
-GREEN=$(tput setaf 2)
 BLUE=$(tput setaf 4)
 RED_BG=$(tput setab 1)
 GREEN_BG=$(tput setab 2)

@@ -95,8 +95,9 @@ function test_rest_api() {
     # Without this, the DB could be locked because
     # the migrations have not yet finished.
     sleep 2
-    for i in {1..5}; do
-        populate_db_with_mock_data 2>/dev/null && break || sleep 1
+    for _ in {1..5}; do
+        populate_db_with_mock_data 2>/dev/null && break
+        sleep 1
     done
 
     echo "Building REST API tests utility"
@@ -124,9 +125,9 @@ function test_rest_api() {
 function test_openapi() {
     echo "Testing OpenAPI specifications file"
     # shellcheck disable=2181
-    docker run --rm -v "${PWD}":/local/:Z openapitools/openapi-generator-cli validate -i ./local/openapi.json
 
-    if [ $? -eq 0 ]; then
+    if docker run --rm -v "${PWD}":/local/:Z openapitools/openapi-generator-cli validate -i ./local/openapi.json
+    then
         echo "OpenAPI spec file is OK"
     else
         echo "OpenAPI spec file validation failed"

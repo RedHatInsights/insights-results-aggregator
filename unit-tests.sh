@@ -15,11 +15,12 @@
 
 
 CONFIG_FILE=config-devel.toml
-POSTGRES_PORT=$(cat $CONFIG_FILE | grep -i pg_port | grep -E -o '[0-9]+')
+POSTGRES_PORT=$(grep -i pg_port $CONFIG_FILE | grep -E -o '[0-9]+')
 
 function run_unit_tests() {
-    go test -coverprofile coverage.out $(go list ./... | grep -v tests)
-    if [ $? -ne 0 ]; then
+    files=$(go list ./... | grep -v tests)
+    if ! go test -coverprofile coverage.out "$files"
+    then
         echo "unit tests failed"
         exit 1
     fi
@@ -29,7 +30,7 @@ echo "running unit tests with sqlite in memory"
 # tests with sqlite
 run_unit_tests
 
-if netstat -nltp 2>/dev/null | grep $POSTGRES_PORT >/dev/null; then
+if netstat -nltp 2>/dev/null | grep "$POSTGRES_PORT" >/dev/null; then
     # tests with postgres
     export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="postgres"
     export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="admin"
