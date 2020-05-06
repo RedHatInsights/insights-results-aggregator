@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -38,6 +39,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/logger"
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
@@ -274,7 +276,7 @@ The commands are:
     help                prints help
     print-help          prints help
     print-config        prints current configuration set by files & env variables
-    print-env			prints env variables
+    print-env           prints env variables
     print-version-info  prints version info
 
 `
@@ -303,6 +305,63 @@ func printEnv() int {
 	}
 
 	return ExitStatusOK
+}
+
+func performMigrations() int {
+	migrationArgs := os.Args[2:]
+
+	db, err := createStorage()
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to prepare DB for migrations")
+		return ExitStatusPrepareDbError
+	}
+	defer closeStorage(db)
+
+	dbConn := db.GetConnection()
+
+	if err := migration.InitInfoTable(dbConn); err != nil {
+		log.Error().Err(err).Msg("Unable to initialize migration info table")
+	}
+
+	switch len(migrationArgs) {
+	case 0:
+		currMigVer, err := migration.GetDBVersion(dbConn)
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to get current DB version")
+			return ExitStatusPrepareDbError
+		}
+
+		log.Info().Msgf("Current DB version: %d", currMigVer)
+		log.Info().Msgf("Maximum available version: %d", migration.GetMaxVersion())
+		return 0
+
+	case 1:
+		versStr := migrationArgs[0]
+		var targetVersion migration.Version
+		if versStrLower := strings.ToLower(versStr); versStrLower == "latest" || versStrLower == "max" {
+			targetVersion = migration.GetMaxVersion()
+		} else {
+			vers, err := strconv.Atoi(versStr)
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to parse target migration version")
+				return ExitStatusPrepareDbError
+			}
+
+			targetVersion = migration.Version(vers)
+		}
+
+		if err := migration.SetDBVersion(dbConn, targetVersion); err != nil {
+			log.Error().Err(err).Msg("Unable to perform migration")
+			return ExitStatusPrepareDbError
+		}
+
+		log.Info().Msgf("Database version is now %d", targetVersion)
+		return ExitStatusOK
+
+	default:
+		log.Error().Msg("Unexpected number of arguments to migrations command (expected 0-1)")
+		return ExitStatusPrepareDbError
+	}
 }
 
 func main() {
@@ -344,6 +403,8 @@ func handleCommand(command string) int {
 		return printEnv()
 	case "print-version-info":
 		printVersionInfo()
+	case "migrations", "migration", "migrate":
+		return performMigrations()
 	default:
 		fmt.Printf("\nCommand '%v' not found\n", command)
 		return printHelp()
