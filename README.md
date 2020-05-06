@@ -31,7 +31,7 @@ Aggregator service consists of three main parts:
 4. That results are consumed by Insights rules aggregator service that caches them
 5. The service provides such data via REST API to other tools, like OpenShift Cluster Manager web UI, OpenShift console, etc.
 
-Optionally, an organization whitelist can be enabled by the configuration variable `enable_org_whitelist`, which enables processing of a .csv file containing organization IDs (path specified by the config variable `org_whitelist`) and allows report processing only for these organizations. This feature is disbabled by default, and might be removed altogether in the near future.
+Optionally, an organization whitelist can be enabled by the configuration variable `enable_org_whitelist`, which enables processing of a .csv file containing organization IDs (path specified by the config variable `org_whitelist`) and allows report processing only for these organizations. This feature is disabled by default, and might be removed altogether in the near future.
 
 ### DB structure
 
@@ -162,6 +162,7 @@ All packages developed in this project have documentation available on [GoDoc se
 * [package `broker`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/broker)
 * [package `consumer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/consumer)
 * [package `content`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/content)
+* [package `logger`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/logger)
 * [package `metrics`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/metrics)
 * [package `migration`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/migration)
 * [package `producer`](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/producer)
@@ -251,10 +252,10 @@ enable_cors = true
 * `address` is host and port which server should listen to
 * `api_prefix` is prefix for RestAPI path
 * `api_spec_file` is the location of a required OpenAPI specifications file
-* `debug` is developer mode that enables some special API endpoints not used on production
-* `auth` turns on or turns authentication
+* `debug` is developer mode that enables some special API endpoints not used on production. In production, `false` is used everytime.
+* `auth` turns on or turns authentication. Please note that this option can be set to `false` only in devel environment. In production, `true` is used everytime.
 * `auth_type` set type of auth, it means which header to use for auth `x-rh-identity` or `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
-* `use_https` is option to turn on TLS server
+* `use_https` is option to turn on TLS server. Please note that this option can be set to `false` only in devel environment. In production, `true` is used everytime.
 * `enable_cors` is option to turn on CORS header, that allows to connect from different hosts (**don't use it in production**)
 
 Please note that if `auth` configuration option is turned off, not all REST API endpoints will be usable. Whole REST API schema is satisfied only for `auth = true`.
