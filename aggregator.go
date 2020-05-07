@@ -321,6 +321,7 @@ func performMigrations() int {
 
 	if err := migration.InitInfoTable(dbConn); err != nil {
 		log.Error().Err(err).Msg("Unable to initialize migration info table")
+		return ExitStatusPrepareDbError
 	}
 
 	switch len(migrationArgs) {
