@@ -17,15 +17,17 @@
 from pathlib import Path
 from json import load
 from sys import exit
+from os import popen
 from argparse import ArgumentParser
 
 
-def main():
-    parser = ArgumentParser()
-    parser.add_argument("-v", "--verbose", dest="verbose", help="make it verbose",
-                        action="store_true", default=None)
-    args = parser.parse_args()
+def read_control_code(operation):
+    """Try to execute tput to read control code for selected operation."""
+    return popen("tput " + operation, "r").readline()
 
+
+def check_jsons(verbose):
+    """Check all JSON files found in current directory and all subdirectories."""
     passes = 0
     failures = 0
 
@@ -35,7 +37,7 @@ def main():
         try:
             with file.open() as fin:
                 obj = load(fin)
-                if args.verbose is not None:
+                if verbose is not None:
                     print("{} is valid".format(file))
 
                 passes += 1
@@ -44,11 +46,45 @@ def main():
             failures += 1
             print(e)
 
+    return passes, failures
+
+
+def display_report(passes, failures, nocolors):
+    """Display report about number of passes and failures."""
+    red_background = green_background = magenta_background = no_color = ""
+    if not nocolors:
+        red_background = read_control_code("setab 1")
+        green_background = read_control_code("setab 2")
+        magenta_background = read_control_code("setab 5")
+        no_color = read_control_code("sgr0")
+
+    if failures == 0:
+        if passes == 0:
+            print("{}[WARN]{}: no JSON files detected".format(magenta_background, no_color))
+        else:
+            print("{}[OK]{}: all JSONs have proper format".format(green_background, no_color))
+    else:
+        print("{}[FAIL]{}: invalid JSON(s) detected".format(red_background, no_color))
+
     print("{} passes".format(passes))
     print("{} failures".format(failures))
 
+
+def main():
+    """Entry point to this tool."""
+    parser = ArgumentParser()
+    parser.add_argument("-v", "--verbose", dest="verbose", help="make it verbose",
+                        action="store_true", default=None)
+    parser.add_argument("-n", "--no-colors", dest="nocolors", help="disable color output",
+                        action="store_true", default=None)
+    args = parser.parse_args()
+
+    passes, failures = check_jsons(args.verbose)
+    display_report(passes, failures, args.nocolors)
+
     if failures > 0:
         exit(1)
+
 
 if __name__ == "__main__":
     main()
