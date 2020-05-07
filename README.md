@@ -601,4 +601,5 @@ usage: json_check.py [-h] [-v]
 optional arguments:
   -h, --help     show this help message and exit
   -v, --verbose  make it verbose
+  -n, --no-colors  disable color output
 ```
