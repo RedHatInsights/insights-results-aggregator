@@ -25,6 +25,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -53,6 +54,8 @@ const (
 	ExitStatusConsumerError
 	// ExitStatusServerError is returned in case of any REST API server-related error
 	ExitStatusServerError
+	// ExitStatusMigrationError is returned in case of an error while attempting to perform DB migrations
+	ExitStatusMigrationError
 	defaultConfigFilename = "config"
 
 	databasePreparationMessage = "database preparation exited with error code %v"
@@ -307,57 +310,82 @@ func printEnv() int {
 	return ExitStatusOK
 }
 
-func performMigrations() int {
-	migrationArgs := os.Args[2:]
-
+// getDBForMigrations opens a DB connection and prepares the DB for migrations.
+// Non-OK exit code is returned as the last return value in case of an error.
+// Otherwise, database and connection pointers are returned.
+func getDBForMigrations() (*storage.DBStorage, *sql.DB, int) {
 	db, err := createStorage()
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to prepare DB for migrations")
-		return ExitStatusPrepareDbError
+		return nil, nil, ExitStatusPrepareDbError
 	}
-	defer closeStorage(db)
 
 	dbConn := db.GetConnection()
 
 	if err := migration.InitInfoTable(dbConn); err != nil {
+		closeStorage(db)
 		log.Error().Err(err).Msg("Unable to initialize migration info table")
+		return nil, nil, ExitStatusPrepareDbError
+	}
+
+	return db, dbConn, ExitStatusOK
+}
+
+// printMigrationInfo prints information about current DB
+// migration version without making any modifications.
+func printMigrationInfo(dbConn *sql.DB) int {
+	currMigVer, err := migration.GetDBVersion(dbConn)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to get current DB version")
 		return ExitStatusPrepareDbError
 	}
 
+	log.Info().Msgf("Current DB version: %d", currMigVer)
+	log.Info().Msgf("Maximum available version: %d", migration.GetMaxVersion())
+	return ExitStatusOK
+}
+
+// setMigrationVersion attempts to migrate the DB to the target version.
+func setMigrationVersion(dbConn *sql.DB, versStr string) int {
+	var targetVersion migration.Version
+	if versStrLower := strings.ToLower(versStr); versStrLower == "latest" || versStrLower == "max" {
+		targetVersion = migration.GetMaxVersion()
+	} else {
+		vers, err := strconv.Atoi(versStr)
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to parse target migration version")
+			return ExitStatusPrepareDbError
+		}
+
+		targetVersion = migration.Version(vers)
+	}
+
+	if err := migration.SetDBVersion(dbConn, targetVersion); err != nil {
+		log.Error().Err(err).Msg("Unable to perform migration")
+		return ExitStatusPrepareDbError
+	}
+
+	log.Info().Msgf("Database version is now %d", targetVersion)
+	return ExitStatusOK
+}
+
+// performMigrations handles migrations subcommand. This can be used to either
+// print the current DB migration version or to migrate to a different version.
+func performMigrations() int {
+	migrationArgs := os.Args[2:]
+
+	db, dbConn, exitCode := getDBForMigrations()
+	if exitCode != ExitStatusOK {
+		return exitCode
+	}
+	defer closeStorage(db)
+
 	switch len(migrationArgs) {
 	case 0:
-		currMigVer, err := migration.GetDBVersion(dbConn)
-		if err != nil {
-			log.Error().Err(err).Msg("Unable to get current DB version")
-			return ExitStatusPrepareDbError
-		}
-
-		log.Info().Msgf("Current DB version: %d", currMigVer)
-		log.Info().Msgf("Maximum available version: %d", migration.GetMaxVersion())
-		return 0
+		return printMigrationInfo(dbConn)
 
 	case 1:
-		versStr := migrationArgs[0]
-		var targetVersion migration.Version
-		if versStrLower := strings.ToLower(versStr); versStrLower == "latest" || versStrLower == "max" {
-			targetVersion = migration.GetMaxVersion()
-		} else {
-			vers, err := strconv.Atoi(versStr)
-			if err != nil {
-				log.Error().Err(err).Msg("Unable to parse target migration version")
-				return ExitStatusPrepareDbError
-			}
-
-			targetVersion = migration.Version(vers)
-		}
-
-		if err := migration.SetDBVersion(dbConn, targetVersion); err != nil {
-			log.Error().Err(err).Msg("Unable to perform migration")
-			return ExitStatusPrepareDbError
-		}
-
-		log.Info().Msgf("Database version is now %d", targetVersion)
-		return ExitStatusOK
+		return setMigrationVersion(dbConn, migrationArgs[0])
 
 	default:
 		log.Error().Msg("Unexpected number of arguments to migrations command (expected 0-1)")
