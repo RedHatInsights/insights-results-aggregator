@@ -603,3 +603,32 @@ optional arguments:
   -v, --verbose  make it verbose
   -n, --no-colors  disable color output
 ```
+
+## Utilitites for working with objects stored in AWS S3 bucket
+
+### `upload_timestamps.py`
+
+Script to retrieve timestamp of all objects stored in AWS S3 bucket and export them to CSV.
+
+#### Usage
+
+```
+upload_timestamps.py [-h] -k ACCESS_KEY -s SECRET_KEY [-r REGION]
+                     [-b BUCKET] -o OUTPUT [-m MAX_RECORDS]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -k ACCESS_KEY, --access_key ACCESS_KEY
+                        AWS access key ID
+  -s SECRET_KEY, --secret_key SECRET_KEY
+                        AWS secret access key
+  -r REGION, --region REGION
+                        AWS region, us-east-1 by default
+  -b BUCKET, --bucket BUCKET
+                        bucket name, insights-buck-it-openshift by default
+  -o OUTPUT, --output OUTPUT
+                        output file name
+  -m MAX_RECORDS, --max_records MAX_RECORDS
+                        max records to export (default=all)
+```
+
