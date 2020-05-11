@@ -337,7 +337,7 @@ func printMigrationInfo(dbConn *sql.DB) int {
 	currMigVer, err := migration.GetDBVersion(dbConn)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get current DB version")
-		return ExitStatusPrepareDbError
+		return ExitStatusMigrationError
 	}
 
 	log.Info().Msgf("Current DB version: %d", currMigVer)
@@ -354,7 +354,7 @@ func setMigrationVersion(dbConn *sql.DB, versStr string) int {
 		vers, err := strconv.Atoi(versStr)
 		if err != nil {
 			log.Error().Err(err).Msg("Unable to parse target migration version")
-			return ExitStatusPrepareDbError
+			return ExitStatusMigrationError
 		}
 
 		targetVersion = migration.Version(vers)
@@ -362,7 +362,7 @@ func setMigrationVersion(dbConn *sql.DB, versStr string) int {
 
 	if err := migration.SetDBVersion(dbConn, targetVersion); err != nil {
 		log.Error().Err(err).Msg("Unable to perform migration")
-		return ExitStatusPrepareDbError
+		return ExitStatusMigrationError
 	}
 
 	log.Info().Msgf("Database version is now %d", targetVersion)
@@ -389,7 +389,7 @@ func performMigrations() int {
 
 	default:
 		log.Error().Msg("Unexpected number of arguments to migrations command (expected 0-1)")
-		return ExitStatusPrepareDbError
+		return ExitStatusMigrationError
 	}
 }
 
