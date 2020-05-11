@@ -31,4 +31,11 @@ var (
 	StartConsumer         = startConsumer
 	StartServer           = startServer
 	PrintVersionInfo      = printVersionInfo
+	PrintHelp             = printHelp
+	PrintConfig           = printConfig
+	PrintEnv              = printEnv
+	GetDBForMigrations    = getDBForMigrations
+	PrintMigrationInfo    = printMigrationInfo
+	SetMigrationVersion   = setMigrationVersion
+	PerformMigrations     = performMigrations
 )
