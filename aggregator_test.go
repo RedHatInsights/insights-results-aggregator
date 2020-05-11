@@ -302,7 +302,7 @@ func TestPrintEnv(t *testing.T) {
 func TestGetDBForMigrations(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, main.ExitStatusOK, exitCode)
-	defer db.Close()
+	defer helpers.MustCloseStorage(t, db)
 
 	row := dbConn.QueryRow("SELECT version FROM migration_info")
 	var version migration.Version
@@ -314,7 +314,7 @@ func TestGetDBForMigrations(t *testing.T) {
 func TestPrintMigrationInfo(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
-	defer db.Close()
+	defer helpers.MustCloseStorage(t, db)
 
 	exitCode = main.PrintMigrationInfo(dbConn)
 	assert.Equal(t, main.ExitStatusOK, exitCode)
@@ -326,7 +326,7 @@ func TestPrintMigrationInfoClosedDB(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	// Close DB connection immediately.
-	db.Close()
+	helpers.MustCloseStorage(t, db)
 
 	exitCode = main.PrintMigrationInfo(dbConn)
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
@@ -336,7 +336,7 @@ func TestPrintMigrationInfoClosedDB(t *testing.T) {
 func TestSetMigrationVersionZero(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
-	defer db.Close()
+	defer helpers.MustCloseStorage(t, db)
 
 	exitCode = main.SetMigrationVersion(dbConn, "0")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
@@ -351,7 +351,7 @@ func TestSetMigrationVersionZero(t *testing.T) {
 func TestSetMigrationVersionLatest(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
-	defer db.Close()
+	defer helpers.MustCloseStorage(t, db)
 
 	exitCode = main.SetMigrationVersion(dbConn, "latest")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
@@ -368,7 +368,7 @@ func TestSetMigrationVersionClosedDB(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	// Close DB connection immediately.
-	db.Close()
+	helpers.MustCloseStorage(t, db)
 
 	exitCode = main.SetMigrationVersion(dbConn, "0")
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
@@ -380,7 +380,7 @@ func TestSetMigrationVersionInvalid(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	// Close DB connection immediately.
-	db.Close()
+	helpers.MustCloseStorage(t, db)
 
 	exitCode = main.SetMigrationVersion(dbConn, "")
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
