@@ -77,6 +77,11 @@ var (
 
 	// BuildCommit contains Git commit used to build this application
 	BuildCommit string = "*not set*"
+
+	// autoMigrate determines if the prepareDB function upgrades
+	// the database to the latest migration version. This is necessary
+	// for certain tests that work with a temporary, empty SQLite DB.
+	autoMigrate bool = false
 )
 
 func createStorage() (*storage.DBStorage, error) {
@@ -100,8 +105,7 @@ func closeStorage(storage *storage.DBStorage) {
 	}
 }
 
-// prepareDB migrates the DB to the latest version
-// and loads all available rule content into it.
+// prepareDB opens a DB connection and loads all available rule content into it.
 func prepareDB() int {
 	dbStorage, err := createStorage()
 	if err != nil {
@@ -109,8 +113,14 @@ func prepareDB() int {
 	}
 	defer closeStorage(dbStorage)
 
-	// Initialize the database by running necessary
-	// migrations to get to the highest available version.
+	// This is only used by some unit tests.
+	if autoMigrate {
+		if err := dbStorage.MigrateToLatest(); err != nil {
+			log.Error().Err(err).Msg("unable to migrate DB to latest version")
+		}
+	}
+
+	// Initialize the database.
 	err = dbStorage.Init()
 	if err != nil {
 		log.Error().Err(err).Msg("DB initialization error")

@@ -202,16 +202,18 @@ func initAndGetDriver(configuration Configuration) (driverType DBDriver, driverN
 	return
 }
 
-// Init method is doing initialization like creating tables in underlying database
-func (storage DBStorage) Init() error {
-	// Perform all defined migrations on the database.
+// MigrateToLatest migrates the database to the latest available
+// migration version. This must be done before an Init() call.
+func (storage DBStorage) MigrateToLatest() error {
 	if err := migration.InitInfoTable(storage.connection); err != nil {
 		return err
 	}
-	if err := migration.SetDBVersion(storage.connection, migration.GetMaxVersion()); err != nil {
-		return err
-	}
+	return migration.SetDBVersion(storage.connection, migration.GetMaxVersion())
+}
 
+// Init performs all database initialization
+// tasks necessary for futher service operation.
+func (storage DBStorage) Init() error {
 	// Read clusterName:LastChecked dictionary from DB.
 	rows, err := storage.connection.Query("SELECT cluster, last_checked_at FROM report")
 	if err != nil {

@@ -79,6 +79,10 @@ func TestStartService(t *testing.T) {
 			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
 		})
 
+		// It is necessary to perform migrations for this test
+		// because the service won't run on top of an empty DB.
+		*main.AutoMigratePtr = true
+
 		go func() {
 			main.StartService()
 		}()

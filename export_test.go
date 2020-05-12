@@ -38,4 +38,5 @@ var (
 	PrintMigrationInfo    = printMigrationInfo
 	SetMigrationVersion   = setMigrationVersion
 	PerformMigrations     = performMigrations
+	AutoMigratePtr        = &autoMigrate
 )

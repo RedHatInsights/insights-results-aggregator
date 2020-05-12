@@ -157,6 +157,8 @@ func TestHttpServer_readReportForCluster_getContentForRule_DBError(t *testing.T)
 	mockStorage := storage.NewFromConnection(connection, storage.DBDriverSQLite3)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
+	helpers.FailOnError(t, mockStorage.MigrateToLatest())
+
 	err = mockStorage.Init()
 	helpers.FailOnError(t, err)
 
