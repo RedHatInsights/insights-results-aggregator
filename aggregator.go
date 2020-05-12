@@ -117,6 +117,7 @@ func prepareDB() int {
 	if autoMigrate {
 		if err := dbStorage.MigrateToLatest(); err != nil {
 			log.Error().Err(err).Msg("unable to migrate DB to latest version")
+			return ExitStatusPrepareDbError
 		}
 	}
 
