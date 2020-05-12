@@ -105,6 +105,30 @@ func closeStorage(storage *storage.DBStorage) {
 	}
 }
 
+func prepareDBMigrations(dbStorage *storage.DBStorage) int {
+	// This is only used by some unit tests.
+	if autoMigrate {
+		if err := dbStorage.MigrateToLatest(); err != nil {
+			log.Error().Err(err).Msg("unable to migrate DB to latest version")
+			return ExitStatusPrepareDbError
+		}
+	} else {
+		currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection())
+		if err != nil {
+			log.Error().Err(err).Msg("unable to check DB migration version")
+			return ExitStatusPrepareDbError
+		}
+
+		maxVersion := migration.GetMaxVersion()
+		if currentVersion != maxVersion {
+			log.Error().Msgf("old DB migration version (current: %d, latest: %d)", currentVersion, maxVersion)
+			return ExitStatusPrepareDbError
+		}
+	}
+
+	return ExitStatusOK
+}
+
 // prepareDB opens a DB connection and loads all available rule content into it.
 func prepareDB() int {
 	dbStorage, err := createStorage()
@@ -113,12 +137,9 @@ func prepareDB() int {
 	}
 	defer closeStorage(dbStorage)
 
-	// This is only used by some unit tests.
-	if autoMigrate {
-		if err := dbStorage.MigrateToLatest(); err != nil {
-			log.Error().Err(err).Msg("unable to migrate DB to latest version")
-			return ExitStatusPrepareDbError
-		}
+	// Ensure that the DB is at the latest migration version.
+	if exitCode := prepareDBMigrations(dbStorage); exitCode != ExitStatusOK {
+		return exitCode
 	}
 
 	// Initialize the database.
