@@ -150,6 +150,22 @@ func (server *HTTPServer) getContentForRules(
 	return hitRules, totalRules, nil
 }
 
+// getUserVoteForRules returns user votes for defined list of report's IDs
+func (server *HTTPServer) getUserVoteForRules(
+	writer http.ResponseWriter,
+	feedbacks map[types.RuleID]types.UserVote,
+	rulesContent []types.RuleContentResponse,
+) []types.RuleContentResponse {
+	for i := range rulesContent {
+		if vote, found := feedbacks[types.RuleID(rulesContent[i].RuleModule)]; found {
+			rulesContent[i].UserVote = vote
+		} else {
+			rulesContent[i].UserVote = types.UserVoteNone
+		}
+	}
+	return rulesContent
+}
+
 func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
 	organizationID, err := readOrganizationID(writer, request, server.Config.Auth)
 	if err != nil {
@@ -158,6 +174,12 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	}
 
 	clusterName, err := readClusterName(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	userID, err := server.readUserID(err, request, writer)
 	if err != nil {
 		// everything has been handled already
 		return
@@ -176,6 +198,16 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 	hitRulesCount := len(rulesContent)
+
+	feedbacks, err := server.Storage.GetUserFeedbackOnRules(clusterName, rulesContent, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to retrieve feedback results from database")
+		handleServerError(writer, err)
+		return
+	}
+
+	rulesContent = server.getUserVoteForRules(writer, feedbacks, rulesContent)
+
 	// -1 as count in response means there are no rules for this cluster
 	// as opposed to no rules hit for the cluster
 	if rulesCount == 0 {
@@ -200,17 +232,17 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 
 // likeRule likes the rule for current user
 func (server *HTTPServer) likeRule(writer http.ResponseWriter, request *http.Request) {
-	server.voteOnRule(writer, request, storage.UserVoteLike)
+	server.voteOnRule(writer, request, types.UserVoteLike)
 }
 
 // dislikeRule dislikes the rule for current user
 func (server *HTTPServer) dislikeRule(writer http.ResponseWriter, request *http.Request) {
-	server.voteOnRule(writer, request, storage.UserVoteDislike)
+	server.voteOnRule(writer, request, types.UserVoteDislike)
 }
 
 // resetVoteOnRule resets vote for the rule for current user
 func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *http.Request) {
-	server.voteOnRule(writer, request, storage.UserVoteNone)
+	server.voteOnRule(writer, request, types.UserVoteNone)
 }
 
 // checkUserClusterPermissions retrieves organization ID by checking the owner of cluster ID, checks if it matches the one from request
@@ -231,7 +263,7 @@ func (server *HTTPServer) checkUserClusterPermissions(writer http.ResponseWriter
 	return nil
 }
 
-func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote storage.UserVote) {
+func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote types.UserVote) {
 	clusterID, ruleID, userID, err := server.readClusterRuleUserParams(writer, request)
 	if err != nil {
 		// everything has been handled already

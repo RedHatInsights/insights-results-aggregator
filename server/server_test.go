@@ -36,6 +36,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var config = server.Configuration{
@@ -305,15 +306,15 @@ func TestRuleFeedbackVote(t *testing.T) {
 	for _, endpoint := range []string{
 		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
 	} {
-		var expectedVote storage.UserVote
+		var expectedVote types.UserVote
 
 		switch endpoint {
 		case server.LikeRuleEndpoint:
-			expectedVote = storage.UserVoteLike
+			expectedVote = types.UserVoteLike
 		case server.DislikeRuleEndpoint:
-			expectedVote = storage.UserVoteDislike
+			expectedVote = types.UserVoteDislike
 		case server.ResetVoteOnRuleEndpoint:
-			expectedVote = storage.UserVoteNone
+			expectedVote = types.UserVoteNone
 		default:
 			t.Fatal("not expected action")
 		}
@@ -575,15 +576,15 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 	for _, endpoint := range []string{
 		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
 	} {
-		var expectedVote storage.UserVote
+		var expectedVote types.UserVote
 
 		switch endpoint {
 		case server.LikeRuleEndpoint:
-			expectedVote = storage.UserVoteLike
+			expectedVote = types.UserVoteLike
 		case server.DislikeRuleEndpoint:
-			expectedVote = storage.UserVoteDislike
+			expectedVote = types.UserVoteDislike
 		case server.ResetVoteOnRuleEndpoint:
-			expectedVote = storage.UserVoteNone
+			expectedVote = types.UserVoteNone
 		default:
 			t.Fatal("not expected action")
 		}

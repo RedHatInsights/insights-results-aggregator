@@ -69,7 +69,7 @@ type Storage interface {
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		userID types.UserID,
-		userVote UserVote,
+		userVote types.UserVote,
 	) error
 	AddOrUpdateFeedbackOnRule(
 		clusterID types.ClusterName,
@@ -111,6 +111,11 @@ type Storage interface {
 	CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) error
 	DeleteRuleErrorKey(ruleID types.RuleID, errorKey types.ErrorKey) error
 	WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
+	GetUserFeedbackOnRules(
+		clusterID types.ClusterName,
+		rulesContent []types.RuleContentResponse,
+		userID types.UserID,
+	) (map[types.RuleID]types.UserVote, error)
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database

@@ -171,6 +171,18 @@ var (
 		},
 	}
 
+	RuleContentResponses = []types.RuleContentResponse{
+		types.RuleContentResponse{
+			RuleModule: string(Rule1ID),
+		},
+		types.RuleContentResponse{
+			RuleModule: string(Rule2ID),
+		},
+		types.RuleContentResponse{
+			RuleModule: string(Rule3ID),
+		},
+	}
+
 	Report0Rules = types.ClusterReport(`
 {
 	"system": {
