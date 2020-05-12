@@ -30,6 +30,7 @@ import (
 
 	main "github.com/RedHatInsights/insights-results-aggregator"
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
@@ -69,6 +70,10 @@ func TestCreateStorage(t *testing.T) {
 }
 
 func TestStartService(t *testing.T) {
+	// It is necessary to perform migrations for this test
+	// because the service won't run on top of an empty DB.
+	*main.AutoMigratePtr = true
+
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		os.Clearenv()
 
@@ -86,10 +91,13 @@ func TestStartService(t *testing.T) {
 		errCode := main.StopService()
 		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)
+
+	*main.AutoMigratePtr = false
 }
 
 func TestStartServiceWithMockBroker(t *testing.T) {
 	const topicName = "topic"
+	*main.AutoMigratePtr = true
 
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		mockBroker := sarama.NewMockBroker(t, 0)
@@ -124,6 +132,8 @@ func TestStartServiceWithMockBroker(t *testing.T) {
 		errCode := main.StopService()
 		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)
+
+	*main.AutoMigratePtr = false
 }
 
 func TestStartService_DBError(t *testing.T) {
@@ -184,8 +194,12 @@ func TestPrepareDB(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
 	})
 
+	*main.AutoMigratePtr = true
+
 	errCode := main.PrepareDB()
 	assert.Equal(t, main.ExitStatusOK, errCode)
+
+	*main.AutoMigratePtr = false
 }
 
 func TestPrepareDB_NoRulesDirectory(t *testing.T) {
@@ -272,11 +286,155 @@ func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
 	})
 
+	*main.AutoMigratePtr = true
+
 	errCode := main.StartService()
 	assert.Equal(t, main.ExitStatusConsumerError+main.ExitStatusServerError, errCode)
+
+	*main.AutoMigratePtr = false
 }
 
 // TestPrintVersionInfo is dummy ATM - we'll check versions etc. in integration tests
 func TestPrintVersionInfo(t *testing.T) {
 	main.PrintVersionInfo()
+}
+
+// TestPrintHelp checks that printing help returns OK exit code.
+func TestPrintHelp(t *testing.T) {
+	assert.Equal(t, main.ExitStatusOK, main.PrintHelp())
+}
+
+// TestPrintConfig checks that printing configuration info returns OK exit code.
+func TestPrintConfig(t *testing.T) {
+	assert.Equal(t, main.ExitStatusOK, main.PrintConfig())
+}
+
+// TestPrintEnv checks that printing environment variables returns OK exit code.
+func TestPrintEnv(t *testing.T) {
+	assert.Equal(t, main.ExitStatusOK, main.PrintEnv())
+}
+
+// TestGetDBForMigrations checks that the function ensures the existence of
+// the migration_info table and that the SQL DB connection works correctly.
+func TestGetDBForMigrations(t *testing.T) {
+	db, dbConn, exitCode := main.GetDBForMigrations()
+	assert.Equal(t, main.ExitStatusOK, exitCode)
+	defer helpers.MustCloseStorage(t, db)
+
+	row := dbConn.QueryRow("SELECT version FROM migration_info")
+	var version migration.Version
+	err := row.Scan(&version)
+	assert.NoError(t, err, "unable to read version from migration info table")
+}
+
+// TestPrintMigrationInfo checks that printing migration info exits with OK code.
+func TestPrintMigrationInfo(t *testing.T) {
+	db, dbConn, exitCode := main.GetDBForMigrations()
+	assert.Equal(t, exitCode, main.ExitStatusOK)
+	defer helpers.MustCloseStorage(t, db)
+
+	exitCode = main.PrintMigrationInfo(dbConn)
+	assert.Equal(t, main.ExitStatusOK, exitCode)
+}
+
+// TestPrintMigrationInfoClosedDB checks that printing migration info with
+// a closed DB connection results in a migration error exit code.
+func TestPrintMigrationInfoClosedDB(t *testing.T) {
+	db, dbConn, exitCode := main.GetDBForMigrations()
+	assert.Equal(t, exitCode, main.ExitStatusOK)
+	// Close DB connection immediately.
+	helpers.MustCloseStorage(t, db)
+
+	exitCode = main.PrintMigrationInfo(dbConn)
+	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
+}
+
+// TestSetMigrationVersionZero checks that it is possible to set migration version to 0.
+func TestSetMigrationVersionZero(t *testing.T) {
+	db, dbConn, exitCode := main.GetDBForMigrations()
+	assert.Equal(t, exitCode, main.ExitStatusOK)
+	defer helpers.MustCloseStorage(t, db)
+
+	exitCode = main.SetMigrationVersion(dbConn, "0")
+	assert.Equal(t, main.ExitStatusOK, exitCode)
+
+	version, err := migration.GetDBVersion(dbConn)
+	assert.NoError(t, err, "unable to get migration version")
+
+	assert.Equal(t, migration.Version(0), version)
+}
+
+// TestSetMigrationVersionZero checks that it is to upgrade DB to the latest migration.
+func TestSetMigrationVersionLatest(t *testing.T) {
+	db, dbConn, exitCode := main.GetDBForMigrations()
+	assert.Equal(t, exitCode, main.ExitStatusOK)
+	defer helpers.MustCloseStorage(t, db)
+
+	exitCode = main.SetMigrationVersion(dbConn, "latest")
+	assert.Equal(t, main.ExitStatusOK, exitCode)
+
+	version, err := migration.GetDBVersion(dbConn)
+	assert.NoError(t, err, "unable to get migration version")
+
+	assert.Equal(t, migration.GetMaxVersion(), version)
+}
+
+// TestSetMigrationVersionClosedDB checks that setting the migration version
+// with a closed DB connection results in a migration error exit code.
+func TestSetMigrationVersionClosedDB(t *testing.T) {
+	db, dbConn, exitCode := main.GetDBForMigrations()
+	assert.Equal(t, exitCode, main.ExitStatusOK)
+	// Close DB connection immediately.
+	helpers.MustCloseStorage(t, db)
+
+	exitCode = main.SetMigrationVersion(dbConn, "0")
+	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
+}
+
+// TestSetMigrationVersionInvalid checks that when supplied an invalid version
+// argument, the set version function exits with a migration error code.
+func TestSetMigrationVersionInvalid(t *testing.T) {
+	db, dbConn, exitCode := main.GetDBForMigrations()
+	assert.Equal(t, exitCode, main.ExitStatusOK)
+	// Close DB connection immediately.
+	helpers.MustCloseStorage(t, db)
+
+	exitCode = main.SetMigrationVersion(dbConn, "")
+	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
+}
+
+// TestPerformMigrationsPrint checks that the command for
+// printing migration info exits with the OK exit code.
+func TestPerformMigrationsPrint(t *testing.T) {
+	oldArgs := os.Args
+
+	os.Args = []string{os.Args[0], "migrations"}
+	exitCode := main.PerformMigrations()
+	assert.Equal(t, main.ExitStatusOK, exitCode)
+
+	os.Args = oldArgs
+}
+
+// TestPerformMigrationsPrint checks that the command for
+// setting migration version exits with the OK exit code.
+func TestPerformMigrationsSet(t *testing.T) {
+	oldArgs := os.Args
+
+	os.Args = []string{os.Args[0], "migrations", "0"}
+	exitCode := main.PerformMigrations()
+	assert.Equal(t, main.ExitStatusOK, exitCode)
+
+	os.Args = oldArgs
+}
+
+// TestPerformMigrationsPrint checks that supplying too many arguments
+// to the migration sub-commands results in the migration error exit code.
+func TestPerformMigrationsTooManyArgs(t *testing.T) {
+	oldArgs := os.Args
+
+	os.Args = []string{os.Args[0], "migrations", "hello", "world"}
+	exitCode := main.PerformMigrations()
+	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
+
+	os.Args = oldArgs
 }

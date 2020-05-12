@@ -25,9 +25,11 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -38,6 +40,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/logger"
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 )
@@ -51,6 +54,8 @@ const (
 	ExitStatusConsumerError
 	// ExitStatusServerError is returned in case of any REST API server-related error
 	ExitStatusServerError
+	// ExitStatusMigrationError is returned in case of an error while attempting to perform DB migrations
+	ExitStatusMigrationError
 	defaultConfigFilename = "config"
 
 	databasePreparationMessage = "database preparation exited with error code %v"
@@ -72,6 +77,11 @@ var (
 
 	// BuildCommit contains Git commit used to build this application
 	BuildCommit string = "*not set*"
+
+	// autoMigrate determines if the prepareDB function upgrades
+	// the database to the latest migration version. This is necessary
+	// for certain tests that work with a temporary, empty SQLite DB.
+	autoMigrate bool = false
 )
 
 func createStorage() (*storage.DBStorage, error) {
@@ -95,8 +105,7 @@ func closeStorage(storage *storage.DBStorage) {
 	}
 }
 
-// prepareDB migrates the DB to the latest version
-// and loads all available rule content into it.
+// prepareDB opens a DB connection and loads all available rule content into it.
 func prepareDB() int {
 	dbStorage, err := createStorage()
 	if err != nil {
@@ -104,8 +113,15 @@ func prepareDB() int {
 	}
 	defer closeStorage(dbStorage)
 
-	// Initialize the database by running necessary
-	// migrations to get to the highest available version.
+	// This is only used by some unit tests.
+	if autoMigrate {
+		if err := dbStorage.MigrateToLatest(); err != nil {
+			log.Error().Err(err).Msg("unable to migrate DB to latest version")
+			return ExitStatusPrepareDbError
+		}
+	}
+
+	// Initialize the database.
 	err = dbStorage.Init()
 	if err != nil {
 		log.Error().Err(err).Msg("DB initialization error")
@@ -274,7 +290,7 @@ The commands are:
     help                prints help
     print-help          prints help
     print-config        prints current configuration set by files & env variables
-    print-env			prints env variables
+    print-env           prints env variables
     print-version-info  prints version info
 
 `
@@ -303,6 +319,89 @@ func printEnv() int {
 	}
 
 	return ExitStatusOK
+}
+
+// getDBForMigrations opens a DB connection and prepares the DB for migrations.
+// Non-OK exit code is returned as the last return value in case of an error.
+// Otherwise, database and connection pointers are returned.
+func getDBForMigrations() (*storage.DBStorage, *sql.DB, int) {
+	db, err := createStorage()
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to prepare DB for migrations")
+		return nil, nil, ExitStatusPrepareDbError
+	}
+
+	dbConn := db.GetConnection()
+
+	if err := migration.InitInfoTable(dbConn); err != nil {
+		closeStorage(db)
+		log.Error().Err(err).Msg("Unable to initialize migration info table")
+		return nil, nil, ExitStatusPrepareDbError
+	}
+
+	return db, dbConn, ExitStatusOK
+}
+
+// printMigrationInfo prints information about current DB
+// migration version without making any modifications.
+func printMigrationInfo(dbConn *sql.DB) int {
+	currMigVer, err := migration.GetDBVersion(dbConn)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to get current DB version")
+		return ExitStatusMigrationError
+	}
+
+	log.Info().Msgf("Current DB version: %d", currMigVer)
+	log.Info().Msgf("Maximum available version: %d", migration.GetMaxVersion())
+	return ExitStatusOK
+}
+
+// setMigrationVersion attempts to migrate the DB to the target version.
+func setMigrationVersion(dbConn *sql.DB, versStr string) int {
+	var targetVersion migration.Version
+	if versStrLower := strings.ToLower(versStr); versStrLower == "latest" || versStrLower == "max" {
+		targetVersion = migration.GetMaxVersion()
+	} else {
+		vers, err := strconv.Atoi(versStr)
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to parse target migration version")
+			return ExitStatusMigrationError
+		}
+
+		targetVersion = migration.Version(vers)
+	}
+
+	if err := migration.SetDBVersion(dbConn, targetVersion); err != nil {
+		log.Error().Err(err).Msg("Unable to perform migration")
+		return ExitStatusMigrationError
+	}
+
+	log.Info().Msgf("Database version is now %d", targetVersion)
+	return ExitStatusOK
+}
+
+// performMigrations handles migrations subcommand. This can be used to either
+// print the current DB migration version or to migrate to a different version.
+func performMigrations() int {
+	migrationArgs := os.Args[2:]
+
+	db, dbConn, exitCode := getDBForMigrations()
+	if exitCode != ExitStatusOK {
+		return exitCode
+	}
+	defer closeStorage(db)
+
+	switch len(migrationArgs) {
+	case 0:
+		return printMigrationInfo(dbConn)
+
+	case 1:
+		return setMigrationVersion(dbConn, migrationArgs[0])
+
+	default:
+		log.Error().Msg("Unexpected number of arguments to migrations command (expected 0-1)")
+		return ExitStatusMigrationError
+	}
 }
 
 func main() {
@@ -344,6 +443,8 @@ func handleCommand(command string) int {
 		return printEnv()
 	case "print-version-info":
 		printVersionInfo()
+	case "migrations", "migration", "migrate":
+		return performMigrations()
 	default:
 		fmt.Printf("\nCommand '%v' not found\n", command)
 		return printHelp()

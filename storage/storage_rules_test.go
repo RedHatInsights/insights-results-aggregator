@@ -774,6 +774,8 @@ func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
 	mockStorage := storage.NewFromConnection(connection, -1)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
+	helpers.FailOnError(t, mockStorage.MigrateToLatest())
+
 	err = mockStorage.Init()
 	helpers.FailOnError(t, err)
 

@@ -131,6 +131,7 @@ func mustGetSqliteStorage(tb testing.TB, datasource string, init bool) storage.S
 	sqliteStorage := storage.NewFromConnection(db, storage.DBDriverSQLite3)
 
 	if init {
+		FailOnError(tb, sqliteStorage.MigrateToLatest())
 		FailOnError(tb, sqliteStorage.Init())
 	}
 
@@ -165,6 +166,7 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) 
 	FailOnError(tb, err)
 
 	if init {
+		FailOnError(tb, postgresStorage.MigrateToLatest())
 		FailOnError(tb, postgresStorage.Init())
 	}
 

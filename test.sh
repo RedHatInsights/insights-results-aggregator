@@ -61,11 +61,26 @@ else
     exit 1
 fi
 
+function migrate_db_to_latest() {
+    echo "Migrating DB to the latest migration version..."
+
+    if INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests \
+        ./insights-results-aggregator migrate latest >/dev/null
+    then
+
+        echo "Database migration was successful"
+        return 0
+    else
+        echo "Unable to migrate DB"
+        return 1
+    fi
+}
+
 function populate_db_with_mock_data() {
     echo "Populating db with mock data..."
 
     if ./local_storage/populate_db_with_mock_data.sh; then
-        echo "Done"
+        echo "Database successfully populated with mock data"
         return 0
     else
         echo "Unable to populate db with mock data"
@@ -88,17 +103,11 @@ function start_service() {
 }
 
 function test_rest_api() {
+    migrate_db_to_latest
     start_service
-    # Retry populating the database with mock data N times.
-    # Wait 2 seconds between the retry starts to settle down
-    # Wait 1 second between attempts.
-    # Without this, the DB could be locked because
-    # the migrations have not yet finished.
     sleep 2
-    for _ in {1..5}; do
-        populate_db_with_mock_data 2>/dev/null && break
-        sleep 1
-    done
+    populate_db_with_mock_data
+    sleep 1
 
     echo "Building REST API tests utility"
     if go build -o rest-api-tests tests/rest_api_tests.go; then
