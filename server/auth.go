@@ -28,6 +28,8 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-operator-utils/collections"
+
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -67,7 +69,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// for specific URLs it is ok to not use auth. mechanisms at all
-		if stringInSlice(r.RequestURI, noAuthURLs) || r.Method == "OPTIONS" {
+		if collections.StringInSlice(r.RequestURI, noAuthURLs) || r.Method == "OPTIONS" {
 			next.ServeHTTP(w, r)
 			return
 		}
