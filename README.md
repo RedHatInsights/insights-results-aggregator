@@ -499,19 +499,7 @@ Directory `rules/tutorial/` contains tutorial rule that is 'hit' by any cluster.
 
 ## Mock data for aggregator
 
-Data to be consumed by aggregator through Kafka broker is prepared in `utils/produce_insights_results/` subdirectory.
-Several types of data are available there:
-
-* `r_[0-9]*.json` - real data analyzed from test clusters
-* `r_tutorial_[0-9]*.json` - real data analyzed from test clusters with added tutorial rule result
-* `result*.json` - artifically created data
-* `big_resuts.json` - file with most reports created by joining several real data (no cluster is in the state when all rules fail)
-* `big_results_tutorial.json` - the same, but with tutorial rule result
-* `big_results_no_skips.json` - the same, but no skipped rules are stored
-* `big_results_no_skips_tutorial.json` - the same, but with tutorial rule result
-* `no_hits.json` - data with no rule hits (ie. the cluster is healthy)
-* `no_hits_no_skips.json` - data with no rule hits and no skips (ie. there's no health check performed)
-* `tutorial_only.json` - report with only tutorial rule hit
+Data to be consumed by aggregator through Kafka broker is prepared in repository [RedHatInsights / insights-results-aggregator-data](https://github.com/RedHatInsights/insights-results-aggregator-data). Description of these data is [available there](https://github.com/RedHatInsights/insights-results-aggregator-data/blob/master/README.md).
 
 ## Utilitites
 
