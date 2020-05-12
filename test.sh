@@ -15,7 +15,7 @@
 
 COLORS_RED='\033[0;31m'
 COLORS_RESET='\033[0m'
-LOG_LEVEL="fatal"
+LOG_LEVEL="error"
 VERBOSE=false
 
 if [[ $* == *verbose* ]]; then
