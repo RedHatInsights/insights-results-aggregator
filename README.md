@@ -26,7 +26,7 @@ Aggregator service consists of three main parts:
 ![data_flow](./doc/customer-facing-services-architecture.png)
 
 1. Event about new data from insights operator is consumed from Kafka. That event contains (among other things) URL to S3 Bucket
-2. Insights operator data is read from S3 Bucket and insigts rules are applied to that data
+2. Insights operator data is read from S3 Bucket and Insights rules are applied to that data
 3. Results (basically organization ID + cluster name + insights results JSON) are stored back into Kafka, but into different topic
 4. That results are consumed by Insights rules aggregator service that caches them
 5. The service provides such data via REST API to other tools, like OpenShift Cluster Manager web UI, OpenShift console, etc.
@@ -128,7 +128,7 @@ CREATE TABLE cluster_rule_toggle (
     disabled_at TIMESTAMP NULL,
     enabled_at TIMESTAMP NULL,
     updated_at TIMESTAMP NOT NULL,
-    
+
     CHECK (disabled >= 0 AND disabled <= 1),
 
     PRIMARY KEY(cluster_id, rule_id, user_id)
@@ -252,10 +252,10 @@ enable_cors = true
 * `address` is host and port which server should listen to
 * `api_prefix` is prefix for RestAPI path
 * `api_spec_file` is the location of a required OpenAPI specifications file
-* `debug` is developer mode that enables some special API endpoints not used on production. In production, `false` is used everytime.
-* `auth` turns on or turns authentication. Please note that this option can be set to `false` only in devel environment. In production, `true` is used everytime.
+* `debug` is developer mode that enables some special API endpoints not used on production. In production, `false` is used every time.
+* `auth` turns on or turns authentication. Please note that this option can be set to `false` only in devel environment. In production, `true` is used every time.
 * `auth_type` set type of auth, it means which header to use for auth `x-rh-identity` or `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
-* `use_https` is option to turn on TLS server. Please note that this option can be set to `false` only in devel environment. In production, `true` is used everytime.
+* `use_https` is option to turn on TLS server. Please note that this option can be set to `false` only in devel environment. In production, `true` is used every time.
 * `enable_cors` is option to turn on CORS header, that allows to connect from different hosts (**don't use it in production**)
 
 Please note that if `auth` configuration option is turned off, not all REST API endpoints will be usable. Whole REST API schema is satisfied only for `auth = true`.
@@ -339,6 +339,26 @@ pg_params = "sslmode=disable"
 
 This service contains an implementation of a simple database migration mechanism that allows semi-automatic transitions between various database versions as well as building the latest version of the database from scratch.
 
+The migrations are no longer performed during initialization of the service to make running multiple instances of the service in parallel against the same database safer. Instead, the database migration version can now be set using the built-in CLI sub-command `migration` (aliases: `migrations` and `migrate`).
+
+#### Printing information about database migrations
+
+```shell
+./insights-results-aggregator migrations
+```
+
+#### Upgrading the database to the latest available migration
+
+```shell
+./insights-results-aggregator migration latest
+```
+
+#### Downgrading to the base (empty) database migration version
+
+```shell
+./insights-results-aggregator migration 0
+```
+
 Before using the migration mechanism, it is first necessary to initialize the migration information table `migration_info`. This can be done using the `migration.InitInfoTable(*sql.DB)` function. Any attempt to get or set the database version without initializing this table first will result in a `no such table: migration_info` error from the SQL driver.
 
 New migrations must be added manually into the code, because it was decided that modifying the list of migrations at runtime is undesirable.
@@ -381,14 +401,12 @@ In debug mode, standard Golang pprof interface is available at `/debug/pprof/`
 
 Common usage (for using pprof against local instance):
 
-```
+```shell
 go tool pprof localhost:8080/debug/pprof/profile
 ```
 
 A practical example is available here:
-https://medium.com/@paulborile/profiling-a-golang-rest-api-server-635fa0ed45f3
-
-
+<https://medium.com/@paulborile/profiling-a-golang-rest-api-server-635fa0ed45f3>
 
 ## Authentication
 
@@ -424,7 +442,7 @@ If aggregator didn't get identity token or got invalid one, then it returns erro
 
 Please look into document [CONTRIBUTING.md](CONTRIBUTING.md) that contains all information about how to contribute to this project.
 
-Please look also at [Definitiot of Done](DoD.md) document with further informations.
+Please look also at [Definition of Done](DoD.md) document with further information.
 
 ## Testing
 
@@ -433,7 +451,7 @@ tl;dr: `make before_commit` will run most of the checks by magic
 The following tests can be run to test your code in `insights-results-aggregator`.
 Detailed information about each type of test is included in the corresponding subsection:
 
-1. Unit tests: checks behaviour of all units in source code (methods, functions)
+1. Unit tests: checks behavior of all units in source code (methods, functions)
 1. REST API Tests: test the real REST API of locally deployed application with database initialized with test data only
 1. Integration tests: the integration tests for `insights-results-aggregator` service
 1. Metrics tests: test whether Prometheus metrics are exposed as expected
@@ -471,9 +489,9 @@ By default all logs from the application aren't shown, if you want to see them, 
 
 * Unit tests that use the standard tool `go test`.
 * `go fmt` tool to check code formatting. That tool is run with `-s` flag to perform [following transformations](https://golang.org/cmd/gofmt/#hdr-The_simplify_command)
-* `go vet` to report likely mistakes in source code, for example suspicious constructs, such as Printf calls whose arguments do not align with the format string.
+* `go vet` to report likely mistakes in source code, for example suspicious constructs, such as `Printf` calls whose arguments do not align with the format string.
 * `golint` as a linter for all Go sources stored in this repository
-* `gocyclo` to report all functions and methods with too high cyclomatic complexity. The cyclomatic complexity of a function is calculated according to the following rules: 1 is the base complexity of a function +1 for each 'if', 'for', 'case', '&&' or '||' Go Report Card warns on functions with cyclomatic complexity > 9
+* `gocyclo` to report all functions and methods with too high cyclomatic complexity. The cyclomatic complexity of a function is calculated according to the following rules: 1 is the base complexity of a function +1 for each `if`, `for`, `case`, `&&` or `||` Go Report Card warns on functions with cyclomatic complexity > 9
 * `goconst` to find repeated strings that could be replaced by a constant
 * `gosec` to inspect source code for security problems by scanning the Go AST
 * `ineffassign` to detect and print all ineffectual assignments in Go code
@@ -487,7 +505,7 @@ History of checks performed by CI is available at [RedHatInsights / insights-res
 
 ## Rules
 
-The user has the ability to disable a rule/health check recommendation that they're not interested in to stop it from showing in OCM. The user also has the ability to re-enable the rule, in case they later become interested in it, or in the case of an accidental disable, for exapmle.
+The user has the ability to disable a rule/health check recommendation that they're not interested in to stop it from showing in OCM. The user also has the ability to re-enable the rule, in case they later become interested in it, or in the case of an accidental disable, for example.
 
 This is made possible by using these two endpoints:
 `clusters/{cluster}/rules/{rule_id}/disable`
@@ -501,7 +519,7 @@ Directory `rules/tutorial/` contains tutorial rule that is 'hit' by any cluster.
 
 Data to be consumed by aggregator through Kafka broker is prepared in repository [RedHatInsights / insights-results-aggregator-data](https://github.com/RedHatInsights/insights-results-aggregator-data). Description of these data is [available there](https://github.com/RedHatInsights/insights-results-aggregator-data/blob/master/README.md).
 
-## Utilitites
+## Utilities
 
 Utilities are stored in `utils` subdirectory.
 
@@ -509,9 +527,9 @@ Utilities are stored in `utils` subdirectory.
 
 Simple checker if all JSONs have the correct syntax (not scheme).
 
-Usage:
+#### Script usage
 
-```
+```text
 usage: json_check.py [-h] [-v]
 
 optional arguments:
