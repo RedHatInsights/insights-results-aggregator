@@ -70,6 +70,10 @@ func TestCreateStorage(t *testing.T) {
 }
 
 func TestStartService(t *testing.T) {
+	// It is necessary to perform migrations for this test
+	// because the service won't run on top of an empty DB.
+	*main.AutoMigratePtr = true
+
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		os.Clearenv()
 
@@ -79,10 +83,6 @@ func TestStartService(t *testing.T) {
 			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
 		})
 
-		// It is necessary to perform migrations for this test
-		// because the service won't run on top of an empty DB.
-		*main.AutoMigratePtr = true
-
 		go func() {
 			main.StartService()
 		}()
@@ -91,10 +91,13 @@ func TestStartService(t *testing.T) {
 		errCode := main.StopService()
 		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)
+
+	*main.AutoMigratePtr = false
 }
 
 func TestStartServiceWithMockBroker(t *testing.T) {
 	const topicName = "topic"
+	*main.AutoMigratePtr = true
 
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		mockBroker := sarama.NewMockBroker(t, 0)
@@ -129,6 +132,8 @@ func TestStartServiceWithMockBroker(t *testing.T) {
 		errCode := main.StopService()
 		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)
+
+	*main.AutoMigratePtr = false
 }
 
 func TestStartService_DBError(t *testing.T) {
@@ -189,8 +194,12 @@ func TestPrepareDB(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
 	})
 
+	*main.AutoMigratePtr = true
+
 	errCode := main.PrepareDB()
 	assert.Equal(t, main.ExitStatusOK, errCode)
+
+	*main.AutoMigratePtr = false
 }
 
 func TestPrepareDB_NoRulesDirectory(t *testing.T) {
@@ -277,8 +286,12 @@ func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
 	})
 
+	*main.AutoMigratePtr = true
+
 	errCode := main.StartService()
 	assert.Equal(t, main.ExitStatusConsumerError+main.ExitStatusServerError, errCode)
+
+	*main.AutoMigratePtr = false
 }
 
 // TestPrintVersionInfo is dummy ATM - we'll check versions etc. in integration tests
