@@ -15,7 +15,7 @@
 
 COLORS_RED='\033[0;31m'
 COLORS_RESET='\033[0m'
-LOG_LEVEL="error"
+LOG_LEVEL="fatal"
 VERBOSE=false
 
 if [[ $* == *verbose* ]]; then
@@ -64,7 +64,10 @@ fi
 function migrate_db_to_latest() {
     echo "Migrating DB to the latest migration version..."
 
-    if ./insights-results-aggregator migrate latest >/dev/null; then
+    if INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests \
+        ./insights-results-aggregator migrate latest >/dev/null
+    then
+
         echo "Database migration was successful"
         return 0
     else
