@@ -14,13 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package storage
+package types
 
 import (
 	"errors"
 	"fmt"
 	"regexp"
 
+	"github.com/lib/pq"
+	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -38,7 +40,7 @@ func (e *ItemNotFoundError) Error() string {
 	return fmt.Sprintf("Item with ID %+v was not found in the storage", e.ItemID)
 }
 
-// TableNotFoundError table now found error
+// TableNotFoundError table not found error
 type TableNotFoundError struct {
 	tableName string
 }
@@ -48,94 +50,129 @@ func (err *TableNotFoundError) Error() string {
 	return fmt.Sprintf("no such table: %v", err.tableName)
 }
 
+// TableAlreadyExistsError represents table already exists error
+type TableAlreadyExistsError struct {
+	tableName string
+}
+
+// Error returns error string
+func (err *TableAlreadyExistsError) Error() string {
+	return fmt.Sprintf("table %v already exists", err.tableName)
+}
+
 // ForeignKeyError something violates foreign key error
 // tableName and foreignKeyName can be empty for DBs not supporting it (SQLite)
 type ForeignKeyError struct {
-	tableName      string
-	foreignKeyName string
+	TableName      string
+	ForeignKeyName string
+
+	// Details can reveal you information about specific item violating fk
+	Details string
 }
 
 // Error returns error string
 func (err *ForeignKeyError) Error() string {
 	return fmt.Sprintf(
-		`operation violates foreign key "%v" on table "%v"`, err.foreignKeyName, err.tableName,
+		`operation violates foreign key "%v" on table "%v"`, err.ForeignKeyName, err.TableName,
 	)
 }
 
-// convertDBError converts dbs error to the
-func convertDBError(err error) error {
+// ConvertDBError converts sql errors to those defined in this package
+func ConvertDBError(err error) error {
 	if err == nil {
 		return nil
 	}
 
-	err = convertNoTableError(err)
-	err = convertForeignKeyError(err)
+	err = convertPostgresError(err)
+	err = convertSQLiteError(err)
+
+	return err
+}
+func regexGetFirstMatchOrLogError(regexStr string, str string) string {
+	return regexGetNthMatchOrLogError(regexStr, 1, str)
+}
+
+func regexGetNthMatchOrLogError(regexStr string, nMatch uint, str string) string {
+	match, err := regexGetNthMatch(regexStr, nMatch, str)
+	if err != nil {
+		log.Error().
+			Str("regex", regexStr).
+			Str("str", str).
+			Msgf("unable to get first match from string '%v' with regex '%v'", str, regexStr)
+		return ""
+	}
+
+	return match
+}
+func regexGetFirstMatch(regexStr string, str string) (string, error) {
+	return regexGetNthMatch(regexStr, 1, str)
+}
+
+func regexGetNthMatch(regexStr string, nMatch uint, str string) (string, error) {
+	regex := regexp.MustCompile(regexStr)
+	if !regex.MatchString(str) {
+		return "", errors.New("regex doesn't match string")
+	}
+
+	matches := regex.FindStringSubmatch(str)
+	if len(matches) < int(nMatch+1) {
+		return "", errors.New("regexGetNthMatch unable to find match")
+	}
+
+	return matches[nMatch], nil
+}
+
+func convertPostgresError(err error) error {
+	pqError, ok := err.(*pq.Error)
+	if !ok {
+		return err
+	}
+
+	// see https://www.postgresql.org/docs/current/errcodes-appendix.html to get the magic happening below
+	switch pqError.Code {
+	case "42P07": // duplicate_table
+		return &TableAlreadyExistsError{
+			tableName: regexGetFirstMatchOrLogError(`relation "(.+)" already exists`, pqError.Message),
+		}
+	case "42P01": // undefined_table
+		return &TableNotFoundError{
+			tableName: regexGetNthMatchOrLogError(`(table|relation) "(.+)" does not exist`, 2, pqError.Message),
+		}
+	case "23503": // foreign_key_violation
+		// for some reason field Table is filled not in all errors
+		return &ForeignKeyError{
+			TableName:      pqError.Table,
+			ForeignKeyName: pqError.Constraint,
+			Details:        pqError.Detail,
+		}
+	}
 
 	return err
 }
 
-func convertNoTableError(err error) error {
-	errString := err.Error()
-
-	sqliteRegex := regexp.MustCompile(`no such table: (.+)`)
-
-	if sqliteRegex.MatchString(errString) {
-		matches := sqliteRegex.FindStringSubmatch(errString)
-		if len(matches) < 2 {
-			log.Error().
-				Str("errString", errString).
-				Msg("convertDBError unable to find table name")
-
-			return &TableNotFoundError{tableName: ""}
-		}
-
-		return &TableNotFoundError{tableName: matches[1]}
+func convertSQLiteError(err error) error {
+	sqlite3Error, ok := err.(sqlite3.Error)
+	if !ok {
+		return err
 	}
 
-	postgresRegex := regexp.MustCompile(`pq: relation "(.+)" does not exist`)
-	if postgresRegex.MatchString(errString) {
-		matches := postgresRegex.FindStringSubmatch(errString)
-		if len(matches) < 2 {
-			logRegexError(errString, "convertDBError unable to find table name")
-
-			return &TableNotFoundError{tableName: ""}
-		}
-
-		return &TableNotFoundError{tableName: matches[1]}
-	}
-
-	return err
-}
-
-func convertForeignKeyError(err error) error {
-	errString := err.Error()
+	errString := sqlite3Error.Error()
 
 	if errString == "FOREIGN KEY constraint failed" {
 		return &ForeignKeyError{}
 	}
 
-	postgresRegex := regexp.MustCompile(
-		`pq: .+? on table "(.+?)" violates foreign key constraint "(.+?)"`,
-	)
-	if postgresRegex.MatchString(errString) {
-		matches := postgresRegex.FindStringSubmatch(errString)
-		if len(matches) < 3 {
-			logRegexError(errString, "convertDBError unable to find table and constraint name")
-
-			return &ForeignKeyError{}
+	if match, err := regexGetFirstMatch(`no such table: (.+)`, errString); err == nil {
+		return &TableNotFoundError{
+			tableName: match,
 		}
+	}
 
-		return &ForeignKeyError{
-			tableName:      matches[1],
-			foreignKeyName: matches[2],
+	if match, err := regexGetFirstMatch(`table (.+) already exists`, errString); err == nil {
+		return &TableAlreadyExistsError{
+			tableName: match,
 		}
 	}
 
 	return err
-}
-
-func logRegexError(errString, msg string) {
-	log.Error().
-		Str("errString", errString).
-		Msg(msg)
 }

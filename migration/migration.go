@@ -25,6 +25,8 @@ package migration
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // Version represents a version of the database.
@@ -32,24 +34,12 @@ type Version uint
 
 // Step represents an action performed to either increase
 // or decrease the migration version of the database.
-type Step func(tx *sql.Tx) error
+type Step func(tx *sql.Tx, driver types.DBDriver) error
 
 // Migration type describes a single Migration.
 type Migration struct {
 	StepUp   Step
 	StepDown Step
-}
-
-// migrations is a list of migrations that, when applied in their order,
-// create the most recent version of the database from scratch.
-var migrations = []Migration{
-	mig0001CreateReport,
-	mig0002CreateRuleContent,
-	mig0003CreateClusterRuleUserFeedback,
-	mig0004ModifyClusterRuleUserFeedback,
-	mig0005CreateConsumerError,
-	mig0006AddOnDeleteCascade,
-	mig0007CreateClusterRuleToggle,
 }
 
 // GetMaxVersion returns the highest available migration version.
@@ -100,13 +90,14 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 
 	var version Version = 0
 	err = db.QueryRow("SELECT version FROM migration_info").Scan(&version)
+	err = types.ConvertDBError(err)
 
 	return version, err
 }
 
 // SetDBVersion attempts to get the database into the specified
 // target version using available migration steps.
-func SetDBVersion(db *sql.DB, targetVer Version) error {
+func SetDBVersion(db *sql.DB, dbDriver types.DBDriver, targetVer Version) error {
 	maxVer := GetMaxVersion()
 	if targetVer > maxVer {
 		return fmt.Errorf("invalid target version (available version range is 0-%d)", maxVer)
@@ -123,7 +114,7 @@ func SetDBVersion(db *sql.DB, targetVer Version) error {
 		return fmt.Errorf("current version (%d) is outside of available migration boundaries", currentVer)
 	}
 
-	return execStepsInTx(db, currentVer, targetVer)
+	return execStepsInTx(db, dbDriver, currentVer, targetVer)
 }
 
 // updateVersionInDB updates the migration version number in the migration info table.
@@ -148,7 +139,7 @@ func updateVersionInDB(tx *sql.Tx, newVersion Version) error {
 }
 
 // execStepsInTx executes the necessary migration steps in a single transaction.
-func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
+func execStepsInTx(db *sql.DB, dbDriver types.DBDriver, currentVer, targetVer Version) error {
 	// Already at target version.
 	if currentVer == targetVer {
 		return nil
@@ -157,7 +148,8 @@ func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
 	return withTransaction(db, func(tx *sql.Tx) error {
 		// Upgrade to target version.
 		for currentVer < targetVer {
-			if err := migrations[currentVer].StepUp(tx); err != nil {
+			if err := migrations[currentVer].StepUp(tx, dbDriver); err != nil {
+				err = types.ConvertDBError(err)
 				return err
 			}
 			currentVer++
@@ -165,7 +157,8 @@ func execStepsInTx(db *sql.DB, currentVer, targetVer Version) error {
 
 		// Downgrade to target version.
 		for currentVer > targetVer {
-			if err := migrations[currentVer-1].StepDown(tx); err != nil {
+			if err := migrations[currentVer-1].StepDown(tx, dbDriver); err != nil {
+				err = types.ConvertDBError(err)
 				return err
 			}
 			currentVer--
@@ -194,75 +187,6 @@ func validateNumberOfRows(db *sql.DB) error {
 func getNumberOfRows(db *sql.DB) (uint, error) {
 	var count uint
 	err := db.QueryRow("SELECT COUNT(*) FROM migration_info;").Scan(&count)
+	err = types.ConvertDBError(err)
 	return count, err
-}
-
-// NewUpdateTableMigration generates a migration which changes tables schema and copies data
-// (should work in most of cases like adding a field, altering it and so on)
-func NewUpdateTableMigration(tableName, previousSchema, newSchema string) Migration {
-	return Migration{
-		StepUp: func(tx *sql.Tx) error {
-			return upgradeTable(tx, tableName, newSchema)
-		},
-		StepDown: func(tx *sql.Tx) error {
-			return downgradeTableTable(tx, tableName, previousSchema)
-		},
-	}
-}
-
-func upgradeTable(tx *sql.Tx, tableName, newTableDefinition string) error {
-	// disable "G202 (CWE-89): SQL string concatenation"
-	// #nosec G202
-	_, err := tx.Exec(`ALTER TABLE ` + tableName + ` RENAME TO tmp;`)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(newTableDefinition)
-	if err != nil {
-		return err
-	}
-
-	// disable "G202 (CWE-89): SQL string concatenation"
-	// #nosec G202
-	_, err = tx.Exec(`INSERT INTO ` + tableName + ` SELECT * FROM tmp;`)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(`DROP TABLE tmp;`)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func downgradeTableTable(tx *sql.Tx, tableName, oldTableDefinition string) error {
-	// disable "G202 (CWE-89): SQL string concatenation"
-	// #nosec G202
-	_, err := tx.Exec(`ALTER TABLE ` + tableName + ` RENAME TO tmp;`)
-	if err != nil {
-		return err
-	}
-
-	// create one without foreign keys
-	_, err = tx.Exec(oldTableDefinition)
-	if err != nil {
-		return err
-	}
-
-	// disable "G202 (CWE-89): SQL string concatenation"
-	// #nosec G202
-	_, err = tx.Exec(`INSERT INTO ` + tableName + ` SELECT * FROM tmp;`)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(`DROP TABLE tmp;`)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
