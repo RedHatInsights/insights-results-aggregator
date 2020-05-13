@@ -26,6 +26,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 const sqlite3 = "sqlite3"
@@ -49,7 +50,7 @@ func MustGetMockStorage(tb testing.TB, init bool) (storage.Storage, func()) {
 // before each query, so first try to use MustGetMockStorage
 // don't forget to call MustCloseMockStorageWithExpects
 func MustGetMockStorageWithExpects(t *testing.T) (storage.Storage, sqlmock.Sqlmock) {
-	return MustGetMockStorageWithExpectsForDriver(t, storage.DBDriverGeneral)
+	return MustGetMockStorageWithExpectsForDriver(t, types.DBDriverGeneral)
 }
 
 // MustGetMockStorageWithExpectsForDriver returns mock db storage
@@ -58,7 +59,7 @@ func MustGetMockStorageWithExpects(t *testing.T) (storage.Storage, sqlmock.Sqlmo
 // before each query, so first try to use MustGetMockStorage
 // don't forget to call MustCloseMockStorageWithExpects
 func MustGetMockStorageWithExpectsForDriver(
-	t *testing.T, driverType storage.DBDriver,
+	t *testing.T, driverType types.DBDriver,
 ) (storage.Storage, sqlmock.Sqlmock) {
 	db, expects := MustGetMockDBWithExpects(t)
 
@@ -128,7 +129,7 @@ func mustGetSqliteStorage(tb testing.TB, datasource string, init bool) storage.S
 	_, err = db.Exec("PRAGMA foreign_keys = ON;")
 	FailOnError(tb, err)
 
-	sqliteStorage := storage.NewFromConnection(db, storage.DBDriverSQLite3)
+	sqliteStorage := storage.NewFromConnection(db, types.DBDriverSQLite3)
 
 	if init {
 		FailOnError(tb, sqliteStorage.MigrateToLatest())

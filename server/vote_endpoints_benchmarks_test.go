@@ -187,7 +187,9 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 			}`, ruleID, errorKey),
 		})
 
-		err := mockStorage.WriteReportForCluster(testdata.OrgID, clusterID, "{}", time.Now())
+		err := mockStorage.WriteReportForCluster(
+			testdata.OrgID, clusterID, "{}", time.Now(), testdata.KafkaOffset,
+		)
 		helpers.FailOnError(tb, err)
 
 		endpointArgs = append(endpointArgs, voteEndpointArg{

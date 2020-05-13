@@ -59,9 +59,14 @@ func (*NoopStorage) ReadReportForClusterByClusterName(
 	return "", "", nil
 }
 
+// GetLatestKafkaOffset noop
+func (*NoopStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
+	return 0, nil
+}
+
 // WriteReportForCluster noop
 func (*NoopStorage) WriteReportForCluster(
-	_ types.OrgID, _ types.ClusterName, _ types.ClusterReport, _ time.Time,
+	_ types.OrgID, _ types.ClusterName, _ types.ClusterReport, _ time.Time, _ types.KafkaOffset,
 ) error {
 	return nil
 }

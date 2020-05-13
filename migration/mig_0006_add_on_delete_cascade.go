@@ -32,6 +32,7 @@ var mig0006AddOnDeleteCascade = NewUpdateTableMigration(
 			PRIMARY KEY("error_key", "rule_module")
 		)
 		`,
+	nil,
 	`
 		CREATE TABLE rule_error_key (
 			"error_key"     VARCHAR NOT NULL,

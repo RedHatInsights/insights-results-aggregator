@@ -85,7 +85,7 @@ func TestHttpServer_readReportForCluster_NoContent(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -113,7 +113,7 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.LastCheckedAt,
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -154,7 +154,7 @@ func TestHttpServer_readReportForCluster_getContentForRule_DBError(t *testing.T)
 	connection, err := sql.Open("sqlite3", ":memory:")
 	helpers.FailOnError(t, err)
 
-	mockStorage := storage.NewFromConnection(connection, storage.DBDriverSQLite3)
+	mockStorage := storage.NewFromConnection(connection, types.DBDriverSQLite3)
 	defer helpers.MustCloseStorage(t, mockStorage)
 
 	helpers.FailOnError(t, mockStorage.MigrateToLatest())
@@ -167,7 +167,7 @@ func TestHttpServer_readReportForCluster_getContentForRule_DBError(t *testing.T)
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -188,7 +188,7 @@ func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, badReport, testdata.LastCheckedAt,
+		testdata.OrgID, testdata.ClusterName, badReport, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -233,6 +233,7 @@ func TestReadReportWithContent(t *testing.T) {
 		testdata.ClusterName,
 		testdata.Report3Rules,
 		testdata.LastCheckedAt,
+		testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -263,6 +264,7 @@ func TestReadReportDisableRule(t *testing.T) {
 		testdata.ClusterName,
 		testdata.Report2Rules,
 		testdata.LastCheckedAt,
+		testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 

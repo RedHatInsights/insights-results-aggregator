@@ -150,7 +150,7 @@ var (
 
 func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -650,7 +650,7 @@ func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
-				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt,
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
 			)
 			helpers.FailOnError(t, err)
 
@@ -746,7 +746,7 @@ func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
 	defer closer()
 
 	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
-	if _, ok := err.(*storage.ItemNotFoundError); err == nil || !ok {
+	if _, ok := err.(*types.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
 }

@@ -112,7 +112,7 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	now := time.Now()
 
 	_, err = statement.Exec(clusterID, ruleID, userID, userVote, now, now, message)
-	err = convertDBError(err)
+	err = types.ConvertDBError(err)
 	if err != nil {
 		log.Error().Err(err).Msg("addOrUpdateUserFeedbackOnRuleForCluster")
 		return err
@@ -127,7 +127,7 @@ func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote bool,
 	var query string
 
 	switch storage.dbDriverType {
-	case DBDriverSQLite3, DBDriverPostgres, DBDriverGeneral:
+	case types.DBDriverSQLite3, types.DBDriverPostgres, types.DBDriverGeneral:
 		query = `
 			INSERT INTO cluster_rule_user_feedback
 			(cluster_id, rule_id, user_id, user_vote, added_at, updated_at, message)
@@ -179,7 +179,7 @@ func (storage DBStorage) GetUserFeedbackOnRule(
 
 	switch {
 	case err == sql.ErrNoRows:
-		return nil, &ItemNotFoundError{
+		return nil, &types.ItemNotFoundError{
 			ItemID: fmt.Sprintf("%v/%v/%v", clusterID, ruleID, userID),
 		}
 	case err != nil:

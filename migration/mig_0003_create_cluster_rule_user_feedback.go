@@ -18,10 +18,12 @@ package migration
 
 import (
 	"database/sql"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var mig0003CreateClusterRuleUserFeedback = Migration{
-	StepUp: func(tx *sql.Tx) error {
+	StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`
 			CREATE TABLE cluster_rule_user_feedback (
 				cluster_id VARCHAR NOT NULL,
@@ -31,12 +33,12 @@ var mig0003CreateClusterRuleUserFeedback = Migration{
 				user_vote SMALLINT NOT NULL,
 				added_at TIMESTAMP NOT NULL,
 				updated_at TIMESTAMP NOT NULL,
-				
+
 				PRIMARY KEY(cluster_id, rule_id, user_id)
 			)`)
 		return err
 	},
-	StepDown: func(tx *sql.Tx) error {
+	StepDown: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`DROP TABLE cluster_rule_user_feedback`)
 		return err
 	},

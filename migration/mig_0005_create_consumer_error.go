@@ -18,10 +18,12 @@ package migration
 
 import (
 	"database/sql"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var mig0005CreateConsumerError = Migration{
-	StepUp: func(tx *sql.Tx) error {
+	StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`
 			CREATE TABLE consumer_error (
 				topic           VARCHAR NOT NULL,
@@ -38,7 +40,7 @@ var mig0005CreateConsumerError = Migration{
 		`)
 		return err
 	},
-	StepDown: func(tx *sql.Tx) error {
+	StepDown: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`DROP TABLE consumer_error`)
 		return err
 	},

@@ -15,10 +15,12 @@ package migration
 
 import (
 	"database/sql"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var mig0007CreateClusterRuleToggle = Migration{
-	StepUp: func(tx *sql.Tx) error {
+	StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`
 			CREATE TABLE cluster_rule_toggle (
 				cluster_id VARCHAR NOT NULL,
@@ -28,13 +30,13 @@ var mig0007CreateClusterRuleToggle = Migration{
 				disabled_at TIMESTAMP NULL,
 				enabled_at TIMESTAMP NULL,
 				updated_at TIMESTAMP NOT NULL,
-				
+
 				CHECK (disabled >= 0 AND disabled <= 1),
 				PRIMARY KEY(cluster_id, rule_id, user_id)
 			)`)
 		return err
 	},
-	StepDown: func(tx *sql.Tx) error {
+	StepDown: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`DROP TABLE cluster_rule_toggle`)
 		return err
 	},
