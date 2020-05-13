@@ -14,5 +14,5 @@
 # limitations under the License.
 
 
-go get github.com/kisielk/errcheck
+GO111MODULE=off go get github.com/kisielk/errcheck
 errcheck ./...
