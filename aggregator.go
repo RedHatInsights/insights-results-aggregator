@@ -313,6 +313,8 @@ The commands are:
     print-config        prints current configuration set by files & env variables
     print-env           prints env variables
     print-version-info  prints version info
+    migration           prints information about migrations (current, latest)
+    migration <version> migrates database to the specified version
 
 `
 
