@@ -121,7 +121,9 @@ func NewWithSaramaConfig(
 	nextOffset := sarama.OffsetNewest
 
 	if saveOffset {
-		offsetManager, partitionOffsetManager, nextOffset, err = getOffsetManagers(brokerCfg, client, partitions)
+		offsetManager, partitionOffsetManager, nextOffset, err = getOffsetManagers(
+			brokerCfg, client, partitions, storage,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -161,7 +163,7 @@ func NewWithSaramaConfig(
 }
 
 func getOffsetManagers(
-	brokerCfg broker.Configuration, client sarama.Client, partitions []int32,
+	brokerCfg broker.Configuration, client sarama.Client, partitions []int32, dbStorage storage.Storage,
 ) (sarama.OffsetManager, sarama.PartitionOffsetManager, int64, error) {
 	offsetManager, err := sarama.NewOffsetManagerFromClient(brokerCfg.Group, client)
 	if err != nil {
@@ -173,14 +175,26 @@ func getOffsetManagers(
 		return nil, nil, 0, err
 	}
 
-	nextOffset, _ := partitionOffsetManager.NextOffset()
-	if nextOffset < 0 {
-		// if next offset wasn't stored yet, initial state of the broker
-		log.Info().Msg("saved offset was not found, consuming from the beginning")
-		nextOffset = sarama.OffsetOldest
+	nextOffset, err := dbStorage.GetLatestKafkaOffset()
+	if err != nil {
+		return nil, nil, 0, err
 	}
 
-	return offsetManager, partitionOffsetManager, nextOffset, nil
+	if nextOffset <= 0 {
+		log.Info().Msg("saved offset was not found in postgres, falling back to sarama's offset")
+
+		partitionManagerOffset, _ := partitionOffsetManager.NextOffset()
+		if partitionManagerOffset <= 0 {
+			// if next offset wasn't stored yet, initial state of the broker
+			log.Info().Msg("saved offset was not found, consuming from the beginning")
+			partitionManagerOffset = sarama.OffsetOldest
+		}
+		nextOffset = types.KafkaOffset(partitionManagerOffset)
+	} else {
+		log.Debug().Msg("taking offset from postgres")
+	}
+
+	return offsetManager, partitionOffsetManager, int64(nextOffset), nil
 }
 
 // checkReportStructure tests if the report has correct structure
@@ -246,7 +260,18 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 func (consumer *KafkaConsumer) Serve() {
 	log.Info().Msgf("Consumer has been started, waiting for messages send to topic '%s'", consumer.Configuration.Topic)
 
+	latestMessageOffset, err := consumer.Storage.GetLatestKafkaOffset()
+	if err != nil {
+		log.Error().Msg("unable to get latest offset")
+		latestMessageOffset = 0
+	}
+
 	for msg := range consumer.PartitionConsumer.Messages() {
+		consumer.saveLastMessageOffset(msg.Offset)
+		if types.KafkaOffset(msg.Offset) <= latestMessageOffset {
+			log.Warn().Int64(offsetKey, msg.Offset).Msg("this offset was already processed by aggregator")
+		}
+
 		metrics.ConsumedMessages.Inc()
 
 		startTime := time.Now()
@@ -254,8 +279,8 @@ func (consumer *KafkaConsumer) Serve() {
 		messageProcessingDuration := time.Since(startTime)
 
 		log.Info().
-			Int(offsetKey, int(msg.Offset)).
-			Int(partitionKey, int(msg.Partition)).
+			Int64(offsetKey, msg.Offset).
+			Int32(partitionKey, msg.Partition).
 			Str(topicKey, msg.Topic).
 			Msgf("processing of message took '%v' seconds", messageProcessingDuration.Seconds())
 
@@ -268,18 +293,18 @@ func (consumer *KafkaConsumer) Serve() {
 
 			if err := consumer.Storage.WriteConsumerError(msg, err); err != nil {
 				log.Error().Err(err).Msg("Unable to write consumer error to storage")
-			} else {
-				// if error is written, we don't want to deal with this message again
-				consumer.saveLastMessageOffset(msg.Offset)
 			}
 		} else {
 			metrics.SuccessfulMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
 			consumer.numberOfSuccessfullyConsumedMessages++
-			consumer.saveLastMessageOffset(msg.Offset)
 		}
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
 		log.Info().Int64(durationKey, duration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
+
+		if types.KafkaOffset(msg.Offset) > latestMessageOffset {
+			latestMessageOffset = types.KafkaOffset(msg.Offset)
+		}
 	}
 }
 
@@ -381,9 +406,10 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 		*message.ClusterName,
 		types.ClusterReport(reportAsStr),
 		lastCheckedTime,
+		types.KafkaOffset(msg.Offset),
 	)
 	if err != nil {
-		if err == storage.ErrOldReport {
+		if err == types.ErrOldReport {
 			logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
 			return nil
 		}
