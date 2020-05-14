@@ -152,7 +152,6 @@ func (server *HTTPServer) getContentForRules(
 
 // getUserVoteForRules returns user votes for defined list of report's IDs
 func (server *HTTPServer) getUserVoteForRules(
-	writer http.ResponseWriter,
 	feedbacks map[types.RuleID]types.UserVote,
 	rulesContent []types.RuleContentResponse,
 ) []types.RuleContentResponse {
@@ -206,7 +205,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	rulesContent = server.getUserVoteForRules(writer, feedbacks, rulesContent)
+	rulesContent = server.getUserVoteForRules(feedbacks, rulesContent)
 
 	// -1 as count in response means there are no rules for this cluster
 	// as opposed to no rules hit for the cluster
