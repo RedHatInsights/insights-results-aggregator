@@ -26,25 +26,13 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// UserVote is a type for user's vote
-type UserVote int
-
-const (
-	// UserVoteDislike shows user's dislike
-	UserVoteDislike UserVote = -1
-	// UserVoteNone shows no vote from user
-	UserVoteNone UserVote = 0
-	// UserVoteLike shows user's like
-	UserVoteLike UserVote = 1
-)
-
 // UserFeedbackOnRule shows user's feedback on rule
 type UserFeedbackOnRule struct {
 	ClusterID types.ClusterName
 	RuleID    types.RuleID
 	UserID    types.UserID
 	Message   string
-	UserVote  UserVote
+	UserVote  types.UserVote
 	AddedAt   time.Time
 	UpdatedAt time.Time
 }
@@ -54,7 +42,7 @@ func (storage DBStorage) VoteOnRule(
 	clusterID types.ClusterName,
 	ruleID types.RuleID,
 	userID types.UserID,
-	userVote UserVote,
+	userVote types.UserVote,
 ) error {
 	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, userID, &userVote, nil)
 }
@@ -75,12 +63,12 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	clusterID types.ClusterName,
 	ruleID types.RuleID,
 	userID types.UserID,
-	userVotePtr *UserVote,
+	userVotePtr *types.UserVote,
 	messagePtr *string,
 ) error {
 	updateVote := false
 	updateMessage := false
-	userVote := UserVoteNone
+	userVote := types.UserVoteNone
 	message := ""
 
 	if userVotePtr != nil {
@@ -156,7 +144,7 @@ func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote bool,
 	return query, nil
 }
 
-// GetUserFeedbackOnRule gets user feedback from db
+// GetUserFeedbackOnRule gets user feedback from DB
 func (storage DBStorage) GetUserFeedbackOnRule(
 	clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
 ) (*UserFeedbackOnRule, error) {
@@ -187,4 +175,48 @@ func (storage DBStorage) GetUserFeedbackOnRule(
 	}
 
 	return &feedback, nil
+}
+
+// GetUserFeedbackOnRules gets user feedbacks for defined array of rule IDs from DB
+func (storage DBStorage) GetUserFeedbackOnRules(
+	clusterID types.ClusterName, rulesContent []types.RuleContentResponse, userID types.UserID,
+) (map[types.RuleID]types.UserVote, error) {
+	ruleIDs := make([]string, 0)
+	for _, v := range rulesContent {
+		ruleIDs = append(ruleIDs, v.RuleModule)
+	}
+
+	feedbacks := make(map[types.RuleID]types.UserVote)
+
+	query := `SELECT rule_id, user_vote
+		FROM cluster_rule_user_feedback
+		WHERE cluster_id = $1 AND rule_id in (%v) AND user_id = $2`
+
+	whereInStatement := "'" + strings.Join([]string(ruleIDs), "','") + "'"
+	query = fmt.Sprintf(query, whereInStatement)
+
+	rows, err := storage.connection.Query(query, clusterID, userID)
+	if err != nil {
+		return feedbacks, err
+	}
+	defer closeRows(rows)
+
+	for rows.Next() {
+		var (
+			ruleID   types.RuleID
+			userVote types.UserVote
+		)
+		err = rows.Scan(
+			&ruleID,
+			&userVote,
+		)
+		if err == nil {
+			feedbacks[ruleID] = userVote
+		} else {
+			log.Error().Err(err).Msg("GetUserFeedbackOnRules")
+			return nil, err
+		}
+	}
+
+	return feedbacks, nil
 }

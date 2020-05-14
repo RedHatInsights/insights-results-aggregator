@@ -250,6 +250,15 @@
                                   3,
                                   4
                                 ]
+                              },
+                              "user_vote": {
+                                "type": "integer",
+                                "description": "User vote - value of user voting. -1 is dislike vote, 0 is no vote, 1 is like vote.",
+                                "enum": [
+                                  -1,
+                                  0,
+                                  1
+                                ]
                               }
                             }
                           }

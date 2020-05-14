@@ -597,10 +597,10 @@ func TestDBStorageDeleteDisabledRule(t *testing.T) {
 }
 
 func TestDBStorageVoteOnRule(t *testing.T) {
-	for _, vote := range []storage.UserVote{
-		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
+	for _, vote := range []types.UserVote{
+		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
 	} {
-		func(vote storage.UserVote) {
+		func(vote types.UserVote) {
 			mockStorage, closer := helpers.MustGetMockStorage(t, true)
 			defer closer()
 
@@ -625,10 +625,10 @@ func TestDBStorageVoteOnRule(t *testing.T) {
 }
 
 func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
-	for _, vote := range []storage.UserVote{
-		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
+	for _, vote := range []types.UserVote{
+		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
 	} {
-		func(vote storage.UserVote) {
+		func(vote types.UserVote) {
 			mockStorage, closer := helpers.MustGetMockStorage(t, true)
 			defer closer()
 
@@ -642,10 +642,10 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 }
 
 func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
-	for _, vote := range []storage.UserVote{
-		storage.UserVoteDislike, storage.UserVoteLike, storage.UserVoteNone,
+	for _, vote := range []types.UserVote{
+		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
 	} {
-		func(vote storage.UserVote) {
+		func(vote types.UserVote) {
 			mockStorage, closer := helpers.MustGetMockStorage(t, true)
 			defer closer()
 
@@ -670,12 +670,12 @@ func TestDBStorageChangeVote(t *testing.T) {
 	mustWriteReport3Rules(t, mockStorage)
 
 	helpers.FailOnError(t, mockStorage.VoteOnRule(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.UserVoteLike,
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteLike,
 	))
 	// just to be sure that addedAt != to updatedAt
 	time.Sleep(1 * time.Millisecond)
 	helpers.FailOnError(t, mockStorage.VoteOnRule(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.UserVoteDislike,
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteDislike,
 	))
 
 	feedback, err := mockStorage.GetUserFeedbackOnRule(
@@ -687,7 +687,7 @@ func TestDBStorageChangeVote(t *testing.T) {
 	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
 	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "", feedback.Message)
-	assert.Equal(t, storage.UserVoteDislike, feedback.UserVote)
+	assert.Equal(t, types.UserVoteDislike, feedback.UserVote)
 	assert.NotEqual(t, feedback.AddedAt, feedback.UpdatedAt)
 }
 
@@ -710,7 +710,7 @@ func TestDBStorageTextFeedback(t *testing.T) {
 	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
 	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "test feedback", feedback.Message)
-	assert.Equal(t, storage.UserVoteNone, feedback.UserVote)
+	assert.Equal(t, types.UserVoteNone, feedback.UserVote)
 }
 
 func TestDBStorageFeedbackChangeMessage(t *testing.T) {
@@ -737,7 +737,7 @@ func TestDBStorageFeedbackChangeMessage(t *testing.T) {
 	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
 	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "message2", feedback.Message)
-	assert.Equal(t, storage.UserVoteNone, feedback.UserVote)
+	assert.Equal(t, types.UserVoteNone, feedback.UserVote)
 	assert.NotEqual(t, feedback.AddedAt, feedback.UpdatedAt)
 }
 
@@ -763,7 +763,7 @@ func TestDBStorageVoteOnRuleDBError(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	closer()
 
-	err := mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, storage.UserVoteNone)
+	err := mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, types.UserVoteNone)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -779,7 +779,7 @@ func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
 	err = mockStorage.Init()
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, storage.UserVoteNone)
+	err = mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, types.UserVoteNone)
 	assert.EqualError(t, err, "DB driver -1 is not supported")
 }
 
@@ -822,7 +822,7 @@ func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.VoteOnRule("non int", testRuleID, testUserID, storage.UserVoteNone)
+	err = mockStorage.VoteOnRule("non int", testRuleID, testUserID, types.UserVoteNone)
 	assert.Error(t, err)
 	const sqliteErrMessage = "CHECK constraint failed: cluster_rule_user_feedback"
 	const postgresErrMessage = "pq: invalid input syntax for integer"
@@ -851,7 +851,7 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 		ExpectExec().
 		WillReturnResult(driver.ResultNoRows)
 
-	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testUserID, storage.UserVoteNone)
+	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testUserID, types.UserVoteNone)
 	helpers.FailOnError(t, err)
 
 	// TODO: uncomment when issues upthere resolved
@@ -1043,4 +1043,27 @@ func TestDBStorage_DeleteRuleErrorKey_DBError(t *testing.T) {
 
 	err = mockStorage.DeleteRuleErrorKey("module", "error_key")
 	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestDBStorageGetVotes(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	helpers.FailOnError(t, mockStorage.VoteOnRule(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteLike,
+	))
+	helpers.FailOnError(t, mockStorage.VoteOnRule(
+		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, types.UserVoteDislike,
+	))
+
+	feedbacks, err := mockStorage.GetUserFeedbackOnRules(
+		testdata.ClusterName, testdata.RuleContentResponses, testdata.UserID,
+	)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, types.UserVoteLike, feedbacks[testdata.Rule1ID])
+	assert.Equal(t, types.UserVoteDislike, feedbacks[testdata.Rule2ID])
+	assert.Equal(t, types.UserVoteNone, feedbacks[testdata.Rule3ID])
 }

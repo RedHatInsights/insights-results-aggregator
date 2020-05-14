@@ -77,7 +77,7 @@ func (*NoopStorage) ReportsCount() (int, error) {
 }
 
 // VoteOnRule noop
-func (*NoopStorage) VoteOnRule(_ types.ClusterName, _ types.RuleID, _ types.UserID, _ UserVote) error {
+func (*NoopStorage) VoteOnRule(_ types.ClusterName, _ types.RuleID, _ types.UserID, _ types.UserVote) error {
 	return nil
 }
 
@@ -175,5 +175,14 @@ func (*NoopStorage) GetFromClusterRuleToggle(
 	types.RuleID,
 	types.UserID,
 ) (*ClusterRuleToggle, error) {
+	return nil, nil
+}
+
+// GetUserFeedbackOnRules noop
+func (*NoopStorage) GetUserFeedbackOnRules(
+	types.ClusterName,
+	[]types.RuleContentResponse,
+	types.UserID,
+) (map[types.RuleID]types.UserVote, error) {
 	return nil, nil
 }
