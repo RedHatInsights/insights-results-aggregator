@@ -22,7 +22,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
-	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // responseDataError is used as the error message when the responses functions return an error
@@ -78,7 +78,7 @@ func handleServerError(writer http.ResponseWriter, err error) {
 		respErr = responses.SendBadRequest(writer, err.Error())
 	case *json.UnmarshalTypeError:
 		respErr = responses.SendBadRequest(writer, "bad type in json data")
-	case *storage.ItemNotFoundError:
+	case *types.ItemNotFoundError:
 		respErr = responses.SendNotFound(writer, err.Error())
 	case *AuthenticationError:
 		respErr = responses.SendForbidden(writer, err.Error())

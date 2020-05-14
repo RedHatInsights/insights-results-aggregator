@@ -61,6 +61,7 @@ const (
 	Rule1MoreInfo    = "rule 1 more info"
 	Rule2MoreInfo    = "rule 2 more info"
 	Rule3MoreInfo    = "rule 3 more info"
+	KafkaOffset      = types.KafkaOffset(1)
 )
 
 var (

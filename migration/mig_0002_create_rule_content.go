@@ -18,10 +18,12 @@ package migration
 
 import (
 	"database/sql"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var mig0002CreateRuleContent = Migration{
-	StepUp: func(tx *sql.Tx) error {
+	StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`
 			CREATE TABLE rule (
 				"module"        VARCHAR PRIMARY KEY,
@@ -50,7 +52,7 @@ var mig0002CreateRuleContent = Migration{
 			)`)
 		return err
 	},
-	StepDown: func(tx *sql.Tx) error {
+	StepDown: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`DROP TABLE rule_error_key`)
 		if err != nil {
 			return err

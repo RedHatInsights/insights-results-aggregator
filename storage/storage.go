@@ -36,13 +36,11 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/lib/pq"
+	_ "github.com/lib/pq" // PostgreSQL database driver
 	"github.com/mattn/go-sqlite3"
-
+	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	_ "github.com/lib/pq"           // PostgreSQL database driver
-	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 
 	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -58,11 +56,13 @@ type Storage interface {
 	ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
 	ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
 	ReadReportForClusterByClusterName(clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
+	GetLatestKafkaOffset() (types.KafkaOffset, error)
 	WriteReportForCluster(
 		orgID types.OrgID,
 		clusterName types.ClusterName,
 		report types.ClusterReport,
 		collectedAtTime time.Time,
+		kafkaOffset types.KafkaOffset,
 	) error
 	ReportsCount() (int, error)
 	VoteOnRule(
@@ -113,25 +113,13 @@ type Storage interface {
 	WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
 }
 
-// DBDriver type for db driver enum
-type DBDriver int
-
-const (
-	// DBDriverSQLite3 shows that db driver is sqlite
-	DBDriverSQLite3 DBDriver = iota
-	// DBDriverPostgres shows that db driver is postgres
-	DBDriverPostgres
-	// DBDriverGeneral general sql(used for mock now)
-	DBDriverGeneral
-)
-
 // DBStorage is an implementation of Storage interface that use selected SQL like database
 // like SQLite, PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
 // sql package. It is possible to configure connection via Configuration structure.
 // SQLQueriesLog is log for sql queries, default is nil which means nothing is logged
 type DBStorage struct {
 	connection   *sql.DB
-	dbDriverType DBDriver
+	dbDriverType types.DBDriver
 	// clusterLastCheckedDict is a dictionary of timestamps when the clusters were last checked.
 	clustersLastChecked map[types.ClusterName]time.Time
 }
@@ -158,7 +146,7 @@ func New(configuration Configuration) (*DBStorage, error) {
 }
 
 // NewFromConnection function creates and initializes a new instance of Storage interface from prepared connection
-func NewFromConnection(connection *sql.DB, dbDriverType DBDriver) *DBStorage {
+func NewFromConnection(connection *sql.DB, dbDriverType types.DBDriver) *DBStorage {
 	return &DBStorage{
 		connection:          connection,
 		dbDriverType:        dbDriverType,
@@ -168,17 +156,17 @@ func NewFromConnection(connection *sql.DB, dbDriverType DBDriver) *DBStorage {
 
 // initAndGetDriver initializes driver(with logs if logSQLQueries is true),
 // checks if it's supported and returns driver type, driver name, dataSource and error
-func initAndGetDriver(configuration Configuration) (driverType DBDriver, driverName string, dataSource string, err error) {
+func initAndGetDriver(configuration Configuration) (driverType types.DBDriver, driverName string, dataSource string, err error) {
 	var driver sql_driver.Driver
 	driverName = configuration.Driver
 
 	switch driverName {
 	case "sqlite3":
-		driverType = DBDriverSQLite3
+		driverType = types.DBDriverSQLite3
 		driver = &sqlite3.SQLiteDriver{}
 		dataSource = configuration.SQLiteDataSource
 	case "postgres":
-		driverType = DBDriverPostgres
+		driverType = types.DBDriverPostgres
 		driver = &pq.Driver{}
 		dataSource = fmt.Sprintf(
 			"postgresql://%v:%v@%v:%v/%v?%v",
@@ -208,11 +196,12 @@ func (storage DBStorage) MigrateToLatest() error {
 	if err := migration.InitInfoTable(storage.connection); err != nil {
 		return err
 	}
-	return migration.SetDBVersion(storage.connection, migration.GetMaxVersion())
+
+	return migration.SetDBVersion(storage.connection, storage.dbDriverType, migration.GetMaxVersion())
 }
 
 // Init performs all database initialization
-// tasks necessary for futher service operation.
+// tasks necessary for further service operation.
 func (storage DBStorage) Init() error {
 	// Read clusterName:LastChecked dictionary from DB.
 	rows, err := storage.connection.Query("SELECT cluster, last_checked_at FROM report")
@@ -275,7 +264,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 	orgs := make([]types.OrgID, 0)
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
-	err = convertDBError(err)
+	err = types.ConvertDBError(err)
 	if err != nil {
 		return orgs, err
 	}
@@ -299,7 +288,7 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 	clusters := make([]types.ClusterName, 0)
 
 	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster", orgID)
-	err = convertDBError(err)
+	err = types.ConvertDBError(err)
 	if err != nil {
 		return clusters, err
 	}
@@ -341,11 +330,11 @@ func (storage DBStorage) ReadReportForCluster(
 	err := storage.connection.QueryRow(
 		"SELECT report, last_checked_at FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
 	).Scan(&report, &lastChecked)
-	err = convertDBError(err)
+	err = types.ConvertDBError(err)
 
 	switch {
 	case err == sql.ErrNoRows:
-		return "", "", &ItemNotFoundError{
+		return "", "", &types.ItemNotFoundError{
 			ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
 		}
 	case err != nil:
@@ -368,7 +357,7 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 
 	switch {
 	case err == sql.ErrNoRows:
-		return "", "", &ItemNotFoundError{
+		return "", "", &types.ItemNotFoundError{
 			ItemID: fmt.Sprintf("%v", clusterName),
 		}
 	case err != nil:
@@ -376,6 +365,13 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 	}
 
 	return types.ClusterReport(report), types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), nil
+}
+
+// GetLatestKafkaOffset returns latest kafka offset from report table
+func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
+	var offset types.KafkaOffset
+	err := storage.connection.QueryRow(`SELECT COALESCE(MAX(kafka_offset), 0) FROM report`).Scan(&offset)
+	return offset, err
 }
 
 // constructWhereClause constructs a dynamic WHERE .. IN clause
@@ -495,14 +491,14 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 
 func (storage DBStorage) getReportUpsertQuery() (string, error) {
 	switch storage.dbDriverType {
-	case DBDriverSQLite3:
-		return `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at)
-		 VALUES ($1, $2, $3, $4, $5)`, nil
-	case DBDriverPostgres:
-		return `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at)
-		 VALUES ($1, $2, $3, $4, $5)
+	case types.DBDriverSQLite3:
+		return `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset)
+		 VALUES ($1, $2, $3, $4, $5, $6)`, nil
+	case types.DBDriverPostgres:
+		return `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset)
+		 VALUES ($1, $2, $3, $4, $5, $6)
 		 ON CONFLICT (org_id, cluster)
-		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5`, nil
+		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6`, nil
 	default:
 		return "", fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
@@ -514,11 +510,12 @@ func (storage DBStorage) WriteReportForCluster(
 	clusterName types.ClusterName,
 	report types.ClusterReport,
 	lastCheckedTime time.Time,
+	kafkaOffset types.KafkaOffset,
 ) error {
 	// Skip writing the report if it isn't newer than a report
 	// that is already in the database for the same cluster.
 	if oldLastChecked, exists := storage.clustersLastChecked[clusterName]; exists && !lastCheckedTime.After(oldLastChecked) {
-		return ErrOldReport
+		return types.ErrOldReport
 	}
 
 	// Get the UPSERT query for writing a report into the database.
@@ -537,7 +534,7 @@ func (storage DBStorage) WriteReportForCluster(
 	rows, err := tx.Query(
 		`SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3`,
 		orgID, clusterName, lastCheckedTime)
-	err = convertDBError(err)
+	err = types.ConvertDBError(err)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to look up the most recent report in database")
 		_ = tx.Rollback()
@@ -555,7 +552,7 @@ func (storage DBStorage) WriteReportForCluster(
 
 	// Perform the report upsert.
 	reportedAtTime := time.Now()
-	_, err = tx.Exec(upsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime)
+	_, err = tx.Exec(upsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, kafkaOffset)
 	if err != nil {
 		log.Err(err).Msgf("Unable to upsert the cluster report (org: %v, cluster: %v)", orgID, clusterName)
 		_ = tx.Rollback()
@@ -571,7 +568,7 @@ func (storage DBStorage) WriteReportForCluster(
 func (storage DBStorage) ReportsCount() (int, error) {
 	count := -1
 	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
-	err = convertDBError(err)
+	err = types.ConvertDBError(err)
 
 	return count, err
 }
@@ -691,7 +688,7 @@ func (storage DBStorage) GetRuleByID(ruleID types.RuleID) (*types.Rule, error) {
 		&rule.MoreInfo,
 	)
 	if err == sql.ErrNoRows {
-		return nil, &ItemNotFoundError{ItemID: ruleID}
+		return nil, &types.ItemNotFoundError{ItemID: ruleID}
 	}
 
 	return &rule, err
@@ -735,7 +732,7 @@ func (storage DBStorage) DeleteRule(ruleID types.RuleID) error {
 	}
 
 	if rowsAffected == 0 {
-		return &ItemNotFoundError{ItemID: ruleID}
+		return &types.ItemNotFoundError{ItemID: ruleID}
 	}
 
 	return nil
@@ -798,7 +795,7 @@ func (storage DBStorage) DeleteRuleErrorKey(ruleID types.RuleID, errorKey types.
 	}
 
 	if rowsAffected == 0 {
-		return &ItemNotFoundError{ItemID: fmt.Sprintf("%v/%v", ruleID, errorKey)}
+		return &types.ItemNotFoundError{ItemID: fmt.Sprintf("%v/%v", ruleID, errorKey)}
 	}
 
 	return nil
@@ -817,4 +814,9 @@ func (storage DBStorage) WriteConsumerError(msg *sarama.ConsumerMessage, consume
 		msg.Topic, msg.Partition, msg.Offset, msg.Key, msg.Timestamp, time.Now().UTC(), msg.Value, consumerErr.Error())
 
 	return err
+}
+
+// GetDBDriverType returns db driver type
+func (storage DBStorage) GetDBDriverType() types.DBDriver {
+	return storage.dbDriverType
 }

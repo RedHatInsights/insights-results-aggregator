@@ -25,6 +25,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func GetTxForMigration(t *testing.T) (*sql.Tx, *sql.DB, sqlmock.Sqlmock) {
@@ -39,19 +40,19 @@ func GetTxForMigration(t *testing.T) (*sql.Tx, *sql.DB, sqlmock.Sqlmock) {
 }
 
 func TestAllMigrations(t *testing.T) {
-	db := prepareDB(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDB(t)
+	defer closer()
 
 	err := migration.InitInfoTable(db)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, migration.GetMaxVersion())
+	err = migration.SetDBVersion(db, dbDriver, migration.GetMaxVersion())
 	helpers.FailOnError(t, err)
 }
 
 func TestMigrationsOneByOne(t *testing.T) {
-	db := prepareDB(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDB(t)
+	defer closer()
 
 	allMigrations := make([]migration.Migration, len(*migration.Migrations))
 	copy(allMigrations, *migration.Migrations)
@@ -64,144 +65,149 @@ func TestMigrationsOneByOne(t *testing.T) {
 		err := migration.InitInfoTable(db)
 		helpers.FailOnError(t, err)
 
-		err = migration.SetDBVersion(db, migration.GetMaxVersion())
+		err = migration.SetDBVersion(db, dbDriver, migration.GetMaxVersion())
 		helpers.FailOnError(t, err)
 	}
 }
 
 func TestMigration1_TableReportAlreadyExists(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
 	_, err := db.Exec(`CREATE TABLE report(c INTEGER);`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, migration.GetMaxVersion())
+	err = migration.SetDBVersion(db, dbDriver, migration.GetMaxVersion())
 	assert.EqualError(t, err, "table report already exists")
 }
 
 func TestMigration1_TableReportDoesNotExist(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
-	// set to the latest version
-	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	// set to the version with the report table
+	err := migration.SetDBVersion(db, dbDriver, 1)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`DROP TABLE report;`)
 	helpers.FailOnError(t, err)
 
 	// try to set to the first version
-	err = migration.SetDBVersion(db, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0)
 	assert.EqualError(t, err, "no such table: report")
 }
 
 func TestMigration2_TableRuleAlreadyExists(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
 	_, err := db.Exec(`CREATE TABLE rule(c INTEGER);`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, migration.GetMaxVersion())
+	err = migration.SetDBVersion(db, dbDriver, migration.GetMaxVersion())
 	assert.EqualError(t, err, "table rule already exists")
 }
 
 func TestMigration2_TableRuleDoesNotExist(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
-	// set to the latest version
-	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	// set to the version where table rule exists
+	err := migration.SetDBVersion(db, dbDriver, 2)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`DROP TABLE rule;`)
-	helpers.FailOnError(t, err)
+	if dbDriver == types.DBDriverSQLite3 {
+		_, err = db.Exec(`DROP TABLE rule;`)
+		helpers.FailOnError(t, err)
+	} else {
+		_, err = db.Exec(`DROP TABLE rule CASCADE;`)
+		helpers.FailOnError(t, err)
+	}
 
 	// try to set to the first version
-	err = migration.SetDBVersion(db, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0)
 	assert.EqualError(t, err, "no such table: rule")
 }
 
 func TestMigration2_TableRuleErrorKeyAlreadyExists(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
 	_, err := db.Exec(`CREATE TABLE rule_error_key(c INTEGER);`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, migration.GetMaxVersion())
+	err = migration.SetDBVersion(db, dbDriver, migration.GetMaxVersion())
 	assert.EqualError(t, err, "table rule_error_key already exists")
 }
 
 func TestMigration2_TableRuleErrorKeyDoesNotExist(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
 	// set to the latest version
-	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	err := migration.SetDBVersion(db, dbDriver, 2)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`DROP TABLE rule_error_key;`)
 	helpers.FailOnError(t, err)
 
 	// try to set to the first version
-	err = migration.SetDBVersion(db, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0)
 	assert.EqualError(t, err, "no such table: rule_error_key")
 }
 
 func TestMigration3_TableClusterRuleUserFeedbackAlreadyExists(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
 	_, err := db.Exec(`CREATE TABLE cluster_rule_user_feedback(c INTEGER);`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, migration.GetMaxVersion())
+	err = migration.SetDBVersion(db, dbDriver, migration.GetMaxVersion())
 	assert.EqualError(t, err, "table cluster_rule_user_feedback already exists")
 }
 
 func TestMigration3_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
 	// set to the latest version
-	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	err := migration.SetDBVersion(db, dbDriver, 3)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
 	helpers.FailOnError(t, err)
 
 	// try to set to the first version
-	err = migration.SetDBVersion(db, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0)
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
 
 func TestMigration4_StepUp_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
-	err := migration.SetDBVersion(db, 3)
+	err := migration.SetDBVersion(db, dbDriver, 3)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, migration.GetMaxVersion())
+	err = migration.SetDBVersion(db, dbDriver, migration.GetMaxVersion())
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
 
 func TestMigration4_StepDown_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
-	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	err := migration.SetDBVersion(db, dbDriver, 4)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0)
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
 
@@ -209,8 +215,8 @@ func TestMigration4_CreateTableError(t *testing.T) {
 	expectedErr := fmt.Errorf("create table error")
 	mig4 := migration.Mig0004ModifyClusterRuleUserFeedback
 
-	for _, method := range []func(*sql.Tx) error{mig4.StepUp, mig4.StepDown} {
-		func(method func(*sql.Tx) error) {
+	for _, method := range []func(*sql.Tx, types.DBDriver) error{mig4.StepUp, mig4.StepDown} {
+		func(method func(*sql.Tx, types.DBDriver) error) {
 			tx, db, expects := GetTxForMigration(t)
 			defer helpers.MustCloseMockDBWithExpects(t, db, expects)
 
@@ -219,7 +225,7 @@ func TestMigration4_CreateTableError(t *testing.T) {
 			expects.ExpectExec("CREATE TABLE").
 				WillReturnError(expectedErr)
 
-			err := method(tx)
+			err := method(tx, types.DBDriverGeneral)
 			assert.EqualError(t, err, expectedErr.Error())
 		}(method)
 	}
@@ -229,8 +235,8 @@ func TestMigration4_InsertError(t *testing.T) {
 	expectedErr := fmt.Errorf("insert error")
 	mig4 := migration.Mig0004ModifyClusterRuleUserFeedback
 
-	for _, method := range []func(*sql.Tx) error{mig4.StepUp, mig4.StepDown} {
-		func(method func(*sql.Tx) error) {
+	for _, method := range []func(*sql.Tx, types.DBDriver) error{mig4.StepUp, mig4.StepDown} {
+		func(method func(*sql.Tx, types.DBDriver) error) {
 			tx, db, expects := GetTxForMigration(t)
 			defer helpers.MustCloseMockDBWithExpects(t, db, expects)
 
@@ -241,7 +247,7 @@ func TestMigration4_InsertError(t *testing.T) {
 			expects.ExpectExec("INSERT INTO").
 				WillReturnError(expectedErr)
 
-			err := method(tx)
+			err := method(tx, types.DBDriverGeneral)
 			assert.EqualError(t, err, expectedErr.Error())
 		}(method)
 	}
@@ -251,8 +257,8 @@ func TestMigration4_DropTableError(t *testing.T) {
 	expectedErr := fmt.Errorf("drop table error")
 	mig4 := migration.Mig0004ModifyClusterRuleUserFeedback
 
-	for _, method := range []func(*sql.Tx) error{mig4.StepUp, mig4.StepDown} {
-		func(method func(*sql.Tx) error) {
+	for _, method := range []func(*sql.Tx, types.DBDriver) error{mig4.StepUp, mig4.StepDown} {
+		func(method func(*sql.Tx, types.DBDriver) error) {
 			tx, db, expects := GetTxForMigration(t)
 			defer helpers.MustCloseMockDBWithExpects(t, db, expects)
 
@@ -265,33 +271,33 @@ func TestMigration4_DropTableError(t *testing.T) {
 			expects.ExpectExec("DROP TABLE").
 				WillReturnError(expectedErr)
 
-			err := method(tx)
+			err := method(tx, types.DBDriverGeneral)
 			assert.EqualError(t, err, expectedErr.Error())
 		}(method)
 	}
 }
 
 func TestMigration5_TableAlreadyExists(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
 	_, err := db.Exec(`CREATE TABLE consumer_error(c INTEGER)`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, migration.GetMaxVersion())
+	err = migration.SetDBVersion(db, dbDriver, migration.GetMaxVersion())
 	assert.EqualError(t, err, "table consumer_error already exists")
 }
 
 func TestMigration5_NoSuchTable(t *testing.T) {
-	db := prepareDBAndInfo(t)
-	defer closeDB(t, db)
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
 
-	err := migration.SetDBVersion(db, migration.GetMaxVersion())
+	err := migration.SetDBVersion(db, dbDriver, 5)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`DROP TABLE consumer_error`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0)
 	assert.EqualError(t, err, "no such table: consumer_error")
 }

@@ -43,6 +43,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 const (
@@ -67,21 +68,21 @@ var (
 	consumerInstance consumer.Consumer
 
 	// BuildVersion contains the major.minor version of the CLI client
-	BuildVersion string = "*not set*"
+	BuildVersion = "*not set*"
 
 	// BuildTime contains timestamp when the CLI client has been built
-	BuildTime string = "*not set*"
+	BuildTime = "*not set*"
 
 	// BuildBranch contains Git branch used to build this application
-	BuildBranch string = "*not set*"
+	BuildBranch = "*not set*"
 
 	// BuildCommit contains Git commit used to build this application
-	BuildCommit string = "*not set*"
+	BuildCommit = "*not set*"
 
 	// autoMigrate determines if the prepareDB function upgrades
 	// the database to the latest migration version. This is necessary
 	// for certain tests that work with a temporary, empty SQLite DB.
-	autoMigrate bool = false
+	autoMigrate = false
 )
 
 func createStorage() (*storage.DBStorage, error) {
@@ -380,7 +381,7 @@ func printMigrationInfo(dbConn *sql.DB) int {
 }
 
 // setMigrationVersion attempts to migrate the DB to the target version.
-func setMigrationVersion(dbConn *sql.DB, versStr string) int {
+func setMigrationVersion(dbConn *sql.DB, dbDriver types.DBDriver, versStr string) int {
 	var targetVersion migration.Version
 	if versStrLower := strings.ToLower(versStr); versStrLower == "latest" || versStrLower == "max" {
 		targetVersion = migration.GetMaxVersion()
@@ -394,7 +395,7 @@ func setMigrationVersion(dbConn *sql.DB, versStr string) int {
 		targetVersion = migration.Version(vers)
 	}
 
-	if err := migration.SetDBVersion(dbConn, targetVersion); err != nil {
+	if err := migration.SetDBVersion(dbConn, dbDriver, targetVersion); err != nil {
 		log.Error().Err(err).Msg("Unable to perform migration")
 		return ExitStatusMigrationError
 	}
@@ -419,7 +420,7 @@ func performMigrations() int {
 		return printMigrationInfo(dbConn)
 
 	case 1:
-		return setMigrationVersion(dbConn, migrationArgs[0])
+		return setMigrationVersion(dbConn, db.GetDBDriverType(), migrationArgs[0])
 
 	default:
 		log.Error().Msg("Unexpected number of arguments to migrations command (expected 0-1)")

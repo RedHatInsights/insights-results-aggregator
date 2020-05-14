@@ -336,6 +336,9 @@ func TestKafkaConsumer_New(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
 
+		mockStorage, closer := helpers.MustGetMockStorage(t, true)
+		defer closer()
+
 		mockBroker := sarama.NewMockBroker(t, 0)
 		defer mockBroker.Close()
 
@@ -346,7 +349,7 @@ func TestKafkaConsumer_New(t *testing.T) {
 			Topic:      testTopicName,
 			Enabled:    true,
 			SaveOffset: true,
-		}, nil)
+		}, mockStorage)
 		helpers.FailOnError(t, err)
 
 		err = mockConsumer.Close()

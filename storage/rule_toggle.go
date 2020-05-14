@@ -65,7 +65,7 @@ func (storage DBStorage) ToggleRuleForCluster(
 	}
 
 	switch storage.dbDriverType {
-	case DBDriverSQLite3, DBDriverPostgres:
+	case types.DBDriverSQLite3, types.DBDriverPostgres:
 		query = `
 			INSERT INTO cluster_rule_toggle(
 				cluster_id, rule_id, user_id, disabled, disabled_at, enabled_at, updated_at
@@ -183,7 +183,7 @@ func (storage DBStorage) GetFromClusterRuleToggle(
 		&disabledRule.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
-		return nil, &ItemNotFoundError{ItemID: ruleID}
+		return nil, &types.ItemNotFoundError{ItemID: ruleID}
 	}
 
 	return &disabledRule, err

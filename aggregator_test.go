@@ -355,7 +355,7 @@ func TestSetMigrationVersionZero(t *testing.T) {
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	defer helpers.MustCloseStorage(t, db)
 
-	exitCode = main.SetMigrationVersion(dbConn, "0")
+	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "0")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
 
 	version, err := migration.GetDBVersion(dbConn)
@@ -370,7 +370,7 @@ func TestSetMigrationVersionLatest(t *testing.T) {
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	defer helpers.MustCloseStorage(t, db)
 
-	exitCode = main.SetMigrationVersion(dbConn, "latest")
+	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "latest")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
 
 	version, err := migration.GetDBVersion(dbConn)
@@ -387,7 +387,7 @@ func TestSetMigrationVersionClosedDB(t *testing.T) {
 	// Close DB connection immediately.
 	helpers.MustCloseStorage(t, db)
 
-	exitCode = main.SetMigrationVersion(dbConn, "0")
+	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "0")
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
 }
 
@@ -399,7 +399,7 @@ func TestSetMigrationVersionInvalid(t *testing.T) {
 	// Close DB connection immediately.
 	helpers.MustCloseStorage(t, db)
 
-	exitCode = main.SetMigrationVersion(dbConn, "")
+	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "")
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
 }
 

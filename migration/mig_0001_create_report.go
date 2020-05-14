@@ -18,10 +18,12 @@ package migration
 
 import (
 	"database/sql"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var mig0001CreateReport = Migration{
-	StepUp: func(tx *sql.Tx) error {
+	StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`
 			CREATE TABLE report (
 				org_id          INTEGER NOT NULL,
@@ -33,7 +35,7 @@ var mig0001CreateReport = Migration{
 			)`)
 		return err
 	},
-	StepDown: func(tx *sql.Tx) error {
+	StepDown: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`DROP TABLE report`)
 		return err
 	},
