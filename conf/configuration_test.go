@@ -216,6 +216,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		debug = true
 		use_https = false
 		enable_cors = true
+		content_service_url = "http://localhost:8081/api/v1/"
 
 		[storage]
 		db_driver = "sqlite3"
@@ -246,13 +247,14 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 	assert.Equal(t, true, brokerCfg.Enabled)
 
 	assert.Equal(t, server.Configuration{
-		Address:     ":8080",
-		APIPrefix:   "/api/v1/",
-		APISpecFile: "openapi.json",
-		AuthType:    "xrh",
-		Debug:       true,
-		UseHTTPS:    false,
-		EnableCORS:  true,
+		Address:           ":8080",
+		APIPrefix:         "/api/v1/",
+		APISpecFile:       "openapi.json",
+		AuthType:          "xrh",
+		Debug:             true,
+		UseHTTPS:          false,
+		EnableCORS:        true,
+		ContentServiceURL: "http://localhost:8081/api/v1/",
 	}, conf.GetServerConfiguration())
 
 	orgWhiteList := conf.GetOrganizationWhitelist()
@@ -317,13 +319,14 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	assert.Equal(t, true, brokerCfg.Enabled)
 
 	assert.Equal(t, server.Configuration{
-		Address:     ":8080",
-		APIPrefix:   "/api/v1/",
-		APISpecFile: "openapi.json",
-		AuthType:    "xrh",
-		Debug:       true,
-		UseHTTPS:    false,
-		EnableCORS:  true,
+		Address:           ":8080",
+		APIPrefix:         "/api/v1/",
+		APISpecFile:       "openapi.json",
+		AuthType:          "xrh",
+		Debug:             true,
+		UseHTTPS:          false,
+		EnableCORS:        true,
+		ContentServiceURL: "http://localhost:8081/api/v1/",
 	}, conf.GetServerConfiguration())
 
 	orgWhiteList := conf.GetOrganizationWhitelist()

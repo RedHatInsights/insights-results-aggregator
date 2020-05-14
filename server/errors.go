@@ -67,7 +67,7 @@ func (*NoBodyError) Error() string {
 	return "client didn't provide request body"
 }
 
-// ContentServiceUnavailableError error meaning that client didn't provide body when it's required
+// ContentServiceUnavailableError error is used when the content service cannot be reached
 type ContentServiceUnavailableError struct{}
 
 func (*ContentServiceUnavailableError) Error() string {
