@@ -18,12 +18,13 @@ package server
 
 // Configuration represents configuration of REST API HTTP server
 type Configuration struct {
-	Address     string `mapstructure:"address" toml:"address"`
-	APIPrefix   string `mapstructure:"api_prefix" toml:"api_prefix"`
-	APISpecFile string `mapstructure:"api_spec_file" toml:"api_spec_file"`
-	Debug       bool   `mapstructure:"debug" toml:"debug"`
-	Auth        bool   `mapstructure:"auth" toml:"auth"`
-	AuthType    string `mapstructure:"auth_type" toml:"auth_type"`
-	UseHTTPS    bool   `mapstructure:"use_https" toml:"use_https"`
-	EnableCORS  bool   `mapstructure:"enable_cors" toml:"enable_cors"`
+	Address           string `mapstructure:"address" toml:"address"`
+	APIPrefix         string `mapstructure:"api_prefix" toml:"api_prefix"`
+	APISpecFile       string `mapstructure:"api_spec_file" toml:"api_spec_file"`
+	Debug             bool   `mapstructure:"debug" toml:"debug"`
+	Auth              bool   `mapstructure:"auth" toml:"auth"`
+	AuthType          string `mapstructure:"auth_type" toml:"auth_type"`
+	UseHTTPS          bool   `mapstructure:"use_https" toml:"use_https"`
+	EnableCORS        bool   `mapstructure:"enable_cors" toml:"enable_cors"`
+	ContentServiceURL string `mapstructure:"content_service_url" toml:"content_service_url"`
 }

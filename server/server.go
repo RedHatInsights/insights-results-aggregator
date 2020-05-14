@@ -47,6 +47,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	// we just have to import this package in order to expose pprof interface in debug mode
 	// disable "G108 (CWE-): Profiling endpoint is automatically exposed on /debug/pprof"
 	// #nosec G108
@@ -347,6 +348,33 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
+}
+
+// getRuleGroups serves as a proxy to the insights-content-service redirecting the request
+// if the service is alive
+func (server *HTTPServer) getRuleGroups(writer http.ResponseWriter, request *http.Request) {
+	contentServiceURL, err := url.Parse(server.Config.ContentServiceURL)
+
+	if err != nil {
+		log.Error().Err(err).Msg("Error during Content Service URL parsing")
+		handleServerError(writer, err)
+		return
+	}
+
+	// test if service is alive
+	_, err = http.Get(contentServiceURL.String())
+	if err != nil {
+		log.Error().Err(err).Msg("Content service unavailable")
+
+		if _, ok := err.(*url.Error); ok {
+			err = &ContentServiceUnavailableError{}
+		}
+
+		handleServerError(writer, err)
+		return
+	}
+
+	http.Redirect(writer, request, contentServiceURL.String()+RuleGroupsEndpoint, 302)
 }
 
 // deleteRuleForClusterToggle is debug endpoint for deleting the record in the rule_cluster_toggle table
@@ -664,6 +692,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+RuleGroupsEndpoint, server.getRuleGroups).Methods(http.MethodGet)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
