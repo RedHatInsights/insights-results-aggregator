@@ -175,23 +175,25 @@ func getOffsetManagers(
 		return nil, nil, 0, err
 	}
 
-	nextOffset, err := dbStorage.GetLatestKafkaOffset()
+	latestOffset, err := dbStorage.GetLatestKafkaOffset()
 	if err != nil {
 		return nil, nil, 0, err
 	}
 
-	if nextOffset <= 0 {
+	nextOffset := latestOffset + 1
+
+	if latestOffset <= 0 {
 		log.Info().Msg("saved offset was not found in postgres, falling back to sarama's offset")
 
-		partitionManagerOffset, _ := partitionOffsetManager.NextOffset()
-		if partitionManagerOffset <= 0 {
+		saramaOffset, _ := partitionOffsetManager.NextOffset()
+		if saramaOffset <= 0 {
 			// if next offset wasn't stored yet, initial state of the broker
 			log.Info().Msg("saved offset was not found, consuming from the beginning")
-			partitionManagerOffset = sarama.OffsetOldest
+			saramaOffset = sarama.OffsetOldest
 		}
-		nextOffset = types.KafkaOffset(partitionManagerOffset)
+		nextOffset = types.KafkaOffset(saramaOffset)
 	} else {
-		log.Debug().Msg("taking offset from postgres")
+		log.Info().Msgf("taking offset %v from postgres", nextOffset)
 	}
 
 	return offsetManager, partitionOffsetManager, int64(nextOffset), nil
