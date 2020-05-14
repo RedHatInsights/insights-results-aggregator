@@ -130,15 +130,15 @@ func convertPostgresError(err error) error {
 
 	// see https://www.postgresql.org/docs/current/errcodes-appendix.html to get the magic happening below
 	switch pqError.Code {
-	case "42P07": // duplicate_table
+	case pgDuplicateTableErrorCode: // duplicate_table
 		return &TableAlreadyExistsError{
 			tableName: regexGetFirstMatchOrLogError(`relation "(.+)" already exists`, pqError.Message),
 		}
-	case "42P01": // undefined_table
+	case pgUndefinedTableErrorCode: // undefined_table
 		return &TableNotFoundError{
 			tableName: regexGetNthMatchOrLogError(`(table|relation) "(.+)" does not exist`, 2, pqError.Message),
 		}
-	case "23503": // foreign_key_violation
+	case pgForeignKeyViolationErrorCode: // foreign_key_violation
 		// for some reason field Table is filled not in all errors
 		return &ForeignKeyError{
 			TableName:      pqError.Table,
