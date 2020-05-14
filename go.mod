@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/RedHatInsights/cloudwatch v0.0.0-20200512151223-b0b55757a24b
-	github.com/RedHatInsights/insights-operator-utils v1.0.0
+	github.com/RedHatInsights/insights-operator-utils v1.0.1
 	github.com/Shopify/sarama v1.26.0
 	github.com/aws/aws-sdk-go v1.30.25
 	github.com/bitly/go-simplejson v0.5.0 // indirect
