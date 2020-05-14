@@ -58,6 +58,9 @@ style: fmt vet lint cyclo shellcheck errcheck goconst gosec ineffassign abcgo js
 run: clean build ## Build the project and executes the binary
 	./insights-results-aggregator
 
+automigrate: clean build
+	./insights-results-aggregator migrate latest
+
 test: clean build ## Run the unit tests
 	./unit-tests.sh
 
