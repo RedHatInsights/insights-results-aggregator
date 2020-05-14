@@ -51,7 +51,7 @@ var (
 	}
 	testMigration = migration.Migration{
 		StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
-			_, err := tx.Exec("CREATE TABLE migration_test_table (col INTEGER)")
+			_, err := tx.Exec("CREATE TABLE migration_test_table (col INTEGER);")
 			return err
 		},
 		StepDown: func(tx *sql.Tx, _ types.DBDriver) error {
@@ -148,7 +148,7 @@ func TestMigrationInitNotOneRow(t *testing.T) {
 	db, _, closer := prepareDBAndMigrations(t)
 	defer closer()
 
-	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10)")
+	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10);")
 	helpers.FailOnError(t, err)
 
 	const expectedErrStr = "unexpected number of rows in migration info table (expected: 1, reality: 2)"
@@ -180,7 +180,7 @@ func TestMigrationGetVersionMultipleRows(t *testing.T) {
 	db, _, closer := prepareDBAndMigrations(t)
 	defer closer()
 
-	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10)")
+	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10);")
 	helpers.FailOnError(t, err)
 
 	_, err = migration.GetDBVersion(db)
@@ -191,7 +191,7 @@ func TestMigrationGetVersionEmptyTable(t *testing.T) {
 	db, _, closer := prepareDBAndMigrations(t)
 	defer closer()
 
-	_, err := db.Exec("DELETE FROM migration_info")
+	_, err := db.Exec("DELETE FROM migration_info;")
 	helpers.FailOnError(t, err)
 
 	_, err = migration.GetDBVersion(db)
@@ -202,10 +202,10 @@ func TestMigrationGetVersionInvalidType(t *testing.T) {
 	db, _, closer := prepareDB(t)
 	defer closer()
 
-	_, err := db.Exec("CREATE TABLE migration_info ( version TEXT )")
+	_, err := db.Exec("CREATE TABLE migration_info ( version TEXT );")
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec("INSERT INTO migration_info(version) VALUES('hello world')")
+	_, err = db.Exec("INSERT INTO migration_info(version) VALUES('hello world');")
 	helpers.FailOnError(t, err)
 
 	const expectedErrStr = `sql: Scan error on column index 0, name "version": ` +
@@ -320,7 +320,7 @@ func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndMigrations(t)
 	defer closer()
 
-	_, err := db.Exec("UPDATE migration_info SET version=10")
+	_, err := db.Exec("UPDATE migration_info SET version=10;")
 	helpers.FailOnError(t, err)
 
 	const expectedErrStr = "current version (10) is outside of available migration boundaries"

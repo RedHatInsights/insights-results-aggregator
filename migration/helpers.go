@@ -50,7 +50,7 @@ func upgradeTable(tx *sql.Tx, tableName, newTableDefinition string) error {
 
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
-	_, err = tx.Exec(`INSERT INTO ` + tableName + ` SELECT * FROM tmp;`)
+	_, err = tx.Exec("INSERT INTO " + tableName + " SELECT * FROM tmp;")
 	if err != nil {
 		return err
 	}
@@ -85,12 +85,12 @@ func downgradeTable(tx *sql.Tx, tableName, oldTableDefinition string, columns []
 
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
-	_, err = tx.Exec(`INSERT INTO ` + tableName + ` SELECT ` + columnsStr + ` FROM tmp;`)
+	_, err = tx.Exec("INSERT INTO " + tableName + " SELECT " + columnsStr + " FROM tmp;")
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(`DROP TABLE tmp;`)
+	_, err = tx.Exec("DROP TABLE tmp;")
 	if err != nil {
 		return err
 	}

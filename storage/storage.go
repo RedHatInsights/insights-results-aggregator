@@ -209,7 +209,7 @@ func (storage DBStorage) MigrateToLatest() error {
 // tasks necessary for further service operation.
 func (storage DBStorage) Init() error {
 	// Read clusterName:LastChecked dictionary from DB.
-	rows, err := storage.connection.Query("SELECT cluster, last_checked_at FROM report")
+	rows, err := storage.connection.Query("SELECT cluster, last_checked_at FROM report;")
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func closeRows(rows *sql.Rows) {
 func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 	orgs := make([]types.OrgID, 0)
 
-	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id")
+	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id;")
 	err = types.ConvertDBError(err)
 	if err != nil {
 		return orgs, err
@@ -292,7 +292,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
 	clusters := make([]types.ClusterName, 0)
 
-	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster", orgID)
+	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster;", orgID)
 	err = types.ConvertDBError(err)
 	if err != nil {
 		return clusters, err
@@ -314,7 +314,7 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 
 // GetOrgIDByClusterID reads OrgID for specified cluster
 func (storage DBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error) {
-	row := storage.connection.QueryRow("SELECT org_id FROM report WHERE cluster = $1 ORDER BY org_id", cluster)
+	row := storage.connection.QueryRow("SELECT org_id FROM report WHERE cluster = $1 ORDER BY org_id;", cluster)
 
 	var orgID uint64
 	err := row.Scan(&orgID)
@@ -333,7 +333,7 @@ func (storage DBStorage) ReadReportForCluster(
 	var lastChecked time.Time
 
 	err := storage.connection.QueryRow(
-		"SELECT report, last_checked_at FROM report WHERE org_id = $1 AND cluster = $2", orgID, clusterName,
+		"SELECT report, last_checked_at FROM report WHERE org_id = $1 AND cluster = $2;", orgID, clusterName,
 	).Scan(&report, &lastChecked)
 	err = types.ConvertDBError(err)
 
@@ -357,7 +357,7 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 	var lastChecked time.Time
 
 	err := storage.connection.QueryRow(
-		"SELECT report, last_checked_at FROM report WHERE cluster = $1", clusterName,
+		"SELECT report, last_checked_at FROM report WHERE cluster = $1;", clusterName,
 	).Scan(&report, &lastChecked)
 
 	switch {
@@ -375,7 +375,7 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 // GetLatestKafkaOffset returns latest kafka offset from report table
 func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 	var offset types.KafkaOffset
-	err := storage.connection.QueryRow(`SELECT COALESCE(MAX(kafka_offset), 0) FROM report`).Scan(&offset)
+	err := storage.connection.QueryRow("SELECT COALESCE(MAX(kafka_offset), 0) FROM report;").Scan(&offset)
 	return offset, err
 }
 
@@ -537,7 +537,7 @@ func (storage DBStorage) WriteReportForCluster(
 
 	// Check if there is a more recent report for the cluster already in the database.
 	rows, err := tx.Query(
-		`SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3`,
+		"SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3;",
 		orgID, clusterName, lastCheckedTime)
 	err = types.ConvertDBError(err)
 	if err != nil {
@@ -572,7 +572,7 @@ func (storage DBStorage) WriteReportForCluster(
 // ReportsCount reads number of all records stored in database
 func (storage DBStorage) ReportsCount() (int, error) {
 	count := -1
-	err := storage.connection.QueryRow("SELECT count(*) FROM report").Scan(&count)
+	err := storage.connection.QueryRow("SELECT count(*) FROM report;").Scan(&count)
 	err = types.ConvertDBError(err)
 
 	return count, err
@@ -580,13 +580,13 @@ func (storage DBStorage) ReportsCount() (int, error) {
 
 // DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
 func (storage DBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
-	_, err := storage.connection.Exec("DELETE FROM report WHERE org_id = $1", orgID)
+	_, err := storage.connection.Exec("DELETE FROM report WHERE org_id = $1;", orgID)
 	return err
 }
 
 // DeleteReportsForCluster deletes all reports related to the specified cluster from the storage.
 func (storage DBStorage) DeleteReportsForCluster(clusterName types.ClusterName) error {
-	_, err := storage.connection.Exec("DELETE FROM report WHERE cluster = $1", clusterName)
+	_, err := storage.connection.Exec("DELETE FROM report WHERE cluster = $1;", clusterName)
 	return err
 }
 
@@ -786,7 +786,7 @@ func (storage DBStorage) CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) err
 // DeleteRuleErrorKey creates rule_error_key with provided data in the DB
 func (storage DBStorage) DeleteRuleErrorKey(ruleID types.RuleID, errorKey types.ErrorKey) error {
 	res, err := storage.connection.Exec(
-		`DELETE FROM rule_error_key WHERE "error_key" = $1 AND "rule_module" = $2`,
+		`DELETE FROM rule_error_key WHERE "error_key" = $1 AND "rule_module" = $2;`,
 		errorKey,
 		ruleID,
 	)
