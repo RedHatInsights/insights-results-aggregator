@@ -39,6 +39,7 @@ import (
 	"github.com/verdverm/frisby"
 )
 
+// common constants used by REST API tests
 const (
 	apiURL              = "http://localhost:8080/api/v1/"
 	contentTypeHeader   = "Content-Type"
@@ -139,22 +140,22 @@ func sendAndExpectStatus(f *frisby.Frisby, expectedStatus int) {
 
 // checkGetEndpointByOtherMethods checks whether a 'GET' endpoint respond correctly if other HTTP methods are used
 func checkGetEndpointByOtherMethods(endpoint string) {
-	f := frisby.Create("Check the end point " + endpoint + " with wrong method: POST").Post(apiURL)
+	f := frisby.Create("Check the end point " + endpoint + " with wrong method: POST").Post(endpoint)
 	sendAndExpectStatus(f, 405)
 
-	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: PUT").Put(apiURL)
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: PUT").Put(endpoint)
 	sendAndExpectStatus(f, 405)
 
-	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: DELETE").Delete(apiURL)
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: DELETE").Delete(endpoint)
 	sendAndExpectStatus(f, 405)
 
-	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: PATCH").Patch(apiURL)
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: PATCH").Patch(endpoint)
 	sendAndExpectStatus(f, 405)
 
-	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: OPTIONS").Options(apiURL)
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: OPTIONS").Options(endpoint)
 	sendAndExpectStatus(f, 405)
 
-	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: HEAD").Head(apiURL)
+	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: HEAD").Head(endpoint)
 	sendAndExpectStatus(f, 405)
 }
 
