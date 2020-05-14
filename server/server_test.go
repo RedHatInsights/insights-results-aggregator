@@ -40,13 +40,14 @@ import (
 )
 
 var config = server.Configuration{
-	Address:     ":8080",
-	APIPrefix:   "/api/test/",
-	APISpecFile: "openapi.json",
-	Debug:       true,
-	Auth:        false,
-	UseHTTPS:    false,
-	EnableCORS:  true,
+	Address:           ":8080",
+	APIPrefix:         "/api/test/",
+	APISpecFile:       "openapi.json",
+	Debug:             true,
+	Auth:              false,
+	UseHTTPS:          false,
+	EnableCORS:        true,
+	ContentServiceURL: "nonexistent/url",
 }
 
 func init() {
@@ -1300,5 +1301,30 @@ func TestHTTPServer_DeleteRuleErrorKey_BadRuleKey(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "` + errMessage + `"}`,
+	})
+}
+
+func TestHTTPServer_getRuleGroupsServiceUnavailable(t *testing.T) {
+	// nonexistent url set in config
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.RuleGroupsEndpoint,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusServiceUnavailable,
+		Body:       `{"status": "Content service is unreachable"}`,
+	})
+}
+
+func TestHTTPServer_getRuleGroupsWrongUrl(t *testing.T) {
+	configCopy := config
+	// set invalid url for url parser to fail
+	configCopy.ContentServiceURL = " http://foo.bar"
+
+	helpers.AssertAPIRequest(t, nil, &configCopy, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.RuleGroupsEndpoint,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }

@@ -42,13 +42,14 @@ const (
 	RuleEndpoint = "rules/{rule_id}"
 	// RuleErrorKeyEndpoint is an endpoint to create&delete a rule_error_key. DEBUG only
 	RuleErrorKeyEndpoint = "rules/{rule_id}/error_keys/{error_key}"
+	// RuleGroupsEndpoint is a simple redirect endpoint to the insights-content-service API specified in configruation
+	RuleGroupsEndpoint = "groups"
 	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
 	// DisableRuleForClusterEndpoint disables a rule for specified cluster
 	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/disable"
 	// EnableRuleForClusterEndpoint re-enables a rule for specified cluster
 	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/enable"
-
 	// MetricsEndpoint returns prometheus metrics
 	MetricsEndpoint = "metrics"
 )

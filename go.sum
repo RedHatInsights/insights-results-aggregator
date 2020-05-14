@@ -23,6 +23,8 @@ github.com/RedHatInsights/insights-operator-utils v0.0.1 h1:o5bIO+WyuApRN6g+JEEi
 github.com/RedHatInsights/insights-operator-utils v0.0.1/go.mod h1:c6ReBK57bYPBl3DCb03lo3Jwr+ORT/9XUdlTwzhKQP8=
 github.com/RedHatInsights/insights-operator-utils v1.0.0 h1:Fwr1Cj9cwBXo/NyZAArtE7av3rKtjQcanMxZ0dez12M=
 github.com/RedHatInsights/insights-operator-utils v1.0.0/go.mod h1:gRzYBMY4csuOXgrxUuC10WUkz6STOm3mqVsQCb+AGOQ=
+github.com/RedHatInsights/insights-operator-utils v1.0.1 h1:uxMsNAMGfhb1ABRXITSHAUnDypceI7eRfLvrwCpq+A4=
+github.com/RedHatInsights/insights-operator-utils v1.0.1/go.mod h1:gRzYBMY4csuOXgrxUuC10WUkz6STOm3mqVsQCb+AGOQ=
 github.com/Shopify/sarama v1.13.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/sarama v1.26.0 h1:C+zFi+/NJdfeJgZWbu+WaLgk4NcsbmqfFTKsoJmR39U=
