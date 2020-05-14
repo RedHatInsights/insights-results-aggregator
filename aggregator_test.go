@@ -321,7 +321,7 @@ func TestGetDBForMigrations(t *testing.T) {
 	assert.Equal(t, main.ExitStatusOK, exitCode)
 	defer helpers.MustCloseStorage(t, db)
 
-	row := dbConn.QueryRow("SELECT version FROM migration_info")
+	row := dbConn.QueryRow("SELECT version FROM migration_info;")
 	var version migration.Version
 	err := row.Scan(&version)
 	assert.NoError(t, err, "unable to read version from migration info table")

@@ -281,7 +281,7 @@ func TestMigration5_TableAlreadyExists(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec(`CREATE TABLE consumer_error(c INTEGER)`)
+	_, err := db.Exec("CREATE TABLE consumer_error(c INTEGER);")
 	helpers.FailOnError(t, err)
 
 	err = migration.SetDBVersion(db, dbDriver, migration.GetMaxVersion())

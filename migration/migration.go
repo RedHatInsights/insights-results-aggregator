@@ -60,15 +60,13 @@ func InitInfoTable(db *sql.DB) error {
 		}
 
 		// INSERT if there's no rows in the table
-		_, err = tx.Exec(`
-			INSERT INTO migration_info (version) SELECT 0 WHERE NOT EXISTS (SELECT version FROM migration_info);
-		`)
+		_, err = tx.Exec("INSERT INTO migration_info (version) SELECT 0 WHERE NOT EXISTS (SELECT version FROM migration_info);")
 		if err != nil {
 			return err
 		}
 
 		var rowCount uint
-		err = tx.QueryRow("SELECT COUNT(*) FROM migration_info").Scan(&rowCount)
+		err = tx.QueryRow("SELECT COUNT(*) FROM migration_info;").Scan(&rowCount)
 		if err != nil {
 			return err
 		}
@@ -89,7 +87,7 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 	}
 
 	var version Version = 0
-	err = db.QueryRow("SELECT version FROM migration_info").Scan(&version)
+	err = db.QueryRow("SELECT version FROM migration_info;").Scan(&version)
 	err = types.ConvertDBError(err)
 
 	return version, err
@@ -120,7 +118,7 @@ func SetDBVersion(db *sql.DB, dbDriver types.DBDriver, targetVer Version) error 
 // updateVersionInDB updates the migration version number in the migration info table.
 // This function does NOT rollback in case of an error. The calling function is expected to do that.
 func updateVersionInDB(tx *sql.Tx, newVersion Version) error {
-	res, err := tx.Exec("UPDATE migration_info SET version=$1", newVersion)
+	res, err := tx.Exec("UPDATE migration_info SET version=$1;", newVersion)
 	if err != nil {
 		return err
 	}
