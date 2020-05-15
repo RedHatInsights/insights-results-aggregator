@@ -1045,6 +1045,18 @@ func TestDBStorage_DeleteRuleErrorKey_DBError(t *testing.T) {
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
+func TestDBStorageGetVotesForNoRules(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	feedbacks, err := mockStorage.GetUserFeedbackOnRules(
+		testdata.ClusterName, testdata.RuleContentResponses, testdata.UserID,
+	)
+	helpers.FailOnError(t, err)
+
+	assert.Len(t, feedbacks, 0)
+}
+
 func TestDBStorageGetVotes(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
@@ -1062,6 +1074,8 @@ func TestDBStorageGetVotes(t *testing.T) {
 		testdata.ClusterName, testdata.RuleContentResponses, testdata.UserID,
 	)
 	helpers.FailOnError(t, err)
+
+	assert.Len(t, feedbacks, 2)
 
 	assert.Equal(t, types.UserVoteLike, feedbacks[testdata.Rule1ID])
 	assert.Equal(t, types.UserVoteDislike, feedbacks[testdata.Rule2ID])
