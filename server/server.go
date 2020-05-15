@@ -179,7 +179,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	userID, err := server.readUserID(err, request, writer)
+	userID, err := server.readUserID(request, writer)
 	if err != nil {
 		// everything has been handled already
 		return
@@ -530,7 +530,8 @@ func (server *HTTPServer) deleteRuleErrorKey(writer http.ResponseWriter, request
 	}
 }
 
-func (server *HTTPServer) readUserID(err error, request *http.Request, writer http.ResponseWriter) (types.UserID, error) {
+// readUserID tries to retrieve user ID from request. If any error occurs, error response is send back to client.
+func (server *HTTPServer) readUserID(request *http.Request, writer http.ResponseWriter) (types.UserID, error) {
 	userID, err := server.GetCurrentUserID(request)
 	if err != nil {
 		const message = "Unable to get user id"

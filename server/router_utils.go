@@ -252,7 +252,7 @@ func (server *HTTPServer) readClusterRuleUserParams(
 		return "", "", "", err
 	}
 
-	userID, err := server.readUserID(err, request, writer)
+	userID, err := server.readUserID(request, writer)
 	if err != nil {
 		// everything has been handled already
 		return "", "", "", err
