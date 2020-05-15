@@ -19,12 +19,39 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	sarama_mocks "github.com/Shopify/sarama/mocks"
 	mapset "github.com/deckarep/golang-set"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 )
+
+// MockKafkaConsumer is mock consumer
+type MockKafkaConsumer struct {
+	KafkaConsumer consumer.KafkaConsumer
+	topic         string
+	messages      []string
+}
+
+// Serve simulates sending messages
+func (mockKafkaConsumer *MockKafkaConsumer) Serve() {
+	for i, message := range mockKafkaConsumer.messages {
+		mockKafkaConsumer.KafkaConsumer.HandleMessage(&sarama.ConsumerMessage{
+			Timestamp:      time.Now(),
+			BlockTimestamp: time.Now(),
+			Value:          []byte(message),
+			Topic:          mockKafkaConsumer.topic,
+			Partition:      0,
+			Offset:         int64(i),
+		})
+	}
+
+}
+
+// Close closes mock consumer
+func (mockKafkaConsumer *MockKafkaConsumer) Close(t testing.TB) {
+	err := mockKafkaConsumer.KafkaConsumer.Close()
+	FailOnError(t, err)
+}
 
 // MustGetMockKafkaConsumerWithExpectedMessages creates mocked kafka consumer
 // which produces list of messages automatically
@@ -34,7 +61,7 @@ func MustGetMockKafkaConsumerWithExpectedMessages(
 	topic string,
 	orgWhiteList mapset.Set,
 	messages []string,
-) (*consumer.KafkaConsumer, func()) {
+) (*MockKafkaConsumer, func()) {
 	mockConsumer, closer, err := GetMockKafkaConsumerWithExpectedMessages(t, topic, orgWhiteList, messages)
 	if err != nil {
 		t.Fatal(err)
@@ -47,44 +74,36 @@ func MustGetMockKafkaConsumerWithExpectedMessages(
 // which produces list of messages automatically
 func GetMockKafkaConsumerWithExpectedMessages(
 	t *testing.T, topic string, orgWhiteList mapset.Set, messages []string,
-) (*consumer.KafkaConsumer, func(), error) {
-	mockConsumer := sarama_mocks.NewConsumer(t, nil)
+) (*MockKafkaConsumer, func(), error) {
+	mockStorage, storageCloser := MustGetMockStorage(t, true)
 
-	for _, message := range messages {
-		mockConsumer.
-			ExpectConsumePartition(topic, 0, sarama.OffsetOldest).
-			YieldMessage(&sarama.ConsumerMessage{Value: []byte(message)})
-	}
-
-	mockPartitionConsumer, err := mockConsumer.ConsumePartition(
-		topic, 0, sarama.OffsetOldest,
-	)
-	if err != nil {
-		return nil, func() {}, err
-	}
-
-	mockStorage, closer := MustGetMockStorage(t, true)
-
-	return &consumer.KafkaConsumer{
-		Configuration: broker.Configuration{
-			Address:      "",
-			Topic:        "",
-			Group:        "",
-			Enabled:      true,
-			OrgWhitelist: orgWhiteList,
+	mockConsumer := &MockKafkaConsumer{
+		KafkaConsumer: consumer.KafkaConsumer{
+			Configuration: broker.Configuration{
+				Address:      "",
+				Topic:        topic,
+				Group:        "",
+				Enabled:      true,
+				OrgWhitelist: orgWhiteList,
+			},
+			Storage: mockStorage,
 		},
-		Consumer:          mockConsumer,
-		PartitionConsumer: mockPartitionConsumer,
-		Storage:           mockStorage,
-	}, closer, nil
+		topic:    topic,
+		messages: messages,
+	}
+
+	return mockConsumer, func() {
+		storageCloser()
+		mockConsumer.Close(t)
+	}, nil
 }
 
 // WaitForMockConsumerToHaveNConsumedMessages waits until mockConsumer has at least N
 // consumed(either successfully or not) messages
-func WaitForMockConsumerToHaveNConsumedMessages(mockConsumer *consumer.KafkaConsumer, nMessages uint64) {
+func WaitForMockConsumerToHaveNConsumedMessages(mockConsumer *MockKafkaConsumer, nMessages uint64) {
 	for {
-		n := mockConsumer.GetNumberOfSuccessfullyConsumedMessages() +
-			mockConsumer.GetNumberOfErrorsConsumingMessages()
+		n := mockConsumer.KafkaConsumer.GetNumberOfSuccessfullyConsumedMessages() +
+			mockConsumer.KafkaConsumer.GetNumberOfErrorsConsumingMessages()
 		if n >= nMessages {
 			break
 		}

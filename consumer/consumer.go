@@ -56,8 +56,6 @@ type KafkaConsumer struct {
 	Storage                              storage.Storage
 	numberOfSuccessfullyConsumedMessages uint64
 	numberOfErrorsConsumingMessages      uint64
-	context                              context.Context
-	cancel                               context.CancelFunc
 	ready                                chan bool
 }
 
@@ -82,8 +80,6 @@ func NewWithSaramaConfig(
 		saramaConfig.Version = sarama.V0_10_2_0
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-
 	consumerGroup, err := sarama.NewConsumerGroup([]string{brokerCfg.Address}, brokerCfg.Group, saramaConfig)
 	if err != nil {
 		return nil, err
@@ -95,17 +91,22 @@ func NewWithSaramaConfig(
 		Storage:                              storage,
 		numberOfSuccessfullyConsumedMessages: 0,
 		numberOfErrorsConsumingMessages:      0,
-		context:                              ctx,
-		cancel:                               cancel,
 		ready:                                make(chan bool),
 	}
+
+	return consumer, nil
+}
+
+// Serve starts listening for messages and processing them. It blocks current thread.
+func (consumer *KafkaConsumer) Serve() {
+	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		for {
 			// `Consume` should be called inside an infinite loop, when a
 			// server-side rebalance happens, the consumer session will need to be
 			// recreated to get the new claims
-			if err := consumerGroup.Consume(ctx, []string{brokerCfg.Topic}, consumer); err != nil {
+			if err := consumer.ConsumerGroup.Consume(ctx, []string{consumer.Configuration.Topic}, consumer); err != nil {
 				log.Fatal().Err(err).Msg("unable to recreate kafka session")
 			}
 
@@ -125,15 +126,12 @@ func NewWithSaramaConfig(
 	<-consumer.ready
 	log.Info().Msg("finished waiting for consumer to become ready")
 
-	return consumer, nil
-}
-
-// Serve starts listening for messages and processing them. It blocks current thread.
-func (consumer *KafkaConsumer) Serve() {
 	// Actual processing is done in goroutine created by sarama (see ConsumeClaim below)
 	log.Info().Msg("started serving consumer")
-	<-consumer.context.Done()
+	<-ctx.Done()
 	log.Info().Msg("context cancelled, exiting")
+
+	cancel()
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
@@ -169,7 +167,7 @@ func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
 				Msg("this offset was already processed by aggregator")
 		}
 
-		consumer.handleMessage(message)
+		consumer.HandleMessage(message)
 
 		session.MarkMessage(message, "")
 		if types.KafkaOffset(message.Offset) > latestMessageOffset {
@@ -182,9 +180,10 @@ func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
 
 // Close method closes all resources used by consumer
 func (consumer *KafkaConsumer) Close() error {
-	consumer.cancel()
-	if err := consumer.ConsumerGroup.Close(); err != nil {
-		log.Error().Err(err).Msg("Unable to close consumer group")
+	if consumer.ConsumerGroup != nil {
+		if err := consumer.ConsumerGroup.Close(); err != nil {
+			log.Error().Err(err).Msg("Unable to close consumer group")
+		}
 	}
 
 	return nil

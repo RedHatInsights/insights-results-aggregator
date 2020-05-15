@@ -64,7 +64,7 @@ func getCounterVecValue(counterVec *prometheus.CounterVec, labels map[string]str
 	return getCounterValue(counter)
 }
 
-// TestConsumedMessagesMetric tests that consumed messages metric works
+//TestConsumedMessagesMetric tests that consumed messages metric works
 func TestConsumedMessagesMetric(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		mockConsumer, closer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
