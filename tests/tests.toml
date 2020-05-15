@@ -3,7 +3,6 @@ address = "localhost:29093"
 topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = false
-save_offset = false
 enable_org_whitelist = true
 
 [server]
