@@ -65,7 +65,7 @@ func (cgc *MockConsumerGroupClaim) Messages() <-chan *sarama.ConsumerMessage {
 
 var offset int64 = 0
 
-// StringToSaramaMessage converts string to sarama consumer message
+// StringToSaramaConsumerMessage converts string to sarama consumer message
 func StringToSaramaConsumerMessage(str string) *sarama.ConsumerMessage {
 	message := &sarama.ConsumerMessage{
 		Headers:        nil,
@@ -77,5 +77,6 @@ func StringToSaramaConsumerMessage(str string) *sarama.ConsumerMessage {
 		Offset:         offset,
 	}
 	offset++
+
 	return message
 }
