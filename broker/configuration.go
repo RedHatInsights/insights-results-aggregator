@@ -31,5 +31,4 @@ type Configuration struct {
 	Enabled             bool       `mapstructure:"enabled" toml:"enabled"`
 	OrgWhitelist        mapset.Set `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
 	OrgWhitelistEnabled bool       `mapstructure:"enable_org_whitelist" toml:"enable_org_whitelist"`
-	SaveOffset          bool       `mapstructure:"save_offset" toml:"save_offset"`
 }

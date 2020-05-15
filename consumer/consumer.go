@@ -19,35 +19,14 @@ limitations under the License.
 package consumer
 
 import (
-	"encoding/json"
-	"errors"
-	"time"
+	"context"
 
 	"github.com/Shopify/sarama"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
-	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-)
-
-const (
-	// key for topic name used in structured log messages
-	topicKey = "topic"
-	// key for broker group name used in structured log messages
-	groupKey = "group"
-	// key for message offset used in structured log messages
-	offsetKey = "offset"
-	// key for message partition used in structured log messages
-	partitionKey = "partition"
-	// key for organization ID used in structured log messages
-	organizationKey = "organization"
-	// key for cluster ID used in structured log messages
-	clusterKey = "cluster"
-	// key for duration message type used in structured log messages
-	durationKey = "duration"
 )
 
 // Consumer represents any consumer of insights-rules messages
@@ -58,28 +37,28 @@ type Consumer interface {
 }
 
 // KafkaConsumer in an implementation of Consumer interface
+// Example:
+//
+// kafkaConsumer, err := consumer.New(brokerCfg, storage)
+// if err != nil {
+//     panic(err)
+// }
+//
+// kafkaConsumer.Serve()
+//
+// err := kafkaConsumer.Stop()
+// if err != nil {
+//     panic(err)
+// }
 type KafkaConsumer struct {
 	Configuration                        broker.Configuration
-	Consumer                             sarama.Consumer
-	PartitionConsumer                    sarama.PartitionConsumer
+	ConsumerGroup                        sarama.ConsumerGroup
 	Storage                              storage.Storage
 	numberOfSuccessfullyConsumedMessages uint64
 	numberOfErrorsConsumingMessages      uint64
-	offsetManager                        sarama.OffsetManager
-	partitionOffsetManager               sarama.PartitionOffsetManager
-	client                               sarama.Client
-}
-
-// Report represents report send in a message consumed from any broker
-type Report map[string]*json.RawMessage
-
-// incomingMessage is representation of message consumed from any broker
-type incomingMessage struct {
-	Organization *types.OrgID       `json:"OrgID"`
-	ClusterName  *types.ClusterName `json:"ClusterName"`
-	Report       *Report            `json:"Report"`
-	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
-	LastChecked string `json:"LastChecked"`
+	context                              context.Context
+	cancel                               context.CancelFunc
+	ready                                chan bool
 }
 
 // DefaultSaramaConfig is a config which will be used by default
@@ -89,7 +68,7 @@ var DefaultSaramaConfig *sarama.Config
 
 // New constructs new implementation of Consumer interface
 func New(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsumer, error) {
-	return NewWithSaramaConfig(brokerCfg, storage, DefaultSaramaConfig, brokerCfg.SaveOffset)
+	return NewWithSaramaConfig(brokerCfg, storage, DefaultSaramaConfig)
 }
 
 // NewWithSaramaConfig constructs new implementation of Consumer interface with custom sarama config
@@ -97,170 +76,85 @@ func NewWithSaramaConfig(
 	brokerCfg broker.Configuration,
 	storage storage.Storage,
 	saramaConfig *sarama.Config,
-	saveOffset bool,
 ) (*KafkaConsumer, error) {
-	client, err := sarama.NewClient([]string{brokerCfg.Address}, saramaConfig)
+	if saramaConfig == nil {
+		saramaConfig = sarama.NewConfig()
+		saramaConfig.Version = sarama.V0_10_2_0
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	consumerGroup, err := sarama.NewConsumerGroup([]string{brokerCfg.Address}, brokerCfg.Group, saramaConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	consumer, err := sarama.NewConsumerFromClient(client)
-	if err != nil {
-		return nil, err
+	consumer := &KafkaConsumer{
+		Configuration:                        brokerCfg,
+		ConsumerGroup:                        consumerGroup,
+		Storage:                              storage,
+		numberOfSuccessfullyConsumedMessages: 0,
+		numberOfErrorsConsumingMessages:      0,
+		context:                              ctx,
+		cancel:                               cancel,
+		ready:                                make(chan bool),
 	}
 
-	partitions, err := consumer.Partitions(brokerCfg.Topic)
-	if err != nil {
-		return nil, err
-	}
+	go func() {
+		for {
+			// `Consume` should be called inside an infinite loop, when a
+			// server-side rebalance happens, the consumer session will need to be
+			// recreated to get the new claims
+			if err := consumerGroup.Consume(ctx, []string{brokerCfg.Topic}, consumer); err != nil {
+				log.Fatal().Err(err).Msg("unable to recreate kafka session")
+			}
 
-	var (
-		offsetManager          sarama.OffsetManager
-		partitionOffsetManager sarama.PartitionOffsetManager
-	)
-	nextOffset := sarama.OffsetNewest
+			// check if context was cancelled, signaling that the consumer should stop
+			if ctx.Err() != nil {
+				return
+			}
 
-	if saveOffset {
-		offsetManager, partitionOffsetManager, nextOffset, err = getOffsetManagers(
-			brokerCfg, client, partitions, storage,
-		)
-		if err != nil {
-			return nil, err
+			log.Info().Msg("created new kafka session")
+
+			consumer.ready = make(chan bool)
 		}
-	}
+	}()
 
-	partitionConsumer, err := consumer.ConsumePartition(
-		brokerCfg.Topic,
-		partitions[0],
-		nextOffset,
-	)
-	if kErr, ok := err.(sarama.KError); ok && kErr == sarama.ErrOffsetOutOfRange {
-		// try again with offset from the beginning
-		log.Error().Err(err).Msg("consuming from the beginning")
+	// Await till the consumer has been set up
+	log.Info().Msg("waiting for consumer to become ready")
+	<-consumer.ready
+	log.Info().Msg("finished waiting for consumer to become ready")
 
-		nextOffset = sarama.OffsetOldest
-		partitionConsumer, err = consumer.ConsumePartition(
-			brokerCfg.Topic,
-			partitions[0],
-			nextOffset,
-		)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	log.Info().Msgf("created consumer with starting offset %+v", nextOffset)
-
-	return &KafkaConsumer{
-		Configuration:          brokerCfg,
-		Consumer:               consumer,
-		PartitionConsumer:      partitionConsumer,
-		Storage:                storage,
-		offsetManager:          offsetManager,
-		partitionOffsetManager: partitionOffsetManager,
-		client:                 client,
-	}, nil
+	return consumer, nil
 }
 
-func getOffsetManagers(
-	brokerCfg broker.Configuration, client sarama.Client, partitions []int32, dbStorage storage.Storage,
-) (sarama.OffsetManager, sarama.PartitionOffsetManager, int64, error) {
-	offsetManager, err := sarama.NewOffsetManagerFromClient(brokerCfg.Group, client)
-	if err != nil {
-		return nil, nil, 0, err
-	}
-
-	partitionOffsetManager, err := offsetManager.ManagePartition(brokerCfg.Topic, partitions[0])
-	if err != nil {
-		return nil, nil, 0, err
-	}
-
-	latestOffset, err := dbStorage.GetLatestKafkaOffset()
-	if err != nil {
-		return nil, nil, 0, err
-	}
-
-	nextOffset := latestOffset + 1
-
-	if latestOffset <= 0 {
-		log.Info().Msg("saved offset was not found in postgres, falling back to sarama's offset")
-
-		saramaOffset, _ := partitionOffsetManager.NextOffset()
-		if saramaOffset <= 0 {
-			// if next offset wasn't stored yet, initial state of the broker
-			log.Info().Msg("saved offset was not found, consuming from the beginning")
-			saramaOffset = sarama.OffsetOldest
-		}
-		nextOffset = types.KafkaOffset(saramaOffset)
-	} else {
-		log.Info().Msgf("taking offset %v from postgres", nextOffset)
-	}
-
-	return offsetManager, partitionOffsetManager, int64(nextOffset), nil
+// Serve starts listening for messages and processing them. It blocks current thread.
+func (consumer *KafkaConsumer) Serve() {
+	// Actual processing is done in goroutine created by sarama (see ConsumeClaim below)
+	log.Info().Msg("started serving consumer")
+	<-consumer.context.Done()
+	log.Info().Msg("context cancelled, exiting")
 }
 
-// checkReportStructure tests if the report has correct structure
-func checkReportStructure(r Report) error {
-	// the structure is not well defined yet, so all we should do is to check if all keys are there
-	expectedKeys := []string{"fingerprints", "info", "reports", "skips", "system"}
-	for _, expectedKey := range expectedKeys {
-		_, found := r[expectedKey]
-		if !found {
-			return errors.New("Improper report structure, missing key " + expectedKey)
-		}
-	}
+// Setup is run at the beginning of a new session, before ConsumeClaim
+func (consumer *KafkaConsumer) Setup(sarama.ConsumerGroupSession) error {
+	log.Info().Msg("new session has been setup")
+	// Mark the consumer as ready
+	close(consumer.ready)
 	return nil
 }
 
-// parseMessage tries to parse incoming message and read all required attributes from it
-func parseMessage(messageValue []byte) (incomingMessage, error) {
-	var deserialized incomingMessage
-
-	err := json.Unmarshal(messageValue, &deserialized)
-	if err != nil {
-		return deserialized, err
-	}
-
-	if deserialized.Organization == nil {
-		return deserialized, errors.New("missing required attribute 'OrgID'")
-	}
-	if deserialized.ClusterName == nil {
-		return deserialized, errors.New("missing required attribute 'ClusterName'")
-	}
-	if deserialized.Report == nil {
-		return deserialized, errors.New("missing required attribute 'Report'")
-	}
-
-	_, err = uuid.Parse(string(*deserialized.ClusterName))
-
-	if err != nil {
-		return deserialized, errors.New("cluster name is not a UUID")
-	}
-
-	err = checkReportStructure(*deserialized.Report)
-	if err != nil {
-		log.Err(err).Msgf("Deserialized report read from message with improper structure: %v", *deserialized.Report)
-		return deserialized, err
-	}
-
-	return deserialized, nil
+// Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
+func (consumer *KafkaConsumer) Cleanup(sarama.ConsumerGroupSession) error {
+	log.Info().Msg("new session has been finished")
+	return nil
 }
 
-// organizationAllowed checks whether the given organization is on whitelist or not
-func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
-	whitelist := consumer.Configuration.OrgWhitelist
-	if whitelist == nil {
-		return false
-	}
-
-	orgWhitelisted := whitelist.Contains(orgID)
-
-	return orgWhitelisted
-}
-
-// Serve starts listening for messages and processing them. It blocks current thread
-func (consumer *KafkaConsumer) Serve() {
-	log.Info().Msgf("Consumer has been started, waiting for messages send to topic '%s'", consumer.Configuration.Topic)
+// ConsumeClaim starts a consumer loop of ConsumerGroupClaim's Messages().
+func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	log.Info().
+		Int64(offsetKey, claim.InitialOffset()).
+		Msg("starting messages loop")
 
 	latestMessageOffset, err := consumer.Storage.GetLatestKafkaOffset()
 	if err != nil {
@@ -268,207 +162,29 @@ func (consumer *KafkaConsumer) Serve() {
 		latestMessageOffset = 0
 	}
 
-	for msg := range consumer.PartitionConsumer.Messages() {
-		consumer.saveLastMessageOffset(msg.Offset)
-		if types.KafkaOffset(msg.Offset) <= latestMessageOffset {
-			log.Warn().Int64(offsetKey, msg.Offset).Msg("this offset was already processed by aggregator")
+	for message := range claim.Messages() {
+		if types.KafkaOffset(message.Offset) <= latestMessageOffset {
+			log.Warn().
+				Int64(offsetKey, message.Offset).
+				Msg("this offset was already processed by aggregator")
 		}
 
-		metrics.ConsumedMessages.Inc()
+		consumer.handleMessage(message)
 
-		startTime := time.Now()
-		err := consumer.ProcessMessage(msg)
-		messageProcessingDuration := time.Since(startTime)
-
-		log.Info().
-			Int64(offsetKey, msg.Offset).
-			Int32(partitionKey, msg.Partition).
-			Str(topicKey, msg.Topic).
-			Msgf("processing of message took '%v' seconds", messageProcessingDuration.Seconds())
-
-		if err != nil {
-			metrics.FailedMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
-			metrics.ConsumingErrors.Inc()
-
-			log.Error().Err(err).Msg("Error processing message consumed from Kafka")
-			consumer.numberOfErrorsConsumingMessages++
-
-			if err := consumer.Storage.WriteConsumerError(msg, err); err != nil {
-				log.Error().Err(err).Msg("Unable to write consumer error to storage")
-			}
-		} else {
-			metrics.SuccessfulMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
-			consumer.numberOfSuccessfullyConsumedMessages++
-		}
-		endTime := time.Now()
-		duration := endTime.Sub(startTime)
-		log.Info().Int64(durationKey, duration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
-
-		if types.KafkaOffset(msg.Offset) > latestMessageOffset {
-			latestMessageOffset = types.KafkaOffset(msg.Offset)
+		session.MarkMessage(message, "")
+		if types.KafkaOffset(message.Offset) > latestMessageOffset {
+			latestMessageOffset = types.KafkaOffset(message.Offset)
 		}
 	}
-}
 
-func (consumer *KafkaConsumer) saveLastMessageOffset(lastMessageOffset int64) {
-	// remember offset
-	if consumer.partitionOffsetManager != nil {
-		consumer.partitionOffsetManager.MarkOffset(lastMessageOffset+1, "")
-	} else {
-		log.Warn().Msgf(`not saving offset "%+v" because it's disabled'`, lastMessageOffset)
-	}
-}
-
-func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
-	log.Info().
-		Int(offsetKey, int(originalMessage.Offset)).
-		Int(partitionKey, int(originalMessage.Partition)).
-		Str(topicKey, consumer.Configuration.Topic).
-		Int(organizationKey, int(*parsedMessage.Organization)).
-		Str(clusterKey, string(*parsedMessage.ClusterName)).
-		Msg(event)
-}
-
-func logUnparsedMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, event string, err error) {
-	log.Error().
-		Int(offsetKey, int(originalMessage.Offset)).
-		Str(topicKey, consumer.Configuration.Topic).
-		Err(err).
-		Msg(event)
-}
-
-func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string, err error) {
-	log.Error().
-		Int(offsetKey, int(originalMessage.Offset)).
-		Str(topicKey, consumer.Configuration.Topic).
-		Int(organizationKey, int(*parsedMessage.Organization)).
-		Str(clusterKey, string(*parsedMessage.ClusterName)).
-		Err(err).
-		Msg(event)
-}
-
-// ProcessMessage processes an incoming message
-func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
-	tStart := time.Now()
-
-	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
-	message, err := parseMessage(msg.Value)
-	if err != nil {
-		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
-		return err
-	}
-
-	logMessageInfo(consumer, msg, message, "Read")
-	tRead := time.Now()
-
-	if consumer.Configuration.OrgWhitelistEnabled {
-		logMessageInfo(consumer, msg, message, "Checking organization ID against whitelist")
-
-		if ok := organizationAllowed(consumer, *message.Organization); !ok {
-			const cause = "organization ID is not whitelisted"
-			// now we have all required information about the incoming message,
-			// the right time to record structured log entry
-			logMessageError(consumer, msg, message, cause, err)
-			return errors.New(cause)
-		}
-
-		logMessageInfo(consumer, msg, message, "Organization whitelisted")
-	} else {
-		logMessageInfo(consumer, msg, message, "Organization whitelisting disabled")
-	}
-	tWhitelisted := time.Now()
-
-	reportAsStr, err := json.Marshal(*message.Report)
-	if err != nil {
-		logMessageError(consumer, msg, message, "Error marshalling report", err)
-		return err
-	}
-
-	logMessageInfo(consumer, msg, message, "Marshalled")
-	tMarshalled := time.Now()
-
-	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
-	if err != nil {
-		logMessageError(consumer, msg, message, "Error parsing date from message", err)
-		return err
-	}
-
-	lastCheckedTimestampLagMinutes := time.Now().Sub(lastCheckedTime).Minutes()
-	if lastCheckedTimestampLagMinutes < 0 {
-		logMessageError(consumer, msg, message, "got a message from the future", nil)
-	}
-
-	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
-
-	logMessageInfo(consumer, msg, message, "Time ok")
-	tTimeCheck := time.Now()
-
-	err = consumer.Storage.WriteReportForCluster(
-		*message.Organization,
-		*message.ClusterName,
-		types.ClusterReport(reportAsStr),
-		lastCheckedTime,
-		types.KafkaOffset(msg.Offset),
-	)
-	if err != nil {
-		if err == types.ErrOldReport {
-			logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
-			return nil
-		}
-
-		logMessageError(consumer, msg, message, "Error writing report to database", err)
-		return err
-	}
-	logMessageInfo(consumer, msg, message, "Stored")
-	tStored := time.Now()
-
-	// log durations for every message consumption steps
-	logDuration(tStart, tRead, msg.Offset, "read")
-	logDuration(tRead, tWhitelisted, msg.Offset, "whitelisting")
-	logDuration(tWhitelisted, tMarshalled, msg.Offset, "marshalling")
-	logDuration(tMarshalled, tTimeCheck, msg.Offset, "time_check")
-	logDuration(tTimeCheck, tStored, msg.Offset, "db_store")
-
-	// message has been parsed and stored into storage
 	return nil
-}
-
-func logDuration(tStart time.Time, tEnd time.Time, offset int64, key string) {
-	duration := tEnd.Sub(tStart)
-	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, offset).Msg(key)
 }
 
 // Close method closes all resources used by consumer
 func (consumer *KafkaConsumer) Close() error {
-	err := consumer.PartitionConsumer.Close()
-	if err != nil {
-		return err
-	}
-
-	err = consumer.Consumer.Close()
-	if err != nil {
-		return err
-	}
-
-	if consumer.partitionOffsetManager != nil {
-		err = consumer.partitionOffsetManager.Close()
-		if err != nil {
-			return err
-		}
-	}
-
-	if consumer.partitionOffsetManager != nil {
-		err = consumer.offsetManager.Close()
-		if err != nil {
-			return err
-		}
-	}
-
-	if consumer.client != nil {
-		err = consumer.client.Close()
-		if err != nil {
-			return err
-		}
+	consumer.cancel()
+	if err := consumer.ConsumerGroup.Close(); err != nil {
+		log.Error().Err(err).Msg("Unable to close consumer group")
 	}
 
 	return nil
