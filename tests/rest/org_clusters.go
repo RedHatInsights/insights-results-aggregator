@@ -132,7 +132,7 @@ func checkClustersEndpointWrongMethods() {
 	for _, knownOrganization := range knownOrganizations {
 		orgID := strconv.Itoa(knownOrganization)
 		url := apiURL + "organizations/" + orgID + "/clusters"
-		checkGetEndpointByOtherMethods(url)
+		checkGetEndpointByOtherMethods(url, false)
 	}
 }
 

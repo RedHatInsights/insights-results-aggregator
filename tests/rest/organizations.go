@@ -96,5 +96,5 @@ func checkOrganizationsEndpoint() {
 
 // checkOrganizationsEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
 func checkOrganizationsEndpointWrongMethods() {
-	checkGetEndpointByOtherMethods(apiURL + "organizations")
+	checkGetEndpointByOtherMethods(apiURL+"organizations", false)
 }
