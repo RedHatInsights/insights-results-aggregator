@@ -498,7 +498,44 @@ func TestKafkaConsumer_ConsumeClaim(t *testing.T) {
 	}
 
 	mockConsumerGroupSession := &helpers.MockConsumerGroupSession{}
-	mockConsumerGroupClaim := &helpers.MockConsumerGroupClaim{}
+	mockConsumerGroupClaim := helpers.NewMockConsumerGroupClaim(nil)
+
+	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
+	helpers.FailOnError(t, err)
+}
+
+func TestKafkaConsumer_ConsumeClaim_DBError(t *testing.T) {
+	buf := new(bytes.Buffer)
+	zerolog_log.Logger = zerolog.New(buf)
+
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
+
+	kafkaConsumer := consumer.KafkaConsumer{
+		Storage: mockStorage,
+	}
+
+	mockConsumerGroupSession := &helpers.MockConsumerGroupSession{}
+	mockConsumerGroupClaim := helpers.NewMockConsumerGroupClaim(nil)
+
+	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
+	helpers.FailOnError(t, err)
+
+	assert.Contains(t, buf.String(), "unable to get latest offset")
+}
+
+func TestKafkaConsumer_ConsumeClaim_OKMessage(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	kafkaConsumer := consumer.KafkaConsumer{
+		Storage: mockStorage,
+	}
+
+	mockConsumerGroupSession := &helpers.MockConsumerGroupSession{}
+	mockConsumerGroupClaim := helpers.NewMockConsumerGroupClaim([]*sarama.ConsumerMessage{
+		helpers.StringToSaramaConsumerMessage(testdata.ConsumerMessage),
+	})
 
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
 	helpers.FailOnError(t, err)
