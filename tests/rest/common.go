@@ -14,21 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package tests contains REST API tests for following endpoints:
-//
-// apiPrefix
-//
-// apiPrefix+"organizations"
-//
-// apiPrefix+"report/{organization}/{cluster}"
-//
-// apiPrefix+"clusters/{cluster}/rules/{rule_id}/like"
-//
-// apiPrefix+"clusters/{cluster}/rules/{rule_id}/dislike"
-//
-// apiPrefix+"clusters/{cluster}/rules/{rule_id}/reset_vote"
-//
-// apiPrefix+"organizations/{organization}/clusters"
 package tests
 
 import (
@@ -98,39 +83,6 @@ func readStatusFromResponse(f *frisby.Frisby) StatusOnlyResponse {
 	return response
 }
 
-// checkRestAPIEntryPoint check if the entry point (usually /api/v1/) responds correctly to HTTP GET command
-func checkRestAPIEntryPoint() {
-	f := frisby.Create("Check the entry point to REST API using HTTP GET method").Get(apiURL)
-	setAuthHeader(f)
-	f.Send()
-	f.ExpectStatus(200)
-	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
-	f.PrintReport()
-}
-
-// checkNonExistentEntryPoint check whether non-existing endpoints are handled properly (HTTP code 404 etc.)
-func checkNonExistentEntryPoint() {
-	f := frisby.Create("Check the non-existent entry point to REST API").Get(apiURL + "foobar")
-	setAuthHeader(f)
-	f.Send()
-	f.ExpectStatus(404)
-	f.ExpectHeader(contentTypeHeader, ContentTypeText)
-	f.PrintReport()
-}
-
-// checkWrongEntryPoint check whether wrongly specified URLs are handled correctly
-func checkWrongEntryPoint() {
-	postfixes := [...]string{"..", "../", "...", "..?", "..?foobar"}
-	for _, postfix := range postfixes {
-		f := frisby.Create("Check the wrong entry point to REST API with postfix '" + postfix + "'").Get(apiURL + postfix)
-		setAuthHeader(f)
-		f.Send()
-		f.ExpectStatus(404)
-		f.ExpectHeader(contentTypeHeader, ContentTypeText)
-		f.PrintReport()
-	}
-}
-
 // sendAndExpectStatus sends the request to the server and checks whether expected HTTP code (status) is returned
 func sendAndExpectStatus(f *frisby.Frisby, expectedStatus int) {
 	f.Send()
@@ -162,63 +114,9 @@ func checkGetEndpointByOtherMethods(endpoint string, includingOptions bool) {
 	}
 }
 
-// check whether other HTTP methods are rejected correctly for the REST API entry point
-func checkWrongMethodsForEntryPoint() {
-	checkGetEndpointByOtherMethods(apiURL, false)
-}
-
-// ServerTests run all tests for basic REST API endpoints
-func ServerTests() {
-	// basic tests for REST API apiPrefix
-	checkRestAPIEntryPoint()
-	checkNonExistentEntryPoint()
-	checkWrongEntryPoint()
-	checkWrongMethodsForEntryPoint()
-
-	// tests for REST API endpoints apiPrefix+"organizations"
-	checkOrganizationsEndpoint()
-	checkOrganizationsEndpointWrongMethods()
-
-	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
-	checkClustersEndpointForKnownOrganizations()
-	checkClustersEndpointForUnknownOrganizations()
-	checkClustersEndpointForImproperOrganizations()
-	checkClustersEndpointWrongMethods()
-	checkClustersEndpointSpecialOrganizationIds()
-
-	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
-	checkReportEndpointForKnownOrganizationAndKnownCluster()
-	checkReportEndpointForKnownOrganizationAndUnknownCluster()
-	checkReportEndpointForUnknownOrganizationAndKnownCluster()
-	checkReportEndpointForUnknownOrganizationAndUnknownCluster()
-	checkReportEndpointForImproperOrganization()
-	checkReportEndpointWrongMethods()
-	reproducerForIssue384()
-
-	// tests for REST API endpoints for voting about rules
-	checkLikeKnownRuleForKnownCluster()
-	checkDislikeKnownRuleForKnownCluster()
-	checkResetKnownRuleForKnownCluster()
-	checkLikeKnownRuleForUnknownCluster()
-	checkDislikeKnownRuleForUnknownCluster()
-	checkResetKnownRuleForUnknownCluster()
-	checkLikeKnownRuleForImproperCluster()
-	checkDislikeKnownRuleForImproperCluster()
-	checkResetKnownRuleForImproperCluster()
-	checkLikeUnknownRuleForKnownCluster()
-	checkDislikeUnknownRuleForKnownCluster()
-	checkResetUnknownRuleForKnownCluster()
-	checkLikeUnknownRuleForUnknownCluster()
-	checkDislikeUnknownRuleForUnknownCluster()
-	checkResetUnknownRuleForUnknownCluster()
-	checkLikeUnknownRuleForImproperCluster()
-	checkDislikeUnknownRuleForImproperCluster()
-	checkResetUnknownRuleForImproperCluster()
-	reproducerForIssue385()
-
-	// tests for OpenAPI specification that is accessible via its endpoint as well
-	checkOpenAPISpecifications()
-
-	// tests for metrics hat is accessible via its endpoint as well
-	checkPrometheusMetrics()
+// checkOkStatusResponse tests whether the response (JSON) contains status attribute set to 'ok'
+func checkOkStatusResponse(f *frisby.Frisby, response ClustersResponse) {
+	if response.Status != "ok" {
+		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", response.Status))
+	}
 }
