@@ -98,39 +98,6 @@ func readStatusFromResponse(f *frisby.Frisby) StatusOnlyResponse {
 	return response
 }
 
-// checkRestAPIEntryPoint check if the entry point (usually /api/v1/) responds correctly to HTTP GET command
-func checkRestAPIEntryPoint() {
-	f := frisby.Create("Check the entry point to REST API using HTTP GET method").Get(apiURL)
-	setAuthHeader(f)
-	f.Send()
-	f.ExpectStatus(200)
-	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
-	f.PrintReport()
-}
-
-// checkNonExistentEntryPoint check whether non-existing endpoints are handled properly (HTTP code 404 etc.)
-func checkNonExistentEntryPoint() {
-	f := frisby.Create("Check the non-existent entry point to REST API").Get(apiURL + "foobar")
-	setAuthHeader(f)
-	f.Send()
-	f.ExpectStatus(404)
-	f.ExpectHeader(contentTypeHeader, ContentTypeText)
-	f.PrintReport()
-}
-
-// checkWrongEntryPoint check whether wrongly specified URLs are handled correctly
-func checkWrongEntryPoint() {
-	postfixes := [...]string{"..", "../", "...", "..?", "..?foobar"}
-	for _, postfix := range postfixes {
-		f := frisby.Create("Check the wrong entry point to REST API with postfix '" + postfix + "'").Get(apiURL + postfix)
-		setAuthHeader(f)
-		f.Send()
-		f.ExpectStatus(404)
-		f.ExpectHeader(contentTypeHeader, ContentTypeText)
-		f.PrintReport()
-	}
-}
-
 // sendAndExpectStatus sends the request to the server and checks whether expected HTTP code (status) is returned
 func sendAndExpectStatus(f *frisby.Frisby, expectedStatus int) {
 	f.Send()
@@ -160,11 +127,6 @@ func checkGetEndpointByOtherMethods(endpoint string, includingOptions bool) {
 		f = frisby.Create("Check the entry point " + endpoint + " with wrong method: OPTIONS").Options(endpoint)
 		sendAndExpectStatus(f, 405)
 	}
-}
-
-// check whether other HTTP methods are rejected correctly for the REST API entry point
-func checkWrongMethodsForEntryPoint() {
-	checkGetEndpointByOtherMethods(apiURL, false)
 }
 
 // ServerTests run all tests for basic REST API endpoints
