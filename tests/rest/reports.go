@@ -101,5 +101,5 @@ func checkReportEndpointForImproperOrganization() {
 // checkReportEndpointWrongMethods check if the end point to return results responds correctly to other methods than HTTP GET
 func checkReportEndpointWrongMethods() {
 	url := constructURLForReportForOrgCluster("1", knownClusterForOrganization1)
-	checkGetEndpointByOtherMethods(url)
+	checkGetEndpointByOtherMethods(url, false)
 }

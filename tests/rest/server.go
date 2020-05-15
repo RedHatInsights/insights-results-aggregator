@@ -139,7 +139,7 @@ func sendAndExpectStatus(f *frisby.Frisby, expectedStatus int) {
 }
 
 // checkGetEndpointByOtherMethods checks whether a 'GET' endpoint respond correctly if other HTTP methods are used
-func checkGetEndpointByOtherMethods(endpoint string) {
+func checkGetEndpointByOtherMethods(endpoint string, includingOptions bool) {
 	f := frisby.Create("Check the end point " + endpoint + " with wrong method: POST").Post(endpoint)
 	sendAndExpectStatus(f, 405)
 
@@ -152,16 +152,19 @@ func checkGetEndpointByOtherMethods(endpoint string) {
 	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: PATCH").Patch(endpoint)
 	sendAndExpectStatus(f, 405)
 
-	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: OPTIONS").Options(endpoint)
-	sendAndExpectStatus(f, 405)
-
 	f = frisby.Create("Check the entry point " + endpoint + " with wrong method: HEAD").Head(endpoint)
 	sendAndExpectStatus(f, 405)
+
+	// some endpoints accepts OPTIONS method together with GET one, so this check is fully optional
+	if includingOptions {
+		f = frisby.Create("Check the entry point " + endpoint + " with wrong method: OPTIONS").Options(endpoint)
+		sendAndExpectStatus(f, 405)
+	}
 }
 
 // check whether other HTTP methods are rejected correctly for the REST API entry point
 func checkWrongMethodsForEntryPoint() {
-	checkGetEndpointByOtherMethods(apiURL)
+	checkGetEndpointByOtherMethods(apiURL, false)
 }
 
 // ServerTests run all tests for basic REST API endpoints
