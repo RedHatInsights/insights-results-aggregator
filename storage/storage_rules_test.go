@@ -1075,6 +1075,8 @@ func TestDBStorageGetVotes(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
+	assert.Len(t, feedbacks, 2)
+
 	assert.Equal(t, types.UserVoteLike, feedbacks[testdata.Rule1ID])
 	assert.Equal(t, types.UserVoteDislike, feedbacks[testdata.Rule2ID])
 	assert.Equal(t, types.UserVoteNone, feedbacks[testdata.Rule3ID])
