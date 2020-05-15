@@ -33,7 +33,7 @@ import (
 type Consumer interface {
 	Serve()
 	Close() error
-	ProcessMessage(msg *sarama.ConsumerMessage) error
+	ProcessMessage(msg *sarama.ConsumerMessage) (interface{}, error)
 }
 
 // KafkaConsumer in an implementation of Consumer interface
@@ -83,7 +83,7 @@ func NewWithSaramaConfig(
 
 	consumerGroup, err := sarama.NewConsumerGroup([]string{brokerCfg.Address}, brokerCfg.Group, saramaConfig)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
 	consumer := &KafkaConsumer{

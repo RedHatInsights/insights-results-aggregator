@@ -62,7 +62,7 @@ func TestProducerProduceMessage(t *testing.T) {
 		Producer:      mockProducer,
 	}
 
-	_, _, err := kafkaProducer.ProduceMessage("Hello world")
+	_, _, err := kafkaProducer.ProduceMessage(producer.PayloadTrackerMessage{})
 	helpers.FailOnError(t, err)
 }
 
@@ -84,7 +84,7 @@ func TestProducerProduceMessageFails(t *testing.T) {
 		Producer:      mockProducer,
 	}
 
-	_, _, err := kafkaProducer.ProduceMessage("Hello world")
+	_, _, err := kafkaProducer.ProduceMessage(producer.PayloadTrackerMessage{})
 	assert.EqualError(t, err, expectedErr.Error())
 }
 
