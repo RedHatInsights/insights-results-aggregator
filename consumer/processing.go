@@ -30,13 +30,19 @@ import (
 // Report represents report send in a message consumed from any broker
 type Report map[string]*json.RawMessage
 
+// MaybeRequestID contains either a string or nil depending on the content
+// of the input message. Sometimes the request ID is missing,
+// in which case it is nil, otherwise it should always be a string.
+type MaybeRequestID interface{}
+
 // incomingMessage is representation of message consumed from any broker
 type incomingMessage struct {
 	Organization *types.OrgID       `json:"OrgID"`
 	ClusterName  *types.ClusterName `json:"ClusterName"`
 	Report       *Report            `json:"Report"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
-	LastChecked string `json:"LastChecked"`
+	LastChecked string         `json:"LastChecked"`
+	RequestID   MaybeRequestID `json:"RequestId"`
 }
 
 // HandleMessage handles the message and does all logging, metrics, etc
@@ -51,8 +57,12 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 	metrics.ConsumedMessages.Inc()
 
 	startTime := time.Now()
-	err := consumer.ProcessMessage(msg)
-	messageProcessingDuration := time.Since(startTime)
+	requestID, err := consumer.ProcessMessage(msg)
+	timeAfterProfessingMessage := time.Now()
+	messageProcessingDuration := timeAfterProfessingMessage.Sub(startTime)
+
+	consumer.trackPayload(requestID, startTime, "received")
+	consumer.trackPayload(requestID, timeAfterProfessingMessage, "processed")
 
 	log.Info().
 		Int64(offsetKey, msg.Offset).
@@ -76,19 +86,21 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 	}
 
 	endTime := time.Now()
-	duration := endTime.Sub(startTime)
-	log.Info().Int64(durationKey, duration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
+	totalMessageDuration := endTime.Sub(startTime)
+	log.Info().Int64(durationKey, totalMessageDuration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
+
+	consumer.trackPayload(requestID, endTime, "success")
 }
 
 // ProcessMessage processes an incoming message
-func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error {
+func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (MaybeRequestID, error) {
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 	message, err := parseMessage(msg.Value)
 	if err != nil {
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
-		return err
+		return message.RequestID, err
 	}
 
 	logMessageInfo(consumer, msg, message, "Read")
@@ -102,7 +114,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 			// now we have all required information about the incoming message,
 			// the right time to record structured log entry
 			logMessageError(consumer, msg, message, cause, err)
-			return errors.New(cause)
+			return message.RequestID, errors.New(cause)
 		}
 
 		logMessageInfo(consumer, msg, message, "Organization whitelisted")
@@ -114,7 +126,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	reportAsStr, err := json.Marshal(*message.Report)
 	if err != nil {
 		logMessageError(consumer, msg, message, "Error marshalling report", err)
-		return err
+		return message.RequestID, err
 	}
 
 	logMessageInfo(consumer, msg, message, "Marshalled")
@@ -123,7 +135,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
 	if err != nil {
 		logMessageError(consumer, msg, message, "Error parsing date from message", err)
-		return err
+		return message.RequestID, err
 	}
 
 	lastCheckedTimestampLagMinutes := time.Now().Sub(lastCheckedTime).Minutes()
@@ -146,11 +158,11 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	if err != nil {
 		if err == types.ErrOldReport {
 			logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
-			return nil
+			return message.RequestID, nil
 		}
 
 		logMessageError(consumer, msg, message, "Error writing report to database", err)
-		return err
+		return message.RequestID, err
 	}
 	logMessageInfo(consumer, msg, message, "Stored")
 	tStored := time.Now()
@@ -163,7 +175,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) error
 	logDuration(tTimeCheck, tStored, msg.Offset, "db_store")
 
 	// message has been parsed and stored into storage
-	return nil
+	return message.RequestID, nil
 }
 
 // organizationAllowed checks whether the given organization is on whitelist or not

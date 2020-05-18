@@ -20,11 +20,13 @@ package consumer
 
 import (
 	"context"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -33,7 +35,7 @@ import (
 type Consumer interface {
 	Serve()
 	Close() error
-	ProcessMessage(msg *sarama.ConsumerMessage) (interface{}, error)
+	ProcessMessage(msg *sarama.ConsumerMessage) (MaybeRequestID, error)
 }
 
 // KafkaConsumer in an implementation of Consumer interface
@@ -58,6 +60,7 @@ type KafkaConsumer struct {
 	numberOfErrorsConsumingMessages      uint64
 	ready                                chan bool
 	cancel                               context.CancelFunc
+	payloadTrackerProducer               *producer.KafkaProducer
 }
 
 // DefaultSaramaConfig is a config which will be used by default
@@ -83,7 +86,13 @@ func NewWithSaramaConfig(
 
 	consumerGroup, err := sarama.NewConsumerGroup([]string{brokerCfg.Address}, brokerCfg.Group, saramaConfig)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
+	}
+
+	ptProducer, err := producer.New(brokerCfg)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to construct producer")
+		return nil, err
 	}
 
 	consumer := &KafkaConsumer{
@@ -93,6 +102,7 @@ func NewWithSaramaConfig(
 		numberOfSuccessfullyConsumedMessages: 0,
 		numberOfErrorsConsumingMessages:      0,
 		ready:                                make(chan bool),
+		payloadTrackerProducer:               ptProducer,
 	}
 
 	return consumer, nil
@@ -148,6 +158,24 @@ func (consumer *KafkaConsumer) Setup(sarama.ConsumerGroupSession) error {
 func (consumer *KafkaConsumer) Cleanup(sarama.ConsumerGroupSession) error {
 	log.Info().Msg("new session has been finished")
 	return nil
+}
+
+func (consumer *KafkaConsumer) trackPayload(reqID interface{}, timestamp time.Time, status string) {
+	reqIDString, ok := reqID.(string)
+	if !ok {
+		log.Warn().Msgf("request ID is not a string: %#v", reqID)
+		return
+	}
+
+	_, _, err := consumer.payloadTrackerProducer.ProduceMessage(producer.PayloadTrackerMessage{
+		Service:   "insights-results-aggregator",
+		RequestID: reqIDString,
+		Status:    status,
+		Date:      timestamp.UTC().Format(time.RFC3339Nano),
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("unable to produce payload tracker message for request ID '%s'", reqIDString)
+	}
 }
 
 // ConsumeClaim starts a consumer loop of ConsumerGroupClaim's Messages().
