@@ -48,7 +48,8 @@ Broker configuration is in section `[broker]` in config file
 [broker]
 address = "localhost:9092"
 topic = "topic"
-publish_topic = "topic"
+payload_tracker_topic = "payload-tracker-topic"
+service_name = "insights-results-aggregator"
 group = "aggregator"
 enabled = true
 save_offset = true
@@ -56,7 +57,8 @@ save_offset = true
 
 * `address` is an address of kafka broker (DEFAULT: "")
 * `topic` is a topic to consume messages from (DEFAULT: "")
-* `publish_topic` is a topic to publish messages to(see package producer) (DEFAULT: "")
+* `payload_tracker_topic` is a topic to which messages for the Payload Tracker are published (see `producer` package) (DEFAULT: "")
+* `service_name` is the name of this service as reported to the Payload Tracker (DEFAULT: "")
 * `group` is a kafka group (DEFAULT: "")
 * `enabled` is an option to turn broker on (DEFAULT: false)
 * `save_offset` is an option to turn on saving offset of successfully consumed messages.
@@ -67,7 +69,8 @@ Option names in env configuration:
 
 * `address` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
 * `topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC
-* `publish_topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__PUBLISH_TOPIC
+* `payload_tracker_topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__PAYLOAD_TRACKER_TOPIC
+* `service_name` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SERVICE_NAME
 * `group` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP
 * `enabled` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
 * `save_offset` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SAVE_OFFSET
