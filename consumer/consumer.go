@@ -57,6 +57,7 @@ type KafkaConsumer struct {
 	numberOfSuccessfullyConsumedMessages uint64
 	numberOfErrorsConsumingMessages      uint64
 	ready                                chan bool
+	cancel                               context.CancelFunc
 }
 
 // DefaultSaramaConfig is a config which will be used by default
@@ -100,6 +101,7 @@ func NewWithSaramaConfig(
 // Serve starts listening for messages and processing them. It blocks current thread.
 func (consumer *KafkaConsumer) Serve() {
 	ctx, cancel := context.WithCancel(context.Background())
+	consumer.cancel = cancel
 
 	go func() {
 		for {
@@ -180,6 +182,10 @@ func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
 
 // Close method closes all resources used by consumer
 func (consumer *KafkaConsumer) Close() error {
+	if consumer.cancel != nil {
+		consumer.cancel()
+	}
+
 	if consumer.ConsumerGroup != nil {
 		if err := consumer.ConsumerGroup.Close(); err != nil {
 			log.Error().Err(err).Msg("Unable to close consumer group")

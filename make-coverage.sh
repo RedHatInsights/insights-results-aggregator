@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+rm coverage.out 2>/dev/null
+
+case $1 in
+"unit-sqlite")
+    echo "Running unit tests with SQLite in memory..."
+    go test -coverprofile=coverage.out ./... 1>&2
+    ;;
+"unit-postgres")
+    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="postgres"
+    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="admin"
+
+    echo "Running unit tests with postgres..."
+    go test -coverprofile=coverage.out ./... 1>&2
+    ;;
+"rest")
+    echo rest # TODO: rest
+    echo "Running REST API tests..."
+    rm test.db 2> /dev/null
+    rm ./insights-results-aggregator.test 2> /dev/null
+
+    go test -c -v -tags testrunmain -coverpkg="./..." . 1>&2
+
+    (
+        export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests
+
+        echo "Migrating the DB"
+        go run . migrate latest
+        echo "Starting a service"
+        ./insights-results-aggregator.test -test.v -test.run "^TestRunMain$" -test.coverprofile=coverage.out 1>&2
+    ) &
+
+    # TODO: use curl in a loop to test when service is available
+    sleep 2s
+    ./test.sh --verbose --no-service 1>&2
+    pkill --signal SIGINT -f insights-results-aggregator.test
+
+    rm ./insights-results-aggregator.test 2>/dev/null
+
+    ;;
+"integration")
+    echo "Running a service..."
+    echo "Start your integration tests and press Ctrl+C when they are done"
+
+    export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./config-devel
+    go test -v -tags testrunmain -run "^TestRunMain$" -coverprofile=coverage.out -coverpkg="./..." . 1>&2
+    ;;
+*)
+    echo 'Please, choose "unit-sqlite", "unit-postgres", "rest" or "integration"'
+    echo "Aggregator's output will be redirected to stderr."
+    echo "Coverage is saved to 'coverage.out' file"
+    exit 1
+    ;;
+esac
+
+go tool cover -func=coverage.out | grep -E "^total"
