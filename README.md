@@ -18,4 +18,4 @@ REST API endpoints.
 ## Documentation
 
 Documentation is hosted on Github Pages <https://redhatinsights.github.io/insights-results-aggregator/>.
-Sources are located in `[docs](https://github.com/RedHatInsights/insights-results-aggregator/tree/master/docs)`.
+Sources are located in [docs](https://github.com/RedHatInsights/insights-results-aggregator/tree/master/docs).

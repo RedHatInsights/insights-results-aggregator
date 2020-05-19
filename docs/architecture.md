@@ -18,7 +18,7 @@ fully supported, but more SQL databases might be added later.
 
 ## Whole data flow
 
-![data_flow](assets/customer-facing-services-architecture.png)
+![data_flow]({{ "assets/customer-facing-services-architecture.png" | relative_url}})
 
 1. Event about new data from insights operator is consumed from Kafka. That event contains (among
 other things) URL to S3 Bucket
