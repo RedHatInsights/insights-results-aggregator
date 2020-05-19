@@ -7,7 +7,7 @@ nav_order: 6
 Authentication is working through `x-rh-identity` token which is provided by 3scale. `x-rh-identity`
  is base64 encoded JSON, that includes data about user and organization, like:
 
-```JSON
+```json
 {
   "identity": {
     "account_number": "0369233",
