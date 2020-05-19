@@ -1,7 +1,8 @@
 [broker]
 address = "kafka:29092"
 topic = "ccx.ocp.results"
-publish_topic = "platform.payload-status"
+payload_tracker_topic = "platform.payload-status"
+service_name = "insights-results-aggregator"
 group = "aggregator"
 enabled = true
 enable_org_whitelist = false

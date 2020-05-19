@@ -24,16 +24,12 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // Report represents report send in a message consumed from any broker
 type Report map[string]*json.RawMessage
-
-// MaybeRequestID contains either a string or nil depending on the content
-// of the input message. Sometimes the request ID is missing,
-// in which case it is nil, otherwise it should always be a string.
-type MaybeRequestID interface{}
 
 // incomingMessage is representation of message consumed from any broker
 type incomingMessage struct {
@@ -41,8 +37,8 @@ type incomingMessage struct {
 	ClusterName  *types.ClusterName `json:"ClusterName"`
 	Report       *Report            `json:"Report"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
-	LastChecked string         `json:"LastChecked"`
-	RequestID   MaybeRequestID `json:"RequestId"`
+	LastChecked string          `json:"LastChecked"`
+	RequestID   types.RequestID `json:"RequestId"`
 }
 
 // HandleMessage handles the message and does all logging, metrics, etc
@@ -61,8 +57,8 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 	timeAfterProfessingMessage := time.Now()
 	messageProcessingDuration := timeAfterProfessingMessage.Sub(startTime)
 
-	consumer.trackPayload(requestID, startTime, "received")
-	consumer.trackPayload(requestID, timeAfterProfessingMessage, "processed")
+	consumer.payloadTrackerProducer.TrackPayload(requestID, startTime, producer.StatusReceived)
+	consumer.payloadTrackerProducer.TrackPayload(requestID, timeAfterProfessingMessage, producer.StatusMessageProcessed)
 
 	log.Info().
 		Int64(offsetKey, msg.Offset).
@@ -70,6 +66,7 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 		Str(topicKey, msg.Topic).
 		Msgf("processing of message took '%v' seconds", messageProcessingDuration.Seconds())
 
+	// Something went wrong while processing the message.
 	if err != nil {
 		metrics.FailedMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
 		metrics.ConsumingErrors.Inc()
@@ -80,20 +77,22 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 		if err := consumer.Storage.WriteConsumerError(msg, err); err != nil {
 			log.Error().Err(err).Msg("Unable to write consumer error to storage")
 		}
+
+		consumer.payloadTrackerProducer.TrackPayload(requestID, time.Now(), producer.StatusError)
 	} else {
+		// The message was processed successfully.
 		metrics.SuccessfulMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
 		consumer.numberOfSuccessfullyConsumedMessages++
+
+		consumer.payloadTrackerProducer.TrackPayload(requestID, time.Now(), producer.StatusSuccess)
 	}
 
-	endTime := time.Now()
-	totalMessageDuration := endTime.Sub(startTime)
+	totalMessageDuration := time.Since(startTime)
 	log.Info().Int64(durationKey, totalMessageDuration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
-
-	consumer.trackPayload(requestID, endTime, "success")
 }
 
 // ProcessMessage processes an incoming message
-func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (MaybeRequestID, error) {
+func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error) {
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")

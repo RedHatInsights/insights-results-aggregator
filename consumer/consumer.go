@@ -20,7 +20,6 @@ package consumer
 
 import (
 	"context"
-	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
@@ -35,7 +34,7 @@ import (
 type Consumer interface {
 	Serve()
 	Close() error
-	ProcessMessage(msg *sarama.ConsumerMessage) (MaybeRequestID, error)
+	ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error)
 }
 
 // KafkaConsumer in an implementation of Consumer interface
@@ -89,7 +88,7 @@ func NewWithSaramaConfig(
 		return nil, err
 	}
 
-	ptProducer, err := producer.New(brokerCfg)
+	payloadTrackerProducer, err := producer.New(brokerCfg)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to construct producer")
 		return nil, err
@@ -102,7 +101,7 @@ func NewWithSaramaConfig(
 		numberOfSuccessfullyConsumedMessages: 0,
 		numberOfErrorsConsumingMessages:      0,
 		ready:                                make(chan bool),
-		payloadTrackerProducer:               ptProducer,
+		payloadTrackerProducer:               payloadTrackerProducer,
 	}
 
 	return consumer, nil
@@ -160,24 +159,6 @@ func (consumer *KafkaConsumer) Cleanup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (consumer *KafkaConsumer) trackPayload(reqID interface{}, timestamp time.Time, status string) {
-	reqIDString, ok := reqID.(string)
-	if !ok {
-		log.Warn().Msgf("request ID is not a string: %#v", reqID)
-		return
-	}
-
-	_, _, err := consumer.payloadTrackerProducer.ProduceMessage(producer.PayloadTrackerMessage{
-		Service:   "insights-results-aggregator",
-		RequestID: reqIDString,
-		Status:    status,
-		Date:      timestamp.UTC().Format(time.RFC3339Nano),
-	})
-	if err != nil {
-		log.Error().Err(err).Msgf("unable to produce payload tracker message for request ID '%s'", reqIDString)
-	}
-}
-
 // ConsumeClaim starts a consumer loop of ConsumerGroupClaim's Messages().
 func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	log.Info().
@@ -216,7 +197,13 @@ func (consumer *KafkaConsumer) Close() error {
 
 	if consumer.ConsumerGroup != nil {
 		if err := consumer.ConsumerGroup.Close(); err != nil {
-			log.Error().Err(err).Msg("Unable to close consumer group")
+			log.Error().Err(err).Msg("unable to close consumer group")
+		}
+	}
+
+	if consumer.payloadTrackerProducer != nil {
+		if err := consumer.payloadTrackerProducer.Close(); err != nil {
+			log.Error().Err(err).Msg("unable to close payload tracker Kafka producer")
 		}
 	}
 

@@ -1,6 +1,8 @@
 [broker]
 address = "localhost:29092"
 topic = "ccx.ocp.results"
+payload_tracker_topic = "platform.payload-status"
+service_name = "insights-results-aggregator"
 group = "aggregator"
 enabled = true
 enable_org_whitelist = false
