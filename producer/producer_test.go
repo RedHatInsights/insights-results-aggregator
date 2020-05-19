@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/Shopify/sarama/mocks"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -125,17 +126,20 @@ func TestProducerClose(t *testing.T) {
 	assert.NoError(t, err, "failed to close Kafka producer")
 }
 
-// TestProducerClose checks that a second attempt to close the producer results in an error.
-func TestProducerCloseTwice(t *testing.T) {
-	mockProducer := mocks.NewSyncProducer(t, nil)
-	prod := producer.KafkaProducer{
-		Configuration: brokerCfg,
-		Producer:      mockProducer,
-	}
+func TestProducerNew(t *testing.T) {
+	mockBroker := sarama.NewMockBroker(t, 0)
+	defer mockBroker.Close()
 
-	err := prod.Close()
-	assert.NoError(t, err, "failed to close Kafka producer")
+	mockBroker.SetHandlerByMap(helpers.GetHandlersMapForMockConsumer(t, mockBroker, brokerCfg.PayloadTrackerTopic))
 
-	err = prod.Close()
-	assert.NoError(t, err, "failed to close Kafka producer")
+	prod, err := producer.New(
+		broker.Configuration{
+			Address:             mockBroker.Addr(),
+			Topic:               brokerCfg.Topic,
+			PayloadTrackerTopic: brokerCfg.PayloadTrackerTopic,
+			Enabled:             brokerCfg.Enabled,
+		})
+	helpers.FailOnError(t, err)
+
+	helpers.FailOnError(t, prod.Close())
 }

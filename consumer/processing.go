@@ -57,8 +57,8 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 	timeAfterProfessingMessage := time.Now()
 	messageProcessingDuration := timeAfterProfessingMessage.Sub(startTime)
 
-	consumer.payloadTrackerProducer.TrackPayload(requestID, startTime, producer.StatusReceived)
-	consumer.payloadTrackerProducer.TrackPayload(requestID, timeAfterProfessingMessage, producer.StatusMessageProcessed)
+	_ = consumer.payloadTrackerProducer.TrackPayload(requestID, startTime, producer.StatusReceived)
+	_ = consumer.payloadTrackerProducer.TrackPayload(requestID, timeAfterProfessingMessage, producer.StatusMessageProcessed)
 
 	log.Info().
 		Int64(offsetKey, msg.Offset).
@@ -78,13 +78,13 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 			log.Error().Err(err).Msg("Unable to write consumer error to storage")
 		}
 
-		consumer.payloadTrackerProducer.TrackPayload(requestID, time.Now(), producer.StatusError)
+		_ = consumer.payloadTrackerProducer.TrackPayload(requestID, time.Now(), producer.StatusError)
 	} else {
 		// The message was processed successfully.
 		metrics.SuccessfulMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
 		consumer.numberOfSuccessfullyConsumedMessages++
 
-		consumer.payloadTrackerProducer.TrackPayload(requestID, time.Now(), producer.StatusSuccess)
+		_ = consumer.payloadTrackerProducer.TrackPayload(requestID, time.Now(), producer.StatusSuccess)
 	}
 
 	totalMessageDuration := time.Since(startTime)

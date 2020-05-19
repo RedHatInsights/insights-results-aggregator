@@ -541,3 +541,29 @@ func TestKafkaConsumer_ConsumeClaim_OKMessage(t *testing.T) {
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
 	helpers.FailOnError(t, err)
 }
+
+func TestKafkaConsumer_SetupCleanup(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, false)
+	defer closer()
+
+	mockBroker := sarama.NewMockBroker(t, 0)
+	defer mockBroker.Close()
+
+	mockBroker.SetHandlerByMap(helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
+
+	mockConsumer, err := consumer.New(broker.Configuration{
+		Address: mockBroker.Addr(),
+		Topic:   testTopicName,
+		Enabled: true,
+	}, mockStorage)
+	helpers.FailOnError(t, err)
+
+	defer func() {
+		helpers.FailOnError(t, mockConsumer.Close())
+	}()
+
+	// The functions don't really use their arguments at all,
+	// so it's possible to just pass nil into them.
+	helpers.FailOnError(t, mockConsumer.Setup(nil))
+	helpers.FailOnError(t, mockConsumer.Cleanup(nil))
+}
