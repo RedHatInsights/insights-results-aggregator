@@ -445,7 +445,11 @@ func main() {
 		command = strings.ToLower(strings.TrimSpace(os.Args[1]))
 	}
 
-	os.Exit(handleCommand(command))
+	errCode := handleCommand(command)
+	if errCode != 0 {
+		log.Error().Msgf("Service exited with non-zero code %v", errCode)
+		os.Exit(errCode)
+	}
 }
 
 func handleCommand(command string) int {

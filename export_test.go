@@ -39,4 +39,5 @@ var (
 	SetMigrationVersion   = setMigrationVersion
 	PerformMigrations     = performMigrations
 	AutoMigratePtr        = &autoMigrate
+	Main                  = main
 )

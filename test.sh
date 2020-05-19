@@ -17,11 +17,16 @@ COLORS_RED='\033[0;31m'
 COLORS_RESET='\033[0m'
 LOG_LEVEL="fatal"
 VERBOSE=false
+NO_SERVICE=false
 
 if [[ $* == *verbose* ]]; then
     # print all possible logs
     LOG_LEVEL=""
     VERBOSE=true
+fi
+
+if [[ $* == *no-service* ]]; then
+    NO_SERVICE=true
 fi
 
 function cleanup() {
@@ -65,8 +70,7 @@ function migrate_db_to_latest() {
     echo "Migrating DB to the latest migration version..."
 
     if INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests \
-        ./insights-results-aggregator migrate latest >/dev/null
-    then
+        ./insights-results-aggregator migrate latest >/dev/null; then
 
         echo "Database migration was successful"
         return 0
@@ -89,6 +93,11 @@ function populate_db_with_mock_data() {
 }
 
 function start_service() {
+    if [ "$NO_SERVICE" = true ]; then
+        echo "Not starting service"
+        return
+    fi
+
     echo "Starting a service"
     # TODO: stop parent(this script) if service died
     INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL=$LOG_LEVEL \
@@ -135,8 +144,7 @@ function test_openapi() {
     echo "Testing OpenAPI specifications file"
     # shellcheck disable=2181
 
-    if docker run --rm -v "${PWD}":/local/:Z openapitools/openapi-generator-cli validate -i ./local/openapi.json
-    then
+    if docker run --rm -v "${PWD}":/local/:Z openapitools/openapi-generator-cli validate -i ./local/openapi.json; then
         echo "OpenAPI spec file is OK"
     else
         echo "OpenAPI spec file validation failed"
