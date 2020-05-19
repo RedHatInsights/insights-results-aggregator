@@ -22,9 +22,9 @@ case $1 in
 
     go test -c -v -tags testrunmain -coverpkg="./..." . 1>&2
 
+    # would be better to put inside a subshell, but linter doesn't like it
+    export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests
     (
-        export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests
-
         echo "Migrating the DB"
         go run . migrate latest
         echo "Starting a service"
