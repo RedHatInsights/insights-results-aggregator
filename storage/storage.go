@@ -436,6 +436,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 		rek.publish_date,
 		rek.impact,
 		rek.likelihood,
+		rek.tags,
 		COALESCE(crt.disabled, 0) as disabled
 	FROM
 		rule r
@@ -461,6 +462,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 	for rows.Next() {
 		var rule types.RuleContentResponse
 		var impact, likelihood int
+		var tags string
 
 		err = rows.Scan(
 			&rule.ErrorKey,
@@ -472,6 +474,7 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 			&rule.CreatedAt,
 			&impact,
 			&likelihood,
+			&tags,
 			&rule.Disabled,
 		)
 		if err != nil {
@@ -480,6 +483,9 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 		}
 
 		rule.TotalRisk = (impact + likelihood) / 2
+
+		// quick hack for rule tags
+		rule.Tags = strings.Split(tags, ",")
 
 		rules = append(rules, rule)
 	}
@@ -604,9 +610,12 @@ func loadRuleErrorKeyContent(tx *sql.Tx, ruleConfig content.GlobalRuleConfig, ru
 			return fmt.Errorf("invalid rule error key status: '%s'", errProperties.Metadata.Status)
 		}
 
+		// quick hack to store tags list into DB
+		tags := strings.Join(errProperties.Metadata.Tags, ",")
+
 		_, err := tx.Exec(`INSERT INTO rule_error_key(error_key, rule_module, condition,
-				description, impact, likelihood, publish_date, active, generic)
-				VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+				description, impact, likelihood, publish_date, active, generic, tags)
+				VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			errName,
 			ruleModuleName,
 			errProperties.Metadata.Condition,
@@ -617,7 +626,8 @@ func loadRuleErrorKeyContent(tx *sql.Tx, ruleConfig content.GlobalRuleConfig, ru
 			errProperties.Metadata.Likelihood,
 			errProperties.Metadata.PublishDate,
 			errIsActiveStatus,
-			errProperties.Generic)
+			errProperties.Generic,
+			tags)
 
 		if err != nil {
 			_ = tx.Rollback()

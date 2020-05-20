@@ -75,6 +75,7 @@ type RuleContentResponse struct {
 	RiskOfChange int         `json:"risk_of_change"`
 	RuleModule   string      `json:"rule_id"`
 	TemplateData interface{} `json:"extra_data"`
+	Tags         []string    `json:"tags"`
 	UserVote     UserVote    `json:"user_vote"`
 	Disabled     bool        `json:"disabled"`
 }
