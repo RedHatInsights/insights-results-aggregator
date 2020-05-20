@@ -693,7 +693,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc(apiPrefix+RuleGroupsEndpoint, server.getRuleGroups).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+RuleGroupsEndpoint, server.getRuleGroups).Methods(http.MethodGet, http.MethodOptions)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
