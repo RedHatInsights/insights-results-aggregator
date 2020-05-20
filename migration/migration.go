@@ -42,6 +42,10 @@ type Migration struct {
 	StepDown Step
 }
 
+const (
+	ruleErrorKeyTable = "rule_error_key"
+)
+
 // GetMaxVersion returns the highest available migration version.
 // The DB version cannot be set to a value higher than this.
 // This value is equivalent to the length of the list of available migrations.

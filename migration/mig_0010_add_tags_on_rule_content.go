@@ -28,7 +28,7 @@ var mig0010AddTagsFieldToRuleErrorKeyTable = Migration{
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverSQLite3 {
-			return downgradeTable(tx, "rule_error_key", `
+			return downgradeTable(tx, ruleErrorKeyTable, `
 				CREATE TABLE rule_error_key (
 					"error_key"     VARCHAR NOT NULL,
 					"rule_module"   VARCHAR NOT NULL REFERENCES rule(module) ON DELETE CASCADE,
