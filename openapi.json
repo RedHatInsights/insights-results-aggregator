@@ -273,6 +273,13 @@
                                   4
                                 ]
                               },
+                              "tags": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "List of tags that the rule contains, forming rule groups"
+                              },
                               "user_vote": {
                                 "type": "integer",
                                 "description": "User vote - value of user voting. -1 is dislike vote, 0 is no vote, 1 is like vote.",
