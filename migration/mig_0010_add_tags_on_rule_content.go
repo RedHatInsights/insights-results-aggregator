@@ -22,7 +22,7 @@ import (
 var mig0010AddTagsFieldToRuleErrorKeyTable = Migration{
 	StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`
-			ALTER TABLE rule_error_key ADD COLUMN tags VARCHAR NOT NULL DEFAULT ""
+			ALTER TABLE rule_error_key ADD COLUMN tags VARCHAR NOT NULL DEFAULT ''
 		`)
 		return err
 	},
