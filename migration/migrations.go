@@ -26,4 +26,5 @@ var migrations = []Migration{
 	mig0007CreateClusterRuleToggle,
 	mig0008AddOffsetFieldToReportTable,
 	mig0009AddIndexOnReportKafkaOffset,
+	mig0010AddTagsFieldToRuleErrorKeyTable,
 }
