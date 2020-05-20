@@ -62,7 +62,8 @@ func init() {
 func consumerProcessMessage(mockConsumer consumer.Consumer, message string) error {
 	saramaMessage := sarama.ConsumerMessage{}
 	saramaMessage.Value = []byte(message)
-	return mockConsumer.ProcessMessage(&saramaMessage)
+	_, err := mockConsumer.ProcessMessage(&saramaMessage)
+	return err
 }
 
 func mustConsumerProcessMessage(t testing.TB, mockConsumer consumer.Consumer, message string) {
@@ -207,7 +208,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 
 	message := sarama.ConsumerMessage{}
 	// message is empty -> nothing should be written into storage
-	err := c.ProcessMessage(&message)
+	_, err := c.ProcessMessage(&message)
 	assert.EqualError(t, err, "unexpected end of JSON input")
 
 	count, err := mockStorage.ReportsCount()
@@ -230,7 +231,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(testdata.ConsumerMessage)
 	// message is empty -> nothing should be written into storage
-	err := c.ProcessMessage(&message)
+	_, err := c.ProcessMessage(&message)
 	helpers.FailOnError(t, err)
 
 	count, err := mockStorage.ReportsCount()
@@ -539,4 +540,30 @@ func TestKafkaConsumer_ConsumeClaim_OKMessage(t *testing.T) {
 
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
 	helpers.FailOnError(t, err)
+}
+
+func TestKafkaConsumer_SetupCleanup(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, false)
+	defer closer()
+
+	mockBroker := sarama.NewMockBroker(t, 0)
+	defer mockBroker.Close()
+
+	mockBroker.SetHandlerByMap(helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
+
+	mockConsumer, err := consumer.New(broker.Configuration{
+		Address: mockBroker.Addr(),
+		Topic:   testTopicName,
+		Enabled: true,
+	}, mockStorage)
+	helpers.FailOnError(t, err)
+
+	defer func() {
+		helpers.FailOnError(t, mockConsumer.Close())
+	}()
+
+	// The functions don't really use their arguments at all,
+	// so it's possible to just pass nil into them.
+	helpers.FailOnError(t, mockConsumer.Setup(nil))
+	helpers.FailOnError(t, mockConsumer.Cleanup(nil))
 }

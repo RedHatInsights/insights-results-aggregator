@@ -26,7 +26,8 @@ import (
 type Configuration struct {
 	Address             string     `mapstructure:"address" toml:"address"`
 	Topic               string     `mapstructure:"topic" toml:"topic"`
-	PublishTopic        string     `mapstructure:"publish_topic" toml:"publish_topic"`
+	PayloadTrackerTopic string     `mapstructure:"payload_tracker_topic" toml:"payload_tracker_topic"`
+	ServiceName         string     `mapstructure:"service_name" toml:"service_name"`
 	Group               string     `mapstructure:"group" toml:"group"`
 	Enabled             bool       `mapstructure:"enabled" toml:"enabled"`
 	OrgWhitelist        mapset.Set `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`

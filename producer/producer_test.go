@@ -19,7 +19,9 @@ package producer_test
 import (
 	"errors"
 	"testing"
+	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/Shopify/sarama/mocks"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -27,75 +29,93 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
+)
+
+const (
+	testRequestID = types.RequestID("example12345678/requestID")
+)
+
+var (
+	brokerCfg = broker.Configuration{
+		Address:             "localhost:1234",
+		Topic:               "consumer-topic",
+		PayloadTrackerTopic: "payload-tracker-topic",
+		Group:               "test-group",
+	}
+	// Base UNIX time plus approximately 50 years (not long before year 2020).
+	testTimestamp = time.Unix(50*365*24*60*60, 0)
 )
 
 func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 }
 
-// Test Producer creation with a non accesible Kafka broker
+// Test Producer creation with a non accessible Kafka broker
 func TestNewProducerBadBroker(t *testing.T) {
 	const expectedErr = "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
-
-	brokerCfg := broker.Configuration{
-		Address:      "localhost:1234",
-		PublishTopic: "topic",
-		Group:        "Group",
-	}
 
 	_, err := producer.New(brokerCfg)
 	assert.EqualError(t, err, expectedErr)
 }
 
-// Test ProduceMessage using a Sarama Mock producer. Assume sending success
-func TestProducerProduceMessage(t *testing.T) {
-	brokerCfg := broker.Configuration{
-		Address:      "localhost:1234",
-		PublishTopic: "topic",
-		Group:        "Group",
-	}
-
+// TestProducerTrackPayload calls the TrackPayload function using a mock Sarama producer.
+func TestProducerTrackPayload(t *testing.T) {
 	mockProducer := mocks.NewSyncProducer(t, nil)
 	mockProducer.ExpectSendMessageAndSucceed()
+
 	kafkaProducer := producer.KafkaProducer{
 		Configuration: brokerCfg,
 		Producer:      mockProducer,
 	}
+	defer func() {
+		helpers.FailOnError(t, kafkaProducer.Close())
+	}()
 
-	_, _, err := kafkaProducer.ProduceMessage("Hello world")
-	helpers.FailOnError(t, err)
+	err := kafkaProducer.TrackPayload(testRequestID, testTimestamp, producer.StatusReceived)
+	assert.NoError(t, err, "payload tracking failed")
 }
 
-// Test ProduceMessage using a Sarama Mock producer. Assume sending fails
-func TestProducerProduceMessageFails(t *testing.T) {
-	expectedErr := errors.New("unable to send the message")
+// TestProducerTrackPayloadEmptyRequestID calls the TrackPayload function using a mock Sarama producer.
+// The request ID passed to the function is empty and therefore
+// a warning should be logged and nothing more should happen.
+func TestProducerTrackPayloadEmptyRequestID(t *testing.T) {
+	mockProducer := mocks.NewSyncProducer(t, nil)
 
-	brokerCfg := broker.Configuration{
-		Address:      "localhost:1234",
-		PublishTopic: "topic",
-		Group:        "Group",
+	kafkaProducer := producer.KafkaProducer{
+		Configuration: brokerCfg,
+		Producer:      mockProducer,
 	}
+	defer func() {
+		helpers.FailOnError(t, kafkaProducer.Close())
+	}()
+
+	err := kafkaProducer.TrackPayload(types.RequestID(""), testTimestamp, producer.StatusReceived)
+	assert.NoError(t, err, "payload tracking failed")
+}
+
+// TestProducerTrackPayloadWithError checks that errors
+// from the underlying producer are correctly returned.
+func TestProducerTrackPayloadWithError(t *testing.T) {
+	const producerErrorMessage = "unable to send the message"
 
 	mockProducer := mocks.NewSyncProducer(t, nil)
-	mockProducer.ExpectSendMessageAndFail(expectedErr)
+	mockProducer.ExpectSendMessageAndFail(errors.New(producerErrorMessage))
 
 	kafkaProducer := producer.KafkaProducer{
 		Configuration: brokerCfg,
 		Producer:      mockProducer,
 	}
+	defer func() {
+		helpers.FailOnError(t, kafkaProducer.Close())
+	}()
 
-	_, _, err := kafkaProducer.ProduceMessage("Hello world")
-	assert.EqualError(t, err, expectedErr.Error())
+	err := kafkaProducer.TrackPayload(testRequestID, testTimestamp, producer.StatusReceived)
+	assert.EqualError(t, err, producerErrorMessage)
 }
 
-// Test Close on success
-func TestProducerCloseSuccess(t *testing.T) {
-	brokerCfg := broker.Configuration{
-		Address:      "localhost:1234",
-		PublishTopic: "topic",
-		Group:        "Group",
-	}
-
+// TestProducerClose makes sure it's possible to close the producer.
+func TestProducerClose(t *testing.T) {
 	mockProducer := mocks.NewSyncProducer(t, nil)
 	prod := producer.KafkaProducer{
 		Configuration: brokerCfg,
@@ -103,5 +123,23 @@ func TestProducerCloseSuccess(t *testing.T) {
 	}
 
 	err := prod.Close()
+	assert.NoError(t, err, "failed to close Kafka producer")
+}
+
+func TestProducerNew(t *testing.T) {
+	mockBroker := sarama.NewMockBroker(t, 0)
+	defer mockBroker.Close()
+
+	mockBroker.SetHandlerByMap(helpers.GetHandlersMapForMockConsumer(t, mockBroker, brokerCfg.PayloadTrackerTopic))
+
+	prod, err := producer.New(
+		broker.Configuration{
+			Address:             mockBroker.Addr(),
+			Topic:               brokerCfg.Topic,
+			PayloadTrackerTopic: brokerCfg.PayloadTrackerTopic,
+			Enabled:             brokerCfg.Enabled,
+		})
 	helpers.FailOnError(t, err)
+
+	helpers.FailOnError(t, prod.Close())
 }
