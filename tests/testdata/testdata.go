@@ -114,6 +114,7 @@ var (
 							Likelihood:  4,
 							PublishDate: Rule1CreatedAt,
 							Status:      "active",
+							Tags:        []string{"tag1", "tag2"},
 						},
 					},
 				},
@@ -139,6 +140,7 @@ var (
 							Likelihood:  2,
 							PublishDate: Rule2CreatedAt,
 							Status:      "active",
+							Tags:        []string{"tag1", "tag2"},
 						},
 					},
 				},
@@ -164,6 +166,7 @@ var (
 							Likelihood:  2,
 							PublishDate: Rule3CreatedAt,
 							Status:      "active",
+							Tags:        []string{"tag1", "tag2"},
 						},
 					},
 				},
@@ -236,6 +239,10 @@ var (
 				"total_risk": 4,
 				"risk_of_change": 0,
 				"extra_data": null,
+				"tags": [
+					"tag1",
+					"tag2"
+				],
 				"disabled": false
 			},
 			{
@@ -248,6 +255,10 @@ var (
 				"total_risk": 3,
 				"risk_of_change": 0,
 				"extra_data": null,
+				"tags": [
+					"tag1",
+					"tag2"
+				],
 				"disabled": true
 			}
 		]
@@ -274,6 +285,10 @@ var (
 				"total_risk": 3,
 				"risk_of_change": 0,
 				"extra_data": null,
+				"tags": [
+					"tag1",
+					"tag2"
+				],
 				"disabled": false
 			},
 			{
@@ -286,6 +301,10 @@ var (
 				"total_risk": 4,
 				"risk_of_change": 0,
 				"extra_data": null,
+				"tags": [
+					"tag1",
+					"tag2"
+				],
 				"disabled": false
 			}
 		]
@@ -338,6 +357,10 @@ var (
 				"total_risk": 3,
 				"risk_of_change": 0,
 				"extra_data": null,
+				"tags": [
+					"tag1",
+					"tag2"
+				],
 				"disabled": false
 			},
 			{
@@ -350,6 +373,10 @@ var (
 				"total_risk": 4,
 				"risk_of_change": 0,
 				"extra_data": null,
+				"tags": [
+					"tag1",
+					"tag2"
+				],
 				"disabled": false
 			},
 			{
@@ -362,6 +389,10 @@ var (
 				"total_risk": 2,
 				"risk_of_change": 0,
 				"extra_data": null,
+				"tags": [
+					"tag1",
+					"tag2"
+				],
 				"disabled": false
 			}
 		]

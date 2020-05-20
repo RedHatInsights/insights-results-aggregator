@@ -56,6 +56,7 @@ var (
 							Likelihood:  1,
 							PublishDate: "1970-01-01 00:00:00",
 							Status:      "active",
+							Tags:        []string{"tag1", "tag2"},
 						},
 					},
 				},
@@ -80,6 +81,7 @@ var (
 							Likelihood:  1,
 							PublishDate: "1970-01-01 00:00:00",
 							Status:      "inactive",
+							Tags:        []string{"tag1", "tag2"},
 						},
 					},
 				},
@@ -104,6 +106,7 @@ var (
 							Likelihood:  1,
 							PublishDate: "1970-01-01 00:00:00",
 							Status:      "bad",
+							Tags:        []string{"tag1", "tag2"},
 						},
 					},
 				},
@@ -140,6 +143,7 @@ var (
 							Likelihood:  1,
 							PublishDate: "1970-01-01 00:00:00",
 							Status:      "active",
+							Tags:        []string{"tag1", "tag2"},
 						},
 					},
 				},
@@ -191,6 +195,7 @@ func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
 			"publish_date"  TIMESTAMP NOT NULL,
 			"active"        BOOLEAN NOT NULL,
 			"generic"       VARCHAR NOT NULL,
+			"tags"          VARCHAR NOT NULL DEFAULT "",
 
 			PRIMARY KEY("error_key", "rule_module")
 		)
@@ -209,6 +214,7 @@ func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
 				"publish_date"  TIMESTAMP NOT NULL,
 				"active"        BOOLEAN NOT NULL,
 				"generic"       VARCHAR NOT NULL,
+				"tags"          VARCHAR NOT NULL DEFAULT "",
 
 				PRIMARY KEY("error_key", "rule_module")
 			)
@@ -328,6 +334,7 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 			TotalRisk:    1,
 			RiskOfChange: 0,
 			TemplateData: nil,
+			Tags:         []string{"tag1", "tag2"},
 			Disabled:     false,
 		},
 	}, res)
@@ -376,6 +383,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			TotalRisk:    3,
 			RiskOfChange: 0,
 			TemplateData: nil,
+			Tags:         []string{"tag1", "tag2"},
 			Disabled:     false,
 		},
 		{
@@ -389,6 +397,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			TotalRisk:    4,
 			RiskOfChange: 0,
 			TemplateData: nil,
+			Tags:         []string{"tag1", "tag2"},
 			Disabled:     false,
 		},
 		{
@@ -402,6 +411,7 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 			TotalRisk:    2,
 			RiskOfChange: 0,
 			TemplateData: nil,
+			Tags:         []string{"tag1", "tag2"},
 			Disabled:     false,
 		},
 	}, res)
@@ -424,6 +434,7 @@ func TestDBStorageGetContentForRulesScanError(t *testing.T) {
 		"publish_date",
 		"impact",
 		"likelihood",
+		"tags",
 		"disabled",
 	}
 
