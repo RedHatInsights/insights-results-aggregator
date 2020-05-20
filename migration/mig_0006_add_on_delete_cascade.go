@@ -17,7 +17,7 @@ limitations under the License.
 package migration
 
 var mig0006AddOnDeleteCascade = NewUpdateTableMigration(
-	"rule_error_key",
+	ruleErrorKeyTable,
 	`
 		CREATE TABLE rule_error_key (
 			"error_key"     VARCHAR NOT NULL,
