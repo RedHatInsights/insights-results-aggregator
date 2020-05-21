@@ -29,11 +29,8 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-)
-
-const (
-	testRequestID = types.RequestID("example12345678/requestID")
 )
 
 var (
@@ -72,7 +69,7 @@ func TestProducerTrackPayload(t *testing.T) {
 		helpers.FailOnError(t, kafkaProducer.Close())
 	}()
 
-	err := kafkaProducer.TrackPayload(testRequestID, testTimestamp, producer.StatusReceived)
+	err := kafkaProducer.TrackPayload(testdata.TestRequestID, testTimestamp, producer.StatusReceived)
 	assert.NoError(t, err, "payload tracking failed")
 }
 
@@ -110,7 +107,7 @@ func TestProducerTrackPayloadWithError(t *testing.T) {
 		helpers.FailOnError(t, kafkaProducer.Close())
 	}()
 
-	err := kafkaProducer.TrackPayload(testRequestID, testTimestamp, producer.StatusReceived)
+	err := kafkaProducer.TrackPayload(testdata.TestRequestID, testTimestamp, producer.StatusReceived)
 	assert.EqualError(t, err, producerErrorMessage)
 }
 
