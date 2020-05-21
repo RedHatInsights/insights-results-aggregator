@@ -195,7 +195,7 @@ func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
 			"publish_date"  TIMESTAMP NOT NULL,
 			"active"        BOOLEAN NOT NULL,
 			"generic"       VARCHAR NOT NULL,
-			"tags"          VARCHAR NOT NULL DEFAULT "",
+			"tags"          VARCHAR NOT NULL DEFAULT '',
 
 			PRIMARY KEY("error_key", "rule_module")
 		)
@@ -214,7 +214,7 @@ func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
 				"publish_date"  TIMESTAMP NOT NULL,
 				"active"        BOOLEAN NOT NULL,
 				"generic"       VARCHAR NOT NULL,
-				"tags"          VARCHAR NOT NULL DEFAULT "",
+				"tags"          VARCHAR NOT NULL DEFAULT '',
 
 				PRIMARY KEY("error_key", "rule_module")
 			)
