@@ -62,6 +62,7 @@ const (
 	Rule2MoreInfo    = "rule 2 more info"
 	Rule3MoreInfo    = "rule 3 more info"
 	KafkaOffset      = types.KafkaOffset(1)
+	TestRequestID    = types.RequestID("example12345678/requestID")
 )
 
 var (

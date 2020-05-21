@@ -17,19 +17,25 @@ package metrics_test
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama/mocks"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/prometheus/client_golang/prometheus"
-	prom_models "github.com/prometheus/client_model/go"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+	prommodels "github.com/prometheus/client_model/go"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 const (
@@ -45,8 +51,12 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 }
 
+func assertCounterValue(tb testing.TB, expected int64, counter prometheus.Counter, initValue int64) {
+	assert.Equal(tb, float64(expected+initValue), getCounterValue(counter))
+}
+
 func getCounterValue(counter prometheus.Counter) float64 {
-	pb := &prom_models.Metric{}
+	pb := &prommodels.Metric{}
 	err := counter.Write(pb)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to get counter from counter %v", err))
@@ -82,9 +92,9 @@ func TestConsumedMessagesMetric(t *testing.T) {
 	}, testCaseTimeLimit)
 }
 
-func TestAPIRequestsMetrics(t *testing.T) {
+func TestAPIRequestsMetric(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		// exposing storage creation out from assertapirequest makes
+		// exposing storage creation out from AssertApiRequest makes
 		// this particular test much faster on postgres
 		mockStorage, closer := helpers.MustGetMockStorage(t, true)
 		defer closer()
@@ -115,13 +125,102 @@ func TestAPIRequestsMetrics(t *testing.T) {
 	}, testCaseTimeLimit)
 }
 
-// TODO: metrics.APIResponsesTime
-// TODO: metrics.ProducedMessages
-// TODO: metrics.WrittenReports
+func TestAPIResponsesTimeMetric(t *testing.T) {
+	metrics.APIResponsesTime.Reset()
+
+	err := testutil.CollectAndCompare(metrics.APIResponsesTime, strings.NewReader(""))
+	helpers.FailOnError(t, err)
+
+	metrics.APIResponsesTime.With(prometheus.Labels{"endpoint": "test"}).Observe(5.6)
+
+	expected := `
+		# HELP api_endpoints_response_time API endpoints response time
+		# TYPE api_endpoints_response_time histogram
+		api_endpoints_response_time_bucket{endpoint="test",le="0"} 0
+		api_endpoints_response_time_bucket{endpoint="test",le="20"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="40"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="60"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="80"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="100"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="120"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="140"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="160"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="180"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="200"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="220"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="240"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="260"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="280"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="300"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="320"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="340"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="360"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="380"} 1
+		api_endpoints_response_time_bucket{endpoint="test",le="+Inf"} 1
+		api_endpoints_response_time_sum{endpoint="test"} 5.6
+		api_endpoints_response_time_count{endpoint="test"} 1
+	`
+	err = testutil.CollectAndCompare(metrics.APIResponsesTime, strings.NewReader(expected))
+	helpers.FailOnError(t, err)
+}
+
+func TestProducedMessagesMetric(t *testing.T) {
+	brokerCfg := broker.Configuration{
+		Address:             "localhost:1234",
+		Topic:               "consumer-topic",
+		PayloadTrackerTopic: "payload-tracker-topic",
+		Group:               "test-group",
+	}
+
+	// other tests may run at the same process
+	initValue := int64(getCounterValue(metrics.ProducedMessages))
+
+	mockProducer := mocks.NewSyncProducer(t, nil)
+	mockProducer.ExpectSendMessageAndSucceed()
+
+	kafkaProducer := producer.KafkaProducer{
+		Configuration: brokerCfg,
+		Producer:      mockProducer,
+	}
+	defer func() {
+		helpers.FailOnError(t, kafkaProducer.Close())
+	}()
+
+	err := kafkaProducer.TrackPayload(testdata.TestRequestID, testdata.LastCheckedAt, producer.StatusReceived)
+	helpers.FailOnError(t, err)
+
+	assertCounterValue(t, 1, metrics.ProducedMessages, initValue)
+}
+
+func TestWrittenReportsMetric(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	// other tests may run at the same process
+	initValue := int64(getCounterValue(metrics.ProducedMessages))
+
+	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, 0)
+	helpers.FailOnError(t, err)
+
+	assertCounterValue(t, 1, metrics.WrittenReports, initValue)
+
+	for i := 0; i < 99; i++ {
+		err := mockStorage.WriteReportForCluster(
+			testdata.OrgID,
+			testdata.ClusterName,
+			testdata.Report3Rules,
+			testdata.LastCheckedAt.Add(time.Duration(i+1)*time.Second),
+			types.KafkaOffset(i+1),
+		)
+		helpers.FailOnError(t, err)
+	}
+
+	assertCounterValue(t, 100, metrics.WrittenReports, initValue)
+}
 
 func TestApiResponseStatusCodesMetric_StatusOK(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		// exposing storage creation out from assertapirequest makes
+		// exposing storage creation out from AssertApiRequest makes
 		// this particular test much faster on postgres
 		mockStorage, closer := helpers.MustGetMockStorage(t, true)
 		defer closer()
@@ -150,7 +249,7 @@ func TestApiResponseStatusCodesMetric_StatusOK(t *testing.T) {
 
 func TestApiResponseStatusCodesMetric_StatusBadRequest(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		// exposing storage creation out from assertapirequest makes
+		// exposing storage creation out from AssertApiRequest makes
 		// this particular test much faster on postgres
 		mockStorage, closer := helpers.MustGetMockStorage(t, true)
 		defer closer()
