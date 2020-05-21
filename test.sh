@@ -131,13 +131,16 @@ function test_rest_api() {
         exit 1
     }
 
+    OUTPUT=$(./rest-api-tests 2>&1)
+    EXIT_CODE=$?
+
     if [ "$VERBOSE" = true ]; then
-        ./rest-api-tests 2>&1
+        echo "$OUTPUT"
     else
-        ./rest-api-tests 2>&1 | grep -v -E "^Pass "
+        echo "$OUTPUT" | grep -v -E "^Pass "
     fi
 
-    return $?
+    return $EXIT_CODE
 }
 
 function test_openapi() {
