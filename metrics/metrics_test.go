@@ -51,6 +51,10 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 }
 
+func assertCounterValue(tb testing.TB, expected int64, counter prometheus.Counter, initValue int64) {
+	assert.Equal(tb, float64(expected+initValue), getCounterValue(counter))
+}
+
 func getCounterValue(counter prometheus.Counter) float64 {
 	pb := &prommodels.Metric{}
 	err := counter.Write(pb)
@@ -168,7 +172,8 @@ func TestProducedMessagesMetric(t *testing.T) {
 		Group:               "test-group",
 	}
 
-	assert.Equal(t, 0.0, getCounterValue(metrics.ProducedMessages))
+	// other tests may run at the same process
+	initValue := int64(getCounterValue(metrics.ProducedMessages))
 
 	mockProducer := mocks.NewSyncProducer(t, nil)
 	mockProducer.ExpectSendMessageAndSucceed()
@@ -184,19 +189,20 @@ func TestProducedMessagesMetric(t *testing.T) {
 	err := kafkaProducer.TrackPayload(testdata.TestRequestID, testdata.LastCheckedAt, producer.StatusReceived)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, 1.0, getCounterValue(metrics.ProducedMessages))
+	assertCounterValue(t, 1, metrics.ProducedMessages, initValue)
 }
 
 func TestWrittenReportsMetric(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	assert.Equal(t, 0.0, getCounterValue(metrics.WrittenReports))
+	// other tests may run at the same process
+	initValue := int64(getCounterValue(metrics.ProducedMessages))
 
 	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, 0)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, 1.0, getCounterValue(metrics.WrittenReports))
+	assertCounterValue(t, 1, metrics.WrittenReports, initValue)
 
 	for i := 0; i < 99; i++ {
 		err := mockStorage.WriteReportForCluster(
@@ -209,7 +215,7 @@ func TestWrittenReportsMetric(t *testing.T) {
 		helpers.FailOnError(t, err)
 	}
 
-	assert.Equal(t, 100.0, getCounterValue(metrics.WrittenReports))
+	assertCounterValue(t, 100, metrics.WrittenReports, initValue)
 }
 
 func TestApiResponseStatusCodesMetric_StatusOK(t *testing.T) {
