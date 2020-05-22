@@ -817,7 +817,11 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
       }
     },
     "/clusters/{clusterId}/rules/{ruleId}/enable": {
@@ -863,8 +867,13 @@
               }
             }
           }
-        }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
       }
     }
   }
 }
+
