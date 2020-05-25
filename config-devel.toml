@@ -26,7 +26,7 @@ db_driver = "postgres"
 pg_username = "user"
 pg_password = "password"
 pg_host = "localhost"
-pg_port = 55432
+pg_port = 5432
 pg_db_name = "aggregator"
 pg_params = "sslmode=disable"
 log_sql_queries = true

@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: insights-results-aggregator-unit-test-pod
+spec:
+  containers:
+    - env:
+        - name: POSTGRESQL_USER
+          value: user
+        - name: POSTGRESQL_PASSWORD
+          value: password
+        - name: POSTGRESQL_ADMIN_PASSWORD
+          value: password
+        - name: POSTGRESQL_DATABASE
+          value: aggregator
+      image: registry.redhat.io/rhel8/postgresql-12
+      imagePullSecrets:
+        - name: registry-redhat-io
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+            - /usr/libexec/check-container
+            - --live
+        failureThreshold: 3
+        initialDelaySeconds: 120
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 10
+      name: postgresql
+      readinessProbe:
+        exec:
+          command:
+            - /usr/libexec/check-container
+        failureThreshold: 3
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+        limits:
+          cpu: 300m
+          memory: 512Mi
+    - image: registry.redhat.io/rhel8/go-toolset:1.13
+      imagePullSecrets:
+        - name: registry-redhat-io
+      name: builder
+      tty: True
+      env:
+        - name: GOPATH
+          value: /tmp/go
+        - name: GOCACHE
+          value: /tmp/go/.cache
+        - name: PATH
+          value: "/tmp/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      command:
+        - cat
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+        limits:
+          cpu: 1
+          memory: 2Gi
+    - name: jnlp
+      image: registry.access.redhat.com/openshift3/jenkins-slave-base-rhel7:v3.11
+      args:
+        - "$(JENKINS_SECRET)"
+        - "$(JENKINS_NAME)"
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+        limits:
+          cpu: 300m
+          memory: 512Mi
+  dnsPolicy: ClusterFirst
