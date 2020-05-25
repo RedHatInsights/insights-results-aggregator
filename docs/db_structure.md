@@ -26,6 +26,7 @@ CREATE TABLE report (
     report          VARCHAR NOT NULL,
     reported_at     TIMESTAMP,
     last_checked_at TIMESTAMP,
+    kafka_offset BIGINT  NOT NULL DEFAULT 0,
     PRIMARY KEY(org_id, cluster)
 )
 ```
@@ -64,6 +65,7 @@ CREATE TABLE rule_error_key (
     publish_date  TIMESTAMP NOT NULL,
     active        BOOLEAN NOT NULL,
     generic       VARCHAR NOT NULL,
+    tags VARCHAR NOT NULL DEFAULT '',
     PRIMARY KEY(error_key, rule_module)
 )
 ```
