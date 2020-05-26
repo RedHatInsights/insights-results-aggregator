@@ -13,14 +13,6 @@ def runStages() {
     openShiftUtils.withNode(yaml: "jenkins_slave_pod_template.yaml") {
         checkout scm
 
-        gitUtils.stageWithContext("Style", shortenURL = false) {
-            styleStatus = sh(script: "make style", returnStatus: true)
-        }
-
-        if (styleStatus != 0) {
-            error("Style check failed")
-        }
-
         gitUtils.stageWithContext("Unit-tests", shortenURL = false) {
             unitTestsStatus = sh(script: "make test", returnStatus: true)
             sh "./check_coverage.sh"
