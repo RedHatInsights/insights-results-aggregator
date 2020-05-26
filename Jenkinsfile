@@ -12,9 +12,9 @@ def getBaseCommit() {
     def baseCommit = ''
     def latestCommit = sh(label: 'Get previous commit', script: "git rev-parse HEAD", returnStdout: true)?.trim()
     def previousCommit = sh(label: 'Get previous commit', script: "git rev-parse HEAD^", returnStdout: true)?.trim()
-    if(env?.CHANGE_ID == null){
+    if (env?.CHANGE_ID == null) {
         baseCommit = env.GIT_COMMIT
-    } else if("${env.GIT_COMMIT}".equals("${latestCommit}")){
+    } else if("${env.GIT_COMMIT}".equals("${latestCommit}")) {
         baseCommit = env.GIT_COMMIT
     } else {
         baseCommit = previousCommit
