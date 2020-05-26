@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -1326,5 +1327,66 @@ func TestHTTPServer_getRuleGroupsWrongUrl(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
+	})
+}
+
+func TestHttpServer_GetRule(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.CreateRule(testdata.Rule1)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRuleErrorKey(testdata.RuleErrorKey1)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRule(testdata.Rule2)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRuleErrorKey(testdata.RuleErrorKey2)
+	helpers.FailOnError(t, err)
+
+	expectedRuleStr, err := json.MarshalIndent(testdata.RuleWithContent1, "", "\t")
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1.Module, testdata.RuleErrorKey1.ErrorKey},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: fmt.Sprintf(`{
+			"rule": %v,
+			"status":"ok"
+		}`, string(expectedRuleStr)),
+	})
+
+	expectedRuleStr, err = json.MarshalIndent(testdata.RuleWithContent2, "", "\t")
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule2.Module, testdata.RuleErrorKey2.ErrorKey},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: fmt.Sprintf(`{
+			"rule": %v,
+			"status":"ok"
+		}`, string(expectedRuleStr)),
+	})
+}
+
+func TestHttpServer_GetRule_DBError(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1.Module, testdata.RuleErrorKey1.ErrorKey},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status":"Internal Server Error"}`,
 	})
 }

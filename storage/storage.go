@@ -116,6 +116,7 @@ type Storage interface {
 		rulesContent []types.RuleContentResponse,
 		userID types.UserID,
 	) (map[types.RuleID]types.UserVote, error)
+	GetRuleWithContent(ruleID types.RuleID, ruleErrorKey types.ErrorKey) (*types.RuleWithContent, error)
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
@@ -421,6 +422,19 @@ func getExtraDataFromReportRules(rules []types.RuleContentResponse, reportRules 
 	return rules
 }
 
+func calculateTotalRisk(impact, likelihood int) int {
+	return (impact + likelihood) / 2
+}
+
+func commaSeparatedStrToTags(str string) []string {
+	str = strings.TrimSpace(str)
+	if len(str) == 0 {
+		return []string{}
+	}
+
+	return strings.Split(str, ",")
+}
+
 // GetContentForRules retrieves content for rules that were hit in the report
 func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]types.RuleContentResponse, error) {
 	rules := make([]types.RuleContentResponse, 0)
@@ -482,10 +496,10 @@ func (storage DBStorage) GetContentForRules(reportRules types.ReportRules) ([]ty
 			continue
 		}
 
-		rule.TotalRisk = (impact + likelihood) / 2
+		rule.TotalRisk = calculateTotalRisk(impact, likelihood)
 
 		// quick hack for rule tags
-		rule.Tags = strings.Split(tags, ",")
+		rule.Tags = commaSeparatedStrToTags(tags)
 
 		rules = append(rules, rule)
 	}

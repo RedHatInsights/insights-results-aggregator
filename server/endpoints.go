@@ -45,7 +45,8 @@ const (
 	GetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/get_vote"
 	// RuleEndpoint is an endpoint to create&delete a rule. DEBUG only
 	RuleEndpoint = "rules/{rule_id}"
-	// RuleErrorKeyEndpoint is an endpoint to create&delete a rule_error_key. DEBUG only
+	// RuleErrorKeyEndpoint is for endpoints to create&delete a rule_error_key (DEBUG only)
+	// and for endpoint to get a rule
 	RuleErrorKeyEndpoint = "rules/{rule_id}/error_keys/{error_key}"
 	// RuleGroupsEndpoint is a simple redirect endpoint to the insights-content-service API specified in configruation
 	RuleGroupsEndpoint = "groups"
@@ -94,6 +95,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+RuleGroupsEndpoint, server.getRuleGroups).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.getRule).Methods(http.MethodGet)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)

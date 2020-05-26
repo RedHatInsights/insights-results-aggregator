@@ -12,6 +12,32 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+// getRule returns rule with content for provided rule ID and rule error key
+func (server *HTTPServer) getRule(writer http.ResponseWriter, request *http.Request) {
+	ruleID, err := readRuleID(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	errorKey, err := readErrorKey(writer, request)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	ruleWithContent, err := server.Storage.GetRuleWithContent(ruleID, errorKey)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("rule", ruleWithContent))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
 // likeRule likes the rule for current user
 func (server *HTTPServer) likeRule(writer http.ResponseWriter, request *http.Request) {
 	server.voteOnRule(writer, request, types.UserVoteLike)
