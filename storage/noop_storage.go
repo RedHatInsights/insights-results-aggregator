@@ -41,20 +41,20 @@ func (*NoopStorage) ListOfOrgs() ([]types.OrgID, error) {
 }
 
 // ListOfClustersForOrg noop
-func (*NoopStorage) ListOfClustersForOrg(_ types.OrgID) ([]types.ClusterName, error) {
+func (*NoopStorage) ListOfClustersForOrg(types.OrgID) ([]types.ClusterName, error) {
 	return nil, nil
 }
 
 // ReadReportForCluster noop
 func (*NoopStorage) ReadReportForCluster(
-	_ types.OrgID, _ types.ClusterName,
+	types.OrgID, types.ClusterName,
 ) (types.ClusterReport, types.Timestamp, error) {
 	return "", "", nil
 }
 
 // ReadReportForClusterByClusterName noop
 func (*NoopStorage) ReadReportForClusterByClusterName(
-	_ types.ClusterName,
+	types.ClusterName,
 ) (types.ClusterReport, types.Timestamp, error) {
 	return "", "", nil
 }
@@ -66,7 +66,7 @@ func (*NoopStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 
 // WriteReportForCluster noop
 func (*NoopStorage) WriteReportForCluster(
-	_ types.OrgID, _ types.ClusterName, _ types.ClusterReport, _ time.Time, _ types.KafkaOffset,
+	types.OrgID, types.ClusterName, types.ClusterReport, time.Time, types.KafkaOffset,
 ) error {
 	return nil
 }
@@ -77,94 +77,94 @@ func (*NoopStorage) ReportsCount() (int, error) {
 }
 
 // VoteOnRule noop
-func (*NoopStorage) VoteOnRule(_ types.ClusterName, _ types.RuleID, _ types.UserID, _ types.UserVote) error {
+func (*NoopStorage) VoteOnRule(types.ClusterName, types.RuleID, types.UserID, types.UserVote) error {
 	return nil
 }
 
 // AddOrUpdateFeedbackOnRule noop
 func (*NoopStorage) AddOrUpdateFeedbackOnRule(
-	_ types.ClusterName, _ types.RuleID, _ types.UserID, _ string,
+	types.ClusterName, types.RuleID, types.UserID, string,
 ) error {
 	return nil
 }
 
 // GetUserFeedbackOnRule noop
 func (*NoopStorage) GetUserFeedbackOnRule(
-	_ types.ClusterName, _ types.RuleID, _ types.UserID,
+	types.ClusterName, types.RuleID, types.UserID,
 ) (*UserFeedbackOnRule, error) {
 	return nil, nil
 }
 
 // GetContentForRules noop
-func (*NoopStorage) GetContentForRules(_ types.ReportRules) ([]types.RuleContentResponse, error) {
+func (*NoopStorage) GetContentForRules(types.ReportRules) ([]types.RuleContentResponse, error) {
 	return nil, nil
 }
 
 // DeleteReportsForOrg noop
-func (*NoopStorage) DeleteReportsForOrg(_ types.OrgID) error {
+func (*NoopStorage) DeleteReportsForOrg(types.OrgID) error {
 	return nil
 }
 
 // DeleteReportsForCluster noop
-func (*NoopStorage) DeleteReportsForCluster(_ types.ClusterName) error {
+func (*NoopStorage) DeleteReportsForCluster(types.ClusterName) error {
 	return nil
 }
 
 // LoadRuleContent noop
-func (*NoopStorage) LoadRuleContent(_ content.RuleContentDirectory) error {
+func (*NoopStorage) LoadRuleContent(content.RuleContentDirectory) error {
 	return nil
 }
 
 // GetRuleByID noop
-func (*NoopStorage) GetRuleByID(_ types.RuleID) (*types.Rule, error) {
+func (*NoopStorage) GetRuleByID(types.RuleID) (*types.Rule, error) {
 	return nil, nil
 }
 
 // GetOrgIDByClusterID noop
-func (*NoopStorage) GetOrgIDByClusterID(_ types.ClusterName) (types.OrgID, error) {
+func (*NoopStorage) GetOrgIDByClusterID(types.ClusterName) (types.OrgID, error) {
 	return 0, nil
 }
 
 // CreateRule noop
-func (*NoopStorage) CreateRule(_ types.Rule) error {
+func (*NoopStorage) CreateRule(types.Rule) error {
 	return nil
 }
 
 // DeleteRule noop
-func (*NoopStorage) DeleteRule(_ types.RuleID) error {
+func (*NoopStorage) DeleteRule(types.RuleID) error {
 	return nil
 }
 
 // CreateRuleErrorKey noop
-func (*NoopStorage) CreateRuleErrorKey(_ types.RuleErrorKey) error {
+func (*NoopStorage) CreateRuleErrorKey(types.RuleErrorKey) error {
 	return nil
 }
 
 // DeleteRuleErrorKey noop
-func (*NoopStorage) DeleteRuleErrorKey(_ types.RuleID, _ types.ErrorKey) error {
+func (*NoopStorage) DeleteRuleErrorKey(types.RuleID, types.ErrorKey) error {
 	return nil
 }
 
 // WriteConsumerError noop
-func (*NoopStorage) WriteConsumerError(_ *sarama.ConsumerMessage, _ error) error {
+func (*NoopStorage) WriteConsumerError(*sarama.ConsumerMessage, error) error {
 	return nil
 }
 
 // ToggleRuleForCluster noop
 func (*NoopStorage) ToggleRuleForCluster(
-	_ types.ClusterName, _ types.RuleID, _ types.UserID, _ RuleToggle,
+	types.ClusterName, types.RuleID, types.UserID, RuleToggle,
 ) error {
 	return nil
 }
 
 // ListDisabledRulesForCluster noop
-func (*NoopStorage) ListDisabledRulesForCluster(_ types.ClusterName, _ types.UserID) ([]types.DisabledRuleResponse, error) {
+func (*NoopStorage) ListDisabledRulesForCluster(types.ClusterName, types.UserID) ([]types.DisabledRuleResponse, error) {
 	return nil, nil
 }
 
 // DeleteFromRuleClusterToggle noop
 func (*NoopStorage) DeleteFromRuleClusterToggle(
-	_ types.ClusterName, _ types.RuleID, _ types.UserID,
+	types.ClusterName, types.RuleID, types.UserID,
 ) error {
 	return nil
 }
@@ -184,5 +184,12 @@ func (*NoopStorage) GetUserFeedbackOnRules(
 	[]types.RuleContentResponse,
 	types.UserID,
 ) (map[types.RuleID]types.UserVote, error) {
+	return nil, nil
+}
+
+// GetRuleWithContent noop
+func (*NoopStorage) GetRuleWithContent(
+	types.RuleID, types.ErrorKey,
+) (*types.RuleWithContent, error) {
 	return nil, nil
 }

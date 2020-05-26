@@ -781,7 +781,7 @@
         "description": "",
         "parameters": [
           {
-            "name": "rule_id",
+            "name": "ruleId",
             "in": "path",
             "required": true,
             "schema": {
@@ -790,7 +790,7 @@
             "description": ""
           },
           {
-            "name": "rule_error_key",
+            "name": "errorKey",
             "in": "path",
             "required": true,
             "schema": {
