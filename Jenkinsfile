@@ -14,7 +14,7 @@ def runStages() {
         checkout scm
 
         gitUtils.stageWithContext("Unit-tests", shortenURL = false) {
-            unitTestsStatus = sh(script: "make test", returnStatus: true)
+            unitTestsStatus = sh(script: "make test-postgres", returnStatus: true)
             sh "./check_coverage.sh"
             withCredentials([string(credentialsId: "ira-codecov", variable: "CODECOV_TOKEN")]) {
                 sh "bash <(curl -s https://codecov.io/bash)"

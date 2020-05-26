@@ -13,9 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-CONFIG_FILE=config-devel.toml
-POSTGRES_PORT=$(grep -i pg_port $CONFIG_FILE | grep -E -o '[0-9]+')
+STORAGE=$1
 
 function run_unit_tests() {
     # shellcheck disable=SC2046
@@ -26,16 +24,16 @@ function run_unit_tests() {
     fi
 }
 
-echo "running unit tests with sqlite in memory"
-# tests with sqlite
-run_unit_tests
-
-if netstat -nltp 2>/dev/null | grep "$POSTGRES_PORT" >/dev/null; then
-    # tests with postgres
-    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="aggregator"
-    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="password"
-    echo "running unit tests with postgres on port $POSTGRES_PORT"
+if [ -z "$STORAGE" ] && command -v sqlite > /dev/null 2>&1; then
+    # tests with sqlite
+    echo "running unit tests with sqlite in memory"
+    CONFIG_FILE=config.toml
     run_unit_tests
-else
-    echo "postgres on port $POSTGRES_PORT is not running, skipping unit tests with postgres"
+fi
+
+if [ "$STORAGE" == "postgres" ]; then
+    # tests with postgres
+    echo "running unit tests with postgres"
+    CONFIG_FILE=config-devel.toml
+    run_unit_tests
 fi

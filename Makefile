@@ -62,7 +62,10 @@ automigrate: clean build
 	./insights-results-aggregator migrate latest
 
 test: clean build ## Run the unit tests
-	./unit-tests.sh
+	./unit-tests.sh all
+
+test-postgres: clean build
+	./unit-tests.sh postgres
 
 cover: test
 	@go tool cover -html=coverage.out
