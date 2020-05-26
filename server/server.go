@@ -142,7 +142,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	rulesContent, rulesCount, err := server.getContentForRules(writer, report)
+	rulesContent, rulesCount, err := server.getContentForRules(writer, report, userID, clusterName)
 	if err != nil {
 		// everything has been handled already
 		return

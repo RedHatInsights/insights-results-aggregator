@@ -318,6 +318,8 @@ func getTotalRuleCount(reportRules types.ReportRules) int {
 func (server *HTTPServer) getContentForRules(
 	writer http.ResponseWriter,
 	report types.ClusterReport,
+	userID types.UserID,
+	clusterName types.ClusterName,
 ) ([]types.RuleContentResponse, int, error) {
 	var reportRules types.ReportRules
 
@@ -330,7 +332,7 @@ func (server *HTTPServer) getContentForRules(
 
 	totalRules := getTotalRuleCount(reportRules)
 
-	hitRules, err := server.Storage.GetContentForRules(reportRules)
+	hitRules, err := server.Storage.GetContentForRules(reportRules, userID, clusterName)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to retrieve rules content from database")
 		handleServerError(writer, err)

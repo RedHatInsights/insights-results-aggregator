@@ -280,12 +280,16 @@ func TestDBStorageGetContentForRulesEmpty(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	res, err := mockStorage.GetContentForRules(types.ReportRules{
-		HitRules:     nil,
-		SkippedRules: nil,
-		PassedRules:  nil,
-		TotalCount:   0,
-	})
+	res, err := mockStorage.GetContentForRules(
+		types.ReportRules{
+			HitRules:     nil,
+			SkippedRules: nil,
+			PassedRules:  nil,
+			TotalCount:   0,
+		},
+		testdata.UserID,
+		testdata.ClusterName,
+	)
 	helpers.FailOnError(t, err)
 
 	assert.Empty(t, res)
@@ -295,12 +299,16 @@ func TestDBStorageGetContentForRulesDBError(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	closer()
 
-	_, err := mockStorage.GetContentForRules(types.ReportRules{
-		HitRules:     nil,
-		SkippedRules: nil,
-		PassedRules:  nil,
-		TotalCount:   0,
-	})
+	_, err := mockStorage.GetContentForRules(
+		types.ReportRules{
+			HitRules:     nil,
+			SkippedRules: nil,
+			PassedRules:  nil,
+			TotalCount:   0,
+		},
+		testdata.UserID,
+		testdata.ClusterName,
+	)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -311,15 +319,20 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 	err := mockStorage.LoadRuleContent(ruleContentExample1)
 	helpers.FailOnError(t, err)
 
-	res, err := mockStorage.GetContentForRules(types.ReportRules{
-		HitRules: []types.RuleOnReport{
-			{
-				Module:   string(testRuleID),
-				ErrorKey: "ek",
+	res, err := mockStorage.GetContentForRules(
+		types.ReportRules{
+			HitRules: []types.RuleOnReport{
+				{
+					Module:   string(testRuleID),
+					ErrorKey: "ek",
+				},
 			},
+			TotalCount: 1,
 		},
-		TotalCount: 1,
-	})
+		testdata.UserID,
+		testdata.ClusterName,
+	)
+
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, []types.RuleContentResponse{
@@ -347,23 +360,28 @@ func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
 	err := mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
 	helpers.FailOnError(t, err)
 
-	res, err := mockStorage.GetContentForRules(types.ReportRules{
-		HitRules: []types.RuleOnReport{
-			{
-				Module:   "test.rule1.report",
-				ErrorKey: "ek1",
+	res, err := mockStorage.GetContentForRules(
+		types.ReportRules{
+			HitRules: []types.RuleOnReport{
+				{
+					Module:   "test.rule1.report",
+					ErrorKey: "ek1",
+				},
+				{
+					Module:   "test.rule2.report",
+					ErrorKey: "ek2",
+				},
+				{
+					Module:   "test.rule3.report",
+					ErrorKey: "ek3",
+				},
 			},
-			{
-				Module:   "test.rule2.report",
-				ErrorKey: "ek2",
-			},
-			{
-				Module:   "test.rule3.report",
-				ErrorKey: "ek3",
-			},
+			TotalCount: 3,
 		},
-		TotalCount: 3,
-	})
+		testdata.UserID,
+		testdata.ClusterName,
+	)
+
 	helpers.FailOnError(t, err)
 
 	assert.Len(t, res, 3)
@@ -448,15 +466,20 @@ func TestDBStorageGetContentForRulesScanError(t *testing.T) {
 		sqlmock.NewRows(columns).AddRow(values...),
 	)
 
-	_, err := mockStorage.GetContentForRules(types.ReportRules{
-		HitRules: []types.RuleOnReport{
-			{
-				Module:   "rule_module",
-				ErrorKey: "error_key",
+	_, err := mockStorage.GetContentForRules(
+		types.ReportRules{
+			HitRules: []types.RuleOnReport{
+				{
+					Module:   "rule_module",
+					ErrorKey: "error_key",
+				},
 			},
+			TotalCount: 1,
 		},
-		TotalCount: 1,
-	})
+		testdata.UserID,
+		testdata.ClusterName,
+	)
+
 	helpers.FailOnError(t, err)
 
 	assert.Regexp(t, "converting driver.Value type .+ to .*", buf.String())
@@ -492,15 +515,20 @@ func TestDBStorageGetContentForRulesRowsError(t *testing.T) {
 		sqlmock.NewRows(columns).AddRow(values...).RowError(0, fmt.Errorf(rowErr)),
 	)
 
-	_, err := mockStorage.GetContentForRules(types.ReportRules{
-		HitRules: []types.RuleOnReport{
-			{
-				Module:   "rule_module",
-				ErrorKey: "error_key",
+	_, err := mockStorage.GetContentForRules(
+		types.ReportRules{
+			HitRules: []types.RuleOnReport{
+				{
+					Module:   "rule_module",
+					ErrorKey: "error_key",
+				},
 			},
+			TotalCount: 1,
 		},
-		TotalCount: 1,
-	})
+		testdata.UserID,
+		testdata.ClusterName,
+	)
+
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), rowErr)
 	assert.Contains(t, buf.String(), "SQL rows error while retrieving content for rules")

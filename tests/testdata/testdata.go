@@ -29,6 +29,7 @@ const (
 	OrgID            = types.OrgID(1)
 	ClusterName      = types.ClusterName("84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc")
 	UserID           = types.UserID("1")
+	User2ID          = types.UserID("2")
 	BadClusterName   = types.ClusterName("aaaa")
 	Rule1ID          = types.RuleID("test.rule1")
 	BadRuleID        = types.RuleID("rule id with spaces")
@@ -330,7 +331,53 @@ var (
 }
 `
 
-	Report2RulesEnabledRule1ExpectedResponse = `
+	Report2RulesDisabledExpectedResponse = `
+{
+	"report": {
+		"meta": {
+			"count": 2,
+			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
+		},
+		"data": [
+			{
+				"rule_id": "` + string(Rule1ID) + `",
+				"description": "` + Rule1Description + `",
+				"details": "` + Rule1Details + `",
+				"reason": "` + Rule1Reason + `",
+				"resolution": "` + Rule1Resolution + `",
+				"created_at": "` + Rule1CreatedAt + `",
+				"total_risk": 3,
+				"risk_of_change": 0,
+				"extra_data": null,
+				"tags": [
+					"tag1",
+					"tag2"
+				],
+				"disabled": true
+			},
+			{
+				"rule_id": "` + string(Rule2ID) + `",
+				"description": "` + Rule2Description + `",
+				"details": "` + Rule2Details + `",
+				"reason": "` + Rule2Reason + `",
+				"resolution": "` + Rule2Resolution + `",
+				"created_at": "` + Rule2CreatedAt + `",
+				"total_risk": 4,
+				"risk_of_change": 0,
+				"extra_data": null,
+				"tags": [
+					"tag1",
+					"tag2"
+				],
+				"disabled": true
+			}
+		]
+	},
+	"status": "ok"
+}
+`
+
+	Report2RulesEnabledRulesExpectedResponse = `
 {
 	"report": {
 		"meta": {
