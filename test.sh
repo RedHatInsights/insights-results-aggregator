@@ -143,27 +143,11 @@ function test_rest_api() {
     return $EXIT_CODE
 }
 
-function test_openapi() {
-    echo "Testing OpenAPI specifications file"
-    # shellcheck disable=2181
-
-    if docker run --rm -v "${PWD}":/local/:Z openapitools/openapi-generator-cli validate -i ./local/openapi.json; then
-        echo "OpenAPI spec file is OK"
-    else
-        echo "OpenAPI spec file validation failed"
-        exit 1
-    fi
-}
-
 echo -e "------------------------------------------------------------------------------------------------"
 
 case $1 in
 rest_api)
     test_rest_api
-    EXIT_VALUE=$?
-    ;;
-openapi)
-    test_openapi
     EXIT_VALUE=$?
     ;;
 *)
@@ -174,8 +158,6 @@ openapi)
     test_rest_api
     EXIT_VALUE=$((EXIT_VALUE + $?))
 
-    test_openapi
-    EXIT_VALUE=$((EXIT_VALUE + $?))
     ;;
 esac
 

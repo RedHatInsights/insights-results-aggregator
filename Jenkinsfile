@@ -15,9 +15,13 @@ def runStages() {
 
         gitUtils.stageWithContext("Unit-tests", shortenURL = false) {
             unitTestsStatus = sh(script: "make test-postgres", returnStatus: true)
-            sh "./check_coverage.sh"
+            withEnv(["TERM=xterm"]){
+                sh "./check_coverage.sh"
+            }
             withCredentials([string(credentialsId: "ira-codecov", variable: "CODECOV_TOKEN")]) {
-                sh "bash <(curl -s https://codecov.io/bash)"
+                withEnv(["TERM=xterm"]){
+                    sh "curl -s https://codecov.io/bash | bash"
+                }
             }
         }
 

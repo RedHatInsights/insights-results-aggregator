@@ -27,6 +27,7 @@ function run_unit_tests() {
 if [ -z "$STORAGE" ] && command -v sqlite > /dev/null 2>&1; then
     # tests with sqlite
     echo "running unit tests with sqlite in memory"
+    # shellcheck disable=SC2034
     CONFIG_FILE=config.toml
     run_unit_tests
 fi
@@ -34,6 +35,7 @@ fi
 if [ "$STORAGE" == "postgres" ]; then
     # tests with postgres
     echo "running unit tests with postgres"
+    # shellcheck disable=SC2034
     CONFIG_FILE=config-devel.toml
     run_unit_tests
 fi
