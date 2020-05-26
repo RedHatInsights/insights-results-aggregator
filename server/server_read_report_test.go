@@ -275,9 +275,10 @@ func TestReadReportDisableRule(t *testing.T) {
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.UserID,
 	}, &helpers.APIResponse{
 		StatusCode:  http.StatusOK,
-		Body:        testdata.Report2RulesEnabledRule1ExpectedResponse,
+		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
 		BodyChecker: assertReportResponsesEqual,
 	})
 
@@ -295,6 +296,7 @@ func TestReadReportDisableRule(t *testing.T) {
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.UserID,
 	}, &helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesDisabledRule1ExpectedResponse,
@@ -315,9 +317,145 @@ func TestReadReportDisableRule(t *testing.T) {
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.UserID,
 	}, &helpers.APIResponse{
 		StatusCode:  http.StatusOK,
-		Body:        testdata.Report2RulesEnabledRule1ExpectedResponse,
+		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
 		BodyChecker: assertReportResponsesEqual,
 	})
+}
+
+// TestReadReportDisableRuleMultipleUsers is a reproducer for bug issues 811 and 814
+func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.Report2Rules,
+		testdata.LastCheckedAt,
+		testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+	helpers.FailOnError(t, err)
+
+	// user 1 check no disabled rules in response
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
+		BodyChecker: assertReportResponsesEqual,
+	})
+
+	// user 2 disables rule1
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.DisableRuleForClusterEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.User2ID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
+
+	// user 2 is affected
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.User2ID,
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report2RulesDisabledRule1ExpectedResponse,
+		BodyChecker: assertReportResponsesEqual,
+	})
+
+	// user 1 is not affected
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
+		BodyChecker: assertReportResponsesEqual,
+	})
+
+	// user 2 re-enables rule
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.EnableRuleForClusterEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.User2ID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
+
+	// user 2 sees no rules disabled
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.User2ID,
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
+		BodyChecker: assertReportResponsesEqual,
+	})
+
+	// user 1 disables rule1
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.DisableRuleForClusterEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
+
+	// user 1 disables rule2
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.DisableRuleForClusterEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule2ID},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
+
+	// user 1 is affected
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.UserID,
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report2RulesDisabledExpectedResponse,
+		BodyChecker: assertReportResponsesEqual,
+	})
+
+	// user 2 is not affected
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.User2ID,
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
+		BodyChecker: assertReportResponsesEqual,
+	})
+
 }

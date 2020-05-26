@@ -96,7 +96,7 @@ func (*NoopStorage) GetUserFeedbackOnRule(
 }
 
 // GetContentForRules noop
-func (*NoopStorage) GetContentForRules(_ types.ReportRules) ([]types.RuleContentResponse, error) {
+func (*NoopStorage) GetContentForRules(_ types.ReportRules, _ types.UserID, _ types.ClusterName) ([]types.RuleContentResponse, error) {
 	return nil, nil
 }
 
