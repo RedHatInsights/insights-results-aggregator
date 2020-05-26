@@ -32,8 +32,8 @@ run_unit_tests
 
 if netstat -nltp 2>/dev/null | grep "$POSTGRES_PORT" >/dev/null; then
     # tests with postgres
-    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="postgres"
-    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="admin"
+    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="aggregator"
+    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="password"
     echo "running unit tests with postgres on port $POSTGRES_PORT"
     run_unit_tests
 else
