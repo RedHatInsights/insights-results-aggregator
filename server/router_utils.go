@@ -69,7 +69,7 @@ func getRouterPositiveIntParam(request *http.Request, paramName string) (uint64,
 
 // validateClusterName checks that the cluster name is a valid UUID.
 // Converted cluster name is returned if everything is okay, otherwise an error is returned.
-func validateClusterName(writer http.ResponseWriter, clusterName string) (types.ClusterName, error) {
+func validateClusterName(clusterName string) (types.ClusterName, error) {
 	if _, err := uuid.Parse(clusterName); err != nil {
 		message := fmt.Sprintf("invalid cluster name: '%s'. Error: %s", clusterName, err.Error())
 
@@ -111,7 +111,7 @@ func readClusterName(writer http.ResponseWriter, request *http.Request) (types.C
 		return "", err
 	}
 
-	validatedClusterName, err := validateClusterName(writer, clusterName)
+	validatedClusterName, err := validateClusterName(clusterName)
 	if err != nil {
 		handleClusterNameError(writer, err)
 		return "", err
@@ -160,7 +160,7 @@ func readClusterNames(writer http.ResponseWriter, request *http.Request) ([]type
 
 	clusterNamesConverted := make([]types.ClusterName, 0)
 	for _, clusterName := range splitRequestParamArray(clusterNamesParam) {
-		convertedName, err := validateClusterName(writer, clusterName)
+		convertedName, err := validateClusterName(clusterName)
 		if err != nil {
 			handleServerError(writer, err)
 			return []types.ClusterName{}, err
