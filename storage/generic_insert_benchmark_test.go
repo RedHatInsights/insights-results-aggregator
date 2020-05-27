@@ -57,7 +57,7 @@ func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {
 	return mockStorage, conn, closer
 }
 
-func mustCleanupAfterBenchmark(b *testing.B, stor storage.Storage, conn *sql.DB, closer func()) {
+func mustCleanupAfterBenchmark(b *testing.B, conn *sql.DB, closer func()) {
 	b.StopTimer()
 
 	_, err := conn.Exec("DROP TABLE benchmark_tab;")
@@ -75,7 +75,7 @@ func BenchmarkStorageGenericInsertExecDirectlySingle(b *testing.B) {
 		helpers.FailOnError(b, err)
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn, closer)
+	mustCleanupAfterBenchmark(b, conn, closer)
 }
 
 // BenchmarkStorageGenericInsertPrepareExecSingle prepares an INSERT statement and then executes it once.
@@ -90,7 +90,7 @@ func BenchmarkStorageGenericInsertPrepareExecSingle(b *testing.B) {
 		helpers.FailOnError(b, err)
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn, closer)
+	mustCleanupAfterBenchmark(b, conn, closer)
 }
 
 // BenchmarkStorageGenericInsertExecDirectlyMany executes the INSERT query row by row,
@@ -105,7 +105,7 @@ func BenchmarkStorageGenericInsertExecDirectlyMany(b *testing.B) {
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn, closer)
+	mustCleanupAfterBenchmark(b, conn, closer)
 }
 
 // BenchmarkStorageGenericInsertPrepareExecMany executes the same exact INSERT statements,
@@ -123,7 +123,7 @@ func BenchmarkStorageGenericInsertPrepareExecMany(b *testing.B) {
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn, closer)
+	mustCleanupAfterBenchmark(b, conn, closer)
 }
 
 // BenchmarkStorageUpsertWithoutConflict inserts many non-conflicting
@@ -138,7 +138,7 @@ func BenchmarkStorageUpsertWithoutConflict(b *testing.B) {
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn, closer)
+	mustCleanupAfterBenchmark(b, conn, closer)
 }
 
 // BenchmarkStorageUpsertConflict insert many mutually conflicting
@@ -153,5 +153,5 @@ func BenchmarkStorageUpsertConflict(b *testing.B) {
 		}
 	}
 
-	mustCleanupAfterBenchmark(b, stor, conn, closer)
+	mustCleanupAfterBenchmark(b, conn, closer)
 }
