@@ -26,7 +26,7 @@ CREATE TABLE report (
     report          VARCHAR NOT NULL,
     reported_at     TIMESTAMP,
     last_checked_at TIMESTAMP,
-    kafka_offset BIGINT  NOT NULL DEFAULT 0,
+    kafka_offset    BIGINT NOT NULL DEFAULT 0,
     PRIMARY KEY(org_id, cluster)
 )
 ```
@@ -45,27 +45,27 @@ Very trivialized example could be:
 
 ```sql
 CREATE TABLE rule (
-    module        VARCHAR PRIMARY KEY,
-    name          VARCHAR NOT NULL,
-    summary       VARCHAR NOT NULL,
-    reason        VARCHAR NOT NULL,
-    resolution    VARCHAR NOT NULL,
-    more_info     VARCHAR NOT NULL
+    module      VARCHAR PRIMARY KEY,
+    name        VARCHAR NOT NULL,
+    summary     VARCHAR NOT NULL,
+    reason      VARCHAR NOT NULL,
+    resolution  VARCHAR NOT NULL,
+    more_info   VARCHAR NOT NULL
 )
 ```
 
 ```sql
 CREATE TABLE rule_error_key (
-    error_key     VARCHAR NOT NULL,
-    rule_module   VARCHAR NOT NULL REFERENCES rule(module),
-    condition     VARCHAR NOT NULL,
-    description   VARCHAR NOT NULL,
-    impact        INTEGER NOT NULL,
-    likelihood    INTEGER NOT NULL,
-    publish_date  TIMESTAMP NOT NULL,
-    active        BOOLEAN NOT NULL,
-    generic       VARCHAR NOT NULL,
-    tags VARCHAR NOT NULL DEFAULT '',
+    error_key       VARCHAR NOT NULL,
+    rule_module     VARCHAR NOT NULL REFERENCES rule(module),
+    condition       VARCHAR NOT NULL,
+    description     VARCHAR NOT NULL,
+    impact          INTEGER NOT NULL,
+    likelihood      INTEGER NOT NULL,
+    publish_date    TIMESTAMP NOT NULL,
+    active          BOOLEAN NOT NULL,
+    generic         VARCHAR NOT NULL,
+    tags            VARCHAR NOT NULL DEFAULT '',
     PRIMARY KEY(error_key, rule_module)
 )
 ```
@@ -78,13 +78,13 @@ CREATE TABLE rule_error_key (
 -- 1 is like,
 -- -1 is dislike
 CREATE TABLE cluster_rule_user_feedback (
-    cluster_id VARCHAR NOT NULL,
-    rule_id VARCHAR NOT NULL,
-    user_id VARCHAR NOT NULL,
-    message VARCHAR NOT NULL,
-    user_vote SMALLINT NOT NULL,
-    added_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
+    cluster_id  VARCHAR NOT NULL,
+    rule_id     VARCHAR NOT NULL,
+    user_id     VARCHAR NOT NULL,
+    message     VARCHAR NOT NULL,
+    user_vote   SMALLINT NOT NULL,
+    added_at    TIMESTAMP NOT NULL,
+    updated_at  TIMESTAMP NOT NULL,
 
     PRIMARY KEY(cluster_id, rule_id, user_id),
     FOREIGN KEY (cluster_id)
@@ -100,13 +100,13 @@ CREATE TABLE cluster_rule_user_feedback (
 
 ```sql
 CREATE TABLE cluster_rule_toggle (
-    cluster_id VARCHAR NOT NULL,
-    rule_id VARCHAR NOT NULL,
-    user_id VARCHAR NOT NULL,
-    disabled SMALLINT NOT NULL,
+    cluster_id  VARCHAR NOT NULL,
+    rule_id     VARCHAR NOT NULL,
+    user_id     VARCHAR NOT NULL,
+    disabled    SMALLINT NOT NULL,
     disabled_at TIMESTAMP NULL,
-    enabled_at TIMESTAMP NULL,
-    updated_at TIMESTAMP NOT NULL,
+    enabled_at  TIMESTAMP NULL,
+    updated_at  TIMESTAMP NOT NULL,
 
     CHECK (disabled >= 0 AND disabled <= 1),
 
