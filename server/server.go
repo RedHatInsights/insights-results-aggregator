@@ -48,6 +48,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+
 	// we just have to import this package in order to expose pprof interface in debug mode
 	// disable "G108 (CWE-): Profiling endpoint is automatically exposed on /debug/pprof"
 	// #nosec G108
@@ -596,7 +597,7 @@ func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *h
 		handleServerError(writer, err)
 		return
 	}
-
+	writer.Header().Set("Content-Type", "application/json")
 	http.ServeFile(writer, request, absPath)
 }
 

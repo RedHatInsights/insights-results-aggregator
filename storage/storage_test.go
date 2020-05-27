@@ -95,6 +95,7 @@ func TestNewStorageWithLoggingError(t *testing.T) {
 	s, _ := storage.New(storage.Configuration{
 		Driver:        "postgres",
 		PGPort:        1234,
+		PGUsername:    "user",
 		LogSQLQueries: true,
 	})
 
@@ -419,9 +420,10 @@ func TestMockDBReportsCountClosedStorage(t *testing.T) {
 
 func TestDBStorageNewPostgresqlError(t *testing.T) {
 	s, _ := storage.New(storage.Configuration{
-		Driver: "postgres",
-		PGHost: "non-existing-host",
-		PGPort: 12345,
+		Driver:     "postgres",
+		PGHost:     "non-existing-host",
+		PGPort:     12345,
+		PGUsername: "user",
 	})
 
 	err := s.Init()

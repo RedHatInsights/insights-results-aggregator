@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2020 Red Hat, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,26 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-language: go
-go:
-- 1.13
-
-jobs:
-  include:
-    - stage: style
-      script:
-        - make style
-    - stage: unit tests
-      script:
-        - make test
-        - ./check_coverage.sh
-      after_success:
-        - bash <(curl -s https://codecov.io/bash)
-    - stage: integration tests
-      script:
-        - make integration_tests
-
-stages:
-  - style
-  - unit tests
-  - integration tests
+if ! command -v shellcheck > /dev/null 2>&1; then
+    scversion="stable" # or "v0.4.7", or "latest"
+    wget -qO- "https://github.com/koalaman/shellcheck/releases/download/${scversion?}/shellcheck-${scversion?}.linux.x86_64.tar.xz" | tar -xJv
+    shellcheck-stable/shellcheck --version
+    shellcheck-stable/shellcheck -- *.sh */*.sh
+else
+    shellcheck -- *.sh */*.sh
+fi
