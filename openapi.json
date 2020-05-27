@@ -281,7 +281,7 @@
                                 "type": "object",
                                 "description": "Used as templating data for other content (details, resolution, etc.), has varying structure depending on the rules in the report.",
                                 "example": {
-                                    "condition": "Degraded"
+                                  "condition": "Degraded"
                                 }
                               },
                               "tags": {
@@ -299,6 +299,15 @@
                                   0,
                                   1
                                 ]
+                              },
+                              "disabled": {
+                                "type": "boolean",
+                                "description": "If this rule result disabled or not. This field can be used in the UI to show only specific set of rules results."
+                              },
+                              "rule_id": {
+                                "type": "string",
+                                "description": "ID of a rule.",
+                                "example": "some.python.module"
                               }
                             }
                           }
