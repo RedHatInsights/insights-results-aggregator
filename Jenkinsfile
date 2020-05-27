@@ -25,6 +25,43 @@ def getBaseCommit() {
 
 def runStages() {
 
+    gitUtils.stageWithContext("Style", shortenURL = false) {
+        parallel
+        go: {
+            openShiftUtils.withNode(yaml: "jenkins_slave_pod_template.yaml") {
+                checkout scm
+
+                styleStatus = sh(script: "make fmt vet lint cyclo shellcheck errcheck goconst gosec ineffassign abcgo", returnStatus: true)
+
+                if (styleStatus != 0) {
+                    error("Style check failed")
+                }
+            }
+        },
+        json: {
+            openShiftUtils.withNode(image: "registry.access.redhat.com/rhscl/python-36-rhel7") {
+                checkout scm
+
+                jsonCheckStatus = sh(script: "make json-check", returnStatus: true)
+
+                if (jsonCheckStatus != 0) {
+                    error("Json check failed")
+                }
+            }
+        },
+        openapi: {
+            openShiftUtils.withNode(image: "openapitools/openapi-generator-cli") {
+                checkout scm
+
+                openapiCheckStatus = sh(script: "validate openapi.json", returnStatus: true)
+
+                if (openapi != 0) {
+                    error("OpenAPI check failed")
+                }
+            }
+        }
+    }
+
     openShiftUtils.withNode(yaml: "jenkins_slave_pod_template.yaml") {
         checkout scm
 
@@ -34,9 +71,7 @@ def runStages() {
                 sh "./check_coverage.sh"
             }
             withCredentials([string(credentialsId: "ira-codecov", variable: "CODECOV_TOKEN")]) {
-                withEnv(["TERM=xterm"]) {
-                    sh "curl -s https://codecov.io/bash | bash -s -- -C ${getBaseCommit()}"
-                }
+                sh "curl -s https://codecov.io/bash | bash -s -- -C ${getBaseCommit()}"
             }
         }
 
