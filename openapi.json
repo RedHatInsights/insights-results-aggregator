@@ -236,7 +236,8 @@
                               },
                               "details": {
                                 "type": "string",
-                                "description": "Details of the rule - templates rendered on frontend."
+                                "description": "Details of the rule - templates rendered on frontend.",
+                                "example": "State of operator: {{=condition}}"
                               },
                               "reason": {
                                 "type": "string",
@@ -272,6 +273,13 @@
                                   3,
                                   4
                                 ]
+                              },
+                              "extra_data": {
+                                "type": "object",
+                                "description": "Used as templating data for other content (details, resolution, etc.), has varying structure depending on the rules in the report.",
+                                "example": {
+                                    "condition": "Degraded"
+                                }
                               },
                               "tags": {
                                 "type": "array",
