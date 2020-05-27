@@ -1,4 +1,4 @@
-.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check style run test cover integration_tests rest_api_tests rules_content sqlite_db license before_commit help
+.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test test-postgres cover integration_tests rest_api_tests rules_content sqlite_db license before_commit help
 
 SOURCES:=$(shell find . -name '*.go')
 
@@ -65,7 +65,7 @@ automigrate: clean build
 	./insights-results-aggregator migrate latest
 
 test: clean build ## Run the unit tests
-	./unit-tests.sh all
+	./unit-tests.sh
 
 test-postgres: clean build
 	./unit-tests.sh postgres
@@ -92,7 +92,7 @@ license:
 	GO111MODULE=off go get -u github.com/google/addlicense && \
 		addlicense -c "Red Hat, Inc" -l "apache" -v ./
 
-before_commit: style test integration_tests license
+before_commit: style test integration_tests openapi-check license
 	./check_coverage.sh
 
 help: ## Show this help screen
