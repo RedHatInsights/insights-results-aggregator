@@ -68,7 +68,7 @@ func mustCleanupAfterBenchmark(b *testing.B, conn *sql.DB, closer func()) {
 
 // BenchmarkStorageGenericInsertExecDirectlySingle executes a single INSERT statement directly.
 func BenchmarkStorageGenericInsertExecDirectlySingle(b *testing.B) {
-	stor, conn, closer := mustPrepareBenchmark(b)
+	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		_, err := conn.Exec(insertQuery, "John Doe", "Hello World!")
@@ -80,7 +80,7 @@ func BenchmarkStorageGenericInsertExecDirectlySingle(b *testing.B) {
 
 // BenchmarkStorageGenericInsertPrepareExecSingle prepares an INSERT statement and then executes it once.
 func BenchmarkStorageGenericInsertPrepareExecSingle(b *testing.B) {
-	stor, conn, closer := mustPrepareBenchmark(b)
+	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		stmt, err := conn.Prepare(insertQuery)
@@ -96,7 +96,7 @@ func BenchmarkStorageGenericInsertPrepareExecSingle(b *testing.B) {
 // BenchmarkStorageGenericInsertExecDirectlyMany executes the INSERT query row by row,
 // each in a separate sql.DB.Exec() call.
 func BenchmarkStorageGenericInsertExecDirectlyMany(b *testing.B) {
-	stor, conn, closer := mustPrepareBenchmark(b)
+	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for rowId := 0; rowId < rowCount; rowId++ {
@@ -111,7 +111,7 @@ func BenchmarkStorageGenericInsertExecDirectlyMany(b *testing.B) {
 // BenchmarkStorageGenericInsertPrepareExecMany executes the same exact INSERT statements,
 // but it prepares them beforehand and only supplies the parameters with each call.
 func BenchmarkStorageGenericInsertPrepareExecMany(b *testing.B) {
-	stor, conn, closer := mustPrepareBenchmark(b)
+	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		stmt, err := conn.Prepare(insertQuery)
@@ -129,7 +129,7 @@ func BenchmarkStorageGenericInsertPrepareExecMany(b *testing.B) {
 // BenchmarkStorageUpsertWithoutConflict inserts many non-conflicting
 // rows into the benchmark table using the upsert query.
 func BenchmarkStorageUpsertWithoutConflict(b *testing.B) {
-	stor, conn, closer := mustPrepareBenchmark(b)
+	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for rowId := 0; rowId < rowCount; rowId++ {
@@ -144,7 +144,7 @@ func BenchmarkStorageUpsertWithoutConflict(b *testing.B) {
 // BenchmarkStorageUpsertConflict insert many mutually conflicting
 // rows into the benchmark table using the uspert query.
 func BenchmarkStorageUpsertConflict(b *testing.B) {
-	stor, conn, closer := mustPrepareBenchmark(b)
+	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for rowId := 0; rowId < rowCount; rowId++ {
