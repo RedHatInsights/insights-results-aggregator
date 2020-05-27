@@ -122,6 +122,25 @@ type RuleErrorKey struct {
 	PublishDate time.Time `json:"publish_date"`
 	Active      bool      `json:"active"`
 	Generic     string    `json:"generic"`
+	Tags        []string  `json:"tags"`
+}
+
+// RuleWithContent represents a rule with content, basically the mix of rule and rule_error_key tables' content
+type RuleWithContent struct {
+	Module      RuleID    `json:"module"`
+	Name        string    `json:"name"`
+	Summary     string    `json:"summary"`
+	Reason      string    `json:"reason"`
+	Resolution  string    `json:"resolution"`
+	MoreInfo    string    `json:"more_info"`
+	ErrorKey    ErrorKey  `json:"error_key"`
+	Condition   string    `json:"condition"`
+	Description string    `json:"description"`
+	TotalRisk   int       `json:"total_risk"`
+	PublishDate time.Time `json:"publish_date"`
+	Active      bool      `json:"active"`
+	Generic     string    `json:"generic"`
+	Tags        []string  `json:"tags"`
 }
 
 // KafkaOffset type for kafka offset

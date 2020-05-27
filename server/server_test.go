@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -939,57 +940,20 @@ func TestHTTPServer_CreateRuleErrorKey(t *testing.T) {
 
 	createRule(t, mockStorage)
 
+	expectedRuleErrorKeyStr, err := json.Marshal(testdata.RuleErrorKey1)
+	helpers.FailOnError(t, err)
+
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.RuleErrorKeyEndpoint,
-		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
-		Body: fmt.Sprintf(`{
-			"error_key": "%v",
-			"rule_module": "%v",
-			"condition": "%v",
-			"description": "%v",
-			"impact": %v,
-			"likelihood": %v,
-			"publish_date": "%v",
-			"active": %v,
-			"generic": "%v"
-		}`,
-			"ek",
-			"module",
-			"",
-			"",
-			1,
-			2,
-			testdata.LastCheckedAt.Format(time.RFC3339),
-			true,
-			"",
-		),
+		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.RuleErrorKey1.ErrorKey},
+		Body:         string(expectedRuleErrorKeyStr),
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
-		Body: `{
-			"status": "ok",
-			"rule_error_key": ` + fmt.Sprintf(`{
-				"error_key": "%v",
-				"rule_module": "%v",
-				"condition": "%v",
-				"description": "%v",
-				"impact": %v,
-				"likelihood": %v,
-				"publish_date": "%v",
-				"active": %v,
-				"generic": "%v"
-			}`,
-			"ek",
-			testdata.Rule1ID,
-			"",
-			"",
-			1,
-			2,
-			testdata.LastCheckedAt.Format(time.RFC3339),
-			true,
-			"",
-		) + `
-		}`,
+		Body: fmt.Sprintf(`{
+			"rule_error_key": %v,
+			"status": "ok"
+		}`, string(expectedRuleErrorKeyStr)),
 	})
 }
 
@@ -1227,63 +1191,26 @@ func TestHTTPServer_DeleteRuleErrorKey(t *testing.T) {
 		}`,
 	})
 
+	expectedRuleErrorKeyStr, err := json.Marshal(testdata.RuleErrorKey1)
+	helpers.FailOnError(t, err)
+
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.RuleErrorKeyEndpoint,
-		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
-		Body: fmt.Sprintf(`{
-			"error_key": "%v",
-			"rule_module": "%v",
-			"condition": "%v",
-			"description": "%v",
-			"impact": %v,
-			"likelihood": %v,
-			"publish_date": "%v",
-			"active": %v,
-			"generic": "%v"
-		}`,
-			"ek",
-			"module",
-			"",
-			"",
-			1,
-			2,
-			testdata.LastCheckedAt.Format(time.RFC3339),
-			true,
-			"",
-		),
+		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.RuleErrorKey1.ErrorKey},
+		Body:         string(expectedRuleErrorKeyStr),
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
-		Body: `{
+		Body: fmt.Sprintf(`{
 			"status": "ok",
-			"rule_error_key": ` + fmt.Sprintf(`{
-				"error_key": "%v",
-				"rule_module": "%v",
-				"condition": "%v",
-				"description": "%v",
-				"impact": %v,
-				"likelihood": %v,
-				"publish_date": "%v",
-				"active": %v,
-				"generic": "%v"
-			}`,
-			"ek",
-			testdata.Rule1ID,
-			"",
-			"",
-			1,
-			2,
-			testdata.LastCheckedAt.Format(time.RFC3339),
-			true,
-			"",
-		) + `
-		}`,
+			"rule_error_key": %v
+		}`, string(expectedRuleErrorKeyStr)),
 	})
 
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
 		Endpoint:     server.RuleErrorKeyEndpoint,
-		EndpointArgs: []interface{}{testdata.Rule1ID, "ek"},
+		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.RuleErrorKey1.ErrorKey},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -1326,5 +1253,66 @@ func TestHTTPServer_getRuleGroupsWrongUrl(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
+	})
+}
+
+func TestHttpServer_GetRule(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.CreateRule(testdata.Rule1)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRuleErrorKey(testdata.RuleErrorKey1)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRule(testdata.Rule2)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRuleErrorKey(testdata.RuleErrorKey2)
+	helpers.FailOnError(t, err)
+
+	expectedRuleStr, err := json.MarshalIndent(testdata.RuleWithContent1, "", "\t")
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1.Module, testdata.RuleErrorKey1.ErrorKey},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: fmt.Sprintf(`{
+			"rule": %v,
+			"status":"ok"
+		}`, string(expectedRuleStr)),
+	})
+
+	expectedRuleStr, err = json.MarshalIndent(testdata.RuleWithContent2, "", "\t")
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule2.Module, testdata.RuleErrorKey2.ErrorKey},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: fmt.Sprintf(`{
+			"rule": %v,
+			"status":"ok"
+		}`, string(expectedRuleStr)),
+	})
+}
+
+func TestHttpServer_GetRule_DBError(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1.Module, testdata.RuleErrorKey1.ErrorKey},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status":"Internal Server Error"}`,
 	})
 }

@@ -3,7 +3,8 @@
   "info": {
     "title": "Insights Results Aggregator",
     "description": "Aggregation service for the results of running Insights rules.",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "contact": {}
   },
   "paths": {
     "/openapi.json": {
@@ -44,7 +45,8 @@
               }
             }
           }
-        }
+        },
+        "parameters": []
       }
     },
     "/metrics": {
@@ -118,7 +120,8 @@
         },
         "tags": [
           "debug"
-        ]
+        ],
+        "parameters": []
       }
     },
     "/organizations/{orgId}/clusters": {
@@ -780,6 +783,39 @@
           "rule",
           "debug"
         ]
+      },
+      "get": {
+        "summary": "getRule returns rule with content for provided rule ID and rule error key",
+        "description": "",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getRule",
+        "responses": {
+          "default": {
+            "description": "Default response"
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
       }
     },
     "/clusters/{clusterId}/rules/{ruleId}/disable": {
@@ -882,6 +918,12 @@
         ]
       }
     }
+  },
+  "security": [],
+  "servers": [],
+  "components": {
+    "links": {},
+    "callbacks": {},
+    "schemas": {}
   }
 }
-

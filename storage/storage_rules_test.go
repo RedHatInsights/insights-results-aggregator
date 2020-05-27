@@ -1120,3 +1120,36 @@ func TestDBStorageGetVotes(t *testing.T) {
 	assert.Equal(t, types.UserVoteDislike, feedbacks[testdata.Rule2ID])
 	assert.Equal(t, types.UserVoteNone, feedbacks[testdata.Rule3ID])
 }
+
+func TestDBStorage_GetRuleWithContent(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.CreateRule(testdata.Rule1)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRuleErrorKey(testdata.RuleErrorKey1)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRule(testdata.Rule2)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.CreateRuleErrorKey(testdata.RuleErrorKey2)
+	helpers.FailOnError(t, err)
+
+	ruleWithContent, err := mockStorage.GetRuleWithContent(testdata.Rule1ID, testdata.RuleErrorKey1.ErrorKey)
+	helpers.FailOnError(t, err)
+
+	// ignore date
+	ruleWithContent.PublishDate = testdata.RuleWithContent1.PublishDate
+
+	assert.Equal(t, testdata.RuleWithContent1, *ruleWithContent)
+
+	ruleWithContent, err = mockStorage.GetRuleWithContent(testdata.Rule2ID, testdata.RuleErrorKey2.ErrorKey)
+	helpers.FailOnError(t, err)
+
+	// ignore date
+	ruleWithContent.PublishDate = testdata.RuleWithContent1.PublishDate
+
+	assert.Equal(t, testdata.RuleWithContent2, *ruleWithContent)
+}
