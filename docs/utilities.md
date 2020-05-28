@@ -19,6 +19,8 @@ optional arguments:
   -h, --help     show this help message and exit
   -v, --verbose  make it verbose
   -n, --no-colors  disable color output
+  -d DIRECTORY, --directory DIRECTORY
+                        directory with JSON files to check
 ```
 
 Please note that other utilities and tools have in available in separate repository
