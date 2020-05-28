@@ -26,12 +26,12 @@ def read_control_code(operation):
     return popen("tput " + operation, "r").readline()
 
 
-def check_jsons(verbose):
+def check_jsons(verbose, directory):
     """Check all JSON files found in current directory and all subdirectories."""
     passes = 0
     failures = 0
 
-    files = list(Path(".").rglob("*.json"))
+    files = list(Path(directory).rglob("*.json"))
 
     for file in files:
         try:
@@ -77,9 +77,12 @@ def main():
                         action="store_true", default=None)
     parser.add_argument("-n", "--no-colors", dest="nocolors", help="disable color output",
                         action="store_true", default=None)
+    parser.add_argument("-d", "--directory", dest="directory",
+                        help="directory with JSON files to check",
+                        action="store", default=".")
     args = parser.parse_args()
 
-    passes, failures = check_jsons(args.verbose)
+    passes, failures = check_jsons(args.verbose, args.directory)
     display_report(passes, failures, args.nocolors)
 
     if failures > 0:
