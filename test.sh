@@ -16,13 +16,13 @@
 COLORS_RED='\033[0;31m'
 COLORS_RESET='\033[0m'
 LOG_LEVEL="fatal"
-VERBOSE=false
+VERBOSE_OUTPUT=false
 NO_SERVICE=false
 
-if [[ $* == *verbose* ]]; then
+if [[ $* == *verbose* ]] || [[ -n "${VERBOSE}" ]]; then
     # print all possible logs
     LOG_LEVEL=""
-    VERBOSE=true
+    VERBOSE_OUTPUT=true
 fi
 
 if [[ $* == *no-service* ]]; then
@@ -134,7 +134,7 @@ function test_rest_api() {
     OUTPUT=$(./rest-api-tests 2>&1)
     EXIT_CODE=$?
 
-    if [ "$VERBOSE" = true ]; then
+    if [ "$VERBOSE_OUTPUT" = true ]; then
         echo "$OUTPUT"
     else
         echo "$OUTPUT" | grep -v -E "^Pass "
