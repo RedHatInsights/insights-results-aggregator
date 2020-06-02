@@ -94,12 +94,7 @@ license:
 	GO111MODULE=off go get -u github.com/google/addlicense && \
 		addlicense -c "Red Hat, Inc" -l "apache" -v ./
 
-before_commit: style ## Checks done before commit
-	./unit-tests.sh
-	./unit-tests.sh postgres
-	make integration_tests
-	make openapi-check
-	make license
+before_commit: style test test-postgres integration_tests openapi-check license ## Checks done before commit
 	./check_coverage.sh
 
 help: ## Show this help screen
