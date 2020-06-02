@@ -92,7 +92,7 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 
 	var version Version = 0
 	err = db.QueryRow("SELECT version FROM migration_info;").Scan(&version)
-	err = types.ConvertDBError(err)
+	err = types.ConvertDBError(err, nil)
 
 	return version, err
 }
@@ -151,7 +151,7 @@ func execStepsInTx(db *sql.DB, dbDriver types.DBDriver, currentVer, targetVer Ve
 		// Upgrade to target version.
 		for currentVer < targetVer {
 			if err := migrations[currentVer].StepUp(tx, dbDriver); err != nil {
-				err = types.ConvertDBError(err)
+				err = types.ConvertDBError(err, nil)
 				return err
 			}
 			currentVer++
@@ -160,7 +160,7 @@ func execStepsInTx(db *sql.DB, dbDriver types.DBDriver, currentVer, targetVer Ve
 		// Downgrade to target version.
 		for currentVer > targetVer {
 			if err := migrations[currentVer-1].StepDown(tx, dbDriver); err != nil {
-				err = types.ConvertDBError(err)
+				err = types.ConvertDBError(err, nil)
 				return err
 			}
 			currentVer--
@@ -189,6 +189,6 @@ func validateNumberOfRows(db *sql.DB) error {
 func getNumberOfRows(db *sql.DB) (uint, error) {
 	var count uint
 	err := db.QueryRow("SELECT COUNT(*) FROM migration_info;").Scan(&count)
-	err = types.ConvertDBError(err)
+	err = types.ConvertDBError(err, nil)
 	return count, err
 }
