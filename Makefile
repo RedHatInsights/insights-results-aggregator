@@ -1,6 +1,10 @@
+SHELL := /bin/bash
+
 .PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test test-postgres cover integration_tests rest_api_tests rules_content sqlite_db license before_commit help
 
 SOURCES:=$(shell find . -name '*.go')
+
+VERBOSE = ""
 
 default: build
 
@@ -39,15 +43,15 @@ errcheck: ## Run errcheck
 
 goconst: ## Run goconst checker
 	@echo "Running goconst checker"
-	./goconst.sh
+	./goconst.sh ${VERBOSE}
 
 gosec: ## Run gosec checker
 	@echo "Running gosec checker"
-	./gosec.sh
+	./gosec.sh ${VERBOSE}
 
 abcgo: ## Run ABC metrics checker
 	@echo "Run ABC metrics checker"
-	./abcgo.sh
+	./abcgo.sh ${VERBOSE}
 
 json-check: ## Check all JSONs for basic syntax
 	@echo "Run JSON checker"
@@ -92,8 +96,9 @@ license:
 	GO111MODULE=off go get -u github.com/google/addlicense && \
 		addlicense -c "Red Hat, Inc" -l "apache" -v ./
 
-before_commit: style test integration_tests openapi-check license
-	./check_coverage.sh
+before_commit: export VERBOSE := "verbose"
+before_commit: style test integration_tests openapi-check license ## Checks done before commit
+	./check_coverage.sh ${VERBOSE}
 
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'
