@@ -38,12 +38,13 @@ type LoggingConfiguration struct {
 
 // CloudWatchConfiguration represents configuration of CloudWatch logger
 type CloudWatchConfiguration struct {
-	AWSAccessID     string `mapstructure:"aws_access_id" toml:"aws_access_id"`
-	AWSSecretKey    string `mapstructure:"aws_secret_key" toml:"aws_secret_key"`
-	AWSSessionToken string `mapstructure:"aws_session_token" toml:"aws_session_token"`
-	AWSRegion       string `mapstructure:"aws_region" toml:"aws_region"`
-	LogGroup        string `mapstructure:"log_group" toml:"log_group"`
-	StreamName      string `mapstructure:"stream_name" toml:"stream_name"`
+	AWSAccessID             string `mapstructure:"aws_access_id" toml:"aws_access_id"`
+	AWSSecretKey            string `mapstructure:"aws_secret_key" toml:"aws_secret_key"`
+	AWSSessionToken         string `mapstructure:"aws_session_token" toml:"aws_session_token"`
+	AWSRegion               string `mapstructure:"aws_region" toml:"aws_region"`
+	LogGroup                string `mapstructure:"log_group" toml:"log_group"`
+	StreamName              string `mapstructure:"stream_name" toml:"stream_name"`
+	CreateStreamIfNotExists bool   `mapstructure:"create_stream_if_not_exists" toml:"create_stream_if_not_exists"`
 
 	// enable debug logs for debugging aws client itself
 	Debug bool `mapstructure:"debug" toml:"debug"`

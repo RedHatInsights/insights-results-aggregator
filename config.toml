@@ -42,3 +42,4 @@ aws_region = "us-east-1"
 log_group = "platform-dev"
 stream_name = "insights-results-aggregator"
 debug = false
+create_stream_if_not_exists = false

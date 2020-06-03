@@ -118,11 +118,19 @@ func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConf
 			WithLogLevel(awsLogLevel)
 
 		cloudWatchSession := session.Must(session.NewSession(awsConf))
-		group := cloudwatch.NewGroup(cloudWatchConf.LogGroup, cloudwatchlogs.New(cloudWatchSession))
+		cloudWatchClient := cloudwatchlogs.New(cloudWatchSession)
 
-		cloudWatchWriter, err := group.Create(cloudWatchConf.StreamName)
-		if err != nil {
-			return err
+		var cloudWatchWriter io.Writer
+		if cloudWatchConf.CreateStreamIfNotExists {
+			group := cloudwatch.NewGroup(cloudWatchConf.LogGroup, cloudWatchClient)
+
+			var err error
+			cloudWatchWriter, err = group.Create(cloudWatchConf.StreamName)
+			if err != nil {
+				return err
+			}
+		} else {
+			cloudWatchWriter = cloudwatch.NewWriter(cloudWatchConf.LogGroup, cloudWatchConf.StreamName, cloudWatchClient)
 		}
 
 		writers = append(writers, &UnJSONWriter{Writer: cloudWatchWriter})
