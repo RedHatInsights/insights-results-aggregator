@@ -107,3 +107,27 @@ only in devel environment. In production, `true` is used every time.
 
 Please note that if `auth` configuration option is turned off, not all REST API endpoints will be
 usable. Whole REST API schema is satisfied only for `auth = true`.
+
+## CloudWatch configuration
+
+CloudWatch configuration is in section `[cloudwatch]` in config file
+
+```toml
+[cloudwatch]
+aws_access_id = "a key id"
+aws_secret_key = "tshhhh it is a secret"
+aws_session_token = ""
+aws_region = "us-east-1"
+log_group = "platform-dev"
+stream_name = "insights-results-aggregator"
+debug = false
+```
+
+* `aws_access_id` is an aws access id
+* `aws_secret_key` is an aws secret key
+* `aws_session_token` is an aws session token
+* `aws_region` is an aws region
+* `log_group` is a log group for aws logging
+* `stream_name` is a stream name for aws logging. If you're deploying multiple pods,
+you can add `$HOSTNAME` to the stream name so that they aren't writing to the same stream at once
+* `debug` is an option to enable debug output of cloudwatch logging

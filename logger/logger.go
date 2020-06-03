@@ -101,6 +101,8 @@ func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConf
 		writers = append(writers, os.Stdout)
 	}
 
+	cloudWatchConf.StreamName = strings.ReplaceAll(cloudWatchConf.StreamName, "$HOSTNAME", os.Getenv("HOSTNAME"))
+
 	if loggingConf.LoggingToCloudWatchEnabled {
 		awsLogLevel := aws.LogOff
 		if cloudWatchConf.Debug {
