@@ -19,6 +19,7 @@ from json import load
 from sys import exit
 from os import popen
 from argparse import ArgumentParser
+import os
 
 
 def read_control_code(operation):
@@ -82,7 +83,9 @@ def main():
                         action="store", default=".")
     args = parser.parse_args()
 
-    passes, failures = check_jsons(args.verbose, args.directory)
+    verbose = args.verbose or "VERBOSE" in os.environ
+
+    passes, failures = check_jsons(verbose, args.directory)
     display_report(passes, failures, args.nocolors)
 
     if failures > 0:

@@ -17,9 +17,11 @@ limitations under the License.
 package types
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
@@ -78,9 +80,22 @@ func (err *ForeignKeyError) Error() string {
 }
 
 // ConvertDBError converts sql errors to those defined in this package
-func ConvertDBError(err error) error {
+func ConvertDBError(err error, itemID interface{}) error {
 	if err == nil {
 		return nil
+	}
+
+	if err == sql.ErrNoRows {
+		if itemIDArray, ok := itemID.([]interface{}); ok {
+			var strArray []string
+			for _, item := range itemIDArray {
+				strArray = append(strArray, fmt.Sprint(item))
+			}
+
+			itemID = strings.Join(strArray, "/")
+		}
+
+		return &ItemNotFoundError{ItemID: itemID}
 	}
 
 	err = convertPostgresError(err)

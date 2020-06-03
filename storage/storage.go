@@ -274,7 +274,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 	orgs := make([]types.OrgID, 0)
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id;")
-	err = types.ConvertDBError(err)
+	err = types.ConvertDBError(err, nil)
 	if err != nil {
 		return orgs, err
 	}
@@ -298,7 +298,7 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.Cluste
 	clusters := make([]types.ClusterName, 0)
 
 	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster;", orgID)
-	err = types.ConvertDBError(err)
+	err = types.ConvertDBError(err, orgID)
 	if err != nil {
 		return clusters, err
 	}
@@ -340,18 +340,9 @@ func (storage DBStorage) ReadReportForCluster(
 	err := storage.connection.QueryRow(
 		"SELECT report, last_checked_at FROM report WHERE org_id = $1 AND cluster = $2;", orgID, clusterName,
 	).Scan(&report, &lastChecked)
-	err = types.ConvertDBError(err)
+	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 
-	switch {
-	case err == sql.ErrNoRows:
-		return "", "", &types.ItemNotFoundError{
-			ItemID: fmt.Sprintf("%v/%v", orgID, clusterName),
-		}
-	case err != nil:
-		return "", "", err
-	}
-
-	return types.ClusterReport(report), types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), nil
+	return types.ClusterReport(report), types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), err
 }
 
 // ReadReportForClusterByClusterName reads result (health status) for selected cluster for given organization
@@ -571,7 +562,7 @@ func (storage DBStorage) WriteReportForCluster(
 	rows, err := tx.Query(
 		"SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3;",
 		orgID, clusterName, lastCheckedTime)
-	err = types.ConvertDBError(err)
+	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to look up the most recent report in database")
 		_ = tx.Rollback()
@@ -605,7 +596,7 @@ func (storage DBStorage) WriteReportForCluster(
 func (storage DBStorage) ReportsCount() (int, error) {
 	count := -1
 	err := storage.connection.QueryRow("SELECT count(*) FROM report;").Scan(&count)
-	err = types.ConvertDBError(err)
+	err = types.ConvertDBError(err, nil)
 
 	return count, err
 }

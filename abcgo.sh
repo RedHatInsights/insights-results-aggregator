@@ -20,15 +20,15 @@ RED_BG=$(tput setab 1)
 GREEN_BG=$(tput setab 2)
 NC=$(tput sgr0) # No Color
 
-VERBOSE=false
+VERBOSE_OUTPUT=false
 
-if [[ $* == *verbose* ]]; then
-    VERBOSE=true
+if [[ $* == *verbose* ]] || [[ -n "${VERBOSE}" ]]; then
+    VERBOSE_OUTPUT=true
 fi
 
 GO111MODULE=off go get -u github.com/droptheplot/abcgo
 
-if [ "$VERBOSE" = true ]; then
+if [ "$VERBOSE_OUTPUT" = true ]; then
     echo -e "${BLUE}All ABC metrics${NC}:"
     abcgo -path .
     echo -e "${BLUE}Functions with ABC metrics greater than ${threshold}${NC}:"

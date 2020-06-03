@@ -24,7 +24,7 @@ function run_unit_tests() {
     fi
 }
 
-if [ -z "$STORAGE" ] && command -v sqlite > /dev/null 2>&1; then
+if [ -z "$STORAGE" ] ; then
     # tests with sqlite
     echo "running unit tests with sqlite in memory"
     # shellcheck disable=SC2034

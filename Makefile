@@ -4,8 +4,6 @@ SHELL := /bin/bash
 
 SOURCES:=$(shell find . -name '*.go')
 
-VERBOSE = ""
-
 default: build
 
 clean: ## Run go clean
@@ -96,9 +94,8 @@ license:
 	GO111MODULE=off go get -u github.com/google/addlicense && \
 		addlicense -c "Red Hat, Inc" -l "apache" -v ./
 
-before_commit: export VERBOSE := "verbose"
-before_commit: style test integration_tests openapi-check license ## Checks done before commit
-	./check_coverage.sh ${VERBOSE}
+before_commit: style test test-postgres integration_tests openapi-check license ## Checks done before commit
+	./check_coverage.sh
 
 help: ## Show this help screen
 	@echo 'Usage: make <OPTIONS> ... <TARGETS>'

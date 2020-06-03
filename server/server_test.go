@@ -1316,3 +1316,21 @@ func TestHttpServer_GetRule_DBError(t *testing.T) {
 		Body:       `{"status":"Internal Server Error"}`,
 	})
 }
+
+func TestHttpServer_GetRule_NotFound(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleErrorKeyEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1.Module, testdata.RuleErrorKey1.ErrorKey},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusNotFound,
+		Body: fmt.Sprintf(
+			`{"status":"Item with ID %v/%v was not found in the storage"}`,
+			testdata.Rule1.Module,
+			testdata.RuleErrorKey1.ErrorKey,
+		),
+	})
+}

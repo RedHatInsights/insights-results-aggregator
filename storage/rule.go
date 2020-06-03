@@ -14,7 +14,9 @@
 
 package storage
 
-import "github.com/RedHatInsights/insights-results-aggregator/types"
+import (
+	"github.com/RedHatInsights/insights-results-aggregator/types"
+)
 
 // GetRuleWithContent returns rule with content for provided ruleID and ruleErrorKey
 func (storage DBStorage) GetRuleWithContent(ruleID types.RuleID, ruleErrorKey types.ErrorKey) (*types.RuleWithContent, error) {
@@ -61,7 +63,7 @@ func (storage DBStorage) GetRuleWithContent(ruleID types.RuleID, ruleErrorKey ty
 		&result.Generic,
 		&tags,
 	)
-	err = types.ConvertDBError(err)
+	err = types.ConvertDBError(err, []interface{}{ruleID, ruleErrorKey})
 	if err != nil {
 		return nil, err
 	}
