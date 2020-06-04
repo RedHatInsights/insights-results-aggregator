@@ -244,7 +244,7 @@ func TestServerStart(t *testing.T) {
 			req, err := http.NewRequest(http.MethodGet, config.APIPrefix, nil)
 			helpers.FailOnError(t, err)
 
-			response := helpers.ExecuteRequest(s, req, &config).Result()
+			response := helpers.ExecuteRequest(s, req).Result()
 			checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 
 			// stopping the server
@@ -553,7 +553,7 @@ func TestRuleFeedbackErrorBadUserID(t *testing.T) {
 	identity := "wrong type"
 	req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
 
-	response := helpers.ExecuteRequest(testServer, req, &config).Result()
+	response := helpers.ExecuteRequest(testServer, req).Result()
 
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode, "Expected different status code")
 	helpers.CheckResponseBodyJSON(t, `{"status": "Internal Server Error"}`, response.Body)

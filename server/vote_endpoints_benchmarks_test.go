@@ -119,7 +119,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					}
 					req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
 
-					response := helpers.ExecuteRequest(testServer, req, &helpers.DefaultServerConfig).Result()
+					response := helpers.ExecuteRequest(testServer, req).Result()
 
 					assert.Equal(b, http.StatusOK, response.StatusCode)
 				}

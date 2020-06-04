@@ -104,7 +104,7 @@ func benchmarkHTTPServerReadReportForCluster(
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			helpers.FailOnError(b, err)
 
-			response := helpers.ExecuteRequest(testServer, req, &helpers.DefaultServerConfig).Result()
+			response := helpers.ExecuteRequest(testServer, req).Result()
 			respBody, err := ioutil.ReadAll(response.Body)
 			helpers.FailOnError(b, err)
 
