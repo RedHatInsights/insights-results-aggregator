@@ -99,7 +99,7 @@ func AssertAPIRequest(
 
 	req := makeRequest(t, request, url)
 
-	response := ExecuteRequest(testServer, req, serverConfig).Result()
+	response := ExecuteRequest(testServer, req).Result()
 
 	if len(expectedResponse.Headers) != 0 {
 		checkResponseHeaders(t, expectedResponse.Headers, response.Header)
@@ -141,8 +141,8 @@ func makeRequest(t testing.TB, request *APIRequest, url string) *http.Request {
 }
 
 // ExecuteRequest executes http request on a testServer
-func ExecuteRequest(testServer *server.HTTPServer, req *http.Request, config *server.Configuration) *httptest.ResponseRecorder {
-	router := testServer.Initialize(config.Address)
+func ExecuteRequest(testServer *server.HTTPServer, req *http.Request) *httptest.ResponseRecorder {
+	router := testServer.Initialize()
 
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
