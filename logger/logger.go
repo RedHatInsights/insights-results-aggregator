@@ -89,10 +89,14 @@ func (writer UnJSONWriter) Write(bytes []byte) (int, error) {
 }
 
 // InitZerolog initializes zerolog with provided configs to use proper stdout and/or CloudWatch logging
-func InitZerolog(loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConfiguration) error {
+func InitZerolog(
+	loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConfiguration, additionalWriters ...io.Writer,
+) error {
 	setGlobalLogLevel(loggingConf)
 
 	var writers []io.Writer
+
+	writers = append(writers, additionalWriters...)
 
 	if loggingConf.Debug {
 		// nice colored output
@@ -176,12 +180,12 @@ func (logger *SaramaZerologger) Print(params ...interface{}) {
 		messages = append(messages, fmt.Sprint(item))
 	}
 
-	logger.constructError().Msg(strings.Join(messages, " "))
+	logger.logMessage("%v", strings.Join(messages, " "))
 }
 
 // Printf wraps printf method
 func (logger *SaramaZerologger) Printf(format string, params ...interface{}) {
-	logger.constructError().Msgf(format, params...)
+	logger.logMessage(format, params...)
 }
 
 // Println wraps println method
@@ -189,6 +193,16 @@ func (logger *SaramaZerologger) Println(v ...interface{}) {
 	logger.Print(v...)
 }
 
-func (logger *SaramaZerologger) constructError() *zerolog.Event {
-	return logger.zerologger.Info().Str("package", "sarama")
+func (logger *SaramaZerologger) logMessage(format string, params ...interface{}) {
+	var event *zerolog.Event
+	messageStr := fmt.Sprintf(format, params...)
+
+	if strings.HasPrefix(messageStr, "kafka: error") {
+		event = logger.zerologger.Error()
+	} else {
+		event = logger.zerologger.Info()
+	}
+
+	event = event.Str("package", "sarama")
+	event.Msg(messageStr)
 }
