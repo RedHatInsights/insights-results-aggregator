@@ -69,7 +69,6 @@ var DefaultServerConfig = server.Configuration{
 	APISpecFile: "openapi.json",
 	Debug:       true,
 	Auth:        false,
-	UseHTTPS:    false,
 	EnableCORS:  true,
 }
 
