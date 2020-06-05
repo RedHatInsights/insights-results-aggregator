@@ -15,7 +15,6 @@ debug = true
 auth = true
 auth_type = "xrh"
 use_https = false
-enable_cors = true
 content_service_url = "http://localhost:8081/api/v1/"
 
 [processing]

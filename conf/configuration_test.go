@@ -215,7 +215,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		api_spec_file = "openapi.json"
 		debug = true
 		use_https = false
-		enable_cors = true
 		content_service_url = "http://localhost:8081/api/v1/"
 
 		[storage]
@@ -253,7 +252,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		AuthType:          "xrh",
 		Debug:             true,
 		UseHTTPS:          false,
-		EnableCORS:        true,
 		ContentServiceURL: "http://localhost:8081/api/v1/",
 	}, conf.GetServerConfiguration())
 
@@ -325,7 +323,6 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		AuthType:          "xrh",
 		Debug:             true,
 		UseHTTPS:          false,
-		EnableCORS:        true,
 		ContentServiceURL: "http://localhost:8081/api/v1/",
 	}, conf.GetServerConfiguration())
 

@@ -293,18 +293,6 @@ func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *h
 	http.ServeFile(writer, request, absPath)
 }
 
-// addCORSHeaders - middleware for adding headers that should be in any response
-func (server *HTTPServer) addCORSHeaders(nextHandler http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-			w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			nextHandler.ServeHTTP(w, r)
-		})
-}
-
 // handleOptionsMethod - middleware for handling OPTIONS method
 func (server *HTTPServer) handleOptionsMethod(nextHandler http.Handler) http.Handler {
 	return http.HandlerFunc(
@@ -342,11 +330,6 @@ func (server *HTTPServer) Initialize() http.Handler {
 			openAPIURL + "?", // to be able to test using Frisby
 		}
 		router.Use(func(next http.Handler) http.Handler { return server.Authentication(next, noAuthURLs) })
-	}
-
-	if server.Config.EnableCORS {
-		router.Use(server.addCORSHeaders)
-		router.Use(server.handleOptionsMethod)
 	}
 
 	server.addEndpointsToRouter(router)

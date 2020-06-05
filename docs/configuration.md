@@ -88,7 +88,6 @@ debug = true
 auth = true
 auth_type = "xrh"
 use_https = true
-enable_cors = true
 ```
 
 * `address` is host and port which server should listen to
@@ -102,8 +101,6 @@ in devel environment. In production, `true` is used every time.
 `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
 * `use_https` is option to turn on TLS server. Please note that this option can be set to `false`
 only in devel environment. In production, `true` is used every time.
-* `enable_cors` is option to turn on CORS header, that allows to connect from different hosts
-(**don't use it in production**)
 
 Please note that if `auth` configuration option is turned off, not all REST API endpoints will be
 usable. Whole REST API schema is satisfied only for `auth = true`.

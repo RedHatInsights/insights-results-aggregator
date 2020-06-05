@@ -70,7 +70,6 @@ var DefaultServerConfig = server.Configuration{
 	Debug:       true,
 	Auth:        false,
 	UseHTTPS:    false,
-	EnableCORS:  true,
 }
 
 // AssertAPIRequest creates new server with provided mockStorage
