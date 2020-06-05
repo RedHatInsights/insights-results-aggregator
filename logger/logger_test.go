@@ -29,7 +29,7 @@ import (
 )
 
 func TestSaramaZerologger(t *testing.T) {
-	const expectedErrStrInfoLevel = "some random error message"
+	const expectedErrStrInfoLevel = "some random message"
 	const expectedErrStrErrorLevel = "kafka: error test error"
 
 	buf := new(bytes.Buffer)
