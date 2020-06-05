@@ -29,7 +29,7 @@ import (
 )
 
 func TestSaramaZerologger(t *testing.T) {
-	const expectedErrStrInfoLevel = "some random message"
+	const expectedStrInfoLevel = "some random message"
 	const expectedErrStrErrorLevel = "kafka: error test error"
 
 	buf := new(bytes.Buffer)
@@ -48,10 +48,10 @@ func TestSaramaZerologger(t *testing.T) {
 	t.Run("InfoLevel", func(t *testing.T) {
 		buf.Reset()
 
-		sarama.Logger.Printf(expectedErrStrInfoLevel)
+		sarama.Logger.Printf(expectedStrInfoLevel)
 
 		assert.Contains(t, buf.String(), `\"level\":\"info\"`)
-		assert.Contains(t, buf.String(), expectedErrStrInfoLevel)
+		assert.Contains(t, buf.String(), expectedStrInfoLevel)
 	})
 
 	t.Run("ErrorLevel", func(t *testing.T) {
