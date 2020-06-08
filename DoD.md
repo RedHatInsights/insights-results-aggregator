@@ -1,8 +1,11 @@
-## A deliverable is to be considered “done” when:
+# Definition of Done
+
+## A deliverable is to be considered “done” when
 
 1. The feature/bug fix implemented - code is complete, documented and checked in
 1. Pull request/commit includes bug number or JIRA number
 1. Unit tests written and running cleanly in the CI environment [1]
+1. All linters are running cleanly in the CI environment
 1. Failing CI blocks release/merge
 1. Integration tests written and running cleanly in the CI environment
 1. Code changes reviewed by at least two peers
