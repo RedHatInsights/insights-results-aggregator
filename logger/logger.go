@@ -169,6 +169,8 @@ func setGlobalLogLevel(configuration LoggingConfiguration) {
 	}
 }
 
+const kafkaErrorPrefix = "kafka: error"
+
 // SaramaZerologger is a wrapper to make sarama log to zerolog
 // those logs can be filtered by key "package" with value "sarama"
 type SaramaZerologger struct{ zerologger zerolog.Logger }
@@ -197,7 +199,7 @@ func (logger *SaramaZerologger) logMessage(format string, params ...interface{})
 	var event *zerolog.Event
 	messageStr := fmt.Sprintf(format, params...)
 
-	if strings.HasPrefix(messageStr, "kafka: error") {
+	if strings.HasPrefix(messageStr, kafkaErrorPrefix) {
 		event = logger.zerologger.Error()
 	} else {
 		event = logger.zerologger.Info()
