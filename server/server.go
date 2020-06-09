@@ -360,15 +360,10 @@ func (server *HTTPServer) Start() error {
 	log.Info().Msgf("Starting HTTP server at '%s'", address)
 	router := server.Initialize()
 	server.Serv = &http.Server{Addr: address, Handler: router}
-	var err error
 
-	if server.Config.UseHTTPS {
-		err = server.Serv.ListenAndServeTLS("server.crt", "server.key")
-	} else {
-		err = server.Serv.ListenAndServe()
-	}
+	err := server.Serv.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		log.Error().Err(err).Msg("Unable to start HTTP/S server")
+		log.Error().Err(err).Msg("Unable to start HTTP server")
 		return err
 	}
 

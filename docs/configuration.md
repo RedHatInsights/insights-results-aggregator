@@ -87,7 +87,6 @@ api_spec_file = "openapi.json"
 debug = true
 auth = true
 auth_type = "xrh"
-use_https = true
 enable_cors = true
 ```
 
@@ -100,8 +99,6 @@ production, `false` is used every time.
 in devel environment. In production, `true` is used every time.
 * `auth_type` set type of auth, it means which header to use for auth `x-rh-identity` or
 `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
-* `use_https` is option to turn on TLS server. Please note that this option can be set to `false`
-only in devel environment. In production, `true` is used every time.
 * `enable_cors` is option to turn on CORS header, that allows to connect from different hosts
 (**don't use it in production**)
 
