@@ -17,6 +17,7 @@ limitations under the License.
 package tests
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -314,44 +315,137 @@ func checkResetUnknownRuleForImproperCluster() {
 		constructURLResetVoteForRule, checkInvalidUUIDFormatPut)
 }
 
-// checkUserVoteForKnownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and known cluster
-func checkUserVoteForKnownCluster() {
+// checkGetUserVoteForKnownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and known cluster
+func checkGetUserVoteForKnownCluster() {
 	testRuleVoteAPIendpoint(knownClustersForOrganization1, knownRules,
 		"Test whether 'get_vote' REST API endpoint works correctly for known rule and known cluster",
 		constructURLGetVoteForRule, checkOkStatusGetVote)
 }
 
-// checkUserVoteForUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and unknown cluster
-func checkUserVoteForUnknownCluster() {
+// checkGetUserVoteForUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and unknown cluster
+func checkGetUserVoteForUnknownCluster() {
 	testRuleVoteAPIendpoint(unknownClusters, knownRules,
 		"Test whether 'get_vote' REST API endpoint works correctly for known rule and unknown cluster",
 		constructURLGetVoteForRule, checkItemNotFoundGet)
 }
 
-// checkUserVoteForImproperCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and improper cluster
-func checkUserVoteForImproperCluster() {
+// checkGetUserVoteForImproperCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and improper cluster
+func checkGetUserVoteForImproperCluster() {
 	testRuleVoteAPIendpoint(improperClusterIDs, knownRules,
 		"Test whether 'get_vote' REST API endpoint works correctly for known rule and improper cluster",
 		constructURLGetVoteForRule, checkInvalidUUIDFormatGet)
 }
 
-// checkUserVoteForUnknownRuleAndKnownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and known cluster
-func checkUserVoteForUnknownRuleAndKnownCluster() {
+// checkGetUserVoteForUnknownRuleAndKnownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and known cluster
+func checkGetUserVoteForUnknownRuleAndKnownCluster() {
 	testRuleVoteAPIendpoint(knownClustersForOrganization1, unknownRules,
 		"Test whether 'get_vote' REST API endpoint works correctly for unknown rule and known cluster",
 		constructURLGetVoteForRule, checkItemNotFoundGet)
 }
 
-// checkUserVoteForUnknownRuleAndUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and unknown cluster
-func checkUserVoteForUnknownRuleAndUnknownCluster() {
+// checkGetUserVoteForUnknownRuleAndUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and unknown cluster
+func checkGetUserVoteForUnknownRuleAndUnknownCluster() {
 	testRuleVoteAPIendpoint(unknownClusters, unknownRules,
 		"Test whether 'get_vote' REST API endpoint works correctly for unknown rule and unknown cluster",
 		constructURLGetVoteForRule, checkItemNotFoundGet)
 }
 
-// checkUserVoteForUnknownRuleAndImproperCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and improper cluster
-func checkUserVoteForUnknownRuleAndImproperCluster() {
+// checkGetUserVoteForUnknownRuleAndImproperCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and improper cluster
+func checkGetUserVoteForUnknownRuleAndImproperCluster() {
 	testRuleVoteAPIendpoint(improperClusterIDs, unknownRules,
 		"Test whether 'get_vote' REST API endpoint works correctly for unknown rule and improper cluster",
 		constructURLGetVoteForRule, checkInvalidUUIDFormatGet)
+}
+
+// RuleVoteResponse represents response containing rule votes
+type RuleVoteResponse struct {
+	RuleVote int    `json:"vote"`
+	Status   string `json:"status"`
+}
+
+func voteForRule(cluster string, rule string) {
+	url := constructURLVoteForRule(cluster, rule)
+	checkOkStatusUserVote(url, "Let's vote")
+}
+
+func unvoteForRule(cluster string, rule string) {
+	url := constructURLUnvoteForRule(cluster, rule)
+	checkOkStatusUserVote(url, "Let's unvote")
+}
+
+func resetVoteForRule(cluster string, rule string) {
+	url := constructURLResetVoteForRule(cluster, rule)
+	checkOkStatusUserVote(url, "Let's reset voting")
+}
+
+func checkVoteForClusterAndRule(cluster string, rule string, expectedVote int) {
+	url := constructURLGetVoteForRule(cluster, rule)
+
+	f := frisby.Create("Read vote for rule").Get(url)
+	r := RuleVoteResponse{}
+	setAuthHeader(f)
+	f.Send()
+	f.ExpectStatus(200)
+
+	text, err := f.Resp.Content()
+	if err != nil {
+		f.AddError(err.Error())
+		return
+	}
+
+	err = json.Unmarshal(text, &r)
+	if err != nil {
+		f.AddError(err.Error())
+		return
+	}
+
+	if r.RuleVote != expectedVote {
+		f.AddError(fmt.Sprintf("Expected vote: %d, actual: %d", expectedVote, r.RuleVote))
+	}
+}
+
+func checkGetUserVoteAfterVote() {
+	cluster := knownClustersForOrganization1[0]
+	rule := knownRules[0]
+
+	checkVoteForClusterAndRule(cluster, rule, 0)
+	voteForRule(cluster, rule)
+	checkVoteForClusterAndRule(cluster, rule, 1)
+	resetVoteForRule(cluster, rule)
+	checkVoteForClusterAndRule(cluster, rule, 0)
+}
+
+func checkGetUserVoteAfterUnvote() {
+	cluster := knownClustersForOrganization1[0]
+	rule := knownRules[1]
+
+	checkVoteForClusterAndRule(cluster, rule, 0)
+	unvoteForRule(cluster, rule)
+	checkVoteForClusterAndRule(cluster, rule, -1)
+	resetVoteForRule(cluster, rule)
+	checkVoteForClusterAndRule(cluster, rule, 0)
+}
+
+func checkGetUserVoteAfterDoubleVote() {
+	cluster := knownClustersForOrganization1[0]
+	rule := knownRules[0]
+
+	checkVoteForClusterAndRule(cluster, rule, 0)
+	voteForRule(cluster, rule)
+	voteForRule(cluster, rule)
+	checkVoteForClusterAndRule(cluster, rule, 1)
+	resetVoteForRule(cluster, rule)
+	checkVoteForClusterAndRule(cluster, rule, 0)
+}
+
+func checkGetUserVoteAfterDoubleUnvote() {
+	cluster := knownClustersForOrganization1[0]
+	rule := knownRules[1]
+
+	checkVoteForClusterAndRule(cluster, rule, 0)
+	unvoteForRule(cluster, rule)
+	unvoteForRule(cluster, rule)
+	checkVoteForClusterAndRule(cluster, rule, -1)
+	resetVoteForRule(cluster, rule)
+	checkVoteForClusterAndRule(cluster, rule, 0)
 }
