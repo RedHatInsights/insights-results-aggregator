@@ -56,9 +56,12 @@ var unknownOrganizations = []int{5, 6, 7, 8}
 // list of improper organization IDs
 var improperOrganizations = []int{-1000, -1, 0}
 
+// user account number
+const accountNumber = "42"
+
 // setAuthHeaderForOrganization set authorization header to request
 func setAuthHeaderForOrganization(f *frisby.Frisby, orgID int) {
-	plainHeader := fmt.Sprintf("{\"identity\": {\"internal\": {\"org_id\": \"%d\"}}}", orgID)
+	plainHeader := fmt.Sprintf("{\"identity\": {\"internal\": {\"org_id\": \"%d\"}, \"account_number\":\"%s\"}}", orgID, accountNumber)
 	encodedHeader := base64.StdEncoding.EncodeToString([]byte(plainHeader))
 	f.SetHeader(authHeaderName, encodedHeader)
 }
