@@ -25,13 +25,14 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -163,7 +164,7 @@ func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 }
 
 func TestDBStorageLoadRuleContentActiveOK(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentActiveOK)
@@ -171,7 +172,7 @@ func TestDBStorageLoadRuleContentActiveOK(t *testing.T) {
 }
 
 func TestDBStorageLoadRuleContentDBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentActiveOK)
@@ -179,7 +180,7 @@ func TestDBStorageLoadRuleContentDBError(t *testing.T) {
 }
 
 func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
@@ -236,8 +237,8 @@ func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
 
 func TestDBStorageLoadRuleContentDeleteDBError(t *testing.T) {
 	const errorStr = "delete error"
-	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
-	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
+	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
 	expects.ExpectBegin()
 	expects.ExpectExec("DELETE FROM rule_error_key").
@@ -249,8 +250,8 @@ func TestDBStorageLoadRuleContentDeleteDBError(t *testing.T) {
 
 func TestDBStorageLoadRuleContentCommitDBError(t *testing.T) {
 	const errorStr = "commit error"
-	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
-	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
+	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
 	expects.ExpectBegin()
 	expects.ExpectExec("DELETE FROM rule_error_key").WillReturnResult(driver.ResultNoRows)
@@ -261,7 +262,7 @@ func TestDBStorageLoadRuleContentCommitDBError(t *testing.T) {
 }
 
 func TestDBStorageLoadRuleContentInactiveOK(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentInactiveOK)
@@ -269,7 +270,7 @@ func TestDBStorageLoadRuleContentInactiveOK(t *testing.T) {
 }
 
 func TestDBStorageLoadRuleContentBadStatus(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentBadStatus)
@@ -277,7 +278,7 @@ func TestDBStorageLoadRuleContentBadStatus(t *testing.T) {
 }
 
 func TestDBStorageGetContentForRulesEmpty(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	res, err := mockStorage.GetContentForRules(
@@ -296,7 +297,7 @@ func TestDBStorageGetContentForRulesEmpty(t *testing.T) {
 }
 
 func TestDBStorageGetContentForRulesDBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
 	_, err := mockStorage.GetContentForRules(
@@ -313,7 +314,7 @@ func TestDBStorageGetContentForRulesDBError(t *testing.T) {
 }
 
 func TestDBStorageGetContentForRulesOK(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.LoadRuleContent(ruleContentExample1)
@@ -354,7 +355,7 @@ func TestDBStorageGetContentForRulesOK(t *testing.T) {
 }
 
 func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
@@ -439,8 +440,8 @@ func TestDBStorageGetContentForRulesScanError(t *testing.T) {
 	buf := new(bytes.Buffer)
 	log.Logger = zerolog.New(buf)
 
-	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
-	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
+	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
 	columns := []string{
 		"error_key",
@@ -491,8 +492,8 @@ func TestDBStorageGetContentForRulesRowsError(t *testing.T) {
 	buf := new(bytes.Buffer)
 	log.Logger = zerolog.New(buf)
 
-	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
-	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
+	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
 	columns := []string{
 		"error_key",
@@ -539,7 +540,7 @@ func TestDBStorageToggleRule(t *testing.T) {
 		storage.RuleToggleDisable, storage.RuleToggleEnable,
 	} {
 		func(state storage.RuleToggle) {
-			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 			defer closer()
 
 			mustWriteReport3Rules(t, mockStorage)
@@ -559,7 +560,7 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 		storage.RuleToggleDisable, storage.RuleToggleEnable,
 	} {
 		func(state storage.RuleToggle) {
-			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 			defer closer()
 
 			mustWriteReport3Rules(t, mockStorage)
@@ -587,7 +588,7 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 }
 
 func TestDBStorageToggleRulesAndList(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -607,7 +608,7 @@ func TestDBStorageToggleRulesAndList(t *testing.T) {
 }
 
 func TestDBStorageDeleteDisabledRule(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -640,7 +641,7 @@ func TestDBStorageVoteOnRule(t *testing.T) {
 		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
 	} {
 		func(vote types.UserVote) {
-			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 			defer closer()
 
 			mustWriteReport3Rules(t, mockStorage)
@@ -668,7 +669,7 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
 	} {
 		func(vote types.UserVote) {
-			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 			defer closer()
 
 			err := mockStorage.VoteOnRule(
@@ -685,7 +686,7 @@ func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
 		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
 	} {
 		func(vote types.UserVote) {
-			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
@@ -703,7 +704,7 @@ func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
 }
 
 func TestDBStorageChangeVote(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -731,7 +732,7 @@ func TestDBStorageChangeVote(t *testing.T) {
 }
 
 func TestDBStorageTextFeedback(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -753,7 +754,7 @@ func TestDBStorageTextFeedback(t *testing.T) {
 }
 
 func TestDBStorageFeedbackChangeMessage(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -781,7 +782,7 @@ func TestDBStorageFeedbackChangeMessage(t *testing.T) {
 }
 
 func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
@@ -791,7 +792,7 @@ func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
 }
 
 func TestDBStorageFeedbackErrorDBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
 	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
@@ -799,7 +800,7 @@ func TestDBStorageFeedbackErrorDBError(t *testing.T) {
 }
 
 func TestDBStorageVoteOnRuleDBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
 	err := mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, types.UserVoteNone)
@@ -811,7 +812,7 @@ func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	mockStorage := storage.NewFromConnection(connection, -1)
-	defer helpers.MustCloseStorage(t, mockStorage)
+	defer ira_helpers.MustCloseStorage(t, mockStorage)
 
 	helpers.FailOnError(t, mockStorage.MigrateToLatest())
 
@@ -823,7 +824,7 @@ func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
 }
 
 func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, false)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
 	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
@@ -881,8 +882,8 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 	buf := new(bytes.Buffer)
 	log.Logger = zerolog.New(buf)
 
-	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
-	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
+	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
 	expects.ExpectPrepare("INSERT").
 		WillBeClosed().
@@ -898,7 +899,7 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 }
 
 func TestDBStorage_CreateRule(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.CreateRule(types.Rule{
@@ -913,7 +914,7 @@ func TestDBStorage_CreateRule(t *testing.T) {
 }
 
 func TestDBStorage_CreateRule_DBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
 	err := mockStorage.CreateRule(types.Rule{
@@ -928,7 +929,7 @@ func TestDBStorage_CreateRule_DBError(t *testing.T) {
 }
 
 func TestDBStorage_CreateRuleErrorKey(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.CreateRule(types.Rule{
@@ -956,7 +957,7 @@ func TestDBStorage_CreateRuleErrorKey(t *testing.T) {
 }
 
 func TestDBStorage_CreateRuleErrorKey_DBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 
 	err := mockStorage.CreateRule(types.Rule{
 		Module:     "module",
@@ -985,7 +986,7 @@ func TestDBStorage_CreateRuleErrorKey_DBError(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRule(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.CreateRule(types.Rule{
@@ -998,7 +999,7 @@ func TestDBStorage_DeleteRule(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRule_NotFound(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.DeleteRule("module")
@@ -1006,7 +1007,7 @@ func TestDBStorage_DeleteRule_NotFound(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRule_DBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
 	err := mockStorage.DeleteRule("module")
@@ -1014,7 +1015,7 @@ func TestDBStorage_DeleteRule_DBError(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRuleErrorKey(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.CreateRule(types.Rule{
@@ -1045,7 +1046,7 @@ func TestDBStorage_DeleteRuleErrorKey(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRuleErrorKey_NotFound(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.DeleteRuleErrorKey("module", "error_key")
@@ -1053,7 +1054,7 @@ func TestDBStorage_DeleteRuleErrorKey_NotFound(t *testing.T) {
 }
 
 func TestDBStorage_DeleteRuleErrorKey_DBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 
 	err := mockStorage.CreateRule(types.Rule{
 		Module:     "module",
@@ -1085,7 +1086,7 @@ func TestDBStorage_DeleteRuleErrorKey_DBError(t *testing.T) {
 }
 
 func TestDBStorageGetVotesForNoRules(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	feedbacks, err := mockStorage.GetUserFeedbackOnRules(
@@ -1097,7 +1098,7 @@ func TestDBStorageGetVotesForNoRules(t *testing.T) {
 }
 
 func TestDBStorageGetVotes(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -1122,7 +1123,7 @@ func TestDBStorageGetVotes(t *testing.T) {
 }
 
 func TestDBStorage_GetRuleWithContent(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.CreateRule(testdata.Rule1)

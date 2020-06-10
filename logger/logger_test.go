@@ -19,13 +19,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/logger"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 func TestSaramaZerologger(t *testing.T) {

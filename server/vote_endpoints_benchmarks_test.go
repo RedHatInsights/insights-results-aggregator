@@ -22,33 +22,34 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func BenchmarkHTTPServer_VoteEndpoints_WithSQLiteMemoryStorage(b *testing.B) {
-	mockStorage, closer := helpers.MustGetMockStorage(b, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(b, true)
 	defer closer()
 
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
 }
 
 func BenchmarkHTTPServer_VoteEndpoints_WithSQLiteFileStorage(b *testing.B) {
-	mockStorage, cleaner := helpers.MustGetSQLiteFileStorage(b, true)
+	mockStorage, cleaner := ira_helpers.MustGetSQLiteFileStorage(b, true)
 	defer cleaner()
 
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
 }
 
 func BenchmarkHTTPServer_VoteEndpoints_WithPostgresStorage(b *testing.B) {
-	mockStorage, cleaner := helpers.MustGetPostgresStorage(b, true)
+	mockStorage, cleaner := ira_helpers.MustGetPostgresStorage(b, true)
 	defer cleaner()
 
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
@@ -63,7 +64,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 	endpointArgs := prepareVoteEndpointArgs(b, numberOfEndpointArgs, mockStorage)
 	defer cleanupEndpointArgs(b, endpointArgs, mockStorage)
 
-	testServer := server.New(helpers.DefaultServerConfig, mockStorage)
+	testServer := server.New(ira_helpers.DefaultServerConfig, mockStorage)
 
 	type TestCase struct {
 		TestName string
@@ -105,7 +106,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					userID := endpointArg.UserID
 
 					url := server.MakeURLToEndpoint(
-						helpers.DefaultServerConfig.APIPrefix,
+						ira_helpers.DefaultServerConfig.APIPrefix,
 						testCase.Endpoint,
 						clusterID, ruleID,
 					)
@@ -119,7 +120,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					}
 					req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
 
-					response := helpers.ExecuteRequest(testServer, req).Result()
+					response := ira_helpers.ExecuteRequest(testServer, req).Result()
 
 					assert.Equal(b, http.StatusOK, response.StatusCode)
 				}
@@ -144,12 +145,12 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 		errorKey := types.ErrorKey("ek")
 		userID := types.UserID(testdata.GetRandomUserID())
 
-		helpers.AssertAPIRequest(tb, mockStorage, nil, &helpers.APIRequest{
+		ira_helpers.AssertAPIRequest(tb, mockStorage, nil, &ira_helpers.APIRequest{
 			Method:       http.MethodPost,
 			Endpoint:     server.RuleEndpoint,
 			EndpointArgs: []interface{}{ruleID},
 			Body:         fmt.Sprintf(`{"rule_module": "%v"}`, ruleID),
-		}, &helpers.APIResponse{
+		}, &ira_helpers.APIResponse{
 			StatusCode: http.StatusOK,
 			Body: fmt.Sprintf(`{
 				"rule": {
@@ -164,12 +165,12 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 			}`, ruleID),
 		})
 
-		helpers.AssertAPIRequest(tb, mockStorage, nil, &helpers.APIRequest{
+		ira_helpers.AssertAPIRequest(tb, mockStorage, nil, &ira_helpers.APIRequest{
 			Method:       http.MethodPost,
 			Endpoint:     server.RuleErrorKeyEndpoint,
 			EndpointArgs: []interface{}{ruleID, errorKey},
 			Body:         fmt.Sprintf(`{"rule_module": "%v"}`, ruleID),
-		}, &helpers.APIResponse{
+		}, &ira_helpers.APIResponse{
 			StatusCode: http.StatusOK,
 			Body: fmt.Sprintf(`{
 				"rule_error_key": {
@@ -205,20 +206,20 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 
 func cleanupEndpointArgs(tb testing.TB, args []voteEndpointArg, mockStorage storage.Storage) {
 	for _, arg := range args {
-		helpers.AssertAPIRequest(tb, mockStorage, nil, &helpers.APIRequest{
+		ira_helpers.AssertAPIRequest(tb, mockStorage, nil, &ira_helpers.APIRequest{
 			Method:       http.MethodDelete,
 			Endpoint:     server.RuleErrorKeyEndpoint,
 			EndpointArgs: []interface{}{arg.RuleID, arg.ErrorKey},
-		}, &helpers.APIResponse{
+		}, &ira_helpers.APIResponse{
 			StatusCode: http.StatusOK,
 			Body:       `{"status": "ok"}`,
 		})
 
-		helpers.AssertAPIRequest(tb, mockStorage, nil, &helpers.APIRequest{
+		ira_helpers.AssertAPIRequest(tb, mockStorage, nil, &ira_helpers.APIRequest{
 			Method:       http.MethodDelete,
 			Endpoint:     server.RuleEndpoint,
 			EndpointArgs: []interface{}{arg.RuleID},
-		}, &helpers.APIResponse{
+		}, &ira_helpers.APIResponse{
 			StatusCode: http.StatusOK,
 			Body:       `{"status": "ok"}`,
 		})

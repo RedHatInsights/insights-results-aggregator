@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/content"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 const errYAMLBadToken = "yaml: line 14: found character that cannot start any token"

@@ -20,8 +20,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+
 	"github.com/RedHatInsights/insights-results-aggregator/server"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )

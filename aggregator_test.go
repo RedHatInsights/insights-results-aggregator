@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -31,7 +32,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 const (
@@ -169,7 +170,7 @@ func TestCloseStorage_Error(t *testing.T) {
 	buf := new(bytes.Buffer)
 	log.Logger = zerolog.New(buf)
 
-	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
 	expects.ExpectClose().WillReturnError(fmt.Errorf(errStr))
 
 	main.CloseStorage(mockStorage.(*storage.DBStorage))
@@ -320,7 +321,7 @@ func TestPrintEnv(t *testing.T) {
 func TestGetDBForMigrations(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, main.ExitStatusOK, exitCode)
-	defer helpers.MustCloseStorage(t, db)
+	defer ira_helpers.MustCloseStorage(t, db)
 
 	row := dbConn.QueryRow("SELECT version FROM migration_info;")
 	var version migration.Version
@@ -332,7 +333,7 @@ func TestGetDBForMigrations(t *testing.T) {
 func TestPrintMigrationInfo(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
-	defer helpers.MustCloseStorage(t, db)
+	defer ira_helpers.MustCloseStorage(t, db)
 
 	exitCode = main.PrintMigrationInfo(dbConn)
 	assert.Equal(t, main.ExitStatusOK, exitCode)
@@ -344,7 +345,7 @@ func TestPrintMigrationInfoClosedDB(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	// Close DB connection immediately.
-	helpers.MustCloseStorage(t, db)
+	ira_helpers.MustCloseStorage(t, db)
 
 	exitCode = main.PrintMigrationInfo(dbConn)
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
@@ -354,7 +355,7 @@ func TestPrintMigrationInfoClosedDB(t *testing.T) {
 func TestSetMigrationVersionZero(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
-	defer helpers.MustCloseStorage(t, db)
+	defer ira_helpers.MustCloseStorage(t, db)
 
 	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "0")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
@@ -369,7 +370,7 @@ func TestSetMigrationVersionZero(t *testing.T) {
 func TestSetMigrationVersionLatest(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
-	defer helpers.MustCloseStorage(t, db)
+	defer ira_helpers.MustCloseStorage(t, db)
 
 	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "latest")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
@@ -386,7 +387,7 @@ func TestSetMigrationVersionClosedDB(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	// Close DB connection immediately.
-	helpers.MustCloseStorage(t, db)
+	ira_helpers.MustCloseStorage(t, db)
 
 	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "0")
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
@@ -398,7 +399,7 @@ func TestSetMigrationVersionInvalid(t *testing.T) {
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	// Close DB connection immediately.
-	helpers.MustCloseStorage(t, db)
+	ira_helpers.MustCloseStorage(t, db)
 
 	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "")
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)

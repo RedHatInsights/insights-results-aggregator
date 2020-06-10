@@ -23,13 +23,14 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -66,7 +67,7 @@ func init() {
 }
 
 func prepareDB(t *testing.T) (*sql.DB, types.DBDriver, func()) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, false)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	dbStorage := mockStorage.(*storage.DBStorage)
 
 	return dbStorage.GetConnection(), dbStorage.GetDBDriverType(), closer
@@ -379,8 +380,8 @@ func TestInitInfoTable_BeginTransactionDBError(t *testing.T) {
 func TestInitInfoTable_InitTableDBError(t *testing.T) {
 	const errStr = "create table error"
 
-	db, expects := helpers.MustGetMockDBWithExpects(t)
-	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+	db, expects := ira_helpers.MustGetMockDBWithExpects(t)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
 	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnError(fmt.Errorf(errStr))
@@ -393,8 +394,8 @@ func TestInitInfoTable_InitTableDBError(t *testing.T) {
 func TestInitInfoTable_InitVersionDBError(t *testing.T) {
 	const errStr = "insert error"
 
-	db, expects := helpers.MustGetMockDBWithExpects(t)
-	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+	db, expects := ira_helpers.MustGetMockDBWithExpects(t)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
 	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
@@ -408,8 +409,8 @@ func TestInitInfoTable_InitVersionDBError(t *testing.T) {
 func TestInitInfoTable_CountDBError(t *testing.T) {
 	const errStr = "count error"
 
-	db, expects := helpers.MustGetMockDBWithExpects(t)
-	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+	db, expects := ira_helpers.MustGetMockDBWithExpects(t)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
 	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
@@ -425,7 +426,7 @@ func updateVersionInDBCommon(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	// set test migrations
 	*migration.Migrations = []migration.Migration{testMigration}
 
-	db, expects := helpers.MustGetMockDBWithExpects(t)
+	db, expects := ira_helpers.MustGetMockDBWithExpects(t)
 
 	expects.ExpectBegin()
 	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
@@ -454,7 +455,7 @@ func TestUpdateVersionInDB_RowsAffectedError(t *testing.T) {
 	const errStr = "rows affected error"
 
 	db, expects := updateVersionInDBCommon(t)
-	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectExec("UPDATE migration_info SET version").
 		WithArgs(1).
@@ -466,7 +467,7 @@ func TestUpdateVersionInDB_RowsAffectedError(t *testing.T) {
 
 func TestUpdateVersionInDB_MoreThan1RowAffected(t *testing.T) {
 	db, expects := updateVersionInDBCommon(t)
-	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectExec("UPDATE migration_info SET version").
 		WithArgs(1).
@@ -484,8 +485,8 @@ func TestUpdateVersionInDB_MoreThan1RowAffected(t *testing.T) {
 func TestWithTransaction_Panic(t *testing.T) {
 	const errStr = "panic"
 
-	db, expects := helpers.MustGetMockDBWithExpects(t)
-	defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+	db, expects := ira_helpers.MustGetMockDBWithExpects(t)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
 	expects.ExpectRollback()

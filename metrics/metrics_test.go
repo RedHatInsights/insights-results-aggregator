@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/Shopify/sarama/mocks"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/prometheus/client_golang/prometheus"
@@ -33,7 +34,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -77,7 +78,7 @@ func getCounterVecValue(counterVec *prometheus.CounterVec, labels map[string]str
 //TestConsumedMessagesMetric tests that consumed messages metric works
 func TestConsumedMessagesMetric(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		mockConsumer, closer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t, testTopicName, testOrgWhiteList, []string{testdata.ConsumerMessage, testdata.ConsumerMessage},
 		)
 		defer closer()
@@ -86,7 +87,7 @@ func TestConsumedMessagesMetric(t *testing.T) {
 
 		go mockConsumer.Serve()
 
-		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 2)
+		ira_helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 2)
 
 		assert.Equal(t, 2.0, getCounterValue(metrics.ConsumedMessages))
 	}, testCaseTimeLimit)
@@ -96,23 +97,23 @@ func TestAPIRequestsMetric(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		// exposing storage creation out from AssertApiRequest makes
 		// this particular test much faster on postgres
-		mockStorage, closer := helpers.MustGetMockStorage(t, true)
+		mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 		defer closer()
 
 		// resetting since go runs tests in 1 process
 		metrics.APIRequests.Reset()
 
-		endpoint := helpers.DefaultServerConfig.APIPrefix + server.ReportEndpoint
+		endpoint := ira_helpers.DefaultServerConfig.APIPrefix + server.ReportEndpoint
 
 		assert.Equal(t, 0.0, getCounterVecValue(metrics.APIRequests, map[string]string{
 			"endpoint": endpoint,
 		}))
 
-		helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		ira_helpers.AssertAPIRequest(t, mockStorage, nil, &ira_helpers.APIRequest{
 			Method:       http.MethodGet,
 			Endpoint:     server.ReportEndpoint,
 			EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
-		}, &helpers.APIResponse{
+		}, &ira_helpers.APIResponse{
 			StatusCode: http.StatusBadRequest,
 			Body: `{
 				"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"
@@ -193,7 +194,7 @@ func TestProducedMessagesMetric(t *testing.T) {
 }
 
 func TestWrittenReportsMetric(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	// other tests may run at the same process
@@ -222,7 +223,7 @@ func TestApiResponseStatusCodesMetric_StatusOK(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		// exposing storage creation out from AssertApiRequest makes
 		// this particular test much faster on postgres
-		mockStorage, closer := helpers.MustGetMockStorage(t, true)
+		mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 		defer closer()
 
 		metrics.APIResponseStatusCodes.Reset()
@@ -232,10 +233,10 @@ func TestApiResponseStatusCodesMetric_StatusOK(t *testing.T) {
 		}))
 
 		for i := 0; i < 15; i++ {
-			helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+			ira_helpers.AssertAPIRequest(t, mockStorage, nil, &ira_helpers.APIRequest{
 				Method:   http.MethodGet,
 				Endpoint: server.MainEndpoint,
-			}, &helpers.APIResponse{
+			}, &ira_helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
 			})
@@ -251,7 +252,7 @@ func TestApiResponseStatusCodesMetric_StatusBadRequest(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		// exposing storage creation out from AssertApiRequest makes
 		// this particular test much faster on postgres
-		mockStorage, closer := helpers.MustGetMockStorage(t, true)
+		mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 		defer closer()
 
 		metrics.APIResponseStatusCodes.Reset()
@@ -260,11 +261,11 @@ func TestApiResponseStatusCodesMetric_StatusBadRequest(t *testing.T) {
 			"status_code": fmt.Sprint(http.StatusBadRequest),
 		}))
 
-		helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		ira_helpers.AssertAPIRequest(t, mockStorage, nil, &ira_helpers.APIRequest{
 			Method:       http.MethodGet,
 			Endpoint:     server.ReportEndpoint,
 			EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
-		}, &helpers.APIResponse{
+		}, &ira_helpers.APIResponse{
 			StatusCode: http.StatusBadRequest,
 			Body: `{
 				"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"

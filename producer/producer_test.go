@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/Shopify/sarama"
 	"github.com/Shopify/sarama/mocks"
 	"github.com/rs/zerolog"
@@ -28,7 +29,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -127,7 +128,7 @@ func TestProducerNew(t *testing.T) {
 	mockBroker := sarama.NewMockBroker(t, 0)
 	defer mockBroker.Close()
 
-	mockBroker.SetHandlerByMap(helpers.GetHandlersMapForMockConsumer(t, mockBroker, brokerCfg.PayloadTrackerTopic))
+	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, brokerCfg.PayloadTrackerTopic))
 
 	prod, err := producer.New(
 		broker.Configuration{
