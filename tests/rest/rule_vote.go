@@ -334,3 +334,24 @@ func checkUserVoteForImproperCluster() {
 		"Test whether 'get_vote' REST API endpoint works correctly for known rule and improper cluster",
 		constructURLGetVoteForRule, checkInvalidUUIDFormatGet)
 }
+
+// checkUserVoteForUnknownRuleAndKnownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and known cluster
+func checkUserVoteForUnknownRuleAndKnownCluster() {
+	testRuleVoteAPIendpoint(knownClustersForOrganization1, unknownRules,
+		"Test whether 'get_vote' REST API endpoint works correctly for unknown rule and known cluster",
+		constructURLGetVoteForRule, checkItemNotFoundGet)
+}
+
+// checkUserVoteForUnknownRuleAndUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and unknown cluster
+func checkUserVoteForUnknownRuleAndUnknownCluster() {
+	testRuleVoteAPIendpoint(unknownClusters, unknownRules,
+		"Test whether 'get_vote' REST API endpoint works correctly for unknown rule and unknown cluster",
+		constructURLGetVoteForRule, checkItemNotFoundGet)
+}
+
+// checkUserVoteForUnknownRuleAndImproperCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and improper cluster
+func checkUserVoteForUnknownRuleAndImproperCluster() {
+	testRuleVoteAPIendpoint(improperClusterIDs, unknownRules,
+		"Test whether 'get_vote' REST API endpoint works correctly for unknown rule and improper cluster",
+		constructURLGetVoteForRule, checkInvalidUUIDFormatGet)
+}
