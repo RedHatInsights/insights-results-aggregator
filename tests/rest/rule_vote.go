@@ -391,12 +391,12 @@ func checkVoteForClusterAndRule(cluster string, rule string, expectedVote int) {
 	if err != nil {
 		f.AddError(err.Error())
 		return
-	} else {
-		err := json.Unmarshal(text, &r)
-		if err != nil {
-			f.AddError(err.Error())
-			return
-		}
+	}
+
+	err = json.Unmarshal(text, &r)
+	if err != nil {
+		f.AddError(err.Error())
+		return
 	}
 
 	if r.RuleVote != expectedVote {
