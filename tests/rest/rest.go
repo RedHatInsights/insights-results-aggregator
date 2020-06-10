@@ -84,6 +84,9 @@ func ServerTests() {
 	checkDislikeUnknownRuleForImproperCluster()
 	checkResetUnknownRuleForImproperCluster()
 	reproducerForIssue385()
+	checkUserVoteForKnownCluster()
+	checkUserVoteForUnknownCluster()
+	checkUserVoteForImproperCluster()
 
 	// tests for OpenAPI specification that is accessible via its endpoint as well
 	// implementation of these tests is stored in openapi.go

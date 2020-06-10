@@ -83,6 +83,10 @@ func constructURLResetVoteForRule(clusterID string, ruleID string) string {
 	return fmt.Sprintf("%sclusters/%s/rules/%s/reset_vote", apiURL, clusterID, ruleID)
 }
 
+func constructURLGetVoteForRule(clusterID string, ruleID string) string {
+	return fmt.Sprintf("%sclusters/%s/rules/%s/get_vote/", apiURL, clusterID, ruleID)
+}
+
 func checkOkStatus(f *frisby.Frisby) {
 	setAuthHeader(f)
 	f.Send()
@@ -96,6 +100,11 @@ func checkOkStatus(f *frisby.Frisby) {
 
 func checkOkStatusUserVote(url string, message string) {
 	f := frisby.Create(message).Put(url)
+	checkOkStatus(f)
+}
+
+func checkOkStatusGetVote(url string, message string) {
+	f := frisby.Create(message).Get(url)
 	checkOkStatus(f)
 }
 
@@ -114,6 +123,11 @@ func checkInvalidUUIDFormat(f *frisby.Frisby) {
 	}
 
 	f.PrintReport()
+}
+
+func checkInvalidUUIDFormatGet(url string, message string) {
+	f := frisby.Create(message).Get(url)
+	checkInvalidUUIDFormat(f)
 }
 
 func checkInvalidUUIDFormatPut(url string, message string) {
@@ -136,6 +150,11 @@ func checkItemNotFound(f *frisby.Frisby) {
 	}
 
 	f.PrintReport()
+}
+
+func checkItemNotFoundGet(url string, message string) {
+	f := frisby.Create(message).Get(url)
+	checkItemNotFound(f)
 }
 
 func checkItemNotFoundPut(url string, message string) {
@@ -293,4 +312,25 @@ func checkResetUnknownRuleForImproperCluster() {
 	testRuleVoteAPIendpoint(improperClusterIDs, unknownRules,
 		"Test whether 'reset vote' REST API endpoint works correctly for unknown rule and improper cluster ID",
 		constructURLResetVoteForRule, checkInvalidUUIDFormatPut)
+}
+
+// checkUserVoteForKnownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and known cluster
+func checkUserVoteForKnownCluster() {
+	testRuleVoteAPIendpoint(knownClustersForOrganization1, knownRules,
+		"Test whether 'get_vote' REST API endpoint works correctly for known rule and known cluster",
+		constructURLGetVoteForRule, checkOkStatusGetVote)
+}
+
+// checkUserVoteForUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and unknown cluster
+func checkUserVoteForUnknownCluster() {
+	testRuleVoteAPIendpoint(unknownClusters, knownRules,
+		"Test whether 'get_vote' REST API endpoint works correctly for known rule and unknown cluster",
+		constructURLGetVoteForRule, checkItemNotFoundGet)
+}
+
+// checkUserVoteForImproperCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and improper cluster
+func checkUserVoteForImproperCluster() {
+	testRuleVoteAPIendpoint(improperClusterIDs, knownRules,
+		"Test whether 'get_vote' REST API endpoint works correctly for known rule and improper cluster",
+		constructURLGetVoteForRule, checkInvalidUUIDFormatGet)
 }
