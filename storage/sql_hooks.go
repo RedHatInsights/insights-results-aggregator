@@ -24,12 +24,10 @@ import (
 	"time"
 
 	"github.com/gchaincl/sqlhooks"
-	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
-type sqlHooks struct {
-	SQLQueriesLogger *zerolog.Logger
-}
+type sqlHooks struct{}
 
 type sqlHooksKey int
 
@@ -46,9 +44,9 @@ const logFormatterString = "query `%+v` with params `%+v`"
 func (h *sqlHooks) Before(ctx context.Context, query string, args ...interface{}) (context.Context, error) {
 	jsonArgs, err := json.Marshal(args)
 	if err == nil {
-		h.SQLQueriesLogger.Printf(logFormatterString+"\n", query, string(jsonArgs))
+		h.log(logFormatterString+"\n", query, string(jsonArgs))
 	} else {
-		h.SQLQueriesLogger.Printf(logFormatterString+"\n", query, args)
+		h.log(logFormatterString+"\n", query, args)
 	}
 
 	return context.WithValue(ctx, sqlHooksKeyQueryBeginTime, time.Now()), nil
@@ -61,12 +59,12 @@ func (h *sqlHooks) After(ctx context.Context, query string, args ...interface{})
 
 	jsonArgs, err := json.Marshal(args)
 	if err == nil {
-		h.SQLQueriesLogger.Printf(
+		h.log(
 			logFormatterString+" took %s\n",
 			query, string(jsonArgs), time.Since(beginTime),
 		)
 	} else {
-		h.SQLQueriesLogger.Printf(
+		h.log(
 			logFormatterString+" took %s\n",
 			query, args, time.Since(beginTime),
 		)
@@ -75,12 +73,15 @@ func (h *sqlHooks) After(ctx context.Context, query string, args ...interface{})
 	return ctx, nil
 }
 
+func (h *sqlHooks) log(format string, params ...interface{}) {
+	log.Debug().Str("type", "SQL").Msgf(format, params...)
+}
+
 // InitSQLDriverWithLogs initializes wrapped version of driver with logging sql queries
 // and returns its name
 func InitSQLDriverWithLogs(
 	realDriver sql_driver.Driver,
 	realDriverName string,
-	logger *zerolog.Logger,
 ) string {
 	// linear search is not gonna be an issue since there's not many drivers
 	// and we call New() only ones/twice per process life
@@ -95,9 +96,7 @@ func InitSQLDriverWithLogs(
 	}
 
 	if !foundHooksDriver {
-		sql.Register(hooksDriverName, sqlhooks.Wrap(realDriver, &sqlHooks{
-			SQLQueriesLogger: logger,
-		}))
+		sql.Register(hooksDriverName, sqlhooks.Wrap(realDriver, &sqlHooks{}))
 	}
 
 	return hooksDriverName
