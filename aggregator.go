@@ -457,12 +457,7 @@ func handleCommand(command string) int {
 	case "start-service":
 		printVersionInfo()
 
-		errCode := startService()
-		if errCode != ExitStatusOK {
-			return errCode
-		}
-
-		return stopService()
+		return startService()
 	case "help", "print-help":
 		return printHelp()
 	case "print-config":
