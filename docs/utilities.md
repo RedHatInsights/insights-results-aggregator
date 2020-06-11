@@ -23,6 +23,8 @@ optional arguments:
                         directory with JSON files to check
 ```
 
+[Annotated source code](json_check.html)
+
 Please note that other utilities and tools have in available in separate repository
 [RedHatInsights / insights-results-aggregator-utils](https://github.com/RedHatInsights/insights-results-aggregator-utils/).
 More detailed description of these tools is
