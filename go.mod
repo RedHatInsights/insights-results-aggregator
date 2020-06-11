@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/RedHatInsights/cloudwatch v0.0.0-20200512151223-b0b55757a24b
-	github.com/RedHatInsights/insights-operator-utils v1.0.1
+	github.com/RedHatInsights/insights-operator-utils v1.0.2-0.20200610143236-c868b2f93d2a
 	github.com/Shopify/sarama v1.26.0
 	github.com/aws/aws-sdk-go v1.30.25
 	github.com/bitly/go-simplejson v0.5.0 // indirect
@@ -26,7 +26,7 @@ require (
 	github.com/prometheus/common v0.7.0
 	github.com/rs/zerolog v1.18.0
 	github.com/spf13/viper v1.6.2
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 )

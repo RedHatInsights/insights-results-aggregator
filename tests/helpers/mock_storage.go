@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/google/uuid"
 
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
@@ -72,7 +73,7 @@ func MustGetMockStorageWithExpectsForDriver(
 // don't forget to call MustCloseMockDBWithExpects
 func MustGetMockDBWithExpects(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	db, expects, err := sqlmock.New()
-	FailOnError(t, err)
+	helpers.FailOnError(t, err)
 
 	return db, expects
 }
@@ -86,7 +87,7 @@ func MustCloseMockStorageWithExpects(
 	}
 
 	expects.ExpectClose()
-	FailOnError(t, mockStorage.Close())
+	helpers.FailOnError(t, mockStorage.Close())
 }
 
 // MustCloseMockDBWithExpects closes mock db with expects and panics if it wasn't successful
@@ -98,7 +99,7 @@ func MustCloseMockDBWithExpects(
 	}
 
 	expects.ExpectClose()
-	FailOnError(t, db.Close())
+	helpers.FailOnError(t, db.Close())
 }
 
 // MustGetSQLiteMemoryStorage creates test sqlite storage in file
@@ -118,22 +119,22 @@ func MustGetSQLiteFileStorage(tb testing.TB, init bool) (storage.Storage, func()
 
 	return sqliteStorage, func() {
 		MustCloseStorage(tb, sqliteStorage)
-		FailOnError(tb, os.Remove(dbFilename))
+		helpers.FailOnError(tb, os.Remove(dbFilename))
 	}
 }
 
 func mustGetSqliteStorage(tb testing.TB, datasource string, init bool) storage.Storage {
 	db, err := sql.Open(sqlite3, datasource)
-	FailOnError(tb, err)
+	helpers.FailOnError(tb, err)
 
 	_, err = db.Exec("PRAGMA foreign_keys = ON;")
-	FailOnError(tb, err)
+	helpers.FailOnError(tb, err)
 
 	sqliteStorage := storage.NewFromConnection(db, types.DBDriverSQLite3)
 
 	if init {
-		FailOnError(tb, sqliteStorage.MigrateToLatest())
-		FailOnError(tb, sqliteStorage.Init())
+		helpers.FailOnError(tb, sqliteStorage.MigrateToLatest())
+		helpers.FailOnError(tb, sqliteStorage.Init())
 	}
 
 	return sqliteStorage
@@ -144,7 +145,7 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) 
 	dbAdminPassword := os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS")
 
 	err := conf.LoadConfiguration("../config-devel")
-	FailOnError(tb, err)
+	helpers.FailOnError(tb, err)
 
 	// force postgres and replace db name with test one
 	storageConf := &conf.Config.Storage
@@ -157,31 +158,31 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) 
 	)
 
 	adminConn, err := sql.Open(storageConf.Driver, connString)
-	FailOnError(tb, err)
+	helpers.FailOnError(tb, err)
 
 	query := "CREATE DATABASE " + storageConf.PGDBName + ";"
 	_, err = adminConn.Exec(query)
-	FailOnError(tb, err)
+	helpers.FailOnError(tb, err)
 
 	postgresStorage, err := storage.New(conf.GetStorageConfiguration())
-	FailOnError(tb, err)
+	helpers.FailOnError(tb, err)
 
 	if init {
-		FailOnError(tb, postgresStorage.MigrateToLatest())
-		FailOnError(tb, postgresStorage.Init())
+		helpers.FailOnError(tb, postgresStorage.MigrateToLatest())
+		helpers.FailOnError(tb, postgresStorage.Init())
 	}
 
 	return postgresStorage, func() {
 		MustCloseStorage(tb, postgresStorage)
 
 		_, err := adminConn.Exec("DROP DATABASE " + conf.Config.Storage.PGDBName)
-		FailOnError(tb, err)
+		helpers.FailOnError(tb, err)
 
-		FailOnError(tb, adminConn.Close())
+		helpers.FailOnError(tb, adminConn.Close())
 	}
 }
 
 // MustCloseStorage closes the storage and calls t.Fatal on error
 func MustCloseStorage(tb testing.TB, s storage.Storage) {
-	FailOnError(tb, s.Close())
+	helpers.FailOnError(tb, s.Close())
 }

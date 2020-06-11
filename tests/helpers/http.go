@@ -23,12 +23,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // APIRequest is a request to api to use in AssertAPIRequest
@@ -108,7 +108,7 @@ func AssertAPIRequest(
 	}
 	if expectedResponse.BodyChecker != nil {
 		bodyBytes, err := ioutil.ReadAll(response.Body)
-		FailOnError(t, err)
+		helpers.FailOnError(t, err)
 
 		expectedResponse.BodyChecker(t, expectedResponse.Body, string(bodyBytes))
 	} else if len(expectedResponse.Body) != 0 {
@@ -118,7 +118,7 @@ func AssertAPIRequest(
 
 func makeRequest(t testing.TB, request *APIRequest, url string) *http.Request {
 	req, err := http.NewRequest(request.Method, url, strings.NewReader(request.Body))
-	FailOnError(t, err)
+	helpers.FailOnError(t, err)
 
 	// authorize user
 	if request.UserID != types.UserID(0) {
@@ -154,9 +154,9 @@ func ExecuteRequest(testServer *server.HTTPServer, req *http.Request) *httptest.
 // also validates both expected and body to be a valid json
 func CheckResponseBodyJSON(t testing.TB, expectedJSON string, body io.ReadCloser) {
 	result, err := ioutil.ReadAll(body)
-	FailOnError(t, err)
+	helpers.FailOnError(t, err)
 
-	AssertStringsAreEqualJSON(t, expectedJSON, string(result))
+	helpers.AssertStringsAreEqualJSON(t, expectedJSON, string(result))
 }
 
 // checkResponseHeaders checks if headers are the same as in expected

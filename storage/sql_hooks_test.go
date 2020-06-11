@@ -25,15 +25,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
-
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestInitSQLDriverWithLogs(t *testing.T) {
