@@ -15,17 +15,16 @@
 package server_test
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
-	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -81,34 +80,6 @@ func TestReadNonExistingReport(t *testing.T) {
 	})
 }
 
-func TestHttpServer_readReportForCluster_NoContent(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
-	)
-	helpers.FailOnError(t, err)
-
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
-		Method:       http.MethodGet,
-		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-	}, &ira_helpers.APIResponse{
-		StatusCode: http.StatusOK,
-		Body: `{
-			"status":"ok",
-			"report": {
-				"meta": {
-					"count": 0,
-					"last_checked_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `"
-				},
-				"data":[]
-			}
-		}`,
-	})
-}
-
 func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
@@ -131,7 +102,7 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 					"count": -1,
 					"last_checked_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `"
 				},
-				"data":[]
+				"reports":[]
 			}
 		}`,
 	})
@@ -148,37 +119,6 @@ func TestReadReportDBError(t *testing.T) {
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status":"Internal Server Error"}`,
-	})
-}
-
-func TestHttpServer_readReportForCluster_getContentForRule_DBError(t *testing.T) {
-	connection, err := sql.Open("sqlite3", ":memory:")
-	helpers.FailOnError(t, err)
-
-	mockStorage := storage.NewFromConnection(connection, types.DBDriverSQLite3)
-	defer ira_helpers.MustCloseStorage(t, mockStorage)
-
-	helpers.FailOnError(t, mockStorage.MigrateToLatest())
-
-	err = mockStorage.Init()
-	helpers.FailOnError(t, err)
-
-	// remove table to cause db error
-	_, err = connection.Exec("DROP TABLE rule_error_key;")
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
-	)
-	helpers.FailOnError(t, err)
-
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
-		Method:       http.MethodGet,
-		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-	}, &ira_helpers.APIResponse{
-		StatusCode: http.StatusInternalServerError,
-		Body:       `{ "status":"Internal Server Error" }`,
 	})
 }
 
@@ -210,8 +150,15 @@ func assertReportResponsesEqual(t testing.TB, expected, got string) {
 	}
 
 	err := helpers.JSONUnmarshalStrict([]byte(expected), &expectedResponse)
+	if err != nil {
+		log.Error().Msg("Error unmarshalling expected value")
+	}
+
 	helpers.FailOnError(t, err)
 	err = helpers.JSONUnmarshalStrict([]byte(got), &gotResponse)
+	if err != nil {
+		log.Error().Msg("Error unmarshalling got value")
+	}
 	helpers.FailOnError(t, err)
 
 	assert.NotEmpty(
@@ -222,10 +169,10 @@ func assertReportResponsesEqual(t testing.TB, expected, got string) {
 	assert.Equal(t, expectedResponse.Status, gotResponse.Status)
 	assert.Equal(t, expectedResponse.Report.Meta, gotResponse.Report.Meta)
 	// ignore the order
-	assert.ElementsMatch(t, expectedResponse.Report.Rules, gotResponse.Report.Rules)
+	assert.ElementsMatch(t, expectedResponse.Report.Report, gotResponse.Report.Report)
 }
 
-func TestReadReportWithContent(t *testing.T) {
+func TestReadReport(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
@@ -236,10 +183,6 @@ func TestReadReportWithContent(t *testing.T) {
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)
-	helpers.FailOnError(t, err)
-
-	// write some rule content into the DB
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
 	helpers.FailOnError(t, err)
 
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{

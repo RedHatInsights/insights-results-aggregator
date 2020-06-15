@@ -42,9 +42,10 @@ type RequestID string
 
 // RuleOnReport represents a single (hit) rule of the string encoded report
 type RuleOnReport struct {
-	Module   string      `json:"component"`
-	ErrorKey string      `json:"key"`
-	Details  interface{} `json:"details"`
+	Module   string   `json:"component"`
+	ErrorKey string   `json:"key"`
+	UserVote UserVote `json:"user_vote"`
+	Disabled bool     `json:"disabled"`
 }
 
 // ReportRules is a helper struct for easy JSON unmarshalling of string encoded report
@@ -57,8 +58,8 @@ type ReportRules struct {
 
 // ReportResponse represents the response of /report endpoint
 type ReportResponse struct {
-	Meta  ReportResponseMeta    `json:"meta"`
-	Rules []RuleContentResponse `json:"data"`
+	Meta   ReportResponseMeta `json:"meta"`
+	Report []RuleOnReport     `json:"reports"`
 }
 
 // ReportResponseMeta contains metadata about the report

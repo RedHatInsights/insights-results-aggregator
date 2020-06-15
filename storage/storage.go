@@ -80,11 +80,6 @@ type Storage interface {
 	GetUserFeedbackOnRule(
 		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
 	) (*UserFeedbackOnRule, error)
-	GetContentForRules(
-		rules types.ReportRules,
-		userID types.UserID,
-		clusterName types.ClusterName,
-	) ([]types.RuleContentResponse, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
 	ToggleRuleForCluster(
@@ -102,6 +97,11 @@ type Storage interface {
 		types.RuleID,
 		types.UserID,
 	) (*ClusterRuleToggle, error)
+	GetTogglesForRules(
+		types.ClusterName,
+		[]types.RuleOnReport,
+		types.UserID,
+	) (map[types.RuleID]bool, error)
 	DeleteFromRuleClusterToggle(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
@@ -117,7 +117,7 @@ type Storage interface {
 	WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
 	GetUserFeedbackOnRules(
 		clusterID types.ClusterName,
-		rulesContent []types.RuleContentResponse,
+		rulesReport []types.RuleOnReport,
 		userID types.UserID,
 	) (map[types.RuleID]types.UserVote, error)
 	GetRuleWithContent(ruleID types.RuleID, ruleErrorKey types.ErrorKey) (*types.RuleWithContent, error)
@@ -375,48 +375,6 @@ func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 	return offset, err
 }
 
-// constructWhereClause constructs a dynamic WHERE .. IN clause
-// If the rules list is empty, returns NULL to have a syntactically correct WHERE NULL, selecting nothing
-func constructWhereClauseForContent(reportRules types.ReportRules) string {
-	if len(reportRules.HitRules) == 0 {
-		return "NULL" // WHERE NULL
-	}
-	statement := "(error_key, rule_module) IN (%v)"
-	var values string
-
-	for i, rule := range reportRules.HitRules {
-		singleVal := ""
-		module := strings.TrimSuffix(rule.Module, ".report") // remove trailing .report from module name
-
-		if i == 0 {
-			singleVal = fmt.Sprintf(`VALUES ('%v', '%v')`, rule.ErrorKey, module)
-		} else {
-			singleVal = fmt.Sprintf(`, ('%v', '%v')`, rule.ErrorKey, module)
-		}
-		values = values + singleVal
-	}
-	statement = fmt.Sprintf(statement, values)
-	return statement
-}
-
-func getExtraDataFromReportRules(rules []types.RuleContentResponse, reportRules types.ReportRules) []types.RuleContentResponse {
-	if len(reportRules.HitRules) == 0 {
-		return rules
-	}
-
-	for i, ruleContent := range rules {
-		module := ruleContent.RuleModule
-
-		for _, hitRule := range reportRules.HitRules {
-			moduleOnReport := strings.TrimSuffix(hitRule.Module, ".report")
-			if module == moduleOnReport {
-				rules[i].TemplateData = hitRule.Details
-			}
-		}
-	}
-	return rules
-}
-
 func calculateTotalRisk(impact, likelihood int) int {
 	return (impact + likelihood) / 2
 }
@@ -428,93 +386,6 @@ func commaSeparatedStrToTags(str string) []string {
 	}
 
 	return strings.Split(str, ",")
-}
-
-// GetContentForRules retrieves content for rules that were hit in the report
-func (storage DBStorage) GetContentForRules(
-	reportRules types.ReportRules,
-	userID types.UserID,
-	clusterName types.ClusterName,
-) ([]types.RuleContentResponse, error) {
-	rules := make([]types.RuleContentResponse, 0)
-
-	query := `
-	SELECT
-		rek.error_key,
-		rek.rule_module,
-		rek.description,
-		rek.generic,
-		r.reason,
-		r.resolution,
-		rek.publish_date,
-		rek.impact,
-		rek.likelihood,
-		rek.tags,
-		COALESCE(crt.disabled, 0) as disabled
-	FROM
-		rule r
-	INNER JOIN
-		rule_error_key rek
-			ON r.module = rek.rule_module
-	LEFT JOIN
-		cluster_rule_toggle crt
-			ON rek.rule_module = crt.rule_id
-			AND crt.cluster_id = $1
-			AND crt.user_id = $2
-	WHERE %v
-	ORDER BY
-		disabled ASC
-	`
-
-	whereInStatement := constructWhereClauseForContent(reportRules)
-	query = fmt.Sprintf(query, whereInStatement)
-
-	rows, err := storage.connection.Query(query, clusterName, userID)
-
-	if err != nil {
-		return rules, err
-	}
-	defer closeRows(rows)
-
-	for rows.Next() {
-		var rule types.RuleContentResponse
-		var impact, likelihood int
-		var tags string
-
-		err = rows.Scan(
-			&rule.ErrorKey,
-			&rule.RuleModule,
-			&rule.Description,
-			&rule.Generic,
-			&rule.Reason,
-			&rule.Resolution,
-			&rule.CreatedAt,
-			&impact,
-			&likelihood,
-			&tags,
-			&rule.Disabled,
-		)
-		if err != nil {
-			log.Error().Err(err).Msg("SQL error while retrieving content for rule")
-			continue
-		}
-
-		rule.TotalRisk = calculateTotalRisk(impact, likelihood)
-
-		// quick hack for rule tags
-		rule.Tags = commaSeparatedStrToTags(tags)
-
-		rules = append(rules, rule)
-	}
-
-	if err := rows.Err(); err != nil {
-		log.Error().Err(err).Msg("SQL rows error while retrieving content for rules")
-		return rules, err
-	}
-
-	rules = getExtraDataFromReportRules(rules, reportRules)
-
-	return rules, nil
 }
 
 func (storage DBStorage) getReportUpsertQuery() (string, error) {
