@@ -193,11 +193,6 @@ DataSource - specification of data source. The content of this parameter depends
 	<div class="ident">GetUserFeedbackOnRule</div><div class="operator">(</div>
 		<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">UserFeedbackOnRule</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">GetContentForRules</div><div class="operator">(</div>
-		<div class="ident">rules</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportRules</div><div class="operator">,</div>
-		<div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
-		<div class="ident">clusterName</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
-	<div class="operator">)</div> <div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleContentResponse</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">DeleteReportsForOrg</div><div class="operator">(</div><div class="ident">orgID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
 	<div class="ident">DeleteReportsForCluster</div><div class="operator">(</div><div class="ident">clusterName</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
 	<div class="ident">ToggleRuleForCluster</div><div class="operator">(</div>
@@ -215,6 +210,11 @@ DataSource - specification of data source. The content of this parameter depends
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">ClusterRuleToggle</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">GetTogglesForRules</div><div class="operator">(</div>
+		<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+		<div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">,</div>
+		<div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
+	<div class="operator">)</div> <div class="operator">(</div><div class="keyword">map</div><div class="operator">[</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">]</div><div class="ident">bool</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">DeleteFromRuleClusterToggle</div><div class="operator">(</div>
 		<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 		<div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
@@ -230,7 +230,7 @@ DataSource - specification of data source. The content of this parameter depends
 	<div class="ident">WriteConsumerError</div><div class="operator">(</div><div class="ident">msg</div> <div class="operator">*</div><div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">,</div> <div class="ident">consumerErr</div> <div class="ident">error</div><div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
 	<div class="ident">GetUserFeedbackOnRules</div><div class="operator">(</div>
 		<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
-		<div class="ident">rulesContent</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleContentResponse</div><div class="operator">,</div>
+		<div class="ident">rulesReport</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">,</div>
 		<div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="operator">(</div><div class="keyword">map</div><div class="operator">[</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">UserVote</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">GetRuleWithContent</div><div class="operator">(</div><div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">ruleErrorKey</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleWithContent</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
@@ -573,53 +573,6 @@ tasks necessary for further service operation.</p>
 	<div class="keyword">return</div> <div class="ident">offset</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>constructWhereClause constructs a dynamic WHERE .. IN clause
-If the rules list is empty, returns NULL to have a syntactically correct WHERE NULL, selecting nothing</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">constructWhereClauseForContent</div><div class="operator">(</div><div class="ident">reportRules</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportRules</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
-	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">reportRules</div><div class="operator">.</div><div class="ident">HitRules</div><div class="operator">)</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
-		<div class="keyword">return</div> <div class="literal">&#34;NULL&#34;</div> <div class="operator"></div><div class="comment">// WHERE NULL</div>
-	<div class="operator">}</div><div class="operator"></div>
-	<div class="ident">statement</div> <div class="operator">:=</div> <div class="literal">&#34;(error_key, rule_module) IN (%v)&#34;</div><div class="operator"></div>
-	<div class="keyword">var</div> <div class="ident">values</div> <div class="ident">string</div><div class="operator"></div>
-
-	<div class="keyword">for</div> <div class="ident">i</div><div class="operator">,</div> <div class="ident">rule</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">reportRules</div><div class="operator">.</div><div class="ident">HitRules</div> <div class="operator">{</div>
-		<div class="ident">singleVal</div> <div class="operator">:=</div> <div class="literal">&#34;&#34;</div><div class="operator"></div>
-		<div class="ident">module</div> <div class="operator">:=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">TrimSuffix</div><div class="operator">(</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">Module</div><div class="operator">,</div> <div class="literal">&#34;.report&#34;</div><div class="operator">)</div> <div class="operator"></div><div class="comment">// remove trailing .report from module name</div>
-
-		<div class="keyword">if</div> <div class="ident">i</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
-			<div class="ident">singleVal</div> <div class="operator">=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">`VALUES (&#39;%v&#39;, &#39;%v&#39;)`</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">,</div> <div class="ident">module</div><div class="operator">)</div><div class="operator"></div>
-		<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
-			<div class="ident">singleVal</div> <div class="operator">=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">`, (&#39;%v&#39;, &#39;%v&#39;)`</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">,</div> <div class="ident">module</div><div class="operator">)</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-		<div class="ident">values</div> <div class="operator">=</div> <div class="ident">values</div> <div class="operator">&#43;</div> <div class="ident">singleVal</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-	<div class="ident">statement</div> <div class="operator">=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="ident">statement</div><div class="operator">,</div> <div class="ident">values</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">return</div> <div class="ident">statement</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">getExtraDataFromReportRules</div><div class="operator">(</div><div class="ident">rules</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleContentResponse</div><div class="operator">,</div> <div class="ident">reportRules</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportRules</div><div class="operator">)</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleContentResponse</div> <div class="operator">{</div>
-	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">reportRules</div><div class="operator">.</div><div class="ident">HitRules</div><div class="operator">)</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
-		<div class="keyword">return</div> <div class="ident">rules</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="keyword">for</div> <div class="ident">i</div><div class="operator">,</div> <div class="ident">ruleContent</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">rules</div> <div class="operator">{</div>
-		<div class="ident">module</div> <div class="operator">:=</div> <div class="ident">ruleContent</div><div class="operator">.</div><div class="ident">RuleModule</div><div class="operator"></div>
-
-		<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">hitRule</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">reportRules</div><div class="operator">.</div><div class="ident">HitRules</div> <div class="operator">{</div>
-			<div class="ident">moduleOnReport</div> <div class="operator">:=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">TrimSuffix</div><div class="operator">(</div><div class="ident">hitRule</div><div class="operator">.</div><div class="ident">Module</div><div class="operator">,</div> <div class="literal">&#34;.report&#34;</div><div class="operator">)</div><div class="operator"></div>
-			<div class="keyword">if</div> <div class="ident">module</div> <div class="operator">==</div> <div class="ident">moduleOnReport</div> <div class="operator">{</div>
-				<div class="ident">rules</div><div class="operator">[</div><div class="ident">i</div><div class="operator">]</div><div class="operator">.</div><div class="ident">TemplateData</div> <div class="operator">=</div> <div class="ident">hitRule</div><div class="operator">.</div><div class="ident">Details</div><div class="operator"></div>
-			<div class="operator">}</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-	<div class="keyword">return</div> <div class="ident">rules</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
 <div class="keyword">func</div> <div class="ident">calculateTotalRisk</div><div class="operator">(</div><div class="ident">impact</div><div class="operator">,</div> <div class="ident">likelihood</div> <div class="ident">int</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="operator">(</div><div class="ident">impact</div> <div class="operator">&#43;</div> <div class="ident">likelihood</div><div class="operator">)</div> <div class="operator">/</div> <div class="literal">2</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -631,103 +584,6 @@ If the rules list is empty, returns NULL to have a syntactically correct WHERE N
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">Split</div><div class="operator">(</div><div class="ident">str</div><div class="operator">,</div> <div class="literal">&#34;,&#34;</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>GetContentForRules retrieves content for rules that were hit in the report</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">GetContentForRules</div><div class="operator">(</div>
-	<div class="ident">reportRules</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportRules</div><div class="operator">,</div>
-	<div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
-	<div class="ident">clusterName</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
-<div class="operator">)</div> <div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleContentResponse</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">rules</div> <div class="operator">:=</div> <div class="ident">make</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleContentResponse</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">query</div> <div class="operator">:=</div> <div class="literal">`
-	SELECT
-		rek.error_key,
-		rek.rule_module,
-		rek.description,
-		rek.generic,
-		r.reason,
-		r.resolution,
-		rek.publish_date,
-		rek.impact,
-		rek.likelihood,
-		rek.tags,
-		COALESCE(crt.disabled, 0) as disabled
-	FROM
-		rule r
-	INNER JOIN
-		rule_error_key rek
-			ON r.module = rek.rule_module
-	LEFT JOIN
-		cluster_rule_toggle crt
-			ON rek.rule_module = crt.rule_id
-			AND crt.cluster_id = $1
-			AND crt.user_id = $2
-	WHERE %v
-	ORDER BY
-		disabled ASC
-	`</div><div class="operator"></div>
-
-	<div class="ident">whereInStatement</div> <div class="operator">:=</div> <div class="ident">constructWhereClauseForContent</div><div class="operator">(</div><div class="ident">reportRules</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">query</div> <div class="operator">=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="ident">query</div><div class="operator">,</div> <div class="ident">whereInStatement</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">rows</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">connection</div><div class="operator">.</div><div class="ident">Query</div><div class="operator">(</div><div class="ident">query</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">userID</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="keyword">return</div> <div class="ident">rules</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-	<div class="keyword">defer</div> <div class="ident">closeRows</div><div class="operator">(</div><div class="ident">rows</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="keyword">for</div> <div class="ident">rows</div><div class="operator">.</div><div class="ident">Next</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-		<div class="keyword">var</div> <div class="ident">rule</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleContentResponse</div><div class="operator"></div>
-		<div class="keyword">var</div> <div class="ident">impact</div><div class="operator">,</div> <div class="ident">likelihood</div> <div class="ident">int</div><div class="operator"></div>
-		<div class="keyword">var</div> <div class="ident">tags</div> <div class="ident">string</div><div class="operator"></div>
-
-		<div class="ident">err</div> <div class="operator">=</div> <div class="ident">rows</div><div class="operator">.</div><div class="ident">Scan</div><div class="operator">(</div>
-			<div class="operator">&amp;</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">RuleModule</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">Description</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">Generic</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">Reason</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">Resolution</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">CreatedAt</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">impact</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">likelihood</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">tags</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">Disabled</div><div class="operator">,</div>
-		<div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;SQL error while retrieving content for rule&#34;</div><div class="operator">)</div><div class="operator"></div>
-			<div class="keyword">continue</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-
-		<div class="ident">rule</div><div class="operator">.</div><div class="ident">TotalRisk</div> <div class="operator">=</div> <div class="ident">calculateTotalRisk</div><div class="operator">(</div><div class="ident">impact</div><div class="operator">,</div> <div class="ident">likelihood</div><div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>quick hack for rule tags</p>
-</td>
-	<td class="code"><pre><code>		<div class="ident">rule</div><div class="operator">.</div><div class="ident">Tags</div> <div class="operator">=</div> <div class="ident">commaSeparatedStrToTags</div><div class="operator">(</div><div class="ident">tags</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">rules</div> <div class="operator">=</div> <div class="ident">append</div><div class="operator">(</div><div class="ident">rules</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">rows</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;SQL rows error while retrieving content for rules&#34;</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div> <div class="ident">rules</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="ident">rules</div> <div class="operator">=</div> <div class="ident">getExtraDataFromReportRules</div><div class="operator">(</div><div class="ident">rules</div><div class="operator">,</div> <div class="ident">reportRules</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="keyword">return</div> <div class="ident">rules</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">getReportUpsertQuery</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>

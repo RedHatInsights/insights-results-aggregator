@@ -117,7 +117,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */</div>
 
-<div class="keyword">package</div> <div class="ident">main</div><div class="operator"></div>
+<div class="keyword">package</div> <div class="ident">conf</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -130,24 +130,9 @@ https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 to see why this trick is needed.</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">var</div> <div class="operator">(</div>
-	<div class="ident">CreateStorage</div>         <div class="operator">=</div> <div class="ident">createStorage</div><div class="operator"></div>
-	<div class="ident">StartService</div>          <div class="operator">=</div> <div class="ident">startService</div><div class="operator"></div>
-	<div class="ident">StopService</div>           <div class="operator">=</div> <div class="ident">stopService</div><div class="operator"></div>
-	<div class="ident">WaitForServiceToStart</div> <div class="operator">=</div> <div class="ident">waitForServiceToStart</div><div class="operator"></div>
-	<div class="ident">CloseStorage</div>          <div class="operator">=</div> <div class="ident">closeStorage</div><div class="operator"></div>
-	<div class="ident">PrepareDB</div>             <div class="operator">=</div> <div class="ident">prepareDB</div><div class="operator"></div>
-	<div class="ident">StartConsumer</div>         <div class="operator">=</div> <div class="ident">startConsumer</div><div class="operator"></div>
-	<div class="ident">StartServer</div>           <div class="operator">=</div> <div class="ident">startServer</div><div class="operator"></div>
-	<div class="ident">PrintVersionInfo</div>      <div class="operator">=</div> <div class="ident">printVersionInfo</div><div class="operator"></div>
-	<div class="ident">PrintHelp</div>             <div class="operator">=</div> <div class="ident">printHelp</div><div class="operator"></div>
-	<div class="ident">PrintConfig</div>           <div class="operator">=</div> <div class="ident">printConfig</div><div class="operator"></div>
-	<div class="ident">PrintEnv</div>              <div class="operator">=</div> <div class="ident">printEnv</div><div class="operator"></div>
-	<div class="ident">GetDBForMigrations</div>    <div class="operator">=</div> <div class="ident">getDBForMigrations</div><div class="operator"></div>
-	<div class="ident">PrintMigrationInfo</div>    <div class="operator">=</div> <div class="ident">printMigrationInfo</div><div class="operator"></div>
-	<div class="ident">SetMigrationVersion</div>   <div class="operator">=</div> <div class="ident">setMigrationVersion</div><div class="operator"></div>
-	<div class="ident">PerformMigrations</div>     <div class="operator">=</div> <div class="ident">performMigrations</div><div class="operator"></div>
-	<div class="ident">AutoMigratePtr</div>        <div class="operator">=</div> <div class="operator">&amp;</div><div class="ident">autoMigrate</div><div class="operator"></div>
-	<div class="ident">Main</div>                  <div class="operator">=</div> <div class="ident">main</div><div class="operator"></div>
+	<div class="ident">GetOrganizationWhitelist</div>  <div class="operator">=</div> <div class="ident">getOrganizationWhitelist</div><div class="operator"></div>
+	<div class="ident">LoadWhitelistFromCSV</div>      <div class="operator">=</div> <div class="ident">loadWhitelistFromCSV</div><div class="operator"></div>
+	<div class="ident">ConfigFileEnvVariableName</div> <div class="operator">=</div> <div class="ident">configFileEnvVariableName</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>

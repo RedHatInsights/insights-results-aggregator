@@ -353,6 +353,18 @@ limitations under the License.</p>
 		<div class="operator">}</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator"></div>
 
+	<div class="ident">RuleOnReportResponses</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">{</div>
+		<div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">{</div>
+			<div class="ident">Module</div><div class="operator">:</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator">,</div>
+		<div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">{</div>
+			<div class="ident">Module</div><div class="operator">:</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator">,</div>
+		<div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">{</div>
+			<div class="ident">Module</div><div class="operator">:</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule3ID</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
 	<div class="ident">Report0Rules</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">(</div><div class="literal">`
 {
 	&#34;system&#34;: {
@@ -374,11 +386,11 @@ limitations under the License.</p>
 	},
 	&#34;reports&#34;: [
 		{
-			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`.report&#34;,
+			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
 			&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey1</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
 		},
 		{
-			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`.report&#34;,
+			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
 			&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey2</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
 		}
 	],
@@ -395,37 +407,17 @@ limitations under the License.</p>
 			&#34;count&#34;: 2,
 			&#34;last_checked_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">LastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
 		},
-		&#34;data&#34;: [
+		&#34;reports&#34;: [
 			{
-				&#34;rule_id&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;description&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Description</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;details&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Details</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;reason&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Reason</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;resolution&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Resolution</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;created_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2CreatedAt</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;total_risk&#34;: 4,
-				&#34;risk_of_change&#34;: 0,
-				&#34;extra_data&#34;: null,
-				&#34;tags&#34;: [
-					&#34;tag1&#34;,
-					&#34;tag2&#34;
-				],
+				&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey2</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;user_vote&#34;: 0,
 				&#34;disabled&#34;: false
 			},
 			{
-				&#34;rule_id&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;description&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Description</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;details&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Details</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;reason&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Reason</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;resolution&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Resolution</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;created_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1CreatedAt</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;total_risk&#34;: 3,
-				&#34;risk_of_change&#34;: 0,
-				&#34;extra_data&#34;: null,
-				&#34;tags&#34;: [
-					&#34;tag1&#34;,
-					&#34;tag2&#34;
-				],
+				&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey1</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;user_vote&#34;: 0,
 				&#34;disabled&#34;: true
 			}
 		]
@@ -441,37 +433,17 @@ limitations under the License.</p>
 			&#34;count&#34;: 2,
 			&#34;last_checked_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">LastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
 		},
-		&#34;data&#34;: [
+		&#34;reports&#34;: [
 			{
-				&#34;rule_id&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;description&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Description</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;details&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Details</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;reason&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Reason</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;resolution&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Resolution</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;created_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1CreatedAt</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;total_risk&#34;: 3,
-				&#34;risk_of_change&#34;: 0,
-				&#34;extra_data&#34;: null,
-				&#34;tags&#34;: [
-					&#34;tag1&#34;,
-					&#34;tag2&#34;
-				],
+				&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey1</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;user_vote&#34;: 0,
 				&#34;disabled&#34;: true
 			},
 			{
-				&#34;rule_id&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;description&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Description</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;details&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Details</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;reason&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Reason</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;resolution&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Resolution</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;created_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2CreatedAt</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;total_risk&#34;: 4,
-				&#34;risk_of_change&#34;: 0,
-				&#34;extra_data&#34;: null,
-				&#34;tags&#34;: [
-					&#34;tag1&#34;,
-					&#34;tag2&#34;
-				],
+				&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey2</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;user_vote&#34;: 0,
 				&#34;disabled&#34;: true
 			}
 		]
@@ -487,37 +459,17 @@ limitations under the License.</p>
 			&#34;count&#34;: 2,
 			&#34;last_checked_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">LastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
 		},
-		&#34;data&#34;: [
+		&#34;reports&#34;: [
 			{
-				&#34;rule_id&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;description&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Description</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;details&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Details</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;reason&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Reason</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;resolution&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Resolution</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;created_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1CreatedAt</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;total_risk&#34;: 3,
-				&#34;risk_of_change&#34;: 0,
-				&#34;extra_data&#34;: null,
-				&#34;tags&#34;: [
-					&#34;tag1&#34;,
-					&#34;tag2&#34;
-				],
+				&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey1</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;user_vote&#34;: 0,
 				&#34;disabled&#34;: false
 			},
 			{
-				&#34;rule_id&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;description&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Description</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;details&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Details</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;reason&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Reason</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;resolution&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Resolution</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;created_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2CreatedAt</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;total_risk&#34;: 4,
-				&#34;risk_of_change&#34;: 0,
-				&#34;extra_data&#34;: null,
-				&#34;tags&#34;: [
-					&#34;tag1&#34;,
-					&#34;tag2&#34;
-				],
+				&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey2</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;user_vote&#34;: 0,
 				&#34;disabled&#34;: false
 			}
 		]
@@ -534,15 +486,15 @@ limitations under the License.</p>
 	},
 	&#34;reports&#34;: [
 		{
-			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`.report&#34;,
+			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
 			&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey1</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
 		},
 		{
-			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`.report&#34;,
+			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
 			&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey2</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
 		},
 		{
-			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule3ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`.report&#34;,
+			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule3ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
 			&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey3</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
 		}
 	],
@@ -555,61 +507,31 @@ limitations under the License.</p>
 	<div class="ident">Report3RulesExpectedResponse</div> <div class="operator">=</div> <div class="literal">`
 {
 	&#34;report&#34;: {
-		&#34;meta&#34;: {
-			&#34;count&#34;: 3,
-			&#34;last_checked_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">LastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
-		},
-		&#34;data&#34;: [
-			{
-				&#34;rule_id&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;description&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Description</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;details&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Details</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;reason&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Reason</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;resolution&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1Resolution</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;created_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule1CreatedAt</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;total_risk&#34;: 3,
-				&#34;risk_of_change&#34;: 0,
-				&#34;extra_data&#34;: null,
-				&#34;tags&#34;: [
-					&#34;tag1&#34;,
-					&#34;tag2&#34;
-				],
+        &#34;meta&#34;: {
+            &#34;count&#34;: 3,
+            &#34;last_checked_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">LastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
+        },
+        &#34;reports&#34;: [
+            {
+				&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey1</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;user_vote&#34;: 0,
+				&#34;disabled&#34;: false
+			},
+            {
+				&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+                &#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey2</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+                &#34;user_vote&#34;: 0,
 				&#34;disabled&#34;: false
 			},
 			{
-				&#34;rule_id&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule2ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;description&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Description</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;details&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Details</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;reason&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Reason</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;resolution&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2Resolution</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;created_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule2CreatedAt</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;total_risk&#34;: 4,
-				&#34;risk_of_change&#34;: 0,
-				&#34;extra_data&#34;: null,
-				&#34;tags&#34;: [
-					&#34;tag1&#34;,
-					&#34;tag2&#34;
-				],
-				&#34;disabled&#34;: false
-			},
-			{
-				&#34;rule_id&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule3ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;description&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule3Description</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;details&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule3Details</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;reason&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule3Reason</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;resolution&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule3Resolution</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;created_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">Rule3CreatedAt</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-				&#34;total_risk&#34;: 2,
-				&#34;risk_of_change&#34;: 0,
-				&#34;extra_data&#34;: null,
-				&#34;tags&#34;: [
-					&#34;tag1&#34;,
-					&#34;tag2&#34;
-				],
+				&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">Rule3ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+                &#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">ErrorKey3</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+				&#34;user_vote&#34;: 0,
 				&#34;disabled&#34;: false
 			}
-		]
-	},
+        ]
+    },
 	&#34;status&#34;: &#34;ok&#34;
 }
 `</div><div class="operator"></div>
@@ -626,6 +548,7 @@ limitations under the License.</p>
 	<div class="ident">orgID</div> <div class="operator">:=</div> <div class="ident">rand</div><div class="operator">.</div><div class="ident">Intn</div><div class="operator">(</div><div class="literal">999999</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">clusterName</div> <div class="operator">:=</div> <div class="ident">uuid</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">timeRandomRange</div> <div class="operator">:=</div> <div class="literal">100000</div><div class="operator"></div>
+	<div class="comment">/* #nosec G404 */</div>
 	<div class="ident">lastCheckedAt</div> <div class="operator">:=</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="operator">-</div><div class="ident">time</div><div class="operator">.</div><div class="ident">Duration</div><div class="operator">(</div><div class="ident">rand</div><div class="operator">.</div><div class="ident">Intn</div><div class="operator">(</div><div class="ident">timeRandomRange</div><div class="operator">)</div><div class="operator">)</div> <div class="operator">*</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Second</div><div class="operator">)</div><div class="operator"></div>
 </code></pre></td>
       </tr>
@@ -636,11 +559,11 @@ limitations under the License.</p>
 	<td class="code"><pre><code>	<div class="ident">consumerReport</div> <div class="operator">:=</div> <div class="ident">ConsumerReport</div><div class="operator"></div>
 
 	<div class="ident">consumerMessage</div> <div class="operator">:=</div> <div class="literal">`{
-		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">orgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
-		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">clusterName</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-		&#34;Report&#34;:`</div> <div class="operator">&#43;</div> <div class="ident">consumerReport</div> <div class="operator">&#43;</div> <div class="literal">`,
-		&#34;LastChecked&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">lastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
-	}`</div><div class="operator"></div>
+		    &#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">orgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		    &#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">clusterName</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		    &#34;Report&#34;:`</div> <div class="operator">&#43;</div> <div class="ident">consumerReport</div> <div class="operator">&#43;</div> <div class="literal">`,
+		    &#34;LastChecked&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">lastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
+	    }`</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">consumerMessage</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -656,6 +579,7 @@ limitations under the License.</p>
 	<div class="keyword">var</div> <div class="ident">result</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator"></div>
 
 	<div class="keyword">for</div> <div class="ident">i</div> <div class="operator">:=</div> <div class="ident">uint</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">i</div> <div class="operator">&lt;</div> <div class="ident">length</div><div class="operator">;</div> <div class="ident">i</div><div class="operator">&#43;&#43;</div> <div class="operator">{</div>
+		<div class="comment">/* #nosec G404 */</div>
 		<div class="ident">char</div> <div class="operator">:=</div> <div class="ident">rune</div><div class="operator">(</div><div class="literal">&#39;a&#39;</div> <div class="operator">&#43;</div> <div class="ident">rand</div><div class="operator">.</div><div class="ident">Intn</div><div class="operator">(</div><div class="literal">&#39;z&#39;</div><div class="operator">-</div><div class="literal">&#39;a&#39;</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 		<div class="ident">result</div> <div class="operator">&#43;=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">(</div><div class="ident">char</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>

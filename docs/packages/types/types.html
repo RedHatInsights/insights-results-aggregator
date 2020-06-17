@@ -185,9 +185,10 @@ a unique identifier of payloads. Empty string represents a missing request ID.</
 	<td class="doc"><p>RuleOnReport represents a single (hit) rule of the string encoded report</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">RuleOnReport</div> <div class="keyword">struct</div> <div class="operator">{</div>
-	<div class="ident">Module</div>   <div class="ident">string</div>      <div class="literal">`json:&#34;component&#34;`</div><div class="operator"></div>
-	<div class="ident">ErrorKey</div> <div class="ident">string</div>      <div class="literal">`json:&#34;key&#34;`</div><div class="operator"></div>
-	<div class="ident">Details</div>  <div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div> <div class="literal">`json:&#34;details&#34;`</div><div class="operator"></div>
+	<div class="ident">Module</div>   <div class="ident">string</div>   <div class="literal">`json:&#34;component&#34;`</div><div class="operator"></div>
+	<div class="ident">ErrorKey</div> <div class="ident">string</div>   <div class="literal">`json:&#34;key&#34;`</div><div class="operator"></div>
+	<div class="ident">UserVote</div> <div class="ident">UserVote</div> <div class="literal">`json:&#34;user_vote&#34;`</div><div class="operator"></div>
+	<div class="ident">Disabled</div> <div class="ident">bool</div>     <div class="literal">`json:&#34;disabled&#34;`</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -210,8 +211,8 @@ a unique identifier of payloads. Empty string represents a missing request ID.</
 	<td class="doc"><p>ReportResponse represents the response of /report endpoint</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ReportResponse</div> <div class="keyword">struct</div> <div class="operator">{</div>
-	<div class="ident">Meta</div>  <div class="ident">ReportResponseMeta</div>    <div class="literal">`json:&#34;meta&#34;`</div><div class="operator"></div>
-	<div class="ident">Rules</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">RuleContentResponse</div> <div class="literal">`json:&#34;data&#34;`</div><div class="operator"></div>
+	<div class="ident">Meta</div>   <div class="ident">ReportResponseMeta</div> <div class="literal">`json:&#34;meta&#34;`</div><div class="operator"></div>
+	<div class="ident">Report</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">RuleOnReport</div>     <div class="literal">`json:&#34;reports&#34;`</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

@@ -118,17 +118,16 @@ limitations under the License.</p>
 	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">server_test</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
-	<div class="literal">&#34;database/sql&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
 	<div class="ident">ira_helpers</div> <div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/testdata&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
@@ -184,34 +183,6 @@ limitations under the License.</p>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
-<div class="keyword">func</div> <div class="ident">TestHttpServer_readReportForCluster_NoContent</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
-		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3Rules</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
-	<div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">config</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-		<div class="ident">Method</div><div class="operator">:</div>       <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div>
-		<div class="ident">Endpoint</div><div class="operator">:</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportEndpoint</div><div class="operator">,</div>
-		<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">}</div><div class="operator">,</div>
-	<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-		<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div>
-		<div class="ident">Body</div><div class="operator">:</div> <div class="literal">`{
-			&#34;status&#34;:&#34;ok&#34;,
-			&#34;report&#34;: {
-				&#34;meta&#34;: {
-					&#34;count&#34;: 0,
-					&#34;last_checked_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
-				},
-				&#34;data&#34;:[]
-			}
-		}`</div><div class="operator">,</div>
-	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
 <div class="keyword">func</div> <div class="ident">TestHttpServer_readReportForCluster_NoRules</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
@@ -234,7 +205,7 @@ limitations under the License.</p>
 					&#34;count&#34;: -1,
 					&#34;last_checked_at&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
 				},
-				&#34;data&#34;:[]
+				&#34;reports&#34;:[]
 			}
 		}`</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
@@ -251,42 +222,6 @@ limitations under the License.</p>
 	<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
 		<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusInternalServerError</div><div class="operator">,</div>
 		<div class="ident">Body</div><div class="operator">:</div>       <div class="literal">`{&#34;status&#34;:&#34;Internal Server Error&#34;}`</div><div class="operator">,</div>
-	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">TestHttpServer_readReportForCluster_getContentForRule_DBError</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">connection</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">sql</div><div class="operator">.</div><div class="ident">Open</div><div class="operator">(</div><div class="literal">&#34;sqlite3&#34;</div><div class="operator">,</div> <div class="literal">&#34;:memory:&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">mockStorage</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">NewFromConnection</div><div class="operator">(</div><div class="ident">connection</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverSQLite3</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">defer</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustCloseStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">MigrateToLatest</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">Init</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>remove table to cause db error</p>
-</td>
-	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">connection</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">&#34;DROP TABLE rule_error_key;&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
-		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3Rules</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
-	<div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">config</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-		<div class="ident">Method</div><div class="operator">:</div>       <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div>
-		<div class="ident">Endpoint</div><div class="operator">:</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportEndpoint</div><div class="operator">,</div>
-		<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">}</div><div class="operator">,</div>
-	<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-		<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusInternalServerError</div><div class="operator">,</div>
-		<div class="ident">Body</div><div class="operator">:</div>       <div class="literal">`{ &#34;status&#34;:&#34;Internal Server Error&#34; }`</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -318,8 +253,15 @@ limitations under the License.</p>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">JSONUnmarshalStrict</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">expected</div><div class="operator">)</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">expectedResponse</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Error unmarshalling expected value&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">JSONUnmarshalStrict</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">got</div><div class="operator">)</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">gotResponse</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Error unmarshalling got value&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">NotEmpty</div><div class="operator">(</div>
@@ -335,10 +277,10 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>ignore the order</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">ElementsMatch</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">.</div><div class="ident">Rules</div><div class="operator">,</div> <div class="ident">gotResponse</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">.</div><div class="ident">Rules</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">ElementsMatch</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">,</div> <div class="ident">gotResponse</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
-<div class="keyword">func</div> <div class="ident">TestReadReportWithContent</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+<div class="keyword">func</div> <div class="ident">TestReadReport</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
@@ -349,15 +291,6 @@ limitations under the License.</p>
 		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div>
 		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>write some rule content into the DB</p>
-</td>
-	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">LoadRuleContent</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">RuleContent3Rules</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">config</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
