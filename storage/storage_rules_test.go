@@ -24,7 +24,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -277,264 +276,6 @@ func TestDBStorageLoadRuleContentBadStatus(t *testing.T) {
 	assert.EqualError(t, err, "invalid rule error key status: 'bad'")
 }
 
-func TestDBStorageGetContentForRulesEmpty(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	res, err := mockStorage.GetContentForRules(
-		types.ReportRules{
-			HitRules:     nil,
-			SkippedRules: nil,
-			PassedRules:  nil,
-			TotalCount:   0,
-		},
-		testdata.UserID,
-		testdata.ClusterName,
-	)
-	helpers.FailOnError(t, err)
-
-	assert.Empty(t, res)
-}
-
-func TestDBStorageGetContentForRulesDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	closer()
-
-	_, err := mockStorage.GetContentForRules(
-		types.ReportRules{
-			HitRules:     nil,
-			SkippedRules: nil,
-			PassedRules:  nil,
-			TotalCount:   0,
-		},
-		testdata.UserID,
-		testdata.ClusterName,
-	)
-	assert.EqualError(t, err, "sql: database is closed")
-}
-
-func TestDBStorageGetContentForRulesOK(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.LoadRuleContent(ruleContentExample1)
-	helpers.FailOnError(t, err)
-
-	res, err := mockStorage.GetContentForRules(
-		types.ReportRules{
-			HitRules: []types.RuleOnReport{
-				{
-					Module:   string(testRuleID),
-					ErrorKey: "ek",
-				},
-			},
-			TotalCount: 1,
-		},
-		testdata.UserID,
-		testdata.ClusterName,
-	)
-
-	helpers.FailOnError(t, err)
-
-	assert.Equal(t, []types.RuleContentResponse{
-		{
-			ErrorKey:     "ek",
-			RuleModule:   string(testRuleID),
-			Description:  "description",
-			Generic:      "generic",
-			Reason:       "reason",
-			Resolution:   "resolution",
-			CreatedAt:    "1970-01-01T00:00:00Z",
-			TotalRisk:    1,
-			RiskOfChange: 0,
-			TemplateData: nil,
-			Tags:         []string{"tag1", "tag2"},
-			Disabled:     false,
-		},
-	}, res)
-}
-
-func TestDBStorageGetContentForMultipleRulesOK(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
-	helpers.FailOnError(t, err)
-
-	res, err := mockStorage.GetContentForRules(
-		types.ReportRules{
-			HitRules: []types.RuleOnReport{
-				{
-					Module:   "test.rule1.report",
-					ErrorKey: "ek1",
-				},
-				{
-					Module:   "test.rule2.report",
-					ErrorKey: "ek2",
-				},
-				{
-					Module:   "test.rule3.report",
-					ErrorKey: "ek3",
-				},
-			},
-			TotalCount: 3,
-		},
-		testdata.UserID,
-		testdata.ClusterName,
-	)
-
-	helpers.FailOnError(t, err)
-
-	assert.Len(t, res, 3)
-
-	// TODO: check risk of change when it will be returned correctly
-	// total risk is `(impact + likelihood) / 2`
-	// db doesn't and shouldn't guarantee order so we're using ElementsMatch
-	assert.ElementsMatch(t, []types.RuleContentResponse{
-		{
-			ErrorKey:     "ek1",
-			RuleModule:   "test.rule1",
-			Description:  "rule 1 description",
-			Generic:      "rule 1 details",
-			Reason:       "rule 1 reason",
-			Resolution:   "rule 1 resolution",
-			CreatedAt:    "1970-01-01T00:00:00Z",
-			TotalRisk:    3,
-			RiskOfChange: 0,
-			TemplateData: nil,
-			Tags:         []string{"tag1", "tag2"},
-			Disabled:     false,
-		},
-		{
-			ErrorKey:     "ek2",
-			RuleModule:   "test.rule2",
-			Description:  "rule 2 description",
-			Generic:      "rule 2 details",
-			Reason:       "rule 2 reason",
-			Resolution:   "rule 2 resolution",
-			CreatedAt:    "1970-01-02T00:00:00Z",
-			TotalRisk:    4,
-			RiskOfChange: 0,
-			TemplateData: nil,
-			Tags:         []string{"tag1", "tag2"},
-			Disabled:     false,
-		},
-		{
-			ErrorKey:     "ek3",
-			RuleModule:   "test.rule3",
-			Description:  "rule 3 description",
-			Generic:      "rule 3 details",
-			Reason:       "rule 3 reason",
-			Resolution:   "rule 3 resolution",
-			CreatedAt:    "1970-01-03T00:00:00Z",
-			TotalRisk:    2,
-			RiskOfChange: 0,
-			TemplateData: nil,
-			Tags:         []string{"tag1", "tag2"},
-			Disabled:     false,
-		},
-	}, res)
-}
-
-func TestDBStorageGetContentForRulesScanError(t *testing.T) {
-	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
-
-	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
-	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
-
-	columns := []string{
-		"error_key",
-		"rule_module",
-		"description",
-		"generic",
-		"reason",
-		"resolution",
-		"publish_date",
-		"impact",
-		"likelihood",
-		"tags",
-		"disabled",
-	}
-
-	values := make([]driver.Value, 0)
-	for _, val := range columns {
-		values = append(values, val)
-	}
-
-	// return bad values
-	expects.ExpectQuery("SELECT (.*) FROM rule (.*) rule_error_key").WillReturnRows(
-		sqlmock.NewRows(columns).AddRow(values...),
-	)
-
-	_, err := mockStorage.GetContentForRules(
-		types.ReportRules{
-			HitRules: []types.RuleOnReport{
-				{
-					Module:   "rule_module",
-					ErrorKey: "error_key",
-				},
-			},
-			TotalCount: 1,
-		},
-		testdata.UserID,
-		testdata.ClusterName,
-	)
-
-	helpers.FailOnError(t, err)
-
-	assert.Regexp(t, "converting driver.Value type .+ to .*", buf.String())
-}
-
-func TestDBStorageGetContentForRulesRowsError(t *testing.T) {
-	const rowErr = "row error"
-
-	buf := new(bytes.Buffer)
-	log.Logger = zerolog.New(buf)
-
-	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
-	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
-
-	columns := []string{
-		"error_key",
-		"rule_module",
-		"description",
-		"generic",
-		"reason",
-		"resolution",
-		"publish_date",
-		"impact",
-		"likelihood",
-	}
-
-	values := []driver.Value{
-		"ek", "rule_module", "desc", "generic", "reason", "resolution", 0, 0, 0,
-	}
-
-	// return bad values
-	expects.ExpectQuery("SELECT (.*) FROM rule (.*) rule_error_key").WillReturnRows(
-		sqlmock.NewRows(columns).AddRow(values...).RowError(0, fmt.Errorf(rowErr)),
-	)
-
-	_, err := mockStorage.GetContentForRules(
-		types.ReportRules{
-			HitRules: []types.RuleOnReport{
-				{
-					Module:   "rule_module",
-					ErrorKey: "error_key",
-				},
-			},
-			TotalCount: 1,
-		},
-		testdata.UserID,
-		testdata.ClusterName,
-	)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), rowErr)
-	assert.Contains(t, buf.String(), "SQL rows error while retrieving content for rules")
-}
-
 func TestDBStorageToggleRule(t *testing.T) {
 	for _, state := range []storage.RuleToggle{
 		storage.RuleToggleDisable, storage.RuleToggleEnable,
@@ -553,6 +294,49 @@ func TestDBStorageToggleRule(t *testing.T) {
 			helpers.FailOnError(t, err)
 		}(state)
 	}
+}
+
+func TestDBStorageGetTogglesForRules_NoRules(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	_, err := mockStorage.GetTogglesForRules(
+		testdata.ClusterName, nil, testdata.UserID,
+	)
+	helpers.FailOnError(t, err)
+}
+
+func TestDBStorageGetTogglesForRules_AllRulesEnabled(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	_, err := mockStorage.GetTogglesForRules(
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+	)
+	helpers.FailOnError(t, err)
+}
+
+func TestDBStorageGetTogglesForRules_OneRuleDisabled(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	result, err := mockStorage.GetTogglesForRules(
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+	)
+
+	helpers.FailOnError(t, err)
+
+	assert.Equal(
+		t,
+		map[types.RuleID]bool{
+			testdata.Rule1ID: true,
+		},
+		result,
+	)
 }
 
 func TestDBStorageToggleRuleAndGet(t *testing.T) {
@@ -1090,7 +874,7 @@ func TestDBStorageGetVotesForNoRules(t *testing.T) {
 	defer closer()
 
 	feedbacks, err := mockStorage.GetUserFeedbackOnRules(
-		testdata.ClusterName, testdata.RuleContentResponses, testdata.UserID,
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1111,7 +895,7 @@ func TestDBStorageGetVotes(t *testing.T) {
 	))
 
 	feedbacks, err := mockStorage.GetUserFeedbackOnRules(
-		testdata.ClusterName, testdata.RuleContentResponses, testdata.UserID,
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
 	)
 	helpers.FailOnError(t, err)
 

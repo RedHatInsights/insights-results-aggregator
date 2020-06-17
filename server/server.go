@@ -44,6 +44,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 
@@ -142,36 +143,37 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	rulesContent, rulesCount, err := server.getContentForRules(writer, report, userID, clusterName)
+	var reportRules types.ReportRules
+	err = json.Unmarshal([]byte(report), &reportRules)
 	if err != nil {
-		// everything has been handled already
-		return
-	}
-	hitRulesCount := len(rulesContent)
-
-	feedbacks, err := server.Storage.GetUserFeedbackOnRules(clusterName, rulesContent, userID)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to retrieve feedback results from database")
+		log.Error().Err(err).Msg("Unable to parse cluster report")
 		handleServerError(writer, err)
 		return
 	}
 
-	rulesContent = server.getUserVoteForRules(feedbacks, rulesContent)
+	hitRules := reportRules.HitRules
+	hitRulesCount := len(hitRules)
+
+	hitRules, err = server.getFeedbackAndTogglesOnRules(clusterName, userID, hitRules)
+
+	if err != nil {
+		log.Error().Err(err).Msg("An error has occurred when getting feedback or toggles")
+		handleServerError(writer, err)
+	}
 
 	// -1 as count in response means there are no rules for this cluster
 	// as opposed to no rules hit for the cluster
-	if rulesCount == 0 {
-		rulesCount = -1
-	} else {
-		rulesCount = hitRulesCount
+	if hitRulesCount == 0 {
+		hitRulesCount = -1
 	}
 
 	response := types.ReportResponse{
 		Meta: types.ReportResponseMeta{
-			Count:         rulesCount,
+			Count:         hitRulesCount,
 			LastCheckedAt: lastChecked,
 		},
-		Rules: rulesContent,
+		// Rules: rulesContent,
+		Report: hitRules,
 	}
 
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData("report", response))

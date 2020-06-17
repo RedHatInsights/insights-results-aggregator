@@ -95,11 +95,6 @@ func (*NoopStorage) GetUserFeedbackOnRule(
 	return nil, nil
 }
 
-// GetContentForRules noop
-func (*NoopStorage) GetContentForRules(types.ReportRules, types.UserID, types.ClusterName) ([]types.RuleContentResponse, error) {
-	return nil, nil
-}
-
 // DeleteReportsForOrg noop
 func (*NoopStorage) DeleteReportsForOrg(types.OrgID) error {
 	return nil
@@ -178,10 +173,19 @@ func (*NoopStorage) GetFromClusterRuleToggle(
 	return nil, nil
 }
 
+// GetTogglesForRules noop
+func (*NoopStorage) GetTogglesForRules(
+	types.ClusterName,
+	[]types.RuleOnReport,
+	types.UserID,
+) (map[types.RuleID]bool, error) {
+	return nil, nil
+}
+
 // GetUserFeedbackOnRules noop
 func (*NoopStorage) GetUserFeedbackOnRules(
 	types.ClusterName,
-	[]types.RuleContentResponse,
+	[]types.RuleOnReport,
 	types.UserID,
 ) (map[types.RuleID]types.UserVote, error) {
 	return nil, nil

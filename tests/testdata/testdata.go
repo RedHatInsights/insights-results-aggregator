@@ -250,6 +250,18 @@ var (
 		},
 	}
 
+	RuleOnReportResponses = []types.RuleOnReport{
+		types.RuleOnReport{
+			Module: string(Rule1ID),
+		},
+		types.RuleOnReport{
+			Module: string(Rule2ID),
+		},
+		types.RuleOnReport{
+			Module: string(Rule3ID),
+		},
+	}
+
 	Report0Rules = types.ClusterReport(`
 {
 	"system": {
@@ -271,11 +283,11 @@ var (
 	},
 	"reports": [
 		{
-			"component": "` + string(Rule1ID) + `.report",
+			"component": "` + string(Rule1ID) + `",
 			"key": "` + ErrorKey1 + `"
 		},
 		{
-			"component": "` + string(Rule2ID) + `.report",
+			"component": "` + string(Rule2ID) + `",
 			"key": "` + ErrorKey2 + `"
 		}
 	],
@@ -292,37 +304,17 @@ var (
 			"count": 2,
 			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
 		},
-		"data": [
+		"reports": [
 			{
-				"rule_id": "` + string(Rule2ID) + `",
-				"description": "` + Rule2Description + `",
-				"details": "` + Rule2Details + `",
-				"reason": "` + Rule2Reason + `",
-				"resolution": "` + Rule2Resolution + `",
-				"created_at": "` + Rule2CreatedAt + `",
-				"total_risk": 4,
-				"risk_of_change": 0,
-				"extra_data": null,
-				"tags": [
-					"tag1",
-					"tag2"
-				],
+				"component": "` + string(Rule2ID) + `",
+				"key": "` + ErrorKey2 + `",
+				"user_vote": 0,
 				"disabled": false
 			},
 			{
-				"rule_id": "` + string(Rule1ID) + `",
-				"description": "` + Rule1Description + `",
-				"details": "` + Rule1Details + `",
-				"reason": "` + Rule1Reason + `",
-				"resolution": "` + Rule1Resolution + `",
-				"created_at": "` + Rule1CreatedAt + `",
-				"total_risk": 3,
-				"risk_of_change": 0,
-				"extra_data": null,
-				"tags": [
-					"tag1",
-					"tag2"
-				],
+				"component": "` + string(Rule1ID) + `",
+				"key": "` + ErrorKey1 + `",
+				"user_vote": 0,
 				"disabled": true
 			}
 		]
@@ -338,37 +330,17 @@ var (
 			"count": 2,
 			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
 		},
-		"data": [
+		"reports": [
 			{
-				"rule_id": "` + string(Rule1ID) + `",
-				"description": "` + Rule1Description + `",
-				"details": "` + Rule1Details + `",
-				"reason": "` + Rule1Reason + `",
-				"resolution": "` + Rule1Resolution + `",
-				"created_at": "` + Rule1CreatedAt + `",
-				"total_risk": 3,
-				"risk_of_change": 0,
-				"extra_data": null,
-				"tags": [
-					"tag1",
-					"tag2"
-				],
+				"component": "` + string(Rule1ID) + `",
+				"key": "` + ErrorKey1 + `",
+				"user_vote": 0,
 				"disabled": true
 			},
 			{
-				"rule_id": "` + string(Rule2ID) + `",
-				"description": "` + Rule2Description + `",
-				"details": "` + Rule2Details + `",
-				"reason": "` + Rule2Reason + `",
-				"resolution": "` + Rule2Resolution + `",
-				"created_at": "` + Rule2CreatedAt + `",
-				"total_risk": 4,
-				"risk_of_change": 0,
-				"extra_data": null,
-				"tags": [
-					"tag1",
-					"tag2"
-				],
+				"component": "` + string(Rule2ID) + `",
+				"key": "` + ErrorKey2 + `",
+				"user_vote": 0,
 				"disabled": true
 			}
 		]
@@ -384,37 +356,17 @@ var (
 			"count": 2,
 			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
 		},
-		"data": [
+		"reports": [
 			{
-				"rule_id": "` + string(Rule1ID) + `",
-				"description": "` + Rule1Description + `",
-				"details": "` + Rule1Details + `",
-				"reason": "` + Rule1Reason + `",
-				"resolution": "` + Rule1Resolution + `",
-				"created_at": "` + Rule1CreatedAt + `",
-				"total_risk": 3,
-				"risk_of_change": 0,
-				"extra_data": null,
-				"tags": [
-					"tag1",
-					"tag2"
-				],
+				"component": "` + string(Rule1ID) + `",
+				"key": "` + ErrorKey1 + `",
+				"user_vote": 0,
 				"disabled": false
 			},
 			{
-				"rule_id": "` + string(Rule2ID) + `",
-				"description": "` + Rule2Description + `",
-				"details": "` + Rule2Details + `",
-				"reason": "` + Rule2Reason + `",
-				"resolution": "` + Rule2Resolution + `",
-				"created_at": "` + Rule2CreatedAt + `",
-				"total_risk": 4,
-				"risk_of_change": 0,
-				"extra_data": null,
-				"tags": [
-					"tag1",
-					"tag2"
-				],
+				"component": "` + string(Rule2ID) + `",
+				"key": "` + ErrorKey2 + `",
+				"user_vote": 0,
 				"disabled": false
 			}
 		]
@@ -431,15 +383,15 @@ var (
 	},
 	"reports": [
 		{
-			"component": "` + string(Rule1ID) + `.report",
+			"component": "` + string(Rule1ID) + `",
 			"key": "` + ErrorKey1 + `"
 		},
 		{
-			"component": "` + string(Rule2ID) + `.report",
+			"component": "` + string(Rule2ID) + `",
 			"key": "` + ErrorKey2 + `"
 		},
 		{
-			"component": "` + string(Rule3ID) + `.report",
+			"component": "` + string(Rule3ID) + `",
 			"key": "` + ErrorKey3 + `"
 		}
 	],
@@ -452,61 +404,31 @@ var (
 	Report3RulesExpectedResponse = `
 {
 	"report": {
-		"meta": {
-			"count": 3,
-			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
-		},
-		"data": [
-			{
-				"rule_id": "` + string(Rule1ID) + `",
-				"description": "` + Rule1Description + `",
-				"details": "` + Rule1Details + `",
-				"reason": "` + Rule1Reason + `",
-				"resolution": "` + Rule1Resolution + `",
-				"created_at": "` + Rule1CreatedAt + `",
-				"total_risk": 3,
-				"risk_of_change": 0,
-				"extra_data": null,
-				"tags": [
-					"tag1",
-					"tag2"
-				],
+        "meta": {
+            "count": 3,
+            "last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
+        },
+        "reports": [
+            {
+				"component": "` + string(Rule1ID) + `",
+				"key": "` + ErrorKey1 + `",
+				"user_vote": 0,
+				"disabled": false
+			},
+            {
+				"component": "` + string(Rule2ID) + `",
+                "key": "` + ErrorKey2 + `",
+                "user_vote": 0,
 				"disabled": false
 			},
 			{
-				"rule_id": "` + string(Rule2ID) + `",
-				"description": "` + Rule2Description + `",
-				"details": "` + Rule2Details + `",
-				"reason": "` + Rule2Reason + `",
-				"resolution": "` + Rule2Resolution + `",
-				"created_at": "` + Rule2CreatedAt + `",
-				"total_risk": 4,
-				"risk_of_change": 0,
-				"extra_data": null,
-				"tags": [
-					"tag1",
-					"tag2"
-				],
-				"disabled": false
-			},
-			{
-				"rule_id": "` + string(Rule3ID) + `",
-				"description": "` + Rule3Description + `",
-				"details": "` + Rule3Details + `",
-				"reason": "` + Rule3Reason + `",
-				"resolution": "` + Rule3Resolution + `",
-				"created_at": "` + Rule3CreatedAt + `",
-				"total_risk": 2,
-				"risk_of_change": 0,
-				"extra_data": null,
-				"tags": [
-					"tag1",
-					"tag2"
-				],
+				"component": "` + string(Rule3ID) + `",
+                "key": "` + ErrorKey3 + `",
+				"user_vote": 0,
 				"disabled": false
 			}
-		]
-	},
+        ]
+    },
 	"status": "ok"
 }
 `
