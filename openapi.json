@@ -227,69 +227,20 @@
                             }
                           }
                         },
-                        "data": {
+                        "report": {
                           "type": "array",
                           "items": {
                             "type": "object",
                             "properties": {
-                              "description": {
+                              "component": {
                                 "type": "string",
-                                "description": "The title of the rule, a short description.",
-                                "example": "Authentication operator is degraded while having a cluster wide proxy configured"
+                                "description": "The rule identifier for the hit rule.",
+                                "example": "some.python.module"
                               },
-                              "details": {
+                              "key": {
                                 "type": "string",
-                                "description": "Details of the rule - templates rendered on frontend.",
-                                "example": "State of operator: {{=condition}}"
-                              },
-                              "reason": {
-                                "type": "string",
-                                "description": "Reason for the issue, giving the user more accurate description of the cause."
-                              },
-                              "resolution": {
-                                "type": "string",
-                                "description": "Resolution steps of the issue, possibly linking to a resolution article in the knowledge base."
-                              },
-                              "created_at": {
-                                "type": "string",
-                                "format": "date",
-                                "example": "2020-01-02T16:15:59.478901889Z"
-                              },
-                              "total_risk": {
-                                "type": "integer",
-                                "description": "Total risk - calculated from rule impact and likelihood.",
-                                "enum": [
-                                  0,
-                                  1,
-                                  2,
-                                  3,
-                                  4
-                                ]
-                              },
-                              "risk_of_change": {
-                                "type": "integer",
-                                "description": "Risk of change - values paired with corresponding UI elements. 0 returned when not defined, therefore to hide the UI.",
-                                "enum": [
-                                  0,
-                                  1,
-                                  2,
-                                  3,
-                                  4
-                                ]
-                              },
-                              "extra_data": {
-                                "type": "object",
-                                "description": "Used as templating data for other content (details, resolution, etc.), has varying structure depending on the rules in the report.",
-                                "example": {
-                                  "condition": "Degraded"
-                                }
-                              },
-                              "tags": {
-                                "type": "array",
-                                "items": {
-                                  "type": "string"
-                                },
-                                "description": "List of tags that the rule contains, forming rule groups"
+                                "description": "The erroy key triggered for this rule in the cluster.",
+                                "example": "SOME_ERROR_KEY"
                               },
                               "user_vote": {
                                 "type": "integer",
@@ -303,11 +254,6 @@
                               "disabled": {
                                 "type": "boolean",
                                 "description": "If this rule result disabled or not. This field can be used in the UI to show only specific set of rules results."
-                              },
-                              "rule_id": {
-                                "type": "string",
-                                "description": "ID of a rule.",
-                                "example": "some.python.module"
                               }
                             }
                           }
