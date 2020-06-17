@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>migration.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>migration.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"></td>
+	<td class="code"><pre><code><div class="comment">/*
+Copyright © 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/</div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Package migration contains an implementation of a simple database migration
+mechanism that allows semi-automatic transitions between various database
+versions as well as building the latest version of the database from
+scratch.</p>
+
+<p>Please look into README.md with further instructions how to use it.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">migration</div><div class="operator"></div>
+
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;database/sql&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Version represents a version of the database.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">Version</div> <div class="ident">uint</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Step represents an action performed to either increase
+or decrease the migration version of the database.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">Step</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">tx</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">driver</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Migration type describes a single Migration.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">Migration</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">StepUp</div>   <div class="ident">Step</div><div class="operator"></div>
+	<div class="ident">StepDown</div> <div class="ident">Step</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">const</div> <div class="operator">(</div>
+	<div class="ident">ruleErrorKeyTable</div> <div class="operator">=</div> <div class="literal">&#34;rule_error_key&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>GetMaxVersion returns the highest available migration version.
+The DB version cannot be set to a value higher than this.
+This value is equivalent to the length of the list of available migrations.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">Version</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">Version</div><div class="operator">(</div><div class="ident">len</div><div class="operator">(</div><div class="ident">migrations</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>InitInfoTable ensures that the migration information table is created.
+If it already exists, no changes will be made to the database.
+Otherwise, a new migration information table will be created and initialized.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">InitInfoTable</div><div class="operator">(</div><div class="ident">db</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">withTransaction</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">tx</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+		<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">&#34;CREATE TABLE IF NOT EXISTS migration_info (version INTEGER NOT NULL);&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>INSERT if there's no rows in the table</p>
+</td>
+	<td class="code"><pre><code>		<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">&#34;INSERT INTO migration_info (version) SELECT 0 WHERE NOT EXISTS (SELECT version FROM migration_info);&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">var</div> <div class="ident">rowCount</div> <div class="ident">uint</div><div class="operator"></div>
+		<div class="ident">err</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">QueryRow</div><div class="operator">(</div><div class="literal">&#34;SELECT COUNT(*) FROM migration_info;&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Scan</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">rowCount</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">if</div> <div class="ident">rowCount</div> <div class="operator">!=</div> <div class="literal">1</div> <div class="operator">{</div>
+			<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;unexpected number of rows in migration info table (expected: 1, reality: %d)&#34;</div><div class="operator">,</div> <div class="ident">rowCount</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>GetDBVersion reads the current version of the database from the migration info table.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">GetDBVersion</div><div class="operator">(</div><div class="ident">db</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">Version</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">validateNumberOfRows</div><div class="operator">(</div><div class="ident">db</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="literal">0</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">var</div> <div class="ident">version</div> <div class="ident">Version</div> <div class="operator">=</div> <div class="literal">0</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">QueryRow</div><div class="operator">(</div><div class="literal">&#34;SELECT version FROM migration_info;&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Scan</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">version</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ConvertDBError</div><div class="operator">(</div><div class="ident">err</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">version</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>SetDBVersion attempts to get the database into the specified
+target version using available migration steps.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">,</div> <div class="ident">dbDriver</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">,</div> <div class="ident">targetVer</div> <div class="ident">Version</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="ident">maxVer</div> <div class="operator">:=</div> <div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">targetVer</div> <div class="operator">&gt;</div> <div class="ident">maxVer</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;invalid target version (available version range is 0-%d)&#34;</div><div class="operator">,</div> <div class="ident">maxVer</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Get current database version.</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">currentVer</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">GetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Current version is unexpectedly high.</p>
+</td>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">currentVer</div> <div class="operator">&gt;</div> <div class="ident">maxVer</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;current version (%d) is outside of available migration boundaries&#34;</div><div class="operator">,</div> <div class="ident">currentVer</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">execStepsInTx</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">currentVer</div><div class="operator">,</div> <div class="ident">targetVer</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>updateVersionInDB updates the migration version number in the migration info table.
+This function does NOT rollback in case of an error. The calling function is expected to do that.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">updateVersionInDB</div><div class="operator">(</div><div class="ident">tx</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">newVersion</div> <div class="ident">Version</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="ident">res</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">&#34;UPDATE migration_info SET version=$1;&#34;</div><div class="operator">,</div> <div class="ident">newVersion</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Check that there is exactly 1 row in the migration info table.</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">affected</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">res</div><div class="operator">.</div><div class="ident">RowsAffected</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">affected</div> <div class="operator">!=</div> <div class="literal">1</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;unexpected number of affected rows in migration info table (expected: 1, reality: %d)&#34;</div><div class="operator">,</div> <div class="ident">affected</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>execStepsInTx executes the necessary migration steps in a single transaction.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">execStepsInTx</div><div class="operator">(</div><div class="ident">db</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">,</div> <div class="ident">dbDriver</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">,</div> <div class="ident">currentVer</div><div class="operator">,</div> <div class="ident">targetVer</div> <div class="ident">Version</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Already at target version.</p>
+</td>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">currentVer</div> <div class="operator">==</div> <div class="ident">targetVer</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">withTransaction</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">tx</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Upgrade to target version.</p>
+</td>
+	<td class="code"><pre><code>		<div class="keyword">for</div> <div class="ident">currentVer</div> <div class="operator">&lt;</div> <div class="ident">targetVer</div> <div class="operator">{</div>
+			<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migrations</div><div class="operator">[</div><div class="ident">currentVer</div><div class="operator">]</div><div class="operator">.</div><div class="ident">StepUp</div><div class="operator">(</div><div class="ident">tx</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+				<div class="ident">err</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ConvertDBError</div><div class="operator">(</div><div class="ident">err</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+				<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+			<div class="operator">}</div><div class="operator"></div>
+			<div class="ident">currentVer</div><div class="operator">&#43;&#43;</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Downgrade to target version.</p>
+</td>
+	<td class="code"><pre><code>		<div class="keyword">for</div> <div class="ident">currentVer</div> <div class="operator">&gt;</div> <div class="ident">targetVer</div> <div class="operator">{</div>
+			<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migrations</div><div class="operator">[</div><div class="ident">currentVer</div><div class="operator">-</div><div class="literal">1</div><div class="operator">]</div><div class="operator">.</div><div class="ident">StepDown</div><div class="operator">(</div><div class="ident">tx</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+				<div class="ident">err</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ConvertDBError</div><div class="operator">(</div><div class="ident">err</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+				<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+			<div class="operator">}</div><div class="operator"></div>
+			<div class="ident">currentVer</div><div class="operator">--</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">updateVersionInDB</div><div class="operator">(</div><div class="ident">tx</div><div class="operator">,</div> <div class="ident">currentVer</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">validateNumberOfRows</div><div class="operator">(</div><div class="ident">db</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="ident">numberOfRows</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">getNumberOfRows</div><div class="operator">(</div><div class="ident">db</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">numberOfRows</div> <div class="operator">!=</div> <div class="literal">1</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;migration info table contain %v rows&#34;</div><div class="operator">,</div> <div class="ident">numberOfRows</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">getNumberOfRows</div><div class="operator">(</div><div class="ident">db</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">uint</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">var</div> <div class="ident">count</div> <div class="ident">uint</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">QueryRow</div><div class="operator">(</div><div class="literal">&#34;SELECT COUNT(*) FROM migration_info;&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Scan</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">count</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ConvertDBError</div><div class="operator">(</div><div class="ident">err</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">count</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
