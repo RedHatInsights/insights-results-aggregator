@@ -46,7 +46,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/url"
 
 	// we just have to import this package in order to expose pprof interface in debug mode
 	// disable "G108 (CWE-): Profiling endpoint is automatically exposed on /debug/pprof"
@@ -198,33 +197,6 @@ func (server *HTTPServer) checkUserClusterPermissions(writer http.ResponseWriter
 		}
 	}
 	return nil
-}
-
-// getRuleGroups serves as a proxy to the insights-content-service redirecting the request
-// if the service is alive
-func (server *HTTPServer) getRuleGroups(writer http.ResponseWriter, request *http.Request) {
-	contentServiceURL, err := url.Parse(server.Config.ContentServiceURL)
-
-	if err != nil {
-		log.Error().Err(err).Msg("Error during Content Service URL parsing")
-		handleServerError(writer, err)
-		return
-	}
-
-	// test if service is alive
-	_, err = http.Get(contentServiceURL.String())
-	if err != nil {
-		log.Error().Err(err).Msg("Content service unavailable")
-
-		if _, ok := err.(*url.Error); ok {
-			err = &ContentServiceUnavailableError{}
-		}
-
-		handleServerError(writer, err)
-		return
-	}
-
-	http.Redirect(writer, request, contentServiceURL.String()+RuleGroupsEndpoint, 302)
 }
 
 // readUserID tries to retrieve user ID from request. If any error occurs, error response is send back to client.

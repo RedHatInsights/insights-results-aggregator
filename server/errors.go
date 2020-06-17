@@ -67,13 +67,6 @@ func (*NoBodyError) Error() string {
 	return "client didn't provide request body"
 }
 
-// ContentServiceUnavailableError error is used when the content service cannot be reached
-type ContentServiceUnavailableError struct{}
-
-func (*ContentServiceUnavailableError) Error() string {
-	return "Content service is unreachable"
-}
-
 // handleServerError handles separate server errors and sends appropriate responses
 func handleServerError(writer http.ResponseWriter, err error) {
 	log.Error().Err(err).Msg("handleServerError()")
@@ -89,8 +82,6 @@ func handleServerError(writer http.ResponseWriter, err error) {
 		respErr = responses.SendNotFound(writer, err.Error())
 	case *AuthenticationError:
 		respErr = responses.SendForbidden(writer, err.Error())
-	case *ContentServiceUnavailableError:
-		respErr = responses.SendServiceUnavailable(writer, err.Error())
 	default:
 		respErr = responses.SendInternalServerError(writer, "Internal Server Error")
 	}

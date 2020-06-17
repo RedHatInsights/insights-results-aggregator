@@ -65,28 +65,6 @@
         }
       }
     },
-    "/groups": {
-      "get": {
-        "summary": "Get all rule groups and their relevant information",
-        "description": "This simply redirects to an endpoint of the same name of a service called insights-operator-service",
-        "parameters": [],
-        "operationId": "getRuleGroups",
-        "responses": {
-          "302": {
-            "description": "Found redirect: response containing all rule groups",
-            "content": {
-              "text/plain": {}
-            }
-          },
-          "503": {
-            "description": "Content service is unavailable",
-            "content": {
-              "text/plain": {}
-            }
-          }
-        }
-      }
-    },
     "/organizations": {
       "get": {
         "summary": "Returns a list of available organization IDs.",

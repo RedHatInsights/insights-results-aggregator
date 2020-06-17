@@ -48,8 +48,6 @@ const (
 	// RuleErrorKeyEndpoint is for endpoints to create&delete a rule_error_key (DEBUG only)
 	// and for endpoint to get a rule
 	RuleErrorKeyEndpoint = "rules/{rule_id}/error_keys/{error_key}"
-	// RuleGroupsEndpoint is a simple redirect endpoint to the insights-content-service API specified in configruation
-	RuleGroupsEndpoint = "groups"
 	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
 	// DisableRuleForClusterEndpoint disables a rule for specified cluster
@@ -94,7 +92,6 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc(apiPrefix+RuleGroupsEndpoint, server.getRuleGroups).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.getRule).Methods(http.MethodGet)
 
 	// Prometheus metrics
