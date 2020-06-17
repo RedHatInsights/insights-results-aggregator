@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>rest.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>rest.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"></td>
+	<td class="code"><pre><code><div class="comment">/*
+Copyright © 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/</div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Package tests contains REST API tests for following endpoints:</p>
+
+<p>apiPrefix</p>
+
+<p>apiPrefix+&quot;organizations&quot;</p>
+
+<p>apiPrefix+&quot;report/{organization}/{cluster}&quot;</p>
+
+<p>apiPrefix+&quot;clusters/{cluster}/rules/{rule_id}/like&quot;</p>
+
+<p>apiPrefix+&quot;clusters/{cluster}/rules/{rule_id}/dislike&quot;</p>
+
+<p>apiPrefix+&quot;clusters/{cluster}/rules/{rule<em>id}/reset</em>vote&quot;</p>
+
+<p>apiPrefix+&quot;organizations/{organization}/clusters&quot;</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">tests</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ServerTests run all tests for basic REST API endpoints</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">ServerTests</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">BasicTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">OrganizationsTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">ClustersTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">ReportsTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">VoteTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>tests for OpenAPI specification that is accessible via its endpoint as well
+implementation of these tests is stored in openapi.go</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkOpenAPISpecifications</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>tests for metrics hat is accessible via its endpoint as well
+implementation of these tests is stored in metrics.go</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkPrometheusMetrics</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>BasicTests implements basic tests for REST API apiPrefix</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">BasicTests</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>implementation of these tests is stored in entrypoint.go</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkRestAPIEntryPoint</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkNonExistentEntryPoint</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkWrongEntryPoint</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkWrongMethodsForEntryPoint</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>OrganizationsTests implements tests for REST API endpoints apiPrefix+&quot;organizations&quot;</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">OrganizationsTests</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>implementation of these tests is stored in organizations.go</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkOrganizationsEndpoint</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkOrganizationsEndpointWrongMethods</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ClustersTests implements tests for REST API endpoints apiPrefix+&quot;report/{organization}/{cluster}&quot;</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">ClustersTests</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>implementation of these tests is stored in org_clusters.go</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkClustersEndpointForKnownOrganizations</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkClustersEndpointForUnknownOrganizations</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkClustersEndpointForImproperOrganizations</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkClustersEndpointWrongMethods</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkClustersEndpointSpecialOrganizationIds</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ReportsTests implements tests for REST API endpoints apiPrefix+&quot;report/{organization}/{cluster}&quot;</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">ReportsTests</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>implementation of these tests is stored in reports.go</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkReportEndpointForKnownOrganizationAndKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkReportEndpointForKnownOrganizationAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkReportEndpointForUnknownOrganizationAndKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkReportEndpointForUnknownOrganizationAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkReportEndpointForImproperOrganization</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkReportEndpointWrongMethods</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">reproducerForIssue384</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>VoteTests implements tests for REST API endpoints for voting about rules</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">VoteTests</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>implementation of these tests is stored in rule_vote.go</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkLikeKnownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkDislikeKnownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkResetKnownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkLikeKnownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkDislikeKnownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkResetKnownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkLikeKnownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkDislikeKnownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkResetKnownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkLikeUnknownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkDislikeUnknownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkResetUnknownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkLikeUnknownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkDislikeUnknownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkResetUnknownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkLikeUnknownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkDislikeUnknownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkResetUnknownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">reproducerForIssue385</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteForKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteForImproperCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteForUnknownRuleAndKnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteForUnknownRuleAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteForUnknownRuleAndImproperCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteAfterVote</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteAfterUnvote</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteAfterDoubleVote</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkGetUserVoteAfterDoubleUnvote</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

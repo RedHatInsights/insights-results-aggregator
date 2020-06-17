@@ -518,16 +518,17 @@ func GetRandomConsumerMessage() string {
 	orgID := rand.Intn(999999)
 	clusterName := uuid.New()
 	timeRandomRange := 100000
+	/* #nosec G404 */
 	lastCheckedAt := time.Now().Add(-time.Duration(rand.Intn(timeRandomRange)) * time.Second)
 	// TODO: generate some real looking consumer report here
 	consumerReport := ConsumerReport
 
 	consumerMessage := `{
-		"OrgID": ` + fmt.Sprint(orgID) + `,
-		"ClusterName": "` + clusterName.String() + `",
-		"Report":` + consumerReport + `,
-		"LastChecked": "` + lastCheckedAt.Format(time.RFC3339) + `"
-	}`
+		    "OrgID": ` + fmt.Sprint(orgID) + `,
+		    "ClusterName": "` + clusterName.String() + `",
+		    "Report":` + consumerReport + `,
+		    "LastChecked": "` + lastCheckedAt.Format(time.RFC3339) + `"
+	    }`
 
 	return consumerMessage
 }
@@ -538,6 +539,7 @@ func GetRandomRuleID(length uint) types.RuleID {
 	var result types.RuleID
 
 	for i := uint(0); i < length; i++ {
+		/* #nosec G404 */
 		char := rune('a' + rand.Intn('z'-'a'))
 		result += types.RuleID(char)
 	}

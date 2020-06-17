@@ -25,6 +25,11 @@ optional arguments:
 
 [Annotated source code](json_check.html)
 
+
+## `docgo.sh`
+
+Generates documentation for all packages.
+
 Please note that other utilities and tools have in available in separate repository
 [RedHatInsights / insights-results-aggregator-utils](https://github.com/RedHatInsights/insights-results-aggregator-utils/).
 More detailed description of these tools is

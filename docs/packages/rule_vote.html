@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>rule_vote.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>rule_vote.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"></td>
+	<td class="code"><pre><code><div class="comment">/*
+Copyright © 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/</div>
+
+<div class="keyword">package</div> <div class="ident">tests</div><div class="operator"></div>
+
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/verdverm/frisby&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">const</div> <div class="operator">(</div>
+	<div class="ident">improperClusterID</div> <div class="operator">=</div> <div class="literal">&#34;000000000000000000000000000000000000&#34;</div><div class="operator"></div>
+	<div class="ident">knownCluster</div>      <div class="operator">=</div> <div class="literal">&#34;00000000-0000-0000-0000-000000000000&#34;</div><div class="operator"></div>
+
+	<div class="ident">anyRule</div>   <div class="operator">=</div> <div class="literal">&#34;0&#34;</div> <div class="operator"></div><div class="comment">// we don&#39;t care</div>
+	<div class="ident">knownRule</div> <div class="operator">=</div> <div class="literal">&#34;foo&#34;</div><div class="operator"></div>
+
+	<div class="ident">unexpectedErrorStatusMessage</div> <div class="operator">=</div> <div class="literal">&#34;Expected error status, but got &#39;%s&#39; instead&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="ident">knownClustersForOrganization1</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+	<div class="literal">&#34;00000000-0000-0000-0000-000000000000&#34;</div><div class="operator">,</div>
+	<div class="literal">&#34;00000000-0000-0000-ffff-000000000000&#34;</div><div class="operator">,</div>
+	<div class="literal">&#34;00000000-0000-0000-0000-ffffffffffff&#34;</div><div class="operator">,</div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="ident">unknownClusters</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+	<div class="literal">&#34;abcdef00-0000-0000-0000-000000000000&#34;</div><div class="operator">,</div>
+	<div class="literal">&#34;abcdef00-0000-0000-1111-000000000000&#34;</div><div class="operator">,</div>
+	<div class="literal">&#34;abcdef00-0000-0000-ffff-000000000000&#34;</div><div class="operator">,</div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="ident">improperClusterIDs</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+	<div class="literal">&#34;xyz&#34;</div><div class="operator">,</div>                                   <div class="comment">// definitely wrong</div>
+	<div class="literal">&#34;00000000-0000-0000-0000-00000000000&#34;</div><div class="operator">,</div>   <div class="comment">// shorter by one character</div>
+	<div class="literal">&#34;0000000-0000-0000-0000-000000000000&#34;</div><div class="operator">,</div>   <div class="comment">// shorter by one character</div>
+	<div class="literal">&#34;00000000-000-0000-0000-000000000000&#34;</div><div class="operator">,</div>   <div class="comment">// shorter by one character</div>
+	<div class="literal">&#34;00000000-0000-000-0000-000000000000&#34;</div><div class="operator">,</div>   <div class="comment">// shorter by one character</div>
+	<div class="literal">&#34;00000000-0000-0000-000-000000000000&#34;</div><div class="operator">,</div>   <div class="comment">// shorter by one character</div>
+	<div class="literal">&#34;00000000-0000-0000-0000-fffffffffffff&#34;</div><div class="operator">,</div> <div class="comment">// longer by one character</div>
+	<div class="literal">&#34;00000000f-0000-0000-0000-ffffffffffff&#34;</div><div class="operator">,</div> <div class="comment">// longer by one character</div>
+	<div class="literal">&#34;00000000-0000f-0000-0000-ffffffffffff&#34;</div><div class="operator">,</div> <div class="comment">// longer by one character</div>
+	<div class="literal">&#34;00000000-0000-0000f-0000-ffffffffffff&#34;</div><div class="operator">,</div> <div class="comment">// longer by one character</div>
+	<div class="literal">&#34;00000000-0000-0000-0000f-ffffffffffff&#34;</div><div class="operator">,</div> <div class="comment">// longer by one character</div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="ident">knownRules</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+	<div class="literal">&#34;foo&#34;</div><div class="operator">,</div>
+	<div class="literal">&#34;bar&#34;</div><div class="operator">,</div>
+	<div class="literal">&#34;xyzzy&#34;</div><div class="operator">,</div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="ident">unknownRules</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+	<div class="literal">&#34;rule1&#34;</div><div class="operator">,</div>
+	<div class="literal">&#34;rule2&#34;</div><div class="operator">,</div>
+	<div class="literal">&#34;rule3&#34;</div><div class="operator">,</div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">constructURLVoteForRule</div><div class="operator">(</div><div class="ident">clusterID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">ruleID</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%sclusters/%s/rules/%s/like&#34;</div><div class="operator">,</div> <div class="ident">apiURL</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">constructURLUnvoteForRule</div><div class="operator">(</div><div class="ident">clusterID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">ruleID</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%sclusters/%s/rules/%s/dislike&#34;</div><div class="operator">,</div> <div class="ident">apiURL</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">constructURLResetVoteForRule</div><div class="operator">(</div><div class="ident">clusterID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">ruleID</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%sclusters/%s/rules/%s/reset_vote&#34;</div><div class="operator">,</div> <div class="ident">apiURL</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">constructURLGetVoteForRule</div><div class="operator">(</div><div class="ident">clusterID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">ruleID</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%sclusters/%s/rules/%s/get_vote/&#34;</div><div class="operator">,</div> <div class="ident">apiURL</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkOkStatus</div><div class="operator">(</div><div class="ident">f</div> <div class="operator">*</div><div class="ident">frisby</div><div class="operator">.</div><div class="ident">Frisby</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">setAuthHeader</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">statusResponse</div> <div class="operator">:=</div> <div class="ident">readStatusFromResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div> <div class="operator">!=</div> <div class="literal">&#34;ok&#34;</div> <div class="operator">{</div>
+		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;Expected ok status, but got &#39;%s&#39; instead&#34;</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkOkStatusUserVote</div><div class="operator">(</div><div class="ident">url</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Put</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkOkStatus</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkOkStatusGetVote</div><div class="operator">(</div><div class="ident">url</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkOkStatus</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkInvalidUUIDFormat</div><div class="operator">(</div><div class="ident">f</div> <div class="operator">*</div><div class="ident">frisby</div><div class="operator">.</div><div class="ident">Frisby</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">setAuthHeader</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">400</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">statusResponse</div> <div class="operator">:=</div> <div class="ident">readStatusFromResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div> <div class="operator">==</div> <div class="literal">&#34;ok&#34;</div> <div class="operator">{</div>
+		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="ident">unexpectedErrorStatusMessage</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">strings</div><div class="operator">.</div><div class="ident">Contains</div><div class="operator">(</div><div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">,</div> <div class="literal">&#34;Error: &#39;invalid UUID &#34;</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;Unexpected error reported: %v&#34;</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkInvalidUUIDFormatGet</div><div class="operator">(</div><div class="ident">url</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkInvalidUUIDFormat</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">(</div><div class="ident">url</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Put</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkInvalidUUIDFormat</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkItemNotFound</div><div class="operator">(</div><div class="ident">f</div> <div class="operator">*</div><div class="ident">frisby</div><div class="operator">.</div><div class="ident">Frisby</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">setAuthHeader</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">404</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">statusResponse</div> <div class="operator">:=</div> <div class="ident">readStatusFromResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div> <div class="operator">==</div> <div class="literal">&#34;ok&#34;</div> <div class="operator">{</div>
+		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="ident">unexpectedErrorStatusMessage</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">strings</div><div class="operator">.</div><div class="ident">Contains</div><div class="operator">(</div><div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">,</div> <div class="literal">&#34;was not found in the storage&#34;</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;Unexpected error reported: %v&#34;</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkItemNotFoundGet</div><div class="operator">(</div><div class="ident">url</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkItemNotFound</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">(</div><div class="ident">url</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Put</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkItemNotFound</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>reproducerForIssue385 checks whether the issue https://github.com/RedHatInsights/insights-results-aggregator/issues/385 has been fixed</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">reproducerForIssue385</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">const</div> <div class="ident">message</div> <div class="operator">=</div> <div class="literal">&#34;Reproducer for issue #385 (https://github.com/RedHatInsights/insights-results-aggregator/issues/385)&#34;</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>vote</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLVoteForRule</div><div class="operator">(</div><div class="ident">improperClusterID</div><div class="operator">,</div> <div class="ident">anyRule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">(</div><div class="ident">url</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>unvote</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">=</div> <div class="ident">constructURLUnvoteForRule</div><div class="operator">(</div><div class="ident">improperClusterID</div><div class="operator">,</div> <div class="ident">anyRule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">(</div><div class="ident">url</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>reset vote</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">=</div> <div class="ident">constructURLResetVoteForRule</div><div class="operator">(</div><div class="ident">improperClusterID</div><div class="operator">,</div> <div class="ident">anyRule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">(</div><div class="ident">url</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>test the specified rule vote/unvote/reset REST API endpoint by using selected checker function</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">clusters</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">rules</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">urlConstructor</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">checker</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">)</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">cluster</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">clusters</div> <div class="operator">{</div>
+		<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">rule</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">rules</div> <div class="operator">{</div>
+			<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">urlConstructor</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">checker</div><div class="operator">(</div><div class="ident">url</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkLikeKnownRuleForKnownCluster tests whether 'like' REST API endpoint works correctly for known rule and known cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkLikeKnownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;like&#39; REST API endpoint works correctly for known rule and known cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLVoteForRule</div><div class="operator">,</div> <div class="ident">checkOkStatusUserVote</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkDislikeKnownRuleForKnownCluster tests whether 'dislike' REST API endpoint works correctly for known rule and known cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkDislikeKnownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;dislike&#39; REST API endpoint works correctly for known rule and known cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLUnvoteForRule</div><div class="operator">,</div> <div class="ident">checkOkStatusUserVote</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkResetKnownRuleForKnownCluster tests whether 'reset vote' REST API endpoint works correctly for known rule and known cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResetKnownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;reset vote&#39; REST API endpoint works correctly for known rule and known cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLResetVoteForRule</div><div class="operator">,</div> <div class="ident">checkOkStatusUserVote</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkLikeKnownRuleForUnknownCluster tests whether 'like' REST API endpoint works correctly for unknown rule and unknown cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkLikeKnownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;like&#39; REST API endpoint works correctly for known rule and unknown cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkDislikeKnownRuleForUnknownCluster tests whether 'dislike' REST API endpoint works correctly for unknown rule and unknown cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkDislikeKnownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;dislike&#39; REST API endpoint works correctly for known rule and unknown cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLUnvoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkResetKnownRuleForUnknownCluster tests whether 'reset vote' REST API endpoint works correctly for unknown rule and unknown cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResetKnownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;reset vote&#39; REST API endpoint works correctly for known rule and unknown cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLResetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkLikeKnownRuleForImproperCluster tests whether 'like' REST API endpoint works correctly for known rule and improper cluster id</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkLikeKnownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;like&#39; REST API endpoint works correctly for known rule and improper cluster ID&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkDislikeKnownRuleForImproperCluster tests whether 'dislike' REST API endpoint works correctly for known rule and improper cluster id</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkDislikeKnownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;dilike&#39; REST API endpoint works correctly for known rule and improper cluster ID&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLUnvoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkResetKnownRuleForImproperCluster tests whether 'reset vote' REST API endpoint works correctly for known rule and improper cluster id</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResetKnownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;reset vote&#39; REST API endpoint works correctly for known rule and improper cluster ID&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLResetVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkLikeUnknownRuleForKnownCluster tests whether 'like' REST API endpoint works correctly for unknown rule and known cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkLikeUnknownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;like&#39; REST API endpoint works correctly for unknown rule and known cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkDislikeUnknownRuleForKnownCluster tests whether 'dislike' REST API endpoint works correctly for unknown rule and known cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkDislikeUnknownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;dislike&#39; REST API endpoint works correctly for unknown rule and known cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLUnvoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkResetUnknownRuleForKnownCluster tests whether 'reset vote' REST API endpoint works correctly for unknown rule and known cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResetUnknownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;reset vote&#39; REST API endpoint works correctly for unknown rule and known cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLResetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkLikeUnknownRuleForUnknownCluster tests whether 'like' REST API endpoint works correctly for unknown rule and unknown cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkLikeUnknownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;like&#39; REST API endpoint works correctly for unknown rule and unknown cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkDislikeUnknownRuleForUnknownCluster tests whether 'dislike' REST API endpoint works correctly for unknown rule and unknown cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkDislikeUnknownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;dislike&#39; REST API endpoint works correctly for unknown rule and unknown cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLUnvoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkResetUnknownRuleForUnknownCluster tests whether 'reset vote' REST API endpoint works correctly for unknown rule and unknown cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResetUnknownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;reset vote&#39; REST API endpoint works correctly for unknown rule and unknown cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLResetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkLikeUnknownRuleForImproperCluster tests whether 'like' REST API endpoint works correctly for unknown rule and improper cluster id</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkLikeUnknownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;like&#39; REST API endpoint works correctly for unknown rule and improper cluster ID&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkDislikeUnknownRuleForImproperCluster tests whether 'dislike' REST API endpoint works correctly for unknown rule and improper cluster id</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkDislikeUnknownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;dilike&#39; REST API endpoint works correctly for unknown rule and improper cluster ID&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLUnvoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkResetUnknownRuleForImproperCluster tests whether 'reset vote' REST API endpoint works correctly for unknown rule and improper cluster id</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResetUnknownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;reset vote&#39; REST API endpoint works correctly for unknown rule and improper cluster ID&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLResetVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkGetUserVoteForKnownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and known cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for known rule and known cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkOkStatusGetVote</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkGetUserVoteForUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and unknown cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for known rule and unknown cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundGet</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkGetUserVoteForImproperCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and improper cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for known rule and improper cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatGet</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkGetUserVoteForUnknownRuleAndKnownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and known cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForUnknownRuleAndKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for unknown rule and known cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundGet</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkGetUserVoteForUnknownRuleAndUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and unknown cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForUnknownRuleAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for unknown rule and unknown cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundGet</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkGetUserVoteForUnknownRuleAndImproperCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and improper cluster</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForUnknownRuleAndImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
+		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for unknown rule and improper cluster&#34;</div><div class="operator">,</div>
+		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatGet</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>RuleVoteResponse represents response containing rule votes</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">RuleVoteResponse</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">RuleVote</div> <div class="ident">int</div>    <div class="literal">`json:&#34;vote&#34;`</div><div class="operator"></div>
+	<div class="ident">Status</div>   <div class="ident">string</div> <div class="literal">`json:&#34;status&#34;`</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">voteForRule</div><div class="operator">(</div><div class="ident">cluster</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">rule</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLVoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkOkStatusUserVote</div><div class="operator">(</div><div class="ident">url</div><div class="operator">,</div> <div class="literal">&#34;Let&#39;s vote&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">unvoteForRule</div><div class="operator">(</div><div class="ident">cluster</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">rule</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLUnvoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkOkStatusUserVote</div><div class="operator">(</div><div class="ident">url</div><div class="operator">,</div> <div class="literal">&#34;Let&#39;s unvote&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">resetVoteForRule</div><div class="operator">(</div><div class="ident">cluster</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">rule</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLResetVoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkOkStatusUserVote</div><div class="operator">(</div><div class="ident">url</div><div class="operator">,</div> <div class="literal">&#34;Let&#39;s reset voting&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">rule</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">expectedVote</div> <div class="ident">int</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLGetVoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Read vote for rule&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">r</div> <div class="operator">:=</div> <div class="ident">RuleVoteResponse</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">setAuthHeader</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">text</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">f</div><div class="operator">.</div><div class="ident">Resp</div><div class="operator">.</div><div class="ident">Content</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Unmarshal</div><div class="operator">(</div><div class="ident">text</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">r</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">r</div><div class="operator">.</div><div class="ident">RuleVote</div> <div class="operator">!=</div> <div class="ident">expectedVote</div> <div class="operator">{</div>
+		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;Expected vote: %d, actual: %d&#34;</div><div class="operator">,</div> <div class="ident">expectedVote</div><div class="operator">,</div> <div class="ident">r</div><div class="operator">.</div><div class="ident">RuleVote</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkGetUserVoteAfterVote</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">cluster</div> <div class="operator">:=</div> <div class="ident">knownClustersForOrganization1</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator"></div>
+	<div class="ident">rule</div> <div class="operator">:=</div> <div class="ident">knownRules</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator"></div>
+
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">voteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">resetVoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkGetUserVoteAfterUnvote</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">cluster</div> <div class="operator">:=</div> <div class="ident">knownClustersForOrganization1</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator"></div>
+	<div class="ident">rule</div> <div class="operator">:=</div> <div class="ident">knownRules</div><div class="operator">[</div><div class="literal">1</div><div class="operator">]</div><div class="operator"></div>
+
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">unvoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="operator">-</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">resetVoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkGetUserVoteAfterDoubleVote</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">cluster</div> <div class="operator">:=</div> <div class="ident">knownClustersForOrganization1</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator"></div>
+	<div class="ident">rule</div> <div class="operator">:=</div> <div class="ident">knownRules</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator"></div>
+
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">voteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">voteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">resetVoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">checkGetUserVoteAfterDoubleUnvote</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">cluster</div> <div class="operator">:=</div> <div class="ident">knownClustersForOrganization1</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator"></div>
+	<div class="ident">rule</div> <div class="operator">:=</div> <div class="ident">knownRules</div><div class="operator">[</div><div class="literal">1</div><div class="operator">]</div><div class="operator"></div>
+
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">unvoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">unvoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="operator">-</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">resetVoteForRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkVoteForClusterAndRule</div><div class="operator">(</div><div class="ident">cluster</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

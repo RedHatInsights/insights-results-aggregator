@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>rule.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>rule.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"><p>Copyright 2020 Red Hat, Inc</p>
+
+<p>Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+
+<pre><code> http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">storage</div><div class="operator"></div>
+
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>GetRuleWithContent returns rule with content for provided ruleID and ruleErrorKey</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">GetRuleWithContent</div><div class="operator">(</div><div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">ruleErrorKey</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleWithContent</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">var</div> <div class="operator">(</div>
+		<div class="ident">result</div>             <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleWithContent</div><div class="operator"></div>
+		<div class="ident">impact</div><div class="operator">,</div> <div class="ident">likelihood</div> <div class="ident">int</div><div class="operator"></div>
+		<div class="ident">tags</div>               <div class="ident">string</div><div class="operator"></div>
+	<div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">connection</div><div class="operator">.</div><div class="ident">QueryRow</div><div class="operator">(</div><div class="literal">`
+		SELECT
+			rule.module,
+			rule.name,
+			rule.summary,
+			rule.reason,
+			rule.resolution,
+			rule.more_info,
+			rek.error_key,
+			rek.condition,
+			rek.description,
+			rek.impact,
+			rek.likelihood,
+			rek.publish_date,
+			rek.active,
+			rek.generic,
+			rek.tags
+		FROM rule
+		INNER JOIN rule_error_key rek ON rule.module = rek.rule_module
+		WHERE rule.module = $1 AND rek.error_key = $2
+	`</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">,</div> <div class="ident">ruleErrorKey</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Scan</div><div class="operator">(</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">Module</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">Name</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">Summary</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">Reason</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">Resolution</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">MoreInfo</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">Condition</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">Description</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">impact</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">likelihood</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">PublishDate</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">Active</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">result</div><div class="operator">.</div><div class="ident">Generic</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">tags</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ConvertDBError</div><div class="operator">(</div><div class="ident">err</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">ruleID</div><div class="operator">,</div> <div class="ident">ruleErrorKey</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">result</div><div class="operator">.</div><div class="ident">TotalRisk</div> <div class="operator">=</div> <div class="ident">calculateTotalRisk</div><div class="operator">(</div><div class="ident">impact</div><div class="operator">,</div> <div class="ident">likelihood</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">result</div><div class="operator">.</div><div class="ident">Tags</div> <div class="operator">=</div> <div class="ident">commaSeparatedStrToTags</div><div class="operator">(</div><div class="ident">tags</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="operator">&amp;</div><div class="ident">result</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
