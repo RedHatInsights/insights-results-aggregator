@@ -172,15 +172,6 @@ limitations under the License.</p>
 			<div class="keyword">defer</div> <div class="ident">cleaner</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 			<div class="ident">testReportDataItems</div> <div class="operator">:=</div> <div class="ident">initTestReports</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">sameReportProvider</div><div class="operator">)</div><div class="operator"></div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>write rule data because reports won't be returned without that</p>
-</td>
-	<td class="code"><pre><code>			<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">LoadRuleContent</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">RuleContent3Rules</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
 			<div class="ident">b</div><div class="operator">.</div><div class="ident">Run</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%v/%v/N=%v&#34;</div><div class="operator">,</div> <div class="literal">&#34;SameReport&#34;</div><div class="operator">,</div> <div class="ident">testCase</div><div class="operator">.</div><div class="ident">storageName</div><div class="operator">,</div> <div class="ident">testCase</div><div class="operator">.</div><div class="ident">N</div><div class="operator">)</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">b</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">B</div><div class="operator">)</div> <div class="operator">{</div>
 				<div class="ident">benchmarkHTTPServerReadReportForCluster</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testReportDataItems</div><div class="operator">,</div> <div class="ident">testCase</div><div class="operator">.</div><div class="ident">N</div><div class="operator">)</div><div class="operator"></div>
 			<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>

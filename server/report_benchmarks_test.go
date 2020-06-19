@@ -69,10 +69,6 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 			defer cleaner()
 
 			testReportDataItems := initTestReports(b, 1, mockStorage, sameReportProvider)
-			// write rule data because reports won't be returned without that
-			err := mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
-			helpers.FailOnError(b, err)
-
 			b.Run(fmt.Sprintf("%v/%v/N=%v", "SameReport", testCase.storageName, testCase.N), func(b *testing.B) {
 				benchmarkHTTPServerReadReportForCluster(b, mockStorage, testReportDataItems, testCase.N)
 			})

@@ -258,49 +258,6 @@ limitations under the License.</p>
 		<div class="ident">errorKey</div> <div class="operator">:=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">(</div><div class="literal">&#34;ek&#34;</div><div class="operator">)</div><div class="operator"></div>
 		<div class="ident">userID</div> <div class="operator">:=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">GetRandomUserID</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 
-		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-			<div class="ident">Method</div><div class="operator">:</div>       <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPost</div><div class="operator">,</div>
-			<div class="ident">Endpoint</div><div class="operator">:</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">RuleEndpoint</div><div class="operator">,</div>
-			<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">ruleID</div><div class="operator">}</div><div class="operator">,</div>
-			<div class="ident">Body</div><div class="operator">:</div>         <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">`{&#34;rule_module&#34;: &#34;%v&#34;}`</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-			<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div>
-			<div class="ident">Body</div><div class="operator">:</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">`{
-				&#34;rule&#34;: {
-					&#34;module&#34;:&#34;%v&#34;,
-					&#34;name&#34;:&#34;&#34;,
-					&#34;summary&#34;:&#34;&#34;,
-					&#34;reason&#34;:&#34;&#34;,
-					&#34;resolution&#34;:&#34;&#34;,
-					&#34;more_info&#34;:&#34;&#34;
-				},
-				&#34;status&#34;:&#34;ok&#34;
-			}`</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-			<div class="ident">Method</div><div class="operator">:</div>       <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPost</div><div class="operator">,</div>
-			<div class="ident">Endpoint</div><div class="operator">:</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">RuleErrorKeyEndpoint</div><div class="operator">,</div>
-			<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">ruleID</div><div class="operator">,</div> <div class="ident">errorKey</div><div class="operator">}</div><div class="operator">,</div>
-			<div class="ident">Body</div><div class="operator">:</div>         <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">`{&#34;rule_module&#34;: &#34;%v&#34;}`</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-			<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div>
-			<div class="ident">Body</div><div class="operator">:</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">`{
-				&#34;rule_error_key&#34;: {
-					&#34;rule_module&#34;: &#34;%v&#34;,
-					&#34;error_key&#34;: &#34;%v&#34;,
-					&#34;condition&#34;: &#34;&#34;,
-					&#34;description&#34;:&#34;&#34;,
-					&#34;impact&#34;:0,
-					&#34;likelihood&#34;:0,
-					&#34;publish_date&#34;:&#34;0001-01-01T00:00:00Z&#34;,
-					&#34;active&#34;:false,
-					&#34;generic&#34;:&#34;&#34;
-				},
-				&#34;status&#34;: &#34;ok&#34;
-			}`</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">,</div> <div class="ident">errorKey</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
 		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
 			<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="literal">&#34;{}&#34;</div><div class="operator">,</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 		<div class="operator">)</div><div class="operator"></div>
@@ -319,27 +276,8 @@ limitations under the License.</p>
 
 <div class="keyword">func</div> <div class="ident">cleanupEndpointArgs</div><div class="operator">(</div><div class="ident">tb</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">args</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">voteEndpointArg</div><div class="operator">,</div> <div class="ident">mockStorage</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">arg</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">args</div> <div class="operator">{</div>
-		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-			<div class="ident">Method</div><div class="operator">:</div>       <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodDelete</div><div class="operator">,</div>
-			<div class="ident">Endpoint</div><div class="operator">:</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">RuleErrorKeyEndpoint</div><div class="operator">,</div>
-			<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">arg</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">arg</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">}</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-			<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div>
-			<div class="ident">Body</div><div class="operator">:</div>       <div class="literal">`{&#34;status&#34;: &#34;ok&#34;}`</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-			<div class="ident">Method</div><div class="operator">:</div>       <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodDelete</div><div class="operator">,</div>
-			<div class="ident">Endpoint</div><div class="operator">:</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">RuleEndpoint</div><div class="operator">,</div>
-			<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">arg</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">}</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-			<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div>
-			<div class="ident">Body</div><div class="operator">:</div>       <div class="literal">`{&#34;status&#34;: &#34;ok&#34;}`</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
 		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">DeleteReportsForCluster</div><div class="operator">(</div><div class="ident">arg</div><div class="operator">.</div><div class="ident">ClusterID</div><div class="operator">)</div><div class="operator"></div>
 		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
 	<div class="operator">}</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 

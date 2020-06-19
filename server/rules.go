@@ -15,8 +15,6 @@
 package server
 
 import (
-	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/rs/zerolog/log"
@@ -25,32 +23,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
-
-// getRule returns rule with content for provided rule ID and rule error key
-func (server *HTTPServer) getRule(writer http.ResponseWriter, request *http.Request) {
-	ruleID, err := readRuleID(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	errorKey, err := readErrorKey(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	ruleWithContent, err := server.Storage.GetRuleWithContent(ruleID, errorKey)
-	if err != nil {
-		handleServerError(writer, err)
-		return
-	}
-
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData("rule", ruleWithContent))
-	if err != nil {
-		log.Error().Err(err).Msg(responseDataError)
-	}
-}
 
 // disableRuleForCluster disables a rule for specified cluster, excluding it from reports
 func (server *HTTPServer) disableRuleForCluster(writer http.ResponseWriter, request *http.Request) {
@@ -79,132 +51,6 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 	err = server.Storage.ToggleRuleForCluster(clusterID, ruleID, userID, toggleRule)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to toggle rule for selected cluster")
-		handleServerError(writer, err)
-		return
-	}
-
-	err = responses.SendOK(writer, responses.BuildOkResponse())
-	if err != nil {
-		log.Error().Err(err).Msg(responseDataError)
-	}
-}
-
-func (server *HTTPServer) createRule(writer http.ResponseWriter, request *http.Request) {
-	ruleID, err := readRuleID(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	var rule types.Rule
-
-	err = json.NewDecoder(request.Body).Decode(&rule)
-	if err != nil {
-		if err == io.EOF {
-			err = &NoBodyError{}
-		}
-		handleServerError(writer, err)
-		return
-	}
-
-	rule.Module = ruleID
-
-	err = server.Storage.CreateRule(rule)
-	if err != nil {
-		handleServerError(writer, err)
-		return
-	}
-
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData(
-		"rule", rule,
-	))
-	if err != nil {
-		log.Error().Err(err).Msg(responseDataError)
-	}
-}
-
-func (server *HTTPServer) deleteRule(writer http.ResponseWriter, request *http.Request) {
-	ruleID, err := readRuleID(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	err = server.Storage.DeleteRule(ruleID)
-	if err != nil {
-		handleServerError(writer, err)
-		return
-	}
-
-	err = responses.SendOK(writer, responses.BuildOkResponse())
-	if err != nil {
-		log.Error().Err(err).Msg(responseDataError)
-	}
-}
-
-func (server *HTTPServer) createRuleErrorKey(writer http.ResponseWriter, request *http.Request) {
-	ruleID, err := readRuleID(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	// it's gonna raise an error if rule does not exist
-	_, err = server.Storage.GetRuleByID(ruleID)
-	if err != nil {
-		handleServerError(writer, err)
-		return
-	}
-
-	errorKey, err := readErrorKey(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	var ruleErrorKey types.RuleErrorKey
-
-	err = json.NewDecoder(request.Body).Decode(&ruleErrorKey)
-	if err != nil {
-		if err == io.EOF {
-			err = &NoBodyError{}
-		}
-		handleServerError(writer, err)
-		return
-	}
-
-	ruleErrorKey.RuleModule = ruleID
-	ruleErrorKey.ErrorKey = errorKey
-
-	err = server.Storage.CreateRuleErrorKey(ruleErrorKey)
-	if err != nil {
-		handleServerError(writer, err)
-		return
-	}
-
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData(
-		"rule_error_key", ruleErrorKey,
-	))
-	if err != nil {
-		log.Error().Err(err).Msg(responseDataError)
-	}
-}
-
-func (server *HTTPServer) deleteRuleErrorKey(writer http.ResponseWriter, request *http.Request) {
-	ruleID, err := readRuleID(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	errorKey, err := readErrorKey(writer, request)
-	if err != nil {
-		// everything has been handled already
-		return
-	}
-
-	err = server.Storage.DeleteRuleErrorKey(ruleID, errorKey)
-	if err != nil {
 		handleServerError(writer, err)
 		return
 	}

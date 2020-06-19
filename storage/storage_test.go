@@ -574,38 +574,6 @@ func TestDBStorage_CheckIfClusterExists_DBError(t *testing.T) {
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
-func TestDBStorage_CheckIfRuleExists_OK(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	mustWriteReport3Rules(t, mockStorage)
-
-	rule, err := mockStorage.GetRuleByID(testdata.Rule1ID)
-	helpers.FailOnError(t, err)
-
-	assert.Equal(t, &testdata.Rule1, rule)
-}
-
-func TestDBStorage_CheckIfRuleExists_ClusterDoesNotExist(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	_, err := mockStorage.GetRuleByID(testdata.Rule1ID)
-	assert.EqualError(
-		t,
-		err,
-		fmt.Sprintf("Item with ID %v was not found in the storage", testdata.Rule1ID),
-	)
-}
-
-func TestDBStorage_CheckIfRuleExists_DBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	closer()
-
-	_, err := mockStorage.GetRuleByID(testdata.Rule1ID)
-	assert.EqualError(t, err, "sql: database is closed")
-}
-
 func TestDBStorage_NewSQLite(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
 		Driver:           "sqlite3",

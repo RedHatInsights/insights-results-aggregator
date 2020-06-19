@@ -29,127 +29,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-)
-
-var (
-	ruleConfigOne       = content.GlobalRuleConfig{Impact: map[string]int{"One": 1}}
-	ruleContentActiveOK = content.RuleContentDirectory{
-		Config: ruleConfigOne,
-		Rules: map[string]content.RuleContent{
-			"rc": {
-				Summary:    []byte("summary"),
-				Reason:     []byte("reason"),
-				Resolution: []byte("resolution"),
-				MoreInfo:   []byte("more info"),
-				ErrorKeys: map[string]content.RuleErrorKeyContent{
-					"ek": {
-						Generic: []byte("generic"),
-						Metadata: content.ErrorKeyMetadata{
-							Condition:   "condition",
-							Description: "description",
-							Impact:      "One",
-							Likelihood:  1,
-							PublishDate: "1970-01-01 00:00:00",
-							Status:      "active",
-							Tags:        []string{"tag1", "tag2"},
-						},
-					},
-				},
-			},
-		},
-	}
-	ruleContentInactiveOK = content.RuleContentDirectory{
-		Config: ruleConfigOne,
-		Rules: map[string]content.RuleContent{
-			"rc": {
-				Summary:    []byte("summary"),
-				Reason:     []byte("reason"),
-				Resolution: []byte("resolution"),
-				MoreInfo:   []byte("more info"),
-				ErrorKeys: map[string]content.RuleErrorKeyContent{
-					"ek": {
-						Generic: []byte("generic"),
-						Metadata: content.ErrorKeyMetadata{
-							Condition:   "condition",
-							Description: "description",
-							Impact:      "One",
-							Likelihood:  1,
-							PublishDate: "1970-01-01 00:00:00",
-							Status:      "inactive",
-							Tags:        []string{"tag1", "tag2"},
-						},
-					},
-				},
-			},
-		},
-	}
-	ruleContentBadStatus = content.RuleContentDirectory{
-		Config: ruleConfigOne,
-		Rules: map[string]content.RuleContent{
-			"rc": {
-				Summary:    []byte("summary"),
-				Reason:     []byte("reason"),
-				Resolution: []byte("resolution"),
-				MoreInfo:   []byte("more info"),
-				ErrorKeys: map[string]content.RuleErrorKeyContent{
-					"ek": {
-						Generic: []byte("generic"),
-						Metadata: content.ErrorKeyMetadata{
-							Condition:   "condition",
-							Description: "description",
-							Impact:      "One",
-							Likelihood:  1,
-							PublishDate: "1970-01-01 00:00:00",
-							Status:      "bad",
-							Tags:        []string{"tag1", "tag2"},
-						},
-					},
-				},
-			},
-		},
-	}
-	ruleContentNull = content.RuleContentDirectory{
-		Config: ruleConfigOne,
-		Rules: map[string]content.RuleContent{
-			"rc": {},
-		},
-	}
-	ruleContentExample1 = content.RuleContentDirectory{
-		Config: ruleConfigOne,
-		Rules: map[string]content.RuleContent{
-			"rc": {
-				Summary:    []byte("summary"),
-				Reason:     []byte("reason"),
-				Resolution: []byte("resolution"),
-				MoreInfo:   []byte("more info"),
-				Plugin: content.RulePluginInfo{
-					Name:         "test rule",
-					NodeID:       string(testClusterName),
-					ProductCode:  "product code",
-					PythonModule: string(testRuleID),
-				},
-				ErrorKeys: map[string]content.RuleErrorKeyContent{
-					"ek": {
-						Generic: []byte("generic"),
-						Metadata: content.ErrorKeyMetadata{
-							Condition:   "condition",
-							Description: "description",
-							Impact:      "One",
-							Likelihood:  1,
-							PublishDate: "1970-01-01 00:00:00",
-							Status:      "active",
-							Tags:        []string{"tag1", "tag2"},
-						},
-					},
-				},
-			},
-		},
-	}
 )
 
 func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
@@ -157,123 +40,6 @@ func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
-
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
-	helpers.FailOnError(t, err)
-}
-
-func TestDBStorageLoadRuleContentActiveOK(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.LoadRuleContent(ruleContentActiveOK)
-	helpers.FailOnError(t, err)
-}
-
-func TestDBStorageLoadRuleContentDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	closer()
-
-	err := mockStorage.LoadRuleContent(ruleContentActiveOK)
-	assert.EqualError(t, err, "sql: database is closed")
-}
-
-func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
-
-	query := `
-		DROP TABLE rule_error_key;
-		CREATE TABLE rule_error_key (
-			"error_key"     INTEGER NOT NULL CHECK(typeof("error_key") = 'integer'),
-			"rule_module"   VARCHAR NOT NULL REFERENCES rule(module),
-			"condition"     VARCHAR NOT NULL,
-			"description"   VARCHAR NOT NULL,
-			"impact"        INTEGER NOT NULL,
-			"likelihood"    INTEGER NOT NULL,
-			"publish_date"  TIMESTAMP NOT NULL,
-			"active"        BOOLEAN NOT NULL,
-			"generic"       VARCHAR NOT NULL,
-			"tags"          VARCHAR NOT NULL DEFAULT '',
-
-			PRIMARY KEY("error_key", "rule_module")
-		)
-	`
-
-	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
-		query = `
-			DROP TABLE rule_error_key;
-			CREATE TABLE rule_error_key (
-				"error_key"     INTEGER NOT NULL,
-				"rule_module"   VARCHAR NOT NULL REFERENCES rule(module),
-				"condition"     VARCHAR NOT NULL,
-				"description"   VARCHAR NOT NULL,
-				"impact"        INTEGER NOT NULL,
-				"likelihood"    INTEGER NOT NULL,
-				"publish_date"  TIMESTAMP NOT NULL,
-				"active"        BOOLEAN NOT NULL,
-				"generic"       VARCHAR NOT NULL,
-				"tags"          VARCHAR NOT NULL DEFAULT '',
-
-				PRIMARY KEY("error_key", "rule_module")
-			)
-		`
-	}
-
-	// create a table with a bad type
-	_, err := connection.Exec(query)
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
-	assert.Error(t, err)
-	const sqliteErrMessage = "CHECK constraint failed: rule_error_key"
-	const postgresErrMessage = "pq: invalid input syntax for integer"
-	if err.Error() != sqliteErrMessage && !strings.HasPrefix(err.Error(), postgresErrMessage) {
-		t.Fatalf("expected on of: \n%v\n%v", sqliteErrMessage, postgresErrMessage)
-	}
-}
-
-func TestDBStorageLoadRuleContentDeleteDBError(t *testing.T) {
-	const errorStr = "delete error"
-	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
-	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
-
-	expects.ExpectBegin()
-	expects.ExpectExec("DELETE FROM rule_error_key").
-		WillReturnError(fmt.Errorf(errorStr))
-
-	err := mockStorage.LoadRuleContent(ruleContentActiveOK)
-	assert.EqualError(t, err, errorStr)
-}
-
-func TestDBStorageLoadRuleContentCommitDBError(t *testing.T) {
-	const errorStr = "commit error"
-	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
-	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
-
-	expects.ExpectBegin()
-	expects.ExpectExec("DELETE FROM rule_error_key").WillReturnResult(driver.ResultNoRows)
-	expects.ExpectCommit().WillReturnError(fmt.Errorf(errorStr))
-
-	err := mockStorage.LoadRuleContent(content.RuleContentDirectory{})
-	assert.EqualError(t, err, errorStr)
-}
-
-func TestDBStorageLoadRuleContentInactiveOK(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.LoadRuleContent(ruleContentInactiveOK)
-	helpers.FailOnError(t, err)
-}
-
-func TestDBStorageLoadRuleContentBadStatus(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.LoadRuleContent(ruleContentBadStatus)
-	assert.EqualError(t, err, "invalid rule error key status: 'bad'")
 }
 
 func TestDBStorageToggleRule(t *testing.T) {
@@ -284,7 +50,7 @@ func TestDBStorageToggleRule(t *testing.T) {
 			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 			defer closer()
 
-			mustWriteReport3Rules(t, mockStorage)
+			// mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
 				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, state,
@@ -347,7 +113,7 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 			defer closer()
 
-			mustWriteReport3Rules(t, mockStorage)
+			// mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
 				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, state,
@@ -369,55 +135,6 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 			helpers.FailOnError(t, mockStorage.Close())
 		}(state)
 	}
-}
-
-func TestDBStorageToggleRulesAndList(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	mustWriteReport3Rules(t, mockStorage)
-
-	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
-	))
-
-	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
-	))
-
-	toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
-	helpers.FailOnError(t, err)
-
-	assert.Len(t, toggledRules, 2)
-}
-
-func TestDBStorageDeleteDisabledRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	mustWriteReport3Rules(t, mockStorage)
-
-	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
-	))
-
-	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
-	))
-
-	toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
-	helpers.FailOnError(t, err)
-
-	assert.Len(t, toggledRules, 2)
-
-	helpers.FailOnError(t, mockStorage.DeleteFromRuleClusterToggle(
-		testdata.ClusterName, testdata.Rule2ID, testdata.UserID,
-	))
-
-	toggledRules, err = mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
-	helpers.FailOnError(t, err)
-
-	assert.Len(t, toggledRules, 1)
 }
 
 func TestDBStorageVoteOnRule(t *testing.T) {
@@ -457,28 +174,6 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 			defer closer()
 
 			err := mockStorage.VoteOnRule(
-				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
-			)
-			assert.Error(t, err)
-			assert.Regexp(t, "operation violates foreign key", err.Error())
-		}(vote)
-	}
-}
-
-func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
-	for _, vote := range []types.UserVote{
-		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
-	} {
-		func(vote types.UserVote) {
-			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-			defer closer()
-
-			err := mockStorage.WriteReportForCluster(
-				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
-			)
-			helpers.FailOnError(t, err)
-
-			err = mockStorage.VoteOnRule(
 				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
 			)
 			assert.Error(t, err)
@@ -682,193 +377,6 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 	//assert.Contains(t, buf.String(), errStr)
 }
 
-func TestDBStorage_CreateRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.CreateRule(types.Rule{
-		Module:     "module",
-		Name:       "name",
-		Summary:    "summary",
-		Reason:     "reason",
-		Resolution: "resolution",
-		MoreInfo:   "more_info",
-	})
-	helpers.FailOnError(t, err)
-}
-
-func TestDBStorage_CreateRule_DBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	closer()
-
-	err := mockStorage.CreateRule(types.Rule{
-		Module:     "module",
-		Name:       "name",
-		Summary:    "summary",
-		Reason:     "reason",
-		Resolution: "resolution",
-		MoreInfo:   "more_info",
-	})
-	assert.EqualError(t, err, "sql: database is closed")
-}
-
-func TestDBStorage_CreateRuleErrorKey(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.CreateRule(types.Rule{
-		Module:     "module",
-		Name:       "name",
-		Summary:    "summary",
-		Reason:     "reason",
-		Resolution: "resolution",
-		MoreInfo:   "more_info",
-	})
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.CreateRuleErrorKey(types.RuleErrorKey{
-		ErrorKey:    "error_key",
-		RuleModule:  "module",
-		Condition:   "condition",
-		Description: "description",
-		Impact:      1,
-		Likelihood:  2,
-		PublishDate: testdata.LastCheckedAt,
-		Active:      true,
-		Generic:     "generic",
-	})
-	helpers.FailOnError(t, err)
-}
-
-func TestDBStorage_CreateRuleErrorKey_DBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-
-	err := mockStorage.CreateRule(types.Rule{
-		Module:     "module",
-		Name:       "name",
-		Summary:    "summary",
-		Reason:     "reason",
-		Resolution: "resolution",
-		MoreInfo:   "more_info",
-	})
-	helpers.FailOnError(t, err)
-
-	closer()
-
-	err = mockStorage.CreateRuleErrorKey(types.RuleErrorKey{
-		ErrorKey:    "error_key",
-		RuleModule:  "rule_module",
-		Condition:   "condition",
-		Description: "description",
-		Impact:      1,
-		Likelihood:  2,
-		PublishDate: testdata.LastCheckedAt,
-		Active:      true,
-		Generic:     "generic",
-	})
-	assert.EqualError(t, err, "sql: database is closed")
-}
-
-func TestDBStorage_DeleteRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.CreateRule(types.Rule{
-		Module: "module",
-	})
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.DeleteRule("module")
-	helpers.FailOnError(t, err)
-}
-
-func TestDBStorage_DeleteRule_NotFound(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.DeleteRule("module")
-	assert.EqualError(t, err, "Item with ID module was not found in the storage")
-}
-
-func TestDBStorage_DeleteRule_DBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	closer()
-
-	err := mockStorage.DeleteRule("module")
-	assert.EqualError(t, err, "sql: database is closed")
-}
-
-func TestDBStorage_DeleteRuleErrorKey(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.CreateRule(types.Rule{
-		Module:     "module",
-		Name:       "name",
-		Summary:    "summary",
-		Reason:     "reason",
-		Resolution: "resolution",
-		MoreInfo:   "more_info",
-	})
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.CreateRuleErrorKey(types.RuleErrorKey{
-		ErrorKey:    "error_key",
-		RuleModule:  "module",
-		Condition:   "condition",
-		Description: "description",
-		Impact:      1,
-		Likelihood:  2,
-		PublishDate: testdata.LastCheckedAt,
-		Active:      true,
-		Generic:     "generic",
-	})
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.DeleteRuleErrorKey("module", "error_key")
-	helpers.FailOnError(t, err)
-}
-
-func TestDBStorage_DeleteRuleErrorKey_NotFound(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.DeleteRuleErrorKey("module", "error_key")
-	assert.EqualError(t, err, "Item with ID module/error_key was not found in the storage")
-}
-
-func TestDBStorage_DeleteRuleErrorKey_DBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-
-	err := mockStorage.CreateRule(types.Rule{
-		Module:     "module",
-		Name:       "name",
-		Summary:    "summary",
-		Reason:     "reason",
-		Resolution: "resolution",
-		MoreInfo:   "more_info",
-	})
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.CreateRuleErrorKey(types.RuleErrorKey{
-		ErrorKey:    "error_key",
-		RuleModule:  "module",
-		Condition:   "condition",
-		Description: "description",
-		Impact:      1,
-		Likelihood:  2,
-		PublishDate: testdata.LastCheckedAt,
-		Active:      true,
-		Generic:     "generic",
-	})
-	helpers.FailOnError(t, err)
-
-	closer()
-
-	err = mockStorage.DeleteRuleErrorKey("module", "error_key")
-	assert.EqualError(t, err, "sql: database is closed")
-}
-
 func TestDBStorageGetVotesForNoRules(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
@@ -904,37 +412,4 @@ func TestDBStorageGetVotes(t *testing.T) {
 	assert.Equal(t, types.UserVoteLike, feedbacks[testdata.Rule1ID])
 	assert.Equal(t, types.UserVoteDislike, feedbacks[testdata.Rule2ID])
 	assert.Equal(t, types.UserVoteNone, feedbacks[testdata.Rule3ID])
-}
-
-func TestDBStorage_GetRuleWithContent(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.CreateRule(testdata.Rule1)
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.CreateRuleErrorKey(testdata.RuleErrorKey1)
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.CreateRule(testdata.Rule2)
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.CreateRuleErrorKey(testdata.RuleErrorKey2)
-	helpers.FailOnError(t, err)
-
-	ruleWithContent, err := mockStorage.GetRuleWithContent(testdata.Rule1ID, testdata.RuleErrorKey1.ErrorKey)
-	helpers.FailOnError(t, err)
-
-	// ignore date
-	ruleWithContent.PublishDate = testdata.RuleWithContent1.PublishDate
-
-	assert.Equal(t, testdata.RuleWithContent1, *ruleWithContent)
-
-	ruleWithContent, err = mockStorage.GetRuleWithContent(testdata.Rule2ID, testdata.RuleErrorKey2.ErrorKey)
-	helpers.FailOnError(t, err)
-
-	// ignore date
-	ruleWithContent.PublishDate = testdata.RuleWithContent1.PublishDate
-
-	assert.Equal(t, testdata.RuleWithContent2, *ruleWithContent)
 }

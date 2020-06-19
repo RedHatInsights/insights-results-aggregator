@@ -212,9 +212,6 @@ func TestReadReportDisableRule(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
-	helpers.FailOnError(t, err)
-
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
@@ -281,9 +278,6 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
 	helpers.FailOnError(t, err)
 
 	// user 1 check no disabled rules in response

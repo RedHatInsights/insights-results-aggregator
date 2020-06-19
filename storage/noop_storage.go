@@ -17,7 +17,6 @@ package storage
 import (
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/Shopify/sarama"
 )
@@ -105,39 +104,9 @@ func (*NoopStorage) DeleteReportsForCluster(types.ClusterName) error {
 	return nil
 }
 
-// LoadRuleContent noop
-func (*NoopStorage) LoadRuleContent(content.RuleContentDirectory) error {
-	return nil
-}
-
-// GetRuleByID noop
-func (*NoopStorage) GetRuleByID(types.RuleID) (*types.Rule, error) {
-	return nil, nil
-}
-
 // GetOrgIDByClusterID noop
 func (*NoopStorage) GetOrgIDByClusterID(types.ClusterName) (types.OrgID, error) {
 	return 0, nil
-}
-
-// CreateRule noop
-func (*NoopStorage) CreateRule(types.Rule) error {
-	return nil
-}
-
-// DeleteRule noop
-func (*NoopStorage) DeleteRule(types.RuleID) error {
-	return nil
-}
-
-// CreateRuleErrorKey noop
-func (*NoopStorage) CreateRuleErrorKey(types.RuleErrorKey) error {
-	return nil
-}
-
-// DeleteRuleErrorKey noop
-func (*NoopStorage) DeleteRuleErrorKey(types.RuleID, types.ErrorKey) error {
-	return nil
 }
 
 // WriteConsumerError noop
@@ -150,11 +119,6 @@ func (*NoopStorage) ToggleRuleForCluster(
 	types.ClusterName, types.RuleID, types.UserID, RuleToggle,
 ) error {
 	return nil
-}
-
-// ListDisabledRulesForCluster noop
-func (*NoopStorage) ListDisabledRulesForCluster(types.ClusterName, types.UserID) ([]types.DisabledRuleResponse, error) {
-	return nil, nil
 }
 
 // DeleteFromRuleClusterToggle noop
@@ -188,12 +152,5 @@ func (*NoopStorage) GetUserFeedbackOnRules(
 	[]types.RuleOnReport,
 	types.UserID,
 ) (map[types.RuleID]types.UserVote, error) {
-	return nil, nil
-}
-
-// GetRuleWithContent noop
-func (*NoopStorage) GetRuleWithContent(
-	types.RuleID, types.ErrorKey,
-) (*types.RuleWithContent, error) {
 	return nil, nil
 }

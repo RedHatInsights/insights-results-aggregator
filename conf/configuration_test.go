@@ -97,15 +97,6 @@ func TestLoadServerConfiguration(t *testing.T) {
 	assert.Equal(t, "/api/v1/", serverCfg.APIPrefix)
 }
 
-// TestLoadContentPathConfiguration tests loading the content configuration
-func TestLoadContentPathConfiguration(t *testing.T) {
-	TestLoadConfiguration(t)
-
-	contentPath := conf.GetContentPathConfiguration()
-
-	assert.Equal(t, "/rules-content", contentPath)
-}
-
 // TestLoadStorageConfiguration tests loading the storage configuration sub-tree
 func TestLoadStorageConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
@@ -348,9 +339,6 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		PGDBName:         "aggregator",
 		PGParams:         "params",
 	}, conf.GetStorageConfiguration())
-
-	contentPath := conf.GetContentPathConfiguration()
-	assert.Equal(t, contentPath, "/rules-content")
 }
 
 func setEnvVariables(t *testing.T) {

@@ -145,49 +145,6 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 		errorKey := types.ErrorKey("ek")
 		userID := types.UserID(testdata.GetRandomUserID())
 
-		ira_helpers.AssertAPIRequest(tb, mockStorage, nil, &ira_helpers.APIRequest{
-			Method:       http.MethodPost,
-			Endpoint:     server.RuleEndpoint,
-			EndpointArgs: []interface{}{ruleID},
-			Body:         fmt.Sprintf(`{"rule_module": "%v"}`, ruleID),
-		}, &ira_helpers.APIResponse{
-			StatusCode: http.StatusOK,
-			Body: fmt.Sprintf(`{
-				"rule": {
-					"module":"%v",
-					"name":"",
-					"summary":"",
-					"reason":"",
-					"resolution":"",
-					"more_info":""
-				},
-				"status":"ok"
-			}`, ruleID),
-		})
-
-		ira_helpers.AssertAPIRequest(tb, mockStorage, nil, &ira_helpers.APIRequest{
-			Method:       http.MethodPost,
-			Endpoint:     server.RuleErrorKeyEndpoint,
-			EndpointArgs: []interface{}{ruleID, errorKey},
-			Body:         fmt.Sprintf(`{"rule_module": "%v"}`, ruleID),
-		}, &ira_helpers.APIResponse{
-			StatusCode: http.StatusOK,
-			Body: fmt.Sprintf(`{
-				"rule_error_key": {
-					"rule_module": "%v",
-					"error_key": "%v",
-					"condition": "",
-					"description":"",
-					"impact":0,
-					"likelihood":0,
-					"publish_date":"0001-01-01T00:00:00Z",
-					"active":false,
-					"generic":""
-				},
-				"status": "ok"
-			}`, ruleID, errorKey),
-		})
-
 		err := mockStorage.WriteReportForCluster(
 			testdata.OrgID, clusterID, "{}", time.Now(), testdata.KafkaOffset,
 		)
@@ -206,26 +163,7 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 
 func cleanupEndpointArgs(tb testing.TB, args []voteEndpointArg, mockStorage storage.Storage) {
 	for _, arg := range args {
-		ira_helpers.AssertAPIRequest(tb, mockStorage, nil, &ira_helpers.APIRequest{
-			Method:       http.MethodDelete,
-			Endpoint:     server.RuleErrorKeyEndpoint,
-			EndpointArgs: []interface{}{arg.RuleID, arg.ErrorKey},
-		}, &ira_helpers.APIResponse{
-			StatusCode: http.StatusOK,
-			Body:       `{"status": "ok"}`,
-		})
-
-		ira_helpers.AssertAPIRequest(tb, mockStorage, nil, &ira_helpers.APIRequest{
-			Method:       http.MethodDelete,
-			Endpoint:     server.RuleEndpoint,
-			EndpointArgs: []interface{}{arg.RuleID},
-		}, &ira_helpers.APIResponse{
-			StatusCode: http.StatusOK,
-			Body:       `{"status": "ok"}`,
-		})
-
 		err := mockStorage.DeleteReportsForCluster(arg.ClusterID)
 		helpers.FailOnError(tb, err)
-
 	}
 }

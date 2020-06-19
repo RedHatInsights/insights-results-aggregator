@@ -154,7 +154,6 @@ APIPrefix - usually &quot;/api/v1/&quot; used for all REST API calls</p>
 	<div class="literal">&#34;context&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;net/url&#34;</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -357,43 +356,6 @@ as opposed to no rules hit for the cluster</p>
 		<div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>getRuleGroups serves as a proxy to the insights-content-service redirecting the request
-if the service is alive</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">getRuleGroups</div><div class="operator">(</div><div class="ident">writer</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ResponseWriter</div><div class="operator">,</div> <div class="ident">request</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">contentServiceURL</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">url</div><div class="operator">.</div><div class="ident">Parse</div><div class="operator">(</div><div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">ContentServiceURL</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Error during Content Service URL parsing&#34;</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>test if service is alive</p>
-</td>
-	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">contentServiceURL</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Content service unavailable&#34;</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="keyword">if</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">ok</div> <div class="operator">:=</div> <div class="ident">err</div><div class="operator">.</div><div class="operator">(</div><div class="operator">*</div><div class="ident">url</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">ok</div> <div class="operator">{</div>
-			<div class="ident">err</div> <div class="operator">=</div> <div class="operator">&amp;</div><div class="ident">ContentServiceUnavailableError</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-
-		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="ident">http</div><div class="operator">.</div><div class="ident">Redirect</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">,</div> <div class="ident">contentServiceURL</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div><div class="operator">&#43;</div><div class="ident">RuleGroupsEndpoint</div><div class="operator">,</div> <div class="literal">302</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
