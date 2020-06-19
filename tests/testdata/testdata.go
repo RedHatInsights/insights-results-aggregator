@@ -288,6 +288,32 @@ var (
 }
 `
 
+	Report2RulesWith1Vote = `
+{
+	"report": {
+		"meta": {
+			"count": 2,
+			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
+		},
+		"reports": [
+			{
+				"component": "` + string(Rule1ID) + `",
+				"key": "` + ErrorKey1 + `",
+				"user_vote": 1,
+				"disabled": false
+			},
+			{
+				"component": "` + string(Rule2ID) + `",
+				"key": "` + ErrorKey2 + `",
+				"user_vote": 0,
+				"disabled": false
+			}
+		]
+	},
+	"status": "ok"
+}
+`
+
 	Report3Rules = types.ClusterReport(`
 {
 	"system": {

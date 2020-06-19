@@ -266,6 +266,41 @@ func TestReadReportDisableRule(t *testing.T) {
 	})
 }
 
+func TestReadReportWithFeedback(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.Report2Rules,
+		testdata.LastCheckedAt,
+		testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.VoteOnRule(
+		testdata.ClusterName,
+		testdata.Rule1ID,
+		testdata.UserID,
+		types.UserVoteLike,
+	)
+	helpers.FailOnError(t, err)
+
+	// check that the report contains one vote on rule 1
+	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.UserID,
+	}, &ira_helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report2RulesWith1Vote,
+		BodyChecker: assertReportResponsesEqual,
+	})
+
+}
+
 // TestReadReportDisableRuleMultipleUsers is a reproducer for bug issues 811 and 814
 func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)

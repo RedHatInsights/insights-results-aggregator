@@ -29,26 +29,26 @@ var migrationClusterRuleUserFeedback = Migration{
 		var err error
 		if driver == types.DBDriverPostgres {
 			_, err = tx.Exec(`
-              ALTER TABLE cluster_rule_user_feedback DROP
-                CONSTRAINT cluster_rule_user_feedback_rule_id_fkey
-              `)
+				ALTER TABLE cluster_rule_user_feedback DROP
+					CONSTRAINT cluster_rule_user_feedback_rule_id_fkey
+				`)
 
 		} else {
 			err = upgradeTable(
 				tx,
 				clusterRuleUserFeedbackTable,
 				`
-CREATE TABLE cluster_rule_user_feedback (
-  cluster_id VARCHAR NOT NULL,
-  rule_id VARCHAR NOT NULL,
-  user_id VARCHAR NOT NULL,
-  message VARCHAR NOT NULL,
-  user_vote SMALLINT NOT NULL,
-  added_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL,
+				CREATE TABLE cluster_rule_user_feedback (
+					cluster_id VARCHAR NOT NULL,
+					rule_id VARCHAR NOT NULL,
+					user_id VARCHAR NOT NULL,
+					message VARCHAR NOT NULL,
+					user_vote SMALLINT NOT NULL,
+					added_at TIMESTAMP NOT NULL,
+					updated_at TIMESTAMP NOT NULL,
 
-  PRIMARY KEY(cluster_id, rule_id, user_id),
-  FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
+					PRIMARY KEY(cluster_id, rule_id, user_id),
+					FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
 )
 `)
 		}
@@ -57,9 +57,9 @@ CREATE TABLE cluster_rule_user_feedback (
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverPostgres {
 			_, err := tx.Exec(`
-ALTER TABLE cluster_rule_user_feedback
-  ADD FOREIGN KEY(rule_id) REFERENCES rule(module) ON DELETE CASCADE
-`)
+				ALTER TABLE cluster_rule_user_feedback
+					ADD FOREIGN KEY(rule_id) REFERENCES rule(module) ON DELETE CASCADE
+				`)
 			return err
 		}
 
@@ -67,19 +67,19 @@ ALTER TABLE cluster_rule_user_feedback
 			tx,
 			clusterRuleUserFeedbackTable,
 			`
-CREATE TABLE cluster_rule_user_feedback (
-  cluster_id VARCHAR NOT NULL,
-  rule_id VARCHAR NOT NULL,
-  user_id VARCHAR NOT NULL,
-  message VARCHAR NOT NULL,
-  user_vote SMALLINT NOT NULL,
-  added_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL,
+			CREATE TABLE cluster_rule_user_feedback (
+				cluster_id VARCHAR NOT NULL,
+				rule_id VARCHAR NOT NULL,
+				user_id VARCHAR NOT NULL,
+				message VARCHAR NOT NULL,
+				user_vote SMALLINT NOT NULL,
+				added_at TIMESTAMP NOT NULL,
+				updated_at TIMESTAMP NOT NULL,
 
-  PRIMARY KEY(cluster_id, rule_id, user_id),
-  FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
-  FOREIGN KEY (rule_id) REFERENCES rule(module) ON DELETE CASCADE
-)`,
+				PRIMARY KEY(cluster_id, rule_id, user_id),
+				FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
+				FOREIGN KEY (rule_id) REFERENCES rule(module) ON DELETE CASCADE
+			)`,
 			nil)
 	},
 }
