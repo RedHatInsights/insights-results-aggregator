@@ -212,9 +212,6 @@ func TestReadReportDisableRule(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
-	helpers.FailOnError(t, err)
-
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
@@ -269,8 +266,7 @@ func TestReadReportDisableRule(t *testing.T) {
 	})
 }
 
-// TestReadReportDisableRuleMultipleUsers is a reproducer for bug issues 811 and 814
-func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
+func TestReadReportWithFeedback(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
@@ -283,7 +279,40 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+	err = mockStorage.VoteOnRule(
+		testdata.ClusterName,
+		testdata.Rule1ID,
+		testdata.UserID,
+		types.UserVoteLike,
+	)
+	helpers.FailOnError(t, err)
+
+	// check that the report contains one vote on rule 1
+	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		UserID:       testdata.UserID,
+	}, &ira_helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report2RulesWith1Vote,
+		BodyChecker: assertReportResponsesEqual,
+	})
+
+}
+
+// TestReadReportDisableRuleMultipleUsers is a reproducer for bug issues 811 and 814
+func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.Report2Rules,
+		testdata.LastCheckedAt,
+		testdata.KafkaOffset,
+	)
 	helpers.FailOnError(t, err)
 
 	// user 1 check no disabled rules in response

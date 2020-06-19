@@ -21,7 +21,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -150,93 +149,7 @@ var (
 		"Report":` + ConsumerReport + `,
 		"LastChecked": "` + LastCheckedAt.Format(time.RFC3339) + `"
 	}`
-	LastCheckedAt     = time.Unix(25, 0).UTC()
-	RuleContent3Rules = content.RuleContentDirectory{
-		Config: content.GlobalRuleConfig{Impact: map[string]int{
-			"Two": 2,
-			"Six": 6,
-		}},
-		Rules: map[string]content.RuleContent{
-			"rc1": content.RuleContent{
-				Summary:    []byte("rule 1 summary"),
-				Reason:     []byte("rule 1 reason"),
-				Resolution: []byte("rule 1 resolution"),
-				MoreInfo:   []byte("rule 1 more info"),
-				Plugin: content.RulePluginInfo{
-					Name:         "rule 1 name",
-					NodeID:       string(ClusterName),
-					ProductCode:  "rule 1 product code",
-					PythonModule: string(Rule1ID),
-				},
-				ErrorKeys: map[string]content.RuleErrorKeyContent{
-					ErrorKey1: {
-						Generic: []byte(Rule1Details),
-						Metadata: content.ErrorKeyMetadata{
-							Condition:   "condition",
-							Description: Rule1Description,
-							Impact:      "Two",
-							Likelihood:  4,
-							PublishDate: Rule1CreatedAt,
-							Status:      "active",
-							Tags:        []string{"tag1", "tag2"},
-						},
-					},
-				},
-			},
-			"rc2": content.RuleContent{
-				Summary:    []byte("rule 2 summary"),
-				Reason:     []byte("rule 2 reason"),
-				Resolution: []byte("rule 2 resolution"),
-				MoreInfo:   []byte("rule 2 more info"),
-				Plugin: content.RulePluginInfo{
-					Name:         "rule 2 name",
-					NodeID:       string(ClusterName),
-					ProductCode:  "rule 2 product code",
-					PythonModule: string(Rule2ID),
-				},
-				ErrorKeys: map[string]content.RuleErrorKeyContent{
-					ErrorKey2: {
-						Generic: []byte(Rule2Details),
-						Metadata: content.ErrorKeyMetadata{
-							Condition:   "condition",
-							Description: Rule2Description,
-							Impact:      "Six",
-							Likelihood:  2,
-							PublishDate: Rule2CreatedAt,
-							Status:      "active",
-							Tags:        []string{"tag1", "tag2"},
-						},
-					},
-				},
-			},
-			"rc3": content.RuleContent{
-				Summary:    []byte("rule 3 summary"),
-				Reason:     []byte("rule 3 reason"),
-				Resolution: []byte("rule 3 resolution"),
-				MoreInfo:   []byte("rule 3 more info"),
-				Plugin: content.RulePluginInfo{
-					Name:         "rule 3 name",
-					NodeID:       string(ClusterName),
-					ProductCode:  "rule 3 product code",
-					PythonModule: string(Rule3ID),
-				},
-				ErrorKeys: map[string]content.RuleErrorKeyContent{
-					ErrorKey3: {
-						Generic: []byte(Rule3Details),
-						Metadata: content.ErrorKeyMetadata{
-							Condition:   "condition",
-							Description: Rule3Description,
-							Impact:      "Two",
-							Likelihood:  2,
-							PublishDate: Rule3CreatedAt,
-							Status:      "active",
-							Tags:        []string{"tag1", "tag2"},
-						},
-					},
-				},
-			},
-		},
-	}
+	LastCheckedAt = time.Unix(25, 0).UTC()
 
 	RuleContentResponses = []types.RuleContentResponse{
 		types.RuleContentResponse{
@@ -361,6 +274,32 @@ var (
 				"component": "` + string(Rule1ID) + `",
 				"key": "` + ErrorKey1 + `",
 				"user_vote": 0,
+				"disabled": false
+			},
+			{
+				"component": "` + string(Rule2ID) + `",
+				"key": "` + ErrorKey2 + `",
+				"user_vote": 0,
+				"disabled": false
+			}
+		]
+	},
+	"status": "ok"
+}
+`
+
+	Report2RulesWith1Vote = `
+{
+	"report": {
+		"meta": {
+			"count": 2,
+			"last_checked_at": "` + LastCheckedAt.Format(time.RFC3339) + `"
+		},
+		"reports": [
+			{
+				"component": "` + string(Rule1ID) + `",
+				"key": "` + ErrorKey1 + `",
+				"user_vote": 1,
 				"disabled": false
 			},
 			{

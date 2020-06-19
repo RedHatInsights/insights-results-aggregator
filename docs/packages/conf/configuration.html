@@ -160,10 +160,7 @@ limitations under the License.
 	<div class="ident">Processing</div> <div class="keyword">struct</div> <div class="operator">{</div>
 		<div class="ident">OrgWhiteListFile</div> <div class="ident">string</div> <div class="literal">`mapstructure:&#34;org_whitelist_file&#34; toml:&#34;org_whitelist_file&#34;`</div><div class="operator"></div>
 	<div class="operator">}</div> <div class="literal">`mapstructure:&#34;processing&#34;`</div><div class="operator"></div>
-	<div class="ident">Storage</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">Configuration</div> <div class="literal">`mapstructure:&#34;storage&#34; toml:&#34;storage&#34;`</div><div class="operator"></div>
-	<div class="ident">Content</div> <div class="keyword">struct</div> <div class="operator">{</div>
-		<div class="ident">ContentPath</div> <div class="ident">string</div> <div class="literal">`mapstructure:&#34;path&#34; toml:&#34;path&#34;`</div><div class="operator"></div>
-	<div class="operator">}</div> <div class="literal">`mapstructure:&#34;content&#34; toml:&#34;content&#34;`</div><div class="operator"></div>
+	<div class="ident">Storage</div>    <div class="ident">storage</div><div class="operator">.</div><div class="ident">Configuration</div>          <div class="literal">`mapstructure:&#34;storage&#34; toml:&#34;storage&#34;`</div><div class="operator"></div>
 	<div class="ident">Logging</div>    <div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div>    <div class="literal">`mapstructure:&#34;logging&#34; toml:&#34;logging&#34;`</div><div class="operator"></div>
 	<div class="ident">CloudWatch</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">CloudWatchConfiguration</div> <div class="literal">`mapstructure:&#34;cloudwatch&#34; toml:&#34;cloudwatch&#34;`</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -324,20 +321,6 @@ limitations under the License.
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">Config</div><div class="operator">.</div><div class="ident">Server</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>GetContentPathConfiguration get the path to the content files from the configuration</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">GetContentPathConfiguration</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
-	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Content</div><div class="operator">.</div><div class="ident">ContentPath</div><div class="operator">)</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
-		<div class="ident">Config</div><div class="operator">.</div><div class="ident">Content</div><div class="operator">.</div><div class="ident">ContentPath</div> <div class="operator">=</div> <div class="ident">defaultContentPath</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="keyword">return</div> <div class="ident">Config</div><div class="operator">.</div><div class="ident">Content</div><div class="operator">.</div><div class="ident">ContentPath</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

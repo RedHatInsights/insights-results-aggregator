@@ -21,7 +21,7 @@ package migration
 */
 
 var mig0004ModifyClusterRuleUserFeedback = NewUpdateTableMigration(
-	"cluster_rule_user_feedback",
+	clusterRuleUserFeedbackTable,
 	`
 		CREATE TABLE cluster_rule_user_feedback (
 			cluster_id VARCHAR NOT NULL,

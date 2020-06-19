@@ -169,12 +169,6 @@ limitations under the License.
 	<div class="literal">&#34;xyzzy&#34;</div><div class="operator">,</div>
 <div class="operator">}</div><div class="operator"></div>
 
-<div class="keyword">var</div> <div class="ident">unknownRules</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
-	<div class="literal">&#34;rule1&#34;</div><div class="operator">,</div>
-	<div class="literal">&#34;rule2&#34;</div><div class="operator">,</div>
-	<div class="literal">&#34;rule3&#34;</div><div class="operator">,</div>
-<div class="operator">}</div><div class="operator"></div>
-
 <div class="keyword">func</div> <div class="ident">constructURLVoteForRule</div><div class="operator">(</div><div class="ident">clusterID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">ruleID</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%sclusters/%s/rules/%s/like&#34;</div><div class="operator">,</div> <div class="ident">apiURL</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -429,114 +423,6 @@ limitations under the License.
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>checkLikeUnknownRuleForKnownCluster tests whether 'like' REST API endpoint works correctly for unknown rule and known cluster</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkLikeUnknownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;like&#39; REST API endpoint works correctly for unknown rule and known cluster&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkDislikeUnknownRuleForKnownCluster tests whether 'dislike' REST API endpoint works correctly for unknown rule and known cluster</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkDislikeUnknownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;dislike&#39; REST API endpoint works correctly for unknown rule and known cluster&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLUnvoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkResetUnknownRuleForKnownCluster tests whether 'reset vote' REST API endpoint works correctly for unknown rule and known cluster</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResetUnknownRuleForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;reset vote&#39; REST API endpoint works correctly for unknown rule and known cluster&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLResetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkLikeUnknownRuleForUnknownCluster tests whether 'like' REST API endpoint works correctly for unknown rule and unknown cluster</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkLikeUnknownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;like&#39; REST API endpoint works correctly for unknown rule and unknown cluster&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkDislikeUnknownRuleForUnknownCluster tests whether 'dislike' REST API endpoint works correctly for unknown rule and unknown cluster</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkDislikeUnknownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;dislike&#39; REST API endpoint works correctly for unknown rule and unknown cluster&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLUnvoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkResetUnknownRuleForUnknownCluster tests whether 'reset vote' REST API endpoint works correctly for unknown rule and unknown cluster</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResetUnknownRuleForUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;reset vote&#39; REST API endpoint works correctly for unknown rule and unknown cluster&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLResetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundPut</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkLikeUnknownRuleForImproperCluster tests whether 'like' REST API endpoint works correctly for unknown rule and improper cluster id</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkLikeUnknownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;like&#39; REST API endpoint works correctly for unknown rule and improper cluster ID&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkDislikeUnknownRuleForImproperCluster tests whether 'dislike' REST API endpoint works correctly for unknown rule and improper cluster id</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkDislikeUnknownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;dilike&#39; REST API endpoint works correctly for unknown rule and improper cluster ID&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLUnvoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkResetUnknownRuleForImproperCluster tests whether 'reset vote' REST API endpoint works correctly for unknown rule and improper cluster id</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResetUnknownRuleForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;reset vote&#39; REST API endpoint works correctly for unknown rule and improper cluster ID&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLResetVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatPut</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
 	<td class="doc"><p>checkGetUserVoteForKnownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and known cluster</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
@@ -566,42 +452,6 @@ limitations under the License.
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">knownRules</div><div class="operator">,</div>
 		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for known rule and improper cluster&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatGet</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkGetUserVoteForUnknownRuleAndKnownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and known cluster</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForUnknownRuleAndKnownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">knownClustersForOrganization1</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for unknown rule and known cluster&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundGet</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkGetUserVoteForUnknownRuleAndUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and unknown cluster</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForUnknownRuleAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">unknownClusters</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for unknown rule and unknown cluster&#34;</div><div class="operator">,</div>
-		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkItemNotFoundGet</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>checkGetUserVoteForUnknownRuleAndImproperCluster tests whether 'get_vote' REST API endpoint works correctly for unknown rule and improper cluster</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkGetUserVoteForUnknownRuleAndImproperCluster</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">testRuleVoteAPIendpoint</div><div class="operator">(</div><div class="ident">improperClusterIDs</div><div class="operator">,</div> <div class="ident">unknownRules</div><div class="operator">,</div>
-		<div class="literal">&#34;Test whether &#39;get_vote&#39; REST API endpoint works correctly for unknown rule and improper cluster&#34;</div><div class="operator">,</div>
 		<div class="ident">constructURLGetVoteForRule</div><div class="operator">,</div> <div class="ident">checkInvalidUUIDFormatGet</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
