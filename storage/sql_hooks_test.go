@@ -24,14 +24,14 @@ import (
 	"testing"
 	"time"
 
-  "github.com/lib/pq"
+	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestInitSQLDriverWithLogs(t *testing.T) {
