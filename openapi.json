@@ -151,7 +151,7 @@
         ]
       }
     },
-    "/report/{orgId}/{clusterId}": {
+    "/organizations/{orgId}/clusters/{clusterId}/users/{userId}/report": {
       "get": {
         "summary": "Returns the latest report for the given organization and cluster which contains information about rules that were hit by the cluster.",
         "operationId": "getReportForCluster",
@@ -176,6 +176,16 @@
               "minLength": 36,
               "maxLength": 36,
               "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36
             }
           }
         ],
