@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set"
 
@@ -50,7 +51,7 @@ func (mockKafkaConsumer *MockKafkaConsumer) Serve() {
 // Close closes mock consumer
 func (mockKafkaConsumer *MockKafkaConsumer) Close(t testing.TB) {
 	err := mockKafkaConsumer.KafkaConsumer.Close()
-	FailOnError(t, err)
+	helpers.FailOnError(t, err)
 }
 
 // MustGetMockKafkaConsumerWithExpectedMessages creates mocked kafka consumer

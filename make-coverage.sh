@@ -13,20 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+TIMEOUT=2m
+
 
 rm coverage.out 2>/dev/null
 
 case $1 in
 "unit-sqlite")
     echo "Running unit tests with SQLite in memory..."
-    go test -coverprofile=coverage.out ./... 1>&2
+    go test -timeout $TIMEOUT -coverprofile=coverage.out ./... 1>&2
     ;;
 "unit-postgres")
     export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="postgres"
     export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="admin"
 
     echo "Running unit tests with postgres..."
-    go test -coverprofile=coverage.out ./... 1>&2
+    go test -timeout $TIMEOUT -coverprofile=coverage.out ./... 1>&2
     ;;
 "rest")
     echo rest # TODO: rest
@@ -34,7 +36,7 @@ case $1 in
     rm test.db 2> /dev/null
     rm ./insights-results-aggregator.test 2> /dev/null
 
-    go test -c -v -tags testrunmain -coverpkg="./..." . 1>&2
+    go test -timeout $TIMEOUT -c -v -tags testrunmain -coverpkg="./..." . 1>&2
 
     # would be better to put inside a subshell, but linter doesn't like it
     export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests
@@ -58,7 +60,7 @@ case $1 in
     echo "Start your integration tests and press Ctrl+C when they are done"
 
     export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./config-devel
-    go test -v -tags testrunmain -run "^TestRunMain$" -coverprofile=coverage.out -coverpkg="./..." . 1>&2
+    go test -timeout $TIMEOUT -v -tags testrunmain -run "^TestRunMain$" -coverprofile=coverage.out -coverpkg="./..." . 1>&2
     ;;
 *)
     echo 'Please, choose "unit-sqlite", "unit-postgres", "rest" or "integration"'

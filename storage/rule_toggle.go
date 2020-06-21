@@ -17,6 +17,7 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -98,53 +99,6 @@ func (storage DBStorage) ToggleRuleForCluster(
 	return nil
 }
 
-// ListDisabledRulesForCluster retrieves disabled rules for specified cluster
-func (storage DBStorage) ListDisabledRulesForCluster(
-	clusterID types.ClusterName, userID types.UserID,
-) ([]types.DisabledRuleResponse, error) {
-
-	rules := make([]types.DisabledRuleResponse, 0)
-
-	query := `
-	SELECT
-		rek.rule_module,
-		rek.description,
-		rek.generic,
-		crt.disabled_at
-	FROM
-		cluster_rule_toggle crt
-	INNER JOIN
-		rule_error_key rek ON crt.rule_id = rek.rule_module
-	WHERE
-		crt.disabled = $1 AND
-		crt.cluster_id = $2 AND
-		crt.user_id = $3
-	`
-
-	rows, err := storage.connection.Query(query, RuleToggleDisable, clusterID, userID)
-	if err != nil {
-		return rules, err
-	}
-	defer closeRows(rows)
-
-	for rows.Next() {
-		var rule types.DisabledRuleResponse
-
-		err = rows.Scan(
-			&rule.RuleModule,
-			&rule.Description,
-			&rule.Generic,
-			&rule.DisabledAt,
-		)
-		if err == nil {
-			rules = append(rules, rule)
-		} else {
-			log.Error().Err(err).Msg("ListDisabledRulesForCluster")
-		}
-	}
-	return rules, nil
-}
-
 // GetFromClusterRuleToggle gets a rule from cluster_rule_toggle
 func (storage DBStorage) GetFromClusterRuleToggle(
 	clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
@@ -187,6 +141,56 @@ func (storage DBStorage) GetFromClusterRuleToggle(
 	}
 
 	return &disabledRule, err
+}
+
+// GetTogglesForRules gets enable/disable toggle for rules
+func (storage DBStorage) GetTogglesForRules(
+	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
+) (map[types.RuleID]bool, error) {
+	ruleIDs := make([]string, 0)
+	for _, rule := range rulesReport {
+		ruleIDs = append(ruleIDs, rule.Module)
+	}
+
+	toggles := make(map[types.RuleID]bool)
+
+	query := `
+	SELECT
+		rule_id,
+		disabled
+	FROM
+		cluster_rule_toggle
+	WHERE
+		cluster_id = $1 AND
+		rule_id in (%v) AND
+		user_id = $2
+	`
+	whereInStatement := "'" + strings.Join([]string(ruleIDs), "','") + "'"
+	query = fmt.Sprintf(query, whereInStatement)
+
+	rows, err := storage.connection.Query(query, clusterID, userID)
+	if err != nil {
+		return toggles, err
+	}
+	defer closeRows(rows)
+
+	for rows.Next() {
+		var (
+			ruleID   types.RuleID
+			disabled bool
+		)
+
+		err = rows.Scan(&ruleID, &disabled)
+
+		if err != nil {
+			log.Error().Err(err).Msg("GetFromClusterRulesToggle")
+			return nil, err
+		}
+
+		toggles[ruleID] = disabled
+	}
+
+	return toggles, nil
 }
 
 // DeleteFromRuleClusterToggle deletes a record from the table rule_cluster_toggle. Only exposed in debug mode.

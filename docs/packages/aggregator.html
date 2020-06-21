@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>aggregator.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>aggregator.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"></td>
+	<td class="code"><pre><code><div class="comment">/*
+Copyright © 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/</div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Entry point to the insights results aggregator service.</p>
+
+<p>The service contains consumer (usually Kafka consumer) that consumes
+messages from given source, processes those messages and stores them
+in configured data store. It also starts REST API servers with
+endpoints that expose several types of information: list of organizations,
+list of clusters for given organization, and cluster health.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">main</div><div class="operator"></div>
+
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;context&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;database/sql&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;os&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;strconv&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;sync&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/conf&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/consumer&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/logger&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/migration&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">const</div> <div class="operator">(</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ExitStatusOK means that the tool finished with success</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ExitStatusOK</div> <div class="operator">=</div> <div class="ident">iota</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ExitStatusPrepareDbError is returned when the DB preparation (including rule content loading) fails</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ExitStatusPrepareDbError</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ExitStatusConsumerError is returned in case of any consumer-related error</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ExitStatusConsumerError</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ExitStatusServerError is returned in case of any REST API server-related error</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ExitStatusServerError</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ExitStatusMigrationError is returned in case of an error while attempting to perform DB migrations</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ExitStatusMigrationError</div><div class="operator"></div>
+	<div class="ident">defaultConfigFilename</div> <div class="operator">=</div> <div class="literal">&#34;config&#34;</div><div class="operator"></div>
+
+	<div class="ident">databasePreparationMessage</div> <div class="operator">=</div> <div class="literal">&#34;database preparation exited with error code %v&#34;</div><div class="operator"></div>
+	<div class="ident">consumerExitedErrorMessage</div> <div class="operator">=</div> <div class="literal">&#34;consumer exited with error code %v&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="operator">(</div>
+	<div class="ident">serverInstance</div>   <div class="operator">*</div><div class="ident">server</div><div class="operator">.</div><div class="ident">HTTPServer</div><div class="operator"></div>
+	<div class="ident">consumerInstance</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Consumer</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>BuildVersion contains the major.minor version of the CLI client</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">BuildVersion</div> <div class="operator">=</div> <div class="literal">&#34;*not set*&#34;</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>BuildTime contains timestamp when the CLI client has been built</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">BuildTime</div> <div class="operator">=</div> <div class="literal">&#34;*not set*&#34;</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>BuildBranch contains Git branch used to build this application</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">BuildBranch</div> <div class="operator">=</div> <div class="literal">&#34;*not set*&#34;</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>BuildCommit contains Git commit used to build this application</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">BuildCommit</div> <div class="operator">=</div> <div class="literal">&#34;*not set*&#34;</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>autoMigrate determines if the prepareDB function upgrades
+the database to the latest migration version. This is necessary
+for certain tests that work with a temporary, empty SQLite DB.</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">autoMigrate</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">createStorage</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">DBStorage</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">storageCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetStorageConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">dbStorage</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">storageCfg</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;storage.New&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">dbStorage</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>closeStorage closes specified DBStorage with proper error checking
+whether the close operation was successful or not.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">closeStorage</div><div class="operator">(</div><div class="ident">storage</div> <div class="operator">*</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">DBStorage</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Error during closing storage connection&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">prepareDBMigrations</div><div class="operator">(</div><div class="ident">dbStorage</div> <div class="operator">*</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>This is only used by some unit tests.</p>
+</td>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">autoMigrate</div> <div class="operator">{</div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">dbStorage</div><div class="operator">.</div><div class="ident">MigrateToLatest</div><div class="operator">(</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;unable to migrate DB to latest version&#34;</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">return</div> <div class="ident">ExitStatusPrepareDbError</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
+		<div class="ident">currentVersion</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetDBVersion</div><div class="operator">(</div><div class="ident">dbStorage</div><div class="operator">.</div><div class="ident">GetConnection</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;unable to check DB migration version&#34;</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">return</div> <div class="ident">ExitStatusPrepareDbError</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="ident">maxVersion</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">currentVersion</div> <div class="operator">!=</div> <div class="ident">maxVersion</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;old DB migration version (current: %d, latest: %d)&#34;</div><div class="operator">,</div> <div class="ident">currentVersion</div><div class="operator">,</div> <div class="ident">maxVersion</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">return</div> <div class="ident">ExitStatusPrepareDbError</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>prepareDB opens a DB connection and loads all available rule content into it.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">prepareDB</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="ident">dbStorage</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">createStorage</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusPrepareDbError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closeStorage</div><div class="operator">(</div><div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Ensure that the DB is at the latest migration version.</p>
+</td>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">exitCode</div> <div class="operator">:=</div> <div class="ident">prepareDBMigrations</div><div class="operator">(</div><div class="ident">dbStorage</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">exitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">exitCode</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Initialize the database.</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">dbStorage</div><div class="operator">.</div><div class="ident">Init</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;DB initialization error&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusPrepareDbError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>startConsumer starts consumer and returns exit code, ExitStatusOK is no error</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">startConsumer</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="ident">dbStorage</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">createStorage</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusConsumerError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closeStorage</div><div class="operator">(</div><div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">brokerCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>if broker is disabled, simply don't start it</p>
+</td>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">brokerCfg</div><div class="operator">.</div><div class="ident">Enabled</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Broker is disabled, not starting it&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">consumerInstance</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">brokerCfg</div><div class="operator">,</div> <div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Broker initialization error&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusConsumerError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">consumerInstance</div><div class="operator">.</div><div class="ident">Serve</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>startServer starts the server and returns error code</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">startServer</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="ident">dbStorage</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">createStorage</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusServerError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closeStorage</div><div class="operator">(</div><div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">serverCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetServerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">serverInstance</div> <div class="operator">=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">serverCfg</div><div class="operator">,</div> <div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">serverInstance</div><div class="operator">.</div><div class="ident">Start</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;HTTP(s) start error&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusServerError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>startService starts service and returns error code</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">startService</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="keyword">var</div> <div class="ident">waitGroup</div> <div class="ident">sync</div><div class="operator">.</div><div class="ident">WaitGroup</div><div class="operator"></div>
+	<div class="ident">exitCode</div> <div class="operator">:=</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+
+	<div class="ident">prepDbExitCode</div> <div class="operator">:=</div> <div class="ident">prepareDB</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">prepDbExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">databasePreparationMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">exitCode</div> <div class="operator">&#43;=</div> <div class="ident">prepDbExitCode</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">exitCode</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>consumer is run in its own thread</p>
+</td>
+	<td class="code"><pre><code>	<div class="keyword">go</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">consumerExitCode</div> <div class="operator">:=</div> <div class="ident">startConsumer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">consumerExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">consumerExitedErrorMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">exitCode</div> <div class="operator">&#43;=</div> <div class="ident">consumerExitCode</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Done</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>server can be started in current thread</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">serverExitCode</div> <div class="operator">:=</div> <div class="ident">startServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">serverExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">consumerExitedErrorMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">exitCode</div> <div class="operator">&#43;=</div> <div class="ident">serverExitCode</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">exitCode</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">waitForServiceToStart</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">for</div> <div class="operator">{</div>
+		<div class="ident">isStarted</div> <div class="operator">:=</div> <div class="ident">true</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Enabled</div> <div class="operator">&amp;&amp;</div> <div class="ident">consumerInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">isStarted</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">isStarted</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">if</div> <div class="ident">isStarted</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>everything was initialized</p>
+</td>
+	<td class="code"><pre><code>			<div class="keyword">break</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+		<div class="ident">time</div><div class="operator">.</div><div class="ident">Sleep</div><div class="operator">(</div><div class="literal">500</div> <div class="operator">*</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Millisecond</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">stopService</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">serverInstance</div><div class="operator">.</div><div class="ident">Stop</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">TODO</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;HTTP(s) server stop error&#34;</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">errCode</div><div class="operator">&#43;&#43;</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">consumerInstance</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerInstance</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Consumer stop error&#34;</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">errCode</div><div class="operator">&#43;&#43;</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">errCode</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">initInfoLog</div><div class="operator">(</div><div class="ident">msg</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Str</div><div class="operator">(</div><div class="literal">&#34;type&#34;</div><div class="operator">,</div> <div class="literal">&#34;init&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">msg</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">printVersionInfo</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">initInfoLog</div><div class="operator">(</div><div class="literal">&#34;Version: &#34;</div> <div class="operator">&#43;</div> <div class="ident">BuildVersion</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">initInfoLog</div><div class="operator">(</div><div class="literal">&#34;Build time: &#34;</div> <div class="operator">&#43;</div> <div class="ident">BuildTime</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">initInfoLog</div><div class="operator">(</div><div class="literal">&#34;Branch: &#34;</div> <div class="operator">&#43;</div> <div class="ident">BuildBranch</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">initInfoLog</div><div class="operator">(</div><div class="literal">&#34;Commit: &#34;</div> <div class="operator">&#43;</div> <div class="ident">BuildCommit</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">const</div> <div class="ident">helpMessageTemplate</div> <div class="operator">=</div> <div class="literal">`
+Aggregator service for insights results
+
+Usage:
+
+    %&#43;v [command]
+
+The commands are:
+
+    &lt;EMPTY&gt;             starts aggregator
+    start-service       starts aggregator
+    help                prints help
+    print-help          prints help
+    print-config        prints current configuration set by files &amp; env variables
+    print-env           prints env variables
+    print-version-info  prints version info
+    migration           prints information about migrations (current, latest)
+    migration &lt;version&gt; migrates database to the specified version
+
+`</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">printHelp</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="ident">fmt</div><div class="operator">.</div><div class="ident">Printf</div><div class="operator">(</div><div class="ident">helpMessageTemplate</div><div class="operator">,</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Args</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">printConfig</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="ident">configBytes</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">MarshalIndent</div><div class="operator">(</div><div class="ident">conf</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="literal">&#34;    &#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="literal">1</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">fmt</div><div class="operator">.</div><div class="ident">Println</div><div class="operator">(</div><div class="ident">string</div><div class="operator">(</div><div class="ident">configBytes</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">printEnv</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">keyVal</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Environ</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">fmt</div><div class="operator">.</div><div class="ident">Println</div><div class="operator">(</div><div class="ident">keyVal</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>getDBForMigrations opens a DB connection and prepares the DB for migrations.
+Non-OK exit code is returned as the last return value in case of an error.
+Otherwise, database and connection pointers are returned.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">getDBForMigrations</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">DBStorage</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">,</div> <div class="ident">int</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">createStorage</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to prepare DB for migrations&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">ExitStatusPrepareDbError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">dbConn</div> <div class="operator">:=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">GetConnection</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">InitInfoTable</div><div class="operator">(</div><div class="ident">dbConn</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">closeStorage</div><div class="operator">(</div><div class="ident">db</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to initialize migration info table&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">ExitStatusPrepareDbError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">db</div><div class="operator">,</div> <div class="ident">dbConn</div><div class="operator">,</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>printMigrationInfo prints information about current DB
+migration version without making any modifications.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">printMigrationInfo</div><div class="operator">(</div><div class="ident">dbConn</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="ident">currMigVer</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetDBVersion</div><div class="operator">(</div><div class="ident">dbConn</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to get current DB version&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusMigrationError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Current DB version: %d&#34;</div><div class="operator">,</div> <div class="ident">currMigVer</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Maximum available version: %d&#34;</div><div class="operator">,</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>setMigrationVersion attempts to migrate the DB to the target version.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">setMigrationVersion</div><div class="operator">(</div><div class="ident">dbConn</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">,</div> <div class="ident">dbDriver</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">,</div> <div class="ident">versStr</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="keyword">var</div> <div class="ident">targetVersion</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">Version</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">versStrLower</div> <div class="operator">:=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">ToLower</div><div class="operator">(</div><div class="ident">versStr</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">versStrLower</div> <div class="operator">==</div> <div class="literal">&#34;latest&#34;</div> <div class="operator">||</div> <div class="ident">versStrLower</div> <div class="operator">==</div> <div class="literal">&#34;max&#34;</div> <div class="operator">{</div>
+		<div class="ident">targetVersion</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
+		<div class="ident">vers</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">strconv</div><div class="operator">.</div><div class="ident">Atoi</div><div class="operator">(</div><div class="ident">versStr</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to parse target migration version&#34;</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">return</div> <div class="ident">ExitStatusMigrationError</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="ident">targetVersion</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">Version</div><div class="operator">(</div><div class="ident">vers</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">dbConn</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">targetVersion</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to perform migration&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusMigrationError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Database version is now %d&#34;</div><div class="operator">,</div> <div class="ident">targetVersion</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>performMigrations handles migrations subcommand. This can be used to either
+print the current DB migration version or to migrate to a different version.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">performMigrations</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="ident">migrationArgs</div> <div class="operator">:=</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Args</div><div class="operator">[</div><div class="literal">2</div><div class="operator">:</div><div class="operator">]</div><div class="operator"></div>
+
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbConn</div><div class="operator">,</div> <div class="ident">exitCode</div> <div class="operator">:=</div> <div class="ident">getDBForMigrations</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">exitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">exitCode</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closeStorage</div><div class="operator">(</div><div class="ident">db</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">switch</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">migrationArgs</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">case</div> <div class="literal">0</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="ident">printMigrationInfo</div><div class="operator">(</div><div class="ident">dbConn</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">case</div> <div class="literal">1</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="ident">setMigrationVersion</div><div class="operator">(</div><div class="ident">dbConn</div><div class="operator">,</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">GetDBDriverType</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">migrationArgs</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">default</div><div class="operator">:</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unexpected number of arguments to migrations command (expected 0-1)&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">ExitStatusMigrationError</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">main</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">LoadConfiguration</div><div class="operator">(</div><div class="ident">defaultConfigFilename</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">panic</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">InitZerolog</div><div class="operator">(</div><div class="ident">conf</div><div class="operator">.</div><div class="ident">GetLoggingConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetCloudWatchConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">panic</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">command</div> <div class="operator">:=</div> <div class="literal">&#34;start-service&#34;</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">os</div><div class="operator">.</div><div class="ident">Args</div><div class="operator">)</div> <div class="operator">&gt;=</div> <div class="literal">2</div> <div class="operator">{</div>
+		<div class="ident">command</div> <div class="operator">=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">ToLower</div><div class="operator">(</div><div class="ident">strings</div><div class="operator">.</div><div class="ident">TrimSpace</div><div class="operator">(</div><div class="ident">os</div><div class="operator">.</div><div class="ident">Args</div><div class="operator">[</div><div class="literal">1</div><div class="operator">]</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">handleCommand</div><div class="operator">(</div><div class="ident">command</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">errCode</div> <div class="operator">!=</div> <div class="literal">0</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Service exited with non-zero code %v&#34;</div><div class="operator">,</div> <div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">os</div><div class="operator">.</div><div class="ident">Exit</div><div class="operator">(</div><div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">handleCommand</div><div class="operator">(</div><div class="ident">command</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="keyword">switch</div> <div class="ident">command</div> <div class="operator">{</div>
+	<div class="keyword">case</div> <div class="literal">&#34;start-service&#34;</div><div class="operator">:</div>
+		<div class="ident">printVersionInfo</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="keyword">return</div> <div class="ident">startService</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">case</div> <div class="literal">&#34;help&#34;</div><div class="operator">,</div> <div class="literal">&#34;print-help&#34;</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="ident">printHelp</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">case</div> <div class="literal">&#34;print-config&#34;</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="ident">printConfig</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">case</div> <div class="literal">&#34;print-env&#34;</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="ident">printEnv</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">case</div> <div class="literal">&#34;print-version-info&#34;</div><div class="operator">:</div>
+		<div class="ident">printVersionInfo</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">case</div> <div class="literal">&#34;migrations&#34;</div><div class="operator">,</div> <div class="literal">&#34;migration&#34;</div><div class="operator">,</div> <div class="literal">&#34;migrate&#34;</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="ident">performMigrations</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">default</div><div class="operator">:</div>
+		<div class="ident">fmt</div><div class="operator">.</div><div class="ident">Printf</div><div class="operator">(</div><div class="literal">&#34;\nCommand &#39;%v&#39; not found\n&#34;</div><div class="operator">,</div> <div class="ident">command</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">printHelp</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

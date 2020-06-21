@@ -38,7 +38,6 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
-	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/logger"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
@@ -147,18 +146,6 @@ func prepareDB() int {
 	err = dbStorage.Init()
 	if err != nil {
 		log.Error().Err(err).Msg("DB initialization error")
-		return ExitStatusPrepareDbError
-	}
-
-	ruleContentDirPath := conf.GetContentPathConfiguration()
-	contentDir, err := content.ParseRuleContentDir(ruleContentDirPath)
-	if osPathError, ok := err.(*os.PathError); ok {
-		log.Error().Err(osPathError).Msg("No rules directory")
-		return ExitStatusPrepareDbError
-	}
-
-	if err := dbStorage.LoadRuleContent(contentDir); err != nil {
-		log.Error().Err(err).Msg("Rules content loading error")
 		return ExitStatusPrepareDbError
 	}
 
@@ -457,12 +444,7 @@ func handleCommand(command string) int {
 	case "start-service":
 		printVersionInfo()
 
-		errCode := startService()
-		if errCode != ExitStatusOK {
-			return errCode
-		}
-
-		return stopService()
+		return startService()
 	case "help", "print-help":
 		return printHelp()
 	case "print-config":

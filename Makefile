@@ -1,15 +1,19 @@
 SHELL := /bin/bash
 
-.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test test-postgres cover integration_tests rest_api_tests rules_content sqlite_db license before_commit help
+.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test test-postgres cover integration_tests rest_api_tests sqlite_db license before_commit help godoc
 
 SOURCES:=$(shell find . -name '*.go')
+BINARY:=insights-results-aggregator
+DOCFILES:=$(addprefix docs/packages/, $(addsuffix .html, $(basename ${SOURCES})))
 
 default: build
 
 clean: ## Run go clean
 	@go clean
 
-build: ## Run go build
+build: ${BINARY} ## Keep this rule for compatibility
+
+${BINARY}: ${SOURCES}
 	./build.sh
 
 fmt: ## Run go fmt -w for all sources
@@ -60,31 +64,28 @@ openapi-check:
 
 style: fmt vet lint cyclo shellcheck errcheck goconst gosec ineffassign abcgo json-check ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
 
-run: clean build ## Build the project and executes the binary
-	./insights-results-aggregator
+run: ${BINARY} ## Build the project and executes the binary
+	./$^
 
-automigrate: clean build
-	./insights-results-aggregator migrate latest
+automigrate: ${BINARY}
+	./$^ migrate latest
 
-test: clean build ## Run the unit tests
+test: ${BINARY} ## Run the unit tests
 	./unit-tests.sh
 
-test-postgres: clean build
+test-postgres: ${BINARY}
 	./unit-tests.sh postgres
 
 cover: test
 	@go tool cover -html=coverage.out
 
-integration_tests: ## Run all integration tests
+integration_tests: ${BINARY} ## Run all integration tests
 	@echo "Running all integration tests"
 	@./test.sh
 
-rest_api_tests: ## Run REST API tests
+rest_api_tests: ${BINARY} ## Run REST API tests
 	@echo "Running REST API tests"
 	@./test.sh rest_api
-
-rules_content: ## Update tests/content/ok directory with latest rules content
-	./update_rules_content.sh
 
 sqlite_db:
 	mv aggregator.db aggragator.db.backup
@@ -105,3 +106,9 @@ help: ## Show this help screen
 	@grep -E '^[ a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo ''
+
+docs/packages/%.html: %.go
+	mkdir -p $(dir $@)
+	docgo -outdir $(dir $@) $^
+
+godoc: ${DOCFILES}

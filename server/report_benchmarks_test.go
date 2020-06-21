@@ -23,12 +23,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -50,9 +51,9 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 
 	for _, n := range []uint{1, 10, 100, 1000} {
 		for storageName, storageProvider := range map[string]func(testing.TB, bool) (storage.Storage, func()){
-			"SQLiteMemory": helpers.MustGetSQLiteMemoryStorage,
-			"SQLiteFile":   helpers.MustGetSQLiteFileStorage,
-			"Postgres":     helpers.MustGetPostgresStorage,
+			"SQLiteMemory": ira_helpers.MustGetSQLiteMemoryStorage,
+			"SQLiteFile":   ira_helpers.MustGetSQLiteFileStorage,
+			"Postgres":     ira_helpers.MustGetPostgresStorage,
 		} {
 			testCases = append(testCases, testCase{
 				storageName,
@@ -68,10 +69,6 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 			defer cleaner()
 
 			testReportDataItems := initTestReports(b, 1, mockStorage, sameReportProvider)
-			// write rule data because reports won't be returned without that
-			err := mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
-			helpers.FailOnError(b, err)
-
 			b.Run(fmt.Sprintf("%v/%v/N=%v", "SameReport", testCase.storageName, testCase.N), func(b *testing.B) {
 				benchmarkHTTPServerReadReportForCluster(b, mockStorage, testReportDataItems, testCase.N)
 			})
@@ -85,7 +82,7 @@ func benchmarkHTTPServerReadReportForCluster(
 	testReportDataItems []testReportData,
 	n uint,
 ) {
-	testServer := server.New(helpers.DefaultServerConfig, mockStorage)
+	testServer := server.New(ira_helpers.DefaultServerConfig, mockStorage)
 
 	b.ResetTimer()
 	for benchIndex := 0; benchIndex < b.N; benchIndex++ {
@@ -96,7 +93,7 @@ func benchmarkHTTPServerReadReportForCluster(
 			clusterID := testReportDataItem.clusterID
 
 			url := server.MakeURLToEndpoint(
-				helpers.DefaultServerConfig.APIPrefix,
+				ira_helpers.DefaultServerConfig.APIPrefix,
 				server.ReportEndpoint,
 				orgID, clusterID,
 			)
@@ -104,7 +101,7 @@ func benchmarkHTTPServerReadReportForCluster(
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			helpers.FailOnError(b, err)
 
-			response := helpers.ExecuteRequest(testServer, req).Result()
+			response := ira_helpers.ExecuteRequest(testServer, req).Result()
 			respBody, err := ioutil.ReadAll(response.Body)
 			helpers.FailOnError(b, err)
 

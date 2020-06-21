@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lib/pq"
+  "github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

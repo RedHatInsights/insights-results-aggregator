@@ -44,8 +44,8 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
-	"net/url"
 
 	// we just have to import this package in order to expose pprof interface in debug mode
 	// disable "G108 (CWE-): Profiling endpoint is automatically exposed on /debug/pprof"
@@ -142,36 +142,37 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	rulesContent, rulesCount, err := server.getContentForRules(writer, report, userID, clusterName)
+	var reportRules types.ReportRules
+	err = json.Unmarshal([]byte(report), &reportRules)
 	if err != nil {
-		// everything has been handled already
-		return
-	}
-	hitRulesCount := len(rulesContent)
-
-	feedbacks, err := server.Storage.GetUserFeedbackOnRules(clusterName, rulesContent, userID)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to retrieve feedback results from database")
+		log.Error().Err(err).Msg("Unable to parse cluster report")
 		handleServerError(writer, err)
 		return
 	}
 
-	rulesContent = server.getUserVoteForRules(feedbacks, rulesContent)
+	hitRules := reportRules.HitRules
+	hitRulesCount := len(hitRules)
+
+	hitRules, err = server.getFeedbackAndTogglesOnRules(clusterName, userID, hitRules)
+
+	if err != nil {
+		log.Error().Err(err).Msg("An error has occurred when getting feedback or toggles")
+		handleServerError(writer, err)
+	}
 
 	// -1 as count in response means there are no rules for this cluster
 	// as opposed to no rules hit for the cluster
-	if rulesCount == 0 {
-		rulesCount = -1
-	} else {
-		rulesCount = hitRulesCount
+	if hitRulesCount == 0 {
+		hitRulesCount = -1
 	}
 
 	response := types.ReportResponse{
 		Meta: types.ReportResponseMeta{
-			Count:         rulesCount,
+			Count:         hitRulesCount,
 			LastCheckedAt: lastChecked,
 		},
-		Rules: rulesContent,
+		// Rules: rulesContent,
+		Report: hitRules,
 	}
 
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData("report", response))
@@ -196,33 +197,6 @@ func (server *HTTPServer) checkUserClusterPermissions(writer http.ResponseWriter
 		}
 	}
 	return nil
-}
-
-// getRuleGroups serves as a proxy to the insights-content-service redirecting the request
-// if the service is alive
-func (server *HTTPServer) getRuleGroups(writer http.ResponseWriter, request *http.Request) {
-	contentServiceURL, err := url.Parse(server.Config.ContentServiceURL)
-
-	if err != nil {
-		log.Error().Err(err).Msg("Error during Content Service URL parsing")
-		handleServerError(writer, err)
-		return
-	}
-
-	// test if service is alive
-	_, err = http.Get(contentServiceURL.String())
-	if err != nil {
-		log.Error().Err(err).Msg("Content service unavailable")
-
-		if _, ok := err.(*url.Error); ok {
-			err = &ContentServiceUnavailableError{}
-		}
-
-		handleServerError(writer, err)
-		return
-	}
-
-	http.Redirect(writer, request, contentServiceURL.String()+RuleGroupsEndpoint, 302)
 }
 
 // readUserID tries to retrieve user ID from request. If any error occurs, error response is send back to client.

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>export_test.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>export_test.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"></td>
+	<td class="code"><pre><code><div class="comment">/*
+Copyright © 2019, 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/</div>
+
+<div class="keyword">package</div> <div class="ident">main</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Export for testing</p>
+
+<p>Please look into the following blogpost:
+https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
+to see why this trick is needed.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">var</div> <div class="operator">(</div>
+	<div class="ident">CreateStorage</div>         <div class="operator">=</div> <div class="ident">createStorage</div><div class="operator"></div>
+	<div class="ident">StartService</div>          <div class="operator">=</div> <div class="ident">startService</div><div class="operator"></div>
+	<div class="ident">StopService</div>           <div class="operator">=</div> <div class="ident">stopService</div><div class="operator"></div>
+	<div class="ident">WaitForServiceToStart</div> <div class="operator">=</div> <div class="ident">waitForServiceToStart</div><div class="operator"></div>
+	<div class="ident">CloseStorage</div>          <div class="operator">=</div> <div class="ident">closeStorage</div><div class="operator"></div>
+	<div class="ident">PrepareDB</div>             <div class="operator">=</div> <div class="ident">prepareDB</div><div class="operator"></div>
+	<div class="ident">StartConsumer</div>         <div class="operator">=</div> <div class="ident">startConsumer</div><div class="operator"></div>
+	<div class="ident">StartServer</div>           <div class="operator">=</div> <div class="ident">startServer</div><div class="operator"></div>
+	<div class="ident">PrintVersionInfo</div>      <div class="operator">=</div> <div class="ident">printVersionInfo</div><div class="operator"></div>
+	<div class="ident">PrintHelp</div>             <div class="operator">=</div> <div class="ident">printHelp</div><div class="operator"></div>
+	<div class="ident">PrintConfig</div>           <div class="operator">=</div> <div class="ident">printConfig</div><div class="operator"></div>
+	<div class="ident">PrintEnv</div>              <div class="operator">=</div> <div class="ident">printEnv</div><div class="operator"></div>
+	<div class="ident">GetDBForMigrations</div>    <div class="operator">=</div> <div class="ident">getDBForMigrations</div><div class="operator"></div>
+	<div class="ident">PrintMigrationInfo</div>    <div class="operator">=</div> <div class="ident">printMigrationInfo</div><div class="operator"></div>
+	<div class="ident">SetMigrationVersion</div>   <div class="operator">=</div> <div class="ident">setMigrationVersion</div><div class="operator"></div>
+	<div class="ident">PerformMigrations</div>     <div class="operator">=</div> <div class="ident">performMigrations</div><div class="operator"></div>
+	<div class="ident">AutoMigratePtr</div>        <div class="operator">=</div> <div class="operator">&amp;</div><div class="ident">autoMigrate</div><div class="operator"></div>
+	<div class="ident">Main</div>                  <div class="operator">=</div> <div class="ident">main</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

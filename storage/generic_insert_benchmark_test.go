@@ -18,10 +18,11 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/rs/zerolog"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 const (
@@ -37,7 +38,7 @@ func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {
 	// to silence them this way to make benchmark results easier to find.
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
-	mockStorage, closer := helpers.MustGetPostgresStorage(b, false)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(b, false)
 	// Alternative using the file-based SQLite DB storage:
 	// mockStorage, _ := helpers.MustGetSQLiteFileStorage(b)
 	// Old version using the in-memory SQLite DB storage:

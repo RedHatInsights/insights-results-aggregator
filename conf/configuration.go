@@ -52,10 +52,7 @@ var Config struct {
 	Processing struct {
 		OrgWhiteListFile string `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
 	} `mapstructure:"processing"`
-	Storage storage.Configuration `mapstructure:"storage" toml:"storage"`
-	Content struct {
-		ContentPath string `mapstructure:"path" toml:"path"`
-	} `mapstructure:"content" toml:"content"`
+	Storage    storage.Configuration          `mapstructure:"storage" toml:"storage"`
 	Logging    logger.LoggingConfiguration    `mapstructure:"logging" toml:"logging"`
 	CloudWatch logger.CloudWatchConfiguration `mapstructure:"cloudwatch" toml:"cloudwatch"`
 }
@@ -161,15 +158,6 @@ func GetServerConfiguration() server.Configuration {
 	}
 
 	return Config.Server
-}
-
-// GetContentPathConfiguration get the path to the content files from the configuration
-func GetContentPathConfiguration() string {
-	if len(Config.Content.ContentPath) == 0 {
-		Config.Content.ContentPath = defaultContentPath
-	}
-
-	return Config.Content.ContentPath
 }
 
 // checkIfFileExists returns nil if path doesn't exist or isn't a file, otherwise it returns corresponding error

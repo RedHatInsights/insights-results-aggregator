@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog"
@@ -34,7 +35,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -71,7 +72,7 @@ func mustConsumerProcessMessage(t testing.TB, mockConsumer consumer.Consumer, me
 }
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, false)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
 
 	mockConsumer, err := consumer.New(wrongBrokerCfg, mockStorage)
@@ -201,7 +202,7 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 }
 
 func TestProcessEmptyMessage(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	c := dummyConsumer(mockStorage, true)
@@ -223,7 +224,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 }
 
 func TestProcessCorrectMessage(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	c := dummyConsumer(mockStorage, true)
@@ -241,7 +242,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 }
 
 func TestProcessingMessageWithClosedStorage(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 
 	mockConsumer := dummyConsumer(mockStorage, true)
 	closer()
@@ -251,7 +252,7 @@ func TestProcessingMessageWithClosedStorage(t *testing.T) {
 }
 
 func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mockConsumer := dummyConsumer(mockStorage, true)
@@ -273,7 +274,7 @@ func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 
 func TestKafkaConsumerMockOK(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		mockConsumer, closer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t,
 			testTopicName,
 			testOrgWhiteList,
@@ -283,7 +284,7 @@ func TestKafkaConsumerMockOK(t *testing.T) {
 		go mockConsumer.Serve()
 
 		// wait for message processing
-		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+		ira_helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
 
 		closer()
 
@@ -294,7 +295,7 @@ func TestKafkaConsumerMockOK(t *testing.T) {
 
 func TestKafkaConsumerMockBadMessage(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		mockConsumer, closer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t,
 			testTopicName,
 			testOrgWhiteList,
@@ -304,7 +305,7 @@ func TestKafkaConsumerMockBadMessage(t *testing.T) {
 		go mockConsumer.Serve()
 
 		// wait for message processing
-		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+		ira_helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
 
 		closer()
 
@@ -315,7 +316,7 @@ func TestKafkaConsumerMockBadMessage(t *testing.T) {
 
 func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-		mockConsumer, closer := helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t, testTopicName, testOrgWhiteList, []string{testdata.ConsumerMessage},
 		)
 
@@ -324,7 +325,7 @@ func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
 
 		go mockConsumer.Serve()
 
-		helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+		ira_helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
 
 		closer()
 
@@ -337,13 +338,13 @@ func TestKafkaConsumer_New(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
 
-		mockStorage, closer := helpers.MustGetMockStorage(t, true)
+		mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 		defer closer()
 
 		mockBroker := sarama.NewMockBroker(t, 0)
 		defer mockBroker.Close()
 
-		mockBroker.SetHandlerByMap(helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
+		mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
 		mockConsumer, err := consumer.New(broker.Configuration{
 			Address: mockBroker.Addr(),
@@ -381,7 +382,7 @@ func TestKafkaConsumer_New(t *testing.T) {
 //}
 
 func TestKafkaConsumer_ProcessMessage_OrganizationWhitelistDisabled(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mockConsumer := dummyConsumer(mockStorage, false)
@@ -391,7 +392,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationWhitelistDisabled(t *testing.T
 }
 
 func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	brokerCfg := broker.Configuration{
@@ -411,7 +412,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 }
 
 func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	brokerCfg := broker.Configuration{
@@ -434,7 +435,7 @@ func TestKafkaConsumer_ProcessMessage_MessageFromTheFuture(t *testing.T) {
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mockConsumer := &consumer.KafkaConsumer{
@@ -459,7 +460,7 @@ func TestKafkaConsumer_ProcessMessage_MoreRecentReportAlreadyExists(t *testing.T
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	mockConsumer := &consumer.KafkaConsumer{
@@ -491,15 +492,15 @@ func TestKafkaConsumer_ProcessMessage_MoreRecentReportAlreadyExists(t *testing.T
 }
 
 func TestKafkaConsumer_ConsumeClaim(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	kafkaConsumer := consumer.KafkaConsumer{
 		Storage: mockStorage,
 	}
 
-	mockConsumerGroupSession := &helpers.MockConsumerGroupSession{}
-	mockConsumerGroupClaim := helpers.NewMockConsumerGroupClaim(nil)
+	mockConsumerGroupSession := &ira_helpers.MockConsumerGroupSession{}
+	mockConsumerGroupClaim := ira_helpers.NewMockConsumerGroupClaim(nil)
 
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
 	helpers.FailOnError(t, err)
@@ -509,15 +510,15 @@ func TestKafkaConsumer_ConsumeClaim_DBError(t *testing.T) {
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
 	kafkaConsumer := consumer.KafkaConsumer{
 		Storage: mockStorage,
 	}
 
-	mockConsumerGroupSession := &helpers.MockConsumerGroupSession{}
-	mockConsumerGroupClaim := helpers.NewMockConsumerGroupClaim(nil)
+	mockConsumerGroupSession := &ira_helpers.MockConsumerGroupSession{}
+	mockConsumerGroupClaim := ira_helpers.NewMockConsumerGroupClaim(nil)
 
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
 	helpers.FailOnError(t, err)
@@ -526,16 +527,16 @@ func TestKafkaConsumer_ConsumeClaim_DBError(t *testing.T) {
 }
 
 func TestKafkaConsumer_ConsumeClaim_OKMessage(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	kafkaConsumer := consumer.KafkaConsumer{
 		Storage: mockStorage,
 	}
 
-	mockConsumerGroupSession := &helpers.MockConsumerGroupSession{}
-	mockConsumerGroupClaim := helpers.NewMockConsumerGroupClaim([]*sarama.ConsumerMessage{
-		helpers.StringToSaramaConsumerMessage(testdata.ConsumerMessage),
+	mockConsumerGroupSession := &ira_helpers.MockConsumerGroupSession{}
+	mockConsumerGroupClaim := ira_helpers.NewMockConsumerGroupClaim([]*sarama.ConsumerMessage{
+		ira_helpers.StringToSaramaConsumerMessage(testdata.ConsumerMessage),
 	})
 
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
@@ -543,13 +544,13 @@ func TestKafkaConsumer_ConsumeClaim_OKMessage(t *testing.T) {
 }
 
 func TestKafkaConsumer_SetupCleanup(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, false)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
 
 	mockBroker := sarama.NewMockBroker(t, 0)
 	defer mockBroker.Close()
 
-	mockBroker.SetHandlerByMap(helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
+	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
 	mockConsumer, err := consumer.New(broker.Configuration{
 		Address: mockBroker.Addr(),
