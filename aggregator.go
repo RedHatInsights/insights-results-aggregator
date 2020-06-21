@@ -34,7 +34,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/conf"

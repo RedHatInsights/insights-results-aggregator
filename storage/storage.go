@@ -34,7 +34,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/Shopify/sarama"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq" // PostgreSQL database driver

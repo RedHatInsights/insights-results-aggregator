@@ -151,11 +151,6 @@ func (*NoopStorage) ToggleRuleForCluster(
 	return nil
 }
 
-// ListDisabledRulesForCluster noop
-func (*NoopStorage) ListDisabledRulesForCluster(types.ClusterName, types.UserID) ([]types.DisabledRuleResponse, error) {
-	return nil, nil
-}
-
 // DeleteFromRuleClusterToggle noop
 func (*NoopStorage) DeleteFromRuleClusterToggle(
 	types.ClusterName, types.RuleID, types.UserID,
