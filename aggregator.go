@@ -150,18 +150,6 @@ func prepareDB() int {
 		return ExitStatusPrepareDbError
 	}
 
-	ruleContentDirPath := conf.GetContentPathConfiguration()
-	contentDir, err := content.ParseRuleContentDir(ruleContentDirPath)
-	if osPathError, ok := err.(*os.PathError); ok {
-		log.Error().Err(osPathError).Msg("No rules directory")
-		return ExitStatusPrepareDbError
-	}
-
-	if err := dbStorage.LoadRuleContent(contentDir); err != nil {
-		log.Error().Err(err).Msg("Rules content loading error")
-		return ExitStatusPrepareDbError
-	}
-
 	return ExitStatusOK
 }
 

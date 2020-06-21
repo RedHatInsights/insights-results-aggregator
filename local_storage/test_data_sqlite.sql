@@ -24,9 +24,4 @@ insert into report (org_id, cluster, report, reported_at, last_checked_at) value
 insert into report (org_id, cluster, report, reported_at, last_checked_at) values (4, 'addddddd-bbbb-0000-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 insert into report (org_id, cluster, report, reported_at, last_checked_at) values (4, 'addddddd-bbbb-cccc-0000-000000000000', '{}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
-delete from rule;
-insert into rule(module, name, summary, reason, resolution, more_info) values ('foo', 'foo', 'summary', 'reason', 'resolution', 'more info');
-insert into rule(module, name, summary, reason, resolution, more_info) values ('bar', 'bar', 'summary', 'reason', 'resolution', 'more info');
-insert into rule(module, name, summary, reason, resolution, more_info) values ('xyzzy', 'xyzzy', 'summary', 'reason', 'resolution', 'more info');
-
 delete from cluster_rule_user_feedback;

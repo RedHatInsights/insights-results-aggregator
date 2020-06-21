@@ -281,11 +281,5 @@ func (server *HTTPServer) readClusterRuleUserParams(
 		return "", "", "", err
 	}
 
-	_, err = server.Storage.GetRuleByID(ruleID)
-	if err != nil {
-		handleServerError(writer, err)
-		return "", "", "", err
-	}
-
 	return clusterID, ruleID, userID, nil
 }
