@@ -24,15 +24,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -42,13 +42,13 @@ var (
 		Config: ruleConfigOne,
 		Rules: map[string]content.RuleContent{
 			"rc": {
-				Summary:    []byte("summary"),
-				Reason:     []byte("reason"),
-				Resolution: []byte("resolution"),
-				MoreInfo:   []byte("more info"),
+				Summary:    "summary",
+				Reason:     "reason",
+				Resolution: "resolution",
+				MoreInfo:   "more info",
 				ErrorKeys: map[string]content.RuleErrorKeyContent{
 					"ek": {
-						Generic: []byte("generic"),
+						Generic: "generic",
 						Metadata: content.ErrorKeyMetadata{
 							Condition:   "condition",
 							Description: "description",
@@ -67,13 +67,13 @@ var (
 		Config: ruleConfigOne,
 		Rules: map[string]content.RuleContent{
 			"rc": {
-				Summary:    []byte("summary"),
-				Reason:     []byte("reason"),
-				Resolution: []byte("resolution"),
-				MoreInfo:   []byte("more info"),
+				Summary:    "summary",
+				Reason:     "reason",
+				Resolution: "resolution",
+				MoreInfo:   "more info",
 				ErrorKeys: map[string]content.RuleErrorKeyContent{
 					"ek": {
-						Generic: []byte("generic"),
+						Generic: "generic",
 						Metadata: content.ErrorKeyMetadata{
 							Condition:   "condition",
 							Description: "description",
@@ -92,13 +92,13 @@ var (
 		Config: ruleConfigOne,
 		Rules: map[string]content.RuleContent{
 			"rc": {
-				Summary:    []byte("summary"),
-				Reason:     []byte("reason"),
-				Resolution: []byte("resolution"),
-				MoreInfo:   []byte("more info"),
+				Summary:    "summary",
+				Reason:     "reason",
+				Resolution: "resolution",
+				MoreInfo:   "more info",
 				ErrorKeys: map[string]content.RuleErrorKeyContent{
 					"ek": {
-						Generic: []byte("generic"),
+						Generic: "generic",
 						Metadata: content.ErrorKeyMetadata{
 							Condition:   "condition",
 							Description: "description",
@@ -123,19 +123,19 @@ var (
 		Config: ruleConfigOne,
 		Rules: map[string]content.RuleContent{
 			"rc": {
-				Summary:    []byte("summary"),
-				Reason:     []byte("reason"),
-				Resolution: []byte("resolution"),
-				MoreInfo:   []byte("more info"),
+				Summary:    "summary",
+				Reason:     "reason",
+				Resolution: "resolution",
+				MoreInfo:   "more info",
 				Plugin: content.RulePluginInfo{
 					Name:         "test rule",
-					NodeID:       string(testClusterName),
+					NodeID:       string(testdata.ClusterName),
 					ProductCode:  "product code",
-					PythonModule: string(testRuleID),
+					PythonModule: string(testdata.Rule1ID),
 				},
 				ErrorKeys: map[string]content.RuleErrorKeyContent{
 					"ek": {
-						Generic: []byte("generic"),
+						Generic: "generic",
 						Metadata: content.ErrorKeyMetadata{
 							Condition:   "condition",
 							Description: "description",
@@ -158,7 +158,7 @@ func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+	err = mockStorage.LoadRuleContent(testdata.RuleContentDirectory3Rules)
 	helpers.FailOnError(t, err)
 }
 
@@ -225,7 +225,7 @@ func TestDBStorageLoadRuleContentInsertIntoRuleErrorKeyError(t *testing.T) {
 	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+	err = mockStorage.LoadRuleContent(testdata.RuleContentDirectory3Rules)
 	assert.Error(t, err)
 	const sqliteErrMessage = "CHECK constraint failed: rule_error_key"
 	const postgresErrMessage = "pq: invalid input syntax for integer"
@@ -569,7 +569,7 @@ func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
 	if _, ok := err.(*types.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
@@ -579,7 +579,7 @@ func TestDBStorageFeedbackErrorDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -587,7 +587,7 @@ func TestDBStorageVoteOnRuleDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
-	err := mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, types.UserVoteNone)
+	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -603,7 +603,7 @@ func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
 	err = mockStorage.Init()
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, types.UserVoteNone)
+	err = mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
 	assert.EqualError(t, err, "DB driver -1 is not supported")
 }
 
@@ -646,7 +646,7 @@ func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.VoteOnRule("non int", testRuleID, testUserID, types.UserVoteNone)
+	err = mockStorage.VoteOnRule("non int", testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
 	assert.Error(t, err)
 	const sqliteErrMessage = "CHECK constraint failed: cluster_rule_user_feedback"
 	const postgresErrMessage = "pq: invalid input syntax for integer"
@@ -675,7 +675,7 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 		ExpectExec().
 		WillReturnResult(driver.ResultNoRows)
 
-	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testUserID, types.UserVoteNone)
+	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
 	helpers.FailOnError(t, err)
 
 	// TODO: uncomment when issues upthere resolved

@@ -196,7 +196,7 @@ func (storage DBStorage) GetTogglesForRules(
 ) (map[types.RuleID]bool, error) {
 	ruleIDs := make([]string, 0)
 	for _, rule := range rulesReport {
-		ruleIDs = append(ruleIDs, rule.Module)
+		ruleIDs = append(ruleIDs, string(rule.Module))
 	}
 
 	toggles := make(map[types.RuleID]bool)
@@ -212,7 +212,7 @@ func (storage DBStorage) GetTogglesForRules(
 		rule_id in (%v) AND
 		user_id = $2
 	`
-	whereInStatement := "'" + strings.Join([]string(ruleIDs), "','") + "'"
+	whereInStatement := "'" + strings.Join(ruleIDs, "','") + "'"
 	query = fmt.Sprintf(query, whereInStatement)
 
 	rows, err := storage.connection.Query(query, clusterID, userID)

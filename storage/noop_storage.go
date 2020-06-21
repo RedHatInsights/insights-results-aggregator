@@ -17,9 +17,10 @@ package storage
 import (
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/content"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/Shopify/sarama"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // NoopStorage represents a storage which does nothing (for benchmarking without a storage)
@@ -46,9 +47,7 @@ func (*NoopStorage) ListOfClustersForOrg(types.OrgID) ([]types.ClusterName, erro
 }
 
 // ReadReportForCluster noop
-func (*NoopStorage) ReadReportForCluster(
-	types.OrgID, types.ClusterName,
-) (types.ClusterReport, types.Timestamp, error) {
+func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) (types.ClusterReport, types.Timestamp, error) {
 	return "", "", nil
 }
 

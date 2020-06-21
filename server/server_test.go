@@ -30,15 +30,19 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
+	httputils "github.com/RedHatInsights/insights-results-aggregator-utils/http"
+	irautils_helpers "github.com/RedHatInsights/insights-results-aggregator-utils/tests/helpers"
+
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 var config = server.Configuration{
@@ -63,8 +67,8 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 func TestMakeURLToEndpoint(t *testing.T) {
 	assert.Equal(
 		t,
-		"api/prefix/report/-55/cluster_id",
-		server.MakeURLToEndpoint("api/prefix/", server.ReportEndpoint, -55, "cluster_id"),
+		"api/prefix/organizations/2/clusters/cluster_id/users/1/report",
+		httputils.MakeURLToEndpoint("api/prefix/", server.ReportEndpoint, 2, "cluster_id", 1),
 	)
 }
 
@@ -80,7 +84,7 @@ func TestAddCORSHeaders(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodOptions,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Headers: map[string]string{
@@ -329,7 +333,7 @@ func TestRuleFeedbackVote(t *testing.T) {
 			)
 			helpers.FailOnError(t, err)
 
-			err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+			err = mockStorage.LoadRuleContent(testdata.RuleContentDirectory3Rules)
 			helpers.FailOnError(t, err)
 
 			ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
@@ -407,7 +411,7 @@ func TestRuleFeedbackVote_DBError(t *testing.T) {
 				testdata.Rule1Summary,
 				testdata.Rule1Reason,
 				testdata.Rule1Resolution,
-				testdata.Rule1MoreInfo,
+				testdata.Rule1ExtraData,
 			),
 		)
 
@@ -522,7 +526,7 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+	err = mockStorage.LoadRuleContent(testdata.RuleContentDirectory3Rules)
 	helpers.FailOnError(t, err)
 
 	connection := mockStorage.(*storage.DBStorage).GetConnection()
@@ -534,6 +538,7 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 		Method:       http.MethodGet,
 		Endpoint:     server.GetVoteOnRuleEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
+		UserID:       testdata.UserID,
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
@@ -543,14 +548,14 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 func TestRuleFeedbackErrorBadUserID(t *testing.T) {
 	testServer := server.New(config, nil)
 
-	url := server.MakeURLToEndpoint(config.APIPrefix, server.LikeRuleEndpoint, testdata.ClusterName, testdata.Rule1ID)
+	url := httputils.MakeURLToEndpoint(config.APIPrefix, server.LikeRuleEndpoint, testdata.ClusterName, testdata.Rule1ID)
 
 	req, err := http.NewRequest(http.MethodPut, url, nil)
 	helpers.FailOnError(t, err)
 
 	// put wrong identity
 	identity := "wrong type"
-	req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
+	req = req.WithContext(context.WithValue(req.Context(), types.ContextKeyUser, identity))
 
 	response := ira_helpers.ExecuteRequest(testServer, req).Result()
 
@@ -599,7 +604,7 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 			)
 			helpers.FailOnError(t, err)
 
-			err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+			err = mockStorage.LoadRuleContent(testdata.RuleContentDirectory3Rules)
 			helpers.FailOnError(t, err)
 
 			ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
@@ -649,7 +654,7 @@ func TestRuleToggle(t *testing.T) {
 			)
 			helpers.FailOnError(t, err)
 
-			err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+			err = mockStorage.LoadRuleContent(testdata.RuleContentDirectory3Rules)
 			helpers.FailOnError(t, err)
 
 			ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
@@ -706,7 +711,7 @@ func TestRuleToggleClosedStorage(t *testing.T) {
 				testdata.Rule1Summary,
 				testdata.Rule1Reason,
 				testdata.Rule1Resolution,
-				testdata.Rule1MoreInfo,
+				testdata.Rule1ExtraData,
 			),
 		)
 
@@ -798,40 +803,12 @@ func createRule(t *testing.T, mockStorage storage.Storage) {
 		Method:       http.MethodPost,
 		Endpoint:     server.RuleEndpoint,
 		EndpointArgs: []interface{}{testdata.Rule1ID},
-		Body: fmt.Sprintf(`{
-			"module": "%v",
-			"name": "%v",
-			"summary": "%v",
-			"reason": "%v",
-			"resolution": "%v",
-			"more_info": "%v"
-		}`,
-			testdata.Rule1ID,
-			testdata.Rule1Name,
-			testdata.Rule1Summary,
-			testdata.Rule1Reason,
-			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
-		),
+		Body:         irautils_helpers.ToJSONString(testdata.Rule1),
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body: `{
 			"status": "ok",
-			"rule": ` + fmt.Sprintf(`{
-				"module": "%v",
-				"name": "%v",
-				"summary": "%v",
-				"reason": "%v",
-				"resolution": "%v",
-				"more_info": "%v"
-			}`,
-			testdata.Rule1ID,
-			testdata.Rule1Name,
-			testdata.Rule1Summary,
-			testdata.Rule1Reason,
-			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
-		) + `
+			"rule": ` + irautils_helpers.ToJSONString(testdata.Rule1) + `
 		}`,
 	})
 }
@@ -912,21 +889,7 @@ func TestHTTPServer_CreateRule_DBError(t *testing.T) {
 		Method:       http.MethodPost,
 		Endpoint:     server.RuleEndpoint,
 		EndpointArgs: []interface{}{testdata.Rule1ID},
-		Body: fmt.Sprintf(`{
-			"module": "%v",
-			"name": "%v",
-			"summary": "%v",
-			"reason": "%v",
-			"resolution": "%v",
-			"more_info": "%v"
-		}`,
-			testdata.Rule1ID,
-			testdata.Rule1Name,
-			testdata.Rule1Summary,
-			testdata.Rule1Reason,
-			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
-		),
+		Body:         irautils_helpers.ToJSONString(testdata.Rule1),
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
@@ -1044,40 +1007,12 @@ func TestHTTPServer_DeleteRule(t *testing.T) {
 		Method:       http.MethodPost,
 		Endpoint:     server.RuleEndpoint,
 		EndpointArgs: []interface{}{testdata.Rule1ID},
-		Body: fmt.Sprintf(`{
-			"module": "%v",
-			"name": "%v",
-			"summary": "%v",
-			"reason": "%v",
-			"resolution": "%v",
-			"more_info": "%v"
-		}`,
-			testdata.Rule1ID,
-			testdata.Rule1Name,
-			testdata.Rule1Summary,
-			testdata.Rule1Reason,
-			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
-		),
+		Body:         irautils_helpers.ToJSONString(testdata.Rule1),
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body: `{
 			"status": "ok",
-			"rule": ` + fmt.Sprintf(`{
-				"module": "%v",
-				"name": "%v",
-				"summary": "%v",
-				"reason": "%v",
-				"resolution": "%v",
-				"more_info": "%v"
-			}`,
-			testdata.Rule1ID,
-			testdata.Rule1Name,
-			testdata.Rule1Summary,
-			testdata.Rule1Reason,
-			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
-		) + `
+			"rule": ` + irautils_helpers.ToJSONString(testdata.Rule1) + `
 		}`,
 	})
 
@@ -1137,7 +1072,7 @@ func TestHTTPServer_DeleteRule_DBError(t *testing.T) {
 			testdata.Rule1Summary,
 			testdata.Rule1Reason,
 			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
+			testdata.Rule1ExtraData,
 		),
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
@@ -1153,40 +1088,12 @@ func TestHTTPServer_DeleteRuleErrorKey(t *testing.T) {
 		Method:       http.MethodPost,
 		Endpoint:     server.RuleEndpoint,
 		EndpointArgs: []interface{}{testdata.Rule1ID},
-		Body: fmt.Sprintf(`{
-			"module": "%v",
-			"name": "%v",
-			"summary": "%v",
-			"reason": "%v",
-			"resolution": "%v",
-			"more_info": "%v"
-		}`,
-			testdata.Rule1ID,
-			testdata.Rule1Name,
-			testdata.Rule1Summary,
-			testdata.Rule1Reason,
-			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
-		),
+		Body:         irautils_helpers.ToJSONString(testdata.Rule1),
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body: `{
 			"status": "ok",
-			"rule": ` + fmt.Sprintf(`{
-				"module": "%v",
-				"name": "%v",
-				"summary": "%v",
-				"reason": "%v",
-				"resolution": "%v",
-				"more_info": "%v"
-			}`,
-			testdata.Rule1ID,
-			testdata.Rule1Name,
-			testdata.Rule1Summary,
-			testdata.Rule1Reason,
-			testdata.Rule1Resolution,
-			testdata.Rule1MoreInfo,
-		) + `
+			"rule": ` + irautils_helpers.ToJSONString(testdata.Rule1) + `
 		}`,
 	})
 

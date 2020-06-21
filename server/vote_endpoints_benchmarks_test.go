@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
+	httputils "github.com/RedHatInsights/insights-results-aggregator-utils/http"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -30,7 +32,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -105,7 +106,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					ruleID := endpointArg.RuleID
 					userID := endpointArg.UserID
 
-					url := server.MakeURLToEndpoint(
+					url := httputils.MakeURLToEndpoint(
 						ira_helpers.DefaultServerConfig.APIPrefix,
 						testCase.Endpoint,
 						clusterID, ruleID,
@@ -118,7 +119,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					identity := server.Identity{
 						AccountNumber: userID,
 					}
-					req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
+					req = req.WithContext(context.WithValue(req.Context(), types.ContextKeyUser, identity))
 
 					response := ira_helpers.ExecuteRequest(testServer, req).Result()
 

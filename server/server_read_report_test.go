@@ -21,24 +21,22 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
-	"github.com/rs/zerolog/log"
-	"github.com/stretchr/testify/assert"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
+	irautils_helpers "github.com/RedHatInsights/insights-results-aggregator-utils/tests/helpers"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func TestReadReportForClusterNonIntOrgID(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{"non-int", testdata.ClusterName},
+		EndpointArgs: []interface{}{"non-int", testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
-			"status": "Error during parsing param 'organization' with value 'non-int'. Error: 'unsigned integer expected'"
+			"status": "Error during parsing param 'org_id' with value 'non-int'. Error: 'unsigned integer expected'"
 		}`,
 	})
 }
@@ -47,11 +45,11 @@ func TestReadReportForClusterNegativeOrgID(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{-1, testdata.ClusterName},
+		EndpointArgs: []interface{}{-1, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
-			"status": "Error during parsing param 'organization' with value '-1'. Error: 'unsigned integer expected'"
+			"status":"Error during parsing param 'org_id' with value '-1'. Error: 'unsigned integer expected'"
 		}`,
 	})
 }
@@ -60,7 +58,7 @@ func TestReadReportForClusterBadClusterName(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"}`,
@@ -71,7 +69,7 @@ func TestReadNonExistingReport(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusNotFound,
 		Body: fmt.Sprintf(
@@ -92,7 +90,7 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body: `{
@@ -115,7 +113,7 @@ func TestReadReportDBError(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status":"Internal Server Error"}`,
@@ -136,40 +134,11 @@ func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{ "status": "invalid character 'o' in literal null (expecting 'u')" }`,
 	})
-}
-
-func assertReportResponsesEqual(t testing.TB, expected, got string) {
-	var expectedResponse, gotResponse struct {
-		Status string               `json:"status"`
-		Report types.ReportResponse `json:"report"`
-	}
-
-	err := helpers.JSONUnmarshalStrict([]byte(expected), &expectedResponse)
-	if err != nil {
-		log.Error().Msg("Error unmarshalling expected value")
-	}
-
-	helpers.FailOnError(t, err)
-	err = helpers.JSONUnmarshalStrict([]byte(got), &gotResponse)
-	if err != nil {
-		log.Error().Msg("Error unmarshalling got value")
-	}
-	helpers.FailOnError(t, err)
-
-	assert.NotEmpty(
-		t,
-		expectedResponse.Status,
-		"status is empty(probably json is completely wrong and unmarshal didn't do anything useful)",
-	)
-	assert.Equal(t, expectedResponse.Status, gotResponse.Status)
-	assert.Equal(t, expectedResponse.Report.Meta, gotResponse.Report.Meta)
-	// ignore the order
-	assert.ElementsMatch(t, expectedResponse.Report.Report, gotResponse.Report.Report)
 }
 
 func TestReadReport(t *testing.T) {
@@ -188,11 +157,11 @@ func TestReadReport(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report3RulesExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
 }
 
@@ -212,18 +181,17 @@ func TestReadReportDisableRule(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+	err = mockStorage.LoadRuleContent(testdata.RuleContentDirectory3Rules)
 	helpers.FailOnError(t, err)
 
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
 
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
@@ -239,12 +207,11 @@ func TestReadReportDisableRule(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesDisabledRule1ExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
 
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
@@ -260,12 +227,11 @@ func TestReadReportDisableRule(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
 }
 
@@ -283,19 +249,18 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
+	err = mockStorage.LoadRuleContent(testdata.RuleContentDirectory3Rules)
 	helpers.FailOnError(t, err)
 
 	// user 1 check no disabled rules in response
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
 
 	// user 2 disables rule1
@@ -313,24 +278,22 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-		UserID:       testdata.User2ID,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.User2ID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesDisabledRule1ExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
 
 	// user 1 is not affected
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
 
 	// user 2 re-enables rule
@@ -348,12 +311,11 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-		UserID:       testdata.User2ID,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.User2ID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
 
 	// user 1 disables rule1
@@ -382,24 +344,21 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesDisabledExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
 
 	// user 2 is not affected
 	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
-		UserID:       testdata.User2ID,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.User2ID},
 	}, &ira_helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
-		BodyChecker: assertReportResponsesEqual,
+		BodyChecker: irautils_helpers.AssertReportResponsesEqual,
 	})
-
 }

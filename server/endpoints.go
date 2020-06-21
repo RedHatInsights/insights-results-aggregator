@@ -15,10 +15,8 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"path/filepath"
-	"regexp"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -33,8 +31,8 @@ const (
 	DeleteClustersEndpoint = "clusters/{clusters}"
 	// OrganizationsEndpoint returns all organizations
 	OrganizationsEndpoint = "organizations"
-	// ReportEndpoint returns report for provided {organization} and {cluster}
-	ReportEndpoint = "report/{organization}/{cluster}"
+	// ReportEndpoint returns report for provided {organization}
+	ReportEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/report"
 	// LikeRuleEndpoint likes rule with {rule_id} for {cluster} using current user(from auth header)
 	LikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/like"
 	// DislikeRuleEndpoint dislikes rule with {rule_id} for {cluster} using current user(from auth header)
@@ -99,11 +97,4 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 
 	// OpenAPI specs
 	router.HandleFunc(openAPIURL, server.serveAPISpecFile).Methods(http.MethodGet)
-}
-
-// MakeURLToEndpoint creates URL to endpoint, use constants from file endpoints.go
-func MakeURLToEndpoint(apiPrefix, endpoint string, args ...interface{}) string {
-	re := regexp.MustCompile(`\{[a-zA-Z_0-9]+\}`)
-	endpoint = re.ReplaceAllString(endpoint, "%v")
-	return apiPrefix + fmt.Sprintf(endpoint, args...)
 }

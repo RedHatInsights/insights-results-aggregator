@@ -34,6 +34,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/Shopify/sarama"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq" // PostgreSQL database driver
@@ -42,7 +43,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -330,7 +330,7 @@ func (storage DBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.O
 	return types.OrgID(orgID), nil
 }
 
-// ReadReportForCluster reads result (health status) for selected cluster for given organization
+// ReadReportForCluster reads result (health status) for selected cluster
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
 ) (types.ClusterReport, types.Timestamp, error) {

@@ -19,17 +19,23 @@ package tests
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/verdverm/frisby"
+
+	httputils "github.com/RedHatInsights/insights-results-aggregator-utils/http"
+
+	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-func constructURLForReportForOrgCluster(organizationID string, clusterID string) string {
-	return apiURL + "report/" + organizationID + "/" + clusterID
+func constructURLForReportForOrgCluster(organizationID string, clusterID string, userID types.UserID) string {
+	return httputils.MakeURLToEndpoint(apiURL, server.ReportEndpoint, organizationID, clusterID, userID)
 }
 
 // checkReportEndpointForKnownOrganizationAndKnownCluster check if the endpoint to return report works as expected
 func checkReportEndpointForKnownOrganizationAndKnownCluster() {
-	url := constructURLForReportForOrgCluster("1", knownClusterForOrganization1)
-	f := frisby.Create("Check the end point to return report for existing organization and cluster ID").Get(url)
+	url := constructURLForReportForOrgCluster("1", knownClusterForOrganization1, testdata.UserID)
+	f := frisby.Create("Check the endpoint to return report for existing organization and cluster ID").Get(url)
 	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(200)
@@ -39,8 +45,8 @@ func checkReportEndpointForKnownOrganizationAndKnownCluster() {
 
 // checkReportEndpointForKnownOrganizationAndUnknownCluster check if the endpoint to return report works as expected
 func checkReportEndpointForKnownOrganizationAndUnknownCluster() {
-	url := constructURLForReportForOrgCluster("1", unknownClusterForOrganization1)
-	f := frisby.Create("Check the end point to return report for existing organization and non-existing cluster ID").Get(url)
+	url := constructURLForReportForOrgCluster("1", unknownClusterForOrganization1, testdata.UserID)
+	f := frisby.Create("Check the endpoint to return report for existing organization and non-existing cluster ID").Get(url)
 	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(404)
@@ -50,8 +56,8 @@ func checkReportEndpointForKnownOrganizationAndUnknownCluster() {
 
 // checkReportEndpointForUnknownOrganizationAndKnownCluster check if the endpoint to return report works as expected
 func checkReportEndpointForUnknownOrganizationAndKnownCluster() {
-	url := constructURLForReportForOrgCluster("100000", knownClusterForOrganization1)
-	f := frisby.Create("Check the end point to return report for non-existing organization and non-existing cluster ID").Get(url)
+	url := constructURLForReportForOrgCluster("100000", knownClusterForOrganization1, testdata.UserID)
+	f := frisby.Create("Check the endpoint to return report for non-existing organization and non-existing cluster ID").Get(url)
 	setAuthHeaderForOrganization(f, 100000)
 	f.Send()
 	f.ExpectStatus(404)
@@ -61,8 +67,8 @@ func checkReportEndpointForUnknownOrganizationAndKnownCluster() {
 
 // checkReportEndpointForUnknownOrganizationAndUnknownCluster check if the endpoint to return report works as expected
 func checkReportEndpointForUnknownOrganizationAndUnknownCluster() {
-	url := constructURLForReportForOrgCluster("100000", unknownClusterForOrganization1)
-	f := frisby.Create("Check the end point to return report for non-existing organization and non-existing cluster ID").Get(url)
+	url := constructURLForReportForOrgCluster("100000", unknownClusterForOrganization1, testdata.UserID)
+	f := frisby.Create("Check the endpoint to return report for non-existing organization and non-existing cluster ID").Get(url)
 	setAuthHeaderForOrganization(f, 100000)
 	f.Send()
 	f.ExpectStatus(404)
@@ -72,7 +78,7 @@ func checkReportEndpointForUnknownOrganizationAndUnknownCluster() {
 
 // reproducerForIssue384 checks whether the issue https://github.com/RedHatInsights/insights-results-aggregator/issues/384 has been fixed
 func reproducerForIssue384() {
-	url := constructURLForReportForOrgCluster("000000000000000000000000000000000000", "1")
+	url := constructURLForReportForOrgCluster("000000000000000000000000000000000000", "1", testdata.UserID)
 	f := frisby.Create("Reproducer for issue #384 (https://github.com/RedHatInsights/insights-results-aggregator/issues/384)").Get(url)
 	setAuthHeader(f)
 	f.Send()
@@ -83,8 +89,8 @@ func reproducerForIssue384() {
 
 // checkReportEndpointForImproperOrganization check if the endpoint to return report works as expected
 func checkReportEndpointForImproperOrganization() {
-	url := constructURLForReportForOrgCluster("foobar", knownClusterForOrganization1)
-	f := frisby.Create("Check the end point to return report for improper organization").Get(url)
+	url := constructURLForReportForOrgCluster("foobar", knownClusterForOrganization1, testdata.UserID)
+	f := frisby.Create("Check the endpoint to return report for improper organization").Get(url)
 	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(400)
@@ -98,8 +104,8 @@ func checkReportEndpointForImproperOrganization() {
 	f.PrintReport()
 }
 
-// checkReportEndpointWrongMethods check if the end point to return results responds correctly to other methods than HTTP GET
+// checkReportEndpointWrongMethods check if the endpoint to return results responds correctly to other methods than HTTP GET
 func checkReportEndpointWrongMethods() {
-	url := constructURLForReportForOrgCluster("1", knownClusterForOrganization1)
+	url := constructURLForReportForOrgCluster("1", knownClusterForOrganization1, testdata.UserID)
 	checkGetEndpointByOtherMethods(url, false)
 }

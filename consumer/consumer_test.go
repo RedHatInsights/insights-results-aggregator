@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog"
@@ -36,7 +37,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
