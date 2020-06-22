@@ -28,19 +28,17 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
-	httputils "github.com/RedHatInsights/insights-results-aggregator-utils/http"
+	httputils "github.com/RedHatInsights/insights-operator-utils/http"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-
-	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 var config = server.Configuration{
@@ -71,7 +69,7 @@ func TestMakeURLToEndpoint(t *testing.T) {
 }
 
 func TestAddCORSHeaders(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -79,11 +77,11 @@ func TestAddCORSHeaders(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodOptions,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Headers: map[string]string{
 			"Access-Control-Allow-Origin":      "*",
@@ -95,18 +93,18 @@ func TestAddCORSHeaders(t *testing.T) {
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ClustersForOrganizationEndpoint,
 		EndpointArgs: []interface{}{1},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"clusters":[],"status":"ok"}`,
 	})
 }
 
 func TestListOfClustersForOrganizationOK(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -114,11 +112,11 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ClustersForOrganizationEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"clusters":["` + string(testdata.ClusterName) + `"],"status":"ok"}`,
 	})
@@ -127,25 +125,25 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 // TestListOfClustersForOrganizationDBError expects db error
 // because the storage is closed before the query
 func TestListOfClustersForOrganizationDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	closer()
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ClustersForOrganizationEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
 func TestListOfClustersForOrganizationNegativeID(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ClustersForOrganizationEndpoint,
 		EndpointArgs: []interface{}{-1},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
 			"status": "Error during parsing param 'organization' with value '-1'. Error: 'unsigned integer expected'"
@@ -154,11 +152,11 @@ func TestListOfClustersForOrganizationNegativeID(t *testing.T) {
 }
 
 func TestListOfClustersForOrganizationNonIntID(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ClustersForOrganizationEndpoint,
 		EndpointArgs: []interface{}{"non-int"},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
 			"status": "Error during parsing param 'organization' with value 'non-int'. Error: 'unsigned integer expected'"
@@ -167,27 +165,27 @@ func TestListOfClustersForOrganizationNonIntID(t *testing.T) {
 }
 
 func TestMainEndpoint(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:   http.MethodGet,
 		Endpoint: server.MainEndpoint,
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
 	})
 }
 
 func TestListOfOrganizationsEmpty(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:   http.MethodGet,
 		Endpoint: server.OrganizationsEndpoint,
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"organizations":[],"status":"ok"}`,
 	})
 }
 
 func TestListOfOrganizationsOK(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -200,23 +198,23 @@ func TestListOfOrganizationsOK(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:   http.MethodGet,
 		Endpoint: server.OrganizationsEndpoint,
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"organizations":[1, 5],"status":"ok"}`,
 	})
 }
 
 func TestListOfOrganizationsDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	closer()
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:   http.MethodGet,
 		Endpoint: server.OrganizationsEndpoint,
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
 	})
@@ -245,7 +243,7 @@ func TestServerStart(t *testing.T) {
 			req, err := http.NewRequest(http.MethodGet, config.APIPrefix, nil)
 			helpers.FailOnError(t, err)
 
-			response := ira_helpers.ExecuteRequest(s, req).Result()
+			response := helpers.ExecuteRequest(s, req).Result()
 			checkResponseCode(t, http.StatusForbidden, response.StatusCode)
 
 			// stopping the server
@@ -277,10 +275,10 @@ func TestServeAPISpecFileOK(t *testing.T) {
 	fileData, err := ioutil.ReadFile(config.APISpecFile)
 	helpers.FailOnError(t, err)
 
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:   http.MethodGet,
 		Endpoint: config.APISpecFile,
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       string(fileData),
 	})
@@ -296,10 +294,10 @@ func TestServeAPISpecFileError(t *testing.T) {
 	err = os.Remove(dirName)
 	helpers.FailOnError(t, err)
 
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:   http.MethodGet,
 		Endpoint: config.APISpecFile,
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
 	})
@@ -323,7 +321,7 @@ func TestRuleFeedbackVote(t *testing.T) {
 		}
 
 		func(endpoint string) {
-			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
@@ -331,12 +329,12 @@ func TestRuleFeedbackVote(t *testing.T) {
 			)
 			helpers.FailOnError(t, err)
 
-			ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
 				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 				UserID:       testdata.UserID,
-			}, &ira_helpers.APIResponse{
+			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
 			})
@@ -356,8 +354,8 @@ func TestRuleFeedbackVote(t *testing.T) {
 func TestRuleFeedbackVote_DBError(t *testing.T) {
 	const errStr = "Internal Server Error"
 
-	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
-	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
 	expects.ExpectQuery("SELECT .* FROM report").
 		WillReturnRows(
@@ -367,12 +365,12 @@ func TestRuleFeedbackVote_DBError(t *testing.T) {
 	expects.ExpectPrepare("INSERT INTO").
 		WillReturnError(fmt.Errorf(errStr))
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 		UserID:       testdata.UserID,
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "` + errStr + `"}`,
 	})
@@ -382,12 +380,12 @@ func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
 	for _, endpoint := range []string{
 		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
 	} {
-		ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+		helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 			Method:       http.MethodPut,
 			Endpoint:     endpoint,
 			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 			UserID:       testdata.UserID,
-		}, &ira_helpers.APIResponse{
+		}, &helpers.APIResponse{
 			StatusCode: http.StatusNotFound,
 			Body: fmt.Sprintf(
 				`{"status": "Item with ID %v was not found in the storage"}`,
@@ -399,7 +397,7 @@ func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
 
 // TODO: make working with the new arch
 //func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
-//	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+//	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 //	defer closer()
 //
 //	err := mockStorage.WriteReportForCluster(
@@ -410,12 +408,12 @@ func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
 //	for _, endpoint := range []string{
 //		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
 //	} {
-//		ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+//		helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 //			Method:       http.MethodPut,
 //			Endpoint:     endpoint,
 //			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 //			UserID:       testdata.UserID,
-//		}, &ira_helpers.APIResponse{
+//		}, &helpers.APIResponse{
 //			StatusCode: http.StatusNotFound,
 //			Body: fmt.Sprintf(
 //				`{"status": "Item with ID %v was not found in the storage"}`,
@@ -429,11 +427,11 @@ func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
 	buf := new(bytes.Buffer)
 	log.Logger = zerolog.New(buf)
 
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
 		EndpointArgs: []interface{}{testdata.BadClusterName, testdata.Rule1ID},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"}`,
 	})
@@ -442,11 +440,11 @@ func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
 }
 
 func TestRuleFeedbackErrorBadRuleID(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.BadRuleID},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
 			"status": "Error during parsing param 'rule_id' with value 'rule id with spaces'. Error: 'invalid rule ID, it must contain only from latin characters, number, underscores or dots'"
@@ -455,11 +453,11 @@ func TestRuleFeedbackErrorBadRuleID(t *testing.T) {
 }
 
 func TestHTTPServer_GetVoteOnRule_BadRuleID(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetVoteOnRuleEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.BadRuleID},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
 			"status": "Error during parsing param 'rule_id' with value 'rule id with spaces'. Error: 'invalid rule ID, it must contain only from latin characters, number, underscores or dots'"
@@ -468,7 +466,7 @@ func TestHTTPServer_GetVoteOnRule_BadRuleID(t *testing.T) {
 }
 
 func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -481,12 +479,12 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 	_, err = connection.Exec(`DROP TABLE cluster_rule_user_feedback;`)
 	helpers.FailOnError(t, err)
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetVoteOnRuleEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 		UserID:       testdata.UserID,
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
 	})
@@ -504,22 +502,22 @@ func TestRuleFeedbackErrorBadUserID(t *testing.T) {
 	identity := "wrong type"
 	req = req.WithContext(context.WithValue(req.Context(), types.ContextKeyUser, identity))
 
-	response := ira_helpers.ExecuteRequest(testServer, req).Result()
+	response := helpers.ExecuteRequest(testServer, req).Result()
 
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode, "Expected different status code")
-	ira_helpers.CheckResponseBodyJSON(t, `{"status": "Internal Server Error"}`, response.Body)
+	helpers.CheckResponseBodyJSON(t, `{"status": "Internal Server Error"}`, response.Body)
 }
 
 func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	closer()
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 		UserID:       testdata.UserID,
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
 	})
@@ -543,7 +541,7 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 		}
 
 		func(endpoint string) {
-			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
@@ -551,22 +549,22 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 			)
 			helpers.FailOnError(t, err)
 
-			ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
 				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 				UserID:       testdata.UserID,
-			}, &ira_helpers.APIResponse{
+			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
 			})
 
-			ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodGet,
 				Endpoint:     server.GetVoteOnRuleEndpoint,
 				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 				UserID:       testdata.UserID,
-			}, &ira_helpers.APIResponse{
+			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       fmt.Sprintf(`{"status": "ok", "vote":%v}`, expectedVote),
 			})
@@ -590,7 +588,7 @@ func TestRuleToggle(t *testing.T) {
 		}
 
 		func(endpoint string) {
-			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
@@ -598,12 +596,12 @@ func TestRuleToggle(t *testing.T) {
 			)
 			helpers.FailOnError(t, err)
 
-			ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
 				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 				UserID:       testdata.UserID,
-			}, &ira_helpers.APIResponse{
+			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
 			})
@@ -625,72 +623,72 @@ func TestRuleToggle(t *testing.T) {
 }
 
 func TestHTTPServer_deleteOrganizationsOK(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
 		Endpoint:     server.DeleteOrganizationsEndpoint,
 		EndpointArgs: []interface{}{1},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
 	})
 }
 
 func TestHTTPServer_deleteOrganizations_NonIntOrgID(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
 		Endpoint:     server.DeleteOrganizationsEndpoint,
 		EndpointArgs: []interface{}{"non-int"},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "Error during parsing param 'organizations' with value 'non-int'. Error: 'integer array expected'"}`,
 	})
 }
 
 func TestHTTPServer_deleteOrganizations_DBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	closer()
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
 		Endpoint:     server.DeleteOrganizationsEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
 func TestHTTPServer_deleteClusters(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
 		Endpoint:     server.DeleteClustersEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
 	})
 }
 
 func TestHTTPServer_deleteClusters_DBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	closer()
 
-	ira_helpers.AssertAPIRequest(t, mockStorage, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
 		Endpoint:     server.DeleteClustersEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
 
 func TestHTTPServer_deleteClusters_BadClusterName(t *testing.T) {
-	ira_helpers.AssertAPIRequest(t, nil, &config, &ira_helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,
 		Endpoint:     server.DeleteClustersEndpoint,
 		EndpointArgs: []interface{}{testdata.BadClusterName},
-	}, &ira_helpers.APIResponse{
+	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"}`,
 	})

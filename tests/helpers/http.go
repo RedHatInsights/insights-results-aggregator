@@ -17,7 +17,7 @@ package helpers
 import (
 	"testing"
 
-	"github.com/RedHatInsights/insights-results-aggregator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"

@@ -22,35 +22,35 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
-	httputils "github.com/RedHatInsights/insights-results-aggregator-utils/http"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
+	httputils "github.com/RedHatInsights/insights-operator-utils/http"
+
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func BenchmarkHTTPServer_VoteEndpoints_WithSQLiteMemoryStorage(b *testing.B) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(b, true)
+	mockStorage, closer := helpers.MustGetMockStorage(b, true)
 	defer closer()
 
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
 }
 
 func BenchmarkHTTPServer_VoteEndpoints_WithSQLiteFileStorage(b *testing.B) {
-	mockStorage, cleaner := ira_helpers.MustGetSQLiteFileStorage(b, true)
+	mockStorage, cleaner := helpers.MustGetSQLiteFileStorage(b, true)
 	defer cleaner()
 
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
 }
 
 func BenchmarkHTTPServer_VoteEndpoints_WithPostgresStorage(b *testing.B) {
-	mockStorage, cleaner := ira_helpers.MustGetPostgresStorage(b, true)
+	mockStorage, cleaner := helpers.MustGetPostgresStorage(b, true)
 	defer cleaner()
 
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
@@ -65,7 +65,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 	endpointArgs := prepareVoteEndpointArgs(b, numberOfEndpointArgs, mockStorage)
 	defer cleanupEndpointArgs(b, endpointArgs, mockStorage)
 
-	testServer := server.New(ira_helpers.DefaultServerConfig, mockStorage)
+	testServer := server.New(helpers.DefaultServerConfig, mockStorage)
 
 	type TestCase struct {
 		TestName string
@@ -107,7 +107,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					userID := endpointArg.UserID
 
 					url := httputils.MakeURLToEndpoint(
-						ira_helpers.DefaultServerConfig.APIPrefix,
+						helpers.DefaultServerConfig.APIPrefix,
 						testCase.Endpoint,
 						clusterID, ruleID,
 					)
@@ -116,12 +116,12 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					helpers.FailOnError(b, err)
 
 					// authorize user
-					identity := server.Identity{
+					identity := types.Identity{
 						AccountNumber: userID,
 					}
 					req = req.WithContext(context.WithValue(req.Context(), types.ContextKeyUser, identity))
 
-					response := ira_helpers.ExecuteRequest(testServer, req).Result()
+					response := helpers.ExecuteRequest(testServer, req).Result()
 
 					assert.Equal(b, http.StatusOK, response.StatusCode)
 				}

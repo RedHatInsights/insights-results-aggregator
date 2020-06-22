@@ -19,10 +19,9 @@ package tests
 import (
 	"fmt"
 
+	httputils "github.com/RedHatInsights/insights-operator-utils/http"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/verdverm/frisby"
-
-	httputils "github.com/RedHatInsights/insights-results-aggregator-utils/http"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/types"

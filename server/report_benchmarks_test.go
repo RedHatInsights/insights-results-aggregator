@@ -23,19 +23,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
-
-	httputils "github.com/RedHatInsights/insights-results-aggregator-utils/http"
-	irautils_helpers "github.com/RedHatInsights/insights-results-aggregator-utils/tests/helpers"
-
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 
-	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	httputils "github.com/RedHatInsights/insights-operator-utils/http"
+
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
@@ -55,9 +52,9 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 
 	for _, n := range []uint{1, 10, 100, 1000} {
 		for storageName, storageProvider := range map[string]func(testing.TB, bool) (storage.Storage, func()){
-			"SQLiteMemory": ira_helpers.MustGetSQLiteMemoryStorage,
-			"SQLiteFile":   ira_helpers.MustGetSQLiteFileStorage,
-			"Postgres":     ira_helpers.MustGetPostgresStorage,
+			"SQLiteMemory": helpers.MustGetSQLiteMemoryStorage,
+			"SQLiteFile":   helpers.MustGetSQLiteFileStorage,
+			"Postgres":     helpers.MustGetPostgresStorage,
 		} {
 			testCases = append(testCases, testCase{
 				storageName,
@@ -87,7 +84,7 @@ func benchmarkHTTPServerReadReportForCluster(
 	testReportDataItems []testReportData,
 	n uint,
 ) {
-	testServer := server.New(ira_helpers.DefaultServerConfig, mockStorage)
+	testServer := server.New(helpers.DefaultServerConfig, mockStorage)
 
 	b.ResetTimer()
 	for benchIndex := 0; benchIndex < b.N; benchIndex++ {
@@ -98,7 +95,7 @@ func benchmarkHTTPServerReadReportForCluster(
 			clusterID := testReportDataItem.clusterID
 
 			url := httputils.MakeURLToEndpoint(
-				ira_helpers.DefaultServerConfig.APIPrefix,
+				helpers.DefaultServerConfig.APIPrefix,
 				server.ReportEndpoint,
 				orgID, clusterID,
 			)
@@ -106,7 +103,7 @@ func benchmarkHTTPServerReadReportForCluster(
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			helpers.FailOnError(b, err)
 
-			response := irautils_helpers.ExecuteRequest(testServer, req).Result()
+			response := helpers.ExecuteRequest(testServer, req).Result()
 			respBody, err := ioutil.ReadAll(response.Body)
 			helpers.FailOnError(b, err)
 
