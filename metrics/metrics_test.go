@@ -277,3 +277,7 @@ func TestApiResponseStatusCodesMetric_StatusBadRequest(t *testing.T) {
 		}))
 	}, testCaseTimeLimit)
 }
+
+// TODO: write tests for sql queries metrics
+// - SQLQueriesCounter
+// - SQLQueriesDurations

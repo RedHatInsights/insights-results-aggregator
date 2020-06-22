@@ -100,3 +100,15 @@ var FeedbackOnRules = promauto.NewCounter(prometheus.CounterOpts{
 	Name: "feedback_on_rules",
 	Help: "The total number of left feedback",
 })
+
+// SQLQueriesCounter shows number of sql queries
+var SQLQueriesCounter = promauto.NewCounter(prometheus.CounterOpts{
+	Name: "sql_queries_counter",
+	Help: "Number of SQL queries",
+})
+
+// SQLQueriesDurations shows durations for sql queries (without parameters).
+var SQLQueriesDurations = promauto.NewHistogramVec(prometheus.HistogramOpts{
+	Name: "sql_queries_durations",
+	Help: "SQL queries durations",
+}, []string{"query"})

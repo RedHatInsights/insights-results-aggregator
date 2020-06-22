@@ -24,7 +24,10 @@ import (
 	"time"
 
 	"github.com/gchaincl/sqlhooks"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
+
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 )
 
 type sqlHooks struct{}
@@ -49,6 +52,8 @@ func (h *sqlHooks) Before(ctx context.Context, query string, args ...interface{}
 		h.log(logFormatterString+"\n", query, args)
 	}
 
+	metrics.SQLQueriesCounter.Inc()
+
 	return context.WithValue(ctx, sqlHooksKeyQueryBeginTime, time.Now()), nil
 }
 
@@ -56,17 +61,20 @@ func (h *sqlHooks) Before(ctx context.Context, query string, args ...interface{}
 // it allows you to see how long your query took
 func (h *sqlHooks) After(ctx context.Context, query string, args ...interface{}) (context.Context, error) {
 	beginTime := ctx.Value(sqlHooksKeyQueryBeginTime).(time.Time)
+	duration := time.Since(beginTime)
+
+	metrics.SQLQueriesDurations.With(prometheus.Labels{"query": query}).Observe(duration.Seconds())
 
 	jsonArgs, err := json.Marshal(args)
 	if err == nil {
 		h.log(
 			logFormatterString+" took %s\n",
-			query, string(jsonArgs), time.Since(beginTime),
+			query, string(jsonArgs), duration,
 		)
 	} else {
 		h.log(
 			logFormatterString+" took %s\n",
-			query, args, time.Since(beginTime),
+			query, args, duration,
 		)
 	}
 
