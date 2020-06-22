@@ -30,7 +30,6 @@ import (
 	"database/sql"
 	sql_driver "database/sql/driver"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -39,7 +38,6 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL database driver
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -181,8 +179,7 @@ func initAndGetDriver(configuration Configuration) (driverType types.DBDriver, d
 	}
 
 	if configuration.LogSQLQueries {
-		logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
-		driverName = InitSQLDriverWithLogs(driver, driverName, &logger)
+		driverName = InitSQLDriverWithLogs(driver, driverName)
 	}
 
 	return
