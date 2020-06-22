@@ -24,15 +24,132 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+)
+
+var (
+	ruleConfigOne       = content.GlobalRuleConfig{Impact: map[string]int{"One": 1}}
+	ruleContentActiveOK = content.RuleContentDirectory{
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": {
+				Summary:    "summary",
+				Reason:     "reason",
+				Resolution: "resolution",
+				MoreInfo:   "more info",
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: "generic",
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "active",
+							Tags:        []string{"tag1", "tag2"},
+						},
+					},
+				},
+			},
+		},
+	}
+	ruleContentInactiveOK = content.RuleContentDirectory{
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": {
+				Summary:    "summary",
+				Reason:     "reason",
+				Resolution: "resolution",
+				MoreInfo:   "more info",
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: "generic",
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "inactive",
+							Tags:        []string{"tag1", "tag2"},
+						},
+					},
+				},
+			},
+		},
+	}
+	ruleContentBadStatus = content.RuleContentDirectory{
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": {
+				Summary:    "summary",
+				Reason:     "reason",
+				Resolution: "resolution",
+				MoreInfo:   "more info",
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: "generic",
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "bad",
+							Tags:        []string{"tag1", "tag2"},
+						},
+					},
+				},
+			},
+		},
+	}
+	ruleContentNull = content.RuleContentDirectory{
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": {},
+		},
+	}
+	ruleContentExample1 = content.RuleContentDirectory{
+		Config: ruleConfigOne,
+		Rules: map[string]content.RuleContent{
+			"rc": {
+				Summary:    "summary",
+				Reason:     "reason",
+				Resolution: "resolution",
+				MoreInfo:   "more info",
+				Plugin: content.RulePluginInfo{
+					Name:         "test rule",
+					NodeID:       string(testdata.ClusterName),
+					ProductCode:  "product code",
+					PythonModule: string(testdata.Rule1ID),
+				},
+				ErrorKeys: map[string]content.RuleErrorKeyContent{
+					"ek": {
+						Generic: "generic",
+						Metadata: content.ErrorKeyMetadata{
+							Condition:   "condition",
+							Description: "description",
+							Impact:      "One",
+							Likelihood:  1,
+							PublishDate: "1970-01-01 00:00:00",
+							Status:      "active",
+							Tags:        []string{"tag1", "tag2"},
+						},
+					},
+				},
+			},
+		},
+	}
 )
 
 func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
@@ -50,7 +167,7 @@ func TestDBStorageToggleRule(t *testing.T) {
 			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 			defer closer()
 
-			// mustWriteReport3Rules(t, mockStorage)
+			mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
 				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, state,
@@ -113,7 +230,7 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 			defer closer()
 
-			// mustWriteReport3Rules(t, mockStorage)
+			mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
 				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, state,
@@ -136,6 +253,57 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 		}(state)
 	}
 }
+
+// TODO: make it work with the new arch
+//func TestDBStorageToggleRulesAndList(t *testing.T) {
+//	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+//	defer closer()
+//
+//	mustWriteReport3Rules(t, mockStorage)
+//
+//	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+//		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
+//	))
+//
+//	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+//		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
+//	))
+//
+//	toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
+//	helpers.FailOnError(t, err)
+//
+//	assert.Len(t, toggledRules, 2)
+//}
+
+// TODO: make it work with the new arch
+//func TestDBStorageDeleteDisabledRule(t *testing.T) {
+//	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+//	defer closer()
+//
+//	mustWriteReport3Rules(t, mockStorage)
+//
+//	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+//		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
+//	))
+//
+//	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+//		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
+//	))
+//
+//	toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
+//	helpers.FailOnError(t, err)
+//
+//	assert.Len(t, toggledRules, 2)
+//
+//	helpers.FailOnError(t, mockStorage.DeleteFromRuleClusterToggle(
+//		testdata.ClusterName, testdata.Rule2ID, testdata.UserID,
+//	))
+//
+//	toggledRules, err = mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
+//	helpers.FailOnError(t, err)
+//
+//	assert.Len(t, toggledRules, 1)
+//}
 
 func TestDBStorageVoteOnRule(t *testing.T) {
 	for _, vote := range []types.UserVote{
@@ -181,6 +349,29 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 		}(vote)
 	}
 }
+
+// TODO: fix according to the new architecture
+//func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
+//	for _, vote := range []types.UserVote{
+//		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
+//	} {
+//		func(vote types.UserVote) {
+//			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+//			defer closer()
+//
+//			err := mockStorage.WriteReportForCluster(
+//				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+//			)
+//			helpers.FailOnError(t, err)
+//
+//			err = mockStorage.VoteOnRule(
+//				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
+//			)
+//			assert.Error(t, err)
+//			assert.Regexp(t, "operation violates foreign key", err.Error())
+//		}(vote)
+//	}
+//}
 
 func TestDBStorageChangeVote(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
@@ -264,7 +455,7 @@ func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
 	if _, ok := err.(*types.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
@@ -274,7 +465,7 @@ func TestDBStorageFeedbackErrorDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRule(testClusterName, testRuleID, testUserID)
+	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -282,7 +473,7 @@ func TestDBStorageVoteOnRuleDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
-	err := mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, types.UserVoteNone)
+	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -298,7 +489,7 @@ func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
 	err = mockStorage.Init()
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.VoteOnRule(testClusterName, testRuleID, testUserID, types.UserVoteNone)
+	err = mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
 	assert.EqualError(t, err, "DB driver -1 is not supported")
 }
 
@@ -341,7 +532,7 @@ func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.VoteOnRule("non int", testRuleID, testUserID, types.UserVoteNone)
+	err = mockStorage.VoteOnRule("non int", testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
 	assert.Error(t, err)
 	const sqliteErrMessage = "CHECK constraint failed: cluster_rule_user_feedback"
 	const postgresErrMessage = "pq: invalid input syntax for integer"
@@ -370,7 +561,7 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 		ExpectExec().
 		WillReturnResult(driver.ResultNoRows)
 
-	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testUserID, types.UserVoteNone)
+	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
 	helpers.FailOnError(t, err)
 
 	// TODO: uncomment when issues upthere resolved

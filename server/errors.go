@@ -69,7 +69,7 @@ func (*NoBodyError) Error() string {
 
 // handleServerError handles separate server errors and sends appropriate responses
 func handleServerError(writer http.ResponseWriter, err error) {
-	log.Error().Err(err).Msg("handleServerError()")
+	log.Error().Err(err).Msg("handleServerError")
 
 	var respErr error
 

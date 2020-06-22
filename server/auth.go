@@ -25,44 +25,28 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/RedHatInsights/insights-operator-utils/collections"
+	"github.com/RedHatInsights/insights-operator-utils/types"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/rs/zerolog/log"
-
-	"github.com/RedHatInsights/insights-operator-utils/collections"
-
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-type contextKey string
-
 const (
-	// ContextKeyUser is a constant for user authentication token in request
-	ContextKeyUser = contextKey("user")
 	// #nosec G101
 	malformedTokenMessage = "Malformed authentication token"
 )
 
 // Internal contains information about organization ID
-type Internal struct {
-	OrgID types.OrgID `json:"org_id,string"`
-}
+type Internal = types.Internal
 
 // Identity contains internal user info
-type Identity struct {
-	AccountNumber types.UserID `json:"account_number"`
-	Internal      Internal     `json:"internal"`
-}
+type Identity = types.Identity
 
 // Token is x-rh-identity struct
-type Token struct {
-	Identity Identity `json:"identity"`
-}
+type Token = types.Token
 
 // JWTPayload is structure that contain data from parsed JWT token
-type JWTPayload struct {
-	AccountNumber types.UserID `json:"account_number"`
-	OrgID         types.OrgID  `json:"org_id,string"`
-}
+type JWTPayload = types.JWTPayload
 
 // Authentication middleware for checking auth rights
 func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string) http.Handler {
@@ -91,15 +75,15 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 
 		// If we took JWT token, it has different structure then x-rh-identity
 		if server.Config.AuthType == "jwt" {
-			jwt := &JWTPayload{}
-			err = json.Unmarshal([]byte(decoded), jwt)
+			jwtPayload := &JWTPayload{}
+			err = json.Unmarshal([]byte(decoded), jwtPayload)
 			if err != nil { //Malformed token, returns with http code 403 as usual
 				log.Error().Err(err).Msg(malformedTokenMessage)
 				handleServerError(w, &AuthenticationError{errString: malformedTokenMessage})
 				return
 			}
 			// Map JWT token to inner token
-			tk.Identity = Identity{AccountNumber: jwt.AccountNumber, Internal: Internal{OrgID: jwt.OrgID}}
+			tk.Identity = Identity{AccountNumber: jwtPayload.AccountNumber, Internal: Internal{OrgID: jwtPayload.OrgID}}
 		} else {
 			err = json.Unmarshal([]byte(decoded), tk)
 
@@ -111,7 +95,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 		}
 
 		// Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
-		ctx := context.WithValue(r.Context(), ContextKeyUser, tk.Identity)
+		ctx := context.WithValue(r.Context(), types.ContextKeyUser, tk.Identity)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
@@ -120,7 +104,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 
 // GetCurrentUserID retrieves current user's id from request
 func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID, error) {
-	i := request.Context().Value(ContextKeyUser)
+	i := request.Context().Value(types.ContextKeyUser)
 
 	if i == nil {
 		return "", &AuthenticationError{errString: "user id is not provided"}

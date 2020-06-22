@@ -318,7 +318,7 @@ func (storage DBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.O
 	return types.OrgID(orgID), nil
 }
 
-// ReadReportForCluster reads result (health status) for selected cluster for given organization
+// ReadReportForCluster reads result (health status) for selected cluster
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
 ) (types.ClusterReport, types.Timestamp, error) {

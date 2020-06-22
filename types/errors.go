@@ -23,6 +23,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/RedHatInsights/insights-operator-utils/types"
+
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
@@ -30,17 +32,10 @@ import (
 
 // ErrOldReport is an error returned if a more recent already
 // exists on the storage while attempting to write a report for a cluster.
-var ErrOldReport = errors.New("More recent report already exists in storage")
+var ErrOldReport = types.ErrOldReport
 
 // ItemNotFoundError shows that item with id ItemID wasn't found in the storage
-type ItemNotFoundError struct {
-	ItemID interface{}
-}
-
-// Error returns error string
-func (e *ItemNotFoundError) Error() string {
-	return fmt.Sprintf("Item with ID %+v was not found in the storage", e.ItemID)
-}
+type ItemNotFoundError = types.ItemNotFoundError
 
 // TableNotFoundError table not found error
 type TableNotFoundError struct {
