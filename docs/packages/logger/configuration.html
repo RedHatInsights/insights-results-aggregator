@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2020 Red Hat, Inc
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<html>
+<head>
+<title>configuration.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>configuration.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"></td>
+	<td class="code"><pre><code><div class="comment">/*
+Copyright © 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/</div>
+
+<div class="keyword">package</div> <div class="ident">logger</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>LoggingConfiguration represents configuration for logging in general</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">LoggingConfiguration</div> <div class="keyword">struct</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Debug enables pretty colored logging</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">Debug</div> <div class="ident">bool</div> <div class="literal">`mapstructure:&#34;debug&#34; toml:&#34;debug&#34;`</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>LogLevel sets logging level to show. Possible values are:
+&quot;debug&quot;
+&quot;info&quot;
+&quot;warn&quot;, &quot;warning&quot;
+&quot;error&quot;
+&quot;fatal&quot;</p>
+
+<p>logging level won't be changed if value is not one of listed above</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">LogLevel</div> <div class="ident">string</div> <div class="literal">`mapstructure:&#34;log_level&#34; toml:&#34;log_level&#34;`</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>LoggingToCloudWatchEnabled enables logging to CloudWatch
+(configuration for CloudWatch is in CloudWatchConfiguration)</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">LoggingToCloudWatchEnabled</div> <div class="ident">bool</div> <div class="literal">`mapstructure:&#34;logging_to_cloud_watch_enabled&#34; toml:&#34;logging_to_cloud_watch_enabled&#34;`</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>CloudWatchConfiguration represents configuration of CloudWatch logger</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">CloudWatchConfiguration</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">AWSAccessID</div>             <div class="ident">string</div> <div class="literal">`mapstructure:&#34;aws_access_id&#34; toml:&#34;aws_access_id&#34;`</div><div class="operator"></div>
+	<div class="ident">AWSSecretKey</div>            <div class="ident">string</div> <div class="literal">`mapstructure:&#34;aws_secret_key&#34; toml:&#34;aws_secret_key&#34;`</div><div class="operator"></div>
+	<div class="ident">AWSSessionToken</div>         <div class="ident">string</div> <div class="literal">`mapstructure:&#34;aws_session_token&#34; toml:&#34;aws_session_token&#34;`</div><div class="operator"></div>
+	<div class="ident">AWSRegion</div>               <div class="ident">string</div> <div class="literal">`mapstructure:&#34;aws_region&#34; toml:&#34;aws_region&#34;`</div><div class="operator"></div>
+	<div class="ident">LogGroup</div>                <div class="ident">string</div> <div class="literal">`mapstructure:&#34;log_group&#34; toml:&#34;log_group&#34;`</div><div class="operator"></div>
+	<div class="ident">StreamName</div>              <div class="ident">string</div> <div class="literal">`mapstructure:&#34;stream_name&#34; toml:&#34;stream_name&#34;`</div><div class="operator"></div>
+	<div class="ident">CreateStreamIfNotExists</div> <div class="ident">bool</div>   <div class="literal">`mapstructure:&#34;create_stream_if_not_exists&#34; toml:&#34;create_stream_if_not_exists&#34;`</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>enable debug logs for debugging aws client itself</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">Debug</div> <div class="ident">bool</div> <div class="literal">`mapstructure:&#34;debug&#34; toml:&#34;debug&#34;`</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

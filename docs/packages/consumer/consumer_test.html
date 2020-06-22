@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2020 Red Hat, Inc
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<html>
+<head>
+<title>consumer_test.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>consumer_test.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"></td>
+	<td class="code"><pre><code><div class="comment">/*
+Copyright © 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/</div>
+
+<div class="keyword">package</div> <div class="ident">consumer_test</div><div class="operator"></div>
+
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;bytes&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;log&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;os&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/Shopify/sarama&#34;</div><div class="operator"></div>
+	<div class="ident">mapset</div> <div class="literal">&#34;github.com/deckarep/golang-set&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/rs/zerolog&#34;</div><div class="operator"></div>
+	<div class="ident">zerolog_log</div> <div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/broker&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/consumer&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
+	<div class="ident">ira_helpers</div> <div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/testdata&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">const</div> <div class="operator">(</div>
+	<div class="ident">testTopicName</div> <div class="operator">=</div> <div class="literal">&#34;topic&#34;</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>time limit for <em>some</em> tests which can stuck in forever loop</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">testCaseTimeLimit</div> <div class="operator">=</div> <div class="literal">60</div> <div class="operator">*</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Second</div><div class="operator"></div>
+	<div class="ident">saramaLogPrefix</div>   <div class="operator">=</div> <div class="literal">&#34;[sarama]&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="operator">(</div>
+	<div class="ident">testOrgWhiteList</div> <div class="operator">=</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">wrongBrokerCfg</div>   <div class="operator">=</div> <div class="ident">broker</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">{</div>
+		<div class="ident">Address</div><div class="operator">:</div> <div class="literal">&#34;localhost:1234&#34;</div><div class="operator">,</div>
+		<div class="ident">Topic</div><div class="operator">:</div>   <div class="literal">&#34;topic&#34;</div><div class="operator">,</div>
+		<div class="ident">Group</div><div class="operator">:</div>   <div class="literal">&#34;group&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">init</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">zerolog</div><div class="operator">.</div><div class="ident">SetGlobalLevel</div><div class="operator">(</div><div class="ident">zerolog</div><div class="operator">.</div><div class="ident">WarnLevel</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Consumer</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="ident">saramaMessage</div> <div class="operator">:=</div> <div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">saramaMessage</div><div class="operator">.</div><div class="ident">Value</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">ProcessMessage</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">saramaMessage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">mustConsumerProcessMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">mockConsumer</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Consumer</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestConsumerConstructorNoKafka</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">wrongBrokerCfg</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Contains</div><div class="operator">(</div>
+		<div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">&#34;kafka: client has run out of available brokers to talk to&#34;</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div>
+		<div class="ident">t</div><div class="operator">,</div>
+		<div class="operator">(</div><div class="operator">*</div><div class="ident">consumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">)</div><div class="operator">(</div><div class="ident">nil</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="ident">mockConsumer</div><div class="operator">,</div>
+		<div class="literal">&#34;consumer.New should return nil instead of Consumer implementation&#34;</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseEmptyMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="literal">&#34;&#34;</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;unexpected end of JSON input&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseMessageWithWrongContent</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">const</div> <div class="ident">message</div> <div class="operator">=</div> <div class="literal">`{&#34;this&#34;:&#34;is&#34;, &#34;not&#34;:&#34;expected content&#34;}`</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Contains</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">&#34;missing required attribute&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseMessageWithImproperJSON</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">const</div> <div class="ident">message</div> <div class="operator">=</div> <div class="literal">`&#34;this_is_not_json_dude&#34;`</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div>
+		<div class="ident">t</div><div class="operator">,</div>
+		<div class="ident">err</div><div class="operator">,</div>
+		<div class="literal">&#34;json: cannot unmarshal string into Go value of type consumer.incomingMessage&#34;</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseProperMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">message</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">Organization</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">var</div> <div class="ident">expectedReport</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Report</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Unmarshal</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerReport</div><div class="operator">)</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">expectedReport</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedReport</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseProperMessageWrongClusterName</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;ClusterName&#34;: &#34;this is not a UUID&#34;,
+		&#34;Report&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerReport</div> <div class="operator">&#43;</div> <div class="literal">`
+	}`</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;cluster name is not a UUID&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseMessageWithoutOrgID</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		&#34;Report&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerReport</div> <div class="operator">&#43;</div> <div class="literal">`
+	}`</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;missing required attribute &#39;OrgID&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseMessageWithoutClusterName</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;Report&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerReport</div> <div class="operator">&#43;</div> <div class="literal">`
+	}`</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;missing required attribute &#39;ClusterName&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseMessageWithoutReport</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
+	}`</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;missing required attribute &#39;Report&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseMessageEmptyReport</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		&#34;Report&#34;: {}
+	}`</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;Improper report structure, missing key fingerprints&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestParseMessageNullReport</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		&#34;Report&#34;: null
+	}`</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;missing required attribute &#39;Report&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">dummyConsumer</div><div class="operator">(</div><div class="ident">s</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div> <div class="ident">whitelist</div> <div class="ident">bool</div><div class="operator">)</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Consumer</div> <div class="operator">{</div>
+	<div class="ident">brokerCfg</div> <div class="operator">:=</div> <div class="ident">broker</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">{</div>
+		<div class="ident">Address</div><div class="operator">:</div> <div class="literal">&#34;localhost:1234&#34;</div><div class="operator">,</div>
+		<div class="ident">Topic</div><div class="operator">:</div>   <div class="literal">&#34;topic&#34;</div><div class="operator">,</div>
+		<div class="ident">Group</div><div class="operator">:</div>   <div class="literal">&#34;group&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">whitelist</div> <div class="operator">{</div>
+		<div class="ident">brokerCfg</div><div class="operator">.</div><div class="ident">OrgWhitelist</div> <div class="operator">=</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">brokerCfg</div><div class="operator">.</div><div class="ident">OrgWhitelistEnabled</div> <div class="operator">=</div> <div class="ident">true</div><div class="operator"></div>
+	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
+		<div class="ident">brokerCfg</div><div class="operator">.</div><div class="ident">OrgWhitelistEnabled</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="operator">&amp;</div><div class="ident">consumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">{</div>
+		<div class="ident">Configuration</div><div class="operator">:</div> <div class="ident">brokerCfg</div><div class="operator">,</div>
+		<div class="ident">Storage</div><div class="operator">:</div>       <div class="ident">s</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestProcessEmptyMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">c</div> <div class="operator">:=</div> <div class="ident">dummyConsumer</div><div class="operator">(</div><div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>message is empty -&gt; nothing should be written into storage</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">c</div><div class="operator">.</div><div class="ident">ProcessMessage</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;unexpected end of JSON input&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">count</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReportsCount</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div>
+		<div class="ident">t</div><div class="operator">,</div>
+		<div class="literal">0</div><div class="operator">,</div>
+		<div class="ident">count</div><div class="operator">,</div>
+		<div class="literal">&#34;process message shouldn&#39;t write anything into the DB&#34;</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestProcessCorrectMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">c</div> <div class="operator">:=</div> <div class="ident">dummyConsumer</div><div class="operator">(</div><div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">message</div><div class="operator">.</div><div class="ident">Value</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>message is empty -&gt; nothing should be written into storage</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">c</div><div class="operator">.</div><div class="ident">ProcessMessage</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">count</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReportsCount</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">,</div> <div class="ident">count</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestProcessingMessageWithClosedStorage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockConsumer</div> <div class="operator">:=</div> <div class="ident">dummyConsumer</div><div class="operator">(</div><div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;sql: database is closed&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestProcessingMessageWithWrongDateFormat</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockConsumer</div> <div class="operator">:=</div> <div class="ident">dummyConsumer</div><div class="operator">(</div><div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">messageValue</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		&#34;Report&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerReport</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;LastChecked&#34;: &#34;2020.01.23 16:15:59&#34;
+	}`</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">messageValue</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">ok</div> <div class="operator">:=</div> <div class="ident">err</div><div class="operator">.</div><div class="operator">(</div><div class="operator">*</div><div class="ident">time</div><div class="operator">.</div><div class="ident">ParseError</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">||</div> <div class="operator">!</div><div class="ident">ok</div> <div class="operator">{</div>
+		<div class="ident">t</div><div class="operator">.</div><div class="ident">Fatal</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div>
+			<div class="literal">&#34;expected time.ParseError error because date format is wrong. Got %&#43;v&#34;</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div>
+		<div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumerMockOK</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">RunTestWithTimeout</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockKafkaConsumerWithExpectedMessages</div><div class="operator">(</div>
+			<div class="ident">t</div><div class="operator">,</div>
+			<div class="ident">testTopicName</div><div class="operator">,</div>
+			<div class="ident">testOrgWhiteList</div><div class="operator">,</div>
+			<div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">}</div><div class="operator">,</div>
+		<div class="operator">)</div><div class="operator"></div>
+
+		<div class="keyword">go</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">Serve</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>wait for message processing</p>
+</td>
+	<td class="code"><pre><code>		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">WaitForMockConsumerToHaveNConsumedMessages</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">uint64</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">.</div><div class="ident">GetNumberOfSuccessfullyConsumedMessages</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">uint64</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">.</div><div class="ident">GetNumberOfErrorsConsumingMessages</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testCaseTimeLimit</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumerMockBadMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">RunTestWithTimeout</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockKafkaConsumerWithExpectedMessages</div><div class="operator">(</div>
+			<div class="ident">t</div><div class="operator">,</div>
+			<div class="ident">testTopicName</div><div class="operator">,</div>
+			<div class="ident">testOrgWhiteList</div><div class="operator">,</div>
+			<div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="literal">&#34;bad message&#34;</div><div class="operator">}</div><div class="operator">,</div>
+		<div class="operator">)</div><div class="operator"></div>
+
+		<div class="keyword">go</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">Serve</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>wait for message processing</p>
+</td>
+	<td class="code"><pre><code>		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">WaitForMockConsumerToHaveNConsumedMessages</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">uint64</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">.</div><div class="ident">GetNumberOfSuccessfullyConsumedMessages</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">uint64</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">.</div><div class="ident">GetNumberOfErrorsConsumingMessages</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testCaseTimeLimit</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumerMockWritingToClosedStorage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">RunTestWithTimeout</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockKafkaConsumerWithExpectedMessages</div><div class="operator">(</div>
+			<div class="ident">t</div><div class="operator">,</div> <div class="ident">testTopicName</div><div class="operator">,</div> <div class="ident">testOrgWhiteList</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">}</div><div class="operator">,</div>
+		<div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="keyword">go</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">Serve</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">WaitForMockConsumerToHaveNConsumedMessages</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">uint64</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">.</div><div class="ident">GetNumberOfSuccessfullyConsumedMessages</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">uint64</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">.</div><div class="ident">GetNumberOfErrorsConsumingMessages</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testCaseTimeLimit</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_New</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">RunTestWithTimeout</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">sarama</div><div class="operator">.</div><div class="ident">Logger</div> <div class="operator">=</div> <div class="ident">log</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">os</div><div class="operator">.</div><div class="ident">Stdout</div><div class="operator">,</div> <div class="ident">saramaLogPrefix</div><div class="operator">,</div> <div class="ident">log</div><div class="operator">.</div><div class="ident">LstdFlags</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">mockBroker</div> <div class="operator">:=</div> <div class="ident">sarama</div><div class="operator">.</div><div class="ident">NewMockBroker</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">defer</div> <div class="ident">mockBroker</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">mockBroker</div><div class="operator">.</div><div class="ident">SetHandlerByMap</div><div class="operator">(</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">GetHandlersMapForMockConsumer</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockBroker</div><div class="operator">,</div> <div class="ident">testTopicName</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">broker</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">{</div>
+			<div class="ident">Address</div><div class="operator">:</div> <div class="ident">mockBroker</div><div class="operator">.</div><div class="ident">Addr</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
+			<div class="ident">Topic</div><div class="operator">:</div>   <div class="ident">testTopicName</div><div class="operator">,</div>
+			<div class="ident">Enabled</div><div class="operator">:</div> <div class="ident">true</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testCaseTimeLimit</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TODO: fix with new groups consumer
+func TestKafkaConsumer<em>New</em>FindCoordinatorRequestError(t *testing.T) {
+helpers.RunTestWithTimeout(t, func(t *testing.T) {
+    sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)</p>
+
+<pre><code>mockBroker := sarama.NewMockBroker(t, 0)
+defer mockBroker.Close()
+
+handlersMap := helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName)
+handlersMap[&quot;FindCoordinatorRequest&quot;] = sarama.NewMockFindCoordinatorResponse(t).
+    SetError(sarama.CoordinatorGroup, &quot;&quot;, sarama.ErrUnknown)
+
+mockBroker.SetHandlerByMap(handlersMap)
+
+_, err := consumer.New(broker.Configuration{
+    Address: mockBroker.Addr(),
+    Topic:   testTopicName,
+    Enabled: true,
+}, nil)
+assert.EqualError(t, err, &quot;kafka server: Unexpected (unknown?) server error.&quot;)
+</code></pre>
+
+<p>}, testCaseTimeLimit)
+}</p>
+</td>
+	<td class="code"><pre><code>
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ProcessMessage_OrganizationWhitelistDisabled</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockConsumer</div> <div class="operator">:=</div> <div class="ident">dummyConsumer</div><div class="operator">(</div><div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">brokerCfg</div> <div class="operator">:=</div> <div class="ident">broker</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">{</div>
+		<div class="ident">Address</div><div class="operator">:</div>             <div class="literal">&#34;localhost:1234&#34;</div><div class="operator">,</div>
+		<div class="ident">Topic</div><div class="operator">:</div>               <div class="literal">&#34;topic&#34;</div><div class="operator">,</div>
+		<div class="ident">Group</div><div class="operator">:</div>               <div class="literal">&#34;group&#34;</div><div class="operator">,</div>
+		<div class="ident">OrgWhitelist</div><div class="operator">:</div>        <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">123</div><div class="operator">)</div><div class="operator">)</div><div class="operator">,</div> <div class="comment">// in testdata, OrgID = 1</div>
+		<div class="ident">OrgWhitelistEnabled</div><div class="operator">:</div> <div class="ident">true</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">mockConsumer</div> <div class="operator">:=</div> <div class="operator">&amp;</div><div class="ident">consumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">{</div>
+		<div class="ident">Configuration</div><div class="operator">:</div> <div class="ident">brokerCfg</div><div class="operator">,</div>
+		<div class="ident">Storage</div><div class="operator">:</div>       <div class="ident">mockStorage</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;organization ID is not whitelisted&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">brokerCfg</div> <div class="operator">:=</div> <div class="ident">broker</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">{</div>
+		<div class="ident">Address</div><div class="operator">:</div>             <div class="literal">&#34;localhost:1234&#34;</div><div class="operator">,</div>
+		<div class="ident">Topic</div><div class="operator">:</div>               <div class="literal">&#34;topic&#34;</div><div class="operator">,</div>
+		<div class="ident">Group</div><div class="operator">:</div>               <div class="literal">&#34;group&#34;</div><div class="operator">,</div>
+		<div class="ident">OrgWhitelist</div><div class="operator">:</div>        <div class="ident">nil</div><div class="operator">,</div>
+		<div class="ident">OrgWhitelistEnabled</div><div class="operator">:</div> <div class="ident">true</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">mockConsumer</div> <div class="operator">:=</div> <div class="operator">&amp;</div><div class="ident">consumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">{</div>
+		<div class="ident">Configuration</div><div class="operator">:</div> <div class="ident">brokerCfg</div><div class="operator">,</div>
+		<div class="ident">Storage</div><div class="operator">:</div>       <div class="ident">mockStorage</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;organization ID is not whitelisted&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ProcessMessage_MessageFromTheFuture</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">buf</div> <div class="operator">:=</div> <div class="ident">new</div><div class="operator">(</div><div class="ident">bytes</div><div class="operator">.</div><div class="ident">Buffer</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">zerolog_log</div><div class="operator">.</div><div class="ident">Logger</div> <div class="operator">=</div> <div class="ident">zerolog</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">buf</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockConsumer</div> <div class="operator">:=</div> <div class="operator">&amp;</div><div class="ident">consumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">{</div>
+		<div class="ident">Configuration</div><div class="operator">:</div> <div class="ident">wrongBrokerCfg</div><div class="operator">,</div>
+		<div class="ident">Storage</div><div class="operator">:</div>       <div class="ident">mockStorage</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		&#34;Report&#34;:`</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerReport</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;LastChecked&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="literal">24</div><div class="operator">*</div><div class="ident">time</div><div class="operator">.</div><div class="ident">Hour</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
+	}`</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Contains</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">buf</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">&#34;got a message from the future&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ProcessMessage_MoreRecentReportAlreadyExists</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">zerolog</div><div class="operator">.</div><div class="ident">SetGlobalLevel</div><div class="operator">(</div><div class="ident">zerolog</div><div class="operator">.</div><div class="ident">InfoLevel</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">buf</div> <div class="operator">:=</div> <div class="ident">new</div><div class="operator">(</div><div class="ident">bytes</div><div class="operator">.</div><div class="ident">Buffer</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">zerolog_log</div><div class="operator">.</div><div class="ident">Logger</div> <div class="operator">=</div> <div class="ident">zerolog</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">buf</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockConsumer</div> <div class="operator">:=</div> <div class="operator">&amp;</div><div class="ident">consumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">{</div>
+		<div class="ident">Configuration</div><div class="operator">:</div> <div class="ident">wrongBrokerCfg</div><div class="operator">,</div>
+		<div class="ident">Storage</div><div class="operator">:</div>       <div class="ident">mockStorage</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		&#34;Report&#34;:`</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerReport</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;LastChecked&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
+	}`</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">message</div> <div class="operator">=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		&#34;Report&#34;:`</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerReport</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;LastChecked&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="operator">-</div><div class="literal">24</div><div class="operator">*</div><div class="ident">time</div><div class="operator">.</div><div class="ident">Hour</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
+	}`</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Contains</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">buf</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">&#34;Skipping because a more recent report already exists for this cluster&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ConsumeClaim</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">kafkaConsumer</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">{</div>
+		<div class="ident">Storage</div><div class="operator">:</div> <div class="ident">mockStorage</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">mockConsumerGroupSession</div> <div class="operator">:=</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MockConsumerGroupSession</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">mockConsumerGroupClaim</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">NewMockConsumerGroupClaim</div><div class="operator">(</div><div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">kafkaConsumer</div><div class="operator">.</div><div class="ident">ConsumeClaim</div><div class="operator">(</div><div class="ident">mockConsumerGroupSession</div><div class="operator">,</div> <div class="ident">mockConsumerGroupClaim</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ConsumeClaim_DBError</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">buf</div> <div class="operator">:=</div> <div class="ident">new</div><div class="operator">(</div><div class="ident">bytes</div><div class="operator">.</div><div class="ident">Buffer</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">zerolog_log</div><div class="operator">.</div><div class="ident">Logger</div> <div class="operator">=</div> <div class="ident">zerolog</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">buf</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">kafkaConsumer</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">{</div>
+		<div class="ident">Storage</div><div class="operator">:</div> <div class="ident">mockStorage</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">mockConsumerGroupSession</div> <div class="operator">:=</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MockConsumerGroupSession</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">mockConsumerGroupClaim</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">NewMockConsumerGroupClaim</div><div class="operator">(</div><div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">kafkaConsumer</div><div class="operator">.</div><div class="ident">ConsumeClaim</div><div class="operator">(</div><div class="ident">mockConsumerGroupSession</div><div class="operator">,</div> <div class="ident">mockConsumerGroupClaim</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Contains</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">buf</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">&#34;unable to get latest offset&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ConsumeClaim_OKMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">kafkaConsumer</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">KafkaConsumer</div><div class="operator">{</div>
+		<div class="ident">Storage</div><div class="operator">:</div> <div class="ident">mockStorage</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">mockConsumerGroupSession</div> <div class="operator">:=</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MockConsumerGroupSession</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">mockConsumerGroupClaim</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">NewMockConsumerGroupClaim</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="operator">*</div><div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">{</div>
+		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">StringToSaramaConsumerMessage</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">kafkaConsumer</div><div class="operator">.</div><div class="ident">ConsumeClaim</div><div class="operator">(</div><div class="ident">mockConsumerGroupSession</div><div class="operator">,</div> <div class="ident">mockConsumerGroupClaim</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestKafkaConsumer_SetupCleanup</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockBroker</div> <div class="operator">:=</div> <div class="ident">sarama</div><div class="operator">.</div><div class="ident">NewMockBroker</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">mockBroker</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockBroker</div><div class="operator">.</div><div class="ident">SetHandlerByMap</div><div class="operator">(</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">GetHandlersMapForMockConsumer</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockBroker</div><div class="operator">,</div> <div class="ident">testTopicName</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">broker</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">{</div>
+		<div class="ident">Address</div><div class="operator">:</div> <div class="ident">mockBroker</div><div class="operator">.</div><div class="ident">Addr</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="ident">Topic</div><div class="operator">:</div>   <div class="ident">testTopicName</div><div class="operator">,</div>
+		<div class="ident">Enabled</div><div class="operator">:</div> <div class="ident">true</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">defer</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>The functions don't really use their arguments at all,
+so it's possible to just pass nil into them.</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">Setup</div><div class="operator">(</div><div class="ident">nil</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockConsumer</div><div class="operator">.</div><div class="ident">Cleanup</div><div class="operator">(</div><div class="ident">nil</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

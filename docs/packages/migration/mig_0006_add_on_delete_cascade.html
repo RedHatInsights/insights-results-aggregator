@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2020 Red Hat, Inc
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<html>
+<head>
+<title>mig_0006_add_on_delete_cascade.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>mig_0006_add_on_delete_cascade.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"></td>
+	<td class="code"><pre><code><div class="comment">/*
+Copyright © 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/</div>
+
+<div class="keyword">package</div> <div class="ident">migration</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="ident">mig0006AddOnDeleteCascade</div> <div class="operator">=</div> <div class="ident">NewUpdateTableMigration</div><div class="operator">(</div>
+	<div class="ident">ruleErrorKeyTable</div><div class="operator">,</div>
+	<div class="literal">`
+		CREATE TABLE rule_error_key (
+			&#34;error_key&#34;     VARCHAR NOT NULL,
+			&#34;rule_module&#34;   VARCHAR NOT NULL REFERENCES rule(module),
+			&#34;condition&#34;     VARCHAR NOT NULL,
+			&#34;description&#34;   VARCHAR NOT NULL,
+			&#34;impact&#34;        INTEGER NOT NULL,
+			&#34;likelihood&#34;    INTEGER NOT NULL,
+			&#34;publish_date&#34;  TIMESTAMP NOT NULL,
+			&#34;active&#34;        BOOLEAN NOT NULL,
+			&#34;generic&#34;       VARCHAR NOT NULL,
+			PRIMARY KEY(&#34;error_key&#34;, &#34;rule_module&#34;)
+		)
+		`</div><div class="operator">,</div>
+	<div class="ident">nil</div><div class="operator">,</div>
+	<div class="literal">`
+		CREATE TABLE rule_error_key (
+			&#34;error_key&#34;     VARCHAR NOT NULL,
+			&#34;rule_module&#34;   VARCHAR NOT NULL REFERENCES rule(module) ON DELETE CASCADE,
+			&#34;condition&#34;     VARCHAR NOT NULL,
+			&#34;description&#34;   VARCHAR NOT NULL,
+			&#34;impact&#34;        INTEGER NOT NULL,
+			&#34;likelihood&#34;    INTEGER NOT NULL,
+			&#34;publish_date&#34;  TIMESTAMP NOT NULL,
+			&#34;active&#34;        BOOLEAN NOT NULL,
+			&#34;generic&#34;       VARCHAR NOT NULL,
+			PRIMARY KEY(&#34;error_key&#34;, &#34;rule_module&#34;)
+		)
+	`</div><div class="operator">,</div>
+<div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

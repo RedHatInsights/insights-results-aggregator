@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2020 Red Hat, Inc
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<html>
+<head>
+<title>actual_migrations_test.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>actual_migrations_test.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"><p>Copyright 2020 Red Hat, Inc</p>
+
+<p>Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+
+<pre><code> http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">migration_test</div><div class="operator"></div>
+
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;database/sql&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;database/sql/driver&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/DATA-DOG/go-sqlmock&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/migration&#34;</div><div class="operator"></div>
+	<div class="ident">ira_helpers</div> <div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">GetTxForMigration</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">,</div> <div class="ident">sqlmock</div><div class="operator">.</div><div class="ident">Sqlmock</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockDBWithExpects</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectBegin</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">tx</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Begin</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">tx</div><div class="operator">,</div> <div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestAllMigrations</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDB</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">InitInfoTable</div><div class="operator">(</div><div class="ident">db</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigrationsOneByOne</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDB</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">allMigrations</div> <div class="operator">:=</div> <div class="ident">make</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">migration</div><div class="operator">.</div><div class="ident">Migration</div><div class="operator">,</div> <div class="ident">len</div><div class="operator">(</div><div class="operator">*</div><div class="ident">migration</div><div class="operator">.</div><div class="ident">Migrations</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">copy</div><div class="operator">(</div><div class="ident">allMigrations</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">migration</div><div class="operator">.</div><div class="ident">Migrations</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">*</div><div class="ident">migration</div><div class="operator">.</div><div class="ident">Migrations</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">migration</div><div class="operator">.</div><div class="ident">Migration</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">for</div> <div class="ident">i</div> <div class="operator">:=</div> <div class="literal">0</div><div class="operator">;</div> <div class="ident">i</div> <div class="operator">&lt;</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">allMigrations</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">i</div><div class="operator">&#43;&#43;</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>add one migration to the list</p>
+</td>
+	<td class="code"><pre><code>		<div class="operator">*</div><div class="ident">migration</div><div class="operator">.</div><div class="ident">Migrations</div> <div class="operator">=</div> <div class="ident">append</div><div class="operator">(</div><div class="operator">*</div><div class="ident">migration</div><div class="operator">.</div><div class="ident">Migrations</div><div class="operator">,</div> <div class="ident">allMigrations</div><div class="operator">[</div><div class="ident">i</div><div class="operator">]</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">InitInfoTable</div><div class="operator">(</div><div class="ident">db</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration1_TableReportAlreadyExists</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`CREATE TABLE report(c INTEGER);`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;table report already exists&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration1_TableReportDoesNotExist</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>set to the version with the report table</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`DROP TABLE report;`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to set to the first version</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: report&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration2_TableRuleAlreadyExists</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`CREATE TABLE rule(c INTEGER);`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;table rule already exists&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration2_TableRuleDoesNotExist</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>set to the version where table rule exists</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">2</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">dbDriver</div> <div class="operator">==</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverSQLite3</div> <div class="operator">{</div>
+		<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`DROP TABLE rule;`</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
+		<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`DROP TABLE rule CASCADE;`</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to set to the first version</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: rule&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration2_TableRuleErrorKeyAlreadyExists</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`CREATE TABLE rule_error_key(c INTEGER);`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;table rule_error_key already exists&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration2_TableRuleErrorKeyDoesNotExist</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>set to the latest version</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">2</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`DROP TABLE rule_error_key;`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to set to the first version</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: rule_error_key&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration3_TableClusterRuleUserFeedbackAlreadyExists</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`CREATE TABLE cluster_rule_user_feedback(c INTEGER);`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;table cluster_rule_user_feedback already exists&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration3_TableClusterRuleUserFeedbackDoesNotExist</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>set to the latest version</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">3</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`DROP TABLE cluster_rule_user_feedback;`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to set to the first version</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: cluster_rule_user_feedback&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration4_StepUp_TableClusterRuleUserFeedbackDoesNotExist</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">3</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`DROP TABLE cluster_rule_user_feedback;`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: cluster_rule_user_feedback&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration4_StepDown_TableClusterRuleUserFeedbackDoesNotExist</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">4</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`DROP TABLE cluster_rule_user_feedback;`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: cluster_rule_user_feedback&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration4_CreateTableError</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">expectedErr</div> <div class="operator">:=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;create table error&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mig4</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">Mig0004ModifyClusterRuleUserFeedback</div><div class="operator"></div>
+
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">method</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">func</div><div class="operator">(</div><div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">)</div> <div class="ident">error</div><div class="operator">{</div><div class="ident">mig4</div><div class="operator">.</div><div class="ident">StepUp</div><div class="operator">,</div> <div class="ident">mig4</div><div class="operator">.</div><div class="ident">StepDown</div><div class="operator">}</div> <div class="operator">{</div>
+		<div class="keyword">func</div><div class="operator">(</div><div class="ident">method</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">)</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+			<div class="ident">tx</div><div class="operator">,</div> <div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div> <div class="operator">:=</div> <div class="ident">GetTxForMigration</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">defer</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustCloseMockDBWithExpects</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div><div class="operator">)</div><div class="operator"></div>
+
+			<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectExec</div><div class="operator">(</div><div class="literal">&#34;ALTER TABLE&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">WillReturnResult</div><div class="operator">(</div><div class="ident">driver</div><div class="operator">.</div><div class="ident">ResultNoRows</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectExec</div><div class="operator">(</div><div class="literal">&#34;CREATE TABLE&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">WillReturnError</div><div class="operator">(</div><div class="ident">expectedErr</div><div class="operator">)</div><div class="operator"></div>
+
+			<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">method</div><div class="operator">(</div><div class="ident">tx</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverGeneral</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="ident">expectedErr</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator">(</div><div class="ident">method</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration4_InsertError</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">expectedErr</div> <div class="operator">:=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;insert error&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mig4</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">Mig0004ModifyClusterRuleUserFeedback</div><div class="operator"></div>
+
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">method</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">func</div><div class="operator">(</div><div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">)</div> <div class="ident">error</div><div class="operator">{</div><div class="ident">mig4</div><div class="operator">.</div><div class="ident">StepUp</div><div class="operator">,</div> <div class="ident">mig4</div><div class="operator">.</div><div class="ident">StepDown</div><div class="operator">}</div> <div class="operator">{</div>
+		<div class="keyword">func</div><div class="operator">(</div><div class="ident">method</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">)</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+			<div class="ident">tx</div><div class="operator">,</div> <div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div> <div class="operator">:=</div> <div class="ident">GetTxForMigration</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">defer</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustCloseMockDBWithExpects</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div><div class="operator">)</div><div class="operator"></div>
+
+			<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectExec</div><div class="operator">(</div><div class="literal">&#34;ALTER TABLE&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">WillReturnResult</div><div class="operator">(</div><div class="ident">driver</div><div class="operator">.</div><div class="ident">ResultNoRows</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectExec</div><div class="operator">(</div><div class="literal">&#34;CREATE TABLE&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">WillReturnResult</div><div class="operator">(</div><div class="ident">driver</div><div class="operator">.</div><div class="ident">ResultNoRows</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectExec</div><div class="operator">(</div><div class="literal">&#34;INSERT INTO&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">WillReturnError</div><div class="operator">(</div><div class="ident">expectedErr</div><div class="operator">)</div><div class="operator"></div>
+
+			<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">method</div><div class="operator">(</div><div class="ident">tx</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverGeneral</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="ident">expectedErr</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator">(</div><div class="ident">method</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration4_DropTableError</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">expectedErr</div> <div class="operator">:=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;drop table error&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mig4</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">Mig0004ModifyClusterRuleUserFeedback</div><div class="operator"></div>
+
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">method</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">func</div><div class="operator">(</div><div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">)</div> <div class="ident">error</div><div class="operator">{</div><div class="ident">mig4</div><div class="operator">.</div><div class="ident">StepUp</div><div class="operator">,</div> <div class="ident">mig4</div><div class="operator">.</div><div class="ident">StepDown</div><div class="operator">}</div> <div class="operator">{</div>
+		<div class="keyword">func</div><div class="operator">(</div><div class="ident">method</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">)</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+			<div class="ident">tx</div><div class="operator">,</div> <div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div> <div class="operator">:=</div> <div class="ident">GetTxForMigration</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">defer</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustCloseMockDBWithExpects</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div><div class="operator">)</div><div class="operator"></div>
+
+			<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectExec</div><div class="operator">(</div><div class="literal">&#34;ALTER TABLE&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">WillReturnResult</div><div class="operator">(</div><div class="ident">driver</div><div class="operator">.</div><div class="ident">ResultNoRows</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectExec</div><div class="operator">(</div><div class="literal">&#34;CREATE TABLE&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">WillReturnResult</div><div class="operator">(</div><div class="ident">driver</div><div class="operator">.</div><div class="ident">ResultNoRows</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectExec</div><div class="operator">(</div><div class="literal">&#34;INSERT INTO&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">WillReturnResult</div><div class="operator">(</div><div class="ident">driver</div><div class="operator">.</div><div class="ident">ResultNoRows</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectExec</div><div class="operator">(</div><div class="literal">&#34;DROP TABLE&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">WillReturnError</div><div class="operator">(</div><div class="ident">expectedErr</div><div class="operator">)</div><div class="operator"></div>
+
+			<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">method</div><div class="operator">(</div><div class="ident">tx</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverGeneral</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="ident">expectedErr</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator">(</div><div class="ident">method</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration5_TableAlreadyExists</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">&#34;CREATE TABLE consumer_error(c INTEGER);&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">GetMaxVersion</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;table consumer_error already exists&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration5_NoSuchTable</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">5</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`DROP TABLE consumer_error`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: consumer_error&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

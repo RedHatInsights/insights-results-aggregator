@@ -23,14 +23,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
+	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/RedHatInsights/insights-results-aggregator/server"
-	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	httputils "github.com/RedHatInsights/insights-operator-utils/http"
+
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
@@ -68,9 +70,6 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 			defer cleaner()
 
 			testReportDataItems := initTestReports(b, 1, mockStorage, sameReportProvider)
-			// write rule data because reports won't be returned without that
-			err := mockStorage.LoadRuleContent(testdata.RuleContent3Rules)
-			helpers.FailOnError(b, err)
 
 			b.Run(fmt.Sprintf("%v/%v/N=%v", "SameReport", testCase.storageName, testCase.N), func(b *testing.B) {
 				benchmarkHTTPServerReadReportForCluster(b, mockStorage, testReportDataItems, testCase.N)
@@ -95,7 +94,7 @@ func benchmarkHTTPServerReadReportForCluster(
 			orgID := testReportDataItem.orgID
 			clusterID := testReportDataItem.clusterID
 
-			url := server.MakeURLToEndpoint(
+			url := httputils.MakeURLToEndpoint(
 				helpers.DefaultServerConfig.APIPrefix,
 				server.ReportEndpoint,
 				orgID, clusterID,

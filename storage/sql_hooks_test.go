@@ -21,37 +21,31 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
-
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/stretchr/testify/assert"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 func TestInitSQLDriverWithLogs(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
-	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
-
 	driverName := storage.InitSQLDriverWithLogs(
 		&sqlite3.SQLiteDriver{},
 		"sqlite3",
-		&logger,
 	)
 	assert.Equal(t, "sqlite3WithHooks", driverName)
 
 	driverName = storage.InitSQLDriverWithLogs(
 		&pq.Driver{},
 		"postgres",
-		&logger,
 	)
 	assert.Equal(t, "postgresWithHooks", driverName)
 }
@@ -61,13 +55,10 @@ func TestInitSQLDriverWithLogs(t *testing.T) {
 func TestInitSQLDriverWithLogsMultipleCalls(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
-	logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
-
 	for i := 0; i < 10; i++ {
 		driverName := storage.InitSQLDriverWithLogs(
 			&sqlite3.SQLiteDriver{},
 			"sqlite3",
-			&logger,
 		)
 		assert.Equal(t, "sqlite3WithHooks", driverName)
 	}
@@ -81,7 +72,9 @@ func TestSQLHooksLoggingArgsJSON(t *testing.T) {
 
 	buf := new(bytes.Buffer)
 	logger := zerolog.New(buf).With().Str("type", "SQL").Logger()
-	hooks := storage.SQLHooks{SQLQueriesLogger: &logger}
+	log.Logger = logger
+
+	hooks := storage.SQLHooks{}
 
 	_, err := hooks.Before(context.Background(), query, params...)
 	helpers.FailOnError(t, err)
@@ -115,7 +108,8 @@ func TestSQLHooksLoggingArgsNotJSON(t *testing.T) {
 
 	buf := new(bytes.Buffer)
 	logger := zerolog.New(buf).With().Str("type", "SQL").Logger()
-	hooks := storage.SQLHooks{SQLQueriesLogger: &logger}
+	log.Logger = logger
+	hooks := storage.SQLHooks{}
 
 	_, err := hooks.Before(context.Background(), query, params...)
 	helpers.FailOnError(t, err)

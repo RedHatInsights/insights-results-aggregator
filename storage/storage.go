@@ -30,7 +30,6 @@ import (
 	"database/sql"
 	sql_driver "database/sql/driver"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -39,10 +38,8 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL database driver
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/RedHatInsights/insights-results-aggregator/content"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -80,11 +77,6 @@ type Storage interface {
 	GetUserFeedbackOnRule(
 		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
 	) (*UserFeedbackOnRule, error)
-	GetContentForRules(
-		rules types.ReportRules,
-		userID types.UserID,
-		clusterName types.ClusterName,
-	) ([]types.RuleContentResponse, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
 	ToggleRuleForCluster(
@@ -93,34 +85,28 @@ type Storage interface {
 		userID types.UserID,
 		ruleToggle RuleToggle,
 	) error
-	ListDisabledRulesForCluster(
-		clusterID types.ClusterName,
-		userID types.UserID,
-	) ([]types.DisabledRuleResponse, error)
 	GetFromClusterRuleToggle(
 		types.ClusterName,
 		types.RuleID,
 		types.UserID,
 	) (*ClusterRuleToggle, error)
+	GetTogglesForRules(
+		types.ClusterName,
+		[]types.RuleOnReport,
+		types.UserID,
+	) (map[types.RuleID]bool, error)
 	DeleteFromRuleClusterToggle(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		userID types.UserID,
 	) error
-	LoadRuleContent(contentDir content.RuleContentDirectory) error
-	GetRuleByID(ruleID types.RuleID) (*types.Rule, error)
 	GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
-	CreateRule(ruleData types.Rule) error
-	DeleteRule(ruleID types.RuleID) error
-	CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) error
-	DeleteRuleErrorKey(ruleID types.RuleID, errorKey types.ErrorKey) error
 	WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
 	GetUserFeedbackOnRules(
 		clusterID types.ClusterName,
-		rulesContent []types.RuleContentResponse,
+		rulesReport []types.RuleOnReport,
 		userID types.UserID,
 	) (map[types.RuleID]types.UserVote, error)
-	GetRuleWithContent(ruleID types.RuleID, ruleErrorKey types.ErrorKey) (*types.RuleWithContent, error)
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
@@ -193,8 +179,7 @@ func initAndGetDriver(configuration Configuration) (driverType types.DBDriver, d
 	}
 
 	if configuration.LogSQLQueries {
-		logger := zerolog.New(os.Stdout).With().Str("type", "SQL").Logger()
-		driverName = InitSQLDriverWithLogs(driver, driverName, &logger)
+		driverName = InitSQLDriverWithLogs(driver, driverName)
 	}
 
 	return
@@ -330,7 +315,7 @@ func (storage DBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.O
 	return types.OrgID(orgID), nil
 }
 
-// ReadReportForCluster reads result (health status) for selected cluster for given organization
+// ReadReportForCluster reads result (health status) for selected cluster
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
 ) (types.ClusterReport, types.Timestamp, error) {
@@ -375,48 +360,6 @@ func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 	return offset, err
 }
 
-// constructWhereClause constructs a dynamic WHERE .. IN clause
-// If the rules list is empty, returns NULL to have a syntactically correct WHERE NULL, selecting nothing
-func constructWhereClauseForContent(reportRules types.ReportRules) string {
-	if len(reportRules.HitRules) == 0 {
-		return "NULL" // WHERE NULL
-	}
-	statement := "(error_key, rule_module) IN (%v)"
-	var values string
-
-	for i, rule := range reportRules.HitRules {
-		singleVal := ""
-		module := strings.TrimSuffix(rule.Module, ".report") // remove trailing .report from module name
-
-		if i == 0 {
-			singleVal = fmt.Sprintf(`VALUES ('%v', '%v')`, rule.ErrorKey, module)
-		} else {
-			singleVal = fmt.Sprintf(`, ('%v', '%v')`, rule.ErrorKey, module)
-		}
-		values = values + singleVal
-	}
-	statement = fmt.Sprintf(statement, values)
-	return statement
-}
-
-func getExtraDataFromReportRules(rules []types.RuleContentResponse, reportRules types.ReportRules) []types.RuleContentResponse {
-	if len(reportRules.HitRules) == 0 {
-		return rules
-	}
-
-	for i, ruleContent := range rules {
-		module := ruleContent.RuleModule
-
-		for _, hitRule := range reportRules.HitRules {
-			moduleOnReport := strings.TrimSuffix(hitRule.Module, ".report")
-			if module == moduleOnReport {
-				rules[i].TemplateData = hitRule.Details
-			}
-		}
-	}
-	return rules
-}
-
 func calculateTotalRisk(impact, likelihood int) int {
 	return (impact + likelihood) / 2
 }
@@ -428,93 +371,6 @@ func commaSeparatedStrToTags(str string) []string {
 	}
 
 	return strings.Split(str, ",")
-}
-
-// GetContentForRules retrieves content for rules that were hit in the report
-func (storage DBStorage) GetContentForRules(
-	reportRules types.ReportRules,
-	userID types.UserID,
-	clusterName types.ClusterName,
-) ([]types.RuleContentResponse, error) {
-	rules := make([]types.RuleContentResponse, 0)
-
-	query := `
-	SELECT
-		rek.error_key,
-		rek.rule_module,
-		rek.description,
-		rek.generic,
-		r.reason,
-		r.resolution,
-		rek.publish_date,
-		rek.impact,
-		rek.likelihood,
-		rek.tags,
-		COALESCE(crt.disabled, 0) as disabled
-	FROM
-		rule r
-	INNER JOIN
-		rule_error_key rek
-			ON r.module = rek.rule_module
-	LEFT JOIN
-		cluster_rule_toggle crt
-			ON rek.rule_module = crt.rule_id
-			AND crt.cluster_id = $1
-			AND crt.user_id = $2
-	WHERE %v
-	ORDER BY
-		disabled ASC
-	`
-
-	whereInStatement := constructWhereClauseForContent(reportRules)
-	query = fmt.Sprintf(query, whereInStatement)
-
-	rows, err := storage.connection.Query(query, clusterName, userID)
-
-	if err != nil {
-		return rules, err
-	}
-	defer closeRows(rows)
-
-	for rows.Next() {
-		var rule types.RuleContentResponse
-		var impact, likelihood int
-		var tags string
-
-		err = rows.Scan(
-			&rule.ErrorKey,
-			&rule.RuleModule,
-			&rule.Description,
-			&rule.Generic,
-			&rule.Reason,
-			&rule.Resolution,
-			&rule.CreatedAt,
-			&impact,
-			&likelihood,
-			&tags,
-			&rule.Disabled,
-		)
-		if err != nil {
-			log.Error().Err(err).Msg("SQL error while retrieving content for rule")
-			continue
-		}
-
-		rule.TotalRisk = calculateTotalRisk(impact, likelihood)
-
-		// quick hack for rule tags
-		rule.Tags = commaSeparatedStrToTags(tags)
-
-		rules = append(rules, rule)
-	}
-
-	if err := rows.Err(); err != nil {
-		log.Error().Err(err).Msg("SQL rows error while retrieving content for rules")
-		return rules, err
-	}
-
-	rules = getExtraDataFromReportRules(rules, reportRules)
-
-	return rules, nil
 }
 
 func (storage DBStorage) getReportUpsertQuery() (string, error) {
@@ -611,226 +467,6 @@ func (storage DBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
 func (storage DBStorage) DeleteReportsForCluster(clusterName types.ClusterName) error {
 	_, err := storage.connection.Exec("DELETE FROM report WHERE cluster = $1;", clusterName)
 	return err
-}
-
-// loadRuleErrorKeyContent inserts the error key contents of all available rules into the database.
-func loadRuleErrorKeyContent(tx *sql.Tx, ruleConfig content.GlobalRuleConfig, ruleModuleName string, errorKeys map[string]content.RuleErrorKeyContent) error {
-	for errName, errProperties := range errorKeys {
-		var errIsActiveStatus bool
-		switch strings.ToLower(errProperties.Metadata.Status) {
-		case "active":
-			errIsActiveStatus = true
-		case "inactive":
-			errIsActiveStatus = false
-		default:
-			_ = tx.Rollback()
-			return fmt.Errorf("invalid rule error key status: '%s'", errProperties.Metadata.Status)
-		}
-
-		// quick hack to store tags list into DB
-		tags := strings.Join(errProperties.Metadata.Tags, ",")
-
-		_, err := tx.Exec(`INSERT INTO rule_error_key(error_key, rule_module, condition,
-				description, impact, likelihood, publish_date, active, generic, tags)
-				VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-			errName,
-			ruleModuleName,
-			errProperties.Metadata.Condition,
-			errProperties.Metadata.Description,
-			// This will panic if the impact string does not exist as a key in the impact
-			// dictionary, which is correct because we cannot continue if that happens.
-			ruleConfig.Impact[errProperties.Metadata.Impact],
-			errProperties.Metadata.Likelihood,
-			errProperties.Metadata.PublishDate,
-			errIsActiveStatus,
-			errProperties.Generic,
-			tags)
-
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-	}
-
-	return nil
-}
-
-// LoadRuleContent loads the parsed rule content into the database.
-func (storage DBStorage) LoadRuleContent(contentDir content.RuleContentDirectory) error {
-	tx, err := storage.connection.Begin()
-	if err != nil {
-		return err
-	}
-
-	// SQLite doesn't support `TRUNCATE`, so it's necessary to use `DELETE` and then `VACUUM`.
-	if _, err := tx.Exec("DELETE FROM rule_error_key; DELETE FROM rule;"); err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	for _, rule := range contentDir.Rules {
-		_, err := tx.Exec(`
-				INSERT INTO rule(module, "name", summary, reason, resolution, more_info)
-				VALUES($1, $2, $3, $4, $5, $6)`,
-			rule.Plugin.PythonModule,
-			rule.Plugin.Name,
-			rule.Summary,
-			rule.Reason,
-			rule.Resolution,
-			rule.MoreInfo,
-		)
-
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-
-		if err := loadRuleErrorKeyContent(tx, contentDir.Config, rule.Plugin.PythonModule, rule.ErrorKeys); err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// GetRuleByID gets a rule by ID
-func (storage DBStorage) GetRuleByID(ruleID types.RuleID) (*types.Rule, error) {
-	var rule types.Rule
-
-	err := storage.connection.QueryRow(`
-		SELECT
-			"module",
-			"name",
-			"summary",
-			"reason",
-			"resolution",
-			"more_info"
-		FROM rule WHERE "module" = $1`, ruleID,
-	).Scan(
-		&rule.Module,
-		&rule.Name,
-		&rule.Summary,
-		&rule.Reason,
-		&rule.Resolution,
-		&rule.MoreInfo,
-	)
-	if err == sql.ErrNoRows {
-		return nil, &types.ItemNotFoundError{ItemID: ruleID}
-	}
-
-	return &rule, err
-}
-
-// CreateRule creates rule with provided ruleData in the DB
-func (storage DBStorage) CreateRule(ruleData types.Rule) error {
-	_, err := storage.connection.Exec(`
-		INSERT INTO rule("module", "name", "summary", "reason", "resolution", "more_info")
-		VALUES($1, $2, $3, $4, $5, $6)
-		ON CONFLICT ("module")
-		DO UPDATE SET
-			"name" = $2,
-			"summary" = $3,
-			"reason" = $4,
-			"resolution" = $5,
-			"more_info" = $6
-		;
-	`,
-		ruleData.Module,
-		ruleData.Name,
-		ruleData.Summary,
-		ruleData.Reason,
-		ruleData.Resolution,
-		ruleData.MoreInfo,
-	)
-
-	return err
-}
-
-// DeleteRule deletes rule with provided ruleData in the DB
-func (storage DBStorage) DeleteRule(ruleID types.RuleID) error {
-	res, err := storage.connection.Exec(`DELETE FROM rule WHERE "module" = $1;`, ruleID)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return &types.ItemNotFoundError{ItemID: ruleID}
-	}
-
-	return nil
-}
-
-// CreateRuleErrorKey creates rule_error_key with provided data in the DB
-func (storage DBStorage) CreateRuleErrorKey(ruleErrorKey types.RuleErrorKey) error {
-	_, err := storage.connection.Exec(`
-		INSERT INTO rule_error_key(
-			"error_key",
-			"rule_module",
-			"condition",
-			"description",
-			"impact",
-			"likelihood",
-			"publish_date",
-			"active",
-			"generic"
-		)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		ON CONFLICT ("error_key", "rule_module")
-		DO UPDATE SET
-			"condition" = $3,
-			"description" = $4,
-			"impact" = $5,
-			"likelihood" = $6,
-			"publish_date" = $7,
-			"active" = $8,
-			"generic" = $9
-		;
-	`,
-		ruleErrorKey.ErrorKey,
-		ruleErrorKey.RuleModule,
-		ruleErrorKey.Condition,
-		ruleErrorKey.Description,
-		ruleErrorKey.Impact,
-		ruleErrorKey.Likelihood,
-		ruleErrorKey.PublishDate,
-		ruleErrorKey.Active,
-		ruleErrorKey.Generic,
-	)
-
-	return err
-}
-
-// DeleteRuleErrorKey creates rule_error_key with provided data in the DB
-func (storage DBStorage) DeleteRuleErrorKey(ruleID types.RuleID, errorKey types.ErrorKey) error {
-	res, err := storage.connection.Exec(
-		`DELETE FROM rule_error_key WHERE "error_key" = $1 AND "rule_module" = $2;`,
-		errorKey,
-		ruleID,
-	)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return &types.ItemNotFoundError{ItemID: fmt.Sprintf("%v/%v", ruleID, errorKey)}
-	}
-
-	return nil
 }
 
 // GetConnection returns db connection(useful for testing)

@@ -11,8 +11,6 @@ api_prefix = "/api/v1/"
 api_spec_file = "openapi.json"
 auth = false
 auth_type = "xrh"
-use_https = false
-content_service_url = "http://localhost:8081/api/v1/"
 
 [processing]
 org_whitelist_file = "org_whitelist.csv"

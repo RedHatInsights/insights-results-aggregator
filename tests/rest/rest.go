@@ -33,27 +33,49 @@ package tests
 
 // ServerTests run all tests for basic REST API endpoints
 func ServerTests() {
-	// basic tests for REST API apiPrefix
+	BasicTests()
+	OrganizationsTests()
+	ClustersTests()
+	ReportsTests()
+	VoteTests()
+
+	// tests for OpenAPI specification that is accessible via its endpoint as well
+	// implementation of these tests is stored in openapi.go
+	checkOpenAPISpecifications()
+
+	// tests for metrics hat is accessible via its endpoint as well
+	// implementation of these tests is stored in metrics.go
+	checkPrometheusMetrics()
+}
+
+// BasicTests implements basic tests for REST API apiPrefix
+func BasicTests() {
 	// implementation of these tests is stored in entrypoint.go
 	checkRestAPIEntryPoint()
 	checkNonExistentEntryPoint()
 	checkWrongEntryPoint()
 	checkWrongMethodsForEntryPoint()
+}
 
-	// tests for REST API endpoints apiPrefix+"organizations"
+// OrganizationsTests implements tests for REST API endpoints apiPrefix+"organizations"
+func OrganizationsTests() {
 	// implementation of these tests is stored in organizations.go
 	checkOrganizationsEndpoint()
 	checkOrganizationsEndpointWrongMethods()
+}
 
-	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
+// ClustersTests implements tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
+func ClustersTests() {
 	// implementation of these tests is stored in org_clusters.go
 	checkClustersEndpointForKnownOrganizations()
 	checkClustersEndpointForUnknownOrganizations()
 	checkClustersEndpointForImproperOrganizations()
 	checkClustersEndpointWrongMethods()
 	checkClustersEndpointSpecialOrganizationIds()
+}
 
-	// tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
+// ReportsTests implements tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
+func ReportsTests() {
 	// implementation of these tests is stored in reports.go
 	checkReportEndpointForKnownOrganizationAndKnownCluster()
 	checkReportEndpointForKnownOrganizationAndUnknownCluster()
@@ -62,8 +84,10 @@ func ServerTests() {
 	checkReportEndpointForImproperOrganization()
 	checkReportEndpointWrongMethods()
 	reproducerForIssue384()
+}
 
-	// tests for REST API endpoints for voting about rules
+// VoteTests implements tests for REST API endpoints for voting about rules
+func VoteTests() {
 	// implementation of these tests is stored in rule_vote.go
 	checkLikeKnownRuleForKnownCluster()
 	checkDislikeKnownRuleForKnownCluster()
@@ -74,22 +98,12 @@ func ServerTests() {
 	checkLikeKnownRuleForImproperCluster()
 	checkDislikeKnownRuleForImproperCluster()
 	checkResetKnownRuleForImproperCluster()
-	checkLikeUnknownRuleForKnownCluster()
-	checkDislikeUnknownRuleForKnownCluster()
-	checkResetUnknownRuleForKnownCluster()
-	checkLikeUnknownRuleForUnknownCluster()
-	checkDislikeUnknownRuleForUnknownCluster()
-	checkResetUnknownRuleForUnknownCluster()
-	checkLikeUnknownRuleForImproperCluster()
-	checkDislikeUnknownRuleForImproperCluster()
-	checkResetUnknownRuleForImproperCluster()
 	reproducerForIssue385()
-
-	// tests for OpenAPI specification that is accessible via its endpoint as well
-	// implementation of these tests is stored in openapi.go
-	checkOpenAPISpecifications()
-
-	// tests for metrics hat is accessible via its endpoint as well
-	// implementation of these tests is stored in metrics.go
-	checkPrometheusMetrics()
+	checkGetUserVoteForKnownCluster()
+	checkGetUserVoteForUnknownCluster()
+	checkGetUserVoteForImproperCluster()
+	checkGetUserVoteAfterVote()
+	checkGetUserVoteAfterUnvote()
+	checkGetUserVoteAfterDoubleVote()
+	checkGetUserVoteAfterDoubleUnvote()
 }

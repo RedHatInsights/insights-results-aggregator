@@ -27,4 +27,5 @@ var migrations = []Migration{
 	mig0008AddOffsetFieldToReportTable,
 	mig0009AddIndexOnReportKafkaOffset,
 	mig0010AddTagsFieldToRuleErrorKeyTable,
+	mig0011RemoveFKAndContentTables,
 }

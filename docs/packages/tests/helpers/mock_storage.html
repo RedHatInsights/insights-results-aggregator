@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2020 Red Hat, Inc
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<html>
+<head>
+<title>mock_storage.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>mock_storage.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"><p>Copyright 2020 Red Hat, Inc</p>
+
+<p>Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+
+<pre><code> http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">helpers</div><div class="operator"></div>
+
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;database/sql&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;os&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/DATA-DOG/go-sqlmock&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/google/uuid&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/conf&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">const</div> <div class="ident">sqlite3</div> <div class="operator">=</div> <div class="literal">&#34;sqlite3&#34;</div><div class="operator"></div>
+<div class="keyword">const</div> <div class="ident">postgres</div> <div class="operator">=</div> <div class="literal">&#34;postgres&#34;</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustGetMockStorage creates mocked storage based on in-memory Sqlite instance by default
+or on postgresql with config taken from config-devel.toml
+if env variable INSIGHTS<em>RESULTS</em>AGGREGATOR<strong>TESTS<em>DB is set to &quot;postgres&quot;
+INSIGHTS</em>RESULTS_AGGREGATOR</strong>TESTS<em>DB</em>ADMIN_PASS is set to db admin's password
+produces t.Fatal(err) on error</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">tb</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">init</div> <div class="ident">bool</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Getenv</div><div class="operator">(</div><div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB&#34;</div><div class="operator">)</div> <div class="operator">==</div> <div class="ident">postgres</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">MustGetPostgresStorage</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">init</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">MustGetSQLiteMemoryStorage</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">init</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustGetMockStorageWithExpects returns mock db storage
+with a driver &quot;github.com/DATA-DOG/go-sqlmock&quot; which requires you to write expect
+before each query, so first try to use MustGetMockStorage
+don't forget to call MustCloseMockStorageWithExpects</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustGetMockStorageWithExpects</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div> <div class="ident">sqlmock</div><div class="operator">.</div><div class="ident">Sqlmock</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">MustGetMockStorageWithExpectsForDriver</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverGeneral</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustGetMockStorageWithExpectsForDriver returns mock db storage
+with specified driver type and
+with a driver &quot;github.com/DATA-DOG/go-sqlmock&quot; which requires you to write expect
+before each query, so first try to use MustGetMockStorage
+don't forget to call MustCloseMockStorageWithExpects</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustGetMockStorageWithExpectsForDriver</div><div class="operator">(</div>
+	<div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">,</div> <div class="ident">driverType</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">,</div>
+<div class="operator">)</div> <div class="operator">(</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div> <div class="ident">sqlmock</div><div class="operator">.</div><div class="ident">Sqlmock</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div> <div class="operator">:=</div> <div class="ident">MustGetMockDBWithExpects</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">NewFromConnection</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">driverType</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">expects</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustGetMockDBWithExpects returns mock db
+with a driver &quot;github.com/DATA-DOG/go-sqlmock&quot; which requires you to write expect
+before each query, so first try to use MustGetMockStorage
+don't forget to call MustCloseMockDBWithExpects</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustGetMockDBWithExpects</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">,</div> <div class="ident">sqlmock</div><div class="operator">.</div><div class="ident">Sqlmock</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">sqlmock</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">db</div><div class="operator">,</div> <div class="ident">expects</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustCloseMockStorageWithExpects closes mock storage with expects and panics if it wasn't successful</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustCloseMockStorageWithExpects</div><div class="operator">(</div>
+	<div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">,</div> <div class="ident">mockStorage</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div> <div class="ident">expects</div> <div class="ident">sqlmock</div><div class="operator">.</div><div class="ident">Sqlmock</div><div class="operator">,</div>
+<div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectationsWereMet</div><div class="operator">(</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">t</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;there were unfulfilled expectations: %s&#34;</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectClose</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustCloseMockDBWithExpects closes mock db with expects and panics if it wasn't successful</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustCloseMockDBWithExpects</div><div class="operator">(</div>
+	<div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">,</div> <div class="ident">db</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div><div class="operator">,</div> <div class="ident">expects</div> <div class="ident">sqlmock</div><div class="operator">.</div><div class="ident">Sqlmock</div><div class="operator">,</div>
+<div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectationsWereMet</div><div class="operator">(</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">t</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;there were unfulfilled expectations: %s&#34;</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">expects</div><div class="operator">.</div><div class="ident">ExpectClose</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustGetSQLiteMemoryStorage creates test sqlite storage in file</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustGetSQLiteMemoryStorage</div><div class="operator">(</div><div class="ident">tb</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">init</div> <div class="ident">bool</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">sqliteStorage</div> <div class="operator">:=</div> <div class="ident">mustGetSqliteStorage</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="literal">&#34;:memory:&#34;</div><div class="operator">,</div> <div class="ident">init</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">sqliteStorage</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">MustCloseStorage</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">sqliteStorage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustGetSQLiteFileStorage creates test sqlite storage in file</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustGetSQLiteFileStorage</div><div class="operator">(</div><div class="ident">tb</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">init</div> <div class="ident">bool</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">dbFilename</div> <div class="operator">:=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;/tmp/insights-results-aggregator.test.%v.db&#34;</div><div class="operator">,</div> <div class="ident">uuid</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">sqliteStorage</div> <div class="operator">:=</div> <div class="ident">mustGetSqliteStorage</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">dbFilename</div><div class="operator">,</div> <div class="ident">init</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">sqliteStorage</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">MustCloseStorage</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">sqliteStorage</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Remove</div><div class="operator">(</div><div class="ident">dbFilename</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">mustGetSqliteStorage</div><div class="operator">(</div><div class="ident">tb</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">datasource</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">init</div> <div class="ident">bool</div><div class="operator">)</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">sql</div><div class="operator">.</div><div class="ident">Open</div><div class="operator">(</div><div class="ident">sqlite3</div><div class="operator">,</div> <div class="ident">datasource</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">&#34;PRAGMA foreign_keys = ON;&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">sqliteStorage</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">NewFromConnection</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverSQLite3</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">init</div> <div class="operator">{</div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">sqliteStorage</div><div class="operator">.</div><div class="ident">MigrateToLatest</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">sqliteStorage</div><div class="operator">.</div><div class="ident">Init</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">sqliteStorage</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustGetPostgresStorage creates test postgres storage with credentials from config-devel</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustGetPostgresStorage</div><div class="operator">(</div><div class="ident">tb</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">init</div> <div class="ident">bool</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">dbAdminPassword</div> <div class="operator">:=</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Getenv</div><div class="operator">(</div><div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">LoadConfiguration</div><div class="operator">(</div><div class="literal">&#34;../config-devel&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>force postgres and replace db name with test one</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">storageConf</div> <div class="operator">:=</div> <div class="operator">&amp;</div><div class="ident">conf</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator"></div>
+	<div class="ident">storageConf</div><div class="operator">.</div><div class="ident">Driver</div> <div class="operator">=</div> <div class="ident">postgres</div><div class="operator"></div>
+	<div class="ident">storageConf</div><div class="operator">.</div><div class="ident">PGDBName</div> <div class="operator">&#43;=</div> <div class="literal">&#34;_test_db_&#34;</div> <div class="operator">&#43;</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">ReplaceAll</div><div class="operator">(</div><div class="ident">uuid</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">String</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">&#34;-&#34;</div><div class="operator">,</div> <div class="literal">&#34;_&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">connString</div> <div class="operator">:=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div>
+		<div class="literal">&#34;host=%s port=%d user=%s password=%s sslmode=disable&#34;</div><div class="operator">,</div>
+		<div class="ident">storageConf</div><div class="operator">.</div><div class="ident">PGHost</div><div class="operator">,</div> <div class="ident">storageConf</div><div class="operator">.</div><div class="ident">PGPort</div><div class="operator">,</div> <div class="ident">postgres</div><div class="operator">,</div> <div class="ident">dbAdminPassword</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">adminConn</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">sql</div><div class="operator">.</div><div class="ident">Open</div><div class="operator">(</div><div class="ident">storageConf</div><div class="operator">.</div><div class="ident">Driver</div><div class="operator">,</div> <div class="ident">connString</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">query</div> <div class="operator">:=</div> <div class="literal">&#34;CREATE DATABASE &#34;</div> <div class="operator">&#43;</div> <div class="ident">storageConf</div><div class="operator">.</div><div class="ident">PGDBName</div> <div class="operator">&#43;</div> <div class="literal">&#34;;&#34;</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">adminConn</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">query</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">postgresStorage</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">conf</div><div class="operator">.</div><div class="ident">GetStorageConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">init</div> <div class="operator">{</div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">postgresStorage</div><div class="operator">.</div><div class="ident">MigrateToLatest</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">postgresStorage</div><div class="operator">.</div><div class="ident">Init</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">postgresStorage</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">MustCloseStorage</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">postgresStorage</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">adminConn</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">&#34;DROP DATABASE &#34;</div> <div class="operator">&#43;</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">PGDBName</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">adminConn</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MustCloseStorage closes the storage and calls t.Fatal on error</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MustCloseStorage</div><div class="operator">(</div><div class="ident">tb</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">s</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">tb</div><div class="operator">,</div> <div class="ident">s</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

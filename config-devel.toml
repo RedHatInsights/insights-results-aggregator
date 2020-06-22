@@ -14,8 +14,6 @@ api_spec_file = "openapi.json"
 debug = true
 auth = true
 auth_type = "xrh"
-use_https = false
-content_service_url = "http://localhost:8081/api/v1/"
 
 [processing]
 org_whitelist_file = "org_whitelist.csv"

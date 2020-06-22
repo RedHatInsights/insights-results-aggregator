@@ -21,15 +21,16 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func GetTxForMigration(t *testing.T) (*sql.Tx, *sql.DB, sqlmock.Sqlmock) {
-	db, expects := helpers.MustGetMockDBWithExpects(t)
+	db, expects := ira_helpers.MustGetMockDBWithExpects(t)
 
 	expects.ExpectBegin()
 
@@ -218,7 +219,7 @@ func TestMigration4_CreateTableError(t *testing.T) {
 	for _, method := range []func(*sql.Tx, types.DBDriver) error{mig4.StepUp, mig4.StepDown} {
 		func(method func(*sql.Tx, types.DBDriver) error) {
 			tx, db, expects := GetTxForMigration(t)
-			defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+			defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 			expects.ExpectExec("ALTER TABLE").
 				WillReturnResult(driver.ResultNoRows)
@@ -238,7 +239,7 @@ func TestMigration4_InsertError(t *testing.T) {
 	for _, method := range []func(*sql.Tx, types.DBDriver) error{mig4.StepUp, mig4.StepDown} {
 		func(method func(*sql.Tx, types.DBDriver) error) {
 			tx, db, expects := GetTxForMigration(t)
-			defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+			defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 			expects.ExpectExec("ALTER TABLE").
 				WillReturnResult(driver.ResultNoRows)
@@ -260,7 +261,7 @@ func TestMigration4_DropTableError(t *testing.T) {
 	for _, method := range []func(*sql.Tx, types.DBDriver) error{mig4.StepUp, mig4.StepDown} {
 		func(method func(*sql.Tx, types.DBDriver) error) {
 			tx, db, expects := GetTxForMigration(t)
-			defer helpers.MustCloseMockDBWithExpects(t, db, expects)
+			defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 			expects.ExpectExec("ALTER TABLE").
 				WillReturnResult(driver.ResultNoRows)

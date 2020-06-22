@@ -179,11 +179,11 @@ func (storage DBStorage) GetUserFeedbackOnRule(
 
 // GetUserFeedbackOnRules gets user feedbacks for defined array of rule IDs from DB
 func (storage DBStorage) GetUserFeedbackOnRules(
-	clusterID types.ClusterName, rulesContent []types.RuleContentResponse, userID types.UserID,
+	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
 ) (map[types.RuleID]types.UserVote, error) {
 	ruleIDs := make([]string, 0)
-	for _, v := range rulesContent {
-		ruleIDs = append(ruleIDs, v.RuleModule)
+	for _, v := range rulesReport {
+		ruleIDs = append(ruleIDs, string(v.Module))
 	}
 
 	feedbacks := make(map[types.RuleID]types.UserVote)

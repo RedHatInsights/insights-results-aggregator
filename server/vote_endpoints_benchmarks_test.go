@@ -22,14 +22,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
+	httputils "github.com/RedHatInsights/insights-operator-utils/http"
+
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -104,7 +106,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					ruleID := endpointArg.RuleID
 					userID := endpointArg.UserID
 
-					url := server.MakeURLToEndpoint(
+					url := httputils.MakeURLToEndpoint(
 						helpers.DefaultServerConfig.APIPrefix,
 						testCase.Endpoint,
 						clusterID, ruleID,
@@ -114,10 +116,10 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					helpers.FailOnError(b, err)
 
 					// authorize user
-					identity := server.Identity{
+					identity := types.Identity{
 						AccountNumber: userID,
 					}
-					req = req.WithContext(context.WithValue(req.Context(), server.ContextKeyUser, identity))
+					req = req.WithContext(context.WithValue(req.Context(), types.ContextKeyUser, identity))
 
 					response := helpers.ExecuteRequest(testServer, req).Result()
 
@@ -144,49 +146,6 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 		errorKey := types.ErrorKey("ek")
 		userID := types.UserID(testdata.GetRandomUserID())
 
-		helpers.AssertAPIRequest(tb, mockStorage, nil, &helpers.APIRequest{
-			Method:       http.MethodPost,
-			Endpoint:     server.RuleEndpoint,
-			EndpointArgs: []interface{}{ruleID},
-			Body:         fmt.Sprintf(`{"rule_module": "%v"}`, ruleID),
-		}, &helpers.APIResponse{
-			StatusCode: http.StatusOK,
-			Body: fmt.Sprintf(`{
-				"rule": {
-					"module":"%v",
-					"name":"",
-					"summary":"",
-					"reason":"",
-					"resolution":"",
-					"more_info":""
-				},
-				"status":"ok"
-			}`, ruleID),
-		})
-
-		helpers.AssertAPIRequest(tb, mockStorage, nil, &helpers.APIRequest{
-			Method:       http.MethodPost,
-			Endpoint:     server.RuleErrorKeyEndpoint,
-			EndpointArgs: []interface{}{ruleID, errorKey},
-			Body:         fmt.Sprintf(`{"rule_module": "%v"}`, ruleID),
-		}, &helpers.APIResponse{
-			StatusCode: http.StatusOK,
-			Body: fmt.Sprintf(`{
-				"rule_error_key": {
-					"rule_module": "%v",
-					"error_key": "%v",
-					"condition": "",
-					"description":"",
-					"impact":0,
-					"likelihood":0,
-					"publish_date":"0001-01-01T00:00:00Z",
-					"active":false,
-					"generic":""
-				},
-				"status": "ok"
-			}`, ruleID, errorKey),
-		})
-
 		err := mockStorage.WriteReportForCluster(
 			testdata.OrgID, clusterID, "{}", time.Now(), testdata.KafkaOffset,
 		)
@@ -205,26 +164,7 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 
 func cleanupEndpointArgs(tb testing.TB, args []voteEndpointArg, mockStorage storage.Storage) {
 	for _, arg := range args {
-		helpers.AssertAPIRequest(tb, mockStorage, nil, &helpers.APIRequest{
-			Method:       http.MethodDelete,
-			Endpoint:     server.RuleErrorKeyEndpoint,
-			EndpointArgs: []interface{}{arg.RuleID, arg.ErrorKey},
-		}, &helpers.APIResponse{
-			StatusCode: http.StatusOK,
-			Body:       `{"status": "ok"}`,
-		})
-
-		helpers.AssertAPIRequest(tb, mockStorage, nil, &helpers.APIRequest{
-			Method:       http.MethodDelete,
-			Endpoint:     server.RuleEndpoint,
-			EndpointArgs: []interface{}{arg.RuleID},
-		}, &helpers.APIResponse{
-			StatusCode: http.StatusOK,
-			Body:       `{"status": "ok"}`,
-		})
-
 		err := mockStorage.DeleteReportsForCluster(arg.ClusterID)
 		helpers.FailOnError(tb, err)
-
 	}
 }

@@ -22,14 +22,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
+	"github.com/RedHatInsights/insights-results-aggregator/logger"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -95,15 +96,6 @@ func TestLoadServerConfiguration(t *testing.T) {
 
 	assert.Equal(t, ":8080", serverCfg.Address)
 	assert.Equal(t, "/api/v1/", serverCfg.APIPrefix)
-}
-
-// TestLoadContentPathConfiguration tests loading the content configuration
-func TestLoadContentPathConfiguration(t *testing.T) {
-	TestLoadConfiguration(t)
-
-	contentPath := conf.GetContentPathConfiguration()
-
-	assert.Equal(t, "/rules-content", contentPath)
 }
 
 // TestLoadStorageConfiguration tests loading the storage configuration sub-tree
@@ -214,8 +206,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		api_prefix = "/api/v1/"
 		api_spec_file = "openapi.json"
 		debug = true
-		use_https = false
-		content_service_url = "http://localhost:8081/api/v1/"
 
 		[storage]
 		db_driver = "sqlite3"
@@ -251,8 +241,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		APISpecFile:       "openapi.json",
 		AuthType:          "xrh",
 		Debug:             true,
-		UseHTTPS:          false,
-		ContentServiceURL: "http://localhost:8081/api/v1/",
 	}, conf.GetServerConfiguration())
 
 	orgWhiteList := conf.GetOrganizationWhitelist()
@@ -322,8 +310,6 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		APISpecFile:       "openapi.json",
 		AuthType:          "xrh",
 		Debug:             true,
-		UseHTTPS:          false,
-		ContentServiceURL: "http://localhost:8081/api/v1/",
 	}, conf.GetServerConfiguration())
 
 	orgWhiteList := conf.GetOrganizationWhitelist()
@@ -351,9 +337,50 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		PGDBName:         "aggregator",
 		PGParams:         "params",
 	}, conf.GetStorageConfiguration())
+}
 
-	contentPath := conf.GetContentPathConfiguration()
-	assert.Equal(t, contentPath, "/rules-content")
+func TestGetLoggingConfigurationDefault(t *testing.T) {
+	setEnvVariables(t)
+
+	mustLoadConfiguration("/non_existing_path")
+
+	assert.Equal(t, logger.LoggingConfiguration{
+		Debug:                      false,
+		LogLevel:                   "",
+		LoggingToCloudWatchEnabled: false,
+	},
+		conf.GetLoggingConfiguration())
+}
+
+func TestGetLoggingConfigurationFromEnv(t *testing.T) {
+	setEnvVariables(t)
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG", "true")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL", "info")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED", "true")
+
+	mustLoadConfiguration("/non_existing_path")
+
+	assert.Equal(t, logger.LoggingConfiguration{
+		Debug:                      true,
+		LogLevel:                   "info",
+		LoggingToCloudWatchEnabled: true,
+	},
+		conf.GetLoggingConfiguration())
+}
+
+func TestGetCloudWatchConfigurationDefault(t *testing.T) {
+	mustLoadConfiguration("/non_existing_path")
+
+	assert.Equal(t, logger.CloudWatchConfiguration{
+		AWSAccessID:             "",
+		AWSSecretKey:            "",
+		AWSSessionToken:         "",
+		AWSRegion:               "",
+		LogGroup:                "",
+		StreamName:              "",
+		CreateStreamIfNotExists: false,
+		Debug:                   false,
+	}, conf.GetCloudWatchConfiguration())
 }
 
 func setEnvVariables(t *testing.T) {

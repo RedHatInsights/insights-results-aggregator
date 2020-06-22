@@ -15,10 +15,8 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"path/filepath"
-	"regexp"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -33,8 +31,8 @@ const (
 	DeleteClustersEndpoint = "clusters/{clusters}"
 	// OrganizationsEndpoint returns all organizations
 	OrganizationsEndpoint = "organizations"
-	// ReportEndpoint returns report for provided {organization} and {cluster}
-	ReportEndpoint = "report/{organization}/{cluster}"
+	// ReportEndpoint returns report for provided {organization}
+	ReportEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/report"
 	// LikeRuleEndpoint likes rule with {rule_id} for {cluster} using current user(from auth header)
 	LikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/like"
 	// DislikeRuleEndpoint dislikes rule with {rule_id} for {cluster} using current user(from auth header)
@@ -43,13 +41,6 @@ const (
 	ResetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/reset_vote"
 	// GetVoteOnRuleEndpoint is an endpoint to get vote on rule. DEBUG only
 	GetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/get_vote"
-	// RuleEndpoint is an endpoint to create&delete a rule. DEBUG only
-	RuleEndpoint = "rules/{rule_id}"
-	// RuleErrorKeyEndpoint is for endpoints to create&delete a rule_error_key (DEBUG only)
-	// and for endpoint to get a rule
-	RuleErrorKeyEndpoint = "rules/{rule_id}/error_keys/{error_key}"
-	// RuleGroupsEndpoint is a simple redirect endpoint to the insights-content-service API specified in configruation
-	RuleGroupsEndpoint = "groups"
 	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
 	// DisableRuleForClusterEndpoint disables a rule for specified cluster
@@ -67,10 +58,6 @@ func (server *HTTPServer) addDebugEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+DeleteOrganizationsEndpoint, server.deleteOrganizations).Methods(http.MethodDelete)
 	router.HandleFunc(apiPrefix+DeleteClustersEndpoint, server.deleteClusters).Methods(http.MethodDelete)
 	router.HandleFunc(apiPrefix+GetVoteOnRuleEndpoint, server.getVoteOnRule).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+RuleEndpoint, server.createRule).Methods(http.MethodPost)
-	router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.createRuleErrorKey).Methods(http.MethodPost)
-	router.HandleFunc(apiPrefix+RuleEndpoint, server.deleteRule).Methods(http.MethodDelete)
-	router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.deleteRuleErrorKey).Methods(http.MethodDelete)
 
 	// endpoints for pprof - needed for profiling, ie. usually in debug mode
 	router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
@@ -94,19 +81,10 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc(apiPrefix+RuleGroupsEndpoint, server.getRuleGroups).Methods(http.MethodGet, http.MethodOptions)
-	router.HandleFunc(apiPrefix+RuleErrorKeyEndpoint, server.getRule).Methods(http.MethodGet)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
 
 	// OpenAPI specs
 	router.HandleFunc(openAPIURL, server.serveAPISpecFile).Methods(http.MethodGet)
-}
-
-// MakeURLToEndpoint creates URL to endpoint, use constants from file endpoints.go
-func MakeURLToEndpoint(apiPrefix, endpoint string, args ...interface{}) string {
-	re := regexp.MustCompile(`\{[a-zA-Z_0-9]+\}`)
-	endpoint = re.ReplaceAllString(endpoint, "%v")
-	return apiPrefix + fmt.Sprintf(endpoint, args...)
 }

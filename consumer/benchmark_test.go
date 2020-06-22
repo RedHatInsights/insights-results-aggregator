@@ -20,14 +20,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
 func benchmarkProcessingMessage(b *testing.B, s storage.Storage, messageProducer func() string) {
@@ -55,12 +56,12 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 	}{
 		{"NoopStorage", getNoopStorage, false},
 		{"NoopStorage", getNoopStorage, true},
-		{"SQLiteInMemory", helpers.MustGetSQLiteMemoryStorage, false},
-		{"SQLiteInMemory", helpers.MustGetSQLiteMemoryStorage, true},
-		{"Postgres", helpers.MustGetPostgresStorage, false},
-		{"Postgres", helpers.MustGetPostgresStorage, true},
-		{"SQLiteFile", helpers.MustGetSQLiteFileStorage, false},
-		{"SQLiteFile", helpers.MustGetSQLiteFileStorage, true},
+		{"SQLiteInMemory", ira_helpers.MustGetSQLiteMemoryStorage, false},
+		{"SQLiteInMemory", ira_helpers.MustGetSQLiteMemoryStorage, true},
+		{"Postgres", ira_helpers.MustGetPostgresStorage, false},
+		{"Postgres", ira_helpers.MustGetPostgresStorage, true},
+		{"SQLiteFile", ira_helpers.MustGetSQLiteFileStorage, false},
+		{"SQLiteFile", ira_helpers.MustGetSQLiteFileStorage, true},
 	}
 
 	for _, testCase := range testCases {
@@ -73,7 +74,7 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 			if cleaner != nil {
 				defer cleaner()
 			}
-			defer helpers.MustCloseStorage(b, benchStorage)
+			defer ira_helpers.MustCloseStorage(b, benchStorage)
 
 			if testCase.RandomMessages {
 				benchmarkProcessingMessage(b, benchStorage, func() string {
@@ -135,9 +136,9 @@ func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
 		StorageProducer func(testing.TB, bool) (storage.Storage, func())
 	}{
 		{"NoopStorage", getNoopStorage},
-		{"SQLiteInMemory", helpers.MustGetSQLiteMemoryStorage},
-		{"Postgres", helpers.MustGetPostgresStorage},
-		{"SQLiteFile", helpers.MustGetSQLiteFileStorage},
+		{"SQLiteInMemory", ira_helpers.MustGetSQLiteMemoryStorage},
+		{"Postgres", ira_helpers.MustGetPostgresStorage},
+		{"SQLiteFile", ira_helpers.MustGetSQLiteFileStorage},
 	}
 
 	for _, testCase := range testCases {
@@ -148,7 +149,7 @@ func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
 			if cleaner != nil {
 				defer cleaner()
 			}
-			defer helpers.MustCloseStorage(b, benchStorage)
+			defer ira_helpers.MustCloseStorage(b, benchStorage)
 
 			kafkaConsumer := &consumer.KafkaConsumer{
 				Storage: benchStorage,

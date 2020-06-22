@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<!--
+ Copyright 2020 Red Hat, Inc
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<html>
+<head>
+<title>http.go</title>
+<meta charset="utf-8"/>
+<style type="text/css">body {
+    background: rgb(225, 225, 225);
+    margin: 0px;
+    padding: 0px;
+}
+
+#docgo p {
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo div {
+    display: inline;
+}
+
+#docgo #background {
+    position: fixed;
+    top: 0; left: 525px; right: 0; bottom: 0;
+    background: rgb(47, 47, 47);
+    border-left: 1px solid #e5e5ee;
+    z-index: -1;
+}
+
+#docgo .keyword {
+    color: rgb(250, 200, 100);
+}
+
+#docgo .literal {
+    color: rgb(140, 190, 100);
+}
+
+#docgo .ident {
+    color: white;
+}
+
+#docgo .operator {
+    color: white;
+}
+
+#docgo .comment {
+}
+
+#docgo h1, h2, h3, h4, h5 {
+    text-align: left;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 15px;
+    margin-left: 0px;
+}
+
+#docgo h1 {
+    margin-top: 40px;
+}
+
+#docgo .doc {
+    vertical-align: top;
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+    font-size: 15px;
+    line-height: 22px;
+    color: black;
+    min-width: 450px;
+    max-width: 450px;
+    padding-top: 10px;
+    padding-right: 25px;
+    padding-bottom: 1px;
+    padding-left: 50px;
+    overflow-x: hidden;
+}
+
+#docgo .code {
+    min-width: 650px;
+    max-width: 650px;
+    padding-left: 25px;
+    padding-right: 15px;
+    border-left: 1px;
+    overflow-x: hidden;
+    vertical-align: top;
+}
+
+#docgo .code pre code  {
+    font-size: 12px;
+    line-height: 18px;
+    font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+    color: rgb(120, 120, 120);
+}
+</style>
+</head>
+<body>
+<div id="docgo">
+  <div id="background"></div>
+  <table>
+    <thead><tr><th class="doc"><h1>http.go</h1></th><th class="code"></th></tr></thead>
+    <tbody>
+      
+      <tr class="section">
+	<td class="doc"><p>Copyright 2020 Red Hat, Inc</p>
+
+<p>Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at</p>
+
+<pre><code> http://www.apache.org/licenses/LICENSE-2.0
+</code></pre>
+
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">helpers</div><div class="operator"></div>
+
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;context&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;io&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;io/ioutil&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;net/http/httptest&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>APIRequest is a request to api to use in AssertAPIRequest</p>
+
+<p>(required) Method is an http method
+(required) Endpoint is an endpoint without api prefix
+EndpointArgs are the arguments to pass to endpoint template (leave empty if endpoint is not a template)
+Body is a string body (leave empty to not send)
+UserID is a user id for methods requiring user id (leave empty to not use it)
+XRHIdentity is an authentication token (leave empty to not use it)
+AuthorizationToken is an authentication token (leave empty to not use it)</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">APIRequest</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">Method</div>             <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">Endpoint</div>           <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">EndpointArgs</div>       <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">Body</div>               <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">UserID</div>             <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator"></div>
+	<div class="ident">XRHIdentity</div>        <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">AuthorizationToken</div> <div class="ident">string</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>APIResponse is an expected api response to use in AssertAPIRequest</p>
+
+<p>StatusCode is an expected http status code (leave empty to not check for status code)
+Body is an expected body string (leave empty to not check for body)
+BodyChecker is a custom body checker function (leave empty to use default one - CheckResponseBodyJSON)</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">APIResponse</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">StatusCode</div>  <div class="ident">int</div><div class="operator"></div>
+	<div class="ident">Body</div>        <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">BodyChecker</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">t</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">expected</div><div class="operator">,</div> <div class="ident">got</div> <div class="ident">string</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">Headers</div>     <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>DefaultServerConfig is a default config used by AssertAPIRequest</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">DefaultServerConfig</div> <div class="operator">=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">{</div>
+	<div class="ident">Address</div><div class="operator">:</div>     <div class="literal">&#34;:8080&#34;</div><div class="operator">,</div>
+	<div class="ident">APIPrefix</div><div class="operator">:</div>   <div class="literal">&#34;/api/test/&#34;</div><div class="operator">,</div>
+	<div class="ident">APISpecFile</div><div class="operator">:</div> <div class="literal">&#34;openapi.json&#34;</div><div class="operator">,</div>
+	<div class="ident">Debug</div><div class="operator">:</div>       <div class="ident">true</div><div class="operator">,</div>
+	<div class="ident">Auth</div><div class="operator">:</div>        <div class="ident">false</div><div class="operator">,</div>
+	<div class="ident">EnableCORS</div><div class="operator">:</div>  <div class="ident">true</div><div class="operator">,</div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>AssertAPIRequest creates new server with provided mockStorage
+(which you can keep nil so it will be created automatically)
+and provided serverConfig(you can leave it empty to use the default one)
+sends api request and checks api response (see docs for APIRequest and APIResponse)</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">AssertAPIRequest</div><div class="operator">(</div>
+	<div class="ident">t</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div>
+	<div class="ident">mockStorage</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div>
+	<div class="ident">serverConfig</div> <div class="operator">*</div><div class="ident">server</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">,</div>
+	<div class="ident">request</div> <div class="operator">*</div><div class="ident">APIRequest</div><div class="operator">,</div>
+	<div class="ident">expectedResponse</div> <div class="operator">*</div><div class="ident">APIResponse</div><div class="operator">,</div>
+<div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">mockStorage</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">var</div> <div class="ident">closer</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">=</div> <div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">serverConfig</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">serverConfig</div> <div class="operator">=</div> <div class="operator">&amp;</div><div class="ident">DefaultServerConfig</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">testServer</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="operator">*</div><div class="ident">serverConfig</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">MakeURLToEndpoint</div><div class="operator">(</div><div class="ident">serverConfig</div><div class="operator">.</div><div class="ident">APIPrefix</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">.</div><div class="ident">Endpoint</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">.</div><div class="ident">EndpointArgs</div><div class="operator">...</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">req</div> <div class="operator">:=</div> <div class="ident">makeRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">,</div> <div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">ExecuteRequest</div><div class="operator">(</div><div class="ident">testServer</div><div class="operator">,</div> <div class="ident">req</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Result</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">Headers</div><div class="operator">)</div> <div class="operator">!=</div> <div class="literal">0</div> <div class="operator">{</div>
+		<div class="ident">checkResponseHeaders</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">Headers</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">StatusCode</div> <div class="operator">!=</div> <div class="literal">0</div> <div class="operator">{</div>
+		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">StatusCode</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">.</div><div class="ident">StatusCode</div><div class="operator">,</div> <div class="literal">&#34;Expected different status code&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">BodyChecker</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">bodyBytes</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">ioutil</div><div class="operator">.</div><div class="ident">ReadAll</div><div class="operator">(</div><div class="ident">response</div><div class="operator">.</div><div class="ident">Body</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">BodyChecker</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">Body</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">bodyBytes</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div> <div class="keyword">else</div> <div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">Body</div><div class="operator">)</div> <div class="operator">!=</div> <div class="literal">0</div> <div class="operator">{</div>
+		<div class="ident">CheckResponseBodyJSON</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedResponse</div><div class="operator">.</div><div class="ident">Body</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">.</div><div class="ident">Body</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">makeRequest</div><div class="operator">(</div><div class="ident">t</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">request</div> <div class="operator">*</div><div class="ident">APIRequest</div><div class="operator">,</div> <div class="ident">url</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div> <div class="operator">{</div>
+	<div class="ident">req</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div><div class="ident">request</div><div class="operator">.</div><div class="ident">Method</div><div class="operator">,</div> <div class="ident">url</div><div class="operator">,</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">NewReader</div><div class="operator">(</div><div class="ident">request</div><div class="operator">.</div><div class="ident">Body</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>authorize user</p>
+</td>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">request</div><div class="operator">.</div><div class="ident">UserID</div> <div class="operator">!=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">identity</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Identity</div><div class="operator">{</div>
+			<div class="ident">AccountNumber</div><div class="operator">:</div> <div class="ident">request</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator"></div>
+		<div class="ident">req</div> <div class="operator">=</div> <div class="ident">req</div><div class="operator">.</div><div class="ident">WithContext</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">WithValue</div><div class="operator">(</div><div class="ident">req</div><div class="operator">.</div><div class="ident">Context</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ContextKeyUser</div><div class="operator">,</div> <div class="ident">identity</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">request</div><div class="operator">.</div><div class="ident">XRHIdentity</div><div class="operator">)</div> <div class="operator">!=</div> <div class="literal">0</div> <div class="operator">{</div>
+		<div class="ident">req</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">.</div><div class="ident">Set</div><div class="operator">(</div><div class="literal">&#34;x-rh-identity&#34;</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">.</div><div class="ident">XRHIdentity</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">request</div><div class="operator">.</div><div class="ident">AuthorizationToken</div><div class="operator">)</div> <div class="operator">!=</div> <div class="literal">0</div> <div class="operator">{</div>
+		<div class="ident">req</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">.</div><div class="ident">Set</div><div class="operator">(</div><div class="literal">&#34;Authorization&#34;</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">.</div><div class="ident">AuthorizationToken</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">req</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ExecuteRequest executes http request on a testServer</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">ExecuteRequest</div><div class="operator">(</div><div class="ident">testServer</div> <div class="operator">*</div><div class="ident">server</div><div class="operator">.</div><div class="ident">HTTPServer</div><div class="operator">,</div> <div class="ident">req</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">)</div> <div class="operator">*</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">ResponseRecorder</div> <div class="operator">{</div>
+	<div class="ident">router</div> <div class="operator">:=</div> <div class="ident">testServer</div><div class="operator">.</div><div class="ident">Initialize</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">rr</div> <div class="operator">:=</div> <div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">router</div><div class="operator">.</div><div class="ident">ServeHTTP</div><div class="operator">(</div><div class="ident">rr</div><div class="operator">,</div> <div class="ident">req</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">rr</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>CheckResponseBodyJSON checks if body is the same json as in expected
+(ignores whitespaces, newlines, etc)
+also validates both expected and body to be a valid json</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">CheckResponseBodyJSON</div><div class="operator">(</div><div class="ident">t</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">expectedJSON</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">body</div> <div class="ident">io</div><div class="operator">.</div><div class="ident">ReadCloser</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">result</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">ioutil</div><div class="operator">.</div><div class="ident">ReadAll</div><div class="operator">(</div><div class="ident">body</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">AssertStringsAreEqualJSON</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedJSON</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">result</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkResponseHeaders checks if headers are the same as in expected</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkResponseHeaders</div><div class="operator">(</div><div class="ident">t</div> <div class="ident">testing</div><div class="operator">.</div><div class="ident">TB</div><div class="operator">,</div> <div class="ident">expectedHeaders</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">actualHeaders</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">for</div> <div class="ident">key</div><div class="operator">,</div> <div class="ident">value</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">expectedHeaders</div> <div class="operator">{</div>
+		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">value</div><div class="operator">,</div> <div class="ident">actualHeaders</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">key</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">&#34;Expected different headers&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

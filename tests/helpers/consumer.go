@@ -17,10 +17,12 @@ package helpers
 import (
 	"testing"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 )
 
 // MustCloseConsumer closes consumer and raises error if it wasn't successful
 func MustCloseConsumer(t *testing.T, mockConsumer consumer.Consumer) {
-	FailOnError(t, mockConsumer.Close())
+	helpers.FailOnError(t, mockConsumer.Close())
 }
