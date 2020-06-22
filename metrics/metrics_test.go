@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/Shopify/sarama/mocks"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/prometheus/client_golang/prometheus"
@@ -35,7 +36,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -112,7 +112,7 @@ func TestAPIRequestsMetric(t *testing.T) {
 		ira_helpers.AssertAPIRequest(t, mockStorage, nil, &ira_helpers.APIRequest{
 			Method:       http.MethodGet,
 			Endpoint:     server.ReportEndpoint,
-			EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
+			EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName, testdata.UserID},
 		}, &ira_helpers.APIResponse{
 			StatusCode: http.StatusBadRequest,
 			Body: `{
@@ -264,7 +264,7 @@ func TestApiResponseStatusCodesMetric_StatusBadRequest(t *testing.T) {
 		ira_helpers.AssertAPIRequest(t, mockStorage, nil, &ira_helpers.APIRequest{
 			Method:       http.MethodGet,
 			Endpoint:     server.ReportEndpoint,
-			EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName},
+			EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName, testdata.UserID},
 		}, &ira_helpers.APIResponse{
 			StatusCode: http.StatusBadRequest,
 			Body: `{

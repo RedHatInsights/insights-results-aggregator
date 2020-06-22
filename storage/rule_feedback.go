@@ -183,7 +183,7 @@ func (storage DBStorage) GetUserFeedbackOnRules(
 ) (map[types.RuleID]types.UserVote, error) {
 	ruleIDs := make([]string, 0)
 	for _, v := range rulesReport {
-		ruleIDs = append(ruleIDs, v.Module)
+		ruleIDs = append(ruleIDs, string(v.Module))
 	}
 
 	feedbacks := make(map[types.RuleID]types.UserVote)

@@ -17,8 +17,10 @@ package storage
 import (
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/Shopify/sarama"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // NoopStorage represents a storage which does nothing (for benchmarking without a storage)
@@ -45,9 +47,7 @@ func (*NoopStorage) ListOfClustersForOrg(types.OrgID) ([]types.ClusterName, erro
 }
 
 // ReadReportForCluster noop
-func (*NoopStorage) ReadReportForCluster(
-	types.OrgID, types.ClusterName,
-) (types.ClusterReport, types.Timestamp, error) {
+func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) (types.ClusterReport, types.Timestamp, error) {
 	return "", "", nil
 }
 
@@ -104,9 +104,39 @@ func (*NoopStorage) DeleteReportsForCluster(types.ClusterName) error {
 	return nil
 }
 
+// LoadRuleContent noop
+func (*NoopStorage) LoadRuleContent(content.RuleContentDirectory) error {
+	return nil
+}
+
+// GetRuleByID noop
+func (*NoopStorage) GetRuleByID(types.RuleID) (*types.Rule, error) {
+	return nil, nil
+}
+
 // GetOrgIDByClusterID noop
 func (*NoopStorage) GetOrgIDByClusterID(types.ClusterName) (types.OrgID, error) {
 	return 0, nil
+}
+
+// CreateRule noop
+func (*NoopStorage) CreateRule(types.Rule) error {
+	return nil
+}
+
+// DeleteRule noop
+func (*NoopStorage) DeleteRule(types.RuleID) error {
+	return nil
+}
+
+// CreateRuleErrorKey noop
+func (*NoopStorage) CreateRuleErrorKey(types.RuleErrorKey) error {
+	return nil
+}
+
+// DeleteRuleErrorKey noop
+func (*NoopStorage) DeleteRuleErrorKey(types.RuleID, types.ErrorKey) error {
+	return nil
 }
 
 // WriteConsumerError noop
@@ -152,5 +182,12 @@ func (*NoopStorage) GetUserFeedbackOnRules(
 	[]types.RuleOnReport,
 	types.UserID,
 ) (map[types.RuleID]types.UserVote, error) {
+	return nil, nil
+}
+
+// GetRuleWithContent noop
+func (*NoopStorage) GetRuleWithContent(
+	types.RuleID, types.ErrorKey,
+) (*types.RuleWithContent, error) {
 	return nil, nil
 }
