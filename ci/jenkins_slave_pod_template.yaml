@@ -58,9 +58,7 @@ spec:
         limits:
           cpu: 300m
           memory: 512Mi
-    - image: registry.redhat.io/rhel8/go-toolset:1.13
-      imagePullSecrets:
-        - name: registry-redhat-io
+    - image: quay.io/redhatqe/go-toolset-custom:1.13
       name: builder
       tty: True
       env:
@@ -69,7 +67,7 @@ spec:
         - name: GOCACHE
           value: /tmp/go/.cache
         - name: PATH
-          value: "/tmp/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+          value: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tmp/go/bin"
       command:
         - cat
       resources:
