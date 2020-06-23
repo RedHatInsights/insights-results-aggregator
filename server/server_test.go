@@ -42,11 +42,11 @@ import (
 )
 
 var config = server.Configuration{
-	Address:           ":8080",
-	APIPrefix:         "/api/test/",
-	APISpecFile:       "openapi.json",
-	Debug:             true,
-	Auth:              false,
+	Address:     ":8080",
+	APIPrefix:   "/api/test/",
+	APISpecFile: "openapi.json",
+	Debug:       true,
+	Auth:        false,
 }
 
 func init() {
