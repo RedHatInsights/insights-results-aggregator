@@ -87,7 +87,6 @@ api_spec_file = "openapi.json"
 debug = true
 auth = true
 auth_type = "xrh"
-enable_cors = true
 ```
 
 * `address` is host and port which server should listen to
@@ -99,8 +98,6 @@ production, `false` is used every time.
 in devel environment. In production, `true` is used every time.
 * `auth_type` set type of auth, it means which header to use for auth `x-rh-identity` or
 `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
-* `enable_cors` is option to turn on CORS header, that allows to connect from different hosts
-(**don't use it in production**)
 
 Please note that if `auth` configuration option is turned off, not all REST API endpoints will be
 usable. Whole REST API schema is satisfied only for `auth = true`.

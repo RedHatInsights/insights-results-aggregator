@@ -12,7 +12,6 @@ api_spec_file = "openapi.json"
 debug = true
 auth = true
 auth_type = "xrh"
-enable_cors = true
 
 [processing]
 org_whitelist_file = "org_whitelist.csv"

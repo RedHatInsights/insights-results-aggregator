@@ -206,7 +206,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		api_prefix = "/api/v1/"
 		api_spec_file = "openapi.json"
 		debug = true
-		enable_cors = true
 
 		[storage]
 		db_driver = "sqlite3"
@@ -242,7 +241,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		APISpecFile: "openapi.json",
 		AuthType:    "xrh",
 		Debug:       true,
-		EnableCORS:  true,
 	}, conf.GetServerConfiguration())
 
 	orgWhiteList := conf.GetOrganizationWhitelist()
@@ -312,7 +310,6 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		APISpecFile: "openapi.json",
 		AuthType:    "xrh",
 		Debug:       true,
-		EnableCORS:  true,
 	}, conf.GetServerConfiguration())
 
 	orgWhiteList := conf.GetOrganizationWhitelist()

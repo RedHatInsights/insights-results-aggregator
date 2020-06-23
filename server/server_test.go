@@ -47,7 +47,6 @@ var config = server.Configuration{
 	APISpecFile: "openapi.json",
 	Debug:       true,
 	Auth:        false,
-	EnableCORS:  true,
 }
 
 func init() {
@@ -66,30 +65,6 @@ func TestMakeURLToEndpoint(t *testing.T) {
 		"api/prefix/organizations/2/clusters/cluster_id/users/1/report",
 		httputils.MakeURLToEndpoint("api/prefix/", server.ReportEndpoint, 2, "cluster_id", 1),
 	)
-}
-
-func TestAddCORSHeaders(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, "{}", time.Now(), testdata.KafkaOffset,
-	)
-	helpers.FailOnError(t, err)
-
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
-		Method:       http.MethodOptions,
-		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
-	}, &helpers.APIResponse{
-		StatusCode: http.StatusOK,
-		Headers: map[string]string{
-			"Access-Control-Allow-Origin":      "*",
-			"Access-Control-Allow-Methods":     "POST, GET, OPTIONS, PUT, DELETE",
-			"Access-Control-Allow-Headers":     "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
-			"Access-Control-Allow-Credentials": "true",
-		},
-	})
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {

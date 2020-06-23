@@ -45,7 +45,6 @@ var DefaultServerConfig = server.Configuration{
 	APISpecFile: "openapi.json",
 	Debug:       true,
 	Auth:        false,
-	EnableCORS:  true,
 }
 
 // AssertAPIRequest creates new server with provided mockStorage
