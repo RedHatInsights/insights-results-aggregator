@@ -28,7 +28,11 @@ cd "$(dirname "$0")" || exit
 
 echo -e "${BLUE}Security issues detection${NC}"
 
-GO111MODULE=off go get github.com/securego/gosec/cmd/gosec 2> /dev/null
+if ! [ -x "$(command -v gosec)" ]
+then
+    echo -e "${BLUE}Installing ${NC}"
+    GO111MODULE=off go get github.com/securego/gosec/cmd/gosec 2> /dev/null
+fi
 
 if ! gosec $GO_SEC_ARGS ./...
 then
