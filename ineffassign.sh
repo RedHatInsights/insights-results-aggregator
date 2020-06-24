@@ -14,5 +14,10 @@
 # limitations under the License.
 
 
-GO111MODULE=off go get github.com/gordonklaus/ineffassign
+if ! [ -x "$(command -v ineffassign)" ]
+then
+    echo -e "${BLUE}Installing ineffassign${NC}"
+    GO111MODULE=off go get github.com/gordonklaus/ineffassign
+fi
+
 ineffassign .
