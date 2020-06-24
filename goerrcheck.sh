@@ -14,5 +14,10 @@
 # limitations under the License.
 
 
-GO111MODULE=off go get github.com/kisielk/errcheck
+if ! [ -x "$(command -v errcheck)" ]
+then
+    echo -e "${BLUE}Installing errcheck ${NC}"
+    GO111MODULE=off go get github.com/kisielk/errcheck
+fi
+
 errcheck ./...
