@@ -2,6 +2,8 @@ module github.com/RedHatInsights/insights-results-aggregator
 
 go 1.13
 
+replace github.com/RedHatInsights/insights-operator-utils => ../insights-operator-utils
+
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/DATA-DOG/go-sqlmock v1.4.1
@@ -13,7 +15,7 @@ require (
 	github.com/RedHatInsights/insights-results-smart-proxy v0.0.0-20200619163313-7d5e376de430 // indirect
 	github.com/Shopify/sarama v1.26.0
 	github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6 // indirect
-	github.com/aws/aws-sdk-go v1.30.25
+	github.com/aws/aws-sdk-go v1.32.6
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/deckarep/golang-set v1.7.1
@@ -38,5 +40,5 @@ require (
 	github.com/zenazn/goji v0.9.0 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
-	gopkg.in/h2non/gock.v1 v1.0.15 // indirect
+	gopkg.in/h2non/gock.v1 v1.0.15
 )

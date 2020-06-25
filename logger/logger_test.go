@@ -16,17 +16,72 @@ package logger_test
 
 import (
 	"bytes"
+	"net/http"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/logger"
+	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
+
+const (
+	testTimeout = 10 * time.Second
+)
+
+var (
+	cloudWatchConf = logger.CloudWatchConfiguration{
+		AWSAccessID:             "access ID",
+		AWSSecretKey:            "secret",
+		AWSSessionToken:         "sess token",
+		AWSRegion:               "aws region",
+		LogGroup:                "log group",
+		StreamName:              "stream name",
+		CreateStreamIfNotExists: true,
+		Debug:                   false,
+	}
+	describeLogStreamsEvent = CloudWatchExpect{
+		http.MethodPost,
+		"Logs_20140328.DescribeLogStreams",
+		`{
+					"descending": false,
+					"logGroupName": "` + cloudWatchConf.LogGroup + `",
+					"logStreamNamePrefix": "` + cloudWatchConf.StreamName + `",
+					"orderBy": "LogStreamName"
+				}`,
+		http.StatusOK,
+		`{
+					"logStreams": [
+						{
+							"arn": "arn:aws:logs:` +
+			cloudWatchConf.AWSRegion + `:012345678910:log-group:` + cloudWatchConf.LogGroup +
+			`:log-stream:` + cloudWatchConf.StreamName + `",
+							"creationTime": 1,
+							"firstEventTimestamp": 2,
+							"lastEventTimestamp": 3,
+							"lastIngestionTime": 4,
+							"logStreamName": "` + cloudWatchConf.StreamName + `",
+							"storedBytes": 100,
+							"uploadSequenceToken": "1"
+						}
+					],
+					"nextToken": "token1"
+				}`,
+	}
+)
+
+type CloudWatchExpect struct {
+	ExpectedMethod   string
+	ExpectedTarget   string
+	ExpectedBody     string
+	ResultStatusCode int
+	ResultBody       string
+}
 
 func TestSaramaZerologger(t *testing.T) {
 	const expectedStrInfoLevel = "some random message"
@@ -120,7 +175,6 @@ func TestUnJSONWriter_Write(t *testing.T) {
 }
 
 func TestInitZerolog_LogToCloudWatch(t *testing.T) {
-	// TODO: mock logging to cloud watch and do actual testing
 	err := logger.InitZerolog(
 		logger.LoggingConfiguration{
 			Debug:                      false,
@@ -130,4 +184,93 @@ func TestInitZerolog_LogToCloudWatch(t *testing.T) {
 		logger.CloudWatchConfiguration{},
 	)
 	helpers.FailOnError(t, err)
+}
+
+func TestLoggingToCloudwatch(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+		defer helpers.CleanAfterGock(t)
+
+		const baseURL = "http://localhost:9999"
+		logger.AWSCloudWatchEndpoint = baseURL + "/cloudwatch"
+
+		expects := []CloudWatchExpect{
+			{
+				http.MethodPost,
+				"Logs_20140328.CreateLogStream",
+				`{
+					"logGroupName": "` + cloudWatchConf.LogGroup + `",
+					"logStreamName": "` + cloudWatchConf.StreamName + `"
+				}`,
+				http.StatusBadRequest,
+				`{
+					"__type": "ResourceAlreadyExistsException",
+					"message": "The specified log stream already exists"
+				}`,
+			},
+			describeLogStreamsEvent,
+			{
+				http.MethodPost,
+				"Logs_20140328.PutLogEvents",
+				`{
+					"logEvents": [
+						{
+							"message": "test message text goes right here",
+							"timestamp": 1
+						}
+					],
+					"logGroupName": "` + cloudWatchConf.LogGroup + `",
+					"logStreamName":"` + cloudWatchConf.StreamName + `",
+					"sequenceToken":"1"
+				}`,
+				http.StatusOK,
+				`{"nextSequenceToken":"2"}`,
+			},
+			{
+				http.MethodPost,
+				"Logs_20140328.PutLogEvents",
+				`{
+					"logEvents": [
+						{
+							"message": "second test message text goes right here",
+							"timestamp": 2
+						}
+					],
+					"logGroupName": "` + cloudWatchConf.LogGroup + `",
+					"logStreamName":"` + cloudWatchConf.StreamName + `",
+					"sequenceToken":"2"
+				}`,
+				http.StatusOK,
+				`{"nextSequenceToken":"3"}`,
+			},
+			describeLogStreamsEvent,
+			describeLogStreamsEvent,
+			describeLogStreamsEvent,
+		}
+
+		for _, expect := range expects {
+			helpers.GockExpectAPIRequest(t, baseURL, &helpers.APIRequest{
+				Method:   expect.ExpectedMethod,
+				Body:     expect.ExpectedBody,
+				Endpoint: "cloudwatch/",
+				ExtraHeaders: http.Header{
+					"X-Amz-Target": []string{expect.ExpectedTarget},
+				},
+			}, &helpers.APIResponse{
+				StatusCode: expect.ResultStatusCode,
+				Body:       expect.ResultBody,
+				Headers: map[string]string{
+					"Content-Type": "application/x-amz-json-1.1",
+				},
+			})
+		}
+
+		err := logger.InitZerolog(logger.LoggingConfiguration{
+			Debug:                      false,
+			LogLevel:                   "debug",
+			LoggingToCloudWatchEnabled: true,
+		}, cloudWatchConf)
+		helpers.FailOnError(t, err)
+
+		log.Error().Msg("test message")
+	}, testTimeout)
 }

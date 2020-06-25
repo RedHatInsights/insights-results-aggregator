@@ -88,6 +88,9 @@ func (writer UnJSONWriter) Write(bytes []byte) (int, error) {
 	return len(bytes), nil
 }
 
+// AWSCloudWatchEndpoint allows you to mock cloudwatch client by redirecting requests to a local proxy
+var AWSCloudWatchEndpoint string
+
 // InitZerolog initializes zerolog with provided configs to use proper stdout and/or CloudWatch logging
 func InitZerolog(
 	loggingConf LoggingConfiguration, cloudWatchConf CloudWatchConfiguration, additionalWriters ...io.Writer,
@@ -123,12 +126,16 @@ func InitZerolog(
 			WithRegion(cloudWatchConf.AWSRegion).
 			WithLogLevel(awsLogLevel)
 
+		if len(AWSCloudWatchEndpoint) > 0 {
+			awsConf = awsConf.WithEndpoint(AWSCloudWatchEndpoint)
+		}
+
 		cloudWatchSession := session.Must(session.NewSession(awsConf))
-		cloudWatchClient := cloudwatchlogs.New(cloudWatchSession)
+		CloudWatchClient := cloudwatchlogs.New(cloudWatchSession)
 
 		var cloudWatchWriter io.Writer
 		if cloudWatchConf.CreateStreamIfNotExists {
-			group := cloudwatch.NewGroup(cloudWatchConf.LogGroup, cloudWatchClient)
+			group := cloudwatch.NewGroup(cloudWatchConf.LogGroup, CloudWatchClient)
 
 			var err error
 			cloudWatchWriter, err = group.Create(cloudWatchConf.StreamName)
@@ -136,7 +143,9 @@ func InitZerolog(
 				return err
 			}
 		} else {
-			cloudWatchWriter = cloudwatch.NewWriter(cloudWatchConf.LogGroup, cloudWatchConf.StreamName, cloudWatchClient)
+			cloudWatchWriter = cloudwatch.NewWriter(
+				cloudWatchConf.LogGroup, cloudWatchConf.StreamName, CloudWatchClient,
+			)
 		}
 
 		writers = append(writers, &UnJSONWriter{Writer: cloudWatchWriter})

@@ -39,6 +39,15 @@ type Timestamp = types.Timestamp
 // UserVote is a type for user's vote
 type UserVote = types.UserVote
 
+const (
+	// UserVoteDislike shows user's dislike
+	UserVoteDislike = types.UserVoteDislike
+	// UserVoteNone shows no vote from user
+	UserVoteNone = types.UserVoteNone
+	// UserVoteLike shows user's like
+	UserVoteLike = types.UserVoteLike
+)
+
 // RequestID is used to store the request ID supplied in input Kafka records as
 // a unique identifier of payloads. Empty string represents a missing request ID.
 type RequestID = types.RequestID
@@ -86,15 +95,6 @@ const (
 	DBDriverPostgres = types.DBDriverPostgres
 	// DBDriverGeneral general sql(used for mock now)
 	DBDriverGeneral = types.DBDriverGeneral
-)
-
-const (
-	// UserVoteDislike shows user's dislike
-	UserVoteDislike = types.UserVoteDislike
-	// UserVoteNone shows no vote from user
-	UserVoteNone = types.UserVoteNone
-	// UserVoteLike shows user's like
-	UserVoteLike = types.UserVoteLike
 )
 
 // Internal contains information about organization ID
