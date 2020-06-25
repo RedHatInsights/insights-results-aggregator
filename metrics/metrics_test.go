@@ -198,7 +198,7 @@ func TestWrittenReportsMetric(t *testing.T) {
 	defer closer()
 
 	// other tests may run at the same process
-	initValue := int64(getCounterValue(metrics.ProducedMessages))
+	initValue := int64(getCounterValue(metrics.WrittenReports))
 
 	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, 0)
 	helpers.FailOnError(t, err)

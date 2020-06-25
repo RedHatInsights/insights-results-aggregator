@@ -2,8 +2,6 @@ module github.com/RedHatInsights/insights-results-aggregator
 
 go 1.13
 
-replace github.com/RedHatInsights/insights-operator-utils => ../insights-operator-utils
-
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/DATA-DOG/go-sqlmock v1.4.1
