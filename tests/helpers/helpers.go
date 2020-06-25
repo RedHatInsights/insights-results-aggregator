@@ -21,3 +21,13 @@ var FailOnError = helpers.FailOnError
 
 // RunTestWithTimeout runs test with timeout
 var RunTestWithTimeout = helpers.RunTestWithTimeout
+
+// AssertStringsAreEqualJSON fails if strings represent different jsons
+var AssertStringsAreEqualJSON = helpers.AssertStringsAreEqualJSON
+
+// ToJSONString converts anything to JSON or panics if it's not possible
+// isOutputPretty makes output indented
+var ToJSONString = helpers.ToJSONString
+
+// CleanAfterGock cleans after gock library and prints all unmatched requests
+var CleanAfterGock = helpers.CleanAfterGock

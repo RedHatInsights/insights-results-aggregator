@@ -31,6 +31,10 @@ github.com/RedHatInsights/insights-operator-utils v1.0.2-0.20200610143236-c868b2
 github.com/RedHatInsights/insights-operator-utils v1.1.0/go.mod h1:PHoCR0njiPXVArw+ooowqZgBjozu1h+8mYDoRoPVh6g=
 github.com/RedHatInsights/insights-operator-utils v1.2.0 h1:M1lEO5NSJnfwbs/IWyeAXoFcb0VE7XvdPa4bVJHOT74=
 github.com/RedHatInsights/insights-operator-utils v1.2.0/go.mod h1:PHoCR0njiPXVArw+ooowqZgBjozu1h+8mYDoRoPVh6g=
+github.com/RedHatInsights/insights-operator-utils v1.2.1 h1:cls7FGRatQ6N1O2Op62idPSwIg0mBqN3Cy0M/XUxHLU=
+github.com/RedHatInsights/insights-operator-utils v1.2.1/go.mod h1:PHoCR0njiPXVArw+ooowqZgBjozu1h+8mYDoRoPVh6g=
+github.com/RedHatInsights/insights-operator-utils v1.2.2 h1:1S4RhDfAQWBOc6VOdaBqgWoUVojejqhSlJAhit2Ciyo=
+github.com/RedHatInsights/insights-operator-utils v1.2.2/go.mod h1:PHoCR0njiPXVArw+ooowqZgBjozu1h+8mYDoRoPVh6g=
 github.com/RedHatInsights/insights-results-aggregator v0.0.0-20200604090056-3534f6dd9c1c/go.mod h1:7Pc15NYXErx7BMJ4rF1Hacm+29G6atzjhwBpXNFMt+0=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200622112651-e5a7c1d79015 h1:NvNKLp20xelGO7Q8gfPshoRKd5Rhq9yZJJm009mlWPY=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200622112651-e5a7c1d79015/go.mod h1:1pHaSnEh5Bhc8IZNqP6vbBI3jtWd5/rv4x2Y2/zG90w=
@@ -60,6 +64,8 @@ github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN
 github.com/aws/aws-sdk-go v1.30.11/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
 github.com/aws/aws-sdk-go v1.30.25 h1:89NXJkfpjnMEnsxkP8MVX+LDsoiLCSqevraLb5y4Mjk=
 github.com/aws/aws-sdk-go v1.30.25/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
+github.com/aws/aws-sdk-go v1.32.6 h1:HoswAabUWgnrUF7X/9dr4WRgrr8DyscxXvTDm7Qw/5c=
+github.com/aws/aws-sdk-go v1.32.6/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=

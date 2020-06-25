@@ -7,13 +7,13 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/RedHatInsights/cloudwatch v0.0.0-20200512151223-b0b55757a24b
 	github.com/RedHatInsights/insights-content-service v0.0.0-20200619153839-23a428468a08
-	github.com/RedHatInsights/insights-operator-utils v1.2.0
+	github.com/RedHatInsights/insights-operator-utils v1.2.2
 	github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200622112651-e5a7c1d79015
 	github.com/RedHatInsights/insights-results-aggregator-utils v0.0.0-20200616074815-67f30b0e724d // indirect
 	github.com/RedHatInsights/insights-results-smart-proxy v0.0.0-20200619163313-7d5e376de430 // indirect
 	github.com/Shopify/sarama v1.26.0
 	github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6 // indirect
-	github.com/aws/aws-sdk-go v1.30.25
+	github.com/aws/aws-sdk-go v1.32.6
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/deckarep/golang-set v1.7.1
@@ -38,5 +38,5 @@ require (
 	github.com/zenazn/goji v0.9.0 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
-	gopkg.in/h2non/gock.v1 v1.0.15 // indirect
+	gopkg.in/h2non/gock.v1 v1.0.15
 )

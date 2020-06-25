@@ -36,6 +36,11 @@ var (
 	CheckResponseBodyJSON = helpers.CheckResponseBodyJSON
 	// AssertReportResponsesEqual fails if report responses aren't equal
 	AssertReportResponsesEqual = helpers.AssertReportResponsesEqual
+	// NewGockRequestMatcher returns a new matcher for github.com/h2non/gock to match requests
+	// with provided method, url and jsonBody
+	NewGockRequestMatcher = helpers.NewGockRequestMatcher
+	// GockExpectAPIRequest makes gock expect the request with the baseURL and sends back the response
+	GockExpectAPIRequest = helpers.GockExpectAPIRequest
 )
 
 // DefaultServerConfig is a default config used by AssertAPIRequest
