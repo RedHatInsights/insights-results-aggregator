@@ -1,20 +1,4 @@
 <!DOCTYPE html>
-<!--
- Copyright 2020 Red Hat, Inc
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
--->
-
 <html>
 <head>
 <title>server.go</title>
@@ -262,17 +246,6 @@ disable &quot;G108 (CWE-): Profiling endpoint is automatically exposed on /debug
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">readReportForCluster</div><div class="operator">(</div><div class="ident">writer</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ResponseWriter</div><div class="operator">,</div> <div class="ident">request</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">organizationID</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">readOrganizationID</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Auth</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>everything has been handled already</p>
-</td>
-	<td class="code"><pre><code>		<div class="keyword">return</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
 	<div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">readClusterName</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 </code></pre></td>
@@ -284,18 +257,17 @@ disable &quot;G108 (CWE-): Profiling endpoint is automatically exposed on /debug
 	<td class="code"><pre><code>		<div class="keyword">return</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">userID</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">readUserID</div><div class="operator">(</div><div class="ident">request</div><div class="operator">,</div> <div class="ident">writer</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>everything has been handled already</p>
-</td>
-	<td class="code"><pre><code>		<div class="keyword">return</div><div class="operator"></div>
+	<div class="ident">userID</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">readUserID</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">successful</div> <div class="operator">{</div>
+		<div class="keyword">return</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">report</div><div class="operator">,</div> <div class="ident">lastChecked</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">ReadReportForCluster</div><div class="operator">(</div><div class="ident">organizationID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">orgID</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">readOrgID</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">successful</div> <div class="operator">{</div>
+		<div class="keyword">return</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">report</div><div class="operator">,</div> <div class="ident">lastChecked</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">ReadReportForCluster</div><div class="operator">(</div><div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to read report for cluster&#34;</div><div class="operator">)</div><div class="operator"></div>
 		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
@@ -336,13 +308,7 @@ as opposed to no rules hit for the cluster</p>
 			<div class="ident">Count</div><div class="operator">:</div>         <div class="ident">hitRulesCount</div><div class="operator">,</div>
 			<div class="ident">LastCheckedAt</div><div class="operator">:</div> <div class="ident">lastChecked</div><div class="operator">,</div>
 		<div class="operator">}</div><div class="operator">,</div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>Rules: rulesContent,</p>
-</td>
-	<td class="code"><pre><code>		<div class="ident">Report</div><div class="operator">:</div> <div class="ident">hitRules</div><div class="operator">,</div>
+		<div class="ident">Report</div><div class="operator">:</div> <div class="ident">hitRules</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">responses</div><div class="operator">.</div><div class="ident">SendOK</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">responses</div><div class="operator">.</div><div class="ident">BuildOkResponseWithData</div><div class="operator">(</div><div class="literal">&#34;report&#34;</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
@@ -466,23 +432,6 @@ as opposed to no rules hit for the cluster</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>addCORSHeaders - middleware for adding headers that should be in any response</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">addCORSHeaders</div><div class="operator">(</div><div class="ident">nextHandler</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Handler</div><div class="operator">)</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Handler</div> <div class="operator">{</div>
-	<div class="keyword">return</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">HandlerFunc</div><div class="operator">(</div>
-		<div class="keyword">func</div><div class="operator">(</div><div class="ident">w</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ResponseWriter</div><div class="operator">,</div> <div class="ident">r</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">)</div> <div class="operator">{</div>
-			<div class="ident">w</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Set</div><div class="operator">(</div><div class="literal">&#34;Access-Control-Allow-Origin&#34;</div><div class="operator">,</div> <div class="literal">&#34;*&#34;</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">w</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Set</div><div class="operator">(</div><div class="literal">&#34;Access-Control-Allow-Methods&#34;</div><div class="operator">,</div> <div class="literal">&#34;POST, GET, OPTIONS, PUT, DELETE&#34;</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">w</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Set</div><div class="operator">(</div><div class="literal">&#34;Access-Control-Allow-Headers&#34;</div><div class="operator">,</div> <div class="literal">&#34;Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization&#34;</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">w</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Set</div><div class="operator">(</div><div class="literal">&#34;Access-Control-Allow-Credentials&#34;</div><div class="operator">,</div> <div class="literal">&#34;true&#34;</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">nextHandler</div><div class="operator">.</div><div class="ident">ServeHTTP</div><div class="operator">(</div><div class="ident">w</div><div class="operator">,</div> <div class="ident">r</div><div class="operator">)</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
 	<td class="doc"><p>handleOptionsMethod - middleware for handling OPTIONS method</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">handleOptionsMethod</div><div class="operator">(</div><div class="ident">nextHandler</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Handler</div><div class="operator">)</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Handler</div> <div class="operator">{</div>
@@ -536,11 +485,6 @@ be handled in middleware which is not optimal</p>
 			<div class="ident">openAPIURL</div> <div class="operator">&#43;</div> <div class="literal">&#34;?&#34;</div><div class="operator">,</div> <div class="comment">// to be able to test using Frisby</div>
 		<div class="operator">}</div><div class="operator"></div>
 		<div class="ident">router</div><div class="operator">.</div><div class="ident">Use</div><div class="operator">(</div><div class="keyword">func</div><div class="operator">(</div><div class="ident">next</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Handler</div><div class="operator">)</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Handler</div> <div class="operator">{</div> <div class="keyword">return</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Authentication</div><div class="operator">(</div><div class="ident">next</div><div class="operator">,</div> <div class="ident">noAuthURLs</div><div class="operator">)</div> <div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="keyword">if</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">EnableCORS</div> <div class="operator">{</div>
-		<div class="ident">router</div><div class="operator">.</div><div class="ident">Use</div><div class="operator">(</div><div class="ident">server</div><div class="operator">.</div><div class="ident">addCORSHeaders</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">router</div><div class="operator">.</div><div class="ident">Use</div><div class="operator">(</div><div class="ident">server</div><div class="operator">.</div><div class="ident">handleOptionsMethod</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">server</div><div class="operator">.</div><div class="ident">addEndpointsToRouter</div><div class="operator">(</div><div class="ident">router</div><div class="operator">)</div><div class="operator"></div>

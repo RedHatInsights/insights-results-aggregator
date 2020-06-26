@@ -1,20 +1,4 @@
 <!DOCTYPE html>
-<!--
- Copyright 2020 Red Hat, Inc
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
--->
-
 <html>
 <head>
 <title>storage_rules_test.go</title>
@@ -143,14 +127,15 @@ limitations under the License.</p>
 	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
+	<div class="literal">&#34;github.com/RedHatInsights/insights-content-service/content&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator-data/testdata&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
 	<div class="ident">ira_helpers</div> <div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/testdata&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
@@ -169,13 +154,8 @@ limitations under the License.</p>
 			<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 			<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>mustWriteReport3Rules(t, mockStorage)</p>
-</td>
-	<td class="code"><pre><code>
+			<div class="ident">mustWriteReport3Rules</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
+
 			<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ToggleRuleForCluster</div><div class="operator">(</div>
 				<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div> <div class="ident">state</div><div class="operator">,</div>
 			<div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
@@ -237,13 +217,8 @@ limitations under the License.</p>
 			<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 			<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>mustWriteReport3Rules(t, mockStorage)</p>
-</td>
-	<td class="code"><pre><code>
+			<div class="ident">mustWriteReport3Rules</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
+
 			<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ToggleRuleForCluster</div><div class="operator">(</div>
 				<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div> <div class="ident">state</div><div class="operator">,</div>
 			<div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
@@ -266,6 +241,67 @@ limitations under the License.</p>
 	<div class="operator">}</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TODO: make it work with the new arch
+func TestDBStorageToggleRulesAndList(t *testing.T) {
+mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+defer closer()</p>
+
+<p>mustWriteReport3Rules(t, mockStorage)</p>
+
+<p>helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+    testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
+))</p>
+
+<p>helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+    testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
+))</p>
+
+<p>toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
+helpers.FailOnError(t, err)</p>
+
+<p>assert.Len(t, toggledRules, 2)
+}</p>
+</td>
+	<td class="code"><pre><code>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TODO: make it work with the new arch
+func TestDBStorageDeleteDisabledRule(t *testing.T) {
+mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+defer closer()</p>
+
+<p>mustWriteReport3Rules(t, mockStorage)</p>
+
+<p>helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+    testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
+))</p>
+
+<p>helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+    testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
+))</p>
+
+<p>toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
+helpers.FailOnError(t, err)</p>
+
+<p>assert.Len(t, toggledRules, 2)</p>
+
+<p>helpers.FailOnError(t, mockStorage.DeleteFromRuleClusterToggle(
+    testdata.ClusterName, testdata.Rule2ID, testdata.UserID,
+))</p>
+
+<p>toggledRules, err = mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
+helpers.FailOnError(t, err)</p>
+
+<p>assert.Len(t, toggledRules, 1)
+}</p>
+</td>
+	<td class="code"><pre><code>
 <div class="keyword">func</div> <div class="ident">TestDBStorageVoteOnRule</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">vote</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">UserVote</div><div class="operator">{</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteDislike</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteLike</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteNone</div><div class="operator">,</div>
@@ -311,6 +347,36 @@ limitations under the License.</p>
 	<div class="operator">}</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TODO: fix according to the new architecture
+func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
+for <em>, vote := range []types.UserVote{
+    types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
+} {
+    func(vote types.UserVote) {
+        mockStorage, closer := ira</em>helpers.MustGetMockStorage(t, true)
+        defer closer()</p>
+
+<pre><code>    err := mockStorage.WriteReportForCluster(
+        testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+    )
+    helpers.FailOnError(t, err)
+
+    err = mockStorage.VoteOnRule(
+        testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
+    )
+    assert.Error(t, err)
+    assert.Regexp(t, &quot;operation violates foreign key&quot;, err.Error())
+}(vote)
+</code></pre>
+
+<p>}
+}</p>
+</td>
+	<td class="code"><pre><code>
 <div class="keyword">func</div> <div class="ident">TestDBStorageChangeVote</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
@@ -403,7 +469,7 @@ limitations under the License.</p>
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">GetUserFeedbackOnRule</div><div class="operator">(</div><div class="ident">testClusterName</div><div class="operator">,</div> <div class="ident">testRuleID</div><div class="operator">,</div> <div class="ident">testUserID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">GetUserFeedbackOnRule</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">ok</div> <div class="operator">:=</div> <div class="ident">err</div><div class="operator">.</div><div class="operator">(</div><div class="operator">*</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ItemNotFoundError</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">||</div> <div class="operator">!</div><div class="ident">ok</div> <div class="operator">{</div>
 		<div class="ident">t</div><div class="operator">.</div><div class="ident">Fatalf</div><div class="operator">(</div><div class="literal">&#34;expected ItemNotFoundError, got %T, %&#43;v&#34;</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
@@ -413,7 +479,7 @@ limitations under the License.</p>
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">GetUserFeedbackOnRule</div><div class="operator">(</div><div class="ident">testClusterName</div><div class="operator">,</div> <div class="ident">testRuleID</div><div class="operator">,</div> <div class="ident">testUserID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">GetUserFeedbackOnRule</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;sql: database is closed&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -421,7 +487,7 @@ limitations under the License.</p>
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">testClusterName</div><div class="operator">,</div> <div class="ident">testRuleID</div><div class="operator">,</div> <div class="ident">testUserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteNone</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteNone</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;sql: database is closed&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -437,7 +503,7 @@ limitations under the License.</p>
 	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">Init</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">testClusterName</div><div class="operator">,</div> <div class="ident">testRuleID</div><div class="operator">,</div> <div class="ident">testUserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteNone</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteNone</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;DB driver -1 is not supported&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -485,7 +551,7 @@ limitations under the License.</p>
 	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">connection</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">query</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="literal">&#34;non int&#34;</div><div class="operator">,</div> <div class="ident">testRuleID</div><div class="operator">,</div> <div class="ident">testUserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteNone</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="literal">&#34;non int&#34;</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteNone</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">const</div> <div class="ident">sqliteErrMessage</div> <div class="operator">=</div> <div class="literal">&#34;CHECK constraint failed: cluster_rule_user_feedback&#34;</div><div class="operator"></div>
 	<div class="keyword">const</div> <div class="ident">postgresErrMessage</div> <div class="operator">=</div> <div class="literal">&#34;pq: invalid input syntax for integer&#34;</div><div class="operator"></div>
@@ -519,7 +585,7 @@ https://github.com/golang/go/issues/37973</p>
 		<div class="ident">ExpectExec</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div>
 		<div class="ident">WillReturnResult</div><div class="operator">(</div><div class="ident">driver</div><div class="operator">.</div><div class="ident">ResultNoRows</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testUserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteNone</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteNone</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
