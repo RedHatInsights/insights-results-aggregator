@@ -16,8 +16,10 @@ package server_test
 
 import (
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
@@ -39,8 +41,18 @@ func TestReadClusterNameMissing(t *testing.T) {
 	request, err := http.NewRequest(http.MethodGet, "", nil)
 	helpers.FailOnError(t, err)
 
-	_, err = server.ReadClusterName(httptest.NewRecorder(), request)
-	assert.EqualError(t, err, "Missing required param from request: cluster")
+	recorder := httptest.NewRecorder()
+
+	_, successful := server.ReadClusterName(recorder, request)
+	assert.False(t, successful)
+
+	resp := recorder.Result()
+	assert.NotNil(t, resp)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, `{"status":"Missing required param from request: cluster"}`, strings.TrimSpace(string(body)))
 }
 
 func TestReadOrganizationIDMissing(t *testing.T) {
@@ -119,6 +131,16 @@ func TestReadRuleIDMissing(t *testing.T) {
 	request, err := http.NewRequest(http.MethodGet, "", nil)
 	helpers.FailOnError(t, err)
 
-	_, err = server.ReadRuleID(httptest.NewRecorder(), request)
-	assert.EqualError(t, err, "Missing required param from request: rule_id")
+	recorder := httptest.NewRecorder()
+
+	_, successful := server.ReadRuleID(recorder, request)
+	assert.False(t, successful)
+
+	resp := recorder.Result()
+	assert.NotNil(t, resp)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, `{"status":"Missing required param from request: rule_id"}`, strings.TrimSpace(string(body)))
 }

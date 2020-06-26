@@ -117,8 +117,8 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 }
 
 func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, request *http.Request) {
-	clusterName, err := readClusterName(writer, request)
-	if err != nil {
+	clusterName, successful := readClusterName(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}

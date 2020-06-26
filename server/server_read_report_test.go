@@ -192,8 +192,7 @@ func TestReadReportDisableRule(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -212,8 +211,7 @@ func TestReadReportDisableRule(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.EnableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -259,8 +257,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-		UserID:       testdata.User2ID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.User2ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -292,8 +289,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.EnableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-		UserID:       testdata.User2ID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.User2ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -314,8 +310,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -325,8 +320,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule2ID},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule2ID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,

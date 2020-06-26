@@ -95,20 +95,20 @@ func handleOrgIDError(writer http.ResponseWriter, err error) {
 }
 
 // readClusterName retrieves cluster name from request
-// if it's not possible, it writes http error to the writer and returns error
-func readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, error) {
+// if it's not possible, it writes http error to the writer and returns false
+func readClusterName(writer http.ResponseWriter, request *http.Request) (types.ClusterName, bool) {
 	clusterName, err := getRouterParam(request, "cluster")
 	if err != nil {
 		handleServerError(writer, err)
-		return "", err
+		return "", false
 	}
 
 	validatedClusterName, err := validateClusterName(clusterName)
 	if err != nil {
 		handleServerError(writer, err)
-		return "", err
+		return "", false
 	}
-	return validatedClusterName, nil
+	return validatedClusterName, true
 }
 
 // readUserID retrieves user_id from request
@@ -219,13 +219,13 @@ func readOrganizationIDs(writer http.ResponseWriter, request *http.Request) ([]t
 	return organizationsConverted, nil
 }
 
-func readRuleID(writer http.ResponseWriter, request *http.Request) (types.RuleID, error) {
+func readRuleID(writer http.ResponseWriter, request *http.Request) (types.RuleID, bool) {
 	ruleID, err := getRouterParam(request, "rule_id")
 	if err != nil {
 		const message = "unable to get rule id"
 		log.Error().Err(err).Msg(message)
 		handleServerError(writer, err)
-		return types.RuleID(0), err
+		return types.RuleID(0), false
 	}
 
 	ruleIDValidator := regexp.MustCompile(`^[a-zA-Z_0-9.]+$`)
@@ -240,10 +240,10 @@ func readRuleID(writer http.ResponseWriter, request *http.Request) (types.RuleID
 			paramValue: ruleID,
 			errString:  err.Error(),
 		})
-		return types.RuleID(0), err
+		return types.RuleID(0), false
 	}
 
-	return types.RuleID(ruleID), nil
+	return types.RuleID(ruleID), true
 }
 
 func readErrorKey(writer http.ResponseWriter, request *http.Request) (types.ErrorKey, error) {
@@ -262,15 +262,13 @@ func readErrorKey(writer http.ResponseWriter, request *http.Request) (types.Erro
 func (server *HTTPServer) readClusterRuleUserParams(
 	writer http.ResponseWriter, request *http.Request,
 ) (types.ClusterName, types.RuleID, types.UserID, bool) {
-	clusterID, err := readClusterName(writer, request)
-	if err != nil {
-		handleServerError(writer, err)
+	clusterID, successful := readClusterName(writer, request)
+	if !successful {
 		return "", "", "", false
 	}
 
-	ruleID, err := readRuleID(writer, request)
-	if err != nil {
-		handleServerError(writer, err)
+	ruleID, successful := readRuleID(writer, request)
+	if !successful {
 		return "", "", "", false
 	}
 
@@ -281,7 +279,7 @@ func (server *HTTPServer) readClusterRuleUserParams(
 	}
 
 	// it's gonna raise an error if cluster does not exist
-	_, _, err = server.Storage.ReadReportForClusterByClusterName(clusterID)
+	_, _, err := server.Storage.ReadReportForClusterByClusterName(clusterID)
 	if err != nil {
 		handleServerError(writer, err)
 		return "", "", "", false
