@@ -196,19 +196,6 @@ func (server *HTTPServer) checkUserClusterPermissions(writer http.ResponseWriter
 	return nil
 }
 
-// readUserID tries to retrieve user ID from request. If any error occurs, error response is send back to client.
-func (server *HTTPServer) readUserID(request *http.Request, writer http.ResponseWriter) (types.UserID, error) {
-	userID, err := server.GetCurrentUserID(request)
-	if err != nil {
-		const message = "Unable to get user id"
-		log.Error().Err(err).Msg(message)
-		handleServerError(writer, err)
-		return "", err
-	}
-
-	return userID, nil
-}
-
 func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {
 	orgIds, err := readOrganizationIDs(writer, request)
 	if err != nil {

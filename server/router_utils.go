@@ -120,6 +120,12 @@ func readUserID(writer http.ResponseWriter, request *http.Request) (types.UserID
 		return "", false
 	}
 
+	userID = strings.TrimSpace(userID)
+	if len(userID) == 0 {
+		handleServerError(writer, &RouterMissingParamError{paramName: "user_id"})
+		return "", false
+	}
+
 	return types.UserID(userID), true
 }
 
@@ -255,31 +261,31 @@ func readErrorKey(writer http.ResponseWriter, request *http.Request) (types.Erro
 // readClusterRuleUserParams gets cluster_name, rule_id and user_id from current request
 func (server *HTTPServer) readClusterRuleUserParams(
 	writer http.ResponseWriter, request *http.Request,
-) (types.ClusterName, types.RuleID, types.UserID, error) {
+) (types.ClusterName, types.RuleID, types.UserID, bool) {
 	clusterID, err := readClusterName(writer, request)
 	if err != nil {
-		// everything has been handled already
-		return "", "", "", err
+		handleServerError(writer, err)
+		return "", "", "", false
 	}
 
 	ruleID, err := readRuleID(writer, request)
 	if err != nil {
-		// everything has been handled already
-		return "", "", "", err
+		handleServerError(writer, err)
+		return "", "", "", false
 	}
 
-	userID, err := server.readUserID(request, writer)
-	if err != nil {
+	userID, successful := readUserID(writer, request)
+	if !successful {
 		// everything has been handled already
-		return "", "", "", err
+		return "", "", "", false
 	}
 
 	// it's gonna raise an error if cluster does not exist
 	_, _, err = server.Storage.ReadReportForClusterByClusterName(clusterID)
 	if err != nil {
 		handleServerError(writer, err)
-		return "", "", "", err
+		return "", "", "", false
 	}
 
-	return clusterID, ruleID, userID, nil
+	return clusterID, ruleID, userID, true
 }

@@ -597,6 +597,31 @@ func TestRuleToggle(t *testing.T) {
 	}
 }
 
+func TestRuleToggle_EmptyUserID(t *testing.T) {
+	for _, endpoint := range []string{
+		server.DisableRuleForClusterEndpoint, server.EnableRuleForClusterEndpoint,
+	} {
+		func(endpoint string) {
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
+
+			err := mockStorage.WriteReportForCluster(
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+			)
+			helpers.FailOnError(t, err)
+
+			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+				Method:       http.MethodPut,
+				Endpoint:     endpoint,
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, " "}, // space is crucial here
+			}, &helpers.APIResponse{
+				StatusCode: http.StatusBadRequest,
+				Body:       `{"status": "Missing required param from request: user_id"}`,
+			})
+		}(endpoint)
+	}
+}
+
 func TestHTTPServer_deleteOrganizationsOK(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodDelete,

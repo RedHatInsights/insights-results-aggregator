@@ -34,19 +34,19 @@ const (
 	// ReportEndpoint returns report for provided {organization}
 	ReportEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/report"
 	// LikeRuleEndpoint likes rule with {rule_id} for {cluster} using current user(from auth header)
-	LikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/like"
+	LikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/like"
 	// DislikeRuleEndpoint dislikes rule with {rule_id} for {cluster} using current user(from auth header)
-	DislikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/dislike"
+	DislikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/dislike"
 	// ResetVoteOnRuleEndpoint resets vote on rule with {rule_id} for {cluster} using current user(from auth header)
-	ResetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/reset_vote"
+	ResetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/reset_vote"
 	// GetVoteOnRuleEndpoint is an endpoint to get vote on rule. DEBUG only
-	GetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/get_vote"
+	GetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/get_vote"
 	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
 	// DisableRuleForClusterEndpoint disables a rule for specified cluster
-	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/disable"
+	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/disable"
 	// EnableRuleForClusterEndpoint re-enables a rule for specified cluster
-	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/enable"
+	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/enable"
 	// MetricsEndpoint returns prometheus metrics
 	MetricsEndpoint = "metrics"
 )
