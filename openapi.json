@@ -263,7 +263,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/users/{user_id}/like": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/like": {
       "put": {
         "summary": "Puts like for the rule with cluster for user",
         "operationId": "addLikeToRule",
@@ -321,7 +321,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/users/{user_id}/dislike": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/dislike": {
       "put": {
         "summary": "Puts dislike for the rule with cluster for user",
         "operationId": "addDislikeToRule",
@@ -379,7 +379,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/users/{user_id}/reset_vote": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/reset_vote": {
       "put": {
         "summary": "Resets vote for the rule with cluster for current user",
         "operationId": "resetVoteForRule",
@@ -437,7 +437,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/users/{user_id}/get_vote": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/get_vote": {
       "get": {
         "summary": "Returns vote for the rule with cluster for user",
         "operationId": "getVoteForRule",
@@ -562,7 +562,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/users/{user_id}/disable": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/disable": {
       "put": {
         "summary": "Disables a rule/health check recommendation for specified cluster",
         "operationId": "disableRule",
@@ -620,7 +620,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/users/{user_id}/enable": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/enable": {
       "put": {
         "summary": "Re-enables a rule/health check recommendation for specified cluster",
         "operationId": "enableRule",
