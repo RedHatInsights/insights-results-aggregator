@@ -39,13 +39,13 @@ func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *h
 }
 
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote types.UserVote) {
-	clusterID, ruleID, userID, err := server.readClusterRuleUserParams(writer, request)
-	if err != nil {
+	clusterID, ruleID, userID, successful := server.readClusterRuleUserParams(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
 
-	err = server.checkUserClusterPermissions(writer, request, clusterID)
+	err := server.checkUserClusterPermissions(writer, request, clusterID)
 	if err != nil {
 		// everything has been handled already
 		return
@@ -64,13 +64,13 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 }
 
 func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *http.Request) {
-	clusterID, ruleID, userID, err := server.readClusterRuleUserParams(writer, request)
-	if err != nil {
+	clusterID, ruleID, userID, successful := server.readClusterRuleUserParams(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
 
-	err = server.checkUserClusterPermissions(writer, request, clusterID)
+	err := server.checkUserClusterPermissions(writer, request, clusterID)
 	if err != nil {
 		// everything has been handled already
 		return

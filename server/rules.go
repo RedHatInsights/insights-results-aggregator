@@ -36,13 +36,13 @@ func (server *HTTPServer) enableRuleForCluster(writer http.ResponseWriter, reque
 
 // toggleRuleForCluster contains shared functionality for enable/disable
 func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, request *http.Request, toggleRule storage.RuleToggle) {
-	clusterID, ruleID, userID, err := server.readClusterRuleUserParams(writer, request)
-	if err != nil {
+	clusterID, ruleID, userID, successful := server.readClusterRuleUserParams(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
 
-	err = server.checkUserClusterPermissions(writer, request, clusterID)
+	err := server.checkUserClusterPermissions(writer, request, clusterID)
 	if err != nil {
 		// everything has been handled already
 		return
@@ -80,7 +80,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 	}
 
 	for i := range rules {
-		ruleID := types.RuleID(rules[i].Module)
+		ruleID := rules[i].Module
 		if vote, found := feedbacks[ruleID]; found {
 			rules[i].UserVote = vote
 		} else {

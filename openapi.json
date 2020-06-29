@@ -263,11 +263,11 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/like": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/like": {
       "put": {
-        "summary": "Puts like for the rule with cluster for current user",
+        "summary": "Puts like for the rule with cluster for user",
         "operationId": "addLikeToRule",
-        "description": "Puts like for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
+        "description": "Puts like for the rule(ruleId) with cluster(clusterId) for user",
         "parameters": [
           {
             "name": "clusterId",
@@ -282,6 +282,14 @@
           },
           {
             "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
@@ -313,11 +321,11 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/dislike": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/dislike": {
       "put": {
-        "summary": "Puts dislike for the rule with cluster for current user",
+        "summary": "Puts dislike for the rule with cluster for user",
         "operationId": "addDislikeToRule",
-        "description": "Puts dislike for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
+        "description": "Puts dislike for the rule(ruleId) with cluster(clusterId) for user",
         "parameters": [
           {
             "name": "clusterId",
@@ -332,6 +340,14 @@
           },
           {
             "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
@@ -363,7 +379,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/reset_vote": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/reset_vote": {
       "put": {
         "summary": "Resets vote for the rule with cluster for current user",
         "operationId": "resetVoteForRule",
@@ -387,6 +403,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -413,11 +437,11 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/get_vote": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/get_vote": {
       "get": {
-        "summary": "Returns vote for the rule with cluster for current user",
+        "summary": "Returns vote for the rule with cluster for user",
         "operationId": "getVoteForRule",
-        "description": "[DEBUG ONLY] Returns vote for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
+        "description": "[DEBUG ONLY] Returns vote for the rule(ruleId) with cluster(clusterId) for user",
         "parameters": [
           {
             "name": "clusterId",
@@ -432,6 +456,14 @@
           },
           {
             "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
@@ -530,7 +562,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/disable": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/disable": {
       "put": {
         "summary": "Disables a rule/health check recommendation for specified cluster",
         "operationId": "disableRule",
@@ -549,6 +581,14 @@
           },
           {
             "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
@@ -580,7 +620,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/enable": {
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/enable": {
       "put": {
         "summary": "Re-enables a rule/health check recommendation for specified cluster",
         "operationId": "enableRule",
@@ -599,6 +639,14 @@
           },
           {
             "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {

@@ -307,8 +307,7 @@ func TestRuleFeedbackVote(t *testing.T) {
 			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
-				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-				UserID:       testdata.UserID,
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
@@ -343,8 +342,7 @@ func TestRuleFeedbackVote_DBError(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "` + errStr + `"}`,
@@ -358,8 +356,7 @@ func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
 		helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 			Method:       http.MethodPut,
 			Endpoint:     endpoint,
-			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-			UserID:       testdata.UserID,
+			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 		}, &helpers.APIResponse{
 			StatusCode: http.StatusNotFound,
 			Body: fmt.Sprintf(
@@ -386,8 +383,7 @@ func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
 //		helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 //			Method:       http.MethodPut,
 //			Endpoint:     endpoint,
-//			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-//			UserID:       testdata.UserID,
+//			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 //		}, &helpers.APIResponse{
 //			StatusCode: http.StatusNotFound,
 //			Body: fmt.Sprintf(
@@ -405,7 +401,7 @@ func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
-		EndpointArgs: []interface{}{testdata.BadClusterName, testdata.Rule1ID},
+		EndpointArgs: []interface{}{testdata.BadClusterName, testdata.Rule1ID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{"status": "Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"}`,
@@ -418,7 +414,7 @@ func TestRuleFeedbackErrorBadRuleID(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.BadRuleID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.BadRuleID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
@@ -431,7 +427,7 @@ func TestHTTPServer_GetVoteOnRule_BadRuleID(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetVoteOnRuleEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.BadRuleID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.BadRuleID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
@@ -457,30 +453,11 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetVoteOnRuleEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
 	})
-}
-
-func TestRuleFeedbackErrorBadUserID(t *testing.T) {
-	testServer := server.New(config, nil)
-
-	url := httputils.MakeURLToEndpoint(config.APIPrefix, server.LikeRuleEndpoint, testdata.ClusterName, testdata.Rule1ID)
-
-	req, err := http.NewRequest(http.MethodPut, url, nil)
-	helpers.FailOnError(t, err)
-
-	// put wrong identity
-	identity := "wrong type"
-	req = req.WithContext(context.WithValue(req.Context(), types.ContextKeyUser, identity))
-
-	response := helpers.ExecuteRequest(testServer, req).Result()
-
-	assert.Equal(t, http.StatusInternalServerError, response.StatusCode, "Expected different status code")
-	helpers.CheckResponseBodyJSON(t, `{"status": "Internal Server Error"}`, response.Body)
 }
 
 func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
@@ -490,8 +467,7 @@ func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.LikeRuleEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-		UserID:       testdata.UserID,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
@@ -527,8 +503,7 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
-				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-				UserID:       testdata.UserID,
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
@@ -537,8 +512,7 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodGet,
 				Endpoint:     server.GetVoteOnRuleEndpoint,
-				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-				UserID:       testdata.UserID,
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       fmt.Sprintf(`{"status": "ok", "vote":%v}`, expectedVote),
@@ -574,8 +548,7 @@ func TestRuleToggle(t *testing.T) {
 			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
-				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
-				UserID:       testdata.UserID,
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
 			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
@@ -593,6 +566,31 @@ func TestRuleToggle(t *testing.T) {
 			} else {
 				assert.Equal(t, sql.NullTime{}, toggledRule.DisabledAt)
 			}
+		}(endpoint)
+	}
+}
+
+func TestRuleToggle_EmptyUserID(t *testing.T) {
+	for _, endpoint := range []string{
+		server.DisableRuleForClusterEndpoint, server.EnableRuleForClusterEndpoint,
+	} {
+		func(endpoint string) {
+			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			defer closer()
+
+			err := mockStorage.WriteReportForCluster(
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+			)
+			helpers.FailOnError(t, err)
+
+			helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+				Method:       http.MethodPut,
+				Endpoint:     endpoint,
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, " "}, // space is crucial here
+			}, &helpers.APIResponse{
+				StatusCode: http.StatusBadRequest,
+				Body:       `{"status": "Missing required param from request: user_id"}`,
+			})
 		}(endpoint)
 	}
 }
