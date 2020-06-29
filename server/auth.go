@@ -58,9 +58,10 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 			return
 		}
 
-		token, isTokenValid := server.getAuthTokenHeader(w, r)
-		if !isTokenValid {
-			// everything has been handled already
+		token, err := server.getAuthTokenHeader(w, r)
+		if err != nil {
+			log.Error().Err(err).Msg(err.Error())
+			handleServerError(w, err)
 			return
 		}
 
@@ -118,7 +119,7 @@ func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID,
 	return identity.AccountNumber, nil
 }
 
-func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Request) (string, bool) {
+func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Request) (string, error) {
 	var tokenHeader string
 	// In case of testing on local machine we don't take x-rh-identity header, but instead Authorization with JWT token in it
 	if server.Config.AuthType == "jwt" {
@@ -126,9 +127,7 @@ func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Requ
 		splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
 		if len(splitted) != 2 {
 			const message = "Invalid/Malformed auth token"
-			log.Error().Msg(message)
-			handleServerError(w, &AuthenticationError{errString: message})
-			return "", false
+			return "", &AuthenticationError{errString: message}
 		}
 
 		// Here we take JWT token which include 3 parts, we need only second one
@@ -141,10 +140,8 @@ func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Requ
 	// TODO: Change SendUnauthorized in utils to accept string instead of map interface and change here
 	if tokenHeader == "" {
 		const message = "Missing auth token"
-		log.Error().Msg(message)
-		handleServerError(w, &AuthenticationError{errString: message})
-		return "", false
+		return "", &AuthenticationError{errString: message}
 	}
 
-	return tokenHeader, true
+	return tokenHeader, nil
 }
