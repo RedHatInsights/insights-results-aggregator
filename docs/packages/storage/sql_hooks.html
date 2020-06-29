@@ -143,12 +143,13 @@ limitations under the License.
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/gchaincl/sqlhooks&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/rs/zerolog&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/prometheus/client_golang/prometheus&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/metrics&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
-<div class="keyword">type</div> <div class="ident">sqlHooks</div> <div class="keyword">struct</div> <div class="operator">{</div>
-	<div class="ident">SQLQueriesLogger</div> <div class="operator">*</div><div class="ident">zerolog</div><div class="operator">.</div><div class="ident">Logger</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
+<div class="keyword">type</div> <div class="ident">sqlHooks</div> <div class="keyword">struct</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">type</div> <div class="ident">sqlHooksKey</div> <div class="ident">int</div><div class="operator"></div>
 
@@ -175,10 +176,12 @@ second arg is params array</p>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">h</div> <div class="operator">*</div><div class="ident">sqlHooks</div><div class="operator">)</div> <div class="ident">Before</div><div class="operator">(</div><div class="ident">ctx</div> <div class="ident">context</div><div class="operator">.</div><div class="ident">Context</div><div class="operator">,</div> <div class="ident">query</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">args</div> <div class="operator">...</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">Context</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">jsonArgs</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Marshal</div><div class="operator">(</div><div class="ident">args</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">h</div><div class="operator">.</div><div class="ident">SQLQueriesLogger</div><div class="operator">.</div><div class="ident">Printf</div><div class="operator">(</div><div class="ident">logFormatterString</div><div class="operator">&#43;</div><div class="literal">&#34;\n&#34;</div><div class="operator">,</div> <div class="ident">query</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">jsonArgs</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">h</div><div class="operator">.</div><div class="ident">log</div><div class="operator">(</div><div class="ident">logFormatterString</div><div class="operator">&#43;</div><div class="literal">&#34;\n&#34;</div><div class="operator">,</div> <div class="ident">query</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">jsonArgs</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
-		<div class="ident">h</div><div class="operator">.</div><div class="ident">SQLQueriesLogger</div><div class="operator">.</div><div class="ident">Printf</div><div class="operator">(</div><div class="ident">logFormatterString</div><div class="operator">&#43;</div><div class="literal">&#34;\n&#34;</div><div class="operator">,</div> <div class="ident">query</div><div class="operator">,</div> <div class="ident">args</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">h</div><div class="operator">.</div><div class="ident">log</div><div class="operator">(</div><div class="ident">logFormatterString</div><div class="operator">&#43;</div><div class="literal">&#34;\n&#34;</div><div class="operator">,</div> <div class="ident">query</div><div class="operator">,</div> <div class="ident">args</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">metrics</div><div class="operator">.</div><div class="ident">SQLQueriesCounter</div><div class="operator">.</div><div class="ident">Inc</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">context</div><div class="operator">.</div><div class="ident">WithValue</div><div class="operator">(</div><div class="ident">ctx</div><div class="operator">,</div> <div class="ident">sqlHooksKeyQueryBeginTime</div><div class="operator">,</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -192,21 +195,28 @@ it allows you to see how long your query took</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">h</div> <div class="operator">*</div><div class="ident">sqlHooks</div><div class="operator">)</div> <div class="ident">After</div><div class="operator">(</div><div class="ident">ctx</div> <div class="ident">context</div><div class="operator">.</div><div class="ident">Context</div><div class="operator">,</div> <div class="ident">query</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">args</div> <div class="operator">...</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">Context</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">beginTime</div> <div class="operator">:=</div> <div class="ident">ctx</div><div class="operator">.</div><div class="ident">Value</div><div class="operator">(</div><div class="ident">sqlHooksKeyQueryBeginTime</div><div class="operator">)</div><div class="operator">.</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">Time</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">duration</div> <div class="operator">:=</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Since</div><div class="operator">(</div><div class="ident">beginTime</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">metrics</div><div class="operator">.</div><div class="ident">SQLQueriesDurations</div><div class="operator">.</div><div class="ident">With</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Labels</div><div class="operator">{</div><div class="literal">&#34;query&#34;</div><div class="operator">:</div> <div class="ident">query</div><div class="operator">}</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Observe</div><div class="operator">(</div><div class="ident">duration</div><div class="operator">.</div><div class="ident">Seconds</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">jsonArgs</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Marshal</div><div class="operator">(</div><div class="ident">args</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">h</div><div class="operator">.</div><div class="ident">SQLQueriesLogger</div><div class="operator">.</div><div class="ident">Printf</div><div class="operator">(</div>
+		<div class="ident">h</div><div class="operator">.</div><div class="ident">log</div><div class="operator">(</div>
 			<div class="ident">logFormatterString</div><div class="operator">&#43;</div><div class="literal">&#34; took %s\n&#34;</div><div class="operator">,</div>
-			<div class="ident">query</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">jsonArgs</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Since</div><div class="operator">(</div><div class="ident">beginTime</div><div class="operator">)</div><div class="operator">,</div>
+			<div class="ident">query</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">jsonArgs</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">duration</div><div class="operator">,</div>
 		<div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
-		<div class="ident">h</div><div class="operator">.</div><div class="ident">SQLQueriesLogger</div><div class="operator">.</div><div class="ident">Printf</div><div class="operator">(</div>
+		<div class="ident">h</div><div class="operator">.</div><div class="ident">log</div><div class="operator">(</div>
 			<div class="ident">logFormatterString</div><div class="operator">&#43;</div><div class="literal">&#34; took %s\n&#34;</div><div class="operator">,</div>
-			<div class="ident">query</div><div class="operator">,</div> <div class="ident">args</div><div class="operator">,</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Since</div><div class="operator">(</div><div class="ident">beginTime</div><div class="operator">)</div><div class="operator">,</div>
+			<div class="ident">query</div><div class="operator">,</div> <div class="ident">args</div><div class="operator">,</div> <div class="ident">duration</div><div class="operator">,</div>
 		<div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">ctx</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="operator">(</div><div class="ident">h</div> <div class="operator">*</div><div class="ident">sqlHooks</div><div class="operator">)</div> <div class="ident">log</div><div class="operator">(</div><div class="ident">format</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">params</div> <div class="operator">...</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">log</div><div class="operator">.</div><div class="ident">Debug</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Str</div><div class="operator">(</div><div class="literal">&#34;type&#34;</div><div class="operator">,</div> <div class="literal">&#34;SQL&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">format</div><div class="operator">,</div> <div class="ident">params</div><div class="operator">...</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -219,7 +229,6 @@ and returns its name</p>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">InitSQLDriverWithLogs</div><div class="operator">(</div>
 	<div class="ident">realDriver</div> <div class="ident">sql_driver</div><div class="operator">.</div><div class="ident">Driver</div><div class="operator">,</div>
 	<div class="ident">realDriverName</div> <div class="ident">string</div><div class="operator">,</div>
-	<div class="ident">logger</div> <div class="operator">*</div><div class="ident">zerolog</div><div class="operator">.</div><div class="ident">Logger</div><div class="operator">,</div>
 <div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
 </code></pre></td>
       </tr>
@@ -239,9 +248,7 @@ and we call New() only ones/twice per process life</p>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">foundHooksDriver</div> <div class="operator">{</div>
-		<div class="ident">sql</div><div class="operator">.</div><div class="ident">Register</div><div class="operator">(</div><div class="ident">hooksDriverName</div><div class="operator">,</div> <div class="ident">sqlhooks</div><div class="operator">.</div><div class="ident">Wrap</div><div class="operator">(</div><div class="ident">realDriver</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">sqlHooks</div><div class="operator">{</div>
-			<div class="ident">SQLQueriesLogger</div><div class="operator">:</div> <div class="ident">logger</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">sql</div><div class="operator">.</div><div class="ident">Register</div><div class="operator">(</div><div class="ident">hooksDriverName</div><div class="operator">,</div> <div class="ident">sqlhooks</div><div class="operator">.</div><div class="ident">Wrap</div><div class="operator">(</div><div class="ident">realDriver</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">sqlHooks</div><div class="operator">{</div><div class="operator">}</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">hooksDriverName</div><div class="operator"></div>

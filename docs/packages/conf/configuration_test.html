@@ -147,6 +147,7 @@ limitations under the License.
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/conf&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/logger&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
@@ -374,7 +375,6 @@ str
 		api_prefix = &#34;/api/v1/&#34;
 		api_spec_file = &#34;openapi.json&#34;
 		debug = true
-		enable_cors = true
 
 		[storage]
 		db_driver = &#34;sqlite3&#34;
@@ -410,7 +410,6 @@ str
 		<div class="ident">APISpecFile</div><div class="operator">:</div> <div class="literal">&#34;openapi.json&#34;</div><div class="operator">,</div>
 		<div class="ident">AuthType</div><div class="operator">:</div>    <div class="literal">&#34;xrh&#34;</div><div class="operator">,</div>
 		<div class="ident">Debug</div><div class="operator">:</div>       <div class="ident">true</div><div class="operator">,</div>
-		<div class="ident">EnableCORS</div><div class="operator">:</div>  <div class="ident">true</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetServerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">orgWhiteList</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationWhitelist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
@@ -480,7 +479,6 @@ str
 		<div class="ident">APISpecFile</div><div class="operator">:</div> <div class="literal">&#34;openapi.json&#34;</div><div class="operator">,</div>
 		<div class="ident">AuthType</div><div class="operator">:</div>    <div class="literal">&#34;xrh&#34;</div><div class="operator">,</div>
 		<div class="ident">Debug</div><div class="operator">:</div>       <div class="ident">true</div><div class="operator">,</div>
-		<div class="ident">EnableCORS</div><div class="operator">:</div>  <div class="ident">true</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetServerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">orgWhiteList</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationWhitelist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
@@ -508,6 +506,50 @@ str
 		<div class="ident">PGDBName</div><div class="operator">:</div>         <div class="literal">&#34;aggregator&#34;</div><div class="operator">,</div>
 		<div class="ident">PGParams</div><div class="operator">:</div>         <div class="literal">&#34;params&#34;</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetStorageConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestGetLoggingConfigurationDefault</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">setEnvVariables</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mustLoadConfiguration</div><div class="operator">(</div><div class="literal">&#34;/non_existing_path&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div><div class="operator">{</div>
+		<div class="ident">Debug</div><div class="operator">:</div>                      <div class="ident">false</div><div class="operator">,</div>
+		<div class="ident">LogLevel</div><div class="operator">:</div>                   <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">LoggingToCloudWatchEnabled</div><div class="operator">:</div> <div class="ident">false</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">,</div>
+		<div class="ident">conf</div><div class="operator">.</div><div class="ident">GetLoggingConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestGetLoggingConfigurationFromEnv</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">setEnvVariables</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mustSetEnv</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG&#34;</div><div class="operator">,</div> <div class="literal">&#34;true&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mustSetEnv</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL&#34;</div><div class="operator">,</div> <div class="literal">&#34;info&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mustSetEnv</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED&#34;</div><div class="operator">,</div> <div class="literal">&#34;true&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">mustLoadConfiguration</div><div class="operator">(</div><div class="literal">&#34;/non_existing_path&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div><div class="operator">{</div>
+		<div class="ident">Debug</div><div class="operator">:</div>                      <div class="ident">true</div><div class="operator">,</div>
+		<div class="ident">LogLevel</div><div class="operator">:</div>                   <div class="literal">&#34;info&#34;</div><div class="operator">,</div>
+		<div class="ident">LoggingToCloudWatchEnabled</div><div class="operator">:</div> <div class="ident">true</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">,</div>
+		<div class="ident">conf</div><div class="operator">.</div><div class="ident">GetLoggingConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestGetCloudWatchConfigurationDefault</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mustLoadConfiguration</div><div class="operator">(</div><div class="literal">&#34;/non_existing_path&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">CloudWatchConfiguration</div><div class="operator">{</div>
+		<div class="ident">AWSAccessID</div><div class="operator">:</div>             <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">AWSSecretKey</div><div class="operator">:</div>            <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">AWSSessionToken</div><div class="operator">:</div>         <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">AWSRegion</div><div class="operator">:</div>               <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">LogGroup</div><div class="operator">:</div>                <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">StreamName</div><div class="operator">:</div>              <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">CreateStreamIfNotExists</div><div class="operator">:</div> <div class="ident">false</div><div class="operator">,</div>
+		<div class="ident">Debug</div><div class="operator">:</div>                   <div class="ident">false</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetCloudWatchConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">setEnvVariables</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>

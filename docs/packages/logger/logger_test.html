@@ -135,17 +135,72 @@ limitations under the License.</p>
 
 <div class="keyword">import</div> <div class="operator">(</div>
 	<div class="literal">&#34;bytes&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
-	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/Shopify/sarama&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/logger&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">const</div> <div class="operator">(</div>
+	<div class="ident">testTimeout</div> <div class="operator">=</div> <div class="literal">10</div> <div class="operator">*</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Second</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">var</div> <div class="operator">(</div>
+	<div class="ident">cloudWatchConf</div> <div class="operator">=</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">CloudWatchConfiguration</div><div class="operator">{</div>
+		<div class="ident">AWSAccessID</div><div class="operator">:</div>             <div class="literal">&#34;access ID&#34;</div><div class="operator">,</div>
+		<div class="ident">AWSSecretKey</div><div class="operator">:</div>            <div class="literal">&#34;secret&#34;</div><div class="operator">,</div>
+		<div class="ident">AWSSessionToken</div><div class="operator">:</div>         <div class="literal">&#34;sess token&#34;</div><div class="operator">,</div>
+		<div class="ident">AWSRegion</div><div class="operator">:</div>               <div class="literal">&#34;aws region&#34;</div><div class="operator">,</div>
+		<div class="ident">LogGroup</div><div class="operator">:</div>                <div class="literal">&#34;log group&#34;</div><div class="operator">,</div>
+		<div class="ident">StreamName</div><div class="operator">:</div>              <div class="literal">&#34;stream name&#34;</div><div class="operator">,</div>
+		<div class="ident">CreateStreamIfNotExists</div><div class="operator">:</div> <div class="ident">true</div><div class="operator">,</div>
+		<div class="ident">Debug</div><div class="operator">:</div>                   <div class="ident">false</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">describeLogStreamsEvent</div> <div class="operator">=</div> <div class="ident">CloudWatchExpect</div><div class="operator">{</div>
+		<div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPost</div><div class="operator">,</div>
+		<div class="literal">&#34;Logs_20140328.DescribeLogStreams&#34;</div><div class="operator">,</div>
+		<div class="literal">`{
+					&#34;descending&#34;: false,
+					&#34;logGroupName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">LogGroup</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+					&#34;logStreamNamePrefix&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">StreamName</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+					&#34;orderBy&#34;: &#34;LogStreamName&#34;
+				}`</div><div class="operator">,</div>
+		<div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div>
+		<div class="literal">`{
+					&#34;logStreams&#34;: [
+						{
+							&#34;arn&#34;: &#34;arn:aws:logs:`</div> <div class="operator">&#43;</div>
+			<div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">AWSRegion</div> <div class="operator">&#43;</div> <div class="literal">`:012345678910:log-group:`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">LogGroup</div> <div class="operator">&#43;</div>
+			<div class="literal">`:log-stream:`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">StreamName</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+							&#34;creationTime&#34;: 1,
+							&#34;firstEventTimestamp&#34;: 2,
+							&#34;lastEventTimestamp&#34;: 3,
+							&#34;lastIngestionTime&#34;: 4,
+							&#34;logStreamName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">StreamName</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+							&#34;storedBytes&#34;: 100,
+							&#34;uploadSequenceToken&#34;: &#34;1&#34;
+						}
+					],
+					&#34;nextToken&#34;: &#34;token1&#34;
+				}`</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">type</div> <div class="ident">CloudWatchExpect</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">ExpectedMethod</div>   <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">ExpectedTarget</div>   <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">ExpectedBody</div>     <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">ResultStatusCode</div> <div class="ident">int</div><div class="operator"></div>
+	<div class="ident">ResultBody</div>       <div class="ident">string</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestSaramaZerologger</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">const</div> <div class="ident">expectedStrInfoLevel</div> <div class="operator">=</div> <div class="literal">&#34;some random message&#34;</div><div class="operator"></div>
@@ -239,13 +294,7 @@ limitations under the License.</p>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestInitZerolog_LogToCloudWatch</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>TODO: mock logging to cloud watch and do actual testing</p>
-</td>
-	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">InitZerolog</div><div class="operator">(</div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">InitZerolog</div><div class="operator">(</div>
 		<div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div><div class="operator">{</div>
 			<div class="ident">Debug</div><div class="operator">:</div>                      <div class="ident">false</div><div class="operator">,</div>
 			<div class="ident">LogLevel</div><div class="operator">:</div>                   <div class="literal">&#34;debug&#34;</div><div class="operator">,</div>
@@ -254,6 +303,95 @@ limitations under the License.</p>
 		<div class="ident">logger</div><div class="operator">.</div><div class="ident">CloudWatchConfiguration</div><div class="operator">{</div><div class="operator">}</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestLoggingToCloudwatch</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">RunTestWithTimeout</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="keyword">defer</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">CleanAfterGock</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="keyword">const</div> <div class="ident">baseURL</div> <div class="operator">=</div> <div class="literal">&#34;http://localhost:9999&#34;</div><div class="operator"></div>
+		<div class="ident">logger</div><div class="operator">.</div><div class="ident">AWSCloudWatchEndpoint</div> <div class="operator">=</div> <div class="ident">baseURL</div> <div class="operator">&#43;</div> <div class="literal">&#34;/cloudwatch&#34;</div><div class="operator"></div>
+
+		<div class="ident">expects</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">CloudWatchExpect</div><div class="operator">{</div>
+			<div class="operator">{</div>
+				<div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPost</div><div class="operator">,</div>
+				<div class="literal">&#34;Logs_20140328.CreateLogStream&#34;</div><div class="operator">,</div>
+				<div class="literal">`{
+					&#34;logGroupName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">LogGroup</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+					&#34;logStreamName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">StreamName</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
+				}`</div><div class="operator">,</div>
+				<div class="ident">http</div><div class="operator">.</div><div class="ident">StatusBadRequest</div><div class="operator">,</div>
+				<div class="literal">`{
+					&#34;__type&#34;: &#34;ResourceAlreadyExistsException&#34;,
+					&#34;message&#34;: &#34;The specified log stream already exists&#34;
+				}`</div><div class="operator">,</div>
+			<div class="operator">}</div><div class="operator">,</div>
+			<div class="ident">describeLogStreamsEvent</div><div class="operator">,</div>
+			<div class="operator">{</div>
+				<div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPost</div><div class="operator">,</div>
+				<div class="literal">&#34;Logs_20140328.PutLogEvents&#34;</div><div class="operator">,</div>
+				<div class="literal">`{
+					&#34;logEvents&#34;: [
+						{
+							&#34;message&#34;: &#34;test message text goes right here&#34;,
+							&#34;timestamp&#34;: 1
+						}
+					],
+					&#34;logGroupName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">LogGroup</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+					&#34;logStreamName&#34;:&#34;`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">StreamName</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+					&#34;sequenceToken&#34;:&#34;1&#34;
+				}`</div><div class="operator">,</div>
+				<div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div>
+				<div class="literal">`{&#34;nextSequenceToken&#34;:&#34;2&#34;}`</div><div class="operator">,</div>
+			<div class="operator">}</div><div class="operator">,</div>
+			<div class="operator">{</div>
+				<div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPost</div><div class="operator">,</div>
+				<div class="literal">&#34;Logs_20140328.PutLogEvents&#34;</div><div class="operator">,</div>
+				<div class="literal">`{
+					&#34;logEvents&#34;: [
+						{
+							&#34;message&#34;: &#34;second test message text goes right here&#34;,
+							&#34;timestamp&#34;: 2
+						}
+					],
+					&#34;logGroupName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">LogGroup</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+					&#34;logStreamName&#34;:&#34;`</div> <div class="operator">&#43;</div> <div class="ident">cloudWatchConf</div><div class="operator">.</div><div class="ident">StreamName</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+					&#34;sequenceToken&#34;:&#34;2&#34;
+				}`</div><div class="operator">,</div>
+				<div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div>
+				<div class="literal">`{&#34;nextSequenceToken&#34;:&#34;3&#34;}`</div><div class="operator">,</div>
+			<div class="operator">}</div><div class="operator">,</div>
+			<div class="ident">describeLogStreamsEvent</div><div class="operator">,</div>
+			<div class="ident">describeLogStreamsEvent</div><div class="operator">,</div>
+			<div class="ident">describeLogStreamsEvent</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">expect</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">expects</div> <div class="operator">{</div>
+			<div class="ident">helpers</div><div class="operator">.</div><div class="ident">GockExpectAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">baseURL</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
+				<div class="ident">Method</div><div class="operator">:</div>   <div class="ident">expect</div><div class="operator">.</div><div class="ident">ExpectedMethod</div><div class="operator">,</div>
+				<div class="ident">Body</div><div class="operator">:</div>     <div class="ident">expect</div><div class="operator">.</div><div class="ident">ExpectedBody</div><div class="operator">,</div>
+				<div class="ident">Endpoint</div><div class="operator">:</div> <div class="literal">&#34;cloudwatch/&#34;</div><div class="operator">,</div>
+				<div class="ident">ExtraHeaders</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">{</div>
+					<div class="literal">&#34;X-Amz-Target&#34;</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="ident">expect</div><div class="operator">.</div><div class="ident">ExpectedTarget</div><div class="operator">}</div><div class="operator">,</div>
+				<div class="operator">}</div><div class="operator">,</div>
+			<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
+				<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">expect</div><div class="operator">.</div><div class="ident">ResultStatusCode</div><div class="operator">,</div>
+				<div class="ident">Body</div><div class="operator">:</div>       <div class="ident">expect</div><div class="operator">.</div><div class="ident">ResultBody</div><div class="operator">,</div>
+				<div class="ident">Headers</div><div class="operator">:</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+					<div class="literal">&#34;Content-Type&#34;</div><div class="operator">:</div> <div class="literal">&#34;application/x-amz-json-1.1&#34;</div><div class="operator">,</div>
+				<div class="operator">}</div><div class="operator">,</div>
+			<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">InitZerolog</div><div class="operator">(</div><div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div><div class="operator">{</div>
+			<div class="ident">Debug</div><div class="operator">:</div>                      <div class="ident">false</div><div class="operator">,</div>
+			<div class="ident">LogLevel</div><div class="operator">:</div>                   <div class="literal">&#34;debug&#34;</div><div class="operator">,</div>
+			<div class="ident">LoggingToCloudWatchEnabled</div><div class="operator">:</div> <div class="ident">true</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator">,</div> <div class="ident">cloudWatchConf</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;test message&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testTimeout</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
