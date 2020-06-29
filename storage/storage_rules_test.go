@@ -24,7 +24,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/rs/zerolog"
