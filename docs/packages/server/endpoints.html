@@ -134,10 +134,8 @@ limitations under the License.</p>
 	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">server</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
-	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;path/filepath&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;regexp&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/gorilla/mux&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/prometheus/client_golang/prometheus/promhttp&#34;</div><div class="operator"></div>
@@ -176,37 +174,37 @@ limitations under the License.</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>ReportEndpoint returns report for provided {organization} and {cluster}</p>
+	<td class="doc"><p>ReportEndpoint returns report for provided {organization}</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">ReportEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;report/{organization}/{cluster}&#34;</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">ReportEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;organizations/{org_id}/clusters/{cluster}/users/{user_id}/report&#34;</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>LikeRuleEndpoint likes rule with {rule_id} for {cluster} using current user(from auth header)</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">LikeRuleEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/like&#34;</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">LikeRuleEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/users/{user_id}/like&#34;</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>DislikeRuleEndpoint dislikes rule with {rule_id} for {cluster} using current user(from auth header)</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">DislikeRuleEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/dislike&#34;</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">DislikeRuleEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/users/{user_id}/dislike&#34;</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>ResetVoteOnRuleEndpoint resets vote on rule with {rule_id} for {cluster} using current user(from auth header)</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">ResetVoteOnRuleEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/reset_vote&#34;</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">ResetVoteOnRuleEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/users/{user_id}/reset_vote&#34;</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>GetVoteOnRuleEndpoint is an endpoint to get vote on rule. DEBUG only</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">GetVoteOnRuleEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/get_vote&#34;</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">GetVoteOnRuleEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/users/{user_id}/get_vote&#34;</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
@@ -220,14 +218,14 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>DisableRuleForClusterEndpoint disables a rule for specified cluster</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">DisableRuleForClusterEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/disable&#34;</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">DisableRuleForClusterEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/users/{user_id}/disable&#34;</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>EnableRuleForClusterEndpoint re-enables a rule for specified cluster</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">EnableRuleForClusterEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/enable&#34;</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">EnableRuleForClusterEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/users/{user_id}/enable&#34;</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
@@ -298,18 +296,6 @@ limitations under the License.</p>
 	<td class="doc"><p>OpenAPI specs</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">openAPIURL</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">serveAPISpecFile</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>MakeURLToEndpoint creates URL to endpoint, use constants from file endpoints.go</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MakeURLToEndpoint</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">,</div> <div class="ident">endpoint</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">args</div> <div class="operator">...</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
-	<div class="ident">re</div> <div class="operator">:=</div> <div class="ident">regexp</div><div class="operator">.</div><div class="ident">MustCompile</div><div class="operator">(</div><div class="literal">`\{[a-zA-Z_0-9]&#43;\}`</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">endpoint</div> <div class="operator">=</div> <div class="ident">re</div><div class="operator">.</div><div class="ident">ReplaceAllString</div><div class="operator">(</div><div class="ident">endpoint</div><div class="operator">,</div> <div class="literal">&#34;%v&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">return</div> <div class="ident">apiPrefix</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="ident">endpoint</div><div class="operator">,</div> <div class="ident">args</div><div class="operator">...</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
