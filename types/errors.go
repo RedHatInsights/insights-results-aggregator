@@ -67,6 +67,20 @@ type ForeignKeyError struct {
 	Details string
 }
 
+// ValidationError validation error, for example when string is longer then expected
+type ValidationError struct {
+	ParamName  string
+	ParamValue interface{}
+	ErrString  string
+}
+
+func (e *ValidationError) Error() string {
+	return fmt.Sprintf(
+		"Error during validating param '%v' with value '%v'. Error: '%v'",
+		e.ParamName, e.ParamValue, e.ErrString,
+	)
+}
+
 // Error returns error string
 func (err *ForeignKeyError) Error() string {
 	return fmt.Sprintf(

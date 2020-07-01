@@ -423,6 +423,29 @@ func TestRuleFeedbackErrorBadRuleID(t *testing.T) {
 	})
 }
 
+func TestRuleFeedbackErrorLongMessage(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.LikeRuleEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
+		Body: `{
+			"message": "Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message"
+		}`,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body: `{
+			"status": "Error during validating param 'message' with value 'Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message'. Error: 'String is longer then 250'"
+		}`,
+	})
+}
+
 func TestHTTPServer_GetVoteOnRule_BadRuleID(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,

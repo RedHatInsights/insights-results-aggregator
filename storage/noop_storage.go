@@ -76,7 +76,7 @@ func (*NoopStorage) ReportsCount() (int, error) {
 }
 
 // VoteOnRule noop
-func (*NoopStorage) VoteOnRule(types.ClusterName, types.RuleID, types.UserID, types.UserVote) error {
+func (*NoopStorage) VoteOnRule(types.ClusterName, types.RuleID, types.UserID, types.UserVote, string) error {
 	return nil
 }
 
