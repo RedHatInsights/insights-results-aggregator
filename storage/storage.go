@@ -67,6 +67,7 @@ type Storage interface {
 		ruleID types.RuleID,
 		userID types.UserID,
 		userVote types.UserVote,
+		voteMessage string,
 	) error
 	AddOrUpdateFeedbackOnRule(
 		clusterID types.ClusterName,

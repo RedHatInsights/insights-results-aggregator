@@ -107,3 +107,8 @@ const (
 	// ContextKeyUser is a constant for user authentication token in request
 	ContextKeyUser = types.ContextKeyUser
 )
+
+// FeedbackRequest contains message of user feedback
+type FeedbackRequest struct {
+	Message string `json:"message"`
+}

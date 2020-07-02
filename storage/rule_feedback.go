@@ -43,8 +43,9 @@ func (storage DBStorage) VoteOnRule(
 	ruleID types.RuleID,
 	userID types.UserID,
 	userVote types.UserVote,
+	voteMessage string,
 ) error {
-	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, userID, &userVote, nil)
+	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, userID, &userVote, &voteMessage)
 }
 
 // AddOrUpdateFeedbackOnRule adds feedback on rule for cluster by user. If entry exists, it overwrites it

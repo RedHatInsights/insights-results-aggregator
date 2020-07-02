@@ -199,7 +199,7 @@ func TestDBStorageVoteOnRule(t *testing.T) {
 			mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.VoteOnRule(
-				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
+				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote, "",
 			))
 
 			feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
@@ -225,7 +225,7 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 			defer closer()
 
 			err := mockStorage.VoteOnRule(
-				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
+				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote, "",
 			)
 			assert.Error(t, err)
 			assert.Regexp(t, "operation violates foreign key", err.Error())
@@ -263,12 +263,12 @@ func TestDBStorageChangeVote(t *testing.T) {
 	mustWriteReport3Rules(t, mockStorage)
 
 	helpers.FailOnError(t, mockStorage.VoteOnRule(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteLike,
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteLike, "",
 	))
 	// just to be sure that addedAt != to updatedAt
 	time.Sleep(1 * time.Millisecond)
 	helpers.FailOnError(t, mockStorage.VoteOnRule(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteDislike,
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteDislike, "",
 	))
 
 	feedback, err := mockStorage.GetUserFeedbackOnRule(
@@ -356,7 +356,7 @@ func TestDBStorageVoteOnRuleDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
-	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
+	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone, "")
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -372,7 +372,7 @@ func TestDBStorageVoteOnRuleUnsupportedDriverError(t *testing.T) {
 	err = mockStorage.Init()
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
+	err = mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone, "")
 	assert.EqualError(t, err, "DB driver -1 is not supported")
 }
 
@@ -415,7 +415,7 @@ func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
-	err = mockStorage.VoteOnRule("non int", testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
+	err = mockStorage.VoteOnRule("non int", testdata.Rule1ID, testdata.UserID, types.UserVoteNone, "")
 	assert.Error(t, err)
 	const sqliteErrMessage = "CHECK constraint failed: cluster_rule_user_feedback"
 	const postgresErrMessage = "pq: invalid input syntax for integer"
@@ -444,7 +444,7 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 		ExpectExec().
 		WillReturnResult(driver.ResultNoRows)
 
-	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone)
+	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteNone, "")
 	helpers.FailOnError(t, err)
 
 	// TODO: uncomment when issues upthere resolved
@@ -470,10 +470,10 @@ func TestDBStorageGetVotes(t *testing.T) {
 	mustWriteReport3Rules(t, mockStorage)
 
 	helpers.FailOnError(t, mockStorage.VoteOnRule(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteLike,
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, types.UserVoteLike, "",
 	))
 	helpers.FailOnError(t, mockStorage.VoteOnRule(
-		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, types.UserVoteDislike,
+		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, types.UserVoteDislike, "",
 	))
 
 	feedbacks, err := mockStorage.GetUserFeedbackOnRules(
