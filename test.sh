@@ -38,14 +38,22 @@ function cleanup() {
         done
     }
 
+
     echo Exiting and killing all children...
+
     for pid in $(print_descendent_pids $$); do
+        # nicely asking a process to commit suicide
         if ! kill "$pid" &>/dev/null; then
-            # wait for it to stop correctly
-            sleep 10
-            kill -9 "$pid" &>/dev/null
+            # we even gave them plenty of time to think
+            sleep 2
         fi
     done
+
+    for pid in $(print_descendent_pids $$); do
+        # murdering those who're alive
+        kill -9 "$pid" &>/dev/null
+    done
+
     sleep 1
 }
 trap cleanup EXIT

@@ -29,9 +29,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -256,7 +258,7 @@ func stopService() int {
 	errCode := ExitStatusOK
 
 	if serverInstance != nil {
-		err := serverInstance.Stop(context.TODO())
+		err := serverInstance.Stop(context.Background())
 		if err != nil {
 			log.Error().Err(err).Msg("HTTP(s) server stop error")
 			errCode++
@@ -416,6 +418,24 @@ func performMigrations() int {
 }
 
 func main() {
+	signals := make(chan os.Signal, 1)
+
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-signals
+
+		fmt.Println("SIGINT or SIGTERM was sent, stopping the service...")
+
+		errCode := stopService()
+		if errCode != 0 {
+			log.Error().Msgf("unable to stop a service, code is %v", errCode)
+			os.Exit(errCode)
+		}
+
+		os.Exit(0)
+	}()
+
 	err := conf.LoadConfiguration(defaultConfigFilename)
 	if err != nil {
 		panic(err)
