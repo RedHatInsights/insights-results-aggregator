@@ -33,25 +33,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-// APIRequests is a counter vector for requests to endpoints
-var APIRequests = promauto.NewCounterVec(prometheus.CounterOpts{
-	Name: "api_endpoints_requests",
-	Help: "The total number of requests per endpoint",
-}, []string{"endpoint"})
-
-// APIResponsesTime collects the information about api response time per endpoint
-var APIResponsesTime = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Name:    "api_endpoints_response_time",
-	Help:    "API endpoints response time",
-	Buckets: prometheus.LinearBuckets(0, 20, 20),
-}, []string{"endpoint"})
-
-// APIResponseStatusCodes collects the information about api response status codes
-var APIResponseStatusCodes = promauto.NewCounterVec(prometheus.CounterOpts{
-	Name: "api_endpoints_status_codes",
-	Help: "API endpoints status codes",
-}, []string{"status_code"})
-
 // ConsumedMessages shows number of messages consumed from Kafka by aggregator
 var ConsumedMessages = promauto.NewCounter(prometheus.CounterOpts{
 	Name: "consumed_messages",
