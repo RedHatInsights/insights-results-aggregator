@@ -142,6 +142,8 @@ limitations under the License.
 	<div class="literal">&#34;regexp&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
 
+	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/types&#34;</div><div class="operator"></div>
+
 	<div class="literal">&#34;github.com/lib/pq&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/mattn/go-sqlite3&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
@@ -154,7 +156,7 @@ limitations under the License.
 	<td class="doc"><p>ErrOldReport is an error returned if a more recent already
 exists on the storage while attempting to write a report for a cluster.</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">ErrOldReport</div> <div class="operator">=</div> <div class="ident">errors</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="literal">&#34;More recent report already exists in storage&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">ErrOldReport</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrOldReport</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -162,19 +164,7 @@ exists on the storage while attempting to write a report for a cluster.</p>
       <tr class="section">
 	<td class="doc"><p>ItemNotFoundError shows that item with id ItemID wasn't found in the storage</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ItemNotFoundError</div> <div class="keyword">struct</div> <div class="operator">{</div>
-	<div class="ident">ItemID</div> <div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>Error returns error string</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">e</div> <div class="operator">*</div><div class="ident">ItemNotFoundError</div><div class="operator">)</div> <div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
-	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;Item with ID %&#43;v was not found in the storage&#34;</div><div class="operator">,</div> <div class="ident">e</div><div class="operator">.</div><div class="ident">ItemID</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ItemNotFoundError</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ItemNotFoundError</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -234,6 +224,25 @@ tableName and foreignKeyName can be empty for DBs not supporting it (SQLite)</p>
 	<td class="doc"><p>Details can reveal you information about specific item violating fk</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">Details</div> <div class="ident">string</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ValidationError validation error, for example when string is longer then expected</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ValidationError</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">ParamName</div>  <div class="ident">string</div><div class="operator"></div>
+	<div class="ident">ParamValue</div> <div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">ErrString</div>  <div class="ident">string</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="operator">(</div><div class="ident">e</div> <div class="operator">*</div><div class="ident">ValidationError</div><div class="operator">)</div> <div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div>
+		<div class="literal">&#34;Error during validating param &#39;%v&#39; with value &#39;%v&#39;. Error: &#39;%v&#39;&#34;</div><div class="operator">,</div>
+		<div class="ident">e</div><div class="operator">.</div><div class="ident">ParamName</div><div class="operator">,</div> <div class="ident">e</div><div class="operator">.</div><div class="ident">ParamValue</div><div class="operator">,</div> <div class="ident">e</div><div class="operator">.</div><div class="ident">ErrString</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

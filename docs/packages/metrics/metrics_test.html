@@ -135,8 +135,6 @@ limitations under the License.</p>
 
 <div class="keyword">import</div> <div class="operator">(</div>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
@@ -145,7 +143,6 @@ limitations under the License.</p>
 	<div class="literal">&#34;github.com/Shopify/sarama/mocks&#34;</div><div class="operator"></div>
 	<div class="ident">mapset</div> <div class="literal">&#34;github.com/deckarep/golang-set&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/prometheus/client_golang/prometheus&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/prometheus/client_golang/prometheus/testutil&#34;</div><div class="operator"></div>
 	<div class="ident">prommodels</div> <div class="literal">&#34;github.com/prometheus/client_model/go&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
@@ -153,7 +150,6 @@ limitations under the License.</p>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/broker&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/metrics&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/producer&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 	<div class="ident">ira_helpers</div> <div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
@@ -215,88 +211,6 @@ limitations under the License.</p>
 
 		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">2.0</div><div class="operator">,</div> <div class="ident">getCounterValue</div><div class="operator">(</div><div class="ident">metrics</div><div class="operator">.</div><div class="ident">ConsumedMessages</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testCaseTimeLimit</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">TestAPIRequestsMetric</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">RunTestWithTimeout</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>exposing storage creation out from AssertApiRequest makes
-this particular test much faster on postgres</p>
-</td>
-	<td class="code"><pre><code>		<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>resetting since go runs tests in 1 process</p>
-</td>
-	<td class="code"><pre><code>		<div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIRequests</div><div class="operator">.</div><div class="ident">Reset</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">endpoint</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">DefaultServerConfig</div><div class="operator">.</div><div class="ident">APIPrefix</div> <div class="operator">&#43;</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportEndpoint</div><div class="operator"></div>
-
-		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">0.0</div><div class="operator">,</div> <div class="ident">getCounterVecValue</div><div class="operator">(</div><div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIRequests</div><div class="operator">,</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
-			<div class="literal">&#34;endpoint&#34;</div><div class="operator">:</div> <div class="ident">endpoint</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-			<div class="ident">Method</div><div class="operator">:</div>       <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div>
-			<div class="ident">Endpoint</div><div class="operator">:</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportEndpoint</div><div class="operator">,</div>
-			<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">BadClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">}</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-			<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusBadRequest</div><div class="operator">,</div>
-			<div class="ident">Body</div><div class="operator">:</div> <div class="literal">`{
-				&#34;status&#34;: &#34;Error during parsing param &#39;cluster&#39; with value &#39;aaaa&#39;. Error: &#39;invalid UUID length: 4&#39;&#34;
-			}`</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">1.0</div><div class="operator">,</div> <div class="ident">getCounterVecValue</div><div class="operator">(</div><div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIRequests</div><div class="operator">,</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
-			<div class="literal">&#34;endpoint&#34;</div><div class="operator">:</div> <div class="ident">endpoint</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testCaseTimeLimit</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">TestAPIResponsesTimeMetric</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponsesTime</div><div class="operator">.</div><div class="ident">Reset</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">testutil</div><div class="operator">.</div><div class="ident">CollectAndCompare</div><div class="operator">(</div><div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponsesTime</div><div class="operator">,</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">NewReader</div><div class="operator">(</div><div class="literal">&#34;&#34;</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponsesTime</div><div class="operator">.</div><div class="ident">With</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Labels</div><div class="operator">{</div><div class="literal">&#34;endpoint&#34;</div><div class="operator">:</div> <div class="literal">&#34;test&#34;</div><div class="operator">}</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Observe</div><div class="operator">(</div><div class="literal">5.6</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">expected</div> <div class="operator">:=</div> <div class="literal">`
-		# HELP api_endpoints_response_time API endpoints response time
-		# TYPE api_endpoints_response_time histogram
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;0&#34;} 0
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;20&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;40&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;60&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;80&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;100&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;120&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;140&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;160&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;180&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;200&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;220&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;240&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;260&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;280&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;300&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;320&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;340&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;360&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;380&#34;} 1
-		api_endpoints_response_time_bucket{endpoint=&#34;test&#34;,le=&#34;&#43;Inf&#34;} 1
-		api_endpoints_response_time_sum{endpoint=&#34;test&#34;} 5.6
-		api_endpoints_response_time_count{endpoint=&#34;test&#34;} 1
-	`</div><div class="operator"></div>
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">testutil</div><div class="operator">.</div><div class="ident">CollectAndCompare</div><div class="operator">(</div><div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponsesTime</div><div class="operator">,</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">NewReader</div><div class="operator">(</div><div class="ident">expected</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestProducedMessagesMetric</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
@@ -361,75 +275,6 @@ this particular test much faster on postgres</p>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">assertCounterValue</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">100</div><div class="operator">,</div> <div class="ident">metrics</div><div class="operator">.</div><div class="ident">WrittenReports</div><div class="operator">,</div> <div class="ident">initValue</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">TestApiResponseStatusCodesMetric_StatusOK</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">RunTestWithTimeout</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>exposing storage creation out from AssertApiRequest makes
-this particular test much faster on postgres</p>
-</td>
-	<td class="code"><pre><code>		<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponseStatusCodes</div><div class="operator">.</div><div class="ident">Reset</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">0.0</div><div class="operator">,</div> <div class="ident">getCounterVecValue</div><div class="operator">(</div><div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponseStatusCodes</div><div class="operator">,</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
-			<div class="literal">&#34;status_code&#34;</div><div class="operator">:</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="keyword">for</div> <div class="ident">i</div> <div class="operator">:=</div> <div class="literal">0</div><div class="operator">;</div> <div class="ident">i</div> <div class="operator">&lt;</div> <div class="literal">15</div><div class="operator">;</div> <div class="ident">i</div><div class="operator">&#43;&#43;</div> <div class="operator">{</div>
-			<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-				<div class="ident">Method</div><div class="operator">:</div>   <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div>
-				<div class="ident">Endpoint</div><div class="operator">:</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">MainEndpoint</div><div class="operator">,</div>
-			<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-				<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div>
-				<div class="ident">Body</div><div class="operator">:</div>       <div class="literal">`{&#34;status&#34;: &#34;ok&#34;}`</div><div class="operator">,</div>
-			<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-
-		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">15.0</div><div class="operator">,</div> <div class="ident">getCounterVecValue</div><div class="operator">(</div><div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponseStatusCodes</div><div class="operator">,</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
-			<div class="literal">&#34;status_code&#34;</div><div class="operator">:</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testCaseTimeLimit</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">TestApiResponseStatusCodesMetric_StatusBadRequest</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">RunTestWithTimeout</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>exposing storage creation out from AssertApiRequest makes
-this particular test much faster on postgres</p>
-</td>
-	<td class="code"><pre><code>		<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponseStatusCodes</div><div class="operator">.</div><div class="ident">Reset</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">0.0</div><div class="operator">,</div> <div class="ident">getCounterVecValue</div><div class="operator">(</div><div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponseStatusCodes</div><div class="operator">,</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
-			<div class="literal">&#34;status_code&#34;</div><div class="operator">:</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">StatusBadRequest</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-			<div class="ident">Method</div><div class="operator">:</div>       <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div>
-			<div class="ident">Endpoint</div><div class="operator">:</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportEndpoint</div><div class="operator">,</div>
-			<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">BadClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">}</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-			<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusBadRequest</div><div class="operator">,</div>
-			<div class="ident">Body</div><div class="operator">:</div> <div class="literal">`{
-				&#34;status&#34;: &#34;Error during parsing param &#39;cluster&#39; with value &#39;aaaa&#39;. Error: &#39;invalid UUID length: 4&#39;&#34;
-			}`</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">1.0</div><div class="operator">,</div> <div class="ident">getCounterVecValue</div><div class="operator">(</div><div class="ident">metrics</div><div class="operator">.</div><div class="ident">APIResponseStatusCodes</div><div class="operator">,</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
-			<div class="literal">&#34;status_code&#34;</div><div class="operator">:</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">StatusBadRequest</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testCaseTimeLimit</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

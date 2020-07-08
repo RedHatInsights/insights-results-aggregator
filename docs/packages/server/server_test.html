@@ -184,7 +184,22 @@ limitations under the License.
 		<div class="literal">&#34;api/prefix/organizations/2/clusters/cluster_id/users/1/report&#34;</div><div class="operator">,</div>
 		<div class="ident">httputils</div><div class="operator">.</div><div class="ident">MakeURLToEndpoint</div><div class="operator">(</div><div class="literal">&#34;api/prefix/&#34;</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportEndpoint</div><div class="operator">,</div> <div class="literal">2</div><div class="operator">,</div> <div class="literal">&#34;cluster_id&#34;</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>assert.Equal(
+    t,
+    &quot;&quot;,
+    httputils.MakeURLToEndpoint(
+        &quot;api/prefix/&quot;,
+        server.LikeRuleEndpoint,
+        []interface{}{testdata.ClusterName, testdata.BadRuleID, testdata.UserID},
+    ),
+)</p>
+</td>
+	<td class="code"><pre><code><div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestListOfClustersForNonExistingOrganization</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">config</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
@@ -565,6 +580,74 @@ helpers.FailOnError(t, err)</p>
 			&#34;status&#34;: &#34;Error during parsing param &#39;rule_id&#39; with value &#39;rule id with spaces&#39;. Error: &#39;invalid rule ID, it must contain only from latin characters, number, underscores or dots&#39;&#34;
 		}`</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkBadRuleFeedbackRequest tries to send rule feedback with bad content and
+then check if that content is rejected properly.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkBadRuleFeedbackRequest</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">,</div> <div class="ident">message</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">expectedStatus</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">requestBody</div> <div class="operator">:=</div> <div class="literal">`{
+			&#34;message&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">message</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
+	}`</div><div class="operator"></div>
+
+	<div class="ident">responseBody</div> <div class="operator">:=</div> <div class="literal">`{
+			&#34;status&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">expectedStatus</div> <div class="operator">&#43;</div> <div class="literal">`&#34;
+	}`</div><div class="operator"></div>
+
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3Rules</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">config</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
+		<div class="ident">Method</div><div class="operator">:</div>       <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPut</div><div class="operator">,</div>
+		<div class="ident">Endpoint</div><div class="operator">:</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">LikeRuleEndpoint</div><div class="operator">,</div>
+		<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">}</div><div class="operator">,</div>
+		<div class="ident">Body</div><div class="operator">:</div>         <div class="ident">requestBody</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
+		<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusBadRequest</div><div class="operator">,</div>
+		<div class="ident">Body</div><div class="operator">:</div>       <div class="ident">responseBody</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestRuleFeedbackErrorLongMessage checks if message longer than 250 bytes is
+rejected properly.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestRuleFeedbackErrorLongMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">checkBadRuleFeedbackRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div>
+		<div class="literal">&#34;Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message&#34;</div><div class="operator">,</div>
+		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message&#39;. Error: &#39;String is longer then 250&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestRuleFeedbackErrorLongMessageWithUnicodeCharacters checks whether the
+message containing less than 250 Unicode characters, but longer than 250
+bytes, is rejected</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestRuleFeedbackErrorLongMessageWithUnicodeCharacters</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">checkBadRuleFeedbackRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>this string has length 250 BYTES, but just 120 characters</p>
+</td>
+	<td class="code"><pre><code>		<div class="literal">&#34;ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů&#34;</div><div class="operator">,</div>
+		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů&#39;. Error: &#39;String is longer then 250&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestHTTPServer_GetVoteOnRule_BadRuleID</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
