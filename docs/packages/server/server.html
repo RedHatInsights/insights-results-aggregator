@@ -183,7 +183,13 @@ disable &quot;G108 (CWE-): Profiling endpoint is automatically exposed on /debug
 	<td class="code"><pre><code>	<div class="ident">_</div> <div class="literal">&#34;net/http/pprof&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;path/filepath&#34;</div><div class="operator"></div>
 
-	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/responses&#34;</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>httputils &quot;github.com/RedHatInsights/insights-operator-utils/http&quot;</p>
+</td>
+	<td class="code"><pre><code>	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/responses&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/gorilla/mux&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 
@@ -453,8 +459,13 @@ as opposed to no rules hit for the cluster</p>
 	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Initializing HTTP server at &#39;%s&#39;&#34;</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Address</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">router</div> <div class="operator">:=</div> <div class="ident">mux</div><div class="operator">.</div><div class="ident">NewRouter</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">StrictSlash</div><div class="operator">(</div><div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">router</div><div class="operator">.</div><div class="ident">Use</div><div class="operator">(</div><div class="ident">server</div><div class="operator">.</div><div class="ident">LogRequest</div><div class="operator">)</div><div class="operator"></div>
-
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>router.Use(httputils.LogRequest)</p>
+</td>
+	<td class="code"><pre><code>
 	<div class="ident">apiPrefix</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">APIPrefix</div><div class="operator"></div>
 
 	<div class="ident">metricsURL</div> <div class="operator">:=</div> <div class="ident">apiPrefix</div> <div class="operator">&#43;</div> <div class="ident">MetricsEndpoint</div><div class="operator"></div>

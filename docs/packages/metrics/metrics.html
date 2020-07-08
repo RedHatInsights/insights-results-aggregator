@@ -161,40 +161,6 @@ and indirectly to Grafana. Currently, the following metrics are exposed:</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>APIRequests is a counter vector for requests to endpoints</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">APIRequests</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounterVec</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
-	<div class="ident">Name</div><div class="operator">:</div> <div class="literal">&#34;api_endpoints_requests&#34;</div><div class="operator">,</div>
-	<div class="ident">Help</div><div class="operator">:</div> <div class="literal">&#34;The total number of requests per endpoint&#34;</div><div class="operator">,</div>
-<div class="operator">}</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="literal">&#34;endpoint&#34;</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>APIResponsesTime collects the information about api response time per endpoint</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">APIResponsesTime</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewHistogramVec</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">HistogramOpts</div><div class="operator">{</div>
-	<div class="ident">Name</div><div class="operator">:</div>    <div class="literal">&#34;api_endpoints_response_time&#34;</div><div class="operator">,</div>
-	<div class="ident">Help</div><div class="operator">:</div>    <div class="literal">&#34;API endpoints response time&#34;</div><div class="operator">,</div>
-	<div class="ident">Buckets</div><div class="operator">:</div> <div class="ident">prometheus</div><div class="operator">.</div><div class="ident">LinearBuckets</div><div class="operator">(</div><div class="literal">0</div><div class="operator">,</div> <div class="literal">20</div><div class="operator">,</div> <div class="literal">20</div><div class="operator">)</div><div class="operator">,</div>
-<div class="operator">}</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="literal">&#34;endpoint&#34;</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>APIResponseStatusCodes collects the information about api response status codes</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">APIResponseStatusCodes</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounterVec</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
-	<div class="ident">Name</div><div class="operator">:</div> <div class="literal">&#34;api_endpoints_status_codes&#34;</div><div class="operator">,</div>
-	<div class="ident">Help</div><div class="operator">:</div> <div class="literal">&#34;API endpoints status codes&#34;</div><div class="operator">,</div>
-<div class="operator">}</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="literal">&#34;status_code&#34;</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
 	<td class="doc"><p>ConsumedMessages shows number of messages consumed from Kafka by aggregator</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">ConsumedMessages</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>

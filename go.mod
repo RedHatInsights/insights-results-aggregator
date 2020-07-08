@@ -7,7 +7,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/RedHatInsights/cloudwatch v0.0.0-20200512151223-b0b55757a24b
 	github.com/RedHatInsights/insights-content-service v0.0.0-20200619153839-23a428468a08
-	github.com/RedHatInsights/insights-operator-utils v1.2.2
+	github.com/RedHatInsights/insights-operator-utils v1.3.2
 	github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200622112651-e5a7c1d79015
 	github.com/RedHatInsights/insights-results-aggregator-utils v0.0.0-20200616074815-67f30b0e724d // indirect
 	github.com/RedHatInsights/insights-results-smart-proxy v0.0.0-20200619163313-7d5e376de430 // indirect
@@ -27,7 +27,7 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mozillazg/request v0.8.0 // indirect
 	github.com/nash-io/jocko v0.9.0 // indirect
-	github.com/prometheus/client_golang v1.6.0
+	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/client_model v0.2.0
 	github.com/rs/zerolog v1.19.0
 	github.com/spf13/viper v1.7.0

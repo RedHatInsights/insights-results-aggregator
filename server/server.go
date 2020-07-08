@@ -53,6 +53,7 @@ import (
 	_ "net/http/pprof"
 	"path/filepath"
 
+	httputils "github.com/RedHatInsights/insights-operator-utils/http"
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -268,7 +269,7 @@ func (server *HTTPServer) Initialize() http.Handler {
 	log.Info().Msgf("Initializing HTTP server at '%s'", server.Config.Address)
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.Use(server.LogRequest)
+	router.Use(httputils.LogRequest)
 
 	apiPrefix := server.Config.APIPrefix
 

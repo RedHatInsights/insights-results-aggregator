@@ -33,8 +33,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
-	httputils "github.com/RedHatInsights/insights-operator-utils/http"
-
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -57,14 +55,6 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 	if expected != actual {
 		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
 	}
-}
-
-func TestMakeURLToEndpoint(t *testing.T) {
-	assert.Equal(
-		t,
-		"api/prefix/organizations/2/clusters/cluster_id/users/1/report",
-		httputils.MakeURLToEndpoint("api/prefix/", server.ReportEndpoint, 2, "cluster_id", 1),
-	)
 }
 
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {

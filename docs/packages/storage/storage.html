@@ -154,7 +154,6 @@ DataSource - specification of data source. The content of this parameter depends
 	<div class="literal">&#34;database/sql&#34;</div><div class="operator"></div>
 	<div class="ident">sql_driver</div> <div class="literal">&#34;database/sql/driver&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;os&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
@@ -163,7 +162,6 @@ DataSource - specification of data source. The content of this parameter depends
 	<div class="ident">_</div> <div class="literal">&#34;github.com/lib/pq&#34;</div> <div class="operator"></div><div class="comment">// PostgreSQL database driver</div>
 	<div class="literal">&#34;github.com/mattn/go-sqlite3&#34;</div><div class="operator"></div>
 	<div class="ident">_</div> <div class="literal">&#34;github.com/mattn/go-sqlite3&#34;</div> <div class="operator"></div><div class="comment">// SQLite database driver</div>
-	<div class="literal">&#34;github.com/rs/zerolog&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/metrics&#34;</div><div class="operator"></div>
@@ -198,6 +196,7 @@ DataSource - specification of data source. The content of this parameter depends
 		<div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
 		<div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 		<div class="ident">userVote</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVote</div><div class="operator">,</div>
+		<div class="ident">voteMessage</div> <div class="ident">string</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
 	<div class="ident">AddOrUpdateFeedbackOnRule</div><div class="operator">(</div>
 		<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
@@ -335,8 +334,7 @@ checks if it's supported and returns driver type, driver name, dataSource and er
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">if</div> <div class="ident">configuration</div><div class="operator">.</div><div class="ident">LogSQLQueries</div> <div class="operator">{</div>
-		<div class="ident">logger</div> <div class="operator">:=</div> <div class="ident">zerolog</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">os</div><div class="operator">.</div><div class="ident">Stdout</div><div class="operator">)</div><div class="operator">.</div><div class="ident">With</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Str</div><div class="operator">(</div><div class="literal">&#34;type&#34;</div><div class="operator">,</div> <div class="literal">&#34;SQL&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Logger</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">driverName</div> <div class="operator">=</div> <div class="ident">InitSQLDriverWithLogs</div><div class="operator">(</div><div class="ident">driver</div><div class="operator">,</div> <div class="ident">driverName</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">logger</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">driverName</div> <div class="operator">=</div> <div class="ident">InitSQLDriverWithLogs</div><div class="operator">(</div><div class="ident">driver</div><div class="operator">,</div> <div class="ident">driverName</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">return</div><div class="operator"></div>
@@ -521,7 +519,7 @@ tasks necessary for further service operation.</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>ReadReportForCluster reads result (health status) for selected cluster for given organization</p>
+	<td class="doc"><p>ReadReportForCluster reads result (health status) for selected cluster</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">ReadReportForCluster</div><div class="operator">(</div>
 	<div class="ident">orgID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">clusterName</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>

@@ -136,8 +136,10 @@ limitations under the License.</p>
 <div class="keyword">import</div> <div class="operator">(</div>
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-content-service/content&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/Shopify/sarama&#34;</div><div class="operator"></div>
+
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
@@ -194,9 +196,7 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>ReadReportForCluster noop</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">ReadReportForCluster</div><div class="operator">(</div>
-	<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
-<div class="operator">)</div> <div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Timestamp</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">ReadReportForCluster</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Timestamp</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -250,7 +250,7 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>VoteOnRule noop</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVote</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVote</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -302,10 +302,70 @@ limitations under the License.</p>
       </tr>
       
       <tr class="section">
+	<td class="doc"><p>LoadRuleContent noop</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">LoadRuleContent</div><div class="operator">(</div><div class="ident">content</div><div class="operator">.</div><div class="ident">RuleContentDirectory</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>GetRuleByID noop</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">GetRuleByID</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">types</div><div class="operator">.</div><div class="ident">Rule</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
 	<td class="doc"><p>GetOrgIDByClusterID noop</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">GetOrgIDByClusterID</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="literal">0</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>CreateRule noop</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">CreateRule</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">Rule</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>DeleteRule noop</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">DeleteRule</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>CreateRuleErrorKey noop</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">CreateRuleErrorKey</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleErrorKey</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>DeleteRuleErrorKey noop</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">DeleteRuleErrorKey</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -381,6 +441,18 @@ limitations under the License.</p>
 	<div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">,</div>
 	<div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 <div class="operator">)</div> <div class="operator">(</div><div class="keyword">map</div><div class="operator">[</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">UserVote</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>GetRuleWithContent noop</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">GetRuleWithContent</div><div class="operator">(</div>
+	<div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">,</div>
+<div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleWithContent</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
