@@ -461,6 +461,16 @@ func TestRuleFeedbackErrorLongMessage(t *testing.T) {
 		"Error during validating param 'message' with value 'Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message'. Error: 'String is longer then 250'")
 }
 
+// TestRuleFeedbackErrorLongMessageWithUnicodeCharacters checks whether the
+// message containing less than 250 Unicode characters, but longer than 250
+// bytes, is rejected
+func TestRuleFeedbackErrorLongMessageWithUnicodeCharacters(t *testing.T) {
+	checkBadRuleFeedbackRequest(t,
+		// this string has length 250 BYTES, but just 120 characters
+		"ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů",
+		"Error during validating param 'message' with value 'ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů'. Error: 'String is longer then 250'")
+}
+
 func TestHTTPServer_GetVoteOnRule_BadRuleID(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
 		Method:       http.MethodGet,
