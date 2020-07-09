@@ -65,8 +65,9 @@ const (
 )
 
 var (
-	serverInstance   *server.HTTPServer
-	consumerInstance consumer.Consumer
+	serverInstance      *server.HTTPServer
+	consumerInstance    consumer.Consumer
+	serverInstanceReady = sync.NewCond(&sync.Mutex{})
 
 	// BuildVersion contains the major.minor version of the CLI client
 	BuildVersion = "*not set*"
@@ -190,7 +191,14 @@ func startServer() int {
 	defer closeStorage(dbStorage)
 
 	serverCfg := conf.GetServerConfiguration()
-	serverInstance = server.New(serverCfg, dbStorage)
+
+	s := server.New(serverCfg, dbStorage)
+
+	serverInstanceReady.L.Lock()
+	serverInstance = s
+	serverInstanceReady.Broadcast()
+	serverInstanceReady.L.Unlock()
+
 	err = serverInstance.Start()
 	if err != nil {
 		log.Error().Err(err).Msg("HTTP(s) start error")
@@ -237,12 +245,13 @@ func startService() int {
 }
 
 func waitForServiceToStart() {
+	serverInstanceReady.L.Lock()
+	serverInstanceReady.Wait()
+	serverInstanceReady.L.Unlock()
+
 	for {
 		isStarted := true
 		if conf.GetBrokerConfiguration().Enabled && consumerInstance == nil {
-			isStarted = false
-		}
-		if serverInstance == nil {
 			isStarted = false
 		}
 
@@ -257,12 +266,14 @@ func waitForServiceToStart() {
 func stopService() int {
 	errCode := ExitStatusOK
 
-	if serverInstance != nil {
-		err := serverInstance.Stop(context.Background())
-		if err != nil {
-			log.Error().Err(err).Msg("HTTP(s) server stop error")
-			errCode++
-		}
+	serverInstanceReady.L.Lock()
+	serverInstanceReady.Wait()
+	serverInstanceReady.L.Unlock()
+
+	err := serverInstance.Stop(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("HTTP(s) server stop error")
+		errCode++
 	}
 
 	if consumerInstance != nil {
@@ -417,7 +428,7 @@ func performMigrations() int {
 	}
 }
 
-func main() {
+func stopServiceOnProcessStopSignal() {
 	signals := make(chan os.Signal, 1)
 
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
@@ -425,17 +436,22 @@ func main() {
 	go func() {
 		<-signals
 
+		serverInstanceReady.L.Lock()
+		serverInstanceReady.Wait()
+		serverInstanceReady.L.Unlock()
+
 		fmt.Println("SIGINT or SIGTERM was sent, stopping the service...")
 
 		errCode := stopService()
 		if errCode != 0 {
-			log.Error().Msgf("unable to stop a service, code is %v", errCode)
+			log.Error().Msgf("unable to stop the service, code is %v", errCode)
 			os.Exit(errCode)
 		}
-
-		os.Exit(0)
+		os.Exit(ExitStatusOK)
 	}()
+}
 
+func main() {
 	err := conf.LoadConfiguration(defaultConfigFilename)
 	if err != nil {
 		panic(err)
@@ -463,6 +479,8 @@ func handleCommand(command string) int {
 	switch command {
 	case "start-service":
 		printVersionInfo()
+
+		stopServiceOnProcessStopSignal()
 
 		return startService()
 	case "help", "print-help":

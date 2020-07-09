@@ -38,10 +38,11 @@ function cleanup() {
         done
     }
 
-
     echo Exiting and killing all children...
 
-    for pid in $(print_descendent_pids $$); do
+    children=$(print_descendent_pids $$)
+
+    for pid in $(echo -en "$children"); do
         # nicely asking a process to commit suicide
         if ! kill "$pid" &>/dev/null; then
             # we even gave them plenty of time to think
@@ -49,8 +50,9 @@ function cleanup() {
         fi
     done
 
-    for pid in $(print_descendent_pids $$); do
+    for pid in $(echo -en "$children"); do
         # murdering those who're alive
+        echo killing pid $pid
         kill -9 "$pid" &>/dev/null
     done
 
