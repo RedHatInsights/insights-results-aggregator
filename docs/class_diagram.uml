@@ -1,0 +1,635 @@
+@startuml
+namespace broker {
+    class Configuration << (S,Aquamarine) >> {
+        + Address string
+        + Topic string
+        + PayloadTrackerTopic string
+        + ServiceName string
+        + Group string
+        + Enabled bool
+        + OrgWhitelist golang-set.Set
+        + OrgWhitelistEnabled bool
+
+    }
+}
+
+
+namespace consumer {
+    interface Consumer  {
+        + Serve() 
+        + Close() error
+        + ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error)
+
+    }
+    class KafkaConsumer << (S,Aquamarine) >> {
+        - numberOfSuccessfullyConsumedMessages uint64
+        - numberOfErrorsConsumingMessages uint64
+        - ready <font color=blue>chan</font> bool
+        - cancel context.CancelFunc
+        - payloadTrackerProducer *producer.KafkaProducer
+
+        + Configuration broker.Configuration
+        + ConsumerGroup sarama.ConsumerGroup
+        + Storage storage.Storage
+
+        + HandleMessage(msg *sarama.ConsumerMessage) 
+        + ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error)
+        + Serve() 
+        + Setup( sarama.ConsumerGroupSession) error
+        + Cleanup( sarama.ConsumerGroupSession) error
+        + ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error
+        + Close() error
+        + GetNumberOfSuccessfullyConsumedMessages() uint64
+        + GetNumberOfErrorsConsumingMessages() uint64
+
+    }
+    class consumer.Report << (T, #FF7700) >>  {
+    }
+    class incomingMessage << (S,Aquamarine) >> {
+        + Organization *types.OrgID
+        + ClusterName *types.ClusterName
+        + Report *Report
+        + LastChecked string
+        + RequestID types.RequestID
+
+    }
+    class "<font color=blue>map</font>[string]*json.RawMessage" as fontcolorbluemapfontstringjsonRawMessage {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+}
+
+"consumer.Consumer" <|-- "consumer.KafkaConsumer"
+"producer.Producer" <|-- "consumer.KafkaConsumer"
+
+namespace helpers {
+    class MockConsumerGroupClaim << (S,Aquamarine) >> {
+        - channel <font color=blue>chan</font> *sarama.ConsumerMessage
+
+        + Topic() string
+        + Partition() int32
+        + InitialOffset() int64
+        + HighWaterMarkOffset() int64
+        + Messages() <font color=blue>chan</font> *sarama.ConsumerMessage
+
+    }
+    class MockConsumerGroupSession << (S,Aquamarine) >> {
+        + Claims() <font color=blue>map</font>[string][]int32
+        + MemberID() string
+        + GenerationID() int32
+        + MarkOffset(topic string, partition int32, offset int64, metadata string) 
+        + ResetOffset(topic string, partition int32, offset int64, metadata string) 
+        + MarkMessage(msg *sarama.ConsumerMessage, metadata string) 
+        + Context() context.Context
+
+    }
+    class MockKafkaConsumer << (S,Aquamarine) >> {
+        - topic string
+        - messages []string
+
+        + KafkaConsumer consumer.KafkaConsumer
+
+        + Serve() 
+        + Close(t testing.TB) 
+
+    }
+    class helpers.APIRequest << (T, #FF7700) >>  {
+    }
+    class helpers.APIResponse << (T, #FF7700) >>  {
+    }
+    class "helpers.APIRequest" as helpersAPIRequest {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "helpers.APIResponse" as helpersAPIResponse {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+}
+
+
+namespace logger {
+    class CloudWatchConfiguration << (S,Aquamarine) >> {
+        + AWSAccessID string
+        + AWSSecretKey string
+        + AWSSessionToken string
+        + AWSRegion string
+        + LogGroup string
+        + StreamName string
+        + CreateStreamIfNotExists bool
+        + Debug bool
+
+    }
+    class LoggingConfiguration << (S,Aquamarine) >> {
+        + Debug bool
+        + LogLevel string
+        + LoggingToCloudWatchEnabled bool
+
+    }
+    class SaramaZerologger << (S,Aquamarine) >> {
+        - zerologger zerolog.Logger
+
+        - logMessage(format string, params ...<font color=blue>interface</font>{}) 
+
+        + Print(params ...<font color=blue>interface</font>{}) 
+        + Printf(format string, params ...<font color=blue>interface</font>{}) 
+        + Println(v ...<font color=blue>interface</font>{}) 
+
+    }
+    class UnJSONWriter << (S,Aquamarine) >> {
+        + Write(bytes []byte) (int, error)
+
+    }
+}
+"io.Writer" *-- "logger.UnJSONWriter"
+
+
+namespace migration {
+    class Migration << (S,Aquamarine) >> {
+        + StepUp Step
+        + StepDown Step
+
+    }
+    class migration.Step << (T, #FF7700) >>  {
+    }
+    class migration.Version << (T, #FF7700) >>  {
+    }
+    class "<font color=blue>func</font>(*sql.Tx, types.DBDriver) error" as fontcolorbluefuncfontsqlTxtypesDBDrivererror {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+}
+
+
+namespace producer {
+    class KafkaProducer << (S,Aquamarine) >> {
+        + Configuration broker.Configuration
+        + Producer sarama.SyncProducer
+
+        - produceMessage(trackerMsg PayloadTrackerMessage) (int32, int64, error)
+
+        + TrackPayload(reqID types.RequestID, timestamp time.Time, status string) error
+        + Close() error
+
+    }
+    class PayloadTrackerMessage << (S,Aquamarine) >> {
+        + Service string
+        + RequestID string
+        + Status string
+        + Date string
+
+    }
+    interface Producer  {
+        + Close() error
+
+    }
+}
+
+"producer.Producer" <|-- "producer.KafkaProducer"
+
+namespace server {
+    class AuthenticationError << (S,Aquamarine) >> {
+        - errString string
+
+        + Error() string
+
+    }
+    class Configuration << (S,Aquamarine) >> {
+        + Address string
+        + APIPrefix string
+        + APISpecFile string
+        + Debug bool
+        + Auth bool
+        + AuthType string
+
+    }
+    class HTTPServer << (S,Aquamarine) >> {
+        + Config Configuration
+        + Storage storage.Storage
+        + Serv *http.Server
+
+        - addDebugEndpointsToRouter(router *mux.Router) 
+        - addEndpointsToRouter(router *mux.Router) 
+        - mainEndpoint(writer http.ResponseWriter, _ *http.Request) 
+        - listOfOrganizations(writer http.ResponseWriter, _ *http.Request) 
+        - listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) 
+        - readReportForCluster(writer http.ResponseWriter, request *http.Request) 
+        - checkUserClusterPermissions(writer http.ResponseWriter, request *http.Request, clusterID types.ClusterName) error
+        - deleteOrganizations(writer http.ResponseWriter, request *http.Request) 
+        - deleteClusters(writer http.ResponseWriter, request *http.Request) 
+        - serveAPISpecFile(writer http.ResponseWriter, request *http.Request) 
+        - handleOptionsMethod(nextHandler http.Handler) http.Handler
+        - getAuthTokenHeader(w http.ResponseWriter, r *http.Request) (string, error)
+        - readFeedbackRequestBody(writer http.ResponseWriter, request *http.Request) (types.FeedbackRequest, bool)
+        - likeRule(writer http.ResponseWriter, request *http.Request) 
+        - dislikeRule(writer http.ResponseWriter, request *http.Request) 
+        - resetVoteOnRule(writer http.ResponseWriter, request *http.Request) 
+        - voteOnRule(writer http.ResponseWriter, request *http.Request, userVote types.UserVote) 
+        - getVoteOnRule(writer http.ResponseWriter, request *http.Request) 
+        - readClusterRuleUserParams(writer http.ResponseWriter, request *http.Request) (types.ClusterName, types.RuleID, types.UserID, bool)
+        - disableRuleForCluster(writer http.ResponseWriter, request *http.Request) 
+        - enableRuleForCluster(writer http.ResponseWriter, request *http.Request) 
+        - toggleRuleForCluster(writer http.ResponseWriter, request *http.Request, toggleRule storage.RuleToggle) 
+        - getFeedbackAndTogglesOnRules(clusterName types.ClusterName, userID types.UserID, rules []types.RuleOnReport) ([]types.RuleOnReport, error)
+
+        + LogRequest(nextHandler http.Handler) http.Handler
+        + Initialize() http.Handler
+        + Start() error
+        + Stop(ctx context.Context) error
+        + Authentication(next http.Handler, noAuthURLs []string) http.Handler
+        + GetCurrentUserID(request *http.Request) (types.UserID, error)
+
+    }
+    class NoBodyError << (S,Aquamarine) >> {
+        + Error() string
+
+    }
+    class RouterMissingParamError << (S,Aquamarine) >> {
+        - paramName string
+
+        + Error() string
+
+    }
+    class RouterParsingError << (S,Aquamarine) >> {
+        - paramName string
+        - paramValue <font color=blue>interface</font>{}
+        - errString string
+
+        + Error() string
+
+    }
+    class loggingResponseWriter << (S,Aquamarine) >> {
+        + WriteHeader(statusCode int) 
+
+    }
+    class server.Identity << (T, #FF7700) >>  {
+    }
+    class server.Internal << (T, #FF7700) >>  {
+    }
+    class server.JWTPayload << (T, #FF7700) >>  {
+    }
+    class server.Token << (T, #FF7700) >>  {
+    }
+    class "types.Internal" as typesInternal {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.Identity" as typesIdentity {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.Token" as typesToken {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.JWTPayload" as typesJWTPayload {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+}
+"http.ResponseWriter" *-- "server.loggingResponseWriter"
+
+
+namespace storage {
+    class ClusterRuleToggle << (S,Aquamarine) >> {
+        + ClusterID types.ClusterName
+        + RuleID types.RuleID
+        + UserID types.UserID
+        + Disabled RuleToggle
+        + DisabledAt sql.NullTime
+        + EnabledAt sql.NullTime
+        + UpdatedAt sql.NullTime
+
+    }
+    class Configuration << (S,Aquamarine) >> {
+        + Driver string
+        + SQLiteDataSource string
+        + LogSQLQueries bool
+        + PGUsername string
+        + PGPassword string
+        + PGHost string
+        + PGPort int
+        + PGDBName string
+        + PGParams string
+
+    }
+    class DBStorage << (S,Aquamarine) >> {
+        - connection *sql.DB
+        - dbDriverType types.DBDriver
+        - clustersLastChecked <font color=blue>map</font>[types.ClusterName]time.Time
+
+        - addOrUpdateUserFeedbackOnRuleForCluster(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID, userVotePtr *types.UserVote, messagePtr *string) error
+        - constructUpsertClusterRuleUserFeedback(updateVote bool, updateMessage bool) (string, error)
+        - getReportUpsertQuery() (string, error)
+
+        + ToggleRuleForCluster(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID, ruleToggle RuleToggle) error
+        + GetFromClusterRuleToggle(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID) (*ClusterRuleToggle, error)
+        + GetTogglesForRules(clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID) (<font color=blue>map</font>[types.RuleID]bool, error)
+        + DeleteFromRuleClusterToggle(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID) error
+        + VoteOnRule(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID, userVote types.UserVote, voteMessage string) error
+        + AddOrUpdateFeedbackOnRule(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID, message string) error
+        + GetUserFeedbackOnRule(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID) (*UserFeedbackOnRule, error)
+        + GetUserFeedbackOnRules(clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID) (<font color=blue>map</font>[types.RuleID]types.UserVote, error)
+        + MigrateToLatest() error
+        + Init() error
+        + Close() error
+        + ListOfOrgs() ([]types.OrgID, error)
+        + ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
+        + GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
+        + ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
+        + ReadReportForClusterByClusterName(clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
+        + GetLatestKafkaOffset() (types.KafkaOffset, error)
+        + WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport, lastCheckedTime time.Time, kafkaOffset types.KafkaOffset) error
+        + ReportsCount() (int, error)
+        + DeleteReportsForOrg(orgID types.OrgID) error
+        + DeleteReportsForCluster(clusterName types.ClusterName) error
+        + GetConnection() *sql.DB
+        + WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
+        + GetDBDriverType() types.DBDriver
+
+    }
+    class NoopStorage << (S,Aquamarine) >> {
+        + Init() error
+        + Close() error
+        + ListOfOrgs() ([]types.OrgID, error)
+        + ListOfClustersForOrg( types.OrgID) ([]types.ClusterName, error)
+        + ReadReportForCluster( types.OrgID,  types.ClusterName) (types.ClusterReport, types.Timestamp, error)
+        + ReadReportForClusterByClusterName( types.ClusterName) (types.ClusterReport, types.Timestamp, error)
+        + GetLatestKafkaOffset() (types.KafkaOffset, error)
+        + WriteReportForCluster( types.OrgID,  types.ClusterName,  types.ClusterReport,  time.Time,  types.KafkaOffset) error
+        + ReportsCount() (int, error)
+        + VoteOnRule( types.ClusterName,  types.RuleID,  types.UserID,  types.UserVote,  string) error
+        + AddOrUpdateFeedbackOnRule( types.ClusterName,  types.RuleID,  types.UserID,  string) error
+        + GetUserFeedbackOnRule( types.ClusterName,  types.RuleID,  types.UserID) (*UserFeedbackOnRule, error)
+        + DeleteReportsForOrg( types.OrgID) error
+        + DeleteReportsForCluster( types.ClusterName) error
+        + LoadRuleContent( content.RuleContentDirectory) error
+        + GetRuleByID( types.RuleID) (*types.Rule, error)
+        + GetOrgIDByClusterID( types.ClusterName) (types.OrgID, error)
+        + CreateRule( types.Rule) error
+        + DeleteRule( types.RuleID) error
+        + CreateRuleErrorKey( types.RuleErrorKey) error
+        + DeleteRuleErrorKey( types.RuleID,  types.ErrorKey) error
+        + WriteConsumerError( *sarama.ConsumerMessage,  error) error
+        + ToggleRuleForCluster( types.ClusterName,  types.RuleID,  types.UserID,  RuleToggle) error
+        + DeleteFromRuleClusterToggle( types.ClusterName,  types.RuleID,  types.UserID) error
+        + GetFromClusterRuleToggle( types.ClusterName,  types.RuleID,  types.UserID) (*ClusterRuleToggle, error)
+        + GetTogglesForRules( types.ClusterName,  []types.RuleOnReport,  types.UserID) (<font color=blue>map</font>[types.RuleID]bool, error)
+        + GetUserFeedbackOnRules( types.ClusterName,  []types.RuleOnReport,  types.UserID) (<font color=blue>map</font>[types.RuleID]types.UserVote, error)
+        + GetRuleWithContent( types.RuleID,  types.ErrorKey) (*types.RuleWithContent, error)
+
+    }
+    class Report << (S,Aquamarine) >> {
+        + Org types.OrgID
+        + Name types.ClusterName
+        + Report types.ClusterReport
+        + ReportedAt types.Timestamp
+
+    }
+    interface Storage  {
+        + Init() error
+        + Close() error
+        + ListOfOrgs() ([]types.OrgID, error)
+        + ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
+        + ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
+        + ReadReportForClusterByClusterName(clusterName types.ClusterName) (types.ClusterReport, types.Timestamp, error)
+        + GetLatestKafkaOffset() (types.KafkaOffset, error)
+        + WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport, collectedAtTime time.Time, kafkaOffset types.KafkaOffset) error
+        + ReportsCount() (int, error)
+        + VoteOnRule(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID, userVote types.UserVote, voteMessage string) error
+        + AddOrUpdateFeedbackOnRule(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID, message string) error
+        + GetUserFeedbackOnRule(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID) (*UserFeedbackOnRule, error)
+        + DeleteReportsForOrg(orgID types.OrgID) error
+        + DeleteReportsForCluster(clusterName types.ClusterName) error
+        + ToggleRuleForCluster(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID, ruleToggle RuleToggle) error
+        + GetFromClusterRuleToggle( types.ClusterName,  types.RuleID,  types.UserID) (*ClusterRuleToggle, error)
+        + GetTogglesForRules( types.ClusterName,  []types.RuleOnReport,  types.UserID) (<font color=blue>map</font>[types.RuleID]bool, error)
+        + DeleteFromRuleClusterToggle(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID) error
+        + GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
+        + WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
+        + GetUserFeedbackOnRules(clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID) (<font color=blue>map</font>[types.RuleID]types.UserVote, error)
+
+    }
+    class UserFeedbackOnRule << (S,Aquamarine) >> {
+        + ClusterID types.ClusterName
+        + RuleID types.RuleID
+        + UserID types.UserID
+        + Message string
+        + UserVote types.UserVote
+        + AddedAt time.Time
+        + UpdatedAt time.Time
+
+    }
+    class sqlHooks << (S,Aquamarine) >> {
+        - log(format string, params ...<font color=blue>interface</font>{}) 
+
+        + Before(ctx context.Context, query string, args ...<font color=blue>interface</font>{}) (context.Context, error)
+        + After(ctx context.Context, query string, args ...<font color=blue>interface</font>{}) (context.Context, error)
+
+    }
+    class storage.RuleToggle << (T, #FF7700) >>  {
+    }
+    class storage.sqlHooksKey << (T, #FF7700) >>  {
+    }
+}
+
+"producer.Producer" <|-- "storage.DBStorage"
+"storage.Storage" <|-- "storage.DBStorage"
+"producer.Producer" <|-- "storage.NoopStorage"
+"storage.Storage" <|-- "storage.NoopStorage"
+
+namespace tests {
+    class ClustersResponse << (S,Aquamarine) >> {
+        + Clusters []string
+        + Status string
+
+    }
+    class OrganizationsResponse << (S,Aquamarine) >> {
+        + Organizations []int
+        + Status string
+
+    }
+    class RuleVoteResponse << (S,Aquamarine) >> {
+        + RuleVote int
+        + Status string
+
+    }
+    class StatusOnlyResponse << (S,Aquamarine) >> {
+        + Status string
+
+    }
+}
+
+
+namespace types {
+    class FeedbackRequest << (S,Aquamarine) >> {
+        + Message string
+
+    }
+    class ForeignKeyError << (S,Aquamarine) >> {
+        + TableName string
+        + ForeignKeyName string
+        + Details string
+
+        + Error() string
+
+    }
+    class TableAlreadyExistsError << (S,Aquamarine) >> {
+        - tableName string
+
+        + Error() string
+
+    }
+    class TableNotFoundError << (S,Aquamarine) >> {
+        - tableName string
+
+        + Error() string
+
+    }
+    class ValidationError << (S,Aquamarine) >> {
+        + ParamName string
+        + ParamValue <font color=blue>interface</font>{}
+        + ErrString string
+
+        + Error() string
+
+    }
+    class types.ClusterName << (T, #FF7700) >>  {
+    }
+    class types.ClusterReport << (T, #FF7700) >>  {
+    }
+    class types.DBDriver << (T, #FF7700) >>  {
+    }
+    class types.DisabledRuleResponse << (T, #FF7700) >>  {
+    }
+    class types.ErrorKey << (T, #FF7700) >>  {
+    }
+    class types.Identity << (T, #FF7700) >>  {
+    }
+    class types.Internal << (T, #FF7700) >>  {
+    }
+    class types.ItemNotFoundError << (T, #FF7700) >>  {
+    }
+    class types.KafkaOffset << (T, #FF7700) >>  {
+    }
+    class types.OrgID << (T, #FF7700) >>  {
+    }
+    class types.ReportResponse << (T, #FF7700) >>  {
+    }
+    class types.ReportResponseMeta << (T, #FF7700) >>  {
+    }
+    class types.ReportRules << (T, #FF7700) >>  {
+    }
+    class types.RequestID << (T, #FF7700) >>  {
+    }
+    class types.Rule << (T, #FF7700) >>  {
+    }
+    class types.RuleErrorKey << (T, #FF7700) >>  {
+    }
+    class types.RuleID << (T, #FF7700) >>  {
+    }
+    class types.RuleOnReport << (T, #FF7700) >>  {
+    }
+    class types.RuleWithContent << (T, #FF7700) >>  {
+    }
+    class types.Timestamp << (T, #FF7700) >>  {
+    }
+    class types.UserID << (T, #FF7700) >>  {
+    }
+    class types.UserVote << (T, #FF7700) >>  {
+    }
+    class "types.ReportResponse" as typesReportResponse {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.DBDriver" as typesDBDriver {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.ClusterName" as typesClusterName {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.UserVote" as typesUserVote {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.RuleOnReport" as typesRuleOnReport {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.Internal" as typesInternal {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.ItemNotFoundError" as typesItemNotFoundError {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.ReportRules" as typesReportRules {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.DisabledRuleResponse" as typesDisabledRuleResponse {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.KafkaOffset" as typesKafkaOffset {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.RuleID" as typesRuleID {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.ErrorKey" as typesErrorKey {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.RuleErrorKey" as typesRuleErrorKey {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.Identity" as typesIdentity {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.UserID" as typesUserID {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.Timestamp" as typesTimestamp {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.ReportResponseMeta" as typesReportResponseMeta {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.Rule" as typesRule {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.RuleWithContent" as typesRuleWithContent {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.OrgID" as typesOrgID {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.ClusterReport" as typesClusterReport {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.RequestID" as typesRequestID {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+}
+
+
+"__builtin__.int" #.. "storage.RuleToggle"
+"__builtin__.int" #.. "storage.sqlHooksKey"
+"__builtin__.uint" #.. "migration.Version"
+"consumer.fontcolorbluemapfontstringjsonRawMessage" #.. "consumer.Report"
+"helpers.helpersAPIRequest" #.. "helpers.APIRequest"
+"helpers.helpersAPIResponse" #.. "helpers.APIResponse"
+"migration.fontcolorbluefuncfontsqlTxtypesDBDrivererror" #.. "migration.Step"
+"server.typesIdentity" #.. "server.Identity"
+"server.typesInternal" #.. "server.Internal"
+"server.typesJWTPayload" #.. "server.JWTPayload"
+"server.typesToken" #.. "server.Token"
+"types.typesClusterName" #.. "types.ClusterName"
+"types.typesClusterReport" #.. "types.ClusterReport"
+"types.typesDBDriver" #.. "types.DBDriver"
+"types.typesDisabledRuleResponse" #.. "types.DisabledRuleResponse"
+"types.typesErrorKey" #.. "types.ErrorKey"
+"types.typesIdentity" #.. "types.Identity"
+"types.typesInternal" #.. "types.Internal"
+"types.typesItemNotFoundError" #.. "types.ItemNotFoundError"
+"types.typesKafkaOffset" #.. "types.KafkaOffset"
+"types.typesOrgID" #.. "types.OrgID"
+"types.typesReportResponse" #.. "types.ReportResponse"
+"types.typesReportResponseMeta" #.. "types.ReportResponseMeta"
+"types.typesReportRules" #.. "types.ReportRules"
+"types.typesRequestID" #.. "types.RequestID"
+"types.typesRule" #.. "types.Rule"
+"types.typesRuleErrorKey" #.. "types.RuleErrorKey"
+"types.typesRuleID" #.. "types.RuleID"
+"types.typesRuleOnReport" #.. "types.RuleOnReport"
+"types.typesRuleWithContent" #.. "types.RuleWithContent"
+"types.typesTimestamp" #.. "types.Timestamp"
+"types.typesUserID" #.. "types.UserID"
+"types.typesUserVote" #.. "types.UserVote"
+@enduml
