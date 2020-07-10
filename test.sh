@@ -19,9 +19,6 @@ LOG_LEVEL="fatal"
 VERBOSE_OUTPUT=false
 NO_SERVICE=false
 
-# disable the message when you send SIGTERM to child processes
-set +m
-
 if [[ $* == *verbose* ]] || [[ -n "${VERBOSE}" ]]; then
     # print all possible logs
     LOG_LEVEL=""
@@ -45,6 +42,9 @@ function cleanup() {
 
     children=$(print_descendent_pids $$)
 
+    # disable the message when you send stop signal to child processes
+    set +m
+
     for pid in $(echo -en "$children"); do
         # nicely asking a process to commit suicide
         if ! kill "$pid" &>/dev/null; then
@@ -52,6 +52,9 @@ function cleanup() {
             sleep 2
         fi
     done
+
+    # restore the message back since we want to know that process wasn't stopped correctory
+    set -m
 
     for pid in $(echo -en "$children"); do
         # murdering those who're alive
