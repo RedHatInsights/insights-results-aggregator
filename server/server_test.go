@@ -226,7 +226,7 @@ func TestServerStart(t *testing.T) {
 			helpers.FailOnError(t, err)
 		}()
 
-		err := s.Start()
+		err := s.Start(nil)
 		if err != nil && err != http.ErrServerClosed {
 			t.Fatal(err)
 		}
@@ -239,7 +239,7 @@ func TestServerStartError(t *testing.T) {
 		APIPrefix: "",
 	}, nil)
 
-	err := testServer.Start()
+	err := testServer.Start(nil)
 	assert.EqualError(t, err, "listen tcp: address 99999: invalid port")
 }
 

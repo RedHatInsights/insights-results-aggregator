@@ -52,7 +52,6 @@ function cleanup() {
 
     for pid in $(echo -en "$children"); do
         # murdering those who're alive
-        echo killing pid $pid
         kill -9 "$pid" &>/dev/null
     done
 

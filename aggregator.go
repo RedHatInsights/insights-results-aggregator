@@ -33,6 +33,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -196,10 +197,9 @@ func startServer() int {
 
 	serverInstanceReady.L.Lock()
 	serverInstance = s
-	serverInstanceReady.Broadcast()
 	serverInstanceReady.L.Unlock()
 
-	err = serverInstance.Start()
+	err = serverInstance.Start(serverInstanceReady)
 	if err != nil {
 		log.Error().Err(err).Msg("HTTP(s) start error")
 		return ExitStatusServerError
@@ -211,42 +211,50 @@ func startServer() int {
 // startService starts service and returns error code
 func startService() int {
 	var waitGroup sync.WaitGroup
-	exitCode := ExitStatusOK
+	exitCode := int32(ExitStatusOK)
 
 	prepDbExitCode := prepareDB()
 	if prepDbExitCode != ExitStatusOK {
 		log.Info().Msgf(databasePreparationMessage, prepDbExitCode)
-		exitCode += prepDbExitCode
-		return exitCode
+		exitCode += int32(prepDbExitCode)
+
+		return int(exitCode)
 	}
 
 	waitGroup.Add(1)
 	// consumer is run in its own thread
 	go func() {
+		defer waitGroup.Done()
+
 		consumerExitCode := startConsumer()
 		if consumerExitCode != ExitStatusOK {
 			log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
-			exitCode += consumerExitCode
+			atomic.AddInt32(&exitCode, int32(consumerExitCode))
 		}
-
-		waitGroup.Done()
 	}()
 
-	// server can be started in current thread
-	serverExitCode := startServer()
-	if serverExitCode != ExitStatusOK {
-		log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
-		exitCode += serverExitCode
-	}
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+
+		// server can be started in current thread
+		serverExitCode := startServer()
+		if serverExitCode != ExitStatusOK {
+			log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
+			atomic.AddInt32(&exitCode, int32(serverExitCode))
+		}
+	}()
 
 	waitGroup.Wait()
 
-	return exitCode
+	return int(exitCode)
 }
 
 func waitForServiceToStart() {
 	serverInstanceReady.L.Lock()
-	serverInstanceReady.Wait()
+	if serverInstance == nil {
+		serverInstanceReady.Wait()
+	}
 	serverInstanceReady.L.Unlock()
 
 	for {
@@ -267,7 +275,9 @@ func stopService() int {
 	errCode := ExitStatusOK
 
 	serverInstanceReady.L.Lock()
-	serverInstanceReady.Wait()
+	if serverInstance == nil {
+		serverInstanceReady.Wait()
+	}
 	serverInstanceReady.L.Unlock()
 
 	err := serverInstance.Stop(context.Background())
@@ -435,19 +445,19 @@ func stopServiceOnProcessStopSignal() {
 
 	go func() {
 		<-signals
+		fmt.Println("SIGINT or SIGTERM was sent, stopping the service...")
 
 		serverInstanceReady.L.Lock()
-		serverInstanceReady.Wait()
+		if serverInstance == nil {
+			serverInstanceReady.Wait()
+		}
 		serverInstanceReady.L.Unlock()
-
-		fmt.Println("SIGINT or SIGTERM was sent, stopping the service...")
 
 		errCode := stopService()
 		if errCode != 0 {
 			log.Error().Msgf("unable to stop the service, code is %v", errCode)
 			os.Exit(errCode)
 		}
-		os.Exit(ExitStatusOK)
 	}()
 }
 
