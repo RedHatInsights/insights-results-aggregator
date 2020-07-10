@@ -19,6 +19,9 @@ LOG_LEVEL="fatal"
 VERBOSE_OUTPUT=false
 NO_SERVICE=false
 
+# disable the message when you send SIGTERM to child processes
+set +m
+
 if [[ $* == *verbose* ]] || [[ -n "${VERBOSE}" ]]; then
     # print all possible logs
     LOG_LEVEL=""
