@@ -29,9 +29,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -63,8 +66,9 @@ const (
 )
 
 var (
-	serverInstance   *server.HTTPServer
-	consumerInstance consumer.Consumer
+	serverInstance      *server.HTTPServer
+	consumerInstance    consumer.Consumer
+	serverInstanceReady = sync.NewCond(&sync.Mutex{})
 
 	// BuildVersion contains the major.minor version of the CLI client
 	BuildVersion = "*not set*"
@@ -188,8 +192,14 @@ func startServer() int {
 	defer closeStorage(dbStorage)
 
 	serverCfg := conf.GetServerConfiguration()
-	serverInstance = server.New(serverCfg, dbStorage)
-	err = serverInstance.Start()
+
+	s := server.New(serverCfg, dbStorage)
+
+	serverInstanceReady.L.Lock()
+	serverInstance = s
+	serverInstanceReady.L.Unlock()
+
+	err = serverInstance.Start(serverInstanceReady)
 	if err != nil {
 		log.Error().Err(err).Msg("HTTP(s) start error")
 		return ExitStatusServerError
@@ -201,46 +211,55 @@ func startServer() int {
 // startService starts service and returns error code
 func startService() int {
 	var waitGroup sync.WaitGroup
-	exitCode := ExitStatusOK
+	exitCode := int32(ExitStatusOK)
 
 	prepDbExitCode := prepareDB()
 	if prepDbExitCode != ExitStatusOK {
 		log.Info().Msgf(databasePreparationMessage, prepDbExitCode)
-		exitCode += prepDbExitCode
-		return exitCode
+		exitCode += int32(prepDbExitCode)
+
+		return int(exitCode)
 	}
 
 	waitGroup.Add(1)
 	// consumer is run in its own thread
 	go func() {
+		defer waitGroup.Done()
+
 		consumerExitCode := startConsumer()
 		if consumerExitCode != ExitStatusOK {
 			log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
-			exitCode += consumerExitCode
+			atomic.AddInt32(&exitCode, int32(consumerExitCode))
 		}
-
-		waitGroup.Done()
 	}()
 
-	// server can be started in current thread
-	serverExitCode := startServer()
-	if serverExitCode != ExitStatusOK {
-		log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
-		exitCode += serverExitCode
-	}
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+
+		// server can be started in current thread
+		serverExitCode := startServer()
+		if serverExitCode != ExitStatusOK {
+			log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
+			atomic.AddInt32(&exitCode, int32(serverExitCode))
+		}
+	}()
 
 	waitGroup.Wait()
 
-	return exitCode
+	return int(exitCode)
 }
 
 func waitForServiceToStart() {
+	serverInstanceReady.L.Lock()
+	if serverInstance == nil {
+		serverInstanceReady.Wait()
+	}
+	serverInstanceReady.L.Unlock()
+
 	for {
 		isStarted := true
 		if conf.GetBrokerConfiguration().Enabled && consumerInstance == nil {
-			isStarted = false
-		}
-		if serverInstance == nil {
 			isStarted = false
 		}
 
@@ -255,12 +274,16 @@ func waitForServiceToStart() {
 func stopService() int {
 	errCode := ExitStatusOK
 
-	if serverInstance != nil {
-		err := serverInstance.Stop(context.TODO())
-		if err != nil {
-			log.Error().Err(err).Msg("HTTP(s) server stop error")
-			errCode++
-		}
+	serverInstanceReady.L.Lock()
+	if serverInstance == nil {
+		serverInstanceReady.Wait()
+	}
+	serverInstanceReady.L.Unlock()
+
+	err := serverInstance.Stop(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("HTTP(s) server stop error")
+		errCode++
 	}
 
 	if consumerInstance != nil {
@@ -415,6 +438,29 @@ func performMigrations() int {
 	}
 }
 
+func stopServiceOnProcessStopSignal() {
+	signals := make(chan os.Signal, 1)
+
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-signals
+		fmt.Println("SIGINT or SIGTERM was sent, stopping the service...")
+
+		serverInstanceReady.L.Lock()
+		if serverInstance == nil {
+			serverInstanceReady.Wait()
+		}
+		serverInstanceReady.L.Unlock()
+
+		errCode := stopService()
+		if errCode != 0 {
+			log.Error().Msgf("unable to stop the service, code is %v", errCode)
+			os.Exit(errCode)
+		}
+	}()
+}
+
 func main() {
 	err := conf.LoadConfiguration(defaultConfigFilename)
 	if err != nil {
@@ -443,6 +489,8 @@ func handleCommand(command string) int {
 	switch command {
 	case "start-service":
 		printVersionInfo()
+
+		stopServiceOnProcessStopSignal()
 
 		return startService()
 	case "help", "print-help":

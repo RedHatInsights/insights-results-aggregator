@@ -19,6 +19,9 @@ LOG_LEVEL="fatal"
 VERBOSE_OUTPUT=false
 NO_SERVICE=false
 
+echo bash version is:
+bash --version
+
 if [[ $* == *verbose* ]] || [[ -n "${VERBOSE}" ]]; then
     # print all possible logs
     LOG_LEVEL=""
@@ -39,13 +42,28 @@ function cleanup() {
     }
 
     echo Exiting and killing all children...
-    for pid in $(print_descendent_pids $$); do
-        if ! kill "$pid" &>/dev/null; then
-            # wait for it to stop correctly
-            sleep 1
-            kill -9 "$pid" &>/dev/null
+
+    children=$(print_descendent_pids $$)
+
+    # disable the message when you send stop signal to child processes
+    set +m
+
+    for pid in $(echo -en "$children"); do
+        # nicely asking a process to commit suicide
+        if ! kill -PIPE "$pid" &>/dev/null; then
+            # we even gave them plenty of time to think
+            sleep 2
         fi
     done
+
+    # restore the message back since we want to know that process wasn't stopped correctory
+    # set -m
+
+    for pid in $(echo -en "$children"); do
+        # murdering those who're alive
+        kill -9 "$pid" &>/dev/null
+    done
+
     sleep 1
 }
 trap cleanup EXIT
