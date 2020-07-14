@@ -50,7 +50,7 @@ function cleanup() {
 
     for pid in $(echo -en "$children"); do
         # nicely asking a process to commit suicide
-        if ! kill "$pid" &>/dev/null; then
+        if ! kill -PIPE "$pid" &>/dev/null; then
             # we even gave them plenty of time to think
             sleep 2
         fi
