@@ -19,6 +19,9 @@ LOG_LEVEL="fatal"
 VERBOSE_OUTPUT=false
 NO_SERVICE=false
 
+echo bash version is:
+bash --version
+
 if [[ $* == *verbose* ]] || [[ -n "${VERBOSE}" ]]; then
     # print all possible logs
     LOG_LEVEL=""
@@ -54,7 +57,7 @@ function cleanup() {
     done
 
     # restore the message back since we want to know that process wasn't stopped correctory
-    set -m
+    # set -m
 
     for pid in $(echo -en "$children"); do
         # murdering those who're alive
