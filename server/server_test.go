@@ -448,7 +448,7 @@ func checkBadRuleFeedbackRequest(t *testing.T, message string, expectedStatus st
 func TestRuleFeedbackErrorLongMessage(t *testing.T) {
 	checkBadRuleFeedbackRequest(t,
 		"Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message",
-		"Error during validating param 'message' with value 'Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message'. Error: 'String is longer then 250'")
+		"Error during validating param 'message' with value 'Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message'. Error: 'String is longer than 250 bytes'")
 }
 
 // TestRuleFeedbackErrorLongMessageWithUnicodeCharacters checks whether the
@@ -458,7 +458,7 @@ func TestRuleFeedbackErrorLongMessageWithUnicodeCharacters(t *testing.T) {
 	checkBadRuleFeedbackRequest(t,
 		// this string has length 250 BYTES, but just 120 characters
 		"ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů",
-		"Error during validating param 'message' with value 'ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů'. Error: 'String is longer then 250'")
+		"Error during validating param 'message' with value 'ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů'. Error: 'String is longer than 250 bytes'")
 }
 
 func TestHTTPServer_GetVoteOnRule_BadRuleID(t *testing.T) {

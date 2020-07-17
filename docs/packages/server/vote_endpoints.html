@@ -164,7 +164,7 @@ limitations under the License.</p>
 
 	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">feedback</div><div class="operator">.</div><div class="ident">Message</div><div class="operator">)</div> <div class="operator">&gt;</div> <div class="literal">250</div> <div class="operator">{</div>
 		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ValidationError</div><div class="operator">{</div>
-			<div class="ident">ErrString</div><div class="operator">:</div>  <div class="literal">&#34;String is longer then 250&#34;</div><div class="operator">,</div>
+			<div class="ident">ErrString</div><div class="operator">:</div>  <div class="literal">&#34;String is longer than 250 bytes&#34;</div><div class="operator">,</div>
 			<div class="ident">ParamName</div><div class="operator">:</div>  <div class="literal">&#34;message&#34;</div><div class="operator">,</div>
 			<div class="ident">ParamValue</div><div class="operator">:</div> <div class="ident">feedback</div><div class="operator">.</div><div class="ident">Message</div><div class="operator">,</div>
 		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>

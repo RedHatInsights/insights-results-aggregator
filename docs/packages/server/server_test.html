@@ -152,8 +152,6 @@ limitations under the License.
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
-	<div class="ident">httputils</div> <div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/http&#34;</div><div class="operator"></div>
-
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
@@ -177,29 +175,6 @@ limitations under the License.
 		<div class="ident">t</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;Expected response code %d. Got %d\n&#34;</div><div class="operator">,</div> <div class="ident">expected</div><div class="operator">,</div> <div class="ident">actual</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">TestMakeURLToEndpoint</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div>
-		<div class="ident">t</div><div class="operator">,</div>
-		<div class="literal">&#34;api/prefix/organizations/2/clusters/cluster_id/users/1/report&#34;</div><div class="operator">,</div>
-		<div class="ident">httputils</div><div class="operator">.</div><div class="ident">MakeURLToEndpoint</div><div class="operator">(</div><div class="literal">&#34;api/prefix/&#34;</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportEndpoint</div><div class="operator">,</div> <div class="literal">2</div><div class="operator">,</div> <div class="literal">&#34;cluster_id&#34;</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator">,</div>
-	<div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>assert.Equal(
-    t,
-    &quot;&quot;,
-    httputils.MakeURLToEndpoint(
-        &quot;api/prefix/&quot;,
-        server.LikeRuleEndpoint,
-        []interface{}{testdata.ClusterName, testdata.BadRuleID, testdata.UserID},
-    ),
-)</p>
-</td>
-	<td class="code"><pre><code><div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestListOfClustersForNonExistingOrganization</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">config</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
@@ -380,7 +355,7 @@ because the storage is closed before the query</p>
 			<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">s</div><div class="operator">.</div><div class="ident">Start</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">s</div><div class="operator">.</div><div class="ident">Start</div><div class="operator">(</div><div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">&amp;&amp;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ErrServerClosed</div> <div class="operator">{</div>
 			<div class="ident">t</div><div class="operator">.</div><div class="ident">Fatal</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
@@ -393,7 +368,7 @@ because the storage is closed before the query</p>
 		<div class="ident">APIPrefix</div><div class="operator">:</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">testServer</div><div class="operator">.</div><div class="ident">Start</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">testServer</div><div class="operator">.</div><div class="ident">Start</div><div class="operator">(</div><div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;listen tcp: address 99999: invalid port&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -627,7 +602,7 @@ rejected properly.</p>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestRuleFeedbackErrorLongMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">checkBadRuleFeedbackRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div>
 		<div class="literal">&#34;Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message&#34;</div><div class="operator">,</div>
-		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message&#39;. Error: &#39;String is longer then 250&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message&#39;. Error: &#39;String is longer than 250 bytes&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -647,7 +622,7 @@ bytes, is rejected</p>
 	<td class="doc"><p>this string has length 250 BYTES, but just 120 characters</p>
 </td>
 	<td class="code"><pre><code>		<div class="literal">&#34;ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů&#34;</div><div class="operator">,</div>
-		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů&#39;. Error: &#39;String is longer then 250&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů&#39;. Error: &#39;String is longer than 250 bytes&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestHTTPServer_GetVoteOnRule_BadRuleID</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>

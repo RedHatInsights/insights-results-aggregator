@@ -40,7 +40,7 @@ func (server *HTTPServer) readFeedbackRequestBody(writer http.ResponseWriter, re
 
 	if len(feedback.Message) > 250 {
 		handleServerError(writer, &types.ValidationError{
-			ErrString:  "String is longer then 250",
+			ErrString:  "String is longer than 250 bytes",
 			ParamName:  "message",
 			ParamValue: feedback.Message,
 		})

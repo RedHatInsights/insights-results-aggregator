@@ -169,7 +169,9 @@ APIPrefix - usually &quot;/api/v1/&quot; used for all REST API calls</p>
 <div class="keyword">import</div> <div class="operator">(</div>
 	<div class="literal">&#34;context&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;sync&#34;</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -183,13 +185,8 @@ disable &quot;G108 (CWE-): Profiling endpoint is automatically exposed on /debug
 	<td class="code"><pre><code>	<div class="ident">_</div> <div class="literal">&#34;net/http/pprof&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;path/filepath&#34;</div><div class="operator"></div>
 
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>httputils &quot;github.com/RedHatInsights/insights-operator-utils/http&quot;</p>
-</td>
-	<td class="code"><pre><code>	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/responses&#34;</div><div class="operator"></div>
+	<div class="ident">httputils</div> <div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/http&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/responses&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/gorilla/mux&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 
@@ -459,13 +456,8 @@ as opposed to no rules hit for the cluster</p>
 	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Initializing HTTP server at &#39;%s&#39;&#34;</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Address</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">router</div> <div class="operator">:=</div> <div class="ident">mux</div><div class="operator">.</div><div class="ident">NewRouter</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">StrictSlash</div><div class="operator">(</div><div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>router.Use(httputils.LogRequest)</p>
-</td>
-	<td class="code"><pre><code>
+	<div class="ident">router</div><div class="operator">.</div><div class="ident">Use</div><div class="operator">(</div><div class="ident">httputils</div><div class="operator">.</div><div class="ident">LogRequest</div><div class="operator">)</div><div class="operator"></div>
+
 	<div class="ident">apiPrefix</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">APIPrefix</div><div class="operator"></div>
 
 	<div class="ident">metricsURL</div> <div class="operator">:=</div> <div class="ident">apiPrefix</div> <div class="operator">&#43;</div> <div class="ident">MetricsEndpoint</div><div class="operator"></div>
@@ -507,11 +499,17 @@ be handled in middleware which is not optimal</p>
       <tr class="section">
 	<td class="doc"><p>Start starts server</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">Start</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">Start</div><div class="operator">(</div><div class="ident">serverInstanceReady</div> <div class="operator">*</div><div class="ident">sync</div><div class="operator">.</div><div class="ident">Cond</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
 	<div class="ident">address</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Address</div><div class="operator"></div>
 	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Starting HTTP server at &#39;%s&#39;&#34;</div><div class="operator">,</div> <div class="ident">address</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">router</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Initialize</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">server</div><div class="operator">.</div><div class="ident">Serv</div> <div class="operator">=</div> <div class="operator">&amp;</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Server</div><div class="operator">{</div><div class="ident">Addr</div><div class="operator">:</div> <div class="ident">address</div><div class="operator">,</div> <div class="ident">Handler</div><div class="operator">:</div> <div class="ident">router</div><div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">serverInstanceReady</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">Broadcast</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Serv</div><div class="operator">.</div><div class="ident">ListenAndServe</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">&amp;&amp;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ErrServerClosed</div> <div class="operator">{</div>
@@ -529,6 +527,10 @@ be handled in middleware which is not optimal</p>
 	<td class="doc"><p>Stop stops server's execution</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">Stop</div><div class="operator">(</div><div class="ident">ctx</div> <div class="ident">context</div><div class="operator">.</div><div class="ident">Context</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Serv</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;server.Serv is nil, nothing to stop&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
 	<div class="keyword">return</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Serv</div><div class="operator">.</div><div class="ident">Shutdown</div><div class="operator">(</div><div class="ident">ctx</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
