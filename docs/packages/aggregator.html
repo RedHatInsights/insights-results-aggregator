@@ -153,9 +153,12 @@ list of clusters for given organization, and cluster health.</p>
 	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;os&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;os/signal&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strconv&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;sync&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;sync/atomic&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;syscall&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
@@ -212,8 +215,9 @@ list of clusters for given organization, and cluster health.</p>
 <div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">var</div> <div class="operator">(</div>
-	<div class="ident">serverInstance</div>   <div class="operator">*</div><div class="ident">server</div><div class="operator">.</div><div class="ident">HTTPServer</div><div class="operator"></div>
-	<div class="ident">consumerInstance</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Consumer</div><div class="operator"></div>
+	<div class="ident">serverInstance</div>      <div class="operator">*</div><div class="ident">server</div><div class="operator">.</div><div class="ident">HTTPServer</div><div class="operator"></div>
+	<div class="ident">consumerInstance</div>    <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Consumer</div><div class="operator"></div>
+	<div class="ident">serverInstanceReady</div> <div class="operator">=</div> <div class="ident">sync</div><div class="operator">.</div><div class="ident">NewCond</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">sync</div><div class="operator">.</div><div class="ident">Mutex</div><div class="operator">{</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -402,8 +406,14 @@ whether the close operation was successful or not.</p>
 	<div class="keyword">defer</div> <div class="ident">closeStorage</div><div class="operator">(</div><div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">serverCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetServerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">serverInstance</div> <div class="operator">=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">serverCfg</div><div class="operator">,</div> <div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">serverInstance</div><div class="operator">.</div><div class="ident">Start</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">s</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">serverCfg</div><div class="operator">,</div> <div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">serverInstance</div> <div class="operator">=</div> <div class="ident">s</div><div class="operator"></div>
+	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">serverInstance</div><div class="operator">.</div><div class="ident">Start</div><div class="operator">(</div><div class="ident">serverInstanceReady</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;HTTP(s) start error&#34;</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div> <div class="ident">ExitStatusServerError</div><div class="operator"></div>
@@ -420,13 +430,14 @@ whether the close operation was successful or not.</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">startService</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
 	<div class="keyword">var</div> <div class="ident">waitGroup</div> <div class="ident">sync</div><div class="operator">.</div><div class="ident">WaitGroup</div><div class="operator"></div>
-	<div class="ident">exitCode</div> <div class="operator">:=</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
+	<div class="ident">exitCode</div> <div class="operator">:=</div> <div class="ident">int32</div><div class="operator">(</div><div class="ident">ExitStatusOK</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">prepDbExitCode</div> <div class="operator">:=</div> <div class="ident">prepareDB</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">prepDbExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
 		<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">databasePreparationMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">exitCode</div> <div class="operator">&#43;=</div> <div class="ident">prepDbExitCode</div><div class="operator"></div>
-		<div class="keyword">return</div> <div class="ident">exitCode</div><div class="operator"></div>
+		<div class="ident">exitCode</div> <div class="operator">&#43;=</div> <div class="ident">int32</div><div class="operator">(</div><div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="keyword">return</div> <div class="ident">int</div><div class="operator">(</div><div class="ident">exitCode</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
@@ -437,14 +448,18 @@ whether the close operation was successful or not.</p>
 	<td class="doc"><p>consumer is run in its own thread</p>
 </td>
 	<td class="code"><pre><code>	<div class="keyword">go</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="keyword">defer</div> <div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Done</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
 		<div class="ident">consumerExitCode</div> <div class="operator">:=</div> <div class="ident">startConsumer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">consumerExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
 			<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">consumerExitedErrorMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">exitCode</div> <div class="operator">&#43;=</div> <div class="ident">consumerExitCode</div><div class="operator"></div>
+			<div class="ident">atomic</div><div class="operator">.</div><div class="ident">AddInt32</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">exitCode</div><div class="operator">,</div> <div class="ident">int32</div><div class="operator">(</div><div class="ident">consumerExitCode</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
-
-		<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Done</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">go</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="keyword">defer</div> <div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Done</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -452,24 +467,28 @@ whether the close operation was successful or not.</p>
       <tr class="section">
 	<td class="doc"><p>server can be started in current thread</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">serverExitCode</div> <div class="operator">:=</div> <div class="ident">startServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">serverExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">consumerExitedErrorMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">exitCode</div> <div class="operator">&#43;=</div> <div class="ident">serverExitCode</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
+	<td class="code"><pre><code>		<div class="ident">serverExitCode</div> <div class="operator">:=</div> <div class="ident">startServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">serverExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">consumerExitedErrorMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">atomic</div><div class="operator">.</div><div class="ident">AddInt32</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">exitCode</div><div class="operator">,</div> <div class="ident">int32</div><div class="operator">(</div><div class="ident">serverExitCode</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="keyword">return</div> <div class="ident">exitCode</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">int</div><div class="operator">(</div><div class="ident">exitCode</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">waitForServiceToStart</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
 	<div class="keyword">for</div> <div class="operator">{</div>
 		<div class="ident">isStarted</div> <div class="operator">:=</div> <div class="ident">true</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Enabled</div> <div class="operator">&amp;&amp;</div> <div class="ident">consumerInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
-			<div class="ident">isStarted</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-		<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
 			<div class="ident">isStarted</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 
@@ -489,12 +508,16 @@ whether the close operation was successful or not.</p>
 <div class="keyword">func</div> <div class="ident">stopService</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
 	<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
 
-	<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">serverInstance</div><div class="operator">.</div><div class="ident">Stop</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">TODO</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;HTTP(s) server stop error&#34;</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">errCode</div><div class="operator">&#43;&#43;</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">serverInstance</div><div class="operator">.</div><div class="ident">Stop</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">Background</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;HTTP(s) server stop error&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">errCode</div><div class="operator">&#43;&#43;</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">if</div> <div class="ident">consumerInstance</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
@@ -669,6 +692,29 @@ print the current DB migration version or to migrate to a different version.</p>
 	<div class="operator">}</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
+<div class="keyword">func</div> <div class="ident">stopServiceOnProcessStopSignal</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">signals</div> <div class="operator">:=</div> <div class="ident">make</div><div class="operator">(</div><div class="keyword">chan</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Signal</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">signal</div><div class="operator">.</div><div class="ident">Notify</div><div class="operator">(</div><div class="ident">signals</div><div class="operator">,</div> <div class="ident">syscall</div><div class="operator">.</div><div class="ident">SIGINT</div><div class="operator">,</div> <div class="ident">syscall</div><div class="operator">.</div><div class="ident">SIGTERM</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">go</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="operator">&lt;-</div><div class="ident">signals</div><div class="operator"></div>
+		<div class="ident">fmt</div><div class="operator">.</div><div class="ident">Println</div><div class="operator">(</div><div class="literal">&#34;SIGINT or SIGTERM was sent, stopping the service...&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">stopService</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">errCode</div> <div class="operator">!=</div> <div class="literal">0</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;unable to stop the service, code is %v&#34;</div><div class="operator">,</div> <div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">os</div><div class="operator">.</div><div class="ident">Exit</div><div class="operator">(</div><div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
 <div class="keyword">func</div> <div class="ident">main</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">LoadConfiguration</div><div class="operator">(</div><div class="ident">defaultConfigFilename</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
@@ -697,6 +743,8 @@ print the current DB migration version or to migrate to a different version.</p>
 	<div class="keyword">switch</div> <div class="ident">command</div> <div class="operator">{</div>
 	<div class="keyword">case</div> <div class="literal">&#34;start-service&#34;</div><div class="operator">:</div>
 		<div class="ident">printVersionInfo</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">stopServiceOnProcessStopSignal</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 		<div class="keyword">return</div> <div class="ident">startService</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">case</div> <div class="literal">&#34;help&#34;</div><div class="operator">,</div> <div class="literal">&#34;print-help&#34;</div><div class="operator">:</div>
