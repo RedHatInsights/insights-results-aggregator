@@ -236,11 +236,12 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 	assert.Equal(t, true, brokerCfg.Enabled)
 
 	assert.Equal(t, server.Configuration{
-		Address:     ":8080",
-		APIPrefix:   "/api/v1/",
-		APISpecFile: "openapi.json",
-		AuthType:    "xrh",
-		Debug:       true,
+		Address:                      ":8080",
+		APIPrefix:                    "/api/v1/",
+		APISpecFile:                  "openapi.json",
+		AuthType:                     "xrh",
+		Debug:                        true,
+		MaximumFeedbackMessageLength: 255,
 	}, conf.GetServerConfiguration())
 
 	orgWhiteList := conf.GetOrganizationWhitelist()
@@ -305,11 +306,12 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	assert.Equal(t, true, brokerCfg.Enabled)
 
 	assert.Equal(t, server.Configuration{
-		Address:     ":8080",
-		APIPrefix:   "/api/v1/",
-		APISpecFile: "openapi.json",
-		AuthType:    "xrh",
-		Debug:       true,
+		Address:                      ":8080",
+		APIPrefix:                    "/api/v1/",
+		APISpecFile:                  "openapi.json",
+		AuthType:                     "xrh",
+		Debug:                        true,
+		MaximumFeedbackMessageLength: 255,
 	}, conf.GetServerConfiguration())
 
 	orgWhiteList := conf.GetOrganizationWhitelist()

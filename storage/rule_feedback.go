@@ -178,6 +178,38 @@ func (storage DBStorage) GetUserFeedbackOnRule(
 	return &feedback, nil
 }
 
+// GetUserFeedbackOnRuleDisable gets user feedback from DB
+func (storage DBStorage) GetUserFeedbackOnRuleDisable(
+	clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+) (*UserFeedbackOnRule, error) {
+	feedback := UserFeedbackOnRule{}
+
+	err := storage.connection.QueryRow(
+		`SELECT cluster_id, user_id, rule_id, message, added_at, updated_at
+		FROM cluster_user_rule_disable_feedback
+		WHERE cluster_id = $1 AND user_id = $2 AND rule_id = $3`,
+		clusterID, userID, ruleID,
+	).Scan(
+		&feedback.ClusterID,
+		&feedback.UserID,
+		&feedback.RuleID,
+		&feedback.Message,
+		&feedback.AddedAt,
+		&feedback.UpdatedAt,
+	)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return nil, &types.ItemNotFoundError{
+			ItemID: fmt.Sprintf("%v/%v/%v", clusterID, userID, ruleID),
+		}
+	case err != nil:
+		return nil, err
+	}
+
+	return &feedback, nil
+}
+
 // GetUserFeedbackOnRules gets user feedbacks for defined array of rule IDs from DB
 func (storage DBStorage) GetUserFeedbackOnRules(
 	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
@@ -220,4 +252,42 @@ func (storage DBStorage) GetUserFeedbackOnRules(
 	}
 
 	return feedbacks, nil
+}
+
+// AddFeedbackOnRuleDisable adds feedback on rule disable
+func (storage DBStorage) AddFeedbackOnRuleDisable(
+	clusterID types.ClusterName,
+	ruleID types.RuleID,
+	userID types.UserID,
+	message string,
+) error {
+	statement, err := storage.connection.Prepare(`
+		INSERT INTO cluster_user_rule_disable_feedback
+		(cluster_id, user_id, rule_id, message, added_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		ON CONFLICT (cluster_id, user_id, rule_id)
+		DO UPDATE SET updated_at = $6, message = $4;
+	`)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err := statement.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to close statement")
+		}
+	}()
+
+	now := time.Now()
+
+	_, err = statement.Exec(clusterID, userID, ruleID, message, now, now)
+	err = types.ConvertDBError(err, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("addOrUpdateUserFeedbackOnRuleDisableForCluster")
+		return err
+	}
+
+	metrics.FeedbackOnRules.Inc()
+
+	return nil
 }

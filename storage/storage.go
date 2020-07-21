@@ -75,7 +75,16 @@ type Storage interface {
 		userID types.UserID,
 		message string,
 	) error
+	AddFeedbackOnRuleDisable(
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		userID types.UserID,
+		message string,
+	) error
 	GetUserFeedbackOnRule(
+		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+	) (*UserFeedbackOnRule, error)
+	GetUserFeedbackOnRuleDisable(
 		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
 	) (*UserFeedbackOnRule, error)
 	DeleteReportsForOrg(orgID types.OrgID) error

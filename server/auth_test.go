@@ -25,19 +25,21 @@ import (
 )
 
 var configAuth = server.Configuration{
-	Address:   ":8080",
-	APIPrefix: "/api/test/",
-	Debug:     false,
-	Auth:      true,
-	AuthType:  "xrh",
+	Address:                      ":8080",
+	APIPrefix:                    "/api/test/",
+	Debug:                        false,
+	Auth:                         true,
+	AuthType:                     "xrh",
+	MaximumFeedbackMessageLength: 255,
 }
 
 var configAuth2 = server.Configuration{
-	Address:   ":8080",
-	APIPrefix: "/api/test/",
-	Debug:     true,
-	Auth:      true,
-	AuthType:  "jwt",
+	Address:                      ":8080",
+	APIPrefix:                    "/api/test/",
+	Debug:                        true,
+	Auth:                         true,
+	AuthType:                     "jwt",
+	MaximumFeedbackMessageLength: 255,
 }
 
 // TestMissingAuthToken checks how the missing auth. token header (expected in HTTP request) is handled

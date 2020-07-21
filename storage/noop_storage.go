@@ -87,6 +87,20 @@ func (*NoopStorage) AddOrUpdateFeedbackOnRule(
 	return nil
 }
 
+// AddFeedbackOnRuleDisable noop
+func (*NoopStorage) AddFeedbackOnRuleDisable(
+	types.ClusterName, types.RuleID, types.UserID, string,
+) error {
+	return nil
+}
+
+// GetUserFeedbackOnRuleDisable noop
+func (*NoopStorage) GetUserFeedbackOnRuleDisable(
+	types.ClusterName, types.RuleID, types.UserID,
+) (*UserFeedbackOnRule, error) {
+	return nil, nil
+}
+
 // GetUserFeedbackOnRule noop
 func (*NoopStorage) GetUserFeedbackOnRule(
 	types.ClusterName, types.RuleID, types.UserID,
