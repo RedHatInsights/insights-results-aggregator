@@ -17,9 +17,9 @@ package server
 import (
 	"net/http"
 
+	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/rs/zerolog/log"
 
-	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 

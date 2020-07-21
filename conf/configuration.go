@@ -14,6 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package conf contains definition of data type named ConfigStruct that
+// represents configuration of Insights Results Aggregator. This package also
+// contains function named LoadConfiguration that can be used to load
+// configuration from provided configuration file and/or from environment
+// variables. Additionally several specific functions named
+// GetBrokerConfiguration, GetStorageConfiguration, GetLoggingConfiguration,
+// GetCloudWatchConfiguration, and GetServerConfiguration are to be used to
+// return specific configuration options.
+//
+// Generated documentation is available at:
+// https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/conf
+//
+// Documentation in literate-programming-style is available at:
+// https://redhatinsights.github.io/insights-results-aggregator/packages/conf/configuration.html
 package conf
 
 import (
@@ -45,8 +59,8 @@ const (
 	defaultContentPath          = "/rules-content"
 )
 
-// Config has exactly the same structure as *.toml file
-var Config struct {
+// ConfigStruct is a structure holding the whole service configuration
+type ConfigStruct struct {
 	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
 	Server     server.Configuration `mapstructure:"server" toml:"server"`
 	Processing struct {
@@ -57,11 +71,16 @@ var Config struct {
 	CloudWatch logger.CloudWatchConfiguration `mapstructure:"cloudwatch" toml:"cloudwatch"`
 }
 
-// LoadConfiguration loads configuration from defaultConfigFile, file set in configFileEnvVariableName or from env
+// Config has exactly the same structure as *.toml file
+var Config ConfigStruct
+
+// LoadConfiguration loads configuration from defaultConfigFile, file set in
+// configFileEnvVariableName or from env
 func LoadConfiguration(defaultConfigFile string) error {
 	configFile, specified := os.LookupEnv(configFileEnvVariableName)
 	if specified {
-		// we need to separate the directory name and filename without extension
+		// we need to separate the directory name and filename without
+		// extension
 		directory, basename := filepath.Split(configFile)
 		file := strings.TrimSuffix(basename, filepath.Ext(basename))
 		// parse the configuration
@@ -75,7 +94,8 @@ func LoadConfiguration(defaultConfigFile string) error {
 
 	err := viper.ReadInConfig()
 	if _, isNotFoundError := err.(viper.ConfigFileNotFoundError); !specified && isNotFoundError {
-		// viper is not smart enough to understand the structure of config by itself
+		// viper is not smart enough to understand the structure of
+		// config by itself
 		fakeTomlConfigWriter := new(bytes.Buffer)
 
 		err := toml.NewEncoder(fakeTomlConfigWriter).Encode(Config)
@@ -160,7 +180,8 @@ func GetServerConfiguration() server.Configuration {
 	return Config.Server
 }
 
-// checkIfFileExists returns nil if path doesn't exist or isn't a file, otherwise it returns corresponding error
+// checkIfFileExists returns nil if path doesn't exist or isn't a file,
+// otherwise it returns corresponding error
 func checkIfFileExists(path string) error {
 	fileInfo, err := os.Stat(path)
 	if os.IsNotExist(err) {
