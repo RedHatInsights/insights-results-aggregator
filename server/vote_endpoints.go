@@ -16,12 +16,17 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+)
+
+const (
+	feedbackMaxLength = 250
 )
 
 // readFeedbackRequestBody parse request body and return object with message in it
@@ -38,9 +43,9 @@ func (server *HTTPServer) readFeedbackRequestBody(writer http.ResponseWriter, re
 		return feedback, false
 	}
 
-	if len(feedback.Message) > 250 {
+	if len(feedback.Message) > feedbackMaxLength {
 		handleServerError(writer, &types.ValidationError{
-			ErrString:  "String is longer than 250 bytes",
+			ErrString:  fmt.Sprintf("String is longer than %d bytes", feedbackMaxLength),
 			ParamName:  "message",
 			ParamValue: feedback.Message,
 		})
