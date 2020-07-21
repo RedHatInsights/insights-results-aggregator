@@ -133,7 +133,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */</div>
 
-<div class="keyword">package</div> <div class="ident">conf</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Package conf contains definition of data type named ConfigStruct that
+represents configuration of Insights Results Aggregator. This package also
+contains function named LoadConfiguration that can be used to load
+configuration from provided configuration file and/or from environment
+variables. Additionally several specific functions named
+GetBrokerConfiguration, GetStorageConfiguration, GetLoggingConfiguration,
+GetCloudWatchConfiguration, and GetServerConfiguration are to be used to
+return specific configuration options.</p>
+
+<p>Generated documentation is available at:
+https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/conf</p>
+
+<p>Documentation in literate-programming-style is available at:
+https://redhatinsights.github.io/insights-results-aggregator/packages/conf/configuration.html</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">conf</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
 	<div class="literal">&#34;bytes&#34;</div><div class="operator"></div>
@@ -354,7 +373,8 @@ config by itself</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>checkIfFileExists returns nil if path doesn't exist or isn't a file, otherwise it returns corresponding error</p>
+	<td class="doc"><p>checkIfFileExists returns nil if path doesn't exist or isn't a file,
+otherwise it returns corresponding error</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkIfFileExists</div><div class="operator">(</div><div class="ident">path</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
 	<div class="ident">fileInfo</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Stat</div><div class="operator">(</div><div class="ident">path</div><div class="operator">)</div><div class="operator"></div>

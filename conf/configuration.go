@@ -14,6 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package conf contains definition of data type named ConfigStruct that
+// represents configuration of Insights Results Aggregator. This package also
+// contains function named LoadConfiguration that can be used to load
+// configuration from provided configuration file and/or from environment
+// variables. Additionally several specific functions named
+// GetBrokerConfiguration, GetStorageConfiguration, GetLoggingConfiguration,
+// GetCloudWatchConfiguration, and GetServerConfiguration are to be used to
+// return specific configuration options.
+//
+// Generated documentation is available at:
+// https://godoc.org/github.com/RedHatInsights/insights-results-aggregator/conf
+//
+// Documentation in literate-programming-style is available at:
+// https://redhatinsights.github.io/insights-results-aggregator/packages/conf/configuration.html
 package conf
 
 import (
@@ -166,7 +180,8 @@ func GetServerConfiguration() server.Configuration {
 	return Config.Server
 }
 
-// checkIfFileExists returns nil if path doesn't exist or isn't a file, otherwise it returns corresponding error
+// checkIfFileExists returns nil if path doesn't exist or isn't a file,
+// otherwise it returns corresponding error
 func checkIfFileExists(path string) error {
 	fileInfo, err := os.Stat(path)
 	if os.IsNotExist(err) {
