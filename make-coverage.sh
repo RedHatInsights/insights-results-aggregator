@@ -14,6 +14,7 @@
 # limitations under the License.
 
 TIMEOUT=2m
+TIMEOUT_INTEGRATION=1440m
 
 
 rm coverage.out 2>/dev/null
@@ -60,7 +61,7 @@ case $1 in
     echo "Start your integration tests and press Ctrl+C when they are done"
 
     export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./config-devel
-    go test -timeout $TIMEOUT -v -tags testrunmain -run "^TestRunMain$" -coverprofile=coverage.out -coverpkg="./..." . 1>&2
+    go test -timeout $TIMEOUT_INTEGRATION -v -tags testrunmain -run "^TestRunMain$" -coverprofile=coverage.out -coverpkg="./..." . 1>&2
     ;;
 *)
     echo 'Please, choose "unit-sqlite", "unit-postgres", "rest" or "integration"'
