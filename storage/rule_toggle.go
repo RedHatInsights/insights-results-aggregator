@@ -40,7 +40,7 @@ type ClusterRuleToggle struct {
 	ClusterID  types.ClusterName
 	RuleID     types.RuleID
 	UserID     types.UserID
-	Disabled   RuleToggle
+	Disabled   bool
 	DisabledAt sql.NullTime
 	EnabledAt  sql.NullTime
 	UpdatedAt  sql.NullTime

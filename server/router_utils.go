@@ -224,6 +224,47 @@ func readOrganizationIDs(writer http.ResponseWriter, request *http.Request) ([]t
 	return organizationsConverted, nil
 }
 
+func readRuleIDWithErrorKey(writer http.ResponseWriter, request *http.Request) (types.RuleID, types.ErrorKey, bool) {
+	ruleIDWithErrorKey, err := getRouterParam(request, "rule_id")
+	if err != nil {
+		const message = "unable to get rule id"
+		log.Error().Err(err).Msg(message)
+		handleServerError(writer, err)
+		return types.RuleID(0), types.ErrorKey(0), false
+	}
+
+	splitedRuleID := strings.Split(string(ruleIDWithErrorKey), "|")
+
+	if len(splitedRuleID) != 2 {
+		err = fmt.Errorf("invalid rule ID, it must contain only rule ID and error key separated by |")
+		log.Error().Err(err)
+		handleServerError(writer, &RouterParsingError{
+			paramName:  "rule_id",
+			paramValue: ruleIDWithErrorKey,
+			errString:  err.Error(),
+		})
+		return types.RuleID(0), types.ErrorKey(0), false
+	}
+
+	IDValidator := regexp.MustCompile(`^[a-zA-Z_0-9.]+$`)
+
+	isRuleIDValid := IDValidator.Match([]byte(splitedRuleID[0]))
+	isErrorKeyValid := IDValidator.Match([]byte(splitedRuleID[1]))
+
+	if !isRuleIDValid || !isErrorKeyValid {
+		err = fmt.Errorf("invalid rule ID, each part of ID must contain only from latin characters, number, underscores or dots")
+		log.Error().Err(err)
+		handleServerError(writer, &RouterParsingError{
+			paramName:  "rule_id",
+			paramValue: ruleIDWithErrorKey,
+			errString:  err.Error(),
+		})
+		return types.RuleID(0), types.ErrorKey(0), false
+	}
+
+	return types.RuleID(splitedRuleID[0]), types.ErrorKey(splitedRuleID[1]), true
+}
+
 // readClusterRuleUserParams gets cluster_name, rule_id and user_id from current request
 func (server *HTTPServer) readClusterRuleUserParams(
 	writer http.ResponseWriter, request *http.Request,

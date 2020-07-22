@@ -47,15 +47,20 @@ func (*NoopStorage) ListOfClustersForOrg(types.OrgID) ([]types.ClusterName, erro
 }
 
 // ReadReportForCluster noop
-func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) (types.ClusterReport, types.Timestamp, error) {
-	return "", "", nil
+func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error) {
+	return []types.RuleOnReport{}, "", nil
+}
+
+// ReadRuleForReport noop
+func (*NoopStorage) ReadRuleForReport(types.OrgID, types.ClusterName, types.RuleID, types.ErrorKey) (types.ClusterReport, error) {
+	return "", nil
 }
 
 // ReadReportForClusterByClusterName noop
 func (*NoopStorage) ReadReportForClusterByClusterName(
 	types.ClusterName,
-) (types.ClusterReport, types.Timestamp, error) {
-	return "", "", nil
+) ([]types.RuleOnReport, types.Timestamp, error) {
+	return []types.RuleOnReport{}, "", nil
 }
 
 // GetLatestKafkaOffset noop

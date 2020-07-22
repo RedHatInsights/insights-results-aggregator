@@ -326,7 +326,7 @@ func TestRuleFeedbackVote_DBError(t *testing.T) {
 
 	expects.ExpectQuery("SELECT .* FROM report").
 		WillReturnRows(
-			sqlmock.NewRows([]string{"report", "last_checked_at"}).AddRow("1", time.Now()),
+			sqlmock.NewRows([]string{"last_checked_at"}).AddRow(time.Now()),
 		)
 
 	expects.ExpectPrepare("INSERT INTO").
@@ -573,13 +573,13 @@ func TestRuleToggle(t *testing.T) {
 	for _, endpoint := range []string{
 		server.DisableRuleForClusterEndpoint, server.EnableRuleForClusterEndpoint,
 	} {
-		var expectedState storage.RuleToggle
+		var expectedState bool
 
 		switch endpoint {
 		case server.DisableRuleForClusterEndpoint:
-			expectedState = storage.RuleToggleDisable
+			expectedState = true
 		case server.EnableRuleForClusterEndpoint:
-			expectedState = storage.RuleToggleEnable
+			expectedState = false
 		default:
 			t.Fatal("no such endpoint")
 		}
@@ -609,7 +609,7 @@ func TestRuleToggle(t *testing.T) {
 			assert.Equal(t, testdata.Rule1ID, toggledRule.RuleID)
 			assert.Equal(t, testdata.UserID, toggledRule.UserID)
 			assert.Equal(t, expectedState, toggledRule.Disabled)
-			if toggledRule.Disabled == storage.RuleToggleDisable {
+			if toggledRule.Disabled == true {
 				assert.Equal(t, sql.NullTime{}, toggledRule.EnabledAt)
 			} else {
 				assert.Equal(t, sql.NullTime{}, toggledRule.DisabledAt)

@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"database/sql"
 	"database/sql/driver"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -35,24 +34,6 @@ import (
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
-
-var report3Rules = []types.ReportItem{
-	types.ReportItem{
-		Module:       testdata.Rule1ID,
-		ErrorKey:     testdata.ErrorKey1,
-		TemplateData: json.RawMessage(testdata.Rule1ExtraData),
-	},
-	types.ReportItem{
-		Module:       testdata.Rule2ID,
-		ErrorKey:     testdata.ErrorKey2,
-		TemplateData: json.RawMessage(testdata.Rule2ExtraData),
-	},
-	types.ReportItem{
-		Module:       testdata.Rule3ID,
-		ErrorKey:     testdata.ErrorKey3,
-		TemplateData: json.RawMessage(testdata.Rule3ExtraData),
-	},
-}
 
 func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 	err := mockStorage.WriteReportForCluster(
@@ -164,8 +145,8 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 			assert.Equal(t, testdata.ClusterName, toggledRule.ClusterID)
 			assert.Equal(t, testdata.Rule1ID, toggledRule.RuleID)
 			assert.Equal(t, testdata.UserID, toggledRule.UserID)
-			assert.Equal(t, state, toggledRule.Disabled)
-			if toggledRule.Disabled == storage.RuleToggleDisable {
+			assert.Equal(t, state == storage.RuleToggleDisable, toggledRule.Disabled)
+			if toggledRule.Disabled == true {
 				assert.Equal(t, sql.NullTime{}, toggledRule.EnabledAt)
 			} else {
 				assert.Equal(t, sql.NullTime{}, toggledRule.DisabledAt)
@@ -282,7 +263,7 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 //			defer closer()
 //
 //			err := mockStorage.WriteReportForCluster(
-//				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+//				testdata.OrgID, testdata.ClusterName, report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
 //			)
 //			helpers.FailOnError(t, err)
 //

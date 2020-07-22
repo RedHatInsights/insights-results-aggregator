@@ -15,6 +15,7 @@
 package server_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func TestReadReportForClusterNonIntOrgID(t *testing.T) {
@@ -119,13 +121,33 @@ func TestReadReportDBError(t *testing.T) {
 }
 
 func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.T) {
-	const badReport = "not-json"
+	badReport := `{
+		"system": {
+			"metadata": {},
+			"hostname": null
+		},
+		"reports": [{
+			"component": "` + string(testdata.Rule1ID) + `",
+			"key": "` + testdata.ErrorKey1 + `",
+			"details": "not-json"
+		}],
+		"fingerprints": [],
+		"skips": [],
+		"info": []
+}`
+	badHitRules := []types.ReportItem{
+		types.ReportItem{
+			Module:       testdata.Rule1ID,
+			ErrorKey:     testdata.ErrorKey1,
+			TemplateData: json.RawMessage("not-json"),
+		},
+	}
 
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, badReport, testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, types.ClusterReport(badReport), badHitRules, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -161,6 +183,39 @@ func TestReadReport(t *testing.T) {
 		StatusCode:  http.StatusOK,
 		Body:        testdata.Report3RulesExpectedResponse,
 		BodyChecker: helpers.AssertReportResponsesEqual,
+	})
+}
+
+func TestReadRuleReport(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.Report3Rules,
+		testdata.Report3RulesParsed,
+		testdata.LastCheckedAt,
+		testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.RuleEndpoint,
+		EndpointArgs: []interface{}{
+			testdata.OrgID,
+			testdata.ClusterName,
+			testdata.UserID,
+			fmt.Sprintf("%v|%v", testdata.Rule1ID, testdata.ErrorKey1),
+		},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body: fmt.Sprintf(`{
+			"report": %v,
+			"status": "ok"
+		}`, helpers.ToJSONString(testdata.RuleOnReport1)),
+		BodyChecker: helpers.AssertRuleResponsesEqual,
 	})
 }
 

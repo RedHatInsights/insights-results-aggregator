@@ -84,11 +84,13 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 
 	query, err := storage.constructUpsertClusterRuleUserFeedback(updateVote, updateMessage)
 	if err != nil {
+		log.Error().Err(err).Msg("Unable to create upsert statement")
 		return err
 	}
 
 	statement, err := storage.connection.Prepare(query)
 	if err != nil {
+		log.Error().Err(err).Msg("Unable to prepare statement")
 		return err
 	}
 	defer func() {

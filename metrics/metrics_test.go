@@ -15,7 +15,6 @@
 package metrics_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 	"time"

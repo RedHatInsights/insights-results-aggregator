@@ -48,6 +48,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 
 	// we just have to import this package in order to expose pprof interface in debug mode
@@ -64,6 +65,9 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
+
+// REPORT_RESPONSE constant that defining name of response field
+const REPORT_RESPONSE = "report"
 
 // HTTPServer in an implementation of Server interface
 type HTTPServer struct {
@@ -137,25 +141,16 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	report, lastChecked, err := server.Storage.ReadReportForCluster(orgID, clusterName)
+	reports, lastChecked, err := server.Storage.ReadReportForCluster(orgID, clusterName)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read report for cluster")
 		handleServerError(writer, err)
 		return
 	}
 
-	var reportRules types.ReportRules
-	err = json.Unmarshal([]byte(report), &reportRules)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to parse cluster report")
-		handleServerError(writer, err)
-		return
-	}
+	hitRulesCount := len(reports)
 
-	hitRules := reportRules.HitRules
-	hitRulesCount := len(hitRules)
-
-	hitRules, err = server.getFeedbackAndTogglesOnRules(clusterName, userID, hitRules)
+	reports, err = server.getFeedbackAndTogglesOnRules(clusterName, userID, reports)
 
 	if err != nil {
 		log.Error().Err(err).Msg("An error has occurred when getting feedback or toggles")
@@ -173,10 +168,68 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 			Count:         hitRulesCount,
 			LastCheckedAt: lastChecked,
 		},
-		Report: hitRules,
+		Report: reports,
 	}
 
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData("report", response))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(REPORT_RESPONSE, response))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+// readRuleForReport return rule by cluster ID, org ID and rule ID
+func (server *HTTPServer) readRuleForReport(writer http.ResponseWriter, request *http.Request) {
+	clusterName, successful := readClusterName(writer, request)
+	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	userID, successful := readUserID(writer, request)
+	if !successful {
+		return
+	}
+
+	orgID, successful := readOrgID(writer, request)
+	if !successful {
+		return
+	}
+
+	ruleID, errorKey, successful := readRuleIDWithErrorKey(writer, request)
+	if !successful {
+		return
+	}
+
+	report, err := server.Storage.ReadRuleForReport(orgID, clusterName, ruleID, errorKey)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to read rule report for cluster")
+		handleServerError(writer, err)
+		return
+	}
+
+	var ruleDetails json.RawMessage
+	err = json.Unmarshal([]byte(report), &ruleDetails)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to parse cluster rule report")
+		handleServerError(writer, err)
+		return
+	}
+
+	ruleIDSplitted := strings.Split(string(ruleID), "|")
+	reportRule := types.RuleOnReport{
+		TemplateData: string(ruleDetails),
+		Module:       types.RuleID(ruleIDSplitted[0]),
+		ErrorKey:     types.ErrorKey(ruleIDSplitted[1]),
+	}
+
+	reportRule = server.getFeedbackAndTogglesOnRule(clusterName, userID, reportRule)
+
+	if err != nil {
+		log.Error().Err(err).Msg("An error has occurred when getting feedback or toggles")
+		handleServerError(writer, err)
+	}
+
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(REPORT_RESPONSE, reportRule))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
