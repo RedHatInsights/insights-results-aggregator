@@ -87,6 +87,7 @@ api_spec_file = "openapi.json"
 debug = true
 auth = true
 auth_type = "xrh"
+maximum_feedback_message_length = 255
 ```
 
 * `address` is host and port which server should listen to
@@ -98,6 +99,7 @@ production, `false` is used every time.
 in devel environment. In production, `true` is used every time.
 * `auth_type` set type of auth, it means which header to use for auth `x-rh-identity` or
 `Authorization`. Can be used only with `auth = true`. Possible options: `jwt`, `xrh`
+* `maximum_feedback_message_length` is a maximum possible length of a string for user's feedback
 
 Please note that if `auth` configuration option is turned off, not all REST API endpoints will be
 usable. Whole REST API schema is satisfied only for `auth = true`.

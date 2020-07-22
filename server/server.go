@@ -46,6 +46,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 
@@ -327,4 +328,47 @@ func (server *HTTPServer) Stop(ctx context.Context) error {
 	}
 
 	return server.Serv.Shutdown(ctx)
+}
+
+// readFeedbackRequestBody parse request body and return object with message in it
+func (server *HTTPServer) readFeedbackRequestBody(writer http.ResponseWriter, request *http.Request) (string, bool) {
+	feedback, err := server.getFeedbackMessageFromBody(request)
+	if err != nil {
+		if _, ok := err.(*NoBodyError); ok {
+			return "", true
+		}
+
+		handleServerError(writer, err)
+		return "", false
+	}
+
+	return feedback, true
+}
+
+// getFeedbackMessageFromBody retrieves the feedback message from body of the request
+func (server *HTTPServer) getFeedbackMessageFromBody(request *http.Request) (string, error) {
+	var feedback types.FeedbackRequest
+
+	err := json.NewDecoder(request.Body).Decode(&feedback)
+	if err != nil {
+		if err == io.EOF {
+			err = &NoBodyError{}
+		}
+
+		return "", err
+	}
+
+	if len(feedback.Message) > server.Config.MaximumFeedbackMessageLength {
+		feedback.Message = feedback.Message[0:server.Config.MaximumFeedbackMessageLength] + "..."
+
+		return "", &types.ValidationError{
+			ParamName:  "message",
+			ParamValue: feedback.Message,
+			ErrString: fmt.Sprintf(
+				"feedback message is longer than %v bytes", server.Config.MaximumFeedbackMessageLength,
+			),
+		}
+	}
+
+	return feedback.Message, nil
 }

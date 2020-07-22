@@ -47,6 +47,8 @@ const (
 	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/disable"
 	// EnableRuleForClusterEndpoint re-enables a rule for specified cluster
 	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/enable"
+	// DisableRuleFeedbackEndpoint accepts a feedback from user when (s)he disables a rule
+	DisableRuleFeedbackEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/disable_feedback"
 	// MetricsEndpoint returns prometheus metrics
 	MetricsEndpoint = "metrics"
 )
@@ -81,6 +83,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+DisableRuleFeedbackEndpoint, server.saveDisableFeedback).Methods(http.MethodPost)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)

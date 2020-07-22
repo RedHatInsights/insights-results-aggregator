@@ -45,11 +45,12 @@ var (
 
 // DefaultServerConfig is a default config used by AssertAPIRequest
 var DefaultServerConfig = server.Configuration{
-	Address:     ":8080",
-	APIPrefix:   "/api/test/",
-	APISpecFile: "openapi.json",
-	Debug:       true,
-	Auth:        false,
+	Address:                      ":8080",
+	APIPrefix:                    "/api/test/",
+	APISpecFile:                  "openapi.json",
+	Debug:                        true,
+	Auth:                         false,
+	MaximumFeedbackMessageLength: 255,
 }
 
 // AssertAPIRequest creates new server with provided mockStorage

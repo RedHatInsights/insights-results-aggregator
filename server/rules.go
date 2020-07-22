@@ -95,3 +95,36 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 	}
 	return rules, nil
 }
+
+func (server HTTPServer) saveDisableFeedback(writer http.ResponseWriter, request *http.Request) {
+	clusterID, ruleID, userID, successful := server.readClusterRuleUserParams(writer, request)
+	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	err := server.checkUserClusterPermissions(writer, request, clusterID)
+	if err != nil {
+		// everything has been handled already
+		return
+	}
+
+	feedback, err := server.getFeedbackMessageFromBody(request)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	err = server.Storage.AddFeedbackOnRuleDisable(clusterID, ruleID, userID, feedback)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(
+		"message", feedback,
+	))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}

@@ -15,44 +15,13 @@
 package server
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/rs/zerolog/log"
-	"io"
 	"net/http"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
+	"github.com/rs/zerolog/log"
+
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
-
-const (
-	feedbackMaxLength = 250
-)
-
-// readFeedbackRequestBody parse request body and return object with message in it
-func (server *HTTPServer) readFeedbackRequestBody(writer http.ResponseWriter, request *http.Request) (types.FeedbackRequest, bool) {
-	var feedback types.FeedbackRequest
-
-	err := json.NewDecoder(request.Body).Decode(&feedback)
-	switch {
-	case err == io.EOF:
-		feedback.Message = ""
-		return feedback, true
-	case err != nil:
-		handleServerError(writer, err)
-		return feedback, false
-	}
-
-	if len(feedback.Message) > feedbackMaxLength {
-		handleServerError(writer, &types.ValidationError{
-			ErrString:  fmt.Sprintf("String is longer than %d bytes", feedbackMaxLength),
-			ParamName:  "message",
-			ParamValue: feedback.Message,
-		})
-		return feedback, false
-	}
-	return feedback, true
-}
 
 // likeRule likes the rule for current user
 func (server *HTTPServer) likeRule(writer http.ResponseWriter, request *http.Request) {
@@ -88,7 +57,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote, voteMessage.Message)
+	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote, voteMessage)
 	if err != nil {
 		handleServerError(writer, err)
 		return

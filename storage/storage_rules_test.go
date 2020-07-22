@@ -487,3 +487,71 @@ func TestDBStorageGetVotes(t *testing.T) {
 	assert.Equal(t, types.UserVoteDislike, feedbacks[testdata.Rule2ID])
 	assert.Equal(t, types.UserVoteNone, feedbacks[testdata.Rule3ID])
 }
+
+func TestDBStorageTextDisableFeedback(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, "test feedback",
+	))
+
+	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID,
+	)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
+	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
+	assert.Equal(t, testdata.UserID, feedback.UserID)
+	assert.Equal(t, "test feedback", feedback.Message)
+	assert.Equal(t, types.UserVoteNone, feedback.UserVote)
+}
+
+func TestDBStorageDisableFeedbackChangeMessage(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, "message1",
+	))
+	// just to be sure that addedAt != to updatedAt
+	time.Sleep(1 * time.Millisecond)
+	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, "message2",
+	))
+
+	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(
+		testdata.ClusterName, testdata.Rule1ID, testdata.UserID,
+	)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
+	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
+	assert.Equal(t, testdata.UserID, feedback.UserID)
+	assert.Equal(t, "message2", feedback.Message)
+	assert.Equal(t, types.UserVoteNone, feedback.UserVote)
+	assert.NotEqual(t, feedback.AddedAt, feedback.UpdatedAt)
+}
+
+func TestDBStorageDisableFeedbackErrorItemNotFound(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+	if _, ok := err.(*types.ItemNotFoundError); err == nil || !ok {
+		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
+	}
+}
+
+func TestDBStorageDisableFeedbackErrorDBError(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	closer()
+
+	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+	assert.EqualError(t, err, "sql: database is closed")
+}
