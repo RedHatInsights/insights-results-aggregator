@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright 2020 Red Hat, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,4 +20,4 @@ java -jar ~/tools/plantuml.jar -tsvg class_diagram.uml
 mv class_diagram.uml docs/
 mv class_diagram.svg docs/
 mv class_diagram.png docs/
-popd
+cd ... || exit
