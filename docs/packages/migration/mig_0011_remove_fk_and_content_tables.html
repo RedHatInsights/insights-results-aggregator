@@ -148,26 +148,26 @@ limitations under the License.
 		<div class="keyword">var</div> <div class="ident">err</div> <div class="ident">error</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">driver</div> <div class="operator">==</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverPostgres</div> <div class="operator">{</div>
 			<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`
-              ALTER TABLE cluster_rule_user_feedback DROP
-                CONSTRAINT cluster_rule_user_feedback_rule_id_fkey
-              `</div><div class="operator">)</div><div class="operator"></div>
+				ALTER TABLE cluster_rule_user_feedback DROP
+					CONSTRAINT cluster_rule_user_feedback_rule_id_fkey
+				`</div><div class="operator">)</div><div class="operator"></div>
 
 		<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
 			<div class="ident">err</div> <div class="operator">=</div> <div class="ident">upgradeTable</div><div class="operator">(</div>
 				<div class="ident">tx</div><div class="operator">,</div>
 				<div class="ident">clusterRuleUserFeedbackTable</div><div class="operator">,</div>
 				<div class="literal">`
-CREATE TABLE cluster_rule_user_feedback (
-  cluster_id VARCHAR NOT NULL,
-  rule_id VARCHAR NOT NULL,
-  user_id VARCHAR NOT NULL,
-  message VARCHAR NOT NULL,
-  user_vote SMALLINT NOT NULL,
-  added_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL,
+				CREATE TABLE cluster_rule_user_feedback (
+					cluster_id VARCHAR NOT NULL,
+					rule_id VARCHAR NOT NULL,
+					user_id VARCHAR NOT NULL,
+					message VARCHAR NOT NULL,
+					user_vote SMALLINT NOT NULL,
+					added_at TIMESTAMP NOT NULL,
+					updated_at TIMESTAMP NOT NULL,
 
-  PRIMARY KEY(cluster_id, rule_id, user_id),
-  FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
+					PRIMARY KEY(cluster_id, rule_id, user_id),
+					FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
 )
 `</div><div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
@@ -176,9 +176,9 @@ CREATE TABLE cluster_rule_user_feedback (
 	<div class="ident">StepDown</div><div class="operator">:</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">tx</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">driver</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
 		<div class="keyword">if</div> <div class="ident">driver</div> <div class="operator">==</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverPostgres</div> <div class="operator">{</div>
 			<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`
-ALTER TABLE cluster_rule_user_feedback
-  ADD FOREIGN KEY(rule_id) REFERENCES rule(module) ON DELETE CASCADE
-`</div><div class="operator">)</div><div class="operator"></div>
+				ALTER TABLE cluster_rule_user_feedback
+					ADD FOREIGN KEY(rule_id) REFERENCES rule(module) ON DELETE CASCADE
+				`</div><div class="operator">)</div><div class="operator"></div>
 			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 
@@ -186,19 +186,19 @@ ALTER TABLE cluster_rule_user_feedback
 			<div class="ident">tx</div><div class="operator">,</div>
 			<div class="ident">clusterRuleUserFeedbackTable</div><div class="operator">,</div>
 			<div class="literal">`
-CREATE TABLE cluster_rule_user_feedback (
-  cluster_id VARCHAR NOT NULL,
-  rule_id VARCHAR NOT NULL,
-  user_id VARCHAR NOT NULL,
-  message VARCHAR NOT NULL,
-  user_vote SMALLINT NOT NULL,
-  added_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL,
+			CREATE TABLE cluster_rule_user_feedback (
+				cluster_id VARCHAR NOT NULL,
+				rule_id VARCHAR NOT NULL,
+				user_id VARCHAR NOT NULL,
+				message VARCHAR NOT NULL,
+				user_vote SMALLINT NOT NULL,
+				added_at TIMESTAMP NOT NULL,
+				updated_at TIMESTAMP NOT NULL,
 
-  PRIMARY KEY(cluster_id, rule_id, user_id),
-  FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
-  FOREIGN KEY (rule_id) REFERENCES rule(module) ON DELETE CASCADE
-)`</div><div class="operator">,</div>
+				PRIMARY KEY(cluster_id, rule_id, user_id),
+				FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
+				FOREIGN KEY (rule_id) REFERENCES rule(module) ON DELETE CASCADE
+			)`</div><div class="operator">,</div>
 			<div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator">,</div>
 <div class="operator">}</div><div class="operator"></div>

@@ -326,6 +326,43 @@ will update user vote and messagePtr if the pointers are not nil</p>
       </tr>
       
       <tr class="section">
+	<td class="doc"><p>GetUserFeedbackOnRuleDisable gets user feedback from DB</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">GetUserFeedbackOnRuleDisable</div><div class="operator">(</div>
+	<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
+<div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">UserFeedbackOnRule</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">feedback</div> <div class="operator">:=</div> <div class="ident">UserFeedbackOnRule</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">connection</div><div class="operator">.</div><div class="ident">QueryRow</div><div class="operator">(</div>
+		<div class="literal">`SELECT cluster_id, user_id, rule_id, message, added_at, updated_at
+		FROM cluster_user_rule_disable_feedback
+		WHERE cluster_id = $1 AND user_id = $2 AND rule_id = $3`</div><div class="operator">,</div>
+		<div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">userID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator">.</div><div class="ident">Scan</div><div class="operator">(</div>
+		<div class="operator">&amp;</div><div class="ident">feedback</div><div class="operator">.</div><div class="ident">ClusterID</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">feedback</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">feedback</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">feedback</div><div class="operator">.</div><div class="ident">Message</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">feedback</div><div class="operator">.</div><div class="ident">AddedAt</div><div class="operator">,</div>
+		<div class="operator">&amp;</div><div class="ident">feedback</div><div class="operator">.</div><div class="ident">UpdatedAt</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">switch</div> <div class="operator">{</div>
+	<div class="keyword">case</div> <div class="ident">err</div> <div class="operator">==</div> <div class="ident">sql</div><div class="operator">.</div><div class="ident">ErrNoRows</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ItemNotFoundError</div><div class="operator">{</div>
+			<div class="ident">ItemID</div><div class="operator">:</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%v/%v/%v&#34;</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">userID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">case</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="operator">&amp;</div><div class="ident">feedback</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
 	<td class="doc"><p>GetUserFeedbackOnRules gets user feedbacks for defined array of rule IDs from DB</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">GetUserFeedbackOnRules</div><div class="operator">(</div>
@@ -369,6 +406,49 @@ will update user vote and messagePtr if the pointers are not nil</p>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">feedbacks</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>AddFeedbackOnRuleDisable adds feedback on rule disable</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">AddFeedbackOnRuleDisable</div><div class="operator">(</div>
+	<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+	<div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
+	<div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
+	<div class="ident">message</div> <div class="ident">string</div><div class="operator">,</div>
+<div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="ident">statement</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">connection</div><div class="operator">.</div><div class="ident">Prepare</div><div class="operator">(</div><div class="literal">`
+		INSERT INTO cluster_user_rule_disable_feedback
+		(cluster_id, user_id, rule_id, message, added_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		ON CONFLICT (cluster_id, user_id, rule_id)
+		DO UPDATE SET updated_at = $6, message = $4;
+	`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">statement</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to close statement&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">now</div> <div class="operator">:=</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">statement</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">userID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">,</div> <div class="ident">now</div><div class="operator">,</div> <div class="ident">now</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ConvertDBError</div><div class="operator">(</div><div class="ident">err</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;addOrUpdateUserFeedbackOnRuleDisableForCluster&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">metrics</div><div class="operator">.</div><div class="ident">FeedbackOnRules</div><div class="operator">.</div><div class="ident">Inc</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

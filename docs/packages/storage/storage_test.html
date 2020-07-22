@@ -147,23 +147,16 @@ limitations under the License.
 
 	<div class="literal">&#34;github.com/DATA-DOG/go-sqlmock&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator-data/testdata&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/Shopify/sarama&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
-	<div class="ident">ira_helpers</div> <div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/testdata&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
-<div class="operator">)</div><div class="operator"></div>
 
-<div class="keyword">const</div> <div class="operator">(</div>
-	<div class="ident">testOrgID</div>              <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">testClusterName</div>        <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">(</div><div class="literal">&#34;84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">testClusterEmptyReport</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">(</div><div class="literal">&#34;{}&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">testRuleID</div>             <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">(</div><div class="literal">&#34;ccx_rules_ocp.external.rules.nodes_kubelet_version_check&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">testUserID</div>             <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">ira_helpers</div> <div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">init</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
@@ -253,7 +246,7 @@ limitations under the License.
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportForCluster</div><div class="operator">(</div><div class="ident">testOrgID</div><div class="operator">,</div> <div class="ident">testClusterName</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportForCluster</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">ok</div> <div class="operator">:=</div> <div class="ident">err</div><div class="operator">.</div><div class="operator">(</div><div class="operator">*</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ItemNotFoundError</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">||</div> <div class="operator">!</div><div class="ident">ok</div> <div class="operator">{</div>
 		<div class="ident">t</div><div class="operator">.</div><div class="ident">Fatalf</div><div class="operator">(</div><div class="literal">&#34;expected ItemNotFoundError, got %T, %&#43;v&#34;</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
@@ -262,8 +255,8 @@ limitations under the License.
 		<div class="ident">t</div><div class="operator">,</div>
 		<div class="ident">err</div><div class="operator">,</div>
 		<div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div>
-			<div class="literal">&#34;Item with ID %&#43;v/%&#43;v was not found in the storage&#34;</div><div class="operator">,</div>
-			<div class="ident">testOrgID</div><div class="operator">,</div> <div class="ident">testClusterName</div><div class="operator">,</div>
+			<div class="literal">&#34;Item with ID %v/%v was not found in the storage&#34;</div><div class="operator">,</div>
+			<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 		<div class="operator">)</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -284,7 +277,7 @@ limitations under the License.
 </td>
 	<td class="code"><pre><code>	<div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportForCluster</div><div class="operator">(</div><div class="ident">testOrgID</div><div class="operator">,</div> <div class="ident">testClusterName</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportForCluster</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;sql: database is closed&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -298,8 +291,8 @@ limitations under the License.
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testOrgID</div><div class="operator">,</div> <div class="ident">testClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">checkReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testOrgID</div><div class="operator">,</div> <div class="ident">testClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -312,10 +305,10 @@ limitations under the License.
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testOrgID</div><div class="operator">,</div> <div class="ident">testClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">orgID</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">GetOrgIDByClusterID</div><div class="operator">(</div><div class="ident">testClusterName</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">orgID</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">GetOrgIDByClusterID</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">testOrgID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -329,7 +322,7 @@ when the table with results does not exist</p>
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportForCluster</div><div class="operator">(</div><div class="ident">testOrgID</div><div class="operator">,</div> <div class="ident">testClusterName</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportForCluster</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: report&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -350,9 +343,9 @@ when the table with results does not exist</p>
 	<td class="code"><pre><code>	<div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
-		<div class="ident">testOrgID</div><div class="operator">,</div>
-		<div class="ident">testClusterName</div><div class="operator">,</div>
-		<div class="ident">testClusterEmptyReport</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">,</div>
 		<div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
 		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
@@ -375,9 +368,9 @@ when the table with results does not exist</p>
 </td>
 	<td class="code"><pre><code>
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">fakeStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
-		<div class="ident">testOrgID</div><div class="operator">,</div>
-		<div class="ident">testClusterName</div><div class="operator">,</div>
-		<div class="ident">testClusterEmptyReport</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">,</div>
 		<div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
 		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
@@ -405,9 +398,9 @@ will not replace a more recent one when writing a report to storage.</p>
 	<td class="doc"><p>Insert newer report.</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
-		<div class="ident">testOrgID</div><div class="operator">,</div>
-		<div class="ident">testClusterName</div><div class="operator">,</div>
-		<div class="ident">testClusterEmptyReport</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">,</div>
 		<div class="ident">newerTime</div><div class="operator">,</div>
 		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
@@ -420,9 +413,9 @@ will not replace a more recent one when writing a report to storage.</p>
 	<td class="doc"><p>Try to insert older report.</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
-		<div class="ident">testOrgID</div><div class="operator">,</div>
-		<div class="ident">testClusterName</div><div class="operator">,</div>
-		<div class="ident">testClusterEmptyReport</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">,</div>
 		<div class="ident">olderTime</div><div class="operator">,</div>
 		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
@@ -452,7 +445,7 @@ returned when trying to SELECT from a dropped/missing report table.</p>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
-		<div class="ident">testOrgID</div><div class="operator">,</div> <div class="ident">testClusterName</div><div class="operator">,</div> <div class="ident">testClusterEmptyReport</div><div class="operator">,</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">,</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: report&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -539,8 +532,8 @@ returned when trying to SELECT from a dropped/missing report table.</p>
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">,</div> <div class="literal">&#34;1deb586c-fb85-4db4-ae5b-139cdbdf77ae&#34;</div><div class="operator">,</div> <div class="ident">testClusterEmptyReport</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">3</div><div class="operator">,</div> <div class="literal">&#34;a1bf5b15-5229-4042-9825-c69dc36b57f5&#34;</div><div class="operator">,</div> <div class="ident">testClusterEmptyReport</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">,</div> <div class="literal">&#34;1deb586c-fb85-4db4-ae5b-139cdbdf77ae&#34;</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">3</div><div class="operator">,</div> <div class="literal">&#34;a1bf5b15-5229-4042-9825-c69dc36b57f5&#34;</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">result</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ListOfOrgs</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
@@ -586,8 +579,8 @@ returned when trying to SELECT from a dropped/missing report table.</p>
 	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">,</div> <div class="literal">&#34;eabb4fbf-edfa-45d0-9352-fb05332fdb82&#34;</div><div class="operator">,</div> <div class="ident">testClusterEmptyReport</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">,</div> <div class="literal">&#34;edf5f242-0c12-4307-8c9f-29dcd289d045&#34;</div><div class="operator">,</div> <div class="ident">testClusterEmptyReport</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">,</div> <div class="literal">&#34;eabb4fbf-edfa-45d0-9352-fb05332fdb82&#34;</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">,</div> <div class="literal">&#34;edf5f242-0c12-4307-8c9f-29dcd289d045&#34;</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -595,7 +588,7 @@ returned when trying to SELECT from a dropped/missing report table.</p>
       <tr class="section">
 	<td class="doc"><p>also pushing cluster for different org</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">5</div><div class="operator">,</div> <div class="literal">&#34;4016d01b-62a1-4b49-a36e-c1c5a3d02750&#34;</div><div class="operator">,</div> <div class="ident">testClusterEmptyReport</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">5</div><div class="operator">,</div> <div class="literal">&#34;4016d01b-62a1-4b49-a36e-c1c5a3d02750&#34;</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">result</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ListOfClustersForOrg</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
@@ -651,7 +644,7 @@ returned when trying to SELECT from a dropped/missing report table.</p>
 
 	<div class="ident">assertNumberOfReports</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">5</div><div class="operator">,</div> <div class="literal">&#34;4016d01b-62a1-4b49-a36e-c1c5a3d02750&#34;</div><div class="operator">,</div> <div class="ident">testClusterEmptyReport</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">5</div><div class="operator">,</div> <div class="literal">&#34;4016d01b-62a1-4b49-a36e-c1c5a3d02750&#34;</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">assertNumberOfReports</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -732,7 +725,7 @@ returned when trying to SELECT from a dropped/missing report table.</p>
       <tr class="section">
 	<td class="doc"><p>write illegal negative org_id</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">mustWriteReport</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">connection</div><div class="operator">,</div> <div class="operator">-</div><div class="literal">1</div><div class="operator">,</div> <div class="ident">testClusterName</div><div class="operator">,</div> <div class="ident">testClusterEmptyReport</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">mustWriteReport</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">connection</div><div class="operator">,</div> <div class="operator">-</div><div class="literal">1</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReportEmpty</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ListOfOrgs</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>

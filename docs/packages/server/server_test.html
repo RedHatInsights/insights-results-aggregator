@@ -152,6 +152,7 @@ limitations under the License.
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/conf&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
@@ -159,15 +160,23 @@ limitations under the License.
 <div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">var</div> <div class="ident">config</div> <div class="operator">=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">{</div>
-	<div class="ident">Address</div><div class="operator">:</div>     <div class="literal">&#34;:8080&#34;</div><div class="operator">,</div>
-	<div class="ident">APIPrefix</div><div class="operator">:</div>   <div class="literal">&#34;/api/test/&#34;</div><div class="operator">,</div>
-	<div class="ident">APISpecFile</div><div class="operator">:</div> <div class="literal">&#34;openapi.json&#34;</div><div class="operator">,</div>
-	<div class="ident">Debug</div><div class="operator">:</div>       <div class="ident">true</div><div class="operator">,</div>
-	<div class="ident">Auth</div><div class="operator">:</div>        <div class="ident">false</div><div class="operator">,</div>
+	<div class="ident">Address</div><div class="operator">:</div>                      <div class="literal">&#34;:8080&#34;</div><div class="operator">,</div>
+	<div class="ident">APIPrefix</div><div class="operator">:</div>                    <div class="literal">&#34;/api/test/&#34;</div><div class="operator">,</div>
+	<div class="ident">APISpecFile</div><div class="operator">:</div>                  <div class="literal">&#34;openapi.json&#34;</div><div class="operator">,</div>
+	<div class="ident">Debug</div><div class="operator">:</div>                        <div class="ident">true</div><div class="operator">,</div>
+	<div class="ident">Auth</div><div class="operator">:</div>                         <div class="ident">false</div><div class="operator">,</div>
+	<div class="ident">MaximumFeedbackMessageLength</div><div class="operator">:</div> <div class="literal">255</div><div class="operator">,</div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">init</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">zerolog</div><div class="operator">.</div><div class="ident">SetGlobalLevel</div><div class="operator">(</div><div class="ident">zerolog</div><div class="operator">.</div><div class="ident">WarnLevel</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">mustLoadConfiguration</div><div class="operator">(</div><div class="ident">path</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">LoadConfiguration</div><div class="operator">(</div><div class="ident">path</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">panic</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">checkResponseCode</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">,</div> <div class="ident">expected</div><div class="operator">,</div> <div class="ident">actual</div> <div class="ident">int</div><div class="operator">)</div> <div class="operator">{</div>
@@ -318,10 +327,11 @@ because the storage is closed before the query</p>
       <tr class="section">
 	<td class="doc"><p>will use any free port</p>
 </td>
-	<td class="code"><pre><code>			<div class="ident">Address</div><div class="operator">:</div>   <div class="literal">&#34;:0&#34;</div><div class="operator">,</div>
-			<div class="ident">APIPrefix</div><div class="operator">:</div> <div class="ident">config</div><div class="operator">.</div><div class="ident">APIPrefix</div><div class="operator">,</div>
-			<div class="ident">Auth</div><div class="operator">:</div>      <div class="ident">true</div><div class="operator">,</div>
-			<div class="ident">Debug</div><div class="operator">:</div>     <div class="ident">true</div><div class="operator">,</div>
+	<td class="code"><pre><code>			<div class="ident">Address</div><div class="operator">:</div>                      <div class="literal">&#34;:0&#34;</div><div class="operator">,</div>
+			<div class="ident">APIPrefix</div><div class="operator">:</div>                    <div class="ident">config</div><div class="operator">.</div><div class="ident">APIPrefix</div><div class="operator">,</div>
+			<div class="ident">Auth</div><div class="operator">:</div>                         <div class="ident">true</div><div class="operator">,</div>
+			<div class="ident">Debug</div><div class="operator">:</div>                        <div class="ident">true</div><div class="operator">,</div>
+			<div class="ident">MaximumFeedbackMessageLength</div><div class="operator">:</div> <div class="literal">255</div><div class="operator">,</div>
 		<div class="operator">}</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
 
 		<div class="keyword">go</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
@@ -364,8 +374,9 @@ because the storage is closed before the query</p>
 
 <div class="keyword">func</div> <div class="ident">TestServerStartError</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">testServer</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">server</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">{</div>
-		<div class="ident">Address</div><div class="operator">:</div>   <div class="literal">&#34;localhost:99999&#34;</div><div class="operator">,</div>
-		<div class="ident">APIPrefix</div><div class="operator">:</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">Address</div><div class="operator">:</div>                      <div class="literal">&#34;localhost:99999&#34;</div><div class="operator">,</div>
+		<div class="ident">APIPrefix</div><div class="operator">:</div>                    <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">MaximumFeedbackMessageLength</div><div class="operator">:</div> <div class="literal">255</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">testServer</div><div class="operator">.</div><div class="ident">Start</div><div class="operator">(</div><div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
@@ -600,9 +611,19 @@ then check if that content is rejected properly.</p>
 rejected properly.</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestRuleFeedbackErrorLongMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">os</div><div class="operator">.</div><div class="ident">Clearenv</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mustLoadConfiguration</div><div class="operator">(</div><div class="literal">&#34;tests/config1&#34;</div><div class="operator">)</div><div class="operator"></div>
+
 	<div class="ident">checkBadRuleFeedbackRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div>
 		<div class="literal">&#34;Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message&#34;</div><div class="operator">,</div>
-		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message&#39;. Error: &#39;String is longer than 250 bytes&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><pre><code>&quot;Error during validating param 'message' with value 'Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryvery long message'. Error: 'String is longer than 250 bytes'&quot;)
+</code></pre>
+</td>
+	<td class="code"><pre><code>		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;Veryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryveryver...&#39;. Error: &#39;feedback message is longer than 255 bytes&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -614,6 +635,9 @@ message containing less than 250 Unicode characters, but longer than 250
 bytes, is rejected</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestRuleFeedbackErrorLongMessageWithUnicodeCharacters</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">os</div><div class="operator">.</div><div class="ident">Clearenv</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mustLoadConfiguration</div><div class="operator">(</div><div class="literal">&#34;tests/config1&#34;</div><div class="operator">)</div><div class="operator"></div>
+
 	<div class="ident">checkBadRuleFeedbackRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div>
 </code></pre></td>
       </tr>
@@ -621,8 +645,8 @@ bytes, is rejected</p>
       <tr class="section">
 	<td class="doc"><p>this string has length 250 BYTES, but just 120 characters</p>
 </td>
-	<td class="code"><pre><code>		<div class="literal">&#34;ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů&#34;</div><div class="operator">,</div>
-		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů&#39;. Error: &#39;String is longer than 250 bytes&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>		<div class="literal">&#34;ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů&#34;</div><div class="operator">,</div>
+		<div class="literal">&#34;Error during validating param &#39;message&#39; with value &#39;ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ěščřžýáíéů ě�...&#39;. Error: &#39;feedback message is longer than 255 bytes&#39;&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestHTTPServer_GetVoteOnRule_BadRuleID</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
