@@ -140,35 +140,31 @@ limitations under the License.
 	<div class="literal">&#34;context&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;math&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;os&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
-	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/lib/pq&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/mattn/go-sqlite3&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestInitSQLDriverWithLogs</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">zerolog</div><div class="operator">.</div><div class="ident">SetGlobalLevel</div><div class="operator">(</div><div class="ident">zerolog</div><div class="operator">.</div><div class="ident">DebugLevel</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">logger</div> <div class="operator">:=</div> <div class="ident">zerolog</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">os</div><div class="operator">.</div><div class="ident">Stdout</div><div class="operator">)</div><div class="operator">.</div><div class="ident">With</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Str</div><div class="operator">(</div><div class="literal">&#34;type&#34;</div><div class="operator">,</div> <div class="literal">&#34;SQL&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Logger</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
 	<div class="ident">driverName</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">InitSQLDriverWithLogs</div><div class="operator">(</div>
 		<div class="operator">&amp;</div><div class="ident">sqlite3</div><div class="operator">.</div><div class="ident">SQLiteDriver</div><div class="operator">{</div><div class="operator">}</div><div class="operator">,</div>
 		<div class="literal">&#34;sqlite3&#34;</div><div class="operator">,</div>
-		<div class="operator">&amp;</div><div class="ident">logger</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;sqlite3WithHooks&#34;</div><div class="operator">,</div> <div class="ident">driverName</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">driverName</div> <div class="operator">=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">InitSQLDriverWithLogs</div><div class="operator">(</div>
 		<div class="operator">&amp;</div><div class="ident">pq</div><div class="operator">.</div><div class="ident">Driver</div><div class="operator">{</div><div class="operator">}</div><div class="operator">,</div>
 		<div class="literal">&#34;postgres&#34;</div><div class="operator">,</div>
-		<div class="operator">&amp;</div><div class="ident">logger</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;postgresWithHooks&#34;</div><div class="operator">,</div> <div class="ident">driverName</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -183,13 +179,10 @@ does not panic on multiple calls and is idempotent</p>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestInitSQLDriverWithLogsMultipleCalls</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">zerolog</div><div class="operator">.</div><div class="ident">SetGlobalLevel</div><div class="operator">(</div><div class="ident">zerolog</div><div class="operator">.</div><div class="ident">DebugLevel</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">logger</div> <div class="operator">:=</div> <div class="ident">zerolog</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">os</div><div class="operator">.</div><div class="ident">Stdout</div><div class="operator">)</div><div class="operator">.</div><div class="ident">With</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Str</div><div class="operator">(</div><div class="literal">&#34;type&#34;</div><div class="operator">,</div> <div class="literal">&#34;SQL&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Logger</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
 	<div class="keyword">for</div> <div class="ident">i</div> <div class="operator">:=</div> <div class="literal">0</div><div class="operator">;</div> <div class="ident">i</div> <div class="operator">&lt;</div> <div class="literal">10</div><div class="operator">;</div> <div class="ident">i</div><div class="operator">&#43;&#43;</div> <div class="operator">{</div>
 		<div class="ident">driverName</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">InitSQLDriverWithLogs</div><div class="operator">(</div>
 			<div class="operator">&amp;</div><div class="ident">sqlite3</div><div class="operator">.</div><div class="ident">SQLiteDriver</div><div class="operator">{</div><div class="operator">}</div><div class="operator">,</div>
 			<div class="literal">&#34;sqlite3&#34;</div><div class="operator">,</div>
-			<div class="operator">&amp;</div><div class="ident">logger</div><div class="operator">,</div>
 		<div class="operator">)</div><div class="operator"></div>
 		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;sqlite3WithHooks&#34;</div><div class="operator">,</div> <div class="ident">driverName</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
@@ -203,7 +196,9 @@ does not panic on multiple calls and is idempotent</p>
 
 	<div class="ident">buf</div> <div class="operator">:=</div> <div class="ident">new</div><div class="operator">(</div><div class="ident">bytes</div><div class="operator">.</div><div class="ident">Buffer</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">logger</div> <div class="operator">:=</div> <div class="ident">zerolog</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">buf</div><div class="operator">)</div><div class="operator">.</div><div class="ident">With</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Str</div><div class="operator">(</div><div class="literal">&#34;type&#34;</div><div class="operator">,</div> <div class="literal">&#34;SQL&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Logger</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">hooks</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">SQLHooks</div><div class="operator">{</div><div class="ident">SQLQueriesLogger</div><div class="operator">:</div> <div class="operator">&amp;</div><div class="ident">logger</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">log</div><div class="operator">.</div><div class="ident">Logger</div> <div class="operator">=</div> <div class="ident">logger</div><div class="operator"></div>
+
+	<div class="ident">hooks</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">SQLHooks</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">hooks</div><div class="operator">.</div><div class="ident">Before</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">Background</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">query</div><div class="operator">,</div> <div class="ident">params</div><div class="operator">...</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
@@ -242,7 +237,8 @@ does not panic on multiple calls and is idempotent</p>
 
 	<div class="ident">buf</div> <div class="operator">:=</div> <div class="ident">new</div><div class="operator">(</div><div class="ident">bytes</div><div class="operator">.</div><div class="ident">Buffer</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">logger</div> <div class="operator">:=</div> <div class="ident">zerolog</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">buf</div><div class="operator">)</div><div class="operator">.</div><div class="ident">With</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Str</div><div class="operator">(</div><div class="literal">&#34;type&#34;</div><div class="operator">,</div> <div class="literal">&#34;SQL&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Logger</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">hooks</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">SQLHooks</div><div class="operator">{</div><div class="ident">SQLQueriesLogger</div><div class="operator">:</div> <div class="operator">&amp;</div><div class="ident">logger</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">log</div><div class="operator">.</div><div class="ident">Logger</div> <div class="operator">=</div> <div class="ident">logger</div><div class="operator"></div>
+	<div class="ident">hooks</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">SQLHooks</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">hooks</div><div class="operator">.</div><div class="ident">Before</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">Background</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">query</div><div class="operator">,</div> <div class="ident">params</div><div class="operator">...</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>

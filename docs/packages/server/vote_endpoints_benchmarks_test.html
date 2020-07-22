@@ -141,34 +141,35 @@ limitations under the License.</p>
 	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
-	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator-data/testdata&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/google/uuid&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
+	<div class="ident">httputils</div> <div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/http&#34;</div><div class="operator"></div>
+
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
-	<div class="ident">ira_helpers</div> <div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/testdata&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">BenchmarkHTTPServer_VoteEndpoints_WithSQLiteMemoryStorage</div><div class="operator">(</div><div class="ident">b</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">B</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">benchmarkHTTPServerVoteEndpointsWithStorage</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">BenchmarkHTTPServer_VoteEndpoints_WithSQLiteFileStorage</div><div class="operator">(</div><div class="ident">b</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">B</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">cleaner</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetSQLiteFileStorage</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">cleaner</div> <div class="operator">:=</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">MustGetSQLiteFileStorage</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">cleaner</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">benchmarkHTTPServerVoteEndpointsWithStorage</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">BenchmarkHTTPServer_VoteEndpoints_WithPostgresStorage</div><div class="operator">(</div><div class="ident">b</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">B</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">cleaner</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetPostgresStorage</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">cleaner</div> <div class="operator">:=</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">MustGetPostgresStorage</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">cleaner</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">benchmarkHTTPServerVoteEndpointsWithStorage</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
@@ -188,7 +189,7 @@ limitations under the License.</p>
 	<div class="ident">endpointArgs</div> <div class="operator">:=</div> <div class="ident">prepareVoteEndpointArgs</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">numberOfEndpointArgs</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">cleanupEndpointArgs</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">endpointArgs</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">testServer</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">DefaultServerConfig</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">testServer</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">DefaultServerConfig</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="keyword">type</div> <div class="ident">TestCase</div> <div class="keyword">struct</div> <div class="operator">{</div>
 		<div class="ident">TestName</div> <div class="ident">string</div><div class="operator"></div>
@@ -229,8 +230,8 @@ limitations under the License.</p>
 					<div class="ident">ruleID</div> <div class="operator">:=</div> <div class="ident">endpointArg</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator"></div>
 					<div class="ident">userID</div> <div class="operator">:=</div> <div class="ident">endpointArg</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator"></div>
 
-					<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">MakeURLToEndpoint</div><div class="operator">(</div>
-						<div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">DefaultServerConfig</div><div class="operator">.</div><div class="ident">APIPrefix</div><div class="operator">,</div>
+					<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">httputils</div><div class="operator">.</div><div class="ident">MakeURLToEndpoint</div><div class="operator">(</div>
+						<div class="ident">helpers</div><div class="operator">.</div><div class="ident">DefaultServerConfig</div><div class="operator">.</div><div class="ident">APIPrefix</div><div class="operator">,</div>
 						<div class="ident">testCase</div><div class="operator">.</div><div class="ident">Endpoint</div><div class="operator">,</div>
 						<div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">,</div>
 					<div class="operator">)</div><div class="operator"></div>
@@ -244,12 +245,12 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>authorize user</p>
 </td>
-	<td class="code"><pre><code>					<div class="ident">identity</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Identity</div><div class="operator">{</div>
+	<td class="code"><pre><code>					<div class="ident">identity</div> <div class="operator">:=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Identity</div><div class="operator">{</div>
 						<div class="ident">AccountNumber</div><div class="operator">:</div> <div class="ident">userID</div><div class="operator">,</div>
 					<div class="operator">}</div><div class="operator"></div>
-					<div class="ident">req</div> <div class="operator">=</div> <div class="ident">req</div><div class="operator">.</div><div class="ident">WithContext</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">WithValue</div><div class="operator">(</div><div class="ident">req</div><div class="operator">.</div><div class="ident">Context</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ContextKeyUser</div><div class="operator">,</div> <div class="ident">identity</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+					<div class="ident">req</div> <div class="operator">=</div> <div class="ident">req</div><div class="operator">.</div><div class="ident">WithContext</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">WithValue</div><div class="operator">(</div><div class="ident">req</div><div class="operator">.</div><div class="ident">Context</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ContextKeyUser</div><div class="operator">,</div> <div class="ident">identity</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 
-					<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">ExecuteRequest</div><div class="operator">(</div><div class="ident">testServer</div><div class="operator">,</div> <div class="ident">req</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Result</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+					<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">ExecuteRequest</div><div class="operator">(</div><div class="ident">testServer</div><div class="operator">,</div> <div class="ident">req</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Result</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 					<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">b</div><div class="operator">,</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusOK</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">.</div><div class="ident">StatusCode</div><div class="operator">)</div><div class="operator"></div>
 				<div class="operator">}</div><div class="operator"></div>

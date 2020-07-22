@@ -204,7 +204,16 @@ DataSource - specification of data source. The content of this parameter depends
 		<div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 		<div class="ident">message</div> <div class="ident">string</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
+	<div class="ident">AddFeedbackOnRuleDisable</div><div class="operator">(</div>
+		<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+		<div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
+		<div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
+		<div class="ident">message</div> <div class="ident">string</div><div class="operator">,</div>
+	<div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
 	<div class="ident">GetUserFeedbackOnRule</div><div class="operator">(</div>
+		<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
+	<div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">UserFeedbackOnRule</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">GetUserFeedbackOnRuleDisable</div><div class="operator">(</div>
 		<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">UserFeedbackOnRule</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">DeleteReportsForOrg</div><div class="operator">(</div><div class="ident">orgID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>

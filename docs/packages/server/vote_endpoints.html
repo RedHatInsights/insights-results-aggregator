@@ -134,49 +134,13 @@ limitations under the License.</p>
 	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">server</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
-	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;io&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/responses&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
+
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
-
-<div class="keyword">const</div> <div class="operator">(</div>
-	<div class="ident">feedbackMaxLength</div> <div class="operator">=</div> <div class="literal">250</div><div class="operator"></div>
-<div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>readFeedbackRequestBody parse request body and return object with message in it</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">readFeedbackRequestBody</div><div class="operator">(</div><div class="ident">writer</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ResponseWriter</div><div class="operator">,</div> <div class="ident">request</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">FeedbackRequest</div><div class="operator">,</div> <div class="ident">bool</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="keyword">var</div> <div class="ident">feedback</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">FeedbackRequest</div><div class="operator"></div>
-
-	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">NewDecoder</div><div class="operator">(</div><div class="ident">request</div><div class="operator">.</div><div class="ident">Body</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Decode</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">feedback</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">switch</div> <div class="operator">{</div>
-	<div class="keyword">case</div> <div class="ident">err</div> <div class="operator">==</div> <div class="ident">io</div><div class="operator">.</div><div class="ident">EOF</div><div class="operator">:</div>
-		<div class="ident">feedback</div><div class="operator">.</div><div class="ident">Message</div> <div class="operator">=</div> <div class="literal">&#34;&#34;</div><div class="operator"></div>
-		<div class="keyword">return</div> <div class="ident">feedback</div><div class="operator">,</div> <div class="ident">true</div><div class="operator"></div>
-	<div class="keyword">case</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div><div class="operator">:</div>
-		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div> <div class="ident">feedback</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">feedback</div><div class="operator">.</div><div class="ident">Message</div><div class="operator">)</div> <div class="operator">&gt;</div> <div class="ident">feedbackMaxLength</div> <div class="operator">{</div>
-		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ValidationError</div><div class="operator">{</div>
-			<div class="ident">ErrString</div><div class="operator">:</div>  <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;String is longer than %d bytes&#34;</div><div class="operator">,</div> <div class="ident">feedbackMaxLength</div><div class="operator">)</div><div class="operator">,</div>
-			<div class="ident">ParamName</div><div class="operator">:</div>  <div class="literal">&#34;message&#34;</div><div class="operator">,</div>
-			<div class="ident">ParamValue</div><div class="operator">:</div> <div class="ident">feedback</div><div class="operator">.</div><div class="ident">Message</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div> <div class="ident">feedback</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-	<div class="keyword">return</div> <div class="ident">feedback</div><div class="operator">,</div> <div class="ident">true</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -242,7 +206,7 @@ limitations under the License.</p>
 	<td class="code"><pre><code>		<div class="keyword">return</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">,</div> <div class="ident">userID</div><div class="operator">,</div> <div class="ident">userVote</div><div class="operator">,</div> <div class="ident">voteMessage</div><div class="operator">.</div><div class="ident">Message</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">VoteOnRule</div><div class="operator">(</div><div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">,</div> <div class="ident">userID</div><div class="operator">,</div> <div class="ident">userVote</div><div class="operator">,</div> <div class="ident">voteMessage</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div><div class="operator"></div>

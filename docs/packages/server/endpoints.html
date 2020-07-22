@@ -230,6 +230,13 @@ limitations under the License.</p>
       </tr>
       
       <tr class="section">
+	<td class="doc"><p>DisableRuleFeedbackEndpoint accepts a feedback from user when (s)he disables a rule</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">DisableRuleFeedbackEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;clusters/{cluster}/rules/{rule_id}/users/{user_id}/disable_feedback&#34;</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
 	<td class="doc"><p>MetricsEndpoint returns prometheus metrics</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">MetricsEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;metrics&#34;</div><div class="operator"></div>
@@ -280,6 +287,7 @@ limitations under the License.</p>
 	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">&#43;</div><div class="ident">ClustersForOrganizationEndpoint</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">listOfClustersForOrganization</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">&#43;</div><div class="ident">DisableRuleForClusterEndpoint</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">disableRuleForCluster</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPut</div><div class="operator">,</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodOptions</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">&#43;</div><div class="ident">EnableRuleForClusterEndpoint</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">enableRuleForCluster</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPut</div><div class="operator">,</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodOptions</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">&#43;</div><div class="ident">DisableRuleFeedbackEndpoint</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">saveDisableFeedback</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPost</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
