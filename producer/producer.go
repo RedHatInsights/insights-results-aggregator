@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package producer contains functions that can be used to produce (i.e. send)
-// messages to properly configured Kafka broker.
+// Package producer contains functions that can be used to produce (that is
+// send) messages to properly configured Kafka broker.
 package producer
 
 import (
