@@ -6,3 +6,7 @@ coverage.out
 aggregator
 rest-api-tests
 rules-content
+
+# Locally generated files from Jekyll
+docs/Gemfile.lock
+docs/_site/

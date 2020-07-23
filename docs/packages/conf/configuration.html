@@ -187,6 +187,16 @@ https://redhatinsights.github.io/insights-results-aggregator/packages/conf/confi
       </tr>
       
       <tr class="section">
+	<td class="doc"><p>MetricsConfiguration holds metrics related configuration</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">MetricsConfiguration</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">Namespace</div> <div class="ident">string</div> <div class="literal">`mapstructure:&#34;namespace&#34; toml:&#34;namespace&#34;`</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
 	<td class="doc"><p>ConfigStruct is a structure holding the whole service configuration</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ConfigStruct</div> <div class="keyword">struct</div> <div class="operator">{</div>
@@ -198,6 +208,7 @@ https://redhatinsights.github.io/insights-results-aggregator/packages/conf/confi
 	<div class="ident">Storage</div>    <div class="ident">storage</div><div class="operator">.</div><div class="ident">Configuration</div>          <div class="literal">`mapstructure:&#34;storage&#34; toml:&#34;storage&#34;`</div><div class="operator"></div>
 	<div class="ident">Logging</div>    <div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div>    <div class="literal">`mapstructure:&#34;logging&#34; toml:&#34;logging&#34;`</div><div class="operator"></div>
 	<div class="ident">CloudWatch</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">CloudWatchConfiguration</div> <div class="literal">`mapstructure:&#34;cloudwatch&#34; toml:&#34;cloudwatch&#34;`</div><div class="operator"></div>
+	<div class="ident">Metrics</div>    <div class="ident">MetricsConfiguration</div>           <div class="literal">`mapstructure:&#34;metrics&#34; toml:&#34;metrics&#34;`</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -367,6 +378,16 @@ config by itself</p>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">Config</div><div class="operator">.</div><div class="ident">Server</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>GetMetricsConfiguration returns metrics configuration</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">GetMetricsConfiguration</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">MetricsConfiguration</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">Config</div><div class="operator">.</div><div class="ident">Metrics</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

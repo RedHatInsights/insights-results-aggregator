@@ -1,20 +1,4 @@
 <!DOCTYPE html>
-<!--
- Copyright 2020 Red Hat, Inc
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
--->
-
 <html>
 <head>
 <title>metrics.go</title>
@@ -140,19 +124,30 @@ limitations under the License.
 	<td class="doc"><p>Package metrics contains all metrics that needs to be exposed to Prometheus
 and indirectly to Grafana. Currently, the following metrics are exposed:</p>
 
-<p>api<em>endpoints</em>requests - number of requests made for each REST API endpoint</p>
-
-<p>api<em>endpoints</em>response_time - response times for all REST API endpoints</p>
-
 <p>consumed_messages - total number of messages consumed from selected broker</p>
+
+<p>consuming_errors - total number of errors during consuming messages from selected broker</p>
+
+<p>successful<em>messages</em>processing_time - time to process successfully message</p>
+
+<p>failed<em>messages</em>processing_time - time to process message fail</p>
+
+<p>last<em>checked</em>timestamp<em>lag</em>minutes - shows how slow we get messages from clusters</p>
 
 <p>produced_messages - total number of produced messages</p>
 
 <p>written_reports - total number of reports written into the storage (cache)</p>
+
+<p>feedback<em>on</em>rules - total number of left feedback</p>
+
+<p>sql<em>queries</em>counter - total number of SQL queries</p>
+
+<p>sql<em>queries</em>durations - SQL queries durations</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">metrics</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/metrics&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/prometheus/client_golang/prometheus&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/prometheus/client_golang/prometheus/promauto&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
@@ -267,6 +262,78 @@ probably it will be used only in tests</p>
 	<div class="ident">Name</div><div class="operator">:</div> <div class="literal">&#34;sql_queries_durations&#34;</div><div class="operator">,</div>
 	<div class="ident">Help</div><div class="operator">:</div> <div class="literal">&#34;SQL queries durations&#34;</div><div class="operator">,</div>
 <div class="operator">}</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="literal">&#34;query&#34;</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>AddMetricsWithNamespace register the desired metrics using a given namespace</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">AddMetricsWithNamespace</div><div class="operator">(</div><div class="ident">namespace</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">metrics</div><div class="operator">.</div><div class="ident">AddAPIMetricsWithNamespace</div><div class="operator">(</div><div class="ident">namespace</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">ConsumedMessages</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">ConsumingErrors</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">SuccessfulMessagesProcessingTime</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">FailedMessagesProcessingTime</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">LastCheckedTimestampLagMinutes</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">ProducedMessages</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">WrittenReports</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">FeedbackOnRules</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">SQLQueriesCounter</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">prometheus</div><div class="operator">.</div><div class="ident">Unregister</div><div class="operator">(</div><div class="ident">SQLQueriesDurations</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">ConsumedMessages</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;consumed_messages&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;The total number of messages consumed from Kafka&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">ConsumingErrors</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;consuming_errors&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;The total number of errors during consuming messages from Kafka&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">SuccessfulMessagesProcessingTime</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewHistogram</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">HistogramOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;successful_messages_processing_time&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;Time to process successfully message&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">FailedMessagesProcessingTime</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewHistogram</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">HistogramOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;failed_messages_processing_time&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;Time to process message fail&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">LastCheckedTimestampLagMinutes</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewHistogram</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">HistogramOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;last_checked_timestamp_lag_minutes&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;Shows how slow we get messages from clusters&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">ProducedMessages</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;produced_messages&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;The total number of produced messages&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">WrittenReports</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;written_reports&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;The total number of reports written to the storage&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">FeedbackOnRules</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;feedback_on_rules&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;The total number of left feedback&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">SQLQueriesCounter</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;sql_queries_counter&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;Number of SQL queries&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">SQLQueriesDurations</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewHistogramVec</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">HistogramOpts</div><div class="operator">{</div>
+		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
+		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;sql_queries_durations&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;SQL queries durations&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="literal">&#34;query&#34;</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
