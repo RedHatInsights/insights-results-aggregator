@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package logger contains the configuration structures needed to configure
-// the access to CloudWatch server to sending the log messages there
+// the access to CloudWatch server to sending the log messages there.
 package logger
 
 import (
