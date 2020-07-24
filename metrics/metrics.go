@@ -17,18 +17,29 @@ limitations under the License.
 // Package metrics contains all metrics that needs to be exposed to Prometheus
 // and indirectly to Grafana. Currently, the following metrics are exposed:
 //
-// api_endpoints_requests - number of requests made for each REST API endpoint
-//
-// api_endpoints_response_time - response times for all REST API endpoints
-//
 // consumed_messages - total number of messages consumed from selected broker
+//
+// consuming_errors - total number of errors during consuming messages from selected broker
+//
+// successful_messages_processing_time - time to process successfully message
+//
+// failed_messages_processing_time - time to process message fail
+//
+// last_checked_timestamp_lag_minutes - shows how slow we get messages from clusters
 //
 // produced_messages - total number of produced messages
 //
 // written_reports - total number of reports written into the storage (cache)
+//
+// feedback_on_rules - total number of left feedback
+//
+// sql_queries_counter - total number of SQL queries
+//
+// sql_queries_durations - SQL queries durations
 package metrics
 
 import (
+	"github.com/RedHatInsights/insights-operator-utils/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -93,3 +104,70 @@ var SQLQueriesDurations = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Name: "sql_queries_durations",
 	Help: "SQL queries durations",
 }, []string{"query"})
+
+// AddMetricsWithNamespace register the desired metrics using a given namespace
+func AddMetricsWithNamespace(namespace string) {
+	metrics.AddAPIMetricsWithNamespace(namespace)
+
+	prometheus.Unregister(ConsumedMessages)
+	prometheus.Unregister(ConsumingErrors)
+	prometheus.Unregister(SuccessfulMessagesProcessingTime)
+	prometheus.Unregister(FailedMessagesProcessingTime)
+	prometheus.Unregister(LastCheckedTimestampLagMinutes)
+	prometheus.Unregister(ProducedMessages)
+	prometheus.Unregister(WrittenReports)
+	prometheus.Unregister(FeedbackOnRules)
+	prometheus.Unregister(SQLQueriesCounter)
+	prometheus.Unregister(SQLQueriesDurations)
+
+	ConsumedMessages = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "consumed_messages",
+		Help:      "The total number of messages consumed from Kafka",
+	})
+	ConsumingErrors = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "consuming_errors",
+		Help:      "The total number of errors during consuming messages from Kafka",
+	})
+	SuccessfulMessagesProcessingTime = promauto.NewHistogram(prometheus.HistogramOpts{
+		Namespace: namespace,
+		Name:      "successful_messages_processing_time",
+		Help:      "Time to process successfully message",
+	})
+	FailedMessagesProcessingTime = promauto.NewHistogram(prometheus.HistogramOpts{
+		Namespace: namespace,
+		Name:      "failed_messages_processing_time",
+		Help:      "Time to process message fail",
+	})
+	LastCheckedTimestampLagMinutes = promauto.NewHistogram(prometheus.HistogramOpts{
+		Namespace: namespace,
+		Name:      "last_checked_timestamp_lag_minutes",
+		Help:      "Shows how slow we get messages from clusters",
+	})
+	ProducedMessages = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "produced_messages",
+		Help:      "The total number of produced messages",
+	})
+	WrittenReports = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "written_reports",
+		Help:      "The total number of reports written to the storage",
+	})
+	FeedbackOnRules = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "feedback_on_rules",
+		Help:      "The total number of left feedback",
+	})
+	SQLQueriesCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "sql_queries_counter",
+		Help:      "Number of SQL queries",
+	})
+	SQLQueriesDurations = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: namespace,
+		Name:      "sql_queries_durations",
+		Help:      "SQL queries durations",
+	}, []string{"query"})
+}
