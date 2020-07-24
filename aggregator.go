@@ -61,6 +61,7 @@ const (
 	// ExitStatusMigrationError is returned in case of an error while attempting to perform DB migrations
 	ExitStatusMigrationError
 	defaultConfigFilename = "config"
+	typeStr               = "type"
 
 	databasePreparationMessage = "database preparation exited with error code %v"
 	consumerExitedErrorMessage = "consumer exited with error code %v"
@@ -304,7 +305,7 @@ func stopService() int {
 }
 
 func initInfoLog(msg string) {
-	log.Info().Str("type", "init").Msg(msg)
+	log.Info().Str(typeStr, "init").Msg(msg)
 }
 
 func printVersionInfo() {
