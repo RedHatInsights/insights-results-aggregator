@@ -127,3 +127,15 @@ debug = false
 * `stream_name` is a stream name for aws logging. If you're deploying multiple pods,
 you can add `$HOSTNAME` to the stream name so that they aren't writing to the same stream at once
 * `debug` is an option to enable debug output of cloudwatch logging
+
+## Metrics configuration
+
+Metrics configuration is in section `[metrics]` in config file
+
+```toml
+[metrics]
+namespace = "mynamespace"
+```
+
+* `namespace` if defined, it is used as `Namespace` argument when creating all
+  the Prometheus metrics exposed by this service.

@@ -42,6 +42,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/logger"
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
@@ -212,6 +213,11 @@ func startServer() int {
 func startService() int {
 	var waitGroup sync.WaitGroup
 	exitCode := int32(ExitStatusOK)
+
+	metricsCfg := conf.GetMetricsConfiguration()
+	if metricsCfg.Namespace != "" {
+		metrics.AddMetricsWithNamespace(metricsCfg.Namespace)
+	}
 
 	prepDbExitCode := prepareDB()
 	if prepDbExitCode != ExitStatusOK {

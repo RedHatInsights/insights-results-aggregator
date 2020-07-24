@@ -59,6 +59,11 @@ const (
 	defaultContentPath          = "/rules-content"
 )
 
+// MetricsConfiguration holds metrics related configuration
+type MetricsConfiguration struct {
+	Namespace string `mapstructure:"namespace" toml:"namespace"`
+}
+
 // ConfigStruct is a structure holding the whole service configuration
 type ConfigStruct struct {
 	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
@@ -69,6 +74,7 @@ type ConfigStruct struct {
 	Storage    storage.Configuration          `mapstructure:"storage" toml:"storage"`
 	Logging    logger.LoggingConfiguration    `mapstructure:"logging" toml:"logging"`
 	CloudWatch logger.CloudWatchConfiguration `mapstructure:"cloudwatch" toml:"cloudwatch"`
+	Metrics    MetricsConfiguration           `mapstructure:"metrics" toml:"metrics"`
 }
 
 // Config has exactly the same structure as *.toml file
@@ -178,6 +184,11 @@ func GetServerConfiguration() server.Configuration {
 	}
 
 	return Config.Server
+}
+
+// GetMetricsConfiguration returns metrics configuration
+func GetMetricsConfiguration() MetricsConfiguration {
+	return Config.Metrics
 }
 
 // checkIfFileExists returns nil if path doesn't exist or isn't a file,

@@ -166,6 +166,7 @@ list of clusters for given organization, and cluster health.</p>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/conf&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/consumer&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/logger&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/metrics&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/migration&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
@@ -431,6 +432,11 @@ whether the close operation was successful or not.</p>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">startService</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
 	<div class="keyword">var</div> <div class="ident">waitGroup</div> <div class="ident">sync</div><div class="operator">.</div><div class="ident">WaitGroup</div><div class="operator"></div>
 	<div class="ident">exitCode</div> <div class="operator">:=</div> <div class="ident">int32</div><div class="operator">(</div><div class="ident">ExitStatusOK</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">metricsCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetMetricsConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">metricsCfg</div><div class="operator">.</div><div class="ident">Namespace</div> <div class="operator">!=</div> <div class="literal">&#34;&#34;</div> <div class="operator">{</div>
+		<div class="ident">metrics</div><div class="operator">.</div><div class="ident">AddMetricsWithNamespace</div><div class="operator">(</div><div class="ident">metricsCfg</div><div class="operator">.</div><div class="ident">Namespace</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">prepDbExitCode</div> <div class="operator">:=</div> <div class="ident">prepareDB</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">prepDbExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
