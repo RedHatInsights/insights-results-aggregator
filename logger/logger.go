@@ -57,12 +57,18 @@ func (writer WorkaroundForRHIOPS729) Write(bytes []byte) (int, error) {
 		obj[strings.ToLower(key)] = val
 	}
 
-	result := map[string]interface{}{
-		"level":   obj["level"],
-		"error":   obj["error"],
-		"message": obj["message"],
-		"type":    obj["type"],
+	result := map[string]interface{}{}
+
+	processField := func(key string) {
+		if val, ok := obj[key]; ok {
+			result[key] = val
+		}
 	}
+
+	processField("level")
+	processField("error")
+	processField("message")
+	processField("type")
 
 	// ignore the rest shit
 

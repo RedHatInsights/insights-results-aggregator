@@ -152,14 +152,14 @@ func TestLoggerSetLogLevel(t *testing.T) {
 	}
 }
 
-func TestUnJSONWriter_Write(t *testing.T) {
+func TestWorkaroundForRHIOPS729_Write(t *testing.T) {
 	for _, testCase := range []struct {
 		Name        string
 		StrToWrite  string
 		ExpectedStr string
 	}{
 		{"NotJSON", "some expected string", "some expected string"},
-		{"JSON", `{"level": "error", "is_something": true}`, "LEVEL=error; IS_SOMETHING=true;"},
+		{"JSON", `{"level": "error", "is_something": true}`, `{"level":"error"}`},
 	} {
 		t.Run(testCase.Name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
