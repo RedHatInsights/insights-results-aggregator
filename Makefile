@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test test-postgres cover integration_tests rest_api_tests sqlite_db license before_commit help godoc
+.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test test-postgres cover integration_tests rest_api_tests sqlite_db license before_commit help godoc install_docgo install_addlicense
 
 SOURCES:=$(shell find . -name '*.go')
 BINARY:=insights-results-aggregator
@@ -91,9 +91,8 @@ sqlite_db:
 	mv aggregator.db aggragator.db.backup
 	local_storage/create_database_sqlite.sh
 
-license:
-	GO111MODULE=off go get -u github.com/google/addlicense && \
-		addlicense -c "Red Hat, Inc" -l "apache" -v ./
+license: install_addlicense
+	addlicense -c "Red Hat, Inc" -l "apache" -v ./
 
 before_commit: style test test-postgres integration_tests openapi-check license ## Checks done before commit
 	./check_coverage.sh
@@ -110,5 +109,15 @@ help: ## Show this help screen
 docs/packages/%.html: %.go
 	mkdir -p $(dir $@)
 	docgo -outdir $(dir $@) $^
+	addlicense -c "Red Hat, Inc" -l "apache" -v $@
 
-godoc: ${DOCFILES}
+godoc: export GO111MODULE=off
+godoc: install_docgo install_addlicense ${DOCFILES}
+
+install_docgo: export GO111MODULE=off
+install_docgo:
+	[[ `command -v docgo` ]] || go get -u github.com/dhconnelly/docgo
+
+install_addlicense: export GO111MODULE=off
+install_addlicense:
+	[[ `command -v addlicense` ]] || GO111MODULE=off go get -u github.com/google/addlicense
