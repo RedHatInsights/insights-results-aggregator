@@ -163,7 +163,7 @@ func TestUnJSONWriter_Write(t *testing.T) {
 	} {
 		t.Run(testCase.Name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
-			unJSONWriter := logger.UnJSONWriter{Writer: buf}
+			unJSONWriter := logger.WorkaroundForRHIOPS729{Writer: buf}
 
 			writtenBytes, err := unJSONWriter.Write([]byte(testCase.StrToWrite))
 			helpers.FailOnError(t, err)
