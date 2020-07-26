@@ -157,9 +157,15 @@ func TestWorkaroundForRHIOPS729_Write(t *testing.T) {
 		Name        string
 		StrToWrite  string
 		ExpectedStr string
+		IsJSON      bool
 	}{
-		{"NotJSON", "some expected string", "some expected string"},
-		{"JSON", `{"level": "error", "is_something": true}`, `{"level":"error"}`},
+		{"NotJSON", "some expected string", "some expected string", false},
+		{
+			"JSON",
+			`{"level": "error", "is_something": true}`,
+			`{"LEVEL":"error", "IS_SOMETHING": true}`,
+			true,
+		},
 	} {
 		t.Run(testCase.Name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
@@ -169,7 +175,11 @@ func TestWorkaroundForRHIOPS729_Write(t *testing.T) {
 			helpers.FailOnError(t, err)
 
 			assert.Equal(t, writtenBytes, len(testCase.StrToWrite))
-			assert.Equal(t, testCase.ExpectedStr, strings.TrimSpace(buf.String()))
+			if testCase.IsJSON {
+				helpers.AssertStringsAreEqualJSON(t, testCase.ExpectedStr, buf.String())
+			} else {
+				assert.Equal(t, testCase.ExpectedStr, strings.TrimSpace(buf.String()))
+			}
 		})
 	}
 }
