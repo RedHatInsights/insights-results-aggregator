@@ -54,25 +54,10 @@ func (writer WorkaroundForRHIOPS729) Write(bytes []byte) (int, error) {
 	for key := range obj {
 		val := obj[key]
 		delete(obj, key)
-		obj[strings.ToLower(key)] = val
+		obj[strings.ToUpper(key)] = val
 	}
 
-	result := map[string]interface{}{}
-
-	processField := func(key string) {
-		if val, ok := obj[key]; ok {
-			result[key] = val
-		}
-	}
-
-	processField("level")
-	processField("error")
-	processField("message")
-	processField("type")
-
-	// ignore the rest shit
-
-	resultBytes, err := json.Marshal(result)
+	resultBytes, err := json.Marshal(obj)
 	if err != nil {
 		return 0, err
 	}
