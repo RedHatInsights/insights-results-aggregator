@@ -35,13 +35,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// UnJSONWriter converts JSON objects to not JSON to fix RHIOPS-729.
+// WorkaroundForRHIOPS729 keeps only those fields that are currently getting their way to Kibana
 // TODO: delete when RHIOPS-729 is fixed
-type UnJSONWriter struct {
+type WorkaroundForRHIOPS729 struct {
 	io.Writer
 }
 
-func (writer UnJSONWriter) Write(bytes []byte) (int, error) {
+func (writer WorkaroundForRHIOPS729) Write(bytes []byte) (int, error) {
 	var obj map[string]interface{}
 
 	err := json.Unmarshal(bytes, &obj)
@@ -50,38 +50,24 @@ func (writer UnJSONWriter) Write(bytes []byte) (int, error) {
 		return writer.Writer.Write(bytes)
 	}
 
-	// uppercase the keys
+	// lowercase the keys
 	for key := range obj {
 		val := obj[key]
 		delete(obj, key)
 		obj[strings.ToUpper(key)] = val
 	}
 
-	stringifiedObj := ""
-
-	processKeyIfExists := func(key string) {
-		if val, ok := obj[key]; ok {
-			stringifiedObj += fmt.Sprintf("%+v=%+v; ", strings.ToUpper(key), val)
-			delete(obj, key)
-		}
+	resultBytes, err := json.Marshal(obj)
+	if err != nil {
+		return 0, err
 	}
 
-	processKeyIfExists("LEVEL")
-	processKeyIfExists("TIME")
-	processKeyIfExists("ERROR")
-	processKeyIfExists("MESSAGE")
-
-	// process the rest
-	for key, val := range obj {
-		stringifiedObj += fmt.Sprintf("%+v=%+v; ", strings.ToUpper(key), val)
-	}
-
-	written, err := writer.Write([]byte(stringifiedObj))
+	written, err := writer.Writer.Write(resultBytes)
 	if err != nil {
 		return written, err
 	}
 
-	if written < len(stringifiedObj) {
+	if written < len(resultBytes) {
 		return written, fmt.Errorf("too few bytes were written")
 	}
 
@@ -148,7 +134,7 @@ func InitZerolog(
 			)
 		}
 
-		writers = append(writers, &UnJSONWriter{Writer: cloudWatchWriter})
+		writers = append(writers, &WorkaroundForRHIOPS729{Writer: cloudWatchWriter})
 	}
 
 	logsWriter := io.MultiWriter(writers...)

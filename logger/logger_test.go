@@ -152,24 +152,34 @@ func TestLoggerSetLogLevel(t *testing.T) {
 	}
 }
 
-func TestUnJSONWriter_Write(t *testing.T) {
+func TestWorkaroundForRHIOPS729_Write(t *testing.T) {
 	for _, testCase := range []struct {
 		Name        string
 		StrToWrite  string
 		ExpectedStr string
+		IsJSON      bool
 	}{
-		{"NotJSON", "some expected string", "some expected string"},
-		{"JSON", `{"level": "error", "is_something": true}`, "LEVEL=error; IS_SOMETHING=true;"},
+		{"NotJSON", "some expected string", "some expected string", false},
+		{
+			"JSON",
+			`{"level": "error", "is_something": true}`,
+			`{"LEVEL":"error", "IS_SOMETHING": true}`,
+			true,
+		},
 	} {
 		t.Run(testCase.Name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
-			unJSONWriter := logger.UnJSONWriter{Writer: buf}
+			unJSONWriter := logger.WorkaroundForRHIOPS729{Writer: buf}
 
 			writtenBytes, err := unJSONWriter.Write([]byte(testCase.StrToWrite))
 			helpers.FailOnError(t, err)
 
 			assert.Equal(t, writtenBytes, len(testCase.StrToWrite))
-			assert.Equal(t, testCase.ExpectedStr, strings.TrimSpace(buf.String()))
+			if testCase.IsJSON {
+				helpers.AssertStringsAreEqualJSON(t, testCase.ExpectedStr, buf.String())
+			} else {
+				assert.Equal(t, testCase.ExpectedStr, strings.TrimSpace(buf.String()))
+			}
 		})
 	}
 }
