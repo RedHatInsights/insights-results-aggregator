@@ -210,6 +210,7 @@ list of clusters for given organization, and cluster health.</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">ExitStatusMigrationError</div><div class="operator"></div>
 	<div class="ident">defaultConfigFilename</div> <div class="operator">=</div> <div class="literal">&#34;config&#34;</div><div class="operator"></div>
+	<div class="ident">typeStr</div>               <div class="operator">=</div> <div class="literal">&#34;type&#34;</div><div class="operator"></div>
 
 	<div class="ident">databasePreparationMessage</div> <div class="operator">=</div> <div class="literal">&#34;database preparation exited with error code %v&#34;</div><div class="operator"></div>
 	<div class="ident">consumerExitedErrorMessage</div> <div class="operator">=</div> <div class="literal">&#34;consumer exited with error code %v&#34;</div><div class="operator"></div>
@@ -538,7 +539,7 @@ whether the close operation was successful or not.</p>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">initInfoLog</div><div class="operator">(</div><div class="ident">msg</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Str</div><div class="operator">(</div><div class="literal">&#34;type&#34;</div><div class="operator">,</div> <div class="literal">&#34;init&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">msg</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Str</div><div class="operator">(</div><div class="ident">typeStr</div><div class="operator">,</div> <div class="literal">&#34;init&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">msg</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">printVersionInfo</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>

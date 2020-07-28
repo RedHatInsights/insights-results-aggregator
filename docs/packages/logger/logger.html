@@ -163,14 +163,14 @@ the access to CloudWatch server to sending the log messages there.</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>UnJSONWriter converts JSON objects to not JSON to fix RHIOPS-729.
+	<td class="doc"><p>WorkaroundForRHIOPS729 keeps only those fields that are currently getting their way to Kibana
 TODO: delete when RHIOPS-729 is fixed</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">UnJSONWriter</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">WorkaroundForRHIOPS729</div> <div class="keyword">struct</div> <div class="operator">{</div>
 	<div class="ident">io</div><div class="operator">.</div><div class="ident">Writer</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
-<div class="keyword">func</div> <div class="operator">(</div><div class="ident">writer</div> <div class="ident">UnJSONWriter</div><div class="operator">)</div> <div class="ident">Write</div><div class="operator">(</div><div class="ident">bytes</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">int</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+<div class="keyword">func</div> <div class="operator">(</div><div class="ident">writer</div> <div class="ident">WorkaroundForRHIOPS729</div><div class="operator">)</div> <div class="ident">Write</div><div class="operator">(</div><div class="ident">bytes</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">int</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">var</div> <div class="ident">obj</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Unmarshal</div><div class="operator">(</div><div class="ident">bytes</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">obj</div><div class="operator">)</div><div class="operator"></div>
@@ -188,7 +188,7 @@ TODO: delete when RHIOPS-729 is fixed</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>uppercase the keys</p>
+	<td class="doc"><p>lowercase the keys</p>
 </td>
 	<td class="code"><pre><code>	<div class="keyword">for</div> <div class="ident">key</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">obj</div> <div class="operator">{</div>
 		<div class="ident">val</div> <div class="operator">:=</div> <div class="ident">obj</div><div class="operator">[</div><div class="ident">key</div><div class="operator">]</div><div class="operator"></div>
@@ -196,36 +196,17 @@ TODO: delete when RHIOPS-729 is fixed</p>
 		<div class="ident">obj</div><div class="operator">[</div><div class="ident">strings</div><div class="operator">.</div><div class="ident">ToUpper</div><div class="operator">(</div><div class="ident">key</div><div class="operator">)</div><div class="operator">]</div> <div class="operator">=</div> <div class="ident">val</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">stringifiedObj</div> <div class="operator">:=</div> <div class="literal">&#34;&#34;</div><div class="operator"></div>
-
-	<div class="ident">processKeyIfExists</div> <div class="operator">:=</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">key</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
-		<div class="keyword">if</div> <div class="ident">val</div><div class="operator">,</div> <div class="ident">ok</div> <div class="operator">:=</div> <div class="ident">obj</div><div class="operator">[</div><div class="ident">key</div><div class="operator">]</div><div class="operator">;</div> <div class="ident">ok</div> <div class="operator">{</div>
-			<div class="ident">stringifiedObj</div> <div class="operator">&#43;=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%&#43;v=%&#43;v; &#34;</div><div class="operator">,</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">ToUpper</div><div class="operator">(</div><div class="ident">key</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">val</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">delete</div><div class="operator">(</div><div class="ident">obj</div><div class="operator">,</div> <div class="ident">key</div><div class="operator">)</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">resultBytes</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Marshal</div><div class="operator">(</div><div class="ident">obj</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="literal">0</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">processKeyIfExists</div><div class="operator">(</div><div class="literal">&#34;LEVEL&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">processKeyIfExists</div><div class="operator">(</div><div class="literal">&#34;TIME&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">processKeyIfExists</div><div class="operator">(</div><div class="literal">&#34;ERROR&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">processKeyIfExists</div><div class="operator">(</div><div class="literal">&#34;MESSAGE&#34;</div><div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>process the rest</p>
-</td>
-	<td class="code"><pre><code>	<div class="keyword">for</div> <div class="ident">key</div><div class="operator">,</div> <div class="ident">val</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">obj</div> <div class="operator">{</div>
-		<div class="ident">stringifiedObj</div> <div class="operator">&#43;=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%&#43;v=%&#43;v; &#34;</div><div class="operator">,</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">ToUpper</div><div class="operator">(</div><div class="ident">key</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">val</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="ident">written</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">writer</div><div class="operator">.</div><div class="ident">Write</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">stringifiedObj</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">written</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">writer</div><div class="operator">.</div><div class="ident">Writer</div><div class="operator">.</div><div class="ident">Write</div><div class="operator">(</div><div class="ident">resultBytes</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="keyword">return</div> <div class="ident">written</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="keyword">if</div> <div class="ident">written</div> <div class="operator">&lt;</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">stringifiedObj</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">written</div> <div class="operator">&lt;</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">resultBytes</div><div class="operator">)</div> <div class="operator">{</div>
 		<div class="keyword">return</div> <div class="ident">written</div><div class="operator">,</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;too few bytes were written&#34;</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
@@ -307,7 +288,7 @@ TODO: delete when RHIOPS-729 is fixed</p>
 			<div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 
-		<div class="ident">writers</div> <div class="operator">=</div> <div class="ident">append</div><div class="operator">(</div><div class="ident">writers</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">UnJSONWriter</div><div class="operator">{</div><div class="ident">Writer</div><div class="operator">:</div> <div class="ident">cloudWatchWriter</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">writers</div> <div class="operator">=</div> <div class="ident">append</div><div class="operator">(</div><div class="ident">writers</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">WorkaroundForRHIOPS729</div><div class="operator">{</div><div class="ident">Writer</div><div class="operator">:</div> <div class="ident">cloudWatchWriter</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">logsWriter</div> <div class="operator">:=</div> <div class="ident">io</div><div class="operator">.</div><div class="ident">MultiWriter</div><div class="operator">(</div><div class="ident">writers</div><div class="operator">...</div><div class="operator">)</div><div class="operator"></div>
