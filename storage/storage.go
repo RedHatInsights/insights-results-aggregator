@@ -58,6 +58,7 @@ type Storage interface {
 		orgID types.OrgID,
 		clusterName types.ClusterName,
 		report types.ClusterReport,
+		rules []types.ReportItem,
 		collectedAtTime time.Time,
 		kafkaOffset types.KafkaOffset,
 	) error
@@ -383,19 +384,76 @@ func commaSeparatedStrToTags(str string) []string {
 	return strings.Split(str, ",")
 }
 
-func (storage DBStorage) getReportUpsertQuery() (string, error) {
+func (storage DBStorage) getReportUpsertQuery() string {
 	switch storage.dbDriverType {
 	case types.DBDriverSQLite3:
 		return `INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset)
-		 VALUES ($1, $2, $3, $4, $5, $6)`, nil
+		 VALUES ($1, $2, $3, $4, $5, $6)`
 	case types.DBDriverPostgres:
 		return `INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset)
 		 VALUES ($1, $2, $3, $4, $5, $6)
 		 ON CONFLICT (org_id, cluster)
-		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6`, nil
-	default:
-		return "", fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
+		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6`
 	}
+	return ""
+}
+
+func (storage DBStorage) getRuleUpsertQuery() string {
+	switch storage.dbDriverType {
+	case types.DBDriverSQLite3:
+		return `INSERT OR REPLACE INTO rule_hit(org_id, cluster_id, rule_id, error_key, report)
+		 VALUES ($1, $2, $3, $4, $5)`
+	case types.DBDriverPostgres:
+		return `INSERT INTO rule_hit(org_id, cluster_id, rule_id, error_key, report)
+		 VALUES ($1, $2, $3, $4, $5)
+		 ON CONFLICT (org_id, cluster, rule_id, error_key)
+		 DO UPDATE SET report = $4`
+	}
+	return ""
+}
+
+func (storage DBStorage) updateReport(
+	tx *sql.Tx,
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+	report types.ClusterReport,
+	rules []types.ReportItem,
+	lastCheckedTime time.Time,
+	kafkaOffset types.KafkaOffset,
+) error {
+	// Get the UPSERT query for writing a report into the database.
+	reportUpsertQuery := storage.getReportUpsertQuery()
+
+	// Get the UPSERT query for writing a rule into the database.
+	ruleUpsertQuery := storage.getRuleUpsertQuery()
+
+	deleteQuery := "DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
+	_, err := tx.Exec(deleteQuery, orgID, clusterName)
+	if err != nil {
+		log.Err(err).Msgf("Unable to remove previous cluster reports (org: %v, cluster: %v)", orgID, clusterName)
+		_ = tx.Rollback()
+		return err
+	}
+
+	// Perform the report upsert.
+	reportedAtTime := time.Now()
+
+	for _, rule := range rules {
+		_, err = tx.Exec(ruleUpsertQuery, orgID, clusterName, rule.Module, rule.ErrorKey, string(rule.TemplateData))
+		if err != nil {
+			log.Err(err).Msgf("Unable to upsert the cluster report (org: %v, cluster: %v)", orgID, clusterName)
+			_ = tx.Rollback()
+			return err
+		}
+	}
+
+	_, err = tx.Exec(reportUpsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, kafkaOffset)
+	if err != nil {
+		log.Err(err).Msgf("Unable to upsert the cluster report (org: %v, cluster: %v)", orgID, clusterName)
+		_ = tx.Rollback()
+		return err
+	}
+	return nil
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
@@ -403,6 +461,7 @@ func (storage DBStorage) WriteReportForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	report types.ClusterReport,
+	rules []types.ReportItem,
 	lastCheckedTime time.Time,
 	kafkaOffset types.KafkaOffset,
 ) error {
@@ -412,10 +471,8 @@ func (storage DBStorage) WriteReportForCluster(
 		return types.ErrOldReport
 	}
 
-	// Get the UPSERT query for writing a report into the database.
-	upsertQuery, err := storage.getReportUpsertQuery()
-	if err != nil {
-		return err
+	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
+		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
 	// Begin a new transaction.
@@ -431,7 +488,6 @@ func (storage DBStorage) WriteReportForCluster(
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to look up the most recent report in database")
-		_ = tx.Rollback()
 		return err
 	}
 	defer closeRows(rows)
@@ -440,16 +496,11 @@ func (storage DBStorage) WriteReportForCluster(
 	if rows.Next() {
 		log.Warn().Msgf("Database already contains report for organization %d and cluster name %s more recent than %v",
 			orgID, clusterName, lastCheckedTime)
-		_ = tx.Rollback()
 		return nil
 	}
 
-	// Perform the report upsert.
-	reportedAtTime := time.Now()
-	_, err = tx.Exec(upsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, kafkaOffset)
+	err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, kafkaOffset)
 	if err != nil {
-		log.Err(err).Msgf("Unable to upsert the cluster report (org: %v, cluster: %v)", orgID, clusterName)
-		_ = tx.Rollback()
 		return err
 	}
 

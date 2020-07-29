@@ -29,4 +29,5 @@ var migrations = []Migration{
 	mig0010AddTagsFieldToRuleErrorKeyTable,
 	mig0011RemoveFKAndContentTables,
 	mig0012CreateClusterUserRuleDisableFeedback,
+	mig0013AddRuleHitTable,
 }

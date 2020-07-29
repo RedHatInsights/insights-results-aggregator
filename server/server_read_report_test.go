@@ -81,7 +81,7 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -125,7 +125,7 @@ func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, badReport, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, badReport, testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -147,6 +147,7 @@ func TestReadReport(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.Report3Rules,
+		testdata.Report3RulesParsed,
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)
@@ -174,6 +175,7 @@ func TestReadReportDisableRule(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.Report2Rules,
+		testdata.Report2RulesParsed,
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)
@@ -237,6 +239,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.Report2Rules,
+		testdata.Report2RulesParsed,
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)

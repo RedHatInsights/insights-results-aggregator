@@ -82,7 +82,7 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -163,12 +163,12 @@ func TestListOfOrganizationsOK(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		1, "8083c377-8a05-4922-af8d-e7d0970c1f49", "{}", time.Now(), testdata.KafkaOffset,
+		1, "8083c377-8a05-4922-af8d-e7d0970c1f49", "{}", testdata.ReportEmptyRulesParsed, time.Now(), testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteReportForCluster(
-		5, "52ab955f-b769-444d-8170-4b676c5d3c85", "{}", time.Now(), testdata.KafkaOffset,
+		5, "52ab955f-b769-444d-8170-4b676c5d3c85", "{}", testdata.ReportEmptyRulesParsed, time.Now(), testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -301,7 +301,7 @@ func TestRuleFeedbackVote(t *testing.T) {
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
-				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 			)
 			helpers.FailOnError(t, err)
 
@@ -440,7 +440,7 @@ func checkBadRuleFeedbackRequest(t *testing.T, message string, expectedStatus st
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
-		testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
@@ -497,7 +497,7 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -552,7 +552,7 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
-				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 			)
 			helpers.FailOnError(t, err)
 
@@ -597,7 +597,7 @@ func TestRuleToggle(t *testing.T) {
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
-				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 			)
 			helpers.FailOnError(t, err)
 
@@ -635,7 +635,7 @@ func TestRuleToggle_EmptyUserID(t *testing.T) {
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
-				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 			)
 			helpers.FailOnError(t, err)
 
