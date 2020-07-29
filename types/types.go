@@ -102,3 +102,6 @@ const (
 type FeedbackRequest struct {
 	Message string `json:"message"`
 }
+
+// ReportItem represents a single (hit) rule of the string encoded report
+type ReportItem = types.ReportItem

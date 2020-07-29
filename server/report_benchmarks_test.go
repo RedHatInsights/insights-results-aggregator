@@ -38,8 +38,8 @@ import (
 func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
-	sameReportProvider := func() types.ClusterReport {
-		return testdata.Report3Rules
+	sameReportProvider := func() (types.ClusterReport, []types.ReportItem) {
+		return testdata.Report3Rules, testdata.Report3RulesParsed
 	}
 
 	type testCase struct {
@@ -128,15 +128,15 @@ type testReportData struct {
 	clusterID types.ClusterName
 }
 
-func initTestReports(b *testing.B, n uint, mockStorage storage.Storage, reportProvider func() types.ClusterReport) []testReportData {
+func initTestReports(b *testing.B, n uint, mockStorage storage.Storage, reportProvider func() (types.ClusterReport, []types.ReportItem)) []testReportData {
 	var testReportDataItems []testReportData
 
 	for i := uint(0); i < n; i++ {
 		orgID := testdata.GetRandomOrgID()
 		clusterID := testdata.GetRandomClusterID()
-		report := reportProvider()
+		report, rules := reportProvider()
 
-		err := mockStorage.WriteReportForCluster(orgID, clusterID, report, time.Now(), testdata.KafkaOffset)
+		err := mockStorage.WriteReportForCluster(orgID, clusterID, report, rules, time.Now(), testdata.KafkaOffset)
 		helpers.FailOnError(b, err)
 
 		testReportDataItems = append(testReportDataItems, testReportData{
