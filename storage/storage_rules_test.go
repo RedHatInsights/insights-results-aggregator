@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"database/sql"
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -34,6 +35,24 @@ import (
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
+
+var report3Rules = []types.ReportItem{
+	types.ReportItem{
+		Module:       testdata.Rule1ID,
+		ErrorKey:     testdata.ErrorKey1,
+		TemplateData: json.RawMessage(testdata.Rule1ExtraData),
+	},
+	types.ReportItem{
+		Module:       testdata.Rule2ID,
+		ErrorKey:     testdata.ErrorKey2,
+		TemplateData: json.RawMessage(testdata.Rule2ExtraData),
+	},
+	types.ReportItem{
+		Module:       testdata.Rule3ID,
+		ErrorKey:     testdata.ErrorKey3,
+		TemplateData: json.RawMessage(testdata.Rule3ExtraData),
+	},
+}
 
 func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 	err := mockStorage.WriteReportForCluster(

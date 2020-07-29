@@ -105,7 +105,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
-	message, err := parseMessage(msg.Value)
+	message, rules, err := parseMessage(msg.Value)
 	if err != nil {
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
 		return message.RequestID, err
@@ -213,34 +213,35 @@ func checkReportStructure(r Report) error {
 }
 
 // parseMessage tries to parse incoming message and read all required attributes from it
-func parseMessage(messageValue []byte) (incomingMessage, error) {
+func parseMessage(messageValue []byte) (incomingMessage, []types.ReportItem, error) {
 	var deserialized incomingMessage
+	var rules []types.ReportItem
 
 	err := json.Unmarshal(messageValue, &deserialized)
 	if err != nil {
-		return deserialized, err
+		return deserialized, rules, err
 	}
 
 	if deserialized.Organization == nil {
-		return deserialized, errors.New("missing required attribute 'OrgID'")
+		return deserialized, rules, errors.New("missing required attribute 'OrgID'")
 	}
 	if deserialized.ClusterName == nil {
-		return deserialized, errors.New("missing required attribute 'ClusterName'")
+		return deserialized, rules, errors.New("missing required attribute 'ClusterName'")
 	}
 	if deserialized.Report == nil {
-		return deserialized, errors.New("missing required attribute 'Report'")
+		return deserialized, rules, errors.New("missing required attribute 'Report'")
 	}
 
 	_, err = uuid.Parse(string(*deserialized.ClusterName))
 
 	if err != nil {
-		return deserialized, errors.New("cluster name is not a UUID")
+		return deserialized, rules, errors.New("cluster name is not a UUID")
 	}
 
 	err = checkReportStructure(*deserialized.Report)
 	if err != nil {
 		log.Err(err).Msgf("Deserialized report read from message with improper structure: %v", *deserialized.Report)
-		return deserialized, err
+		return deserialized, rules, err
 	}
 
 	err = json.Unmarshal(*((*deserialized.Report)["reports"]), &deserialized.ParsedHits)
