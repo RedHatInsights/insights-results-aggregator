@@ -13,7 +13,7 @@ Currently, the following metrics are exposed:
 1. `successful_messages_processing_time` the time to process successfully message
 1. `failed_messages_processing_time` the time to process message fail
 1. `last_checked_timestamp_lag_minutes` shows how slow we get messages from clusters
-1. `produced_messages` the total number of produced messages
+1. `produced_messages` the total number of produced messages sent to Payload Tracker's Kafka topic
 1. `written_reports` the total number of reports written to the storage
 1. `feedback_on_rules` the total number of left feedback
 1. `sql_queries_counter` the total number of SQL queries
