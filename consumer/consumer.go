@@ -81,6 +81,12 @@ func NewWithSaramaConfig(
 	if saramaConfig == nil {
 		saramaConfig = sarama.NewConfig()
 		saramaConfig.Version = sarama.V0_10_2_0
+
+		if brokerCfg.Timeout > 0 {
+			saramaConfig.Net.DialTimeout = brokerCfg.Timeout
+			saramaConfig.Net.ReadTimeout = brokerCfg.Timeout
+			saramaConfig.Net.WriteTimeout = brokerCfg.Timeout
+		}
 	}
 
 	consumerGroup, err := sarama.NewConsumerGroup([]string{brokerCfg.Address}, brokerCfg.Group, saramaConfig)
