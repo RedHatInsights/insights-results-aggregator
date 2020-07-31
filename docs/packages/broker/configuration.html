@@ -143,6 +143,8 @@ brokers that can be used to consume input messages by aggegator.</p>
 	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">broker</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
+
 	<div class="ident">mapset</div> <div class="literal">&#34;github.com/deckarep/golang-set&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
@@ -153,14 +155,15 @@ brokers that can be used to consume input messages by aggegator.</p>
 	<td class="doc"><p>Configuration represents configuration of Kafka broker</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">Configuration</div> <div class="keyword">struct</div> <div class="operator">{</div>
-	<div class="ident">Address</div>             <div class="ident">string</div>     <div class="literal">`mapstructure:&#34;address&#34; toml:&#34;address&#34;`</div><div class="operator"></div>
-	<div class="ident">Topic</div>               <div class="ident">string</div>     <div class="literal">`mapstructure:&#34;topic&#34; toml:&#34;topic&#34;`</div><div class="operator"></div>
-	<div class="ident">PayloadTrackerTopic</div> <div class="ident">string</div>     <div class="literal">`mapstructure:&#34;payload_tracker_topic&#34; toml:&#34;payload_tracker_topic&#34;`</div><div class="operator"></div>
-	<div class="ident">ServiceName</div>         <div class="ident">string</div>     <div class="literal">`mapstructure:&#34;service_name&#34; toml:&#34;service_name&#34;`</div><div class="operator"></div>
-	<div class="ident">Group</div>               <div class="ident">string</div>     <div class="literal">`mapstructure:&#34;group&#34; toml:&#34;group&#34;`</div><div class="operator"></div>
-	<div class="ident">Enabled</div>             <div class="ident">bool</div>       <div class="literal">`mapstructure:&#34;enabled&#34; toml:&#34;enabled&#34;`</div><div class="operator"></div>
-	<div class="ident">OrgWhitelist</div>        <div class="ident">mapset</div><div class="operator">.</div><div class="ident">Set</div> <div class="literal">`mapstructure:&#34;org_whitelist_file&#34; toml:&#34;org_whitelist_file&#34;`</div><div class="operator"></div>
-	<div class="ident">OrgWhitelistEnabled</div> <div class="ident">bool</div>       <div class="literal">`mapstructure:&#34;enable_org_whitelist&#34; toml:&#34;enable_org_whitelist&#34;`</div><div class="operator"></div>
+	<div class="ident">Address</div>             <div class="ident">string</div>        <div class="literal">`mapstructure:&#34;address&#34; toml:&#34;address&#34;`</div><div class="operator"></div>
+	<div class="ident">Topic</div>               <div class="ident">string</div>        <div class="literal">`mapstructure:&#34;topic&#34; toml:&#34;topic&#34;`</div><div class="operator"></div>
+	<div class="ident">Timeout</div>             <div class="ident">time</div><div class="operator">.</div><div class="ident">Duration</div> <div class="literal">`mapstructure:&#34;timeout&#34; toml:&#34;timeout&#34;`</div><div class="operator"></div>
+	<div class="ident">PayloadTrackerTopic</div> <div class="ident">string</div>        <div class="literal">`mapstructure:&#34;payload_tracker_topic&#34; toml:&#34;payload_tracker_topic&#34;`</div><div class="operator"></div>
+	<div class="ident">ServiceName</div>         <div class="ident">string</div>        <div class="literal">`mapstructure:&#34;service_name&#34; toml:&#34;service_name&#34;`</div><div class="operator"></div>
+	<div class="ident">Group</div>               <div class="ident">string</div>        <div class="literal">`mapstructure:&#34;group&#34; toml:&#34;group&#34;`</div><div class="operator"></div>
+	<div class="ident">Enabled</div>             <div class="ident">bool</div>          <div class="literal">`mapstructure:&#34;enabled&#34; toml:&#34;enabled&#34;`</div><div class="operator"></div>
+	<div class="ident">OrgWhitelist</div>        <div class="ident">mapset</div><div class="operator">.</div><div class="ident">Set</div>    <div class="literal">`mapstructure:&#34;org_whitelist_file&#34; toml:&#34;org_whitelist_file&#34;`</div><div class="operator"></div>
+	<div class="ident">OrgWhitelistEnabled</div> <div class="ident">bool</div>          <div class="literal">`mapstructure:&#34;enable_org_whitelist&#34; toml:&#34;enable_org_whitelist&#34;`</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

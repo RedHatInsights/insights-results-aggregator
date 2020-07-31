@@ -19,17 +19,20 @@ limitations under the License.
 package broker
 
 import (
+	"time"
+
 	mapset "github.com/deckarep/golang-set"
 )
 
 // Configuration represents configuration of Kafka broker
 type Configuration struct {
-	Address             string     `mapstructure:"address" toml:"address"`
-	Topic               string     `mapstructure:"topic" toml:"topic"`
-	PayloadTrackerTopic string     `mapstructure:"payload_tracker_topic" toml:"payload_tracker_topic"`
-	ServiceName         string     `mapstructure:"service_name" toml:"service_name"`
-	Group               string     `mapstructure:"group" toml:"group"`
-	Enabled             bool       `mapstructure:"enabled" toml:"enabled"`
-	OrgWhitelist        mapset.Set `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
-	OrgWhitelistEnabled bool       `mapstructure:"enable_org_whitelist" toml:"enable_org_whitelist"`
+	Address             string        `mapstructure:"address" toml:"address"`
+	Topic               string        `mapstructure:"topic" toml:"topic"`
+	Timeout             time.Duration `mapstructure:"timeout" toml:"timeout"`
+	PayloadTrackerTopic string        `mapstructure:"payload_tracker_topic" toml:"payload_tracker_topic"`
+	ServiceName         string        `mapstructure:"service_name" toml:"service_name"`
+	Group               string        `mapstructure:"group" toml:"group"`
+	Enabled             bool          `mapstructure:"enabled" toml:"enabled"`
+	OrgWhitelist        mapset.Set    `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
+	OrgWhitelistEnabled bool          `mapstructure:"enable_org_whitelist" toml:"enable_org_whitelist"`
 }

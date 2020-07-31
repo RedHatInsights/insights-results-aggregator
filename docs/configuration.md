@@ -47,6 +47,7 @@ Broker configuration is in section `[broker]` in config file
 ```toml
 [broker]
 address = "localhost:9092"
+timeout = "30s"
 topic = "topic"
 payload_tracker_topic = "payload-tracker-topic"
 service_name = "insights-results-aggregator"
@@ -56,6 +57,7 @@ save_offset = true
 ```
 
 * `address` is an address of kafka broker (DEFAULT: "")
+* `timeout` is the time used as timeout for the Kafka client networking side. See notes above
 * `topic` is a topic to consume messages from (DEFAULT: "")
 * `payload_tracker_topic` is a topic to which messages for the Payload Tracker are published (see `producer` package) (DEFAULT: "")
 * `service_name` is the name of this service as reported to the Payload Tracker (DEFAULT: "")
@@ -68,12 +70,22 @@ consuming will be started from the most recent message (DEFAULT: false)
 Option names in env configuration:
 
 * `address` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
+* `timeout` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__TIMEOUT
 * `topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC
 * `payload_tracker_topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__PAYLOAD_TRACKER_TOPIC
 * `service_name` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SERVICE_NAME
 * `group` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP
 * `enabled` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
 * `save_offset` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SAVE_OFFSET
+
+### About `timeout` definition
+
+The `timeout` configuration should be an string that can be parsed by the
+function [`time.ParseDuration`](https://golang.org/pkg/time/#ParseDuration) from
+Golang standard library.
+
+This timeout will be applied as the configuration for dial, read and write
+timeouts of the Sarama Kafka library.
 
 ## Server configuration
 
