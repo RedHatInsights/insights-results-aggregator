@@ -27,7 +27,7 @@ limitations under the License.
 //
 // last_checked_timestamp_lag_minutes - shows how slow we get messages from clusters
 //
-// produced_messages - total number of produced messages
+// produced_messages - total number of produced messages sent to Payload Tracker's Kafka topic
 //
 // written_reports - total number of reports written into the storage (cache)
 //
@@ -78,7 +78,7 @@ var LastCheckedTimestampLagMinutes = promauto.NewHistogram(prometheus.HistogramO
 // probably it will be used only in tests
 var ProducedMessages = promauto.NewCounter(prometheus.CounterOpts{
 	Name: "produced_messages",
-	Help: "The total number of produced messages",
+	Help: "The total number of produced messages sent to Payload Tracker's Kafka topic",
 })
 
 // WrittenReports shows number of reports written into the database
@@ -148,7 +148,7 @@ func AddMetricsWithNamespace(namespace string) {
 	ProducedMessages = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
 		Name:      "produced_messages",
-		Help:      "The total number of produced messages",
+		Help:      "The total number of produced messages sent to Payload Tracker's Kafka topic",
 	})
 	WrittenReports = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
