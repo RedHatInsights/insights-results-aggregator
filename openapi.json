@@ -161,6 +161,7 @@
             "name": "orgId",
             "in": "path",
             "required": true,
+            "description": "ID of the organization that owns the cluster.",
             "schema": {
               "type": "integer",
               "format": "int64",
@@ -171,6 +172,7 @@
             "name": "clusterId",
             "in": "path",
             "required": true,
+            "description": "ID of the cluster which must conform to UUID format.",
             "schema": {
               "type": "string",
               "minLength": 36,
@@ -182,6 +184,7 @@
             "name": "userId",
             "in": "path",
             "required": true,
+            "description": "Numeric ID of the user.",
             "schema": {
               "type": "string",
               "minLength": 36,
