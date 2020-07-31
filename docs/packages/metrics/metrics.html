@@ -150,7 +150,7 @@ and indirectly to Grafana. Currently, the following metrics are exposed:</p>
 
 <p>last<em>checked</em>timestamp<em>lag</em>minutes - shows how slow we get messages from clusters</p>
 
-<p>produced_messages - total number of produced messages</p>
+<p>produced_messages - total number of produced messages sent to Payload Tracker's Kafka topic</p>
 
 <p>written_reports - total number of reports written into the storage (cache)</p>
 
@@ -232,7 +232,7 @@ probably it will be used only in tests</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">ProducedMessages</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
 	<div class="ident">Name</div><div class="operator">:</div> <div class="literal">&#34;produced_messages&#34;</div><div class="operator">,</div>
-	<div class="ident">Help</div><div class="operator">:</div> <div class="literal">&#34;The total number of produced messages&#34;</div><div class="operator">,</div>
+	<div class="ident">Help</div><div class="operator">:</div> <div class="literal">&#34;The total number of produced messages sent to Payload Tracker&#39;s Kafka topic&#34;</div><div class="operator">,</div>
 <div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
@@ -327,7 +327,7 @@ probably it will be used only in tests</p>
 	<div class="ident">ProducedMessages</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
 		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
 		<div class="ident">Name</div><div class="operator">:</div>      <div class="literal">&#34;produced_messages&#34;</div><div class="operator">,</div>
-		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;The total number of produced messages&#34;</div><div class="operator">,</div>
+		<div class="ident">Help</div><div class="operator">:</div>      <div class="literal">&#34;The total number of produced messages sent to Payload Tracker&#39;s Kafka topic&#34;</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">WrittenReports</div> <div class="operator">=</div> <div class="ident">promauto</div><div class="operator">.</div><div class="ident">NewCounter</div><div class="operator">(</div><div class="ident">prometheus</div><div class="operator">.</div><div class="ident">CounterOpts</div><div class="operator">{</div>
 		<div class="ident">Namespace</div><div class="operator">:</div> <div class="ident">namespace</div><div class="operator">,</div>
