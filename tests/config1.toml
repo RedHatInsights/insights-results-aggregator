@@ -4,6 +4,7 @@ topic = "platform.results.ccx"
 group = "aggregator"
 enabled = false
 enable_org_whitelist = true
+timeout = "30s"
 
 [server]
 address = ":8080"
@@ -35,3 +36,6 @@ log_level = ""
 logging_to_cloud_watch_enabled = false
 
 [cloudwatch]
+
+[metrics]
+namespace = "aggregator"
