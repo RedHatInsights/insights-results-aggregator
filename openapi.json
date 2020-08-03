@@ -172,7 +172,7 @@
             "name": "clusterId",
             "in": "path",
             "required": true,
-            "description": "ID of the cluster which must conform to UUID format.",
+            "description": "ID of the cluster which must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266`",
             "schema": {
               "type": "string",
               "minLength": 36,
@@ -184,7 +184,7 @@
             "name": "userId",
             "in": "path",
             "required": true,
-            "description": "Numeric ID of the user.",
+            "description": "Numeric ID of the user. An example: `some.python.module`",
             "schema": {
               "type": "string",
               "minLength": 36,
@@ -337,6 +337,7 @@
             "name": "clusterId",
             "in": "path",
             "required": true,
+            "description": "ID of the cluster which must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266`",
             "schema": {
               "type": "string",
               "minLength": 36,
@@ -348,6 +349,7 @@
             "name": "ruleId",
             "in": "path",
             "required": true,
+            "description": "ID of a rule. An example: `some.python.module`",
             "schema": {
               "type": "string"
             }
@@ -356,6 +358,7 @@
             "name": "userId",
             "in": "path",
             "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
             "schema": {
               "type": "string"
             }
