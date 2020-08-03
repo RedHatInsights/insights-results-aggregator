@@ -21,6 +21,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	mapset "github.com/deckarep/golang-set"
@@ -80,12 +81,14 @@ func TestLoadingConfigurationFailure(t *testing.T) {
 func TestLoadBrokerConfiguration(t *testing.T) {
 	helpers.FailOnError(t, os.Chdir(".."))
 	TestLoadConfiguration(t)
+	expectedTimeout, _ := time.ParseDuration("30s")
 
 	brokerCfg := conf.GetBrokerConfiguration()
 
 	assert.Equal(t, "localhost:29092", brokerCfg.Address)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
+	assert.Equal(t, expectedTimeout, brokerCfg.Timeout)
 }
 
 // TestLoadServerConfiguration tests loading the server configuration sub-tree
@@ -383,6 +386,14 @@ func TestGetCloudWatchConfigurationDefault(t *testing.T) {
 		CreateStreamIfNotExists: false,
 		Debug:                   false,
 	}, conf.GetCloudWatchConfiguration())
+}
+
+func TestGetMetricsConfiguration(t *testing.T) {
+	helpers.FailOnError(t, os.Chdir(".."))
+	TestLoadConfiguration(t)
+
+	metricsCfg := conf.GetMetricsConfiguration()
+	assert.Equal(t, "aggregator", metricsCfg.Namespace)
 }
 
 func setEnvVariables(t *testing.T) {

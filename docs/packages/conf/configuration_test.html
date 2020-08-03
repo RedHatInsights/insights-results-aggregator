@@ -140,6 +140,7 @@ limitations under the License.
 	<div class="literal">&#34;os&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;testing&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
 	<div class="ident">mapset</div> <div class="literal">&#34;github.com/deckarep/golang-set&#34;</div><div class="operator"></div>
@@ -219,12 +220,14 @@ limitations under the License.
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestLoadBrokerConfiguration</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Chdir</div><div class="operator">(</div><div class="literal">&#34;..&#34;</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">TestLoadConfiguration</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectedTimeout</div><div class="operator">,</div> <div class="ident">_</div> <div class="operator">:=</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">ParseDuration</div><div class="operator">(</div><div class="literal">&#34;30s&#34;</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">brokerCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;localhost:29092&#34;</div><div class="operator">,</div> <div class="ident">brokerCfg</div><div class="operator">.</div><div class="ident">Address</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;platform.results.ccx&#34;</div><div class="operator">,</div> <div class="ident">brokerCfg</div><div class="operator">.</div><div class="ident">Topic</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;aggregator&#34;</div><div class="operator">,</div> <div class="ident">brokerCfg</div><div class="operator">.</div><div class="ident">Group</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedTimeout</div><div class="operator">,</div> <div class="ident">brokerCfg</div><div class="operator">.</div><div class="ident">Timeout</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -552,6 +555,14 @@ str
 		<div class="ident">CreateStreamIfNotExists</div><div class="operator">:</div> <div class="ident">false</div><div class="operator">,</div>
 		<div class="ident">Debug</div><div class="operator">:</div>                   <div class="ident">false</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetCloudWatchConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestGetMetricsConfiguration</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">os</div><div class="operator">.</div><div class="ident">Chdir</div><div class="operator">(</div><div class="literal">&#34;..&#34;</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">TestLoadConfiguration</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">metricsCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetMetricsConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;aggregator&#34;</div><div class="operator">,</div> <div class="ident">metricsCfg</div><div class="operator">.</div><div class="ident">Namespace</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">setEnvVariables</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
