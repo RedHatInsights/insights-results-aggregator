@@ -54,21 +54,21 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 
 	startTime := time.Now()
 	requestID, err := consumer.ProcessMessage(msg)
-	timeAfterProfessingMessage := time.Now()
-	messageProcessingDuration := timeAfterProfessingMessage.Sub(startTime)
+	timeAfterProcessingMessage := time.Now()
+	messageProcessingDuration := timeAfterProcessingMessage.Sub(startTime).Seconds()
 
-	_ = consumer.payloadTrackerProducer.TrackPayload(requestID, startTime, producer.StatusReceived)
-	_ = consumer.payloadTrackerProducer.TrackPayload(requestID, timeAfterProfessingMessage, producer.StatusMessageProcessed)
+	consumer.updatePayloadTracker(requestID, startTime, producer.StatusReceived)
+	consumer.updatePayloadTracker(requestID, timeAfterProcessingMessage, producer.StatusMessageProcessed)
 
 	log.Info().
 		Int64(offsetKey, msg.Offset).
 		Int32(partitionKey, msg.Partition).
 		Str(topicKey, msg.Topic).
-		Msgf("processing of message took '%v' seconds", messageProcessingDuration.Seconds())
+		Msgf("processing of message took '%v' seconds", messageProcessingDuration)
 
 	// Something went wrong while processing the message.
 	if err != nil {
-		metrics.FailedMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
+		metrics.FailedMessagesProcessingTime.Observe(messageProcessingDuration)
 		metrics.ConsumingErrors.Inc()
 
 		log.Error().Err(err).Msg("Error processing message consumed from Kafka")
@@ -78,17 +78,25 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 			log.Error().Err(err).Msg("Unable to write consumer error to storage")
 		}
 
-		_ = consumer.payloadTrackerProducer.TrackPayload(requestID, time.Now(), producer.StatusError)
+		consumer.updatePayloadTracker(requestID, time.Now(), producer.StatusError)
 	} else {
 		// The message was processed successfully.
-		metrics.SuccessfulMessagesProcessingTime.Observe(messageProcessingDuration.Seconds())
+		metrics.SuccessfulMessagesProcessingTime.Observe(messageProcessingDuration)
 		consumer.numberOfSuccessfullyConsumedMessages++
 
-		_ = consumer.payloadTrackerProducer.TrackPayload(requestID, time.Now(), producer.StatusSuccess)
+		consumer.updatePayloadTracker(requestID, time.Now(), producer.StatusSuccess)
 	}
 
 	totalMessageDuration := time.Since(startTime)
 	log.Info().Int64(durationKey, totalMessageDuration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
+}
+
+// updatePayloadTracker
+func (consumer KafkaConsumer) updatePayloadTracker(requestID types.RequestID, timestamp time.Time, status string) {
+	err := consumer.payloadTrackerProducer.TrackPayload(requestID, timestamp, status)
+	if err != nil {
+		log.Warn().Msgf(`Unable to send "%s" update to Payload Tracker service`, status)
+	}
 }
 
 // ProcessMessage processes an incoming message
