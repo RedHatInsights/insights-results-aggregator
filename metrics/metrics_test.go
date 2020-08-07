@@ -40,7 +40,7 @@ const (
 	testCaseTimeLimit = 60 * time.Second
 )
 
-var testOrgWhiteList = mapset.NewSetWith(testdata.OrgID)
+var testOrgAllowlist = mapset.NewSetWith(testdata.OrgID)
 
 func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)

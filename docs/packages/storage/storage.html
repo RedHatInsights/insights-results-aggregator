@@ -186,6 +186,7 @@ DataSource - specification of data source. The content of this parameter depends
 		<div class="ident">orgID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
 		<div class="ident">clusterName</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 		<div class="ident">report</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">,</div>
+		<div class="ident">rules</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ReportItem</div><div class="operator">,</div>
 		<div class="ident">collectedAtTime</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Time</div><div class="operator">,</div>
 		<div class="ident">kafkaOffset</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
@@ -583,19 +584,104 @@ tasks necessary for further service operation.</p>
 	<div class="keyword">return</div> <div class="ident">offset</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
-<div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">getReportUpsertQuery</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+<div class="keyword">func</div> <div class="ident">calculateTotalRisk</div><div class="operator">(</div><div class="ident">impact</div><div class="operator">,</div> <div class="ident">likelihood</div> <div class="ident">int</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="operator">(</div><div class="ident">impact</div> <div class="operator">&#43;</div> <div class="ident">likelihood</div><div class="operator">)</div> <div class="operator">/</div> <div class="literal">2</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">commaSeparatedStrToTags</div><div class="operator">(</div><div class="ident">str</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div> <div class="operator">{</div>
+	<div class="ident">str</div> <div class="operator">=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">TrimSpace</div><div class="operator">(</div><div class="ident">str</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">str</div><div class="operator">)</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">Split</div><div class="operator">(</div><div class="ident">str</div><div class="operator">,</div> <div class="literal">&#34;,&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">getReportUpsertQuery</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
 	<div class="keyword">switch</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">dbDriverType</div> <div class="operator">{</div>
 	<div class="keyword">case</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverSQLite3</div><div class="operator">:</div>
 		<div class="keyword">return</div> <div class="literal">`INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset)
-		 VALUES ($1, $2, $3, $4, $5, $6)`</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+		 VALUES ($1, $2, $3, $4, $5, $6)`</div><div class="operator"></div>
 	<div class="keyword">case</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverPostgres</div><div class="operator">:</div>
 		<div class="keyword">return</div> <div class="literal">`INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset)
 		 VALUES ($1, $2, $3, $4, $5, $6)
 		 ON CONFLICT (org_id, cluster)
-		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6`</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
-	<div class="keyword">default</div><div class="operator">:</div>
-		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;writing report with DB %v is not supported&#34;</div><div class="operator">,</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">dbDriverType</div><div class="operator">)</div><div class="operator"></div>
+		 DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6`</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">getRuleUpsertQuery</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+	<div class="keyword">switch</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">dbDriverType</div> <div class="operator">{</div>
+	<div class="keyword">case</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverSQLite3</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="literal">`INSERT OR REPLACE INTO rule_hit(org_id, cluster_id, rule_id, error_key, report)
+		 VALUES ($1, $2, $3, $4, $5)`</div><div class="operator"></div>
+	<div class="keyword">case</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverPostgres</div><div class="operator">:</div>
+		<div class="keyword">return</div> <div class="literal">`INSERT INTO rule_hit(org_id, cluster_id, rule_id, error_key, report)
+		 VALUES ($1, $2, $3, $4, $5)
+		 ON CONFLICT (org_id, cluster, rule_id, error_key)
+		 DO UPDATE SET report = $4`</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">updateReport</div><div class="operator">(</div>
+	<div class="ident">tx</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div>
+	<div class="ident">orgID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
+	<div class="ident">clusterName</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+	<div class="ident">report</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">,</div>
+	<div class="ident">rules</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ReportItem</div><div class="operator">,</div>
+	<div class="ident">lastCheckedTime</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Time</div><div class="operator">,</div>
+	<div class="ident">kafkaOffset</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
+<div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Get the UPSERT query for writing a report into the database.</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">reportUpsertQuery</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">getReportUpsertQuery</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Get the UPSERT query for writing a rule into the database.</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ruleUpsertQuery</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">getRuleUpsertQuery</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">deleteQuery</div> <div class="operator">:=</div> <div class="literal">&#34;DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;&#34;</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">deleteQuery</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Unable to remove previous cluster reports (org: %v, cluster: %v)&#34;</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">_</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Rollback</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Perform the report upsert.</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">reportedAtTime</div> <div class="operator">:=</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">rule</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">rules</div> <div class="operator">{</div>
+		<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">ruleUpsertQuery</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">.</div><div class="ident">Module</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">TemplateData</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Unable to upsert the cluster report (org: %v, cluster: %v)&#34;</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">_</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Rollback</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">reportUpsertQuery</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">report</div><div class="operator">,</div> <div class="ident">reportedAtTime</div><div class="operator">,</div> <div class="ident">lastCheckedTime</div><div class="operator">,</div> <div class="ident">kafkaOffset</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Unable to upsert the cluster report (org: %v, cluster: %v)&#34;</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">_</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Rollback</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -608,6 +694,7 @@ tasks necessary for further service operation.</p>
 	<div class="ident">orgID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
 	<div class="ident">clusterName</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 	<div class="ident">report</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">,</div>
+	<div class="ident">rules</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ReportItem</div><div class="operator">,</div>
 	<div class="ident">lastCheckedTime</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Time</div><div class="operator">,</div>
 	<div class="ident">kafkaOffset</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 <div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
@@ -622,15 +709,8 @@ that is already in the database for the same cluster.</p>
 		<div class="keyword">return</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrOldReport</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>Get the UPSERT query for writing a report into the database.</p>
-</td>
-	<td class="code"><pre><code>	<div class="ident">upsertQuery</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">getReportUpsertQuery</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">dbDriverType</div> <div class="operator">!=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverSQLite3</div> <div class="operator">&amp;&amp;</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">dbDriverType</div> <div class="operator">!=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverPostgres</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;writing report with DB %v is not supported&#34;</div><div class="operator">,</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">dbDriverType</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -656,7 +736,6 @@ that is already in the database for the same cluster.</p>
 	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ConvertDBError</div><div class="operator">(</div><div class="ident">err</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div><div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to look up the most recent report in database&#34;</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">_</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Rollback</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 	<div class="keyword">defer</div> <div class="ident">closeRows</div><div class="operator">(</div><div class="ident">rows</div><div class="operator">)</div><div class="operator"></div>
@@ -670,21 +749,11 @@ that is already in the database for the same cluster.</p>
 	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">rows</div><div class="operator">.</div><div class="ident">Next</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
 		<div class="ident">log</div><div class="operator">.</div><div class="ident">Warn</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Database already contains report for organization %d and cluster name %s more recent than %v&#34;</div><div class="operator">,</div>
 			<div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">lastCheckedTime</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">_</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Rollback</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>Perform the report upsert.</p>
-</td>
-	<td class="code"><pre><code>	<div class="ident">reportedAtTime</div> <div class="operator">:=</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">upsertQuery</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">report</div><div class="operator">,</div> <div class="ident">reportedAtTime</div><div class="operator">,</div> <div class="ident">lastCheckedTime</div><div class="operator">,</div> <div class="ident">kafkaOffset</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">updateReport</div><div class="operator">(</div><div class="ident">tx</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">report</div><div class="operator">,</div> <div class="ident">rules</div><div class="operator">,</div> <div class="ident">lastCheckedTime</div><div class="operator">,</div> <div class="ident">kafkaOffset</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Unable to upsert the cluster report (org: %v, cluster: %v)&#34;</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">_</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Rollback</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
