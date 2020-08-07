@@ -55,7 +55,7 @@ import (
 
 const (
 	configFileEnvVariableName   = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
-	defaultOrgWhiteListFileName = "org_whitelist.csv"
+	defaultOrgAllowlistFileName = "org_whitelist.csv"
 	defaultContentPath          = "/rules-content"
 )
 
@@ -69,7 +69,7 @@ type ConfigStruct struct {
 	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
 	Server     server.Configuration `mapstructure:"server" toml:"server"`
 	Processing struct {
-		OrgWhiteListFile string `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
+		OrgAllowlistFile string `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
 	} `mapstructure:"processing"`
 	Storage    storage.Configuration          `mapstructure:"storage" toml:"storage"`
 	Logging    logger.LoggingConfiguration    `mapstructure:"logging" toml:"logging"`
@@ -134,31 +134,31 @@ func LoadConfiguration(defaultConfigFile string) error {
 
 // GetBrokerConfiguration returns broker configuration
 func GetBrokerConfiguration() broker.Configuration {
-	Config.Broker.OrgWhitelist = getOrganizationWhitelist()
+	Config.Broker.OrgAllowlist = getOrganizationAllowlist()
 
 	return Config.Broker
 }
 
-func getOrganizationWhitelist() mapset.Set {
-	if !Config.Broker.OrgWhitelistEnabled {
+func getOrganizationAllowlist() mapset.Set {
+	if !Config.Broker.OrgAllowlistEnabled {
 		return nil
 	}
 
-	if len(Config.Processing.OrgWhiteListFile) == 0 {
-		Config.Processing.OrgWhiteListFile = defaultOrgWhiteListFileName
+	if len(Config.Processing.OrgAllowlistFile) == 0 {
+		Config.Processing.OrgAllowlistFile = defaultOrgAllowlistFileName
 	}
 
-	orgWhiteListFileData, err := ioutil.ReadFile(Config.Processing.OrgWhiteListFile)
+	orgAllowlistFileData, err := ioutil.ReadFile(Config.Processing.OrgAllowlistFile)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Organization whitelist file could not be opened")
+		log.Fatal().Err(err).Msg("Organization allowlist file could not be opened")
 	}
 
-	whitelist, err := loadWhitelistFromCSV(bytes.NewBuffer(orgWhiteListFileData))
+	allowlist, err := loadAllowlistFromCSV(bytes.NewBuffer(orgAllowlistFileData))
 	if err != nil {
-		log.Fatal().Err(err).Msg("Whitelist CSV could not be processed")
+		log.Fatal().Err(err).Msg("Allowlist CSV could not be processed")
 	}
 
-	return whitelist
+	return allowlist
 }
 
 // GetStorageConfiguration returns storage configuration
@@ -208,9 +208,9 @@ func checkIfFileExists(path string) error {
 	return nil
 }
 
-// loadWhitelistFromCSV creates a new CSV reader and returns a Set of whitelisted org. IDs
-func loadWhitelistFromCSV(r io.Reader) (mapset.Set, error) {
-	whitelist := mapset.NewSet()
+// loadAllowlistFromCSV creates a new CSV reader and returns a Set of allowlisted org. IDs
+func loadAllowlistFromCSV(r io.Reader) (mapset.Set, error) {
+	allowlist := mapset.NewSet()
 
 	reader := csv.NewReader(r)
 
@@ -227,13 +227,13 @@ func loadWhitelistFromCSV(r io.Reader) (mapset.Set, error) {
 		orgID, err := strconv.ParseUint(line[0], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf(
-				"organization ID on line %v in whitelist CSV is not numerical. Found value: %v",
+				"organization ID on line %v in allowlist CSV is not numerical. Found value: %v",
 				index+1, line[0],
 			)
 		}
 
-		whitelist.Add(types.OrgID(orgID))
+		allowlist.Add(types.OrgID(orgID))
 	}
 
-	return whitelist, nil
+	return allowlist, nil
 }

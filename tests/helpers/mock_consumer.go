@@ -60,10 +60,10 @@ func (mockKafkaConsumer *MockKafkaConsumer) Close(t testing.TB) {
 func MustGetMockKafkaConsumerWithExpectedMessages(
 	t *testing.T,
 	topic string,
-	orgWhiteList mapset.Set,
+	orgAllowlist mapset.Set,
 	messages []string,
 ) (*MockKafkaConsumer, func()) {
-	mockConsumer, closer, err := GetMockKafkaConsumerWithExpectedMessages(t, topic, orgWhiteList, messages)
+	mockConsumer, closer, err := GetMockKafkaConsumerWithExpectedMessages(t, topic, orgAllowlist, messages)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func MustGetMockKafkaConsumerWithExpectedMessages(
 // GetMockKafkaConsumerWithExpectedMessages creates mocked kafka consumer
 // which produces list of messages automatically
 func GetMockKafkaConsumerWithExpectedMessages(
-	t *testing.T, topic string, orgWhiteList mapset.Set, messages []string,
+	t *testing.T, topic string, orgAllowlist mapset.Set, messages []string,
 ) (*MockKafkaConsumer, func(), error) {
 	mockStorage, storageCloser := MustGetMockStorage(t, true)
 
@@ -85,7 +85,7 @@ func GetMockKafkaConsumerWithExpectedMessages(
 				Topic:        topic,
 				Group:        "",
 				Enabled:      true,
-				OrgWhitelist: orgWhiteList,
+				OrgAllowlist: orgAllowlist,
 			},
 			Storage: mockStorage,
 		},

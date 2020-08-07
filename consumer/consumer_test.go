@@ -48,7 +48,7 @@ const (
 )
 
 var (
-	testOrgWhiteList = mapset.NewSetWith(types.OrgID(1))
+	testOrgAllowlist = mapset.NewSetWith(types.OrgID(1))
 	wrongBrokerCfg   = broker.Configuration{
 		Address: "localhost:1234",
 		Topic:   "topic",
@@ -190,10 +190,10 @@ func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
 		Group:   "group",
 	}
 	if whitelist {
-		brokerCfg.OrgWhitelist = mapset.NewSetWith(types.OrgID(1))
-		brokerCfg.OrgWhitelistEnabled = true
+		brokerCfg.OrgAllowlist = mapset.NewSetWith(types.OrgID(1))
+		brokerCfg.OrgAllowlistEnabled = true
 	} else {
-		brokerCfg.OrgWhitelistEnabled = false
+		brokerCfg.OrgAllowlistEnabled = false
 	}
 	return &consumer.KafkaConsumer{
 		Configuration: brokerCfg,
@@ -277,7 +277,7 @@ func TestKafkaConsumerMockOK(t *testing.T) {
 		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t,
 			testTopicName,
-			testOrgWhiteList,
+			testOrgAllowlist,
 			[]string{testdata.ConsumerMessage},
 		)
 
@@ -298,7 +298,7 @@ func TestKafkaConsumerMockBadMessage(t *testing.T) {
 		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t,
 			testTopicName,
-			testOrgWhiteList,
+			testOrgAllowlist,
 			[]string{"bad message"},
 		)
 
@@ -317,7 +317,7 @@ func TestKafkaConsumerMockBadMessage(t *testing.T) {
 func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t *testing.T) {
 		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
-			t, testTopicName, testOrgWhiteList, []string{testdata.ConsumerMessage},
+			t, testTopicName, testOrgAllowlist, []string{testdata.ConsumerMessage},
 		)
 
 		err := mockConsumer.KafkaConsumer.Storage.Close()
@@ -381,7 +381,7 @@ func TestKafkaConsumer_New(t *testing.T) {
 //	}, testCaseTimeLimit)
 //}
 
-func TestKafkaConsumer_ProcessMessage_OrganizationWhitelistDisabled(t *testing.T) {
+func TestKafkaConsumer_ProcessMessage_OrganizationAllowlistDisabled(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
@@ -399,8 +399,8 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 		Address:             "localhost:1234",
 		Topic:               "topic",
 		Group:               "group",
-		OrgWhitelist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
-		OrgWhitelistEnabled: true,
+		OrgAllowlist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
+		OrgAllowlistEnabled: true,
 	}
 	mockConsumer := &consumer.KafkaConsumer{
 		Configuration: brokerCfg,
@@ -419,8 +419,8 @@ func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testi
 		Address:             "localhost:1234",
 		Topic:               "topic",
 		Group:               "group",
-		OrgWhitelist:        nil,
-		OrgWhitelistEnabled: true,
+		OrgAllowlist:        nil,
+		OrgAllowlistEnabled: true,
 	}
 	mockConsumer := &consumer.KafkaConsumer{
 		Configuration: brokerCfg,
