@@ -113,22 +113,22 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	logMessageInfo(consumer, msg, message, "Read")
 	tRead := time.Now()
 
-	if consumer.Configuration.OrgWhitelistEnabled {
-		logMessageInfo(consumer, msg, message, "Checking organization ID against whitelist")
+	if consumer.Configuration.OrgAllowlistEnabled {
+		logMessageInfo(consumer, msg, message, "Checking organization ID against allow list")
 
 		if ok := organizationAllowed(consumer, *message.Organization); !ok {
-			const cause = "organization ID is not whitelisted"
+			const cause = "organization ID is not in allow list"
 			// now we have all required information about the incoming message,
 			// the right time to record structured log entry
 			logMessageError(consumer, msg, message, cause, err)
 			return message.RequestID, errors.New(cause)
 		}
 
-		logMessageInfo(consumer, msg, message, "Organization whitelisted")
+		logMessageInfo(consumer, msg, message, "Organization is in allow list")
 	} else {
-		logMessageInfo(consumer, msg, message, "Organization whitelisting disabled")
+		logMessageInfo(consumer, msg, message, "Organization allow listing disabled")
 	}
-	tWhitelisted := time.Now()
+	tAllowlisted := time.Now()
 
 	reportAsStr, err := json.Marshal(*message.Report)
 	if err != nil {
@@ -176,8 +176,8 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 
 	// log durations for every message consumption steps
 	logDuration(tStart, tRead, msg.Offset, "read")
-	logDuration(tRead, tWhitelisted, msg.Offset, "whitelisting")
-	logDuration(tWhitelisted, tMarshalled, msg.Offset, "marshalling")
+	logDuration(tRead, tAllowlisted, msg.Offset, "org_filtering")
+	logDuration(tAllowlisted, tMarshalled, msg.Offset, "marshalling")
 	logDuration(tMarshalled, tTimeCheck, msg.Offset, "time_check")
 	logDuration(tTimeCheck, tStored, msg.Offset, "db_store")
 
@@ -185,16 +185,16 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	return message.RequestID, nil
 }
 
-// organizationAllowed checks whether the given organization is on whitelist or not
+// organizationAllowed checks whether the given organization is on allow list or not
 func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
-	whitelist := consumer.Configuration.OrgWhitelist
-	if whitelist == nil {
+	allowList := consumer.Configuration.OrgAllowlist
+	if allowList == nil {
 		return false
 	}
 
-	orgWhitelisted := whitelist.Contains(orgID)
+	orgAllowed := allowList.Contains(orgID)
 
-	return orgWhitelisted
+	return orgAllowed
 }
 
 // checkReportStructure tests if the report has correct structure

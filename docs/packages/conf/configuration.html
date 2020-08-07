@@ -179,7 +179,7 @@ https://redhatinsights.github.io/insights-results-aggregator/packages/conf/confi
 
 <div class="keyword">const</div> <div class="operator">(</div>
 	<div class="ident">configFileEnvVariableName</div>   <div class="operator">=</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE&#34;</div><div class="operator"></div>
-	<div class="ident">defaultOrgWhiteListFileName</div> <div class="operator">=</div> <div class="literal">&#34;org_whitelist.csv&#34;</div><div class="operator"></div>
+	<div class="ident">defaultOrgAllowlistFileName</div> <div class="operator">=</div> <div class="literal">&#34;org_whitelist.csv&#34;</div><div class="operator"></div>
 	<div class="ident">defaultContentPath</div>          <div class="operator">=</div> <div class="literal">&#34;/rules-content&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
@@ -203,7 +203,7 @@ https://redhatinsights.github.io/insights-results-aggregator/packages/conf/confi
 	<div class="ident">Broker</div>     <div class="ident">broker</div><div class="operator">.</div><div class="ident">Configuration</div> <div class="literal">`mapstructure:&#34;broker&#34; toml:&#34;broker&#34;`</div><div class="operator"></div>
 	<div class="ident">Server</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">Configuration</div> <div class="literal">`mapstructure:&#34;server&#34; toml:&#34;server&#34;`</div><div class="operator"></div>
 	<div class="ident">Processing</div> <div class="keyword">struct</div> <div class="operator">{</div>
-		<div class="ident">OrgWhiteListFile</div> <div class="ident">string</div> <div class="literal">`mapstructure:&#34;org_whitelist_file&#34; toml:&#34;org_whitelist_file&#34;`</div><div class="operator"></div>
+		<div class="ident">OrgAllowlistFile</div> <div class="ident">string</div> <div class="literal">`mapstructure:&#34;org_whitelist_file&#34; toml:&#34;org_whitelist_file&#34;`</div><div class="operator"></div>
 	<div class="operator">}</div> <div class="literal">`mapstructure:&#34;processing&#34;`</div><div class="operator"></div>
 	<div class="ident">Storage</div>    <div class="ident">storage</div><div class="operator">.</div><div class="ident">Configuration</div>          <div class="literal">`mapstructure:&#34;storage&#34; toml:&#34;storage&#34;`</div><div class="operator"></div>
 	<div class="ident">Logging</div>    <div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div>    <div class="literal">`mapstructure:&#34;logging&#34; toml:&#34;logging&#34;`</div><div class="operator"></div>
@@ -308,31 +308,31 @@ config by itself</p>
 	<td class="doc"><p>GetBrokerConfiguration returns broker configuration</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">broker</div><div class="operator">.</div><div class="ident">Configuration</div> <div class="operator">{</div>
-	<div class="ident">Config</div><div class="operator">.</div><div class="ident">Broker</div><div class="operator">.</div><div class="ident">OrgWhitelist</div> <div class="operator">=</div> <div class="ident">getOrganizationWhitelist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">Config</div><div class="operator">.</div><div class="ident">Broker</div><div class="operator">.</div><div class="ident">OrgAllowlist</div> <div class="operator">=</div> <div class="ident">getOrganizationAllowlist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">Config</div><div class="operator">.</div><div class="ident">Broker</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
-<div class="keyword">func</div> <div class="ident">getOrganizationWhitelist</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">Set</div> <div class="operator">{</div>
-	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Broker</div><div class="operator">.</div><div class="ident">OrgWhitelistEnabled</div> <div class="operator">{</div>
+<div class="keyword">func</div> <div class="ident">getOrganizationAllowlist</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">Set</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Broker</div><div class="operator">.</div><div class="ident">OrgAllowlistEnabled</div> <div class="operator">{</div>
 		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Processing</div><div class="operator">.</div><div class="ident">OrgWhiteListFile</div><div class="operator">)</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
-		<div class="ident">Config</div><div class="operator">.</div><div class="ident">Processing</div><div class="operator">.</div><div class="ident">OrgWhiteListFile</div> <div class="operator">=</div> <div class="ident">defaultOrgWhiteListFileName</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Processing</div><div class="operator">.</div><div class="ident">OrgAllowlistFile</div><div class="operator">)</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
+		<div class="ident">Config</div><div class="operator">.</div><div class="ident">Processing</div><div class="operator">.</div><div class="ident">OrgAllowlistFile</div> <div class="operator">=</div> <div class="ident">defaultOrgAllowlistFileName</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">orgWhiteListFileData</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">ioutil</div><div class="operator">.</div><div class="ident">ReadFile</div><div class="operator">(</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Processing</div><div class="operator">.</div><div class="ident">OrgWhiteListFile</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">orgAllowlistFileData</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">ioutil</div><div class="operator">.</div><div class="ident">ReadFile</div><div class="operator">(</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Processing</div><div class="operator">.</div><div class="ident">OrgAllowlistFile</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Fatal</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Organization whitelist file could not be opened&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Fatal</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Organization allowlist file could not be opened&#34;</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">whitelist</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">loadWhitelistFromCSV</div><div class="operator">(</div><div class="ident">bytes</div><div class="operator">.</div><div class="ident">NewBuffer</div><div class="operator">(</div><div class="ident">orgWhiteListFileData</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">allowlist</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">loadAllowlistFromCSV</div><div class="operator">(</div><div class="ident">bytes</div><div class="operator">.</div><div class="ident">NewBuffer</div><div class="operator">(</div><div class="ident">orgAllowlistFileData</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Fatal</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Whitelist CSV could not be processed&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Fatal</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Allowlist CSV could not be processed&#34;</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="keyword">return</div> <div class="ident">whitelist</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">allowlist</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -416,10 +416,10 @@ otherwise it returns corresponding error</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>loadWhitelistFromCSV creates a new CSV reader and returns a Set of whitelisted org. IDs</p>
+	<td class="doc"><p>loadAllowlistFromCSV creates a new CSV reader and returns a Set of allowlisted org. IDs</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">loadWhitelistFromCSV</div><div class="operator">(</div><div class="ident">r</div> <div class="ident">io</div><div class="operator">.</div><div class="ident">Reader</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">mapset</div><div class="operator">.</div><div class="ident">Set</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">whitelist</div> <div class="operator">:=</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSet</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">loadAllowlistFromCSV</div><div class="operator">(</div><div class="ident">r</div> <div class="ident">io</div><div class="operator">.</div><div class="ident">Reader</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">mapset</div><div class="operator">.</div><div class="ident">Set</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">allowlist</div> <div class="operator">:=</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSet</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">reader</div> <div class="operator">:=</div> <div class="ident">csv</div><div class="operator">.</div><div class="ident">NewReader</div><div class="operator">(</div><div class="ident">r</div><div class="operator">)</div><div class="operator"></div>
 
@@ -436,15 +436,15 @@ otherwise it returns corresponding error</p>
 		<div class="ident">orgID</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">strconv</div><div class="operator">.</div><div class="ident">ParseUint</div><div class="operator">(</div><div class="ident">line</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">,</div> <div class="literal">10</div><div class="operator">,</div> <div class="literal">64</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 			<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div>
-				<div class="literal">&#34;organization ID on line %v in whitelist CSV is not numerical. Found value: %v&#34;</div><div class="operator">,</div>
+				<div class="literal">&#34;organization ID on line %v in allowlist CSV is not numerical. Found value: %v&#34;</div><div class="operator">,</div>
 				<div class="ident">index</div><div class="operator">&#43;</div><div class="literal">1</div><div class="operator">,</div> <div class="ident">line</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">,</div>
 			<div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 
-		<div class="ident">whitelist</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="ident">orgID</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">allowlist</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="ident">orgID</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="keyword">return</div> <div class="ident">whitelist</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">allowlist</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

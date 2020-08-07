@@ -149,8 +149,8 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 	}, storageCfg)
 }
 
-// TestLoadOrganizationWhitelist tests if the whitelist CSV file gets loaded properly
-func TestLoadOrganizationWhitelist(t *testing.T) {
+// TestLoadOrganizationAllowlist tests if the whitelist CSV file gets loaded properly
+func TestLoadOrganizationAllowlist(t *testing.T) {
 	expectedWhitelist := mapset.NewSetWith(
 		types.OrgID(1),
 		types.OrgID(2),
@@ -159,35 +159,35 @@ func TestLoadOrganizationWhitelist(t *testing.T) {
 		types.OrgID(656485),
 	)
 
-	orgWhitelist := conf.GetOrganizationWhitelist()
-	if equal := orgWhitelist.Equal(expectedWhitelist); !equal {
+	orgAllowlist := conf.GetOrganizationAllowlist()
+	if equal := orgAllowlist.Equal(expectedWhitelist); !equal {
 		t.Errorf(
 			"Org whitelist did not load properly. Order of elements does not matter. Expected %v. Got %v",
-			expectedWhitelist, orgWhitelist,
+			expectedWhitelist, orgAllowlist,
 		)
 	}
 }
 
-// TestLoadWhitelistFromCSVExtraParam tests incorrect CSV format
-func TestLoadWhitelistFromCSVExtraParam(t *testing.T) {
+// TestLoadAllowlistFromCSVExtraParam tests incorrect CSV format
+func TestLoadAllowlistFromCSVExtraParam(t *testing.T) {
 	extraParamCSV := `OrgID
 1,2
 3
 `
 	r := strings.NewReader(extraParamCSV)
-	_, err := conf.LoadWhitelistFromCSV(r)
+	_, err := conf.LoadAllowlistFromCSV(r)
 	assert.EqualError(t, err, "error reading CSV file: record on line 2: wrong number of fields")
 }
 
-// TestLoadWhitelistFromCSVNonInt tests non-integer ID in CSV
-func TestLoadWhitelistFromCSVNonInt(t *testing.T) {
+// TestLoadAllowlistFromCSVNonInt tests non-integer ID in CSV
+func TestLoadAllowlistFromCSVNonInt(t *testing.T) {
 	nonIntIDCSV := `OrgID
 str
 3
 `
 	r := strings.NewReader(nonIntIDCSV)
-	_, err := conf.LoadWhitelistFromCSV(r)
-	assert.EqualError(t, err, "organization ID on line 2 in whitelist CSV is not numerical. Found value: str")
+	_, err := conf.LoadAllowlistFromCSV(r)
+	assert.EqualError(t, err, "organization ID on line 2 in allowlist CSV is not numerical. Found value: str")
 }
 
 func TestLoadConfigurationFromFile(t *testing.T) {
@@ -247,11 +247,11 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		MaximumFeedbackMessageLength: 255,
 	}, conf.GetServerConfiguration())
 
-	orgWhiteList := conf.GetOrganizationWhitelist()
+	orgAllowlist := conf.GetOrganizationAllowlist()
 
 	assert.True(
 		t,
-		orgWhiteList.Equal(mapset.NewSetWith(
+		orgAllowlist.Equal(mapset.NewSetWith(
 			types.OrgID(1),
 			types.OrgID(2),
 			types.OrgID(3),
@@ -317,11 +317,11 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		MaximumFeedbackMessageLength: 255,
 	}, conf.GetServerConfiguration())
 
-	orgWhiteList := conf.GetOrganizationWhitelist()
+	orgAllowlist := conf.GetOrganizationAllowlist()
 
 	assert.True(
 		t,
-		orgWhiteList.Equal(mapset.NewSetWith(
+		orgAllowlist.Equal(mapset.NewSetWith(
 			types.OrgID(1),
 			types.OrgID(2),
 			types.OrgID(3),
