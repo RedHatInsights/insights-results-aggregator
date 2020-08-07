@@ -89,20 +89,20 @@ func TestConsumerConstructorNoKafka(t *testing.T) {
 }
 
 func TestParseEmptyMessage(t *testing.T) {
-	_, _, err := consumer.ParseMessage([]byte(""))
+	_, err := consumer.ParseMessage([]byte(""))
 	assert.EqualError(t, err, "unexpected end of JSON input")
 }
 
 func TestParseMessageWithWrongContent(t *testing.T) {
 	const message = `{"this":"is", "not":"expected content"}`
-	_, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "missing required attribute")
 }
 
 func TestParseMessageWithImproperJSON(t *testing.T) {
 	const message = `"this_is_not_json_dude"`
-	_, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(
 		t,
 		err,
@@ -126,7 +126,7 @@ func TestParseMessageWithImproperReport(t *testing.T) {
 			"info": []
 	}
 }`
-	_, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(
 		t,
 		err,
@@ -135,7 +135,7 @@ func TestParseMessageWithImproperReport(t *testing.T) {
 }
 
 func TestParseProperMessage(t *testing.T) {
-	message, rules, err := consumer.ParseMessage([]byte(testdata.ConsumerMessage))
+	message, err := consumer.ParseMessage([]byte(testdata.ConsumerMessage))
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, types.OrgID(1), *message.Organization)
@@ -146,7 +146,7 @@ func TestParseProperMessage(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, expectedReport, *message.Report)
-	assert.EqualValues(t, []types.ReportItem{}, rules)
+	assert.EqualValues(t, []types.ReportItem{}, message.ParsedHits)
 }
 
 func TestParseProperMessageWrongClusterName(t *testing.T) {
@@ -155,7 +155,7 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
 		"ClusterName": "this is not a UUID",
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "cluster name is not a UUID")
 }
 
@@ -164,7 +164,7 @@ func TestParseMessageWithoutOrgID(t *testing.T) {
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'OrgID'")
 }
 
@@ -173,7 +173,7 @@ func TestParseMessageWithoutClusterName(t *testing.T) {
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'ClusterName'")
 }
 
@@ -182,7 +182,7 @@ func TestParseMessageWithoutReport(t *testing.T) {
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `"
 	}`
-	_, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 
@@ -193,7 +193,7 @@ func TestParseMessageEmptyReport(t *testing.T) {
 		"Report": {}
 	}`
 
-	_, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "Improper report structure, missing key fingerprints")
 }
 
@@ -204,7 +204,7 @@ func TestParseMessageNullReport(t *testing.T) {
 		"Report": null
 	}`
 
-	_, _, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 

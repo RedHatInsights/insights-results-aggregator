@@ -173,6 +173,7 @@ limitations under the License.</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">LastChecked</div> <div class="ident">string</div>          <div class="literal">`json:&#34;LastChecked&#34;`</div><div class="operator"></div>
 	<div class="ident">RequestID</div>   <div class="ident">types</div><div class="operator">.</div><div class="ident">RequestID</div> <div class="literal">`json:&#34;RequestId&#34;`</div><div class="operator"></div>
+	<div class="ident">ParsedHits</div>  <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ReportItem</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -323,6 +324,7 @@ the right time to record structured log entry</p>
 		<div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">Organization</div><div class="operator">,</div>
 		<div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">(</div><div class="ident">reportAsStr</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="ident">message</div><div class="operator">.</div><div class="ident">ParsedHits</div><div class="operator">,</div>
 		<div class="ident">lastCheckedTime</div><div class="operator">,</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">(</div><div class="ident">msg</div><div class="operator">.</div><div class="ident">Offset</div><div class="operator">)</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
@@ -432,6 +434,11 @@ the right time to record structured log entry</p>
 	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">checkReportStructure</div><div class="operator">(</div><div class="operator">*</div><div class="ident">deserialized</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="ident">log</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Deserialized report read from message with improper structure: %v&#34;</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">deserialized</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">deserialized</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Unmarshal</div><div class="operator">(</div><div class="operator">*</div><div class="operator">(</div><div class="operator">(</div><div class="operator">*</div><div class="ident">deserialized</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">)</div><div class="operator">[</div><div class="literal">&#34;reports&#34;</div><div class="operator">]</div><div class="operator">)</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">deserialized</div><div class="operator">.</div><div class="ident">ParsedHits</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="keyword">return</div> <div class="ident">deserialized</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
