@@ -408,7 +408,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 	}
 
 	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
-	assert.EqualError(t, err, "organization ID is not whitelisted")
+	assert.EqualError(t, err, "organization ID is not in allow list")
 }
 
 func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testing.T) {
@@ -428,7 +428,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testi
 	}
 
 	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
-	assert.EqualError(t, err, "organization ID is not whitelisted")
+	assert.EqualError(t, err, "organization ID is not in allow list")
 }
 
 func TestKafkaConsumer_ProcessMessage_MessageFromTheFuture(t *testing.T) {

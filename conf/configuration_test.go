@@ -187,7 +187,7 @@ str
 `
 	r := strings.NewReader(nonIntIDCSV)
 	_, err := conf.LoadAllowlistFromCSV(r)
-	assert.EqualError(t, err, "organization ID on line 2 in whitelist CSV is not numerical. Found value: str")
+	assert.EqualError(t, err, "organization ID on line 2 in allowlist CSV is not numerical. Found value: str")
 }
 
 func TestLoadConfigurationFromFile(t *testing.T) {
