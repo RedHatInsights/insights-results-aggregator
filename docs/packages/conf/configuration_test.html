@@ -307,9 +307,9 @@ limitations under the License.
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>TestLoadOrganizationWhitelist tests if the whitelist CSV file gets loaded properly</p>
+	<td class="doc"><p>TestLoadOrganizationAllowlist tests if the whitelist CSV file gets loaded properly</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestLoadOrganizationWhitelist</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestLoadOrganizationAllowlist</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">expectedWhitelist</div> <div class="operator">:=</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">,</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">2</div><div class="operator">)</div><div class="operator">,</div>
@@ -318,11 +318,11 @@ limitations under the License.
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">656485</div><div class="operator">)</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">orgWhitelist</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationWhitelist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">equal</div> <div class="operator">:=</div> <div class="ident">orgWhitelist</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">expectedWhitelist</div><div class="operator">)</div><div class="operator">;</div> <div class="operator">!</div><div class="ident">equal</div> <div class="operator">{</div>
+	<div class="ident">orgAllowlist</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationAllowlist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">equal</div> <div class="operator">:=</div> <div class="ident">orgAllowlist</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">expectedWhitelist</div><div class="operator">)</div><div class="operator">;</div> <div class="operator">!</div><div class="ident">equal</div> <div class="operator">{</div>
 		<div class="ident">t</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div>
 			<div class="literal">&#34;Org whitelist did not load properly. Order of elements does not matter. Expected %v. Got %v&#34;</div><div class="operator">,</div>
-			<div class="ident">expectedWhitelist</div><div class="operator">,</div> <div class="ident">orgWhitelist</div><div class="operator">,</div>
+			<div class="ident">expectedWhitelist</div><div class="operator">,</div> <div class="ident">orgAllowlist</div><div class="operator">,</div>
 		<div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -331,15 +331,15 @@ limitations under the License.
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>TestLoadWhitelistFromCSVExtraParam tests incorrect CSV format</p>
+	<td class="doc"><p>TestLoadAllowlistFromCSVExtraParam tests incorrect CSV format</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestLoadWhitelistFromCSVExtraParam</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestLoadAllowlistFromCSVExtraParam</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">extraParamCSV</div> <div class="operator">:=</div> <div class="literal">`OrgID
 1,2
 3
 `</div><div class="operator"></div>
 	<div class="ident">r</div> <div class="operator">:=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">NewReader</div><div class="operator">(</div><div class="ident">extraParamCSV</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">LoadWhitelistFromCSV</div><div class="operator">(</div><div class="ident">r</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">LoadAllowlistFromCSV</div><div class="operator">(</div><div class="ident">r</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;error reading CSV file: record on line 2: wrong number of fields&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -347,15 +347,15 @@ limitations under the License.
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>TestLoadWhitelistFromCSVNonInt tests non-integer ID in CSV</p>
+	<td class="doc"><p>TestLoadAllowlistFromCSVNonInt tests non-integer ID in CSV</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestLoadWhitelistFromCSVNonInt</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestLoadAllowlistFromCSVNonInt</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">nonIntIDCSV</div> <div class="operator">:=</div> <div class="literal">`OrgID
 str
 3
 `</div><div class="operator"></div>
 	<div class="ident">r</div> <div class="operator">:=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">NewReader</div><div class="operator">(</div><div class="ident">nonIntIDCSV</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">LoadWhitelistFromCSV</div><div class="operator">(</div><div class="ident">r</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">LoadAllowlistFromCSV</div><div class="operator">(</div><div class="ident">r</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;organization ID on line 2 in whitelist CSV is not numerical. Found value: str&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -416,11 +416,11 @@ str
 		<div class="ident">MaximumFeedbackMessageLength</div><div class="operator">:</div> <div class="literal">255</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetServerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">orgWhiteList</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationWhitelist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">orgAllowlist</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationAllowlist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">True</div><div class="operator">(</div>
 		<div class="ident">t</div><div class="operator">,</div>
-		<div class="ident">orgWhiteList</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div>
+		<div class="ident">orgAllowlist</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div>
 			<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">,</div>
 			<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">2</div><div class="operator">)</div><div class="operator">,</div>
 			<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">3</div><div class="operator">)</div><div class="operator">,</div>
@@ -486,11 +486,11 @@ str
 		<div class="ident">MaximumFeedbackMessageLength</div><div class="operator">:</div> <div class="literal">255</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetServerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">orgWhiteList</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationWhitelist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">orgAllowlist</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationAllowlist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">True</div><div class="operator">(</div>
 		<div class="ident">t</div><div class="operator">,</div>
-		<div class="ident">orgWhiteList</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div>
+		<div class="ident">orgAllowlist</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div>
 			<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">,</div>
 			<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">2</div><div class="operator">)</div><div class="operator">,</div>
 			<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">3</div><div class="operator">)</div><div class="operator">,</div>
