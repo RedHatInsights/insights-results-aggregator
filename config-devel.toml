@@ -12,7 +12,7 @@ address = ":8080"
 api_prefix = "/api/insights-results-aggregator/v1/"
 api_spec_file = "openapi.json"
 debug = true
-auth = true
+auth = false
 auth_type = "xrh"
 maximum_feedback_message_length = 255
 
