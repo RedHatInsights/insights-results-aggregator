@@ -149,9 +149,9 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 	}, storageCfg)
 }
 
-// TestLoadOrganizationAllowlist tests if the whitelist CSV file gets loaded properly
+// TestLoadOrganizationAllowlist tests if the allowlist CSV file gets loaded properly
 func TestLoadOrganizationAllowlist(t *testing.T) {
-	expectedWhitelist := mapset.NewSetWith(
+	expectedAllowlist := mapset.NewSetWith(
 		types.OrgID(1),
 		types.OrgID(2),
 		types.OrgID(3),
@@ -160,10 +160,10 @@ func TestLoadOrganizationAllowlist(t *testing.T) {
 	)
 
 	orgAllowlist := conf.GetOrganizationAllowlist()
-	if equal := orgAllowlist.Equal(expectedWhitelist); !equal {
+	if equal := orgAllowlist.Equal(expectedAllowlist); !equal {
 		t.Errorf(
-			"Org whitelist did not load properly. Order of elements does not matter. Expected %v. Got %v",
-			expectedWhitelist, orgAllowlist,
+			"Org allowlist did not load properly. Order of elements does not matter. Expected %v. Got %v",
+			expectedAllowlist, orgAllowlist,
 		)
 	}
 }
@@ -196,13 +196,13 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		topic = "platform.results.ccx"
 		group = "aggregator"
 		enabled = true
-		enable_org_whitelist = true
+		enable_org_allowlist = true
 
 		[content]
 		path = "/rules-content"
 
 		[processing]
-		org_whitelist_file = "org_whitelist.csv"
+		org_allowlist_file = "org_allowlist.csv"
 
 		[server]
 		address = ":8080"
@@ -409,7 +409,7 @@ func setEnvVariables(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE", "openapi.json")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG", "true")
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_WHITELIST", "org_whitelist.csv")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_ALLOWLIST", "org_allowlist.csv")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "sqlite3")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE", ":memory:")

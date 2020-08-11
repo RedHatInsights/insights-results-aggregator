@@ -33,6 +33,6 @@ type Configuration struct {
 	ServiceName         string        `mapstructure:"service_name" toml:"service_name"`
 	Group               string        `mapstructure:"group" toml:"group"`
 	Enabled             bool          `mapstructure:"enabled" toml:"enabled"`
-	OrgAllowlist        mapset.Set    `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
-	OrgAllowlistEnabled bool          `mapstructure:"enable_org_whitelist" toml:"enable_org_whitelist"`
+	OrgAllowlist        mapset.Set    `mapstructure:"org_allowlist_file" toml:"org_allowlist_file"`
+	OrgAllowlistEnabled bool          `mapstructure:"enable_org_allowlist" toml:"enable_org_allowlist"`
 }

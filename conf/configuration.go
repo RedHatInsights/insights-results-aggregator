@@ -55,7 +55,7 @@ import (
 
 const (
 	configFileEnvVariableName   = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
-	defaultOrgAllowlistFileName = "org_whitelist.csv"
+	defaultOrgAllowlistFileName = "org_allowlist.csv"
 	defaultContentPath          = "/rules-content"
 )
 
@@ -69,7 +69,7 @@ type ConfigStruct struct {
 	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
 	Server     server.Configuration `mapstructure:"server" toml:"server"`
 	Processing struct {
-		OrgAllowlistFile string `mapstructure:"org_whitelist_file" toml:"org_whitelist_file"`
+		OrgAllowlistFile string `mapstructure:"org_allowlist_file" toml:"org_allowlist_file"`
 	} `mapstructure:"processing"`
 	Storage    storage.Configuration          `mapstructure:"storage" toml:"storage"`
 	Logging    logger.LoggingConfiguration    `mapstructure:"logging" toml:"logging"`
