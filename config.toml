@@ -5,7 +5,7 @@ payload_tracker_topic = "platform.payload-status"
 service_name = "insights-results-aggregator"
 group = "aggregator"
 enabled = true
-enable_org_whitelist = false
+enable_org_allowlist = false
 
 [server]
 address = ":8080"
@@ -17,7 +17,7 @@ auth_type = "xrh"
 maximum_feedback_message_length = 255
 
 [processing]
-org_whitelist_file = "org_whitelist.csv"
+org_allowlist_file = "org_allowlist.csv"
 
 [storage]
 db_driver = "sqlite3"

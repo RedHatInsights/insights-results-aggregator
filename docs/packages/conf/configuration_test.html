@@ -307,10 +307,10 @@ limitations under the License.
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>TestLoadOrganizationAllowlist tests if the whitelist CSV file gets loaded properly</p>
+	<td class="doc"><p>TestLoadOrganizationAllowlist tests if the allowlist CSV file gets loaded properly</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestLoadOrganizationAllowlist</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">expectedWhitelist</div> <div class="operator">:=</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div>
+	<div class="ident">expectedAllowlist</div> <div class="operator">:=</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator">,</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">2</div><div class="operator">)</div><div class="operator">,</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">(</div><div class="literal">3</div><div class="operator">)</div><div class="operator">,</div>
@@ -319,10 +319,10 @@ limitations under the License.
 	<div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">orgAllowlist</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationAllowlist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">equal</div> <div class="operator">:=</div> <div class="ident">orgAllowlist</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">expectedWhitelist</div><div class="operator">)</div><div class="operator">;</div> <div class="operator">!</div><div class="ident">equal</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">equal</div> <div class="operator">:=</div> <div class="ident">orgAllowlist</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">expectedAllowlist</div><div class="operator">)</div><div class="operator">;</div> <div class="operator">!</div><div class="ident">equal</div> <div class="operator">{</div>
 		<div class="ident">t</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div>
-			<div class="literal">&#34;Org whitelist did not load properly. Order of elements does not matter. Expected %v. Got %v&#34;</div><div class="operator">,</div>
-			<div class="ident">expectedWhitelist</div><div class="operator">,</div> <div class="ident">orgAllowlist</div><div class="operator">,</div>
+			<div class="literal">&#34;Org allowlist did not load properly. Order of elements does not matter. Expected %v. Got %v&#34;</div><div class="operator">,</div>
+			<div class="ident">expectedAllowlist</div><div class="operator">,</div> <div class="ident">orgAllowlist</div><div class="operator">,</div>
 		<div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -365,13 +365,13 @@ str
 		topic = &#34;platform.results.ccx&#34;
 		group = &#34;aggregator&#34;
 		enabled = true
-		enable_org_whitelist = true
+		enable_org_allowlist = true
 
 		[content]
 		path = &#34;/rules-content&#34;
 
 		[processing]
-		org_whitelist_file = &#34;org_whitelist.csv&#34;
+		org_allowlist_file = &#34;org_allowlist.csv&#34;
 
 		[server]
 		address = &#34;:8080&#34;
@@ -578,7 +578,7 @@ str
 	<div class="ident">mustSetEnv</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE&#34;</div><div class="operator">,</div> <div class="literal">&#34;openapi.json&#34;</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">mustSetEnv</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG&#34;</div><div class="operator">,</div> <div class="literal">&#34;true&#34;</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">mustSetEnv</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_WHITELIST&#34;</div><div class="operator">,</div> <div class="literal">&#34;org_whitelist.csv&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">mustSetEnv</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_ALLOWLIST&#34;</div><div class="operator">,</div> <div class="literal">&#34;org_allowlist.csv&#34;</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">mustSetEnv</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER&#34;</div><div class="operator">,</div> <div class="literal">&#34;sqlite3&#34;</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">mustSetEnv</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE&#34;</div><div class="operator">,</div> <div class="literal">&#34;:memory:&#34;</div><div class="operator">)</div><div class="operator"></div>

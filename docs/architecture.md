@@ -29,8 +29,8 @@ Kafka, but into different topic
 5. The service provides such data via REST API to other tools, like OpenShift Cluster Manager web
 UI, OpenShift console, etc.
 
-Optionally, an organization whitelist can be enabled by the configuration variable
-`enable_org_whitelist`, which enables processing of a .csv file containing organization IDs (path
-specified by the config variable `org_whitelist`) and allows report processing only for these
+Optionally, an organization allowlist can be enabled by the configuration variable
+`enable_org_allowlist`, which enables processing of a .csv file containing organization IDs (path
+specified by the config variable `org_allowlist`) and allows report processing only for these
 organizations. This feature is disabled by default, and might be removed altogether in the near
 future.

@@ -179,7 +179,7 @@ https://redhatinsights.github.io/insights-results-aggregator/packages/conf/confi
 
 <div class="keyword">const</div> <div class="operator">(</div>
 	<div class="ident">configFileEnvVariableName</div>   <div class="operator">=</div> <div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE&#34;</div><div class="operator"></div>
-	<div class="ident">defaultOrgAllowlistFileName</div> <div class="operator">=</div> <div class="literal">&#34;org_whitelist.csv&#34;</div><div class="operator"></div>
+	<div class="ident">defaultOrgAllowlistFileName</div> <div class="operator">=</div> <div class="literal">&#34;org_allowlist.csv&#34;</div><div class="operator"></div>
 	<div class="ident">defaultContentPath</div>          <div class="operator">=</div> <div class="literal">&#34;/rules-content&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
@@ -203,7 +203,7 @@ https://redhatinsights.github.io/insights-results-aggregator/packages/conf/confi
 	<div class="ident">Broker</div>     <div class="ident">broker</div><div class="operator">.</div><div class="ident">Configuration</div> <div class="literal">`mapstructure:&#34;broker&#34; toml:&#34;broker&#34;`</div><div class="operator"></div>
 	<div class="ident">Server</div>     <div class="ident">server</div><div class="operator">.</div><div class="ident">Configuration</div> <div class="literal">`mapstructure:&#34;server&#34; toml:&#34;server&#34;`</div><div class="operator"></div>
 	<div class="ident">Processing</div> <div class="keyword">struct</div> <div class="operator">{</div>
-		<div class="ident">OrgAllowlistFile</div> <div class="ident">string</div> <div class="literal">`mapstructure:&#34;org_whitelist_file&#34; toml:&#34;org_whitelist_file&#34;`</div><div class="operator"></div>
+		<div class="ident">OrgAllowlistFile</div> <div class="ident">string</div> <div class="literal">`mapstructure:&#34;org_allowlist_file&#34; toml:&#34;org_allowlist_file&#34;`</div><div class="operator"></div>
 	<div class="operator">}</div> <div class="literal">`mapstructure:&#34;processing&#34;`</div><div class="operator"></div>
 	<div class="ident">Storage</div>    <div class="ident">storage</div><div class="operator">.</div><div class="ident">Configuration</div>          <div class="literal">`mapstructure:&#34;storage&#34; toml:&#34;storage&#34;`</div><div class="operator"></div>
 	<div class="ident">Logging</div>    <div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div>    <div class="literal">`mapstructure:&#34;logging&#34; toml:&#34;logging&#34;`</div><div class="operator"></div>

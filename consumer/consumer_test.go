@@ -183,13 +183,13 @@ func TestParseMessageNullReport(t *testing.T) {
 	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 
-func dummyConsumer(s storage.Storage, whitelist bool) consumer.Consumer {
+func dummyConsumer(s storage.Storage, allowlist bool) consumer.Consumer {
 	brokerCfg := broker.Configuration{
 		Address: "localhost:1234",
 		Topic:   "topic",
 		Group:   "group",
 	}
-	if whitelist {
+	if allowlist {
 		brokerCfg.OrgAllowlist = mapset.NewSetWith(types.OrgID(1))
 		brokerCfg.OrgAllowlistEnabled = true
 	} else {
