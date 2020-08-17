@@ -48,7 +48,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"sync"
 
 	// we just have to import this package in order to expose pprof interface in debug mode
@@ -177,8 +176,8 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	}
 }
 
-// readRuleForReport return rule by cluster ID, org ID and rule ID
-func (server *HTTPServer) readRuleForReport(writer http.ResponseWriter, request *http.Request) {
+// readSingleRule returns a rule by cluster ID, org ID and rule ID
+func (server *HTTPServer) readSingleRule(writer http.ResponseWriter, request *http.Request) {
 	clusterName, successful := readClusterName(writer, request)
 	if !successful {
 		// everything has been handled already
@@ -200,26 +199,17 @@ func (server *HTTPServer) readRuleForReport(writer http.ResponseWriter, request 
 		return
 	}
 
-	report, err := server.Storage.ReadRuleForReport(orgID, clusterName, ruleID, errorKey)
+	templateData, err := server.Storage.ReadSingleRule(orgID, clusterName, ruleID, errorKey)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read rule report for cluster")
 		handleServerError(writer, err)
 		return
 	}
 
-	var ruleDetails json.RawMessage
-	err = json.Unmarshal([]byte(report), &ruleDetails)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to parse cluster rule report")
-		handleServerError(writer, err)
-		return
-	}
-
-	ruleIDSplitted := strings.Split(string(ruleID), "|")
 	reportRule := types.RuleOnReport{
-		TemplateData: string(ruleDetails),
-		Module:       types.RuleID(ruleIDSplitted[0]),
-		ErrorKey:     types.ErrorKey(ruleIDSplitted[1]),
+		TemplateData: templateData,
+		Module:       ruleID,
+		ErrorKey:     errorKey,
 	}
 
 	reportRule = server.getFeedbackAndTogglesOnRule(clusterName, userID, reportRule)

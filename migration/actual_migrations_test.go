@@ -22,6 +22,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
@@ -301,4 +302,66 @@ func TestMigration5_NoSuchTable(t *testing.T) {
 
 	err = migration.SetDBVersion(db, dbDriver, 0)
 	assert.EqualError(t, err, "no such table: consumer_error")
+}
+
+func TestMigration13(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// migration is not implemented for sqlite
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 12)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`,
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.ClusterReport3Rules,
+		testdata.LastCheckedAt,
+		testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, dbDriver, 13)
+	helpers.FailOnError(t, err)
+
+	assertRule := func(ruleFQDN types.RuleID, errorKey types.ErrorKey, expectedTemplateData string) {
+		var (
+			templateData string
+		)
+
+		err := db.QueryRow(`
+			SELECT
+				template_data
+			FROM
+				rule_hit
+			WHERE
+				org_id = $1 AND cluster_id = $2 AND
+				rule_fqdn = $3 AND error_key = $4
+		`,
+			testdata.OrgID,
+			testdata.ClusterName,
+			ruleFQDN,
+			errorKey,
+		).Scan(
+			&templateData,
+		)
+		helpers.FailOnError(t, err)
+
+		if helpers.IsStringJSON(expectedTemplateData) {
+			assert.JSONEq(t, expectedTemplateData, templateData)
+		} else {
+			assert.Equal(t, expectedTemplateData, templateData)
+		}
+	}
+
+	assertRule(testdata.Rule1ID, testdata.ErrorKey1, testdata.Rule1ExtraData)
+	assertRule(testdata.Rule2ID, testdata.ErrorKey2, testdata.Rule2ExtraData)
+	assertRule(testdata.Rule3ID, testdata.ErrorKey3, testdata.Rule3ExtraData)
 }

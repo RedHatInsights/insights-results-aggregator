@@ -264,11 +264,11 @@
         ]
       }
     },
-    "/organizations/{orgId}/clusters/{clusterId}/users/{userId}/report/{ruleID}": {
+    "/organizations/{orgId}/clusters/{clusterId}/users/{userId}/rules/{ruleId}": {
       "get": {
-        "summary": "Returns the latest rule report for the given organization and cluster which contains information about rules that were hit by the cluster.",
-        "operationId": "getRuleForCluster",
-        "description": "The rule report is specified by the organization ID, the cluster ID and the rule ID. The latest rule report available for the given combination will be returned.",
+        "summary": "Returns the latest rule report for the given organization, cluster, user and rule ids",
+        "operationId": "getSingleRule",
+        "description": "The rule report is specified by organization ID, cluster ID, user ID and rule ID. The latest rule report available for the given combination will be returned.",
         "parameters": [
           {
             "name": "orgId",

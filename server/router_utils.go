@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -285,10 +286,13 @@ func (server *HTTPServer) readClusterRuleUserParams(
 		return "", "", "", false
 	}
 
-	// it's gonna raise an error if cluster does not exist
-	_, _, err := server.Storage.ReadReportForClusterByClusterName(clusterID)
+	clusterExists, err := server.Storage.DoesClusterExist(clusterID)
 	if err != nil {
 		handleServerError(writer, err)
+		return "", "", "", false
+	}
+	if !clusterExists {
+		handleServerError(writer, &types.ItemNotFoundError{ItemID: clusterID})
 		return "", "", "", false
 	}
 

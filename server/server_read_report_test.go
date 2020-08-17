@@ -15,7 +15,6 @@
 package server_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -25,7 +24,6 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func TestReadReportForClusterNonIntOrgID(t *testing.T) {
