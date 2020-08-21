@@ -34,7 +34,7 @@ func TestNoopStorage_Methods(t *testing.T) {
 	_, _, _ = noopStorage.ReadReportForCluster(0, "")
 	_, _, _ = noopStorage.ReadReportForClusterByClusterName("")
 	_, _ = noopStorage.GetLatestKafkaOffset()
-	_ = noopStorage.WriteReportForCluster(0, "", "", time.Now(), 0)
+	_ = noopStorage.WriteReportForCluster(0, "", "", []types.ReportItem{}, time.Now(), 0)
 	_, _ = noopStorage.ReportsCount()
 	_ = noopStorage.VoteOnRule("", "", "", 0, "")
 	_ = noopStorage.AddOrUpdateFeedbackOnRule("", "", "", "")

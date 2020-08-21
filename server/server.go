@@ -206,6 +206,14 @@ func (server *HTTPServer) readSingleRule(writer http.ResponseWriter, request *ht
 		return
 	}
 
+	var ruleDetails json.RawMessage
+	err = json.Unmarshal([]byte(templateData), &ruleDetails)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to parse cluster rule report")
+		handleServerError(writer, err)
+		return
+	}
+
 	reportRule := types.RuleOnReport{
 		TemplateData: templateData,
 		Module:       ruleID,
@@ -213,11 +221,6 @@ func (server *HTTPServer) readSingleRule(writer http.ResponseWriter, request *ht
 	}
 
 	reportRule = server.getFeedbackAndTogglesOnRule(clusterName, userID, reportRule)
-
-	if err != nil {
-		log.Error().Err(err).Msg("An error has occurred when getting feedback or toggles")
-		handleServerError(writer, err)
-	}
 
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData(REPORT_RESPONSE, reportRule))
 	if err != nil {

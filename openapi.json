@@ -295,10 +295,9 @@
             "name": "userId",
             "in": "path",
             "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
             "schema": {
-              "type": "string",
-              "minLength": 36,
-              "maxLength": 36
+              "type": "string"
             }
           },
           {

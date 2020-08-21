@@ -300,23 +300,10 @@ func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
+
 	createReportTableWithBadClusterField(t, mockStorage)
 
-	// create a table with a bad type
-	_, err := connection.Exec(query)
-	helpers.FailOnError(t, err)
-
-	query = `
-		CREATE TABLE rule_hit (
-			org_id			INTEGER NOT NULL,
-			cluster_id      VARCHAR NOT NULL,
-			rule_fqdn 		VARCHAR NOT NULL,
-			error_key        VARCHAR NOT NULL,
-			template_data   VARCHAR NOT NULL,
-			PRIMARY KEY(cluster_id, org_id, rule_fqdn, error_key)
-		)
-	`
-	err = mockStorage.WriteReportForCluster(
+	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	assert.Error(t, err)
@@ -787,5 +774,19 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 
 	// create a table with a bad type
 	_, err := connection.Exec(query)
+	helpers.FailOnError(t, err)
+
+	query = `
+		CREATE TABLE rule_hit (
+			org_id			INTEGER NOT NULL,
+			cluster_id      VARCHAR NOT NULL,
+			rule_fqdn 		VARCHAR NOT NULL,
+			error_key        VARCHAR NOT NULL,
+			template_data   VARCHAR NOT NULL,
+			PRIMARY KEY(cluster_id, org_id, rule_fqdn, error_key)
+		)
+	`
+
+	_, err = connection.Exec(query)
 	helpers.FailOnError(t, err)
 }

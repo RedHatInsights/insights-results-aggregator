@@ -573,13 +573,13 @@ func TestRuleToggle(t *testing.T) {
 	for _, endpoint := range []string{
 		server.DisableRuleForClusterEndpoint, server.EnableRuleForClusterEndpoint,
 	} {
-		var expectedState bool
+		var expectedState storage.RuleToggle
 
 		switch endpoint {
 		case server.DisableRuleForClusterEndpoint:
-			expectedState = true
+			expectedState = storage.RuleToggleDisable
 		case server.EnableRuleForClusterEndpoint:
-			expectedState = false
+			expectedState = storage.RuleToggleEnable
 		default:
 			t.Fatal("no such endpoint")
 		}
@@ -609,7 +609,7 @@ func TestRuleToggle(t *testing.T) {
 			assert.Equal(t, testdata.Rule1ID, toggledRule.RuleID)
 			assert.Equal(t, testdata.UserID, toggledRule.UserID)
 			assert.Equal(t, expectedState, toggledRule.Disabled)
-			if toggledRule.Disabled == true {
+			if toggledRule.Disabled == storage.RuleToggleDisable {
 				assert.Equal(t, sql.NullTime{}, toggledRule.EnabledAt)
 			} else {
 				assert.Equal(t, sql.NullTime{}, toggledRule.DisabledAt)
@@ -720,7 +720,7 @@ func TestHTTPServer_SaveDisableFeedback(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -761,7 +761,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -791,7 +791,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_BadBody(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -810,7 +810,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_DBError(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 

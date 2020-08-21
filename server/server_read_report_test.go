@@ -15,6 +15,7 @@
 package server_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func TestReadReportForClusterNonIntOrgID(t *testing.T) {
@@ -118,7 +120,7 @@ func TestReadReportDBError(t *testing.T) {
 	})
 }
 
-func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.T) {
+func TestHttpServer_readSingleRule_BadReport(t *testing.T) {
 	badReport := `{
 		"system": {
 			"metadata": {},
@@ -134,7 +136,7 @@ func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.
 		"info": []
 }`
 	badHitRules := []types.ReportItem{
-		types.ReportItem{
+		{
 			Module:       testdata.Rule1ID,
 			ErrorKey:     testdata.ErrorKey1,
 			TemplateData: json.RawMessage("not-json"),
@@ -150,9 +152,14 @@ func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.
 	helpers.FailOnError(t, err)
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
-		Method:       http.MethodGet,
-		Endpoint:     server.ReportEndpoint,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
+		Method:   http.MethodGet,
+		Endpoint: server.RuleEndpoint,
+		EndpointArgs: []interface{}{
+			testdata.OrgID,
+			testdata.ClusterName,
+			testdata.UserID,
+			fmt.Sprintf("%v|%v", testdata.Rule1ID, testdata.ErrorKey1),
+		},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       `{ "status": "invalid character 'o' in literal null (expecting 'u')" }`,
@@ -198,7 +205,7 @@ func TestReadRuleReport(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:   http.MethodGet,
 		Endpoint: server.RuleEndpoint,
 		EndpointArgs: []interface{}{

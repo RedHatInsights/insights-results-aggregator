@@ -240,9 +240,9 @@ func readRuleIDWithErrorKey(writer http.ResponseWriter, request *http.Request) (
 		err = fmt.Errorf("invalid rule ID, it must contain only rule ID and error key separated by |")
 		log.Error().Err(err)
 		handleServerError(writer, &RouterParsingError{
-			paramName:  "rule_id",
-			paramValue: ruleIDWithErrorKey,
-			errString:  err.Error(),
+			ParamName:  "rule_id",
+			ParamValue: ruleIDWithErrorKey,
+			ErrString:  err.Error(),
 		})
 		return types.RuleID(0), types.ErrorKey(0), false
 	}
@@ -256,9 +256,9 @@ func readRuleIDWithErrorKey(writer http.ResponseWriter, request *http.Request) (
 		err = fmt.Errorf("invalid rule ID, each part of ID must contain only from latin characters, number, underscores or dots")
 		log.Error().Err(err)
 		handleServerError(writer, &RouterParsingError{
-			paramName:  "rule_id",
-			paramValue: ruleIDWithErrorKey,
-			errString:  err.Error(),
+			ParamName:  "rule_id",
+			ParamValue: ruleIDWithErrorKey,
+			ErrString:  err.Error(),
 		})
 		return types.RuleID(0), types.ErrorKey(0), false
 	}

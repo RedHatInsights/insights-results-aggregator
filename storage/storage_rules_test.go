@@ -145,8 +145,8 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 			assert.Equal(t, testdata.ClusterName, toggledRule.ClusterID)
 			assert.Equal(t, testdata.Rule1ID, toggledRule.RuleID)
 			assert.Equal(t, testdata.UserID, toggledRule.UserID)
-			assert.Equal(t, state == storage.RuleToggleDisable, toggledRule.Disabled)
-			if toggledRule.Disabled == true {
+			assert.Equal(t, state, toggledRule.Disabled)
+			if toggledRule.Disabled == storage.RuleToggleDisable {
 				assert.Equal(t, sql.NullTime{}, toggledRule.EnabledAt)
 			} else {
 				assert.Equal(t, sql.NullTime{}, toggledRule.DisabledAt)
