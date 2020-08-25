@@ -31,11 +31,16 @@ github.com/RedHatInsights/insights-operator-utils v1.0.2-0.20200610143236-c868b2
 github.com/RedHatInsights/insights-operator-utils v1.1.0/go.mod h1:PHoCR0njiPXVArw+ooowqZgBjozu1h+8mYDoRoPVh6g=
 github.com/RedHatInsights/insights-operator-utils v1.4.0 h1:R1ktc6+y/UGSKQyzRV3QN8S7ulqhnc2vcXJXCCYCn4M=
 github.com/RedHatInsights/insights-operator-utils v1.4.0/go.mod h1:F7KKAdWFR70H+3fa89ciXqimNycHdqO9HjLWRdZwOug=
+github.com/RedHatInsights/insights-operator-utils v1.4.1-0.20200729093922-bca68530a5ef/go.mod h1:F7KKAdWFR70H+3fa89ciXqimNycHdqO9HjLWRdZwOug=
 github.com/RedHatInsights/insights-operator-utils v1.4.1 h1:Ik9Il2NGpinfzfEfiumB+vOcpn4TZGGXVXoFIOXLYXE=
 github.com/RedHatInsights/insights-operator-utils v1.4.1/go.mod h1:F7KKAdWFR70H+3fa89ciXqimNycHdqO9HjLWRdZwOug=
+github.com/RedHatInsights/insights-operator-utils v1.4.3 h1:QSMNFHvkluvVH6EJjuPe45r5U6PmaUcsDmiAgQ8gvMA=
+github.com/RedHatInsights/insights-operator-utils v1.4.3/go.mod h1:F7KKAdWFR70H+3fa89ciXqimNycHdqO9HjLWRdZwOug=
 github.com/RedHatInsights/insights-results-aggregator v0.0.0-20200604090056-3534f6dd9c1c/go.mod h1:7Pc15NYXErx7BMJ4rF1Hacm+29G6atzjhwBpXNFMt+0=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200622112651-e5a7c1d79015 h1:NvNKLp20xelGO7Q8gfPshoRKd5Rhq9yZJJm009mlWPY=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200622112651-e5a7c1d79015/go.mod h1:1pHaSnEh5Bhc8IZNqP6vbBI3jtWd5/rv4x2Y2/zG90w=
+github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200825113234-e84e924194bc h1:YW3dZHVYKUEzADsBF+m3BdrGxGZM0Xb3UAByJIBT9Cw=
+github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200825113234-e84e924194bc/go.mod h1:DcDgoCCmBuUSKQOGrTi0BfFLdSjAp/KxIwyqKUd46sM=
 github.com/RedHatInsights/insights-results-aggregator-utils v0.0.0-20200616074815-67f30b0e724d/go.mod h1:a2r0OkXqBR7MqsnIjEn1FVwZIGQO9ROnbjfV2ZelVvE=
 github.com/RedHatInsights/insights-results-smart-proxy v0.0.0-20200619163313-7d5e376de430/go.mod h1:2fm8JFTklN33A6LiK+T0ld0fvBNtU5HrEKaLPsQE/Wc=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
