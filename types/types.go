@@ -48,45 +48,41 @@ const (
 	UserVoteLike = types.UserVoteLike
 )
 
-// RequestID is used to store the request ID supplied in input Kafka records as
-// a unique identifier of payloads. Empty string represents a missing request ID.
-type RequestID = types.RequestID
-
-// RuleOnReport represents a single (hit) rule of the string encoded report
-type RuleOnReport = types.RuleOnReport
-
-// ReportRules is a helper struct for easy JSON unmarshalling of string encoded report
-type ReportRules = types.ReportRules
-
-// ReportResponse represents the response of /report endpoint
-type ReportResponse = types.ReportResponse
-
-// ReportResponseMeta contains metadata about the report
-type ReportResponseMeta = types.ReportResponseMeta
-
-// DisabledRuleResponse represents a single disabled rule displaying only identifying information
-type DisabledRuleResponse = types.DisabledRuleResponse
-
-// RuleID represents type for rule id
-type RuleID = types.RuleID
-
-// ErrorKey represents type for error key
-type ErrorKey = types.ErrorKey
-
-// Rule represents the content of rule table
-type Rule = types.Rule
-
-// RuleErrorKey represents the content of rule_error_key table
-type RuleErrorKey = types.RuleErrorKey
-
-// RuleWithContent represents a rule with content, basically the mix of rule and rule_error_key tables' content
-type RuleWithContent = types.RuleWithContent
-
-// KafkaOffset type for kafka offset
-type KafkaOffset = types.KafkaOffset
-
-// DBDriver type for db driver enum
-type DBDriver = types.DBDriver
+type (
+	// RequestID is used to store the request ID supplied in input Kafka records as
+	// a unique identifier of payloads. Empty string represents a missing request ID.
+	RequestID = types.RequestID
+	// RuleOnReport represents a single (hit) rule of the string encoded report
+	RuleOnReport = types.RuleOnReport
+	// ReportRules is a helper struct for easy JSON unmarshalling of string encoded report
+	ReportRules = types.ReportRules
+	// ReportResponse represents the response of /report endpoint
+	ReportResponse = types.ReportResponse
+	// ReportResponseMeta contains metadata about the report
+	ReportResponseMeta = types.ReportResponseMeta
+	// DisabledRuleResponse represents a single disabled rule displaying only identifying information
+	DisabledRuleResponse = types.DisabledRuleResponse
+	// RuleID represents type for rule id
+	RuleID = types.RuleID
+	// ErrorKey represents type for error key
+	ErrorKey = types.ErrorKey
+	// Rule represents the content of rule table
+	Rule = types.Rule
+	// RuleErrorKey represents the content of rule_error_key table
+	RuleErrorKey = types.RuleErrorKey
+	// RuleWithContent represents a rule with content, basically the mix of rule and rule_error_key tables' content
+	RuleWithContent = types.RuleWithContent
+	// KafkaOffset type for kafka offset
+	KafkaOffset = types.KafkaOffset
+	// DBDriver type for db driver enum
+	DBDriver = types.DBDriver
+	// Internal contains information about organization ID
+	Internal = types.Internal
+	// Identity contains internal user info
+	Identity = types.Identity
+	// Token is x-rh-identity struct
+	Token = types.Token
+)
 
 const (
 	// DBDriverSQLite3 shows that db driver is sqlite
@@ -96,12 +92,6 @@ const (
 	// DBDriverGeneral general sql(used for mock now)
 	DBDriverGeneral = types.DBDriverGeneral
 )
-
-// Internal contains information about organization ID
-type Internal = types.Internal
-
-// Identity contains internal user info
-type Identity = types.Identity
 
 const (
 	// ContextKeyUser is a constant for user authentication token in request

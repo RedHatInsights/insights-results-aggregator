@@ -27,7 +27,7 @@ import (
 )
 
 func TestReadReportForClusterNonIntOrgID(t *testing.T) {
-	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{"non-int", testdata.ClusterName, testdata.UserID},
@@ -40,7 +40,7 @@ func TestReadReportForClusterNonIntOrgID(t *testing.T) {
 }
 
 func TestReadReportForClusterNegativeOrgID(t *testing.T) {
-	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{-1, testdata.ClusterName, testdata.UserID},
@@ -53,7 +53,7 @@ func TestReadReportForClusterNegativeOrgID(t *testing.T) {
 }
 
 func TestReadReportForClusterBadClusterName(t *testing.T) {
-	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.BadClusterName, testdata.UserID},
@@ -64,7 +64,7 @@ func TestReadReportForClusterBadClusterName(t *testing.T) {
 }
 
 func TestReadNonExistingReport(t *testing.T) {
-	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -85,7 +85,7 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -108,7 +108,7 @@ func TestReadReportDBError(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	closer()
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -129,7 +129,7 @@ func TestHttpServer_readReportForCluster_getContentForRule_BadReport(t *testing.
 	)
 	helpers.FailOnError(t, err)
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -152,7 +152,7 @@ func TestReadReport(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -179,7 +179,7 @@ func TestReadReportDisableRule(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -189,7 +189,7 @@ func TestReadReportDisableRule(t *testing.T) {
 		BodyChecker: helpers.AssertReportResponsesEqual,
 	})
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
@@ -198,7 +198,7 @@ func TestReadReportDisableRule(t *testing.T) {
 		Body:       `{"status": "ok"}`,
 	})
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -208,7 +208,7 @@ func TestReadReportDisableRule(t *testing.T) {
 		BodyChecker: helpers.AssertReportResponsesEqual,
 	})
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.EnableRuleForClusterEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
@@ -217,7 +217,7 @@ func TestReadReportDisableRule(t *testing.T) {
 		Body:       `{"status": "ok"}`,
 	})
 
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -243,7 +243,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// user 1 check no disabled rules in response
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -254,7 +254,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	})
 
 	// user 2 disables rule1
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.User2ID},
@@ -264,7 +264,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	})
 
 	// user 2 is affected
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.User2ID},
@@ -275,7 +275,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	})
 
 	// user 1 is not affected
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -286,7 +286,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	})
 
 	// user 2 re-enables rule
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.EnableRuleForClusterEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.User2ID},
@@ -296,7 +296,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	})
 
 	// user 2 sees no rules disabled
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.User2ID},
@@ -307,7 +307,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	})
 
 	// user 1 disables rule1
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
@@ -317,7 +317,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	})
 
 	// user 1 disables rule2
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule2ID, testdata.UserID},
@@ -327,7 +327,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	})
 
 	// user 1 is affected
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
@@ -338,7 +338,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	})
 
 	// user 2 is not affected
-	helpers.AssertAPIRequest(t, mockStorage, &config, &helpers.APIRequest{
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.User2ID},

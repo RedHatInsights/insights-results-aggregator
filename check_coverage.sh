@@ -20,6 +20,8 @@ RED_BG=$(tput setab 1)
 GREEN_BG=$(tput setab 2)
 NC=$(tput sgr0) # No Color
 
+make test || exit 1
+
 go_tool_cover_output=$(go tool cover -func=coverage.out)
 
 if [[ $* == *verbose* ]]; then
