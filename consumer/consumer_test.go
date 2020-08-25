@@ -273,7 +273,7 @@ func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 }
 
 func TestKafkaConsumerMockOK(t *testing.T) {
-	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t,
 			testTopicName,
@@ -294,7 +294,7 @@ func TestKafkaConsumerMockOK(t *testing.T) {
 }
 
 func TestKafkaConsumerMockBadMessage(t *testing.T) {
-	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t,
 			testTopicName,
@@ -315,7 +315,7 @@ func TestKafkaConsumerMockBadMessage(t *testing.T) {
 }
 
 func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
-	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t, testTopicName, testOrgAllowlist, []string{testdata.ConsumerMessage},
 		)
@@ -335,7 +335,7 @@ func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
 }
 
 func TestKafkaConsumer_New(t *testing.T) {
-	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
 
 		mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)

@@ -39,7 +39,7 @@ const (
 	testsTimeout = 60 * time.Second
 )
 
-func mustSetEnv(t *testing.T, key, val string) {
+func mustSetEnv(t testing.TB, key, val string) {
 	err := os.Setenv(key, val)
 	helpers.FailOnError(t, err)
 }
@@ -51,7 +51,7 @@ func mustLoadConfiguration(path string) {
 	}
 }
 
-func setEnvSettings(t *testing.T, settings map[string]string) {
+func setEnvSettings(t testing.TB, settings map[string]string) {
 	os.Clearenv()
 
 	for key, val := range settings {
@@ -74,7 +74,7 @@ func TestStartService(t *testing.T) {
 	// because the service won't run on top of an empty DB.
 	*main.AutoMigratePtr = true
 
-	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		os.Clearenv()
 
 		mustLoadConfiguration("./tests/tests")
@@ -139,7 +139,7 @@ func TestStartService(t *testing.T) {
 //}
 
 func TestStartService_DBError(t *testing.T) {
-	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		buf := new(bytes.Buffer)
 		log.Logger = zerolog.New(buf)
 

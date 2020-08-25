@@ -58,7 +58,7 @@ func (mockKafkaConsumer *MockKafkaConsumer) Close(t testing.TB) {
 // which produces list of messages automatically
 // calls t.Fatal on error
 func MustGetMockKafkaConsumerWithExpectedMessages(
-	t *testing.T,
+	t testing.TB,
 	topic string,
 	orgAllowlist mapset.Set,
 	messages []string,
@@ -74,7 +74,7 @@ func MustGetMockKafkaConsumerWithExpectedMessages(
 // GetMockKafkaConsumerWithExpectedMessages creates mocked kafka consumer
 // which produces list of messages automatically
 func GetMockKafkaConsumerWithExpectedMessages(
-	t *testing.T, topic string, orgAllowlist mapset.Set, messages []string,
+	t testing.TB, topic string, orgAllowlist mapset.Set, messages []string,
 ) (*MockKafkaConsumer, func(), error) {
 	mockStorage, storageCloser := MustGetMockStorage(t, true)
 
@@ -114,7 +114,7 @@ func WaitForMockConsumerToHaveNConsumedMessages(mockConsumer *MockKafkaConsumer,
 }
 
 // GetHandlersMapForMockConsumer returns handlers for mock broker to successfully create a new consumer
-func GetHandlersMapForMockConsumer(t *testing.T, mockBroker *sarama.MockBroker, topicName string) map[string]sarama.MockResponse {
+func GetHandlersMapForMockConsumer(t testing.TB, mockBroker *sarama.MockBroker, topicName string) map[string]sarama.MockResponse {
 	return map[string]sarama.MockResponse{
 		"MetadataRequest": sarama.NewMockMetadataResponse(t).
 			SetBroker(mockBroker.Addr(), mockBroker.BrokerID()).
