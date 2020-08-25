@@ -821,7 +821,7 @@ func TestHTTPServer_SaveDisableFeedback_Error(t *testing.T) {
 			Method:       http.MethodPost,
 			Endpoint:     server.DisableRuleFeedbackEndpoint,
 			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
-			Body:         fmt.Sprint(`{"message": ""}`),
+			Body:         `{"message": ""}`,
 		}, &helpers.APIResponse{
 			StatusCode: http.StatusInternalServerError,
 			Body:       `{"status": "Internal Server Error"}`,
