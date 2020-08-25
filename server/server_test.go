@@ -748,7 +748,7 @@ func TestHTTPServer_SaveDisableFeedback_Error(t *testing.T) {
 			Method:       http.MethodPost,
 			Endpoint:     server.DisableRuleFeedbackEndpoint,
 			EndpointArgs: []interface{}{testdata.BadClusterName, testdata.Rule1ID, testdata.UserID},
-			Body:         fmt.Sprintf(`{"message": ""}`),
+			Body:         `{"message": ""}`,
 		}, &helpers.APIResponse{
 			StatusCode: http.StatusBadRequest,
 			Body: `{
@@ -770,7 +770,7 @@ func TestHTTPServer_SaveDisableFeedback_Error(t *testing.T) {
 			Method:       http.MethodPost,
 			Endpoint:     server.DisableRuleFeedbackEndpoint,
 			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
-			Body:         fmt.Sprintf(`{"message": ""}`),
+			Body:         `{"message": ""}`,
 			XRHIdentity: helpers.MakeXRHTokenString(t, &types.Token{
 				Identity: operator_utils_types.Identity{
 					AccountNumber: testdata.UserID,
