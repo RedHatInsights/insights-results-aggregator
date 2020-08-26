@@ -30,12 +30,16 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type (
+	// ValidationError validation error, for example when string is longer then expected
+	ValidationError = types.ValidationError
+	// ItemNotFoundError shows that item with id ItemID wasn't found in the storage
+	ItemNotFoundError = types.ItemNotFoundError
+)
+
 // ErrOldReport is an error returned if a more recent already
 // exists on the storage while attempting to write a report for a cluster.
 var ErrOldReport = types.ErrOldReport
-
-// ItemNotFoundError shows that item with id ItemID wasn't found in the storage
-type ItemNotFoundError = types.ItemNotFoundError
 
 // TableNotFoundError table not found error
 type TableNotFoundError struct {
@@ -65,20 +69,6 @@ type ForeignKeyError struct {
 
 	// Details can reveal you information about specific item violating fk
 	Details string
-}
-
-// ValidationError validation error, for example when string is longer then expected
-type ValidationError struct {
-	ParamName  string
-	ParamValue interface{}
-	ErrString  string
-}
-
-func (e *ValidationError) Error() string {
-	return fmt.Sprintf(
-		"Error during validating param '%v' with value '%v'. Error: '%v'",
-		e.ParamName, e.ParamValue, e.ErrString,
-	)
 }
 
 // Error returns error string

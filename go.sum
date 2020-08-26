@@ -41,6 +41,8 @@ github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200622112651
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200622112651-e5a7c1d79015/go.mod h1:1pHaSnEh5Bhc8IZNqP6vbBI3jtWd5/rv4x2Y2/zG90w=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200825113234-e84e924194bc h1:YW3dZHVYKUEzADsBF+m3BdrGxGZM0Xb3UAByJIBT9Cw=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200825113234-e84e924194bc/go.mod h1:DcDgoCCmBuUSKQOGrTi0BfFLdSjAp/KxIwyqKUd46sM=
+github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200826060335-2d341f371b98 h1:n/TCYzIT3qzwDN1wd2lSEEimqd6bGh5e/poj66y99MQ=
+github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200826060335-2d341f371b98/go.mod h1:DcDgoCCmBuUSKQOGrTi0BfFLdSjAp/KxIwyqKUd46sM=
 github.com/RedHatInsights/insights-results-aggregator-utils v0.0.0-20200616074815-67f30b0e724d/go.mod h1:a2r0OkXqBR7MqsnIjEn1FVwZIGQO9ROnbjfV2ZelVvE=
 github.com/RedHatInsights/insights-results-smart-proxy v0.0.0-20200619163313-7d5e376de430/go.mod h1:2fm8JFTklN33A6LiK+T0ld0fvBNtU5HrEKaLPsQE/Wc=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=

@@ -15,78 +15,22 @@
 package server
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-
-	"github.com/rs/zerolog/log"
-
-	"github.com/RedHatInsights/insights-operator-utils/responses"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
+	operator_utils_types "github.com/RedHatInsights/insights-operator-utils/types"
 )
+
+type (
+	// NoBodyError error meaning that client didn't provide body when it's required
+	NoBodyError = operator_utils_types.NoBodyError
+	// RouterMissingParamError missing parameter in request
+	RouterMissingParamError = operator_utils_types.RouterMissingParamError
+	// RouterParsingError parsing error, for example string when we expected integer
+	RouterParsingError = operator_utils_types.RouterParsingError
+	// AuthenticationError happens during auth problems, for example malformed token
+	AuthenticationError = operator_utils_types.AuthenticationError
+)
+
+// handleServerError handles separate server errors and sends appropriate responses
+var handleServerError = operator_utils_types.HandleServerError
 
 // responseDataError is used as the error message when the responses functions return an error
 const responseDataError = "Unexpected error during response data encoding"
-
-// RouterMissingParamError missing parameter in request
-type RouterMissingParamError struct {
-	paramName string
-}
-
-func (e *RouterMissingParamError) Error() string {
-	return fmt.Sprintf("Missing required param from request: %v", e.paramName)
-}
-
-// RouterParsingError parsing error, for example string when we expected integer
-type RouterParsingError struct {
-	paramName  string
-	paramValue interface{}
-	errString  string
-}
-
-func (e *RouterParsingError) Error() string {
-	return fmt.Sprintf(
-		"Error during parsing param '%v' with value '%v'. Error: '%v'",
-		e.paramName, e.paramValue, e.errString,
-	)
-}
-
-// AuthenticationError happens during auth problems, for example malformed token
-type AuthenticationError struct {
-	errString string
-}
-
-func (e *AuthenticationError) Error() string {
-	return e.errString
-}
-
-// NoBodyError error meaning that client didn't provide body when it's required
-type NoBodyError struct{}
-
-func (*NoBodyError) Error() string {
-	return "client didn't provide request body"
-}
-
-// handleServerError handles separate server errors and sends appropriate responses
-func handleServerError(writer http.ResponseWriter, err error) {
-	log.Error().Err(err).Msg("handleServerError")
-
-	var respErr error
-
-	switch err := err.(type) {
-	case *RouterMissingParamError, *RouterParsingError, *json.SyntaxError, *NoBodyError, *types.ValidationError:
-		respErr = responses.SendBadRequest(writer, err.Error())
-	case *json.UnmarshalTypeError:
-		respErr = responses.SendBadRequest(writer, "bad type in json data")
-	case *types.ItemNotFoundError:
-		respErr = responses.SendNotFound(writer, err.Error())
-	case *AuthenticationError:
-		respErr = responses.SendForbidden(writer, err.Error())
-	default:
-		respErr = responses.SendInternalServerError(writer, "Internal Server Error")
-	}
-
-	if respErr != nil {
-		log.Error().Err(respErr).Msg(responseDataError)
-	}
-}

@@ -65,21 +65,16 @@ func (storage DBStorage) ToggleRuleForCluster(
 		return fmt.Errorf("Unexpected rule toggle value")
 	}
 
-	switch storage.dbDriverType {
-	case types.DBDriverSQLite3, types.DBDriverPostgres:
-		query = `
-			INSERT INTO cluster_rule_toggle(
-				cluster_id, rule_id, user_id, disabled, disabled_at, enabled_at, updated_at
-			)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-			ON CONFLICT (cluster_id, rule_id, user_id) DO UPDATE SET
-				disabled = $4,
-				disabled_at = $5,
-				enabled_at = $6
-		`
-	default:
-		return fmt.Errorf("DB driver %v is not supported", storage.dbDriverType)
-	}
+	query = `
+		INSERT INTO cluster_rule_toggle(
+			cluster_id, rule_id, user_id, disabled, disabled_at, enabled_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (cluster_id, rule_id, user_id) DO UPDATE SET
+			disabled = $4,
+			disabled_at = $5,
+			enabled_at = $6
+	`
 
 	_, err := storage.connection.Exec(
 		query,

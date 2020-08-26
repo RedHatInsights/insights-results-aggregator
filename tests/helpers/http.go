@@ -41,6 +41,8 @@ var (
 	NewGockRequestMatcher = helpers.NewGockRequestMatcher
 	// GockExpectAPIRequest makes gock expect the request with the baseURL and sends back the response
 	GockExpectAPIRequest = helpers.GockExpectAPIRequest
+	// MakeXRHTokenString converts types.Token to a token string(base64 encoded)
+	MakeXRHTokenString = helpers.MakeXRHTokenString
 )
 
 // DefaultServerConfig is a default config used by AssertAPIRequest
@@ -50,6 +52,16 @@ var DefaultServerConfig = server.Configuration{
 	APISpecFile:                  "openapi.json",
 	Debug:                        true,
 	Auth:                         false,
+	MaximumFeedbackMessageLength: 255,
+}
+
+// DefaultServerConfigAuth is a default config used by AssertAPIRequest with authentication set to true
+var DefaultServerConfigAuth = server.Configuration{
+	Address:                      ":8080",
+	APIPrefix:                    "/api/test/",
+	APISpecFile:                  "openapi.json",
+	Debug:                        true,
+	Auth:                         true,
 	MaximumFeedbackMessageLength: 255,
 }
 

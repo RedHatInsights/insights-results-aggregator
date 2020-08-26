@@ -142,9 +142,50 @@ func TestDBStorageGetOrgIDByClusterID(t *testing.T) {
 	defer closer()
 
 	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`)
+
 	orgID, err := mockStorage.GetOrgIDByClusterID(testdata.ClusterName)
 	helpers.FailOnError(t, err)
+
 	assert.Equal(t, orgID, testdata.OrgID)
+}
+
+func TestDBStorageGetOrgIDByClusterID_Error(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
+	defer closer()
+
+	dbStorage := mockStorage.(*storage.DBStorage)
+	connection := dbStorage.GetConnection()
+
+	query := `
+		CREATE TABLE report (
+			org_id          VARCHAR  NOT NULL,
+			cluster         VARCHAR  NOT NULL,
+			report          VARCHAR NOT NULL,
+			reported_at     TIMESTAMP,
+			last_checked_at TIMESTAMP,
+			kafka_offset BIGINT NOT NULL DEFAULT 0,
+			PRIMARY KEY(org_id, cluster)
+		);
+	`
+
+	// create a table with a bad type for org_id
+	_, err := connection.Exec(query)
+	helpers.FailOnError(t, err)
+
+	// insert some data
+	_, err = connection.Exec(`
+		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
+		VALUES ($1, $2, $3, $4, $5);
+	`, "not-int", testdata.ClusterName, testdata.ClusterReportEmpty, time.Now(), time.Now())
+	helpers.FailOnError(t, err)
+
+	_, err = mockStorage.GetOrgIDByClusterID(testdata.ClusterName)
+	assert.EqualError(
+		t,
+		err,
+		`sql: Scan error on column index 0, name "org_id": `+
+			`converting driver.Value type string ("not-int") to a uint64: invalid syntax`,
+	)
 }
 
 // TestDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster
@@ -244,39 +285,10 @@ func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
-	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
-	query := `
-		CREATE TABLE report (
-			org_id          INTEGER NOT NULL,
-			cluster         INTEGER NOT NULL UNIQUE CHECK(typeof(cluster) = 'integer'),
-			report          VARCHAR NOT NULL,
-			reported_at     TIMESTAMP,
-			last_checked_at TIMESTAMP,
-			kafka_offset BIGINT NOT NULL DEFAULT 0,
-			PRIMARY KEY(org_id, cluster)
-		)
-	`
+	createReportTableWithBadClusterField(t, mockStorage)
 
-	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
-		query = `
-			CREATE TABLE report (
-				org_id          INTEGER NOT NULL,
-				cluster         INTEGER NOT NULL UNIQUE,
-				report          VARCHAR NOT NULL,
-				reported_at     TIMESTAMP,
-				last_checked_at TIMESTAMP,
-				kafka_offset BIGINT NOT NULL DEFAULT 0,
-				PRIMARY KEY(org_id, cluster)
-			)
-		`
-	}
-
-	// create a table with a bad type
-	_, err := connection.Exec(query)
-	helpers.FailOnError(t, err)
-
-	err = mockStorage.WriteReportForCluster(
+	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	assert.Error(t, err)
@@ -655,4 +667,82 @@ func TestDBStorage_GetLatestKafkaOffset_ZeroOffset(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, types.KafkaOffset(0), offset)
+}
+
+func TestDBStorage_Init(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	dbStorage := mockStorage.(*storage.DBStorage)
+
+	err := dbStorage.MigrateToLatest()
+	helpers.FailOnError(t, err)
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	err = mockStorage.Init()
+	helpers.FailOnError(t, err)
+
+	clustersLastChecked := storage.GetClustersLastChecked(dbStorage)
+
+	assert.Len(t, clustersLastChecked, 1)
+	assert.Equal(t, testdata.LastCheckedAt.Unix(), clustersLastChecked[testdata.ClusterName].Unix())
+}
+
+func TestDBStorage_Init_Error(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
+	defer closer()
+
+	createReportTableWithBadClusterField(t, mockStorage)
+
+	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+
+	// create a table with a bad type
+	_, err := connection.Exec(`
+		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
+		VALUES($1, $2, $3, $4, $5)
+	`, testdata.OrgID, 1, testdata.ClusterReportEmpty, time.Now(), time.Now())
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.Init()
+	assert.EqualError(
+		t,
+		err,
+		`sql: Scan error on column index 0, name "cluster": `+
+			`unsupported Scan, storing driver.Value type int64 into type *types.ClusterName`,
+	)
+}
+
+func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Storage) {
+	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+
+	query := `
+		CREATE TABLE report (
+			org_id          INTEGER NOT NULL,
+			cluster         INTEGER NOT NULL UNIQUE CHECK(typeof(cluster) = 'integer'),
+			report          VARCHAR NOT NULL,
+			reported_at     TIMESTAMP,
+			last_checked_at TIMESTAMP,
+			kafka_offset BIGINT NOT NULL DEFAULT 0,
+			PRIMARY KEY(org_id, cluster)
+		)
+	`
+
+	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
+		query = `
+			CREATE TABLE report (
+				org_id          INTEGER NOT NULL,
+				cluster         INTEGER NOT NULL UNIQUE,
+				report          VARCHAR NOT NULL,
+				reported_at     TIMESTAMP,
+				last_checked_at TIMESTAMP,
+				kafka_offset BIGINT NOT NULL DEFAULT 0,
+				PRIMARY KEY(org_id, cluster)
+			)
+		`
+	}
+
+	// create a table with a bad type
+	_, err := connection.Exec(query)
+	helpers.FailOnError(t, err)
 }

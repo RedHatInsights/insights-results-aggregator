@@ -18,6 +18,9 @@ package storage
 
 import (
 	"database/sql"
+	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // Export for testing
@@ -38,4 +41,8 @@ const (
 
 func GetConnection(storage *DBStorage) *sql.DB {
 	return storage.connection
+}
+
+func GetClustersLastChecked(storage *DBStorage) map[types.ClusterName]time.Time {
+	return storage.clustersLastChecked
 }

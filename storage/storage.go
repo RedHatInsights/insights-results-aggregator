@@ -30,7 +30,6 @@ import (
 	"database/sql"
 	sql_driver "database/sql/driver"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -368,19 +367,6 @@ func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 	var offset types.KafkaOffset
 	err := storage.connection.QueryRow("SELECT COALESCE(MAX(kafka_offset), 0) FROM report;").Scan(&offset)
 	return offset, err
-}
-
-func calculateTotalRisk(impact, likelihood int) int {
-	return (impact + likelihood) / 2
-}
-
-func commaSeparatedStrToTags(str string) []string {
-	str = strings.TrimSpace(str)
-	if len(str) == 0 {
-		return []string{}
-	}
-
-	return strings.Split(str, ",")
 }
 
 func (storage DBStorage) getReportUpsertQuery() (string, error) {
