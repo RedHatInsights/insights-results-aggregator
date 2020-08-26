@@ -7,7 +7,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/RedHatInsights/cloudwatch v0.0.0-20200512151223-b0b55757a24b
 	github.com/RedHatInsights/insights-content-service v0.0.0-20200619153839-23a428468a08
-	github.com/RedHatInsights/insights-operator-utils v1.5.0
+	github.com/RedHatInsights/insights-operator-utils v1.4.3
 	github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200825113234-e84e924194bc
 	github.com/RedHatInsights/insights-results-aggregator-utils v0.0.0-20200616074815-67f30b0e724d // indirect
 	github.com/RedHatInsights/insights-results-smart-proxy v0.0.0-20200619163313-7d5e376de430 // indirect
