@@ -742,89 +742,87 @@ func TestHTTPServer_SaveDisableFeedback(t *testing.T) {
 	assert.Equal(t, expectedFeedback, feedback.Message)
 }
 
-func TestHTTPServer_SaveDisableFeedback_Error(t *testing.T) {
-	t.Run("BadClusterName", func(t *testing.T) {
-		helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
-			Method:       http.MethodPost,
-			Endpoint:     server.DisableRuleFeedbackEndpoint,
-			EndpointArgs: []interface{}{testdata.BadClusterName, testdata.Rule1ID, testdata.UserID},
-			Body:         `{"message": ""}`,
-		}, &helpers.APIResponse{
-			StatusCode: http.StatusBadRequest,
-			Body: `{
+func TestHTTPServer_SaveDisableFeedback_Error_BadClusterName(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.DisableRuleFeedbackEndpoint,
+		EndpointArgs: []interface{}{testdata.BadClusterName, testdata.Rule1ID, testdata.UserID},
+		Body:         `{"message": ""}`,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body: `{
 				"status":"Error during parsing param 'cluster' with value 'aaaa'. Error: 'invalid UUID length: 4'"
 			}`,
-		})
 	})
+}
 
-	t.Run("CheckUserClusterPermissions_Error", func(t *testing.T) {
-		mockStorage, closer := helpers.MustGetMockStorage(t, true)
-		defer closer()
+func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
-		err := mockStorage.WriteReportForCluster(
-			testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
-		)
-		helpers.FailOnError(t, err)
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
 
-		helpers.AssertAPIRequest(t, mockStorage, &helpers.DefaultServerConfigAuth, &helpers.APIRequest{
-			Method:       http.MethodPost,
-			Endpoint:     server.DisableRuleFeedbackEndpoint,
-			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
-			Body:         `{"message": ""}`,
-			XRHIdentity: helpers.MakeXRHTokenString(t, &types.Token{
-				Identity: operator_utils_types.Identity{
-					AccountNumber: testdata.UserID,
-					Internal: operator_utils_types.Internal{
-						OrgID: testdata.Org2ID,
-					},
+	helpers.AssertAPIRequest(t, mockStorage, &helpers.DefaultServerConfigAuth, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.DisableRuleFeedbackEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
+		Body:         `{"message": ""}`,
+		XRHIdentity: helpers.MakeXRHTokenString(t, &types.Token{
+			Identity: operator_utils_types.Identity{
+				AccountNumber: testdata.UserID,
+				Internal: operator_utils_types.Internal{
+					OrgID: testdata.Org2ID,
 				},
-			}),
-		}, &helpers.APIResponse{
-			StatusCode: http.StatusForbidden,
-			Body: `{
+			},
+		}),
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusForbidden,
+		Body: `{
 				"status":"You have no permissions to get or change info about this organization"
 			}`,
-		})
 	})
+}
 
-	t.Run("BadBody", func(t *testing.T) {
-		mockStorage, closer := helpers.MustGetMockStorage(t, true)
-		defer closer()
+func TestHTTPServer_SaveDisableFeedback_Error_BadBody(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
 
-		err := mockStorage.WriteReportForCluster(
-			testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
-		)
-		helpers.FailOnError(t, err)
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
 
-		helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
-			Method:       http.MethodPost,
-			Endpoint:     server.DisableRuleFeedbackEndpoint,
-			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
-			Body:         "not-json",
-		}, &helpers.APIResponse{
-			StatusCode: http.StatusBadRequest,
-			Body:       `{"status": "invalid character 'o' in literal null (expecting 'u')"}`,
-		})
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.DisableRuleFeedbackEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
+		Body:         "not-json",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "invalid character 'o' in literal null (expecting 'u')"}`,
 	})
+}
 
-	t.Run("DBError", func(t *testing.T) {
-		mockStorage, closer := helpers.MustGetMockStorage(t, true)
+func TestHTTPServer_SaveDisableFeedback_Error_DBError(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 
-		err := mockStorage.WriteReportForCluster(
-			testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
-		)
-		helpers.FailOnError(t, err)
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
 
-		closer()
+	closer()
 
-		helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
-			Method:       http.MethodPost,
-			Endpoint:     server.DisableRuleFeedbackEndpoint,
-			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
-			Body:         `{"message": ""}`,
-		}, &helpers.APIResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       `{"status": "Internal Server Error"}`,
-		})
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.DisableRuleFeedbackEndpoint,
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
+		Body:         `{"message": ""}`,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
