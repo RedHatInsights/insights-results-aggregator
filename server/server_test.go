@@ -60,7 +60,7 @@ func mustLoadConfiguration(path string) {
 	}
 }
 
-func checkResponseCode(t *testing.T, expected, actual int) {
+func checkResponseCode(t testing.TB, expected, actual int) {
 	if expected != actual {
 		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
 	}
@@ -195,7 +195,7 @@ func TestListOfOrganizationsDBError(t *testing.T) {
 }
 
 func TestServerStart(t *testing.T) {
-	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		s := server.New(server.Configuration{
 			// will use any free port
 			Address:                      ":0",
