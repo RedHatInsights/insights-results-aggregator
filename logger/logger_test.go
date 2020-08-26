@@ -197,7 +197,7 @@ func TestInitZerolog_LogToCloudWatch(t *testing.T) {
 }
 
 func TestLoggingToCloudwatch(t *testing.T) {
-	helpers.RunTestWithTimeout(t, func(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		defer helpers.CleanAfterGock(t)
 
 		const baseURL = "http://localhost:9999"
