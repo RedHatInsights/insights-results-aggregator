@@ -154,7 +154,6 @@ DataSource - specification of data source. The content of this parameter depends
 	<div class="literal">&#34;database/sql&#34;</div><div class="operator"></div>
 	<div class="ident">sql_driver</div> <div class="literal">&#34;database/sql/driver&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/Shopify/sarama&#34;</div><div class="operator"></div>
@@ -582,19 +581,6 @@ tasks necessary for further service operation.</p>
 	<div class="keyword">var</div> <div class="ident">offset</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator"></div>
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">connection</div><div class="operator">.</div><div class="ident">QueryRow</div><div class="operator">(</div><div class="literal">&#34;SELECT COALESCE(MAX(kafka_offset), 0) FROM report;&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Scan</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">offset</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">return</div> <div class="ident">offset</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">calculateTotalRisk</div><div class="operator">(</div><div class="ident">impact</div><div class="operator">,</div> <div class="ident">likelihood</div> <div class="ident">int</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
-	<div class="keyword">return</div> <div class="operator">(</div><div class="ident">impact</div> <div class="operator">&#43;</div> <div class="ident">likelihood</div><div class="operator">)</div> <div class="operator">/</div> <div class="literal">2</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">commaSeparatedStrToTags</div><div class="operator">(</div><div class="ident">str</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div> <div class="operator">{</div>
-	<div class="ident">str</div> <div class="operator">=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">TrimSpace</div><div class="operator">(</div><div class="ident">str</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">str</div><div class="operator">)</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
-		<div class="keyword">return</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="keyword">return</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">Split</div><div class="operator">(</div><div class="ident">str</div><div class="operator">,</div> <div class="literal">&#34;,&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="operator">(</div><div class="ident">storage</div> <div class="ident">DBStorage</div><div class="operator">)</div> <div class="ident">getReportUpsertQuery</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>

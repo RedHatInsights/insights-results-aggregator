@@ -209,21 +209,16 @@ limitations under the License.</p>
 		<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;Unexpected rule toggle value&#34;</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="keyword">switch</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">dbDriverType</div> <div class="operator">{</div>
-	<div class="keyword">case</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverSQLite3</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverPostgres</div><div class="operator">:</div>
-		<div class="ident">query</div> <div class="operator">=</div> <div class="literal">`
-			INSERT INTO cluster_rule_toggle(
-				cluster_id, rule_id, user_id, disabled, disabled_at, enabled_at, updated_at
-			)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-			ON CONFLICT (cluster_id, rule_id, user_id) DO UPDATE SET
-				disabled = $4,
-				disabled_at = $5,
-				enabled_at = $6
-		`</div><div class="operator"></div>
-	<div class="keyword">default</div><div class="operator">:</div>
-		<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;DB driver %v is not supported&#34;</div><div class="operator">,</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">dbDriverType</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">query</div> <div class="operator">=</div> <div class="literal">`
+		INSERT INTO cluster_rule_toggle(
+			cluster_id, rule_id, user_id, disabled, disabled_at, enabled_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (cluster_id, rule_id, user_id) DO UPDATE SET
+			disabled = $4,
+			disabled_at = $5,
+			enabled_at = $6
+	`</div><div class="operator"></div>
 
 	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">connection</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div>
 		<div class="ident">query</div><div class="operator">,</div>

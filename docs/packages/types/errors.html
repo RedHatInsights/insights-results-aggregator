@@ -149,6 +149,23 @@ limitations under the License.
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
+<div class="keyword">type</div> <div class="operator">(</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ValidationError validation error, for example when string is longer then expected</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ValidationError</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ValidationError</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ItemNotFoundError shows that item with id ItemID wasn't found in the storage</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ItemNotFoundError</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ItemNotFoundError</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
 </code></pre></td>
       </tr>
       
@@ -157,14 +174,6 @@ limitations under the License.
 exists on the storage while attempting to write a report for a cluster.</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">ErrOldReport</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrOldReport</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>ItemNotFoundError shows that item with id ItemID wasn't found in the storage</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ItemNotFoundError</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ItemNotFoundError</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -224,25 +233,6 @@ tableName and foreignKeyName can be empty for DBs not supporting it (SQLite)</p>
 	<td class="doc"><p>Details can reveal you information about specific item violating fk</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">Details</div> <div class="ident">string</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>ValidationError validation error, for example when string is longer then expected</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ValidationError</div> <div class="keyword">struct</div> <div class="operator">{</div>
-	<div class="ident">ParamName</div>  <div class="ident">string</div><div class="operator"></div>
-	<div class="ident">ParamValue</div> <div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
-	<div class="ident">ErrString</div>  <div class="ident">string</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="operator">(</div><div class="ident">e</div> <div class="operator">*</div><div class="ident">ValidationError</div><div class="operator">)</div> <div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
-	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div>
-		<div class="literal">&#34;Error during validating param &#39;%v&#39; with value &#39;%v&#39;. Error: &#39;%v&#39;&#34;</div><div class="operator">,</div>
-		<div class="ident">e</div><div class="operator">.</div><div class="ident">ParamName</div><div class="operator">,</div> <div class="ident">e</div><div class="operator">.</div><div class="ident">ParamValue</div><div class="operator">,</div> <div class="ident">e</div><div class="operator">.</div><div class="ident">ErrString</div><div class="operator">,</div>
-	<div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

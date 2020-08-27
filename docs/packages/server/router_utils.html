@@ -162,7 +162,7 @@ limitations under the License.</p>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">getRouterParam</div><div class="operator">(</div><div class="ident">request</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">,</div> <div class="ident">paramName</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">value</div><div class="operator">,</div> <div class="ident">found</div> <div class="operator">:=</div> <div class="ident">mux</div><div class="operator">.</div><div class="ident">Vars</div><div class="operator">(</div><div class="ident">request</div><div class="operator">)</div><div class="operator">[</div><div class="ident">paramName</div><div class="operator">]</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">found</div> <div class="operator">{</div>
-		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterMissingParamError</div><div class="operator">{</div><div class="ident">paramName</div><div class="operator">:</div> <div class="ident">paramName</div><div class="operator">}</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterMissingParamError</div><div class="operator">{</div><div class="ident">ParamName</div><div class="operator">:</div> <div class="ident">paramName</div><div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">value</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
@@ -184,17 +184,17 @@ and check it for being valid and positive integer, otherwise returns error</p>
 	<div class="ident">uintValue</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">strconv</div><div class="operator">.</div><div class="ident">ParseUint</div><div class="operator">(</div><div class="ident">value</div><div class="operator">,</div> <div class="literal">10</div><div class="operator">,</div> <div class="literal">64</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="keyword">return</div> <div class="literal">0</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterParsingError</div><div class="operator">{</div>
-			<div class="ident">paramName</div><div class="operator">:</div>  <div class="ident">paramName</div><div class="operator">,</div>
-			<div class="ident">paramValue</div><div class="operator">:</div> <div class="ident">value</div><div class="operator">,</div>
-			<div class="ident">errString</div><div class="operator">:</div>  <div class="literal">&#34;unsigned integer expected&#34;</div><div class="operator">,</div>
+			<div class="ident">ParamName</div><div class="operator">:</div>  <div class="ident">paramName</div><div class="operator">,</div>
+			<div class="ident">ParamValue</div><div class="operator">:</div> <div class="ident">value</div><div class="operator">,</div>
+			<div class="ident">ErrString</div><div class="operator">:</div>  <div class="literal">&#34;unsigned integer expected&#34;</div><div class="operator">,</div>
 		<div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">if</div> <div class="ident">uintValue</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
 		<div class="keyword">return</div> <div class="literal">0</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterParsingError</div><div class="operator">{</div>
-			<div class="ident">paramName</div><div class="operator">:</div>  <div class="ident">paramName</div><div class="operator">,</div>
-			<div class="ident">paramValue</div><div class="operator">:</div> <div class="ident">value</div><div class="operator">,</div>
-			<div class="ident">errString</div><div class="operator">:</div>  <div class="literal">&#34;positive value expected&#34;</div><div class="operator">,</div>
+			<div class="ident">ParamName</div><div class="operator">:</div>  <div class="ident">paramName</div><div class="operator">,</div>
+			<div class="ident">ParamValue</div><div class="operator">:</div> <div class="ident">value</div><div class="operator">,</div>
+			<div class="ident">ErrString</div><div class="operator">:</div>  <div class="literal">&#34;positive value expected&#34;</div><div class="operator">,</div>
 		<div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
@@ -215,7 +215,7 @@ Converted cluster name is returned if everything is okay, otherwise an error is 
 		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
 
 		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterParsingError</div><div class="operator">{</div>
-			<div class="ident">paramName</div><div class="operator">:</div> <div class="literal">&#34;cluster&#34;</div><div class="operator">,</div> <div class="ident">paramValue</div><div class="operator">:</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">errString</div><div class="operator">:</div> <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
+			<div class="ident">ParamName</div><div class="operator">:</div> <div class="literal">&#34;cluster&#34;</div><div class="operator">,</div> <div class="ident">ParamValue</div><div class="operator">:</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
 		<div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
@@ -276,7 +276,7 @@ if it's not possible, it writes http error to the writer and returns false</p>
 
 	<div class="ident">userID</div> <div class="operator">=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">TrimSpace</div><div class="operator">(</div><div class="ident">userID</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">userID</div><div class="operator">)</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
-		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterMissingParamError</div><div class="operator">{</div><div class="ident">paramName</div><div class="operator">:</div> <div class="literal">&#34;user_id&#34;</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterMissingParamError</div><div class="operator">{</div><div class="ident">ParamName</div><div class="operator">:</div> <div class="literal">&#34;user_id&#34;</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
@@ -325,7 +325,7 @@ if it's not possible, it writes http error to the writer and returns error</p>
 		<div class="keyword">if</div> <div class="ident">identity</div><div class="operator">.</div><div class="ident">Internal</div><div class="operator">.</div><div class="ident">OrgID</div> <div class="operator">!=</div> <div class="ident">orgID</div> <div class="operator">{</div>
 			<div class="keyword">const</div> <div class="ident">message</div> <div class="operator">=</div> <div class="literal">&#34;You have no permissions to get or change info about this organization&#34;</div><div class="operator"></div>
 			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">AuthenticationError</div><div class="operator">{</div><div class="ident">errString</div><div class="operator">:</div> <div class="ident">message</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">AuthenticationError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">message</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 			<div class="keyword">return</div> <div class="ident">errors</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
@@ -381,9 +381,9 @@ if it's not possible, it writes http error to the writer and returns error</p>
 		<div class="ident">orgInt</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">strconv</div><div class="operator">.</div><div class="ident">ParseUint</div><div class="operator">(</div><div class="ident">orgStr</div><div class="operator">,</div> <div class="literal">10</div><div class="operator">,</div> <div class="literal">64</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 			<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterParsingError</div><div class="operator">{</div>
-				<div class="ident">paramName</div><div class="operator">:</div>  <div class="literal">&#34;organizations&#34;</div><div class="operator">,</div>
-				<div class="ident">paramValue</div><div class="operator">:</div> <div class="ident">orgStr</div><div class="operator">,</div>
-				<div class="ident">errString</div><div class="operator">:</div>  <div class="literal">&#34;integer array expected&#34;</div><div class="operator">,</div>
+				<div class="ident">ParamName</div><div class="operator">:</div>  <div class="literal">&#34;organizations&#34;</div><div class="operator">,</div>
+				<div class="ident">ParamValue</div><div class="operator">:</div> <div class="ident">orgStr</div><div class="operator">,</div>
+				<div class="ident">ErrString</div><div class="operator">:</div>  <div class="literal">&#34;integer array expected&#34;</div><div class="operator">,</div>
 			<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 			<div class="keyword">return</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">{</div><div class="operator">}</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
