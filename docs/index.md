@@ -73,6 +73,7 @@ REST API endpoints.
 * [storage/storage_test.go](./packages/storage/storage_test.html)
 * [storage/configuration.go](./packages/storage/configuration.html)
 * [storage/generic_insert_benchmark_test.go](./packages/storage/generic_insert_benchmark_test.html)
+* [storage/noop_storage_test.go](./packages/storage/noop_storage_test.html)
 * [logger/configuration.go](./packages/logger/configuration.html)
 * [logger/logger.go](./packages/logger/logger.html)
 * [logger/logger_test.go](./packages/logger/logger_test.html)
