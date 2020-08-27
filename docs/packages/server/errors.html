@@ -134,15 +134,47 @@ limitations under the License.</p>
 	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">server</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
-	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
-
-	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
-
-	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/responses&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+	<div class="ident">operator_utils_types</div> <div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">type</div> <div class="operator">(</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>NoBodyError error meaning that client didn't provide body when it's required</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">NoBodyError</div> <div class="operator">=</div> <div class="ident">operator_utils_types</div><div class="operator">.</div><div class="ident">NoBodyError</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>RouterMissingParamError missing parameter in request</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">RouterMissingParamError</div> <div class="operator">=</div> <div class="ident">operator_utils_types</div><div class="operator">.</div><div class="ident">RouterMissingParamError</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>RouterParsingError parsing error, for example string when we expected integer</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">RouterParsingError</div> <div class="operator">=</div> <div class="ident">operator_utils_types</div><div class="operator">.</div><div class="ident">RouterParsingError</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>AuthenticationError happens during auth problems, for example malformed token</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">AuthenticationError</div> <div class="operator">=</div> <div class="ident">operator_utils_types</div><div class="operator">.</div><div class="ident">AuthenticationError</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>handleServerError handles separate server errors and sends appropriate responses</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">var</div> <div class="ident">handleServerError</div> <div class="operator">=</div> <div class="ident">operator_utils_types</div><div class="operator">.</div><div class="ident">HandleServerError</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -151,94 +183,6 @@ limitations under the License.</p>
 	<td class="doc"><p>responseDataError is used as the error message when the responses functions return an error</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">const</div> <div class="ident">responseDataError</div> <div class="operator">=</div> <div class="literal">&#34;Unexpected error during response data encoding&#34;</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>RouterMissingParamError missing parameter in request</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">RouterMissingParamError</div> <div class="keyword">struct</div> <div class="operator">{</div>
-	<div class="ident">paramName</div> <div class="ident">string</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="operator">(</div><div class="ident">e</div> <div class="operator">*</div><div class="ident">RouterMissingParamError</div><div class="operator">)</div> <div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
-	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;Missing required param from request: %v&#34;</div><div class="operator">,</div> <div class="ident">e</div><div class="operator">.</div><div class="ident">paramName</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>RouterParsingError parsing error, for example string when we expected integer</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">RouterParsingError</div> <div class="keyword">struct</div> <div class="operator">{</div>
-	<div class="ident">paramName</div>  <div class="ident">string</div><div class="operator"></div>
-	<div class="ident">paramValue</div> <div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
-	<div class="ident">errString</div>  <div class="ident">string</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="operator">(</div><div class="ident">e</div> <div class="operator">*</div><div class="ident">RouterParsingError</div><div class="operator">)</div> <div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
-	<div class="keyword">return</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div>
-		<div class="literal">&#34;Error during parsing param &#39;%v&#39; with value &#39;%v&#39;. Error: &#39;%v&#39;&#34;</div><div class="operator">,</div>
-		<div class="ident">e</div><div class="operator">.</div><div class="ident">paramName</div><div class="operator">,</div> <div class="ident">e</div><div class="operator">.</div><div class="ident">paramValue</div><div class="operator">,</div> <div class="ident">e</div><div class="operator">.</div><div class="ident">errString</div><div class="operator">,</div>
-	<div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>AuthenticationError happens during auth problems, for example malformed token</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">AuthenticationError</div> <div class="keyword">struct</div> <div class="operator">{</div>
-	<div class="ident">errString</div> <div class="ident">string</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="operator">(</div><div class="ident">e</div> <div class="operator">*</div><div class="ident">AuthenticationError</div><div class="operator">)</div> <div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
-	<div class="keyword">return</div> <div class="ident">e</div><div class="operator">.</div><div class="ident">errString</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>NoBodyError error meaning that client didn't provide body when it's required</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">NoBodyError</div> <div class="keyword">struct</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoBodyError</div><div class="operator">)</div> <div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
-	<div class="keyword">return</div> <div class="literal">&#34;client didn&#39;t provide request body&#34;</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>handleServerError handles separate server errors and sends appropriate responses</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ResponseWriter</div><div class="operator">,</div> <div class="ident">err</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;handleServerError&#34;</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="keyword">var</div> <div class="ident">respErr</div> <div class="ident">error</div><div class="operator"></div>
-
-	<div class="keyword">switch</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">err</div><div class="operator">.</div><div class="operator">(</div><div class="keyword">type</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="keyword">case</div> <div class="operator">*</div><div class="ident">RouterMissingParamError</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">RouterParsingError</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">json</div><div class="operator">.</div><div class="ident">SyntaxError</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">NoBodyError</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ValidationError</div><div class="operator">:</div>
-		<div class="ident">respErr</div> <div class="operator">=</div> <div class="ident">responses</div><div class="operator">.</div><div class="ident">SendBadRequest</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">case</div> <div class="operator">*</div><div class="ident">json</div><div class="operator">.</div><div class="ident">UnmarshalTypeError</div><div class="operator">:</div>
-		<div class="ident">respErr</div> <div class="operator">=</div> <div class="ident">responses</div><div class="operator">.</div><div class="ident">SendBadRequest</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="literal">&#34;bad type in json data&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">case</div> <div class="operator">*</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ItemNotFoundError</div><div class="operator">:</div>
-		<div class="ident">respErr</div> <div class="operator">=</div> <div class="ident">responses</div><div class="operator">.</div><div class="ident">SendNotFound</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">case</div> <div class="operator">*</div><div class="ident">AuthenticationError</div><div class="operator">:</div>
-		<div class="ident">respErr</div> <div class="operator">=</div> <div class="ident">responses</div><div class="operator">.</div><div class="ident">SendForbidden</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">default</div><div class="operator">:</div>
-		<div class="ident">respErr</div> <div class="operator">=</div> <div class="ident">responses</div><div class="operator">.</div><div class="ident">SendInternalServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="literal">&#34;Internal Server Error&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="keyword">if</div> <div class="ident">respErr</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">respErr</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">responseDataError</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>

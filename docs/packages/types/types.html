@@ -217,6 +217,7 @@ TODO: need to be improved</p>
 	<td class="code"><pre><code>	<div class="ident">UserVoteLike</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserVoteLike</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
+<div class="keyword">type</div> <div class="operator">(</div>
 </code></pre></td>
       </tr>
       
@@ -224,103 +225,113 @@ TODO: need to be improved</p>
 	<td class="doc"><p>RequestID is used to store the request ID supplied in input Kafka records as
 a unique identifier of payloads. Empty string represents a missing request ID.</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">RequestID</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RequestID</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">RequestID</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RequestID</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>RuleOnReport represents a single (hit) rule of the string encoded report</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">RuleOnReport</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">RuleOnReport</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>ReportRules is a helper struct for easy JSON unmarshalling of string encoded report</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ReportRules</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportRules</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">ReportRules</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportRules</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>ReportResponse represents the response of /report endpoint</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ReportResponse</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportResponse</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">ReportResponse</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportResponse</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>ReportResponseMeta contains metadata about the report</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ReportResponseMeta</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportResponseMeta</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">ReportResponseMeta</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportResponseMeta</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>DisabledRuleResponse represents a single disabled rule displaying only identifying information</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">DisabledRuleResponse</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DisabledRuleResponse</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">DisabledRuleResponse</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DisabledRuleResponse</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>RuleID represents type for rule id</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">RuleID</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">RuleID</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>ErrorKey represents type for error key</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ErrorKey</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">ErrorKey</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>Rule represents the content of rule table</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">Rule</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Rule</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">Rule</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Rule</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>RuleErrorKey represents the content of rule<em>error</em>key table</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">RuleErrorKey</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleErrorKey</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">RuleErrorKey</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleErrorKey</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>RuleWithContent represents a rule with content, basically the mix of rule and rule<em>error</em>key tables' content</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">RuleWithContent</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleWithContent</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">RuleWithContent</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleWithContent</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>KafkaOffset type for kafka offset</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">KafkaOffset</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator"></div>
-
+	<td class="code"><pre><code>	<div class="ident">KafkaOffset</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
 	<td class="doc"><p>DBDriver type for db driver enum</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">DBDriver</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">DBDriver</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Internal contains information about organization ID</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">Internal</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Internal</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Identity contains internal user info</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">Identity</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Identity</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Token is x-rh-identity struct</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">Token</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Token</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">const</div> <div class="operator">(</div>
 </code></pre></td>
@@ -345,22 +356,6 @@ a unique identifier of payloads. Empty string represents a missing request ID.</
 </td>
 	<td class="code"><pre><code>	<div class="ident">DBDriverGeneral</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverGeneral</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>Internal contains information about organization ID</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">Internal</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Internal</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>Identity contains internal user info</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">Identity</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Identity</div><div class="operator"></div>
 
 <div class="keyword">const</div> <div class="operator">(</div>
 </code></pre></td>
