@@ -93,6 +93,6 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	// OpenAPI specs
 	router.HandleFunc(
 		openAPIURL,
-		httputils.CreateOpenAPIHandler(server.Config.APISpecFile, server.Config.Debug),
+		httputils.CreateOpenAPIHandler(server.Config.APISpecFile, server.Config.Debug, true),
 	).Methods(http.MethodGet)
 }
