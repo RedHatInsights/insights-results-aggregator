@@ -18,6 +18,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	httputils "github.com/RedHatInsights/insights-operator-utils/http"
+
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -89,5 +91,8 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
 
 	// OpenAPI specs
-	router.HandleFunc(openAPIURL, server.serveAPISpecFile).Methods(http.MethodGet)
+	router.HandleFunc(
+		openAPIURL,
+		httputils.CreateOpenAPIHandler(server.Config.APISpecFile, server.Config.Debug, true),
+	).Methods(http.MethodGet)
 }

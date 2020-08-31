@@ -242,19 +242,6 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 	}
 }
 
-// serveAPISpecFile serves an OpenAPI specifications file specified in config file
-func (server HTTPServer) serveAPISpecFile(writer http.ResponseWriter, request *http.Request) {
-	absPath, err := filepath.Abs(server.Config.APISpecFile)
-	if err != nil {
-		const message = "Error creating absolute path of OpenAPI spec file"
-		log.Error().Err(err).Msg(message)
-		handleServerError(writer, err)
-		return
-	}
-	writer.Header().Set("Content-Type", "application/json")
-	http.ServeFile(writer, request, absPath)
-}
-
 // handleOptionsMethod - middleware for handling OPTIONS method
 func (server *HTTPServer) handleOptionsMethod(nextHandler http.Handler) http.Handler {
 	return http.HandlerFunc(
