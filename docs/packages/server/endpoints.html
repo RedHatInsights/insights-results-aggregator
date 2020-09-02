@@ -137,6 +137,8 @@ limitations under the License.</p>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;path/filepath&#34;</div><div class="operator"></div>
 
+	<div class="ident">httputils</div> <div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/http&#34;</div><div class="operator"></div>
+
 	<div class="literal">&#34;github.com/gorilla/mux&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/prometheus/client_golang/prometheus/promhttp&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
@@ -303,7 +305,10 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>OpenAPI specs</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">openAPIURL</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">serveAPISpecFile</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div>
+		<div class="ident">openAPIURL</div><div class="operator">,</div>
+		<div class="ident">httputils</div><div class="operator">.</div><div class="ident">CreateOpenAPIHandler</div><div class="operator">(</div><div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">APISpecFile</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Debug</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

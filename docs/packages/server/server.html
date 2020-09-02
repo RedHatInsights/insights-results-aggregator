@@ -416,24 +416,6 @@ as opposed to no rules hit for the cluster</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>serveAPISpecFile serves an OpenAPI specifications file specified in config file</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">serveAPISpecFile</div><div class="operator">(</div><div class="ident">writer</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ResponseWriter</div><div class="operator">,</div> <div class="ident">request</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">absPath</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">filepath</div><div class="operator">.</div><div class="ident">Abs</div><div class="operator">(</div><div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">APISpecFile</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="keyword">const</div> <div class="ident">message</div> <div class="operator">=</div> <div class="literal">&#34;Error creating absolute path of OpenAPI spec file&#34;</div><div class="operator"></div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-	<div class="ident">writer</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Set</div><div class="operator">(</div><div class="literal">&#34;Content-Type&#34;</div><div class="operator">,</div> <div class="literal">&#34;application/json&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">http</div><div class="operator">.</div><div class="ident">ServeFile</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">,</div> <div class="ident">absPath</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
 	<td class="doc"><p>handleOptionsMethod - middleware for handling OPTIONS method</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">handleOptionsMethod</div><div class="operator">(</div><div class="ident">nextHandler</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Handler</div><div class="operator">)</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">Handler</div> <div class="operator">{</div>
