@@ -132,13 +132,10 @@ limitations under the License.
 
 <div class="keyword">package</div> <div class="ident">migration</div><div class="operator"></div>
 
-<div class="comment">/*
-   migration11 removes foreign keys to rules and rule error keys, and then removes the
-   rule and rule_error_key tables because it won&#39;t be stored in database anymore
-*/</div>
-
 <div class="keyword">import</div> <div class="operator">(</div>
 	<div class="literal">&#34;database/sql&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
@@ -149,11 +146,60 @@ limitations under the License.
 		CREATE TABLE rule_hit (
 			org_id          INTEGER NOT NULL,
 			cluster_id      VARCHAR NOT NULL,
-			rule_id         VARCHAR NOT NULL,
-			error_key       VARCHAR NOT NULL,
-			report          VARCHAR NOT NULL,
-			PRIMARY KEY(cluster_id, org_id, rule_id, error_key)
+			rule_fqdn       VARCHAR NOT NULL,
+			error_key		VARCHAR NOT NULL,
+			template_data   VARCHAR NOT NULL,
+			PRIMARY KEY(cluster_id, org_id, rule_fqdn, error_key)
 		)`</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">if</div> <div class="ident">driver</div> <div class="operator">!=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverPostgres</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>if sqlite, just ignore the actual migration cuz sqlite is too stupid for that</p>
+</td>
+	<td class="code"><pre><code>			<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`
+			DECLARE report_cursor CURSOR FOR
+			SELECT
+				org_id, cluster, report, reported_at, last_checked_at
+			FROM
+				report
+		`</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">for</div> <div class="operator">{</div>
+			<div class="keyword">var</div> <div class="operator">(</div>
+				<div class="ident">orgID</div>         <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator"></div>
+				<div class="ident">clusterID</div>     <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator"></div>
+				<div class="ident">report</div>        <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator"></div>
+				<div class="ident">reportedAt</div>    <div class="ident">time</div><div class="operator">.</div><div class="ident">Time</div><div class="operator"></div>
+				<div class="ident">lastCheckedAt</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Time</div><div class="operator"></div>
+			<div class="operator">)</div><div class="operator"></div>
+
+			<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">QueryRow</div><div class="operator">(</div><div class="literal">&#34;FETCH NEXT FROM report_cursor&#34;</div><div class="operator">)</div><div class="operator">.</div>
+				<div class="ident">Scan</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">orgID</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">clusterID</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">report</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">reportedAt</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">lastCheckedAt</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">==</div> <div class="ident">sql</div><div class="operator">.</div><div class="ident">ErrNoRows</div> <div class="operator">{</div>
+				<div class="keyword">break</div><div class="operator"></div>
+			<div class="operator">}</div> <div class="keyword">else</div> <div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+				<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+			<div class="operator">}</div><div class="operator"></div>
+
+			<div class="ident">err</div> <div class="operator">=</div> <div class="ident">writeRulesFromReportToRuleHit</div><div class="operator">(</div><div class="ident">tx</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">report</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+				<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+			<div class="operator">}</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">&#34;CLOSE report_cursor&#34;</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator">,</div>
 	<div class="ident">StepDown</div><div class="operator">:</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">tx</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div> <div class="ident">driver</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriver</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
@@ -162,6 +208,44 @@ limitations under the License.
 		`</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator">,</div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">writeRulesFromReportToRuleHit</div><div class="operator">(</div>
+	<div class="ident">tx</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">Tx</div><div class="operator">,</div>
+	<div class="ident">orgID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
+	<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+	<div class="ident">stringReport</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">,</div>
+<div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="keyword">var</div> <div class="ident">report</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ReportRules</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Unmarshal</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">stringReport</div><div class="operator">)</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">report</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">for</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">rule</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">report</div><div class="operator">.</div><div class="ident">HitRules</div> <div class="operator">{</div>
+		<div class="keyword">var</div> <div class="ident">templateData</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator"></div>
+
+		<div class="keyword">if</div> <div class="ident">templateDataStr</div><div class="operator">,</div> <div class="ident">ok</div> <div class="operator">:=</div> <div class="ident">rule</div><div class="operator">.</div><div class="ident">TemplateData</div><div class="operator">.</div><div class="operator">(</div><div class="ident">string</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">ok</div> <div class="operator">{</div>
+			<div class="ident">templateData</div> <div class="operator">=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">templateDataStr</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
+			<div class="ident">templateData</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Marshal</div><div class="operator">(</div><div class="ident">rule</div><div class="operator">.</div><div class="ident">TemplateData</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+				<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+			<div class="operator">}</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">tx</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`
+			INSERT INTO rule_hit (
+				org_id, cluster_id, rule_fqdn, error_key, template_data
+			) VALUES ($1, $2, $3, $4, $5)
+		`</div><div class="operator">,</div> <div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">.</div><div class="ident">Module</div><div class="operator">,</div> <div class="ident">rule</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">templateData</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

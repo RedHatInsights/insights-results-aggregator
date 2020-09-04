@@ -174,7 +174,7 @@ limitations under the License.
 	<div class="ident">s</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">,</div>
 	<div class="ident">orgID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
 	<div class="ident">clusterName</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
-	<div class="ident">expected</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">,</div>
+	<div class="ident">expected</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">,</div>
 <div class="operator">)</div> <div class="operator">{</div>
 </code></pre></td>
       </tr>
@@ -191,7 +191,7 @@ limitations under the License.
       <tr class="section">
 	<td class="doc"><p>and check the read report with expected one</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expected</div><div class="operator">,</div> <div class="ident">result</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">ElementsMatch</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expected</div><div class="operator">,</div> <div class="ident">result</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">writeReportForCluster</div><div class="operator">(</div>
@@ -293,7 +293,8 @@ limitations under the License.
 	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ReportEmptyRulesParsed</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">checkReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -526,30 +527,11 @@ returned when trying to SELECT from a dropped/missing report table.</p>
 
 	<div class="ident">createReportTableWithBadClusterField</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">query</div> <div class="operator">=</div> <div class="literal">`
-		CREATE TABLE rule_hit (
-			org_id          INTEGER NOT NULL,
-			cluster_id      VARCHAR NOT NULL,
-			rule_id         VARCHAR NOT NULL,
-			error_key       VARCHAR NOT NULL,
-			report          VARCHAR NOT NULL,
-			PRIMARY KEY(cluster_id, org_id, rule_id, error_key)
-		)
-	`</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>create a rule hit table</p>
-</td>
-	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">connection</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">query</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
 		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3Rules</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3RulesParsed</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
 	<div class="keyword">const</div> <div class="ident">sqliteErrMessage</div> <div class="operator">=</div> <div class="literal">&#34;CHECK constraint failed: report&#34;</div><div class="operator"></div>
 	<div class="keyword">const</div> <div class="ident">postgresErrMessage</div> <div class="operator">=</div> <div class="literal">&#34;pq: invalid input syntax for integer&#34;</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">!=</div> <div class="ident">sqliteErrMessage</div> <div class="operator">&amp;&amp;</div> <div class="operator">!</div><div class="ident">strings</div><div class="operator">.</div><div class="ident">HasPrefix</div><div class="operator">(</div><div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">postgresErrMessage</div><div class="operator">)</div> <div class="operator">{</div>
@@ -877,7 +859,7 @@ not null in table creation</p>
 	<div class="ident">report</div><div class="operator">,</div> <div class="ident">lastCheckedAt</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportForClusterByClusterName</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3Rules</div><div class="operator">,</div> <div class="ident">report</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">RuleOnReportResponses</div><div class="operator">,</div> <div class="ident">report</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Timestamp</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">.</div><div class="ident">UTC</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">lastCheckedAt</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -981,7 +963,12 @@ not null in table creation</p>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">offset</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
-		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3Rules</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3RulesParsed</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3Rules</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">Report3RulesParsed</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div>
+		<div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div>
 	<div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
@@ -1076,6 +1063,20 @@ not null in table creation</p>
 	<td class="doc"><p>create a table with a bad type</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">connection</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">query</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">query</div> <div class="operator">=</div> <div class="literal">`
+		CREATE TABLE rule_hit (
+			org_id			INTEGER NOT NULL,
+			cluster_id      VARCHAR NOT NULL,
+			rule_fqdn 		VARCHAR NOT NULL,
+			error_key        VARCHAR NOT NULL,
+			template_data   VARCHAR NOT NULL,
+			PRIMARY KEY(cluster_id, org_id, rule_fqdn, error_key)
+		)
+	`</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">connection</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="ident">query</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 

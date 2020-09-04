@@ -396,7 +396,7 @@ for <em>, vote := range []types.UserVote{
         defer closer()</p>
 
 <pre><code>    err := mockStorage.WriteReportForCluster(
-        testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+        testdata.OrgID, testdata.ClusterName, report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
     )
     helpers.FailOnError(t, err)
 

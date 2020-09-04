@@ -159,7 +159,7 @@ limitations under the License.</p>
 	<div class="ident">testCaseTimeLimit</div> <div class="operator">=</div> <div class="literal">60</div> <div class="operator">*</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Second</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
-<div class="keyword">var</div> <div class="ident">testOrgWhiteList</div> <div class="operator">=</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div><div class="operator"></div>
+<div class="keyword">var</div> <div class="ident">testOrgAllowlist</div> <div class="operator">=</div> <div class="ident">mapset</div><div class="operator">.</div><div class="ident">NewSetWith</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">init</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">zerolog</div><div class="operator">.</div><div class="ident">SetGlobalLevel</div><div class="operator">(</div><div class="ident">zerolog</div><div class="operator">.</div><div class="ident">WarnLevel</div><div class="operator">)</div><div class="operator"></div>

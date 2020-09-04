@@ -137,6 +137,7 @@ limitations under the License.</p>
 	<div class="literal">&#34;errors&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;regexp&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strconv&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
 
@@ -393,6 +394,47 @@ if it's not possible, it writes http error to the writer and returns error</p>
 	<div class="keyword">return</div> <div class="ident">organizationsConverted</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
+<div class="keyword">func</div> <div class="ident">readRuleIDWithErrorKey</div><div class="operator">(</div><div class="ident">writer</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ResponseWriter</div><div class="operator">,</div> <div class="ident">request</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">,</div> <div class="ident">bool</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">ruleIDWithErrorKey</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">getRouterParam</div><div class="operator">(</div><div class="ident">request</div><div class="operator">,</div> <div class="literal">&#34;rule_id&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="keyword">const</div> <div class="ident">message</div> <div class="operator">=</div> <div class="literal">&#34;unable to get rule id&#34;</div><div class="operator"></div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">splitedRuleID</div> <div class="operator">:=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">Split</div><div class="operator">(</div><div class="ident">string</div><div class="operator">(</div><div class="ident">ruleIDWithErrorKey</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">&#34;|&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">splitedRuleID</div><div class="operator">)</div> <div class="operator">!=</div> <div class="literal">2</div> <div class="operator">{</div>
+		<div class="ident">err</div> <div class="operator">=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;invalid rule ID, it must contain only rule ID and error key separated by |&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterParsingError</div><div class="operator">{</div>
+			<div class="ident">ParamName</div><div class="operator">:</div>  <div class="literal">&#34;rule_id&#34;</div><div class="operator">,</div>
+			<div class="ident">ParamValue</div><div class="operator">:</div> <div class="ident">ruleIDWithErrorKey</div><div class="operator">,</div>
+			<div class="ident">ErrString</div><div class="operator">:</div>  <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">IDValidator</div> <div class="operator">:=</div> <div class="ident">regexp</div><div class="operator">.</div><div class="ident">MustCompile</div><div class="operator">(</div><div class="literal">`^[a-zA-Z_0-9.]&#43;$`</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">isRuleIDValid</div> <div class="operator">:=</div> <div class="ident">IDValidator</div><div class="operator">.</div><div class="ident">Match</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">splitedRuleID</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">isErrorKeyValid</div> <div class="operator">:=</div> <div class="ident">IDValidator</div><div class="operator">.</div><div class="ident">Match</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">splitedRuleID</div><div class="operator">[</div><div class="literal">1</div><div class="operator">]</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">isRuleIDValid</div> <div class="operator">||</div> <div class="operator">!</div><div class="ident">isErrorKeyValid</div> <div class="operator">{</div>
+		<div class="ident">err</div> <div class="operator">=</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Errorf</div><div class="operator">(</div><div class="literal">&#34;invalid rule ID, each part of ID must contain only from latin characters, number, underscores or dots&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">RouterParsingError</div><div class="operator">{</div>
+			<div class="ident">ParamName</div><div class="operator">:</div>  <div class="literal">&#34;rule_id&#34;</div><div class="operator">,</div>
+			<div class="ident">ParamValue</div><div class="operator">:</div> <div class="ident">ruleIDWithErrorKey</div><div class="operator">,</div>
+			<div class="ident">ErrString</div><div class="operator">:</div>  <div class="ident">err</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">(</div><div class="ident">splitedRuleID</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">(</div><div class="ident">splitedRuleID</div><div class="operator">[</div><div class="literal">1</div><div class="operator">]</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">true</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
 </code></pre></td>
       </tr>
       
@@ -423,15 +465,13 @@ if it's not possible, it writes http error to the writer and returns error</p>
 	<td class="code"><pre><code>		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>it's gonna raise an error if cluster does not exist</p>
-</td>
-	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">ReadReportForClusterByClusterName</div><div class="operator">(</div><div class="ident">clusterID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">clusterExists</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">DoesClusterExist</div><div class="operator">(</div><div class="ident">clusterID</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">clusterExists</div> <div class="operator">{</div>
+		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ItemNotFoundError</div><div class="operator">{</div><div class="ident">ItemID</div><div class="operator">:</div> <div class="ident">clusterID</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 

@@ -141,6 +141,7 @@ limitations under the License.</p>
 
 	<div class="literal">&#34;github.com/DATA-DOG/go-sqlmock&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/tests/helpers&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator-data/testdata&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/migration&#34;</div><div class="operator"></div>
@@ -465,6 +466,73 @@ limitations under the License.</p>
 
 	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;no such table: consumer_error&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+<div class="keyword">func</div> <div class="ident">TestMigration13</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">prepareDBAndInfo</div><div class="operator">(</div><div class="ident">t</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="keyword">if</div> <div class="ident">dbDriver</div> <div class="operator">==</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">DBDriverSQLite3</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>migration is not implemented for sqlite</p>
+</td>
+	<td class="code"><pre><code>		<div class="keyword">return</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">12</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">Exec</div><div class="operator">(</div><div class="literal">`
+		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterReport3Rules</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div>
+		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">migration</div><div class="operator">.</div><div class="ident">SetDBVersion</div><div class="operator">(</div><div class="ident">db</div><div class="operator">,</div> <div class="ident">dbDriver</div><div class="operator">,</div> <div class="literal">13</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">assertRule</div> <div class="operator">:=</div> <div class="keyword">func</div><div class="operator">(</div><div class="ident">ruleFQDN</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">errorKey</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ErrorKey</div><div class="operator">,</div> <div class="ident">expectedTemplateData</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+		<div class="keyword">var</div> <div class="operator">(</div>
+			<div class="ident">templateData</div> <div class="ident">string</div><div class="operator"></div>
+		<div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">db</div><div class="operator">.</div><div class="ident">QueryRow</div><div class="operator">(</div><div class="literal">`
+			SELECT
+				template_data
+			FROM
+				rule_hit
+			WHERE
+				org_id = $1 AND cluster_id = $2 AND
+				rule_fqdn = $3 AND error_key = $4
+		`</div><div class="operator">,</div>
+			<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
+			<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
+			<div class="ident">ruleFQDN</div><div class="operator">,</div>
+			<div class="ident">errorKey</div><div class="operator">,</div>
+		<div class="operator">)</div><div class="operator">.</div><div class="ident">Scan</div><div class="operator">(</div>
+			<div class="operator">&amp;</div><div class="ident">templateData</div><div class="operator">,</div>
+		<div class="operator">)</div><div class="operator"></div>
+		<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="keyword">if</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">IsStringJSON</div><div class="operator">(</div><div class="ident">expectedTemplateData</div><div class="operator">)</div> <div class="operator">{</div>
+			<div class="ident">assert</div><div class="operator">.</div><div class="ident">JSONEq</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedTemplateData</div><div class="operator">,</div> <div class="ident">templateData</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
+			<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedTemplateData</div><div class="operator">,</div> <div class="ident">templateData</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">assertRule</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ErrorKey1</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ExtraData</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assertRule</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule2ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ErrorKey2</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule2ExtraData</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assertRule</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule3ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ErrorKey3</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule3ExtraData</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
