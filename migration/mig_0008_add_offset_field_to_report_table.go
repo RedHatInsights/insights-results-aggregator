@@ -28,7 +28,7 @@ var mig0008AddOffsetFieldToReportTable = Migration{
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverSQLite3 {
-			return downgradeTable(tx, "report", `
+			return downgradeTable(tx, clusterReportTable, `
 				CREATE TABLE report (
 					org_id          INTEGER NOT NULL,
 					cluster         VARCHAR NOT NULL UNIQUE,

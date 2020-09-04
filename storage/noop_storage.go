@@ -47,15 +47,20 @@ func (*NoopStorage) ListOfClustersForOrg(types.OrgID) ([]types.ClusterName, erro
 }
 
 // ReadReportForCluster noop
-func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) (types.ClusterReport, types.Timestamp, error) {
-	return "", "", nil
+func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error) {
+	return []types.RuleOnReport{}, "", nil
+}
+
+// ReadSingleRule noop
+func (*NoopStorage) ReadSingleRule(types.OrgID, types.ClusterName, types.RuleID, types.ErrorKey) (string, error) {
+	return "", nil
 }
 
 // ReadReportForClusterByClusterName noop
 func (*NoopStorage) ReadReportForClusterByClusterName(
 	types.ClusterName,
-) (types.ClusterReport, types.Timestamp, error) {
-	return "", "", nil
+) ([]types.RuleOnReport, types.Timestamp, error) {
+	return []types.RuleOnReport{}, "", nil
 }
 
 // GetLatestKafkaOffset noop
@@ -65,7 +70,7 @@ func (*NoopStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 
 // WriteReportForCluster noop
 func (*NoopStorage) WriteReportForCluster(
-	types.OrgID, types.ClusterName, types.ClusterReport, time.Time, types.KafkaOffset,
+	types.OrgID, types.ClusterName, types.ClusterReport, []types.ReportItem, time.Time, types.KafkaOffset,
 ) error {
 	return nil
 }
@@ -204,4 +209,9 @@ func (*NoopStorage) GetRuleWithContent(
 	types.RuleID, types.ErrorKey,
 ) (*types.RuleWithContent, error) {
 	return nil, nil
+}
+
+// DoesClusterExist noop
+func (*NoopStorage) DoesClusterExist(types.ClusterName) (bool, error) {
+	return false, nil
 }

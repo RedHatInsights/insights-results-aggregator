@@ -234,6 +234,30 @@ limitations under the License.
 	<div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
+<div class="keyword">func</div> <div class="ident">TestParseMessageWithImproperReport</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">message</div> <div class="operator">:=</div> <div class="literal">`{
+		&#34;OrgID&#34;: `</div> <div class="operator">&#43;</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprint</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`,
+		&#34;ClusterName&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		&#34;LastChecked&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
+		&#34;Report&#34;: {
+			&#34;system&#34;: {
+				&#34;metadata&#34;: {},
+				&#34;hostname&#34;: null
+			},
+			&#34;reports&#34;: &#34;blablablabla&#34;,
+			&#34;fingerprints&#34;: [],
+			&#34;skips&#34;: [],
+			&#34;info&#34;: []
+	}
+}`</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">message</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div>
+		<div class="ident">t</div><div class="operator">,</div>
+		<div class="ident">err</div><div class="operator">,</div>
+		<div class="literal">&#34;json: cannot unmarshal string into Go value of type []types.ReportItem&#34;</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
 <div class="keyword">func</div> <div class="ident">TestParseProperMessage</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">message</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">ParseMessage</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
@@ -246,6 +270,7 @@ limitations under the License.
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">expectedReport</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualValues</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ReportItem</div><div class="operator">{</div><div class="operator">}</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">.</div><div class="ident">ParsedHits</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestParseProperMessageWrongClusterName</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>

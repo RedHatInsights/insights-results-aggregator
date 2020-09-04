@@ -40,9 +40,7 @@ const (
 	testCaseTimeLimit = 60 * time.Second
 )
 
-var (
-	testOrgAllowlist = mapset.NewSetWith(testdata.OrgID)
-)
+var testOrgAllowlist = mapset.NewSetWith(testdata.OrgID)
 
 func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
@@ -124,7 +122,7 @@ func TestWrittenReportsMetric(t *testing.T) {
 	// other tests may run at the same process
 	initValue := int64(getCounterValue(metrics.WrittenReports))
 
-	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, 0)
+	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, 0)
 	helpers.FailOnError(t, err)
 
 	assertCounterValue(t, 1, metrics.WrittenReports, initValue)
@@ -134,6 +132,7 @@ func TestWrittenReportsMetric(t *testing.T) {
 			testdata.OrgID,
 			testdata.ClusterName,
 			testdata.Report3Rules,
+			testdata.Report3RulesParsed,
 			testdata.LastCheckedAt.Add(time.Duration(i+1)*time.Second),
 			types.KafkaOffset(i+1),
 		)

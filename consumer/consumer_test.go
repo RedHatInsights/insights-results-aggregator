@@ -110,6 +110,30 @@ func TestParseMessageWithImproperJSON(t *testing.T) {
 	)
 }
 
+func TestParseMessageWithImproperReport(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Report": {
+			"system": {
+				"metadata": {},
+				"hostname": null
+			},
+			"reports": "blablablabla",
+			"fingerprints": [],
+			"skips": [],
+			"info": []
+	}
+}`
+	_, err := consumer.ParseMessage([]byte(message))
+	assert.EqualError(
+		t,
+		err,
+		"json: cannot unmarshal string into Go value of type []types.ReportItem",
+	)
+}
+
 func TestParseProperMessage(t *testing.T) {
 	message, err := consumer.ParseMessage([]byte(testdata.ConsumerMessage))
 	helpers.FailOnError(t, err)
@@ -122,6 +146,7 @@ func TestParseProperMessage(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, expectedReport, *message.Report)
+	assert.EqualValues(t, []types.ReportItem{}, message.ParsedHits)
 }
 
 func TestParseProperMessageWrongClusterName(t *testing.T) {

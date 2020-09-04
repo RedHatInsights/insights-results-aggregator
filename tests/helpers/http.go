@@ -36,6 +36,8 @@ var (
 	CheckResponseBodyJSON = helpers.CheckResponseBodyJSON
 	// AssertReportResponsesEqual fails if report responses aren't equal
 	AssertReportResponsesEqual = helpers.AssertReportResponsesEqual
+	// AssertRuleResponsesEqual fails if rule responses aren't equal
+	AssertRuleResponsesEqual = helpers.AssertRuleResponsesEqual
 	// NewGockRequestMatcher returns a new matcher for github.com/h2non/gock to match requests
 	// with provided method, url and jsonBody
 	NewGockRequestMatcher = helpers.NewGockRequestMatcher

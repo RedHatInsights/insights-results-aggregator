@@ -25,6 +25,9 @@ var RunTestWithTimeout = helpers.RunTestWithTimeout
 // AssertStringsAreEqualJSON fails if strings represent different jsons
 var AssertStringsAreEqualJSON = helpers.AssertStringsAreEqualJSON
 
+// IsStringJSON checks if a string is a valid JSON
+var IsStringJSON = helpers.IsStringJSON
+
 // ToJSONString converts anything to JSON or panics if it's not possible
 // isOutputPretty makes output indented
 var ToJSONString = helpers.ToJSONString

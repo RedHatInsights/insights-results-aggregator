@@ -55,14 +55,14 @@ func checkReportForCluster(
 	s storage.Storage,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
-	expected types.ClusterReport,
+	expected []types.RuleOnReport,
 ) {
 	// try to read report for cluster
 	result, _, err := s.ReadReportForCluster(orgID, clusterName)
 	helpers.FailOnError(t, err)
 
 	// and check the read report with expected one
-	assert.Equal(t, expected, result)
+	assert.ElementsMatch(t, expected, result)
 }
 
 func writeReportForCluster(
@@ -71,8 +71,9 @@ func writeReportForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	clusterReport types.ClusterReport,
+	rules []types.ReportItem,
 ) {
-	err := storage.WriteReportForCluster(orgID, clusterName, clusterReport, time.Now(), testdata.KafkaOffset)
+	err := storage.WriteReportForCluster(orgID, clusterName, clusterReport, rules, time.Now(), testdata.KafkaOffset)
 	helpers.FailOnError(t, err)
 }
 
@@ -132,8 +133,9 @@ func TestDBStorageReadReportForCluster(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`)
-	checkReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`)
+	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
+	checkReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, nil)
+
 }
 
 // TestDBStorageGetOrgIDByClusterID check the behaviour of method GetOrgIDByClusterID
@@ -141,8 +143,7 @@ func TestDBStorageGetOrgIDByClusterID(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`)
-
+	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
 	orgID, err := mockStorage.GetOrgIDByClusterID(testdata.ClusterName)
 	helpers.FailOnError(t, err)
 
@@ -188,6 +189,16 @@ func TestDBStorageGetOrgIDByClusterID_Error(t *testing.T) {
 	)
 }
 
+// TestDBStorageGetOrgIDByClusterIDFailing check the behaviour of method GetOrgIDByClusterID for not existed ClusterID
+func TestDBStorageGetOrgIDByClusterIDFailing(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	orgID, err := mockStorage.GetOrgIDByClusterID(testdata.ClusterName)
+	assert.EqualError(t, err, "sql: no rows in result set")
+	assert.Equal(t, orgID, types.OrgID(0))
+}
+
 // TestDBStorageReadReportNoTable check the behaviour of method ReadReportForCluster
 // when the table with results does not exist
 func TestDBStorageReadReportNoTable(t *testing.T) {
@@ -208,6 +219,7 @@ func TestDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
+		testdata.ReportEmptyRulesParsed,
 		time.Now(),
 		testdata.KafkaOffset,
 	)
@@ -223,6 +235,7 @@ func TestDBStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
+		testdata.ReportEmptyRulesParsed,
 		time.Now(),
 		testdata.KafkaOffset,
 	)
@@ -243,6 +256,7 @@ func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
+		testdata.ReportEmptyRulesParsed,
 		newerTime,
 		testdata.KafkaOffset,
 	)
@@ -253,6 +267,7 @@ func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
+		testdata.ReportEmptyRulesParsed,
 		olderTime,
 		testdata.KafkaOffset,
 	)
@@ -277,7 +292,7 @@ func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty, time.Now(), testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed, time.Now(), testdata.KafkaOffset,
 	)
 	assert.EqualError(t, err, "no such table: report")
 }
@@ -289,9 +304,10 @@ func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	createReportTableWithBadClusterField(t, mockStorage)
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	assert.Error(t, err)
+
 	const sqliteErrMessage = "CHECK constraint failed: report"
 	const postgresErrMessage = "pq: invalid input syntax for integer"
 	if err.Error() != sqliteErrMessage && !strings.HasPrefix(err.Error(), postgresErrMessage) {
@@ -309,13 +325,21 @@ func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 		WillReturnRows(expects.NewRows([]string{"last_checked_at"})).
 		RowsWillBeClosed()
 
+	expects.ExpectExec("DELETE FROM rule_hit").
+		WillReturnResult(driver.ResultNoRows)
+
+	for i := 0; i < len(testdata.Report3RulesParsed); i++ {
+		expects.ExpectExec("INSERT INTO rule_hit").
+			WillReturnResult(driver.ResultNoRows)
+	}
+
 	expects.ExpectExec("INSERT INTO report").
 		WillReturnResult(driver.ResultNoRows)
 
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 }
@@ -325,8 +349,8 @@ func TestDBStorageListOfOrgs(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	writeReportForCluster(t, mockStorage, 1, "1deb586c-fb85-4db4-ae5b-139cdbdf77ae", testdata.ClusterReportEmpty)
-	writeReportForCluster(t, mockStorage, 3, "a1bf5b15-5229-4042-9825-c69dc36b57f5", testdata.ClusterReportEmpty)
+	writeReportForCluster(t, mockStorage, 1, "1deb586c-fb85-4db4-ae5b-139cdbdf77ae", testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+	writeReportForCluster(t, mockStorage, 3, "a1bf5b15-5229-4042-9825-c69dc36b57f5", testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
 
 	result, err := mockStorage.ListOfOrgs()
 	helpers.FailOnError(t, err)
@@ -357,11 +381,11 @@ func TestDBStorageListOfClustersForOrg(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	writeReportForCluster(t, mockStorage, 1, "eabb4fbf-edfa-45d0-9352-fb05332fdb82", testdata.ClusterReportEmpty)
-	writeReportForCluster(t, mockStorage, 1, "edf5f242-0c12-4307-8c9f-29dcd289d045", testdata.ClusterReportEmpty)
+	writeReportForCluster(t, mockStorage, 1, "eabb4fbf-edfa-45d0-9352-fb05332fdb82", testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+	writeReportForCluster(t, mockStorage, 1, "edf5f242-0c12-4307-8c9f-29dcd289d045", testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
 
 	// also pushing cluster for different org
-	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testdata.ClusterReportEmpty)
+	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
 
 	result, err := mockStorage.ListOfClustersForOrg(1)
 	helpers.FailOnError(t, err)
@@ -402,7 +426,7 @@ func TestMockDBReportsCount(t *testing.T) {
 
 	assertNumberOfReports(t, mockStorage, 0)
 
-	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testdata.ClusterReportEmpty)
+	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
 
 	assertNumberOfReports(t, mockStorage, 1)
 }
@@ -524,6 +548,7 @@ func TestDBStorageDeleteReports(t *testing.T) {
 				testdata.OrgID,
 				testdata.ClusterName,
 				testdata.Report3Rules,
+				testdata.Report3RulesParsed,
 				testdata.LastCheckedAt,
 				testdata.KafkaOffset,
 			)
@@ -555,7 +580,7 @@ func TestDBStorage_ReadReportForClusterByClusterName_OK(t *testing.T) {
 	report, lastCheckedAt, err := mockStorage.ReadReportForClusterByClusterName(testdata.ClusterName)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, testdata.Report3Rules, report)
+	assert.Equal(t, testdata.RuleOnReportResponses, report)
 	assert.Equal(t, types.Timestamp(testdata.LastCheckedAt.UTC().Format(time.RFC3339)), lastCheckedAt)
 }
 
@@ -659,7 +684,12 @@ func TestDBStorage_GetLatestKafkaOffset_ZeroOffset(t *testing.T) {
 	assert.Equal(t, types.KafkaOffset(0), offset)
 
 	err = mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, types.KafkaOffset(0),
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.Report3Rules,
+		testdata.Report3RulesParsed,
+		testdata.LastCheckedAt,
+		types.KafkaOffset(0),
 	)
 	helpers.FailOnError(t, err)
 
@@ -744,5 +774,19 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 
 	// create a table with a bad type
 	_, err := connection.Exec(query)
+	helpers.FailOnError(t, err)
+
+	query = `
+		CREATE TABLE rule_hit (
+			org_id			INTEGER NOT NULL,
+			cluster_id      VARCHAR NOT NULL,
+			rule_fqdn 		VARCHAR NOT NULL,
+			error_key        VARCHAR NOT NULL,
+			template_data   VARCHAR NOT NULL,
+			PRIMARY KEY(cluster_id, org_id, rule_fqdn, error_key)
+		)
+	`
+
+	_, err = connection.Exec(query)
 	helpers.FailOnError(t, err)
 }

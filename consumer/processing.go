@@ -39,6 +39,7 @@ type incomingMessage struct {
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
 	LastChecked string          `json:"LastChecked"`
 	RequestID   types.RequestID `json:"RequestId"`
+	ParsedHits  []types.ReportItem
 }
 
 // HandleMessage handles the message and does all logging, metrics, etc
@@ -159,6 +160,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 		*message.Organization,
 		*message.ClusterName,
 		types.ClusterReport(reportAsStr),
+		message.ParsedHits,
 		lastCheckedTime,
 		types.KafkaOffset(msg.Offset),
 	)
@@ -238,6 +240,11 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 	err = checkReportStructure(*deserialized.Report)
 	if err != nil {
 		log.Err(err).Msgf("Deserialized report read from message with improper structure: %v", *deserialized.Report)
+		return deserialized, err
+	}
+
+	err = json.Unmarshal(*((*deserialized.Report)["reports"]), &deserialized.ParsedHits)
+	if err != nil {
 		return deserialized, err
 	}
 

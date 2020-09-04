@@ -128,3 +128,28 @@ func (server HTTPServer) saveDisableFeedback(writer http.ResponseWriter, request
 		log.Error().Err(err).Msg(responseDataError)
 	}
 }
+
+// getFeedbackAndTogglesOnRule
+func (server HTTPServer) getFeedbackAndTogglesOnRule(
+	clusterName types.ClusterName,
+	userID types.UserID,
+	rule types.RuleOnReport,
+) types.RuleOnReport {
+	ruleToggle, err := server.Storage.GetFromClusterRuleToggle(clusterName, rule.Module, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Rule toggle was not found")
+		rule.Disabled = false
+	} else {
+		rule.Disabled = ruleToggle.Disabled == storage.RuleToggleDisable
+	}
+
+	feedback, err := server.Storage.GetUserFeedbackOnRule(clusterName, rule.Module, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Feedback for rule was not found")
+		rule.UserVote = types.UserVoteNone
+	} else {
+		rule.UserVote = feedback.UserVote
+	}
+
+	return rule
+}
