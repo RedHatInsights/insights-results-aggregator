@@ -99,3 +99,6 @@ REST API endpoints.
 * [tests/helpers/mock_storage.go](./packages/tests/helpers/mock_storage.html)
 * [tests/testdata/testdata.go](./packages/tests/testdata/testdata.html)
 * [tests/rest_api_tests.go](./packages/tests/rest_api_tests.html)
+
+## Documentation for utilities from this repository
+* [utils/json_check.py](json_check.html)

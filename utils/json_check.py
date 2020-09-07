@@ -19,7 +19,6 @@ from json import load
 from sys import exit
 from os import popen
 from argparse import ArgumentParser
-import os
 
 
 def read_control_code(operation):
@@ -42,14 +41,17 @@ def check_jsons(verbose, directory):
         try:
             # If the file can be opened and loaded as JSON, everything is fine.
             with file.open() as fin:
+                # Try to load and parse the content of JSON file.
                 obj = load(fin)
+                # At this point the JSON has been loaded and parsed correctly.
                 if verbose is not None:
                     print("{} is valid".format(file))
 
                 passes += 1
         except ValueError as e:
-            # There are several reasons and possibilities why the file can'b be
-            # read as JSON.
+            # There are several reasons and possibilities why the file can not
+            # be read as JSON, so we just print the error message taken from
+            # exception object.
             print("{} is invalid".format(file))
             failures += 1
             print(e)
@@ -62,9 +64,9 @@ def check_jsons(verbose, directory):
 def display_report(passes, failures, nocolors):
     """Display report about number of passes and failures."""
     # First of all, we need to setup colors to be displayed on terminal. Colors
-    # are displayed by using terminal escape control codes. When colors are not
-    # enabled on command line, simply we can simply use empty strings instead
-    # of real color escape codes.
+    # are displayed by using terminal escape control codes. When color output
+    # are not enabled on command line, we can simply use empty strings in
+    # output instead of real color escape codes.
     red_background = green_background = magenta_background = no_color = ""
 
     # If colors are enabled by command line parameter, use control sequence
@@ -75,12 +77,13 @@ def display_report(passes, failures, nocolors):
         magenta_background = read_control_code("setab 5")
         no_color = read_control_code("sgr0")
 
-    # There are four possible outcomes:
+    # There are four possible outcomes of JSON check:
     # 1. no JSON files has been found
     # 2. all files are ok
     # 3. none of JSON files can be read and parsed
     # 4. some files can be read and parsed, some can not
     if failures == 0:
+        # If there are no failures, then check if any JSON file has been found at all.
         if passes == 0:
             print("{}[WARN]{}: no JSON files detected".format(magenta_background, no_color))
         else:
@@ -106,14 +109,14 @@ def main():
     parser.add_argument("-d", "--directory", dest="directory",
                         help="directory with JSON files to check",
                         action="store", default=".")
+
     # Now it is time to parse flags, check the actual content of command line
-    # and fill in the object named `args`.
+    # and fill in the object stored in variable named `args`.
     args = parser.parse_args()
 
     # Check all JSON files, display problems, and get counters with number of
     # passes and failures.
-    verbose = args.verbose or "VERBOSE" in os.environ
-    passes, failures = check_jsons(verbose, args.directory)
+    passes, failures = check_jsons(args.verbose, args.directory)
 
     # Display detailed report and summary as well.
     display_report(passes, failures, args.nocolors)
@@ -123,7 +126,7 @@ def main():
         exit(1)
 
 
-# If this script is started from command line, run the `main` function which is
-# entry point to the processing.
+# If this script is started from command line, run the `main` function which
+# represents entry point to the processing.
 if __name__ == "__main__":
     main()
