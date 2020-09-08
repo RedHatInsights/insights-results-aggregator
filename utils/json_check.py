@@ -12,7 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Simple checker of all JSONs in the given directory (usually repository)."""
+"""
+Simple checker of all JSONs in the given directory (usually repository).
+
+usage: json_check.py [-h] [-v]
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -v, --verbose  make it verbose
+  -n, --no-colors  disable color output
+  -d DIRECTORY, --directory DIRECTORY
+                        directory with JSON files to check
+"""
 
 from pathlib import Path
 from json import load
@@ -126,7 +137,8 @@ def main():
         exit(1)
 
 
-# If this script is started from command line, run the `main` function which
-# represents entry point to the processing.
+# If this script is started from command line, run the `main` function
+# which represents entry point to the processing.
 if __name__ == "__main__":
+    """Entry point to this tool."""
     main()
