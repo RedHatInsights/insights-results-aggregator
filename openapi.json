@@ -10,6 +10,7 @@
     "/openapi.json": {
       "get": {
         "summary": "Returns the OpenAPI specification JSON.",
+        "description": "The OpenAPI specification of this REST API service that is represented in formatted and human-readable JSON is available under this endpoint.",
         "operationId": "getOpenApi",
         "responses": {
           "200": {
