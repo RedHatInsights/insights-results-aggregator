@@ -106,6 +106,7 @@
     "/organizations/{orgId}/clusters": {
       "get": {
         "summary": "Returns a list of clusters associated with the specified organization ID.",
+        "description": "Returns a list of clusters associated with the specified unique organization ID.",
         "operationId": "getClustersForOrganization",
         "parameters": [
           {
