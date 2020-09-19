@@ -122,6 +122,11 @@ type Storage interface {
 		rulesReport []types.RuleOnReport,
 		userID types.UserID,
 	) (map[types.RuleID]types.UserVote, error)
+	GetUserDisableFeedbackOnRules(
+		clusterID types.ClusterName,
+		rulesReport []types.RuleOnReport,
+		userID types.UserID,
+	) (map[types.RuleID]UserFeedbackOnRule, error)
 	DoesClusterExist(clusterID types.ClusterName) (bool, error)
 }
 

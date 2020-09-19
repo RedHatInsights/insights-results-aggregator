@@ -256,6 +256,31 @@ func (storage DBStorage) GetUserFeedbackOnRules(
 	return feedbacks, nil
 }
 
+// GetUserDisableFeedbackOnRules gets user disable feedbacks for defined array of rule IDs from DB
+func (storage DBStorage) GetUserDisableFeedbackOnRules(
+	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
+) (map[types.RuleID]UserFeedbackOnRule, error) {
+	ruleIDs := make([]types.RuleID, 0)
+	for _, v := range rulesReport {
+		ruleIDs = append(ruleIDs, v.Module)
+	}
+
+	feedbacks := make(map[types.RuleID]UserFeedbackOnRule)
+
+	for _, ruleID := range ruleIDs {
+		feedback, err := storage.GetUserFeedbackOnRuleDisable(clusterID, ruleID, userID)
+		if err != nil {
+			if _, itemNotFound := err.(*types.ItemNotFoundError); !itemNotFound {
+				return nil, err
+			}
+		} else {
+			feedbacks[ruleID] = *feedback
+		}
+	}
+
+	return feedbacks, nil
+}
+
 // AddFeedbackOnRuleDisable adds feedback on rule disable
 func (storage DBStorage) AddFeedbackOnRuleDisable(
 	clusterID types.ClusterName,
