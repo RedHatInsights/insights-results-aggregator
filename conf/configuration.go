@@ -42,12 +42,12 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/RedHatInsights/insights-operator-utils/logger"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
-	"github.com/RedHatInsights/insights-results-aggregator/logger"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
