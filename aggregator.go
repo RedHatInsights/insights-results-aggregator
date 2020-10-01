@@ -37,11 +37,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/RedHatInsights/insights-operator-utils/logger"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
-	"github.com/RedHatInsights/insights-results-aggregator/logger"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
