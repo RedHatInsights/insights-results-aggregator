@@ -211,6 +211,13 @@ func (*NoopStorage) GetRuleWithContent(
 	return nil, nil
 }
 
+// GetUserDisableFeedbackOnRules noop
+func (*NoopStorage) GetUserDisableFeedbackOnRules(
+	types.ClusterName, []types.RuleOnReport, types.UserID,
+) (map[types.RuleID]UserFeedbackOnRule, error) {
+	return nil, nil
+}
+
 // DoesClusterExist noop
 func (*NoopStorage) DoesClusterExist(types.ClusterName) (bool, error) {
 	return false, nil

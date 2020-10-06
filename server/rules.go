@@ -16,6 +16,7 @@ package server
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog/log"
 
@@ -79,6 +80,12 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 		return nil, err
 	}
 
+	disableFeedbacks, err := server.Storage.GetUserDisableFeedbackOnRules(clusterName, rules, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to retrieve disable feedback results from database")
+		return nil, err
+	}
+
 	for i := range rules {
 		ruleID := rules[i].Module
 		if vote, found := feedbacks[ruleID]; found {
@@ -92,7 +99,13 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 		} else {
 			rules[i].Disabled = false
 		}
+
+		if disableFeedback, found := disableFeedbacks[ruleID]; found {
+			rules[i].DisableFeedback = disableFeedback.Message
+			rules[i].DisabledAt = types.Timestamp(disableFeedback.UpdatedAt.Format(time.RFC3339))
+		}
 	}
+
 	return rules, nil
 }
 
