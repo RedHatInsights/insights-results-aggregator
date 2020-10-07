@@ -135,6 +135,7 @@ limitations under the License.</p>
 
 <div class="keyword">import</div> <div class="operator">(</div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
 
@@ -228,6 +229,12 @@ limitations under the License.</p>
 		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
+	<div class="ident">disableFeedbacks</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">GetUserDisableFeedbackOnRules</div><div class="operator">(</div><div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">rules</div><div class="operator">,</div> <div class="ident">userID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to retrieve disable feedback results from database&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
 	<div class="keyword">for</div> <div class="ident">i</div> <div class="operator">:=</div> <div class="keyword">range</div> <div class="ident">rules</div> <div class="operator">{</div>
 		<div class="ident">ruleID</div> <div class="operator">:=</div> <div class="ident">rules</div><div class="operator">[</div><div class="ident">i</div><div class="operator">]</div><div class="operator">.</div><div class="ident">Module</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">vote</div><div class="operator">,</div> <div class="ident">found</div> <div class="operator">:=</div> <div class="ident">feedbacks</div><div class="operator">[</div><div class="ident">ruleID</div><div class="operator">]</div><div class="operator">;</div> <div class="ident">found</div> <div class="operator">{</div>
@@ -241,7 +248,13 @@ limitations under the License.</p>
 		<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
 			<div class="ident">rules</div><div class="operator">[</div><div class="ident">i</div><div class="operator">]</div><div class="operator">.</div><div class="ident">Disabled</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="keyword">if</div> <div class="ident">disableFeedback</div><div class="operator">,</div> <div class="ident">found</div> <div class="operator">:=</div> <div class="ident">disableFeedbacks</div><div class="operator">[</div><div class="ident">ruleID</div><div class="operator">]</div><div class="operator">;</div> <div class="ident">found</div> <div class="operator">{</div>
+			<div class="ident">rules</div><div class="operator">[</div><div class="ident">i</div><div class="operator">]</div><div class="operator">.</div><div class="ident">DisableFeedback</div> <div class="operator">=</div> <div class="ident">disableFeedback</div><div class="operator">.</div><div class="ident">Message</div><div class="operator"></div>
+			<div class="ident">rules</div><div class="operator">[</div><div class="ident">i</div><div class="operator">]</div><div class="operator">.</div><div class="ident">DisabledAt</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">Timestamp</div><div class="operator">(</div><div class="ident">disableFeedback</div><div class="operator">.</div><div class="ident">UpdatedAt</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
+
 	<div class="keyword">return</div> <div class="ident">rules</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
