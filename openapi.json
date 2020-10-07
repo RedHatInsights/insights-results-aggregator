@@ -734,6 +734,74 @@
         ]
       }
     },
+    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/disable_feedback": {
+      "post": {
+        "summary": "Returns rule/health check's disable feedback",
+        "operationId": "disableRuleFeedback",
+        "description": "Returns rule/health check's disable feedback",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266"
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule",
+            "schema": {
+              "type": "string"
+            },
+            "example": "some.python.module"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the user",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1234"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "disable_feedback": {
+                      "type": "string",
+                      "example": "test"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
+      }
+    },
     "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/enable": {
       "put": {
         "summary": "Re-enables a rule/health check recommendation for specified cluster",

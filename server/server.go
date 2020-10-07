@@ -199,17 +199,9 @@ func (server *HTTPServer) readSingleRule(writer http.ResponseWriter, request *ht
 		return
 	}
 
-	templateData, err := server.Storage.ReadSingleRule(orgID, clusterName, ruleID, errorKey)
+	templateData, err := server.Storage.ReadSingleRuleTemplateData(orgID, clusterName, ruleID, errorKey)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read rule report for cluster")
-		handleServerError(writer, err)
-		return
-	}
-
-	var ruleDetails json.RawMessage
-	err = json.Unmarshal([]byte(templateData), &ruleDetails)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to parse cluster rule report")
 		handleServerError(writer, err)
 		return
 	}

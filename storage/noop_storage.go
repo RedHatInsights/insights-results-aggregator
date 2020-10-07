@@ -51,8 +51,8 @@ func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) ([]type
 	return []types.RuleOnReport{}, "", nil
 }
 
-// ReadSingleRule noop
-func (*NoopStorage) ReadSingleRule(types.OrgID, types.ClusterName, types.RuleID, types.ErrorKey) (string, error) {
+// ReadSingleRuleTemplateData noop
+func (*NoopStorage) ReadSingleRuleTemplateData(types.OrgID, types.ClusterName, types.RuleID, types.ErrorKey) (interface{}, error) {
 	return "", nil
 }
 

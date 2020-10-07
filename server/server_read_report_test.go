@@ -15,7 +15,6 @@
 package server_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -28,7 +27,6 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func TestReadReportForClusterNonIntOrgID(t *testing.T) {
@@ -120,52 +118,6 @@ func TestReadReportDBError(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status":"Internal Server Error"}`,
-	})
-}
-
-func TestHttpServer_readSingleRule_BadReport(t *testing.T) {
-	badReport := `{
-		"system": {
-			"metadata": {},
-			"hostname": null
-		},
-		"reports": [{
-			"component": "` + string(testdata.Rule1ID) + `",
-			"key": "` + testdata.ErrorKey1 + `",
-			"details": "not-json"
-		}],
-		"fingerprints": [],
-		"skips": [],
-		"info": []
-}`
-	badHitRules := []types.ReportItem{
-		{
-			Module:       testdata.Rule1ID,
-			ErrorKey:     testdata.ErrorKey1,
-			TemplateData: json.RawMessage("not-json"),
-		},
-	}
-
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, types.ClusterReport(badReport), badHitRules, testdata.LastCheckedAt, testdata.KafkaOffset,
-	)
-	helpers.FailOnError(t, err)
-
-	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
-		Method:   http.MethodGet,
-		Endpoint: server.RuleEndpoint,
-		EndpointArgs: []interface{}{
-			testdata.OrgID,
-			testdata.ClusterName,
-			testdata.UserID,
-			fmt.Sprintf("%v|%v", testdata.Rule1ID, testdata.ErrorKey1),
-		},
-	}, &helpers.APIResponse{
-		StatusCode: http.StatusBadRequest,
-		Body:       `{ "status": "invalid character 'o' in literal null (expecting 'u')" }`,
 	})
 }
 

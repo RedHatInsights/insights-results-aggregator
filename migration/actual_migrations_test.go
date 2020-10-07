@@ -361,7 +361,7 @@ func TestMigration13(t *testing.T) {
 		}
 	}
 
-	assertRule(testdata.Rule1ID, testdata.ErrorKey1, testdata.Rule1ExtraData)
-	assertRule(testdata.Rule2ID, testdata.ErrorKey2, testdata.Rule2ExtraData)
-	assertRule(testdata.Rule3ID, testdata.ErrorKey3, testdata.Rule3ExtraData)
+	assertRule(testdata.Rule1ID, testdata.ErrorKey1, helpers.ToJSONString(testdata.Rule1ExtraData))
+	assertRule(testdata.Rule2ID, testdata.ErrorKey2, helpers.ToJSONString(testdata.Rule2ExtraData))
+	assertRule(testdata.Rule3ID, testdata.ErrorKey3, helpers.ToJSONString(testdata.Rule3ExtraData))
 }

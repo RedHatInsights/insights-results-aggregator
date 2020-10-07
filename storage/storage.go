@@ -29,6 +29,7 @@ package storage
 import (
 	"database/sql"
 	sql_driver "database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -53,9 +54,9 @@ type Storage interface {
 	ReadReportForCluster(
 		orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error,
 	)
-	ReadSingleRule(
+	ReadSingleRuleTemplateData(
 		orgID types.OrgID, clusterName types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey,
-	) (string, error)
+	) (interface{}, error)
 	ReadReportForClusterByClusterName(clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error)
 	GetLatestKafkaOffset() (types.KafkaOffset, error)
 	WriteReportForCluster(
@@ -336,27 +337,42 @@ func (storage DBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.O
 	return types.OrgID(orgID), nil
 }
 
+// parseTemplateData parses template data and returns a json raw message if it's a json or a string otherwise
+func parseTemplateData(templateData []byte) interface{} {
+	var templateDataJSON json.RawMessage
+
+	err := json.Unmarshal(templateData, &templateDataJSON)
+	if err != nil {
+		log.Warn().Err(err).Msgf("unable to parse template data as json")
+		return templateData
+	}
+
+	return templateDataJSON
+}
+
 func parseRuleRows(rows *sql.Rows) ([]types.RuleOnReport, error) {
 	report := make([]types.RuleOnReport, 0)
 
 	for rows.Next() {
 		var (
-			templateData string
-			ruleFQDN     types.RuleID
-			errorKey     types.ErrorKey
+			templateDataBytes []byte
+			ruleFQDN          types.RuleID
+			errorKey          types.ErrorKey
 		)
 
-		err := rows.Scan(&templateData, &ruleFQDN, &errorKey)
+		err := rows.Scan(&templateDataBytes, &ruleFQDN, &errorKey)
 		if err != nil {
 			log.Error().Err(err).Msg("ReportListForCluster")
 			return report, err
 		}
 
+		templateData := parseTemplateData(templateDataBytes)
 		rule := types.RuleOnReport{
 			Module:       ruleFQDN,
 			ErrorKey:     errorKey,
 			TemplateData: templateData,
 		}
+
 		report = append(report, rule)
 	}
 
@@ -392,11 +408,11 @@ func (storage DBStorage) ReadReportForCluster(
 	return report, types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), err
 }
 
-// ReadSingleRule reads rule result (health status) for selected cluster
-func (storage DBStorage) ReadSingleRule(
+// ReadSingleRuleTemplateData reads template data for a single rule
+func (storage DBStorage) ReadSingleRuleTemplateData(
 	orgID types.OrgID, clusterName types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey,
-) (string, error) {
-	var templateData string
+) (interface{}, error) {
+	var templateDataBytes []byte
 
 	err := storage.connection.QueryRow(`
 		SELECT template_data FROM rule_hit
@@ -406,10 +422,10 @@ func (storage DBStorage) ReadSingleRule(
 		clusterName,
 		ruleID,
 		errorKey,
-	).Scan(&templateData)
+	).Scan(&templateDataBytes)
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName, ruleID, errorKey})
 
-	return templateData, err
+	return parseTemplateData(templateDataBytes), err
 }
 
 // ReadReportForClusterByClusterName reads result (health status) for selected cluster for given organization
