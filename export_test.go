@@ -26,22 +26,21 @@ package main
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
 var (
-	CreateStorage               = createStorage
-	StartService                = startService
-	StopService                 = stopService
-	WaitForServiceToStartOrFail = waitForServiceToStartOrFail
-	CloseStorage                = closeStorage
-	PrepareDB                   = prepareDB
-	StartConsumer               = startConsumer
-	StartServer                 = startServer
-	PrintVersionInfo            = printVersionInfo
-	PrintHelp                   = printHelp
-	PrintConfig                 = printConfig
-	PrintEnv                    = printEnv
-	GetDBForMigrations          = getDBForMigrations
-	PrintMigrationInfo          = printMigrationInfo
-	SetMigrationVersion         = setMigrationVersion
-	PerformMigrations           = performMigrations
-	AutoMigratePtr              = &autoMigrate
-	Main                        = main
+	CreateStorage       = createStorage
+	StartService        = startService
+	StopService         = stopService
+	CloseStorage        = closeStorage
+	PrepareDB           = prepareDB
+	StartConsumer       = startConsumer
+	StartServer         = startServer
+	PrintVersionInfo    = printVersionInfo
+	PrintHelp           = printHelp
+	PrintConfig         = printConfig
+	PrintEnv            = printEnv
+	GetDBForMigrations  = getDBForMigrations
+	PrintMigrationInfo  = printMigrationInfo
+	SetMigrationVersion = setMigrationVersion
+	PerformMigrations   = performMigrations
+	AutoMigratePtr      = &autoMigrate
+	Main                = main
 )

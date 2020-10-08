@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/rs/zerolog/log"
 
@@ -11,7 +10,7 @@ import (
 )
 
 var (
-	consumerInstance                                                 consumer.Consumer
+	consumerInstance                                                 *consumer.KafkaConsumer
 	consumerInstanceIsStarting, finishConsumerInstanceInitialization = context.WithCancel(context.Background())
 )
 
@@ -38,7 +37,7 @@ func startConsumer() error {
 	consumerInstance, err = consumer.New(brokerCfg, dbStorage)
 	if err != nil {
 		log.Error().Err(err).Msg("Broker initialization error")
-		return nil
+		return err
 	}
 
 	finishConsumerInstanceInitialization()
@@ -50,7 +49,7 @@ func startConsumer() error {
 func stopConsumer() error {
 	waitForConsumerToStartOrFail()
 
-	if reflect.ValueOf(consumerInstance).IsNil() {
+	if consumerInstance == nil {
 		return nil
 	}
 
