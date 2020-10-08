@@ -168,17 +168,23 @@ func startService() int {
 
 	errorGroup := new(errgroup.Group)
 
-	errorGroup.Go(func() error {
-		defer cancel()
+	brokerConf := conf.GetBrokerConfiguration()
+	// if broker is disabled, simply don't start it
+	if brokerConf.Enabled {
+		errorGroup.Go(func() error {
+			defer cancel()
 
-		err := startConsumer()
-		if err != nil {
-			log.Error().Err(err)
-			return err
-		}
+			err := startConsumer(brokerConf)
+			if err != nil {
+				log.Error().Err(err)
+				return err
+			}
 
-		return nil
-	})
+			return nil
+		})
+	} else {
+		log.Info().Msg("Broker is disabled, not starting it")
+	}
 
 	errorGroup.Go(func() error {
 		defer cancel()
@@ -216,10 +222,13 @@ func stopService() int {
 		errCode += ExitStatusServerError
 	}
 
-	err = stopConsumer()
-	if err != nil {
-		log.Error().Err(err)
-		errCode += ExitStatusConsumerError
+	brokerConf := conf.GetBrokerConfiguration()
+	if brokerConf.Enabled {
+		err = stopConsumer()
+		if err != nil {
+			log.Error().Err(err)
+			errCode += ExitStatusConsumerError
+		}
 	}
 
 	return errCode

@@ -232,7 +232,7 @@ func TestStartConsumer_DBError(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "bad-data-source",
 	})
 
-	err := main.StartConsumer()
+	err := main.StartConsumer(conf.GetBrokerConfiguration())
 	assert.EqualError(t, err, "driver non-existing-driver is not supported")
 }
 
@@ -245,7 +245,7 @@ func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
 	})
 
-	err := main.StartConsumer()
+	err := main.StartConsumer(conf.GetBrokerConfiguration())
 	assert.EqualError(
 		t, err, "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)",
 	)
