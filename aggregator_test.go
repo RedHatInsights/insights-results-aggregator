@@ -88,7 +88,7 @@ func TestStartService(t *testing.T) {
 		}()
 
 		time.Sleep(1 * time.Second)
-		main.WaitForServiceToStart()
+		main.WaitForServiceToStartOrFail()
 		errCode := main.StopService()
 		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)

@@ -26,5 +26,6 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	gopkg.in/h2non/gock.v1 v1.0.15
 )
