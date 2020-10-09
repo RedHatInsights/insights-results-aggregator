@@ -12,6 +12,8 @@ REST API endpoints.
 ## Documentation for source files from this repository
 
 * [aggregator.go](./packages/aggregator.html)
+* [consumer.go](./packages/consumer.html)
+* [server.go](./packages/server.html)
 * [server/rules.go](./packages/server/rules.html)
 * [server/auth_test.go](./packages/server/auth_test.html)
 * [server/router_utils_test.go](./packages/server/router_utils_test.html)

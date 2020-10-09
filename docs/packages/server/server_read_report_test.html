@@ -134,7 +134,6 @@ limitations under the License.</p>
 	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">server_test</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
-	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;sort&#34;</div><div class="operator"></div>
@@ -147,7 +146,6 @@ limitations under the License.</p>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/tests/helpers&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestReadReportForClusterNonIntOrgID</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
@@ -239,52 +237,6 @@ limitations under the License.</p>
 	<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
 		<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusInternalServerError</div><div class="operator">,</div>
 		<div class="ident">Body</div><div class="operator">:</div>       <div class="literal">`{&#34;status&#34;:&#34;Internal Server Error&#34;}`</div><div class="operator">,</div>
-	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">TestHttpServer_readSingleRule_BadReport</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">badReport</div> <div class="operator">:=</div> <div class="literal">`{
-		&#34;system&#34;: {
-			&#34;metadata&#34;: {},
-			&#34;hostname&#34;: null
-		},
-		&#34;reports&#34;: [{
-			&#34;component&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">string</div><div class="operator">(</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">)</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-			&#34;key&#34;: &#34;`</div> <div class="operator">&#43;</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ErrorKey1</div> <div class="operator">&#43;</div> <div class="literal">`&#34;,
-			&#34;details&#34;: &#34;not-json&#34;
-		}],
-		&#34;fingerprints&#34;: [],
-		&#34;skips&#34;: [],
-		&#34;info&#34;: []
-}`</div><div class="operator"></div>
-	<div class="ident">badHitRules</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ReportItem</div><div class="operator">{</div>
-		<div class="operator">{</div>
-			<div class="ident">Module</div><div class="operator">:</div>       <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div>
-			<div class="ident">ErrorKey</div><div class="operator">:</div>     <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ErrorKey1</div><div class="operator">,</div>
-			<div class="ident">TemplateData</div><div class="operator">:</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">RawMessage</div><div class="operator">(</div><div class="literal">&#34;not-json&#34;</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">,</div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
-		<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">(</div><div class="ident">badReport</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">badHitRules</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">LastCheckedAt</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">,</div>
-	<div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">AssertAPIRequest</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">APIRequest</div><div class="operator">{</div>
-		<div class="ident">Method</div><div class="operator">:</div>   <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div>
-		<div class="ident">Endpoint</div><div class="operator">:</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">RuleEndpoint</div><div class="operator">,</div>
-		<div class="ident">EndpointArgs</div><div class="operator">:</div> <div class="operator">[</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">{</div>
-			<div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div>
-			<div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
-			<div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
-			<div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%v|%v&#34;</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">Rule1ID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ErrorKey1</div><div class="operator">)</div><div class="operator">,</div>
-		<div class="operator">}</div><div class="operator">,</div>
-	<div class="operator">}</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">helpers</div><div class="operator">.</div><div class="ident">APIResponse</div><div class="operator">{</div>
-		<div class="ident">StatusCode</div><div class="operator">:</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">StatusBadRequest</div><div class="operator">,</div>
-		<div class="ident">Body</div><div class="operator">:</div>       <div class="literal">`{ &#34;status&#34;: &#34;invalid character &#39;o&#39; in literal null (expecting &#39;u&#39;)&#34; }`</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 

@@ -172,7 +172,6 @@ APIPrefix - usually &quot;/api/v1/&quot; used for all REST API calls</p>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;io&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;sync&#34;</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -369,17 +368,9 @@ as opposed to no rules hit for the cluster</p>
 		<div class="keyword">return</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">templateData</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">ReadSingleRule</div><div class="operator">(</div><div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">,</div> <div class="ident">errorKey</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">templateData</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">ReadSingleRuleTemplateData</div><div class="operator">(</div><div class="ident">orgID</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">,</div> <div class="ident">ruleID</div><div class="operator">,</div> <div class="ident">errorKey</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to read rule report for cluster&#34;</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="keyword">var</div> <div class="ident">ruleDetails</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">RawMessage</div><div class="operator"></div>
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Unmarshal</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">templateData</div><div class="operator">)</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">ruleDetails</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Unable to parse cluster rule report&#34;</div><div class="operator">)</div><div class="operator"></div>
 		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
@@ -543,16 +534,14 @@ be handled in middleware which is not optimal</p>
       <tr class="section">
 	<td class="doc"><p>Start starts server</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">Start</div><div class="operator">(</div><div class="ident">serverInstanceReady</div> <div class="operator">*</div><div class="ident">sync</div><div class="operator">.</div><div class="ident">Cond</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">server</div> <div class="operator">*</div><div class="ident">HTTPServer</div><div class="operator">)</div> <div class="ident">Start</div><div class="operator">(</div><div class="ident">serverInstanceReady</div> <div class="ident">context</div><div class="operator">.</div><div class="ident">CancelFunc</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
 	<div class="ident">address</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Config</div><div class="operator">.</div><div class="ident">Address</div><div class="operator"></div>
 	<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;Starting HTTP server at &#39;%s&#39;&#34;</div><div class="operator">,</div> <div class="ident">address</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">router</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Initialize</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">server</div><div class="operator">.</div><div class="ident">Serv</div> <div class="operator">=</div> <div class="operator">&amp;</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Server</div><div class="operator">{</div><div class="ident">Addr</div><div class="operator">:</div> <div class="ident">address</div><div class="operator">,</div> <div class="ident">Handler</div><div class="operator">:</div> <div class="ident">router</div><div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">if</div> <div class="ident">serverInstanceReady</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">Broadcast</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">serverInstanceReady</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">Serv</div><div class="operator">.</div><div class="ident">ListenAndServe</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>

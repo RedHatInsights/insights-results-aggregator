@@ -211,8 +211,6 @@ because the service won't run on top of an empty DB.</p>
 			<div class="ident">main</div><div class="operator">.</div><div class="ident">StartService</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-		<div class="ident">time</div><div class="operator">.</div><div class="ident">Sleep</div><div class="operator">(</div><div class="literal">1</div> <div class="operator">*</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Second</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">main</div><div class="operator">.</div><div class="ident">WaitForServiceToStart</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StopService</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">ExitStatusOK</div><div class="operator">,</div> <div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">testsTimeout</div><div class="operator">)</div><div class="operator"></div>
@@ -365,8 +363,8 @@ assert.Equal(t, main.ExitStatusOK, errCode)
 		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE&#34;</div><div class="operator">:</div> <div class="literal">&#34;bad-data-source&#34;</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StartConsumer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">ExitStatusConsumerError</div><div class="operator">,</div> <div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StartConsumer</div><div class="operator">(</div><div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;driver non-existing-driver is not supported&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestStartConsumer_BadBrokerAddress</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
@@ -374,12 +372,14 @@ assert.Equal(t, main.ExitStatusOK, errCode)
 		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER&#34;</div><div class="operator">:</div>         <div class="literal">&#34;sqlite3&#34;</div><div class="operator">,</div>
 		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE&#34;</div><div class="operator">:</div> <div class="literal">&#34;:memory:&#34;</div><div class="operator">,</div>
 
-		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS&#34;</div><div class="operator">:</div> <div class="literal">&#34;non-existing-host:1&#34;</div><div class="operator">,</div>
+		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS&#34;</div><div class="operator">:</div> <div class="literal">&#34;non-existing-host:999999&#34;</div><div class="operator">,</div>
 		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED&#34;</div><div class="operator">:</div> <div class="literal">&#34;true&#34;</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StartConsumer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">ExitStatusConsumerError</div><div class="operator">,</div> <div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StartConsumer</div><div class="operator">(</div><div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div>
+		<div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;kafka: client has run out of available brokers to talk to (Is your cluster reachable?)&#34;</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestStartServer_DBError</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
@@ -388,8 +388,8 @@ assert.Equal(t, main.ExitStatusOK, errCode)
 		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE&#34;</div><div class="operator">:</div> <div class="literal">&#34;bad-data-source&#34;</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StartServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">ExitStatusServerError</div><div class="operator">,</div> <div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StartServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;driver non-existing-driver is not supported&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestStartServer_BadServerAddress</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
@@ -397,12 +397,12 @@ assert.Equal(t, main.ExitStatusOK, errCode)
 		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER&#34;</div><div class="operator">:</div>         <div class="literal">&#34;sqlite3&#34;</div><div class="operator">,</div>
 		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE&#34;</div><div class="operator">:</div> <div class="literal">&#34;:memory:&#34;</div><div class="operator">,</div>
 
-		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS&#34;</div><div class="operator">:</div>       <div class="literal">&#34;non-existing-host:1&#34;</div><div class="operator">,</div>
+		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS&#34;</div><div class="operator">:</div>       <div class="literal">&#34;localhost:999999&#34;</div><div class="operator">,</div>
 		<div class="literal">&#34;INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE&#34;</div><div class="operator">:</div> <div class="literal">&#34;openapi.json&#34;</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StartServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">ExitStatusServerError</div><div class="operator">,</div> <div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StartServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;listen tcp: address 999999: invalid port&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestStartService_BadBrokerAndServerAddress</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
@@ -422,7 +422,7 @@ assert.Equal(t, main.ExitStatusOK, errCode)
 	<div class="operator">*</div><div class="ident">main</div><div class="operator">.</div><div class="ident">AutoMigratePtr</div> <div class="operator">=</div> <div class="ident">true</div><div class="operator"></div>
 
 	<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">StartService</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">ExitStatusConsumerError</div><div class="operator">&#43;</div><div class="ident">main</div><div class="operator">.</div><div class="ident">ExitStatusServerError</div><div class="operator">,</div> <div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">main</div><div class="operator">.</div><div class="ident">ExitStatusError</div><div class="operator">,</div> <div class="ident">errCode</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="operator">*</div><div class="ident">main</div><div class="operator">.</div><div class="ident">AutoMigratePtr</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
