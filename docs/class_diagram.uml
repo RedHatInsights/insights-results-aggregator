@@ -53,8 +53,6 @@ namespace consumer {
 
         - updatePayloadTracker(requestID types.RequestID, timestamp time.Time, status string) 
 
-        + HandleMessage(msg *sarama.ConsumerMessage) 
-        + ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error)
         + Serve() 
         + Setup( sarama.ConsumerGroupSession) error
         + Cleanup( sarama.ConsumerGroupSession) error
@@ -62,6 +60,8 @@ namespace consumer {
         + Close() error
         + GetNumberOfSuccessfullyConsumedMessages() uint64
         + GetNumberOfErrorsConsumingMessages() uint64
+        + HandleMessage(msg *sarama.ConsumerMessage) 
+        + ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error)
 
     }
     class consumer.Report << (T, #FF7700) >>  {
@@ -102,6 +102,7 @@ namespace helpers {
         + ResetOffset(topic string, partition int32, offset int64, metadata string) 
         + MarkMessage(msg *sarama.ConsumerMessage, metadata string) 
         + Context() context.Context
+        + Commit() 
 
     }
     class MockKafkaConsumer << (S,Aquamarine) >> {
@@ -125,42 +126,6 @@ namespace helpers {
         'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
     }
 }
-
-
-namespace logger {
-    class CloudWatchConfiguration << (S,Aquamarine) >> {
-        + AWSAccessID string
-        + AWSSecretKey string
-        + AWSSessionToken string
-        + AWSRegion string
-        + LogGroup string
-        + StreamName string
-        + CreateStreamIfNotExists bool
-        + Debug bool
-
-    }
-    class LoggingConfiguration << (S,Aquamarine) >> {
-        + Debug bool
-        + LogLevel string
-        + LoggingToCloudWatchEnabled bool
-
-    }
-    class SaramaZerologger << (S,Aquamarine) >> {
-        - zerologger zerolog.Logger
-
-        - logMessage(format string, params ...<font color=blue>interface</font>{}) 
-
-        + Print(params ...<font color=blue>interface</font>{}) 
-        + Printf(format string, params ...<font color=blue>interface</font>{}) 
-        + Println(v ...<font color=blue>interface</font>{}) 
-
-    }
-    class WorkaroundForRHIOPS729 << (S,Aquamarine) >> {
-        + Write(bytes []byte) (int, error)
-
-    }
-}
-"io.Writer" *-- "logger.WorkaroundForRHIOPS729"
 
 
 namespace migration {
@@ -221,6 +186,9 @@ namespace server {
         + Storage storage.Storage
         + Serv *http.Server
 
+        - addDebugEndpointsToRouter(router *mux.Router) 
+        - addEndpointsToRouter(router *mux.Router) 
+        - getAuthTokenHeader(w http.ResponseWriter, r *http.Request) (string, error)
         - disableRuleForCluster(writer http.ResponseWriter, request *http.Request) 
         - enableRuleForCluster(writer http.ResponseWriter, request *http.Request) 
         - toggleRuleForCluster(writer http.ResponseWriter, request *http.Request, toggleRule storage.RuleToggle) 
@@ -243,16 +211,13 @@ namespace server {
         - resetVoteOnRule(writer http.ResponseWriter, request *http.Request) 
         - voteOnRule(writer http.ResponseWriter, request *http.Request, userVote types.UserVote) 
         - getVoteOnRule(writer http.ResponseWriter, request *http.Request) 
-        - addDebugEndpointsToRouter(router *mux.Router) 
-        - addEndpointsToRouter(router *mux.Router) 
-        - getAuthTokenHeader(w http.ResponseWriter, r *http.Request) (string, error)
         - readClusterRuleUserParams(writer http.ResponseWriter, request *http.Request) (types.ClusterName, types.RuleID, types.UserID, bool)
 
-        + Initialize() http.Handler
-        + Start(serverInstanceReady *sync.Cond) error
-        + Stop(ctx context.Context) error
         + Authentication(next http.Handler, noAuthURLs []string) http.Handler
         + GetCurrentUserID(request *http.Request) (types.UserID, error)
+        + Initialize() http.Handler
+        + Start(serverInstanceReady context.CancelFunc) error
+        + Stop(ctx context.Context) error
 
     }
     class server.Identity << (T, #FF7700) >>  {
@@ -326,6 +291,7 @@ namespace storage {
         + GetUserFeedbackOnRule(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID) (*UserFeedbackOnRule, error)
         + GetUserFeedbackOnRuleDisable(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID) (*UserFeedbackOnRule, error)
         + GetUserFeedbackOnRules(clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID) (<font color=blue>map</font>[types.RuleID]types.UserVote, error)
+        + GetUserDisableFeedbackOnRules(clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID) (<font color=blue>map</font>[types.RuleID]UserFeedbackOnRule, error)
         + AddFeedbackOnRuleDisable(clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID, message string) error
         + MigrateToLatest() error
         + Init() error
@@ -334,7 +300,7 @@ namespace storage {
         + ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
         + GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
         + ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error)
-        + ReadSingleRule(orgID types.OrgID, clusterName types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey) (string, error)
+        + ReadSingleRuleTemplateData(orgID types.OrgID, clusterName types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey) (<font color=blue>interface</font>{}, error)
         + ReadReportForClusterByClusterName(clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error)
         + GetLatestKafkaOffset() (types.KafkaOffset, error)
         + WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport, rules []types.ReportItem, lastCheckedTime time.Time, kafkaOffset types.KafkaOffset) error
@@ -353,7 +319,7 @@ namespace storage {
         + ListOfOrgs() ([]types.OrgID, error)
         + ListOfClustersForOrg( types.OrgID) ([]types.ClusterName, error)
         + ReadReportForCluster( types.OrgID,  types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error)
-        + ReadSingleRule( types.OrgID,  types.ClusterName,  types.RuleID,  types.ErrorKey) (string, error)
+        + ReadSingleRuleTemplateData( types.OrgID,  types.ClusterName,  types.RuleID,  types.ErrorKey) (<font color=blue>interface</font>{}, error)
         + ReadReportForClusterByClusterName( types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error)
         + GetLatestKafkaOffset() (types.KafkaOffset, error)
         + WriteReportForCluster( types.OrgID,  types.ClusterName,  types.ClusterReport,  []types.ReportItem,  time.Time,  types.KafkaOffset) error
@@ -379,6 +345,7 @@ namespace storage {
         + GetTogglesForRules( types.ClusterName,  []types.RuleOnReport,  types.UserID) (<font color=blue>map</font>[types.RuleID]bool, error)
         + GetUserFeedbackOnRules( types.ClusterName,  []types.RuleOnReport,  types.UserID) (<font color=blue>map</font>[types.RuleID]types.UserVote, error)
         + GetRuleWithContent( types.RuleID,  types.ErrorKey) (*types.RuleWithContent, error)
+        + GetUserDisableFeedbackOnRules( types.ClusterName,  []types.RuleOnReport,  types.UserID) (<font color=blue>map</font>[types.RuleID]UserFeedbackOnRule, error)
         + DoesClusterExist( types.ClusterName) (bool, error)
 
     }
@@ -395,7 +362,7 @@ namespace storage {
         + ListOfOrgs() ([]types.OrgID, error)
         + ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
         + ReadReportForCluster(orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error)
-        + ReadSingleRule(orgID types.OrgID, clusterName types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey) (string, error)
+        + ReadSingleRuleTemplateData(orgID types.OrgID, clusterName types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey) (<font color=blue>interface</font>{}, error)
         + ReadReportForClusterByClusterName(clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error)
         + GetLatestKafkaOffset() (types.KafkaOffset, error)
         + WriteReportForCluster(orgID types.OrgID, clusterName types.ClusterName, report types.ClusterReport, rules []types.ReportItem, collectedAtTime time.Time, kafkaOffset types.KafkaOffset) error
@@ -414,6 +381,7 @@ namespace storage {
         + GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
         + WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
         + GetUserFeedbackOnRules(clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID) (<font color=blue>map</font>[types.RuleID]types.UserVote, error)
+        + GetUserDisableFeedbackOnRules(clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID) (<font color=blue>map</font>[types.RuleID]UserFeedbackOnRule, error)
         + DoesClusterExist(clusterID types.ClusterName) (bool, error)
 
     }
@@ -511,6 +479,12 @@ namespace types {
     }
     class types.ValidationError << (T, #FF7700) >>  {
     }
+    class "types.ClusterName" as typesClusterName {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
+    class "types.Timestamp" as typesTimestamp {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
+    }
     class "types.UserVote" as typesUserVote {
         'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
     }
@@ -520,22 +494,16 @@ namespace types {
     class "types.ValidationError" as typesValidationError {
         'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
     }
-    class "types.ReportItem" as typesReportItem {
-        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
-    }
     class "types.OrgID" as typesOrgID {
         'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
     }
-    class "types.ClusterName" as typesClusterName {
+    class "types.ReportItem" as typesReportItem {
         'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
     }
     class "types.UserID" as typesUserID {
         'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
     }
     class "types.ClusterReport" as typesClusterReport {
-        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
-    }
-    class "types.Timestamp" as typesTimestamp {
         'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
     }
 }
