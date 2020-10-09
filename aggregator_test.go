@@ -87,8 +87,6 @@ func TestStartService(t *testing.T) {
 			main.StartService()
 		}()
 
-		time.Sleep(1 * time.Second)
-		main.WaitForServiceToStart()
 		errCode := main.StopService()
 		assert.Equal(t, main.ExitStatusOK, errCode)
 	}, testsTimeout)
@@ -234,8 +232,8 @@ func TestStartConsumer_DBError(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "bad-data-source",
 	})
 
-	errCode := main.StartConsumer()
-	assert.Equal(t, main.ExitStatusConsumerError, errCode)
+	err := main.StartConsumer(conf.GetBrokerConfiguration())
+	assert.EqualError(t, err, "driver non-existing-driver is not supported")
 }
 
 func TestStartConsumer_BadBrokerAddress(t *testing.T) {
@@ -243,12 +241,14 @@ func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
 		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
 
-		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:1",
+		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:999999",
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
 	})
 
-	errCode := main.StartConsumer()
-	assert.Equal(t, main.ExitStatusConsumerError, errCode)
+	err := main.StartConsumer(conf.GetBrokerConfiguration())
+	assert.EqualError(
+		t, err, "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)",
+	)
 }
 
 func TestStartServer_DBError(t *testing.T) {
@@ -257,8 +257,8 @@ func TestStartServer_DBError(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "bad-data-source",
 	})
 
-	errCode := main.StartServer()
-	assert.Equal(t, main.ExitStatusServerError, errCode)
+	err := main.StartServer()
+	assert.EqualError(t, err, "driver non-existing-driver is not supported")
 }
 
 func TestStartServer_BadServerAddress(t *testing.T) {
@@ -266,12 +266,12 @@ func TestStartServer_BadServerAddress(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
 		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
 
-		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       "non-existing-host:1",
+		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       "localhost:999999",
 		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE": "openapi.json",
 	})
 
-	errCode := main.StartServer()
-	assert.Equal(t, main.ExitStatusServerError, errCode)
+	err := main.StartServer()
+	assert.EqualError(t, err, "listen tcp: address 999999: invalid port")
 }
 
 func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
@@ -291,7 +291,7 @@ func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
 	*main.AutoMigratePtr = true
 
 	errCode := main.StartService()
-	assert.Equal(t, main.ExitStatusConsumerError+main.ExitStatusServerError, errCode)
+	assert.Equal(t, main.ExitStatusError, errCode)
 
 	*main.AutoMigratePtr = false
 }

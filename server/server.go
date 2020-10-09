@@ -48,7 +48,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
 
 	// we just have to import this package in order to expose pprof interface in debug mode
 	// disable "G108 (CWE-): Profiling endpoint is automatically exposed on /debug/pprof"
@@ -325,16 +324,14 @@ func (server *HTTPServer) Initialize() http.Handler {
 }
 
 // Start starts server
-func (server *HTTPServer) Start(serverInstanceReady *sync.Cond) error {
+func (server *HTTPServer) Start(serverInstanceReady context.CancelFunc) error {
 	address := server.Config.Address
 	log.Info().Msgf("Starting HTTP server at '%s'", address)
 	router := server.Initialize()
 	server.Serv = &http.Server{Addr: address, Handler: router}
 
 	if serverInstanceReady != nil {
-		serverInstanceReady.L.Lock()
-		serverInstanceReady.Broadcast()
-		serverInstanceReady.L.Unlock()
+		serverInstanceReady()
 	}
 
 	err := server.Serv.ListenAndServe()

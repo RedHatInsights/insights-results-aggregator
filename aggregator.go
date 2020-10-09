@@ -32,19 +32,15 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
-	"sync"
-	"sync/atomic"
 	"syscall"
-	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/logger"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
-	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
-	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -52,6 +48,8 @@ import (
 const (
 	// ExitStatusOK means that the tool finished with success
 	ExitStatusOK = iota
+	// ExitStatusError is a general error code
+	ExitStatusError
 	// ExitStatusPrepareDbError is returned when the DB preparation (including rule content loading) fails
 	ExitStatusPrepareDbError
 	// ExitStatusConsumerError is returned in case of any consumer-related error
@@ -64,14 +62,9 @@ const (
 	typeStr               = "type"
 
 	databasePreparationMessage = "database preparation exited with error code %v"
-	consumerExitedErrorMessage = "consumer exited with error code %v"
 )
 
 var (
-	serverInstance      *server.HTTPServer
-	consumerInstance    consumer.Consumer
-	serverInstanceReady = sync.NewCond(&sync.Mutex{})
-
 	// BuildVersion contains the major.minor version of the CLI client
 	BuildVersion = "*not set*"
 
@@ -158,63 +151,8 @@ func prepareDB() int {
 	return ExitStatusOK
 }
 
-// startConsumer starts consumer and returns exit code, ExitStatusOK is no error
-func startConsumer() int {
-	dbStorage, err := createStorage()
-	if err != nil {
-		return ExitStatusConsumerError
-	}
-	defer closeStorage(dbStorage)
-
-	brokerCfg := conf.GetBrokerConfiguration()
-
-	// if broker is disabled, simply don't start it
-	if !brokerCfg.Enabled {
-		log.Info().Msg("Broker is disabled, not starting it")
-		return ExitStatusOK
-	}
-
-	consumerInstance, err = consumer.New(brokerCfg, dbStorage)
-	if err != nil {
-		log.Error().Err(err).Msg("Broker initialization error")
-		return ExitStatusConsumerError
-	}
-
-	consumerInstance.Serve()
-
-	return ExitStatusOK
-}
-
-// startServer starts the server and returns error code
-func startServer() int {
-	dbStorage, err := createStorage()
-	if err != nil {
-		return ExitStatusServerError
-	}
-	defer closeStorage(dbStorage)
-
-	serverCfg := conf.GetServerConfiguration()
-
-	s := server.New(serverCfg, dbStorage)
-
-	serverInstanceReady.L.Lock()
-	serverInstance = s
-	serverInstanceReady.L.Unlock()
-
-	err = serverInstance.Start(serverInstanceReady)
-	if err != nil {
-		log.Error().Err(err).Msg("HTTP(s) start error")
-		return ExitStatusServerError
-	}
-
-	return ExitStatusOK
-}
-
 // startService starts service and returns error code
 func startService() int {
-	var waitGroup sync.WaitGroup
-	exitCode := int32(ExitStatusOK)
-
 	metricsCfg := conf.GetMetricsConfiguration()
 	if metricsCfg.Namespace != "" {
 		metrics.AddMetricsWithNamespace(metricsCfg.Namespace)
@@ -223,81 +161,73 @@ func startService() int {
 	prepDbExitCode := prepareDB()
 	if prepDbExitCode != ExitStatusOK {
 		log.Info().Msgf(databasePreparationMessage, prepDbExitCode)
-		exitCode += int32(prepDbExitCode)
-
-		return int(exitCode)
+		return prepDbExitCode
 	}
 
-	waitGroup.Add(1)
-	// consumer is run in its own thread
-	go func() {
-		defer waitGroup.Done()
+	ctx, cancel := context.WithCancel(context.Background())
 
-		consumerExitCode := startConsumer()
-		if consumerExitCode != ExitStatusOK {
-			log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
-			atomic.AddInt32(&exitCode, int32(consumerExitCode))
-		}
-	}()
+	errorGroup := new(errgroup.Group)
 
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
+	brokerConf := conf.GetBrokerConfiguration()
+	// if broker is disabled, simply don't start it
+	if brokerConf.Enabled {
+		errorGroup.Go(func() error {
+			defer cancel()
 
-		// server can be started in current thread
-		serverExitCode := startServer()
-		if serverExitCode != ExitStatusOK {
-			log.Info().Msgf(consumerExitedErrorMessage, prepDbExitCode)
-			atomic.AddInt32(&exitCode, int32(serverExitCode))
-		}
-	}()
+			err := startConsumer(brokerConf)
+			if err != nil {
+				log.Error().Err(err)
+				return err
+			}
 
-	waitGroup.Wait()
-
-	return int(exitCode)
-}
-
-func waitForServiceToStart() {
-	serverInstanceReady.L.Lock()
-	if serverInstance == nil {
-		serverInstanceReady.Wait()
+			return nil
+		})
+	} else {
+		log.Info().Msg("Broker is disabled, not starting it")
 	}
-	serverInstanceReady.L.Unlock()
 
-	for {
-		isStarted := true
-		if conf.GetBrokerConfiguration().Enabled && consumerInstance == nil {
-			isStarted = false
+	errorGroup.Go(func() error {
+		defer cancel()
+
+		err := startServer()
+		if err != nil {
+			log.Error().Err(err)
+			return err
 		}
 
-		if isStarted {
-			// everything was initialized
-			break
-		}
-		time.Sleep(500 * time.Millisecond)
+		return nil
+	})
+
+	// it's gonna finish when either of goroutines finishes or fails
+	_ = <-ctx.Done()
+
+	if errCode := stopService(); errCode != ExitStatusOK {
+		return errCode
 	}
+
+	if err := errorGroup.Wait(); err != nil {
+		// no need to log the error here since it's an error of the first failed goroutine
+		return ExitStatusError
+	}
+
+	return ExitStatusOK
 }
 
 func stopService() int {
 	errCode := ExitStatusOK
 
-	serverInstanceReady.L.Lock()
-	if serverInstance == nil {
-		serverInstanceReady.Wait()
-	}
-	serverInstanceReady.L.Unlock()
-
-	err := serverInstance.Stop(context.Background())
+	err := stopServer()
 	if err != nil {
-		log.Error().Err(err).Msg("HTTP(s) server stop error")
-		errCode++
+		log.Error().Err(err)
+		errCode += ExitStatusServerError
 	}
 
-	if consumerInstance != nil {
-		err := consumerInstance.Close()
+	brokerConf := conf.GetBrokerConfiguration()
+	if brokerConf.Enabled {
+		err = stopConsumer()
 		if err != nil {
-			log.Error().Err(err).Msg("Consumer stop error")
-			errCode++
+			log.Error().Err(err)
+			errCode += ExitStatusConsumerError
 		}
 	}
 
@@ -453,12 +383,6 @@ func stopServiceOnProcessStopSignal() {
 	go func() {
 		<-signals
 		fmt.Println("SIGINT or SIGTERM was sent, stopping the service...")
-
-		serverInstanceReady.L.Lock()
-		if serverInstance == nil {
-			serverInstanceReady.Wait()
-		}
-		serverInstanceReady.L.Unlock()
 
 		errCode := stopService()
 		if errCode != 0 {
