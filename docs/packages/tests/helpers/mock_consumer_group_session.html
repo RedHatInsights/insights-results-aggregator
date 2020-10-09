@@ -153,7 +153,7 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>Claims returns information about the claimed partitions by topic.</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">cgs</div> <div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">Claims</div><div class="operator">(</div><div class="operator">)</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="operator">[</div><div class="operator">]</div><div class="ident">int32</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">Claims</div><div class="operator">(</div><div class="operator">)</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="operator">[</div><div class="operator">]</div><div class="ident">int32</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -163,7 +163,7 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>MemberID returns the cluster member ID.</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">cgs</div> <div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">MemberID</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">MemberID</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -173,7 +173,7 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>GenerationID returns the current generation ID.</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">cgs</div> <div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">GenerationID</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int32</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">GenerationID</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int32</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="literal">0</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -183,7 +183,7 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>MarkOffset marks the provided offset, alongside a metadata string</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">cgs</div> <div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">MarkOffset</div><div class="operator">(</div><div class="ident">topic</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">partition</div> <div class="ident">int32</div><div class="operator">,</div> <div class="ident">offset</div> <div class="ident">int64</div><div class="operator">,</div> <div class="ident">metadata</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">MarkOffset</div><div class="operator">(</div><div class="ident">topic</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">partition</div> <div class="ident">int32</div><div class="operator">,</div> <div class="ident">offset</div> <div class="ident">int64</div><div class="operator">,</div> <div class="ident">metadata</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -192,7 +192,7 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>ResetOffset resets to the provided offset, alongside a metadata string that</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">cgs</div> <div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">ResetOffset</div><div class="operator">(</div><div class="ident">topic</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">partition</div> <div class="ident">int32</div><div class="operator">,</div> <div class="ident">offset</div> <div class="ident">int64</div><div class="operator">,</div> <div class="ident">metadata</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">ResetOffset</div><div class="operator">(</div><div class="ident">topic</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">partition</div> <div class="ident">int32</div><div class="operator">,</div> <div class="ident">offset</div> <div class="ident">int64</div><div class="operator">,</div> <div class="ident">metadata</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -201,7 +201,7 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>MarkMessage marks a message as consumed.</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">cgs</div> <div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">MarkMessage</div><div class="operator">(</div><div class="ident">msg</div> <div class="operator">*</div><div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">,</div> <div class="ident">metadata</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">MarkMessage</div><div class="operator">(</div><div class="ident">msg</div> <div class="operator">*</div><div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">,</div> <div class="ident">metadata</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -209,9 +209,17 @@ limitations under the License.</p>
       <tr class="section">
 	<td class="doc"><p>Context returns the session context.</p>
 </td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="ident">cgs</div> <div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">Context</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">context</div><div class="operator">.</div><div class="ident">Context</div> <div class="operator">{</div>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">Context</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">context</div><div class="operator">.</div><div class="ident">Context</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">context</div><div class="operator">.</div><div class="ident">TODO</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>Commit commits</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">MockConsumerGroupSession</div><div class="operator">)</div> <div class="ident">Commit</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>

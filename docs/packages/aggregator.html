@@ -156,19 +156,15 @@ list of clusters for given organization, and cluster health.</p>
 	<div class="literal">&#34;os/signal&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strconv&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;sync&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;sync/atomic&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;syscall&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;time&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/logger&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/rs/zerolog/log&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;golang.org/x/sync/errgroup&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/conf&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/consumer&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/metrics&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/migration&#34;</div><div class="operator"></div>
-	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/storage&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
@@ -181,6 +177,13 @@ list of clusters for given organization, and cluster health.</p>
 	<td class="doc"><p>ExitStatusOK means that the tool finished with success</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">ExitStatusOK</div> <div class="operator">=</div> <div class="ident">iota</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ExitStatusError is a general error code</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ExitStatusError</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
@@ -213,14 +216,9 @@ list of clusters for given organization, and cluster health.</p>
 	<div class="ident">typeStr</div>               <div class="operator">=</div> <div class="literal">&#34;type&#34;</div><div class="operator"></div>
 
 	<div class="ident">databasePreparationMessage</div> <div class="operator">=</div> <div class="literal">&#34;database preparation exited with error code %v&#34;</div><div class="operator"></div>
-	<div class="ident">consumerExitedErrorMessage</div> <div class="operator">=</div> <div class="literal">&#34;consumer exited with error code %v&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">var</div> <div class="operator">(</div>
-	<div class="ident">serverInstance</div>      <div class="operator">*</div><div class="ident">server</div><div class="operator">.</div><div class="ident">HTTPServer</div><div class="operator"></div>
-	<div class="ident">consumerInstance</div>    <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Consumer</div><div class="operator"></div>
-	<div class="ident">serverInstanceReady</div> <div class="operator">=</div> <div class="ident">sync</div><div class="operator">.</div><div class="ident">NewCond</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">sync</div><div class="operator">.</div><div class="ident">Mutex</div><div class="operator">{</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
-
 </code></pre></td>
       </tr>
       
@@ -361,79 +359,9 @@ whether the close operation was successful or not.</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>startConsumer starts consumer and returns exit code, ExitStatusOK is no error</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">startConsumer</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
-	<div class="ident">dbStorage</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">createStorage</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="keyword">return</div> <div class="ident">ExitStatusConsumerError</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-	<div class="keyword">defer</div> <div class="ident">closeStorage</div><div class="operator">(</div><div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">brokerCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>if broker is disabled, simply don't start it</p>
-</td>
-	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="operator">!</div><div class="ident">brokerCfg</div><div class="operator">.</div><div class="ident">Enabled</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Broker is disabled, not starting it&#34;</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="ident">consumerInstance</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">brokerCfg</div><div class="operator">,</div> <div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Broker initialization error&#34;</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div> <div class="ident">ExitStatusConsumerError</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="ident">consumerInstance</div><div class="operator">.</div><div class="ident">Serve</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>startServer starts the server and returns error code</p>
-</td>
-	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">startServer</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
-	<div class="ident">dbStorage</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">createStorage</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="keyword">return</div> <div class="ident">ExitStatusServerError</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-	<div class="keyword">defer</div> <div class="ident">closeStorage</div><div class="operator">(</div><div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">serverCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetServerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">s</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">serverCfg</div><div class="operator">,</div> <div class="ident">dbStorage</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">serverInstance</div> <div class="operator">=</div> <div class="ident">s</div><div class="operator"></div>
-	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">serverInstance</div><div class="operator">.</div><div class="ident">Start</div><div class="operator">(</div><div class="ident">serverInstanceReady</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;HTTP(s) start error&#34;</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">return</div> <div class="ident">ExitStatusServerError</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-
-	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
 	<td class="doc"><p>startService starts service and returns error code</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">startService</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
-	<div class="keyword">var</div> <div class="ident">waitGroup</div> <div class="ident">sync</div><div class="operator">.</div><div class="ident">WaitGroup</div><div class="operator"></div>
-	<div class="ident">exitCode</div> <div class="operator">:=</div> <div class="ident">int32</div><div class="operator">(</div><div class="ident">ExitStatusOK</div><div class="operator">)</div><div class="operator"></div>
-
 	<div class="ident">metricsCfg</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetMetricsConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">metricsCfg</div><div class="operator">.</div><div class="ident">Namespace</div> <div class="operator">!=</div> <div class="literal">&#34;&#34;</div> <div class="operator">{</div>
 		<div class="ident">metrics</div><div class="operator">.</div><div class="ident">AddMetricsWithNamespace</div><div class="operator">(</div><div class="ident">metricsCfg</div><div class="operator">.</div><div class="ident">Namespace</div><div class="operator">)</div><div class="operator"></div>
@@ -442,96 +370,88 @@ whether the close operation was successful or not.</p>
 	<div class="ident">prepDbExitCode</div> <div class="operator">:=</div> <div class="ident">prepareDB</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">prepDbExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
 		<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">databasePreparationMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">exitCode</div> <div class="operator">&#43;=</div> <div class="ident">int32</div><div class="operator">(</div><div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="keyword">return</div> <div class="ident">int</div><div class="operator">(</div><div class="ident">exitCode</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">prepDbExitCode</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">ctx</div><div class="operator">,</div> <div class="ident">cancel</div> <div class="operator">:=</div> <div class="ident">context</div><div class="operator">.</div><div class="ident">WithCancel</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">Background</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">errorGroup</div> <div class="operator">:=</div> <div class="ident">new</div><div class="operator">(</div><div class="ident">errgroup</div><div class="operator">.</div><div class="ident">Group</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">brokerConf</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>consumer is run in its own thread</p>
+	<td class="doc"><p>if broker is disabled, simply don't start it</p>
 </td>
-	<td class="code"><pre><code>	<div class="keyword">go</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-		<div class="keyword">defer</div> <div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Done</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">brokerConf</div><div class="operator">.</div><div class="ident">Enabled</div> <div class="operator">{</div>
+		<div class="ident">errorGroup</div><div class="operator">.</div><div class="ident">Go</div><div class="operator">(</div><div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+			<div class="keyword">defer</div> <div class="ident">cancel</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-		<div class="ident">consumerExitCode</div> <div class="operator">:=</div> <div class="ident">startConsumer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">if</div> <div class="ident">consumerExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
-			<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">consumerExitedErrorMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">atomic</div><div class="operator">.</div><div class="ident">AddInt32</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">exitCode</div><div class="operator">,</div> <div class="ident">int32</div><div class="operator">(</div><div class="ident">consumerExitCode</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">startConsumer</div><div class="operator">(</div><div class="ident">brokerConf</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+				<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+				<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
+			<div class="operator">}</div><div class="operator"></div>
+
+			<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Broker is disabled, not starting it&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="ident">errorGroup</div><div class="operator">.</div><div class="ident">Go</div><div class="operator">(</div><div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+		<div class="keyword">defer</div> <div class="ident">cancel</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">startServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+			<div class="keyword">return</div> <div class="ident">err</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Add</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">go</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-		<div class="keyword">defer</div> <div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Done</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>server can be started in current thread</p>
+	<td class="doc"><p>it's gonna finish when either of goroutines finishes or fails</p>
 </td>
-	<td class="code"><pre><code>		<div class="ident">serverExitCode</div> <div class="operator">:=</div> <div class="ident">startServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">if</div> <div class="ident">serverExitCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
-			<div class="ident">log</div><div class="operator">.</div><div class="ident">Info</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="ident">consumerExitedErrorMessage</div><div class="operator">,</div> <div class="ident">prepDbExitCode</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">atomic</div><div class="operator">.</div><div class="ident">AddInt32</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">exitCode</div><div class="operator">,</div> <div class="ident">int32</div><div class="operator">(</div><div class="ident">serverExitCode</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">_</div> <div class="operator">=</div> <div class="operator">&lt;-</div><div class="ident">ctx</div><div class="operator">.</div><div class="ident">Done</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">waitGroup</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="keyword">return</div> <div class="ident">int</div><div class="operator">(</div><div class="ident">exitCode</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">waitForServiceToStart</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">stopService</div><div class="operator">(</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">errCode</div> <div class="operator">!=</div> <div class="ident">ExitStatusOK</div> <div class="operator">{</div>
+		<div class="keyword">return</div> <div class="ident">errCode</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
-	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="keyword">for</div> <div class="operator">{</div>
-		<div class="ident">isStarted</div> <div class="operator">:=</div> <div class="ident">true</div><div class="operator"></div>
-		<div class="keyword">if</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Enabled</div> <div class="operator">&amp;&amp;</div> <div class="ident">consumerInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
-			<div class="ident">isStarted</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-
-		<div class="keyword">if</div> <div class="ident">isStarted</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">errorGroup</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator">;</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 </code></pre></td>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>everything was initialized</p>
+	<td class="doc"><p>no need to log the error here since it's an error of the first failed goroutine</p>
 </td>
-	<td class="code"><pre><code>			<div class="keyword">break</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-		<div class="ident">time</div><div class="operator">.</div><div class="ident">Sleep</div><div class="operator">(</div><div class="literal">500</div> <div class="operator">*</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Millisecond</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>		<div class="keyword">return</div> <div class="ident">ExitStatusError</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
+
+	<div class="keyword">return</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">stopService</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">int</div> <div class="operator">{</div>
 	<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">ExitStatusOK</div><div class="operator"></div>
 
-	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
-	<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">serverInstance</div><div class="operator">.</div><div class="ident">Stop</div><div class="operator">(</div><div class="ident">context</div><div class="operator">.</div><div class="ident">Background</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">stopServer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;HTTP(s) server stop error&#34;</div><div class="operator">)</div><div class="operator"></div>
-		<div class="ident">errCode</div><div class="operator">&#43;&#43;</div><div class="operator"></div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+		<div class="ident">errCode</div> <div class="operator">&#43;=</div> <div class="ident">ExitStatusServerError</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="keyword">if</div> <div class="ident">consumerInstance</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerInstance</div><div class="operator">.</div><div class="ident">Close</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">brokerConf</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetBrokerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">brokerConf</div><div class="operator">.</div><div class="ident">Enabled</div> <div class="operator">{</div>
+		<div class="ident">err</div> <div class="operator">=</div> <div class="ident">stopConsumer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
-			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="literal">&#34;Consumer stop error&#34;</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">errCode</div><div class="operator">&#43;&#43;</div><div class="operator"></div>
+			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">errCode</div> <div class="operator">&#43;=</div> <div class="ident">ExitStatusConsumerError</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
@@ -707,12 +627,6 @@ print the current DB migration version or to migrate to a different version.</p>
 	<div class="keyword">go</div> <div class="keyword">func</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
 		<div class="operator">&lt;-</div><div class="ident">signals</div><div class="operator"></div>
 		<div class="ident">fmt</div><div class="operator">.</div><div class="ident">Println</div><div class="operator">(</div><div class="literal">&#34;SIGINT or SIGTERM was sent, stopping the service...&#34;</div><div class="operator">)</div><div class="operator"></div>
-
-		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Lock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-		<div class="keyword">if</div> <div class="ident">serverInstance</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
-			<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">Wait</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-		<div class="ident">serverInstanceReady</div><div class="operator">.</div><div class="ident">L</div><div class="operator">.</div><div class="ident">Unlock</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 		<div class="ident">errCode</div> <div class="operator">:=</div> <div class="ident">stopService</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">errCode</div> <div class="operator">!=</div> <div class="literal">0</div> <div class="operator">{</div>
