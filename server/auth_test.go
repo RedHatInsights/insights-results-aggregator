@@ -143,7 +143,7 @@ func TestBadOrganizationID(t *testing.T) {
 		EndpointArgs: []interface{}{12345},
 		XRHIdentity:  "eyJpZGVudGl0eSI6IHsiaW50ZXJuYWwiOiB7Im9yZ19pZCI6ICIxMjM0In19fQo=",
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusUnauthorized,
-		Body:       `{"status":"You have no permissions to get or change info about this organization"}`,
+		StatusCode: http.StatusForbidden,
+		Body:       `{"status":"you have no permissions to get or change info about this organization"}`,
 	})
 }

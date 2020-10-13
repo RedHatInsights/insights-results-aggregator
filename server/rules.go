@@ -43,13 +43,13 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	err := server.checkUserClusterPermissions(writer, request, clusterID)
-	if err != nil {
+	successful = server.checkUserClusterPermissions(writer, request, clusterID)
+	if !successful {
 		// everything has been handled already
 		return
 	}
 
-	err = server.Storage.ToggleRuleForCluster(clusterID, ruleID, userID, toggleRule)
+	err := server.Storage.ToggleRuleForCluster(clusterID, ruleID, userID, toggleRule)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to toggle rule for selected cluster")
 		handleServerError(writer, err)
@@ -116,8 +116,8 @@ func (server HTTPServer) saveDisableFeedback(writer http.ResponseWriter, request
 		return
 	}
 
-	err := server.checkUserClusterPermissions(writer, request, clusterID)
-	if err != nil {
+	successful = server.checkUserClusterPermissions(writer, request, clusterID)
+	if !successful {
 		// everything has been handled already
 		return
 	}

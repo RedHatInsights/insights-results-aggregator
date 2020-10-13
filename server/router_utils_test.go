@@ -59,8 +59,8 @@ func TestReadOrganizationIDMissing(t *testing.T) {
 	request, err := http.NewRequest(http.MethodGet, "", nil)
 	helpers.FailOnError(t, err)
 
-	_, err = server.ReadOrganizationID(httptest.NewRecorder(), request, false)
-	assert.EqualError(t, err, "Missing required param from request: organization")
+	_, successful := server.ReadOrganizationID(httptest.NewRecorder(), request, false)
+	assert.False(t, successful)
 }
 
 func mustGetRequestWithMuxVars(
@@ -115,16 +115,16 @@ func TestReadClusterNamesMissing(t *testing.T) {
 	request, err := http.NewRequest(http.MethodGet, "", nil)
 	helpers.FailOnError(t, err)
 
-	_, err = server.ReadClusterNames(httptest.NewRecorder(), request)
-	assert.EqualError(t, err, "Missing required param from request: clusters")
+	_, successful := server.ReadClusterNames(httptest.NewRecorder(), request)
+	assert.False(t, successful)
 }
 
 func TestReadOrganizationIDsMissing(t *testing.T) {
 	request, err := http.NewRequest(http.MethodGet, "", nil)
 	helpers.FailOnError(t, err)
 
-	_, err = server.ReadOrganizationIDs(httptest.NewRecorder(), request)
-	assert.EqualError(t, err, "Missing required param from request: organizations")
+	_, successful := server.ReadOrganizationIDs(httptest.NewRecorder(), request)
+	assert.False(t, successful)
 }
 
 func TestReadRuleIDMissing(t *testing.T) {

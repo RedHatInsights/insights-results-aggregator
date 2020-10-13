@@ -779,9 +779,9 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 			},
 		}),
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusUnauthorized,
+		StatusCode: http.StatusForbidden,
 		Body: `{
-				"status":"You have no permissions to get or change info about this organization"
+				"status":"you have no permissions to get or change info about this organization"
 			}`,
 	})
 }

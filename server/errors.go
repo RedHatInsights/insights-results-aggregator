@@ -25,8 +25,10 @@ type (
 	RouterMissingParamError = operator_utils_types.RouterMissingParamError
 	// RouterParsingError parsing error, for example string when we expected integer
 	RouterParsingError = operator_utils_types.RouterParsingError
-	// AuthenticationError happens during auth problems, for example malformed token
-	AuthenticationError = operator_utils_types.AuthenticationError
+	// UnauthorizedError means server can't authorize you, for example the token is missing or malformed
+	UnauthorizedError = operator_utils_types.UnauthorizedError
+	// ForbiddenError means you don't have permission to do a particular action,
+	ForbiddenError = operator_utils_types.ForbiddenError
 )
 
 // handleServerError handles separate server errors and sends appropriate responses
