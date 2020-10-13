@@ -136,8 +136,7 @@ func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Requ
 	} else {
 		tokenHeader = r.Header.Get("x-rh-identity") //Grab the token from the header
 	}
-	// Token is missing, SHOULD RETURN with error code 403 Unauthorized - changes in utils necessary
-	// TODO: Change SendUnauthorized in utils to accept string instead of map interface and change here
+
 	if tokenHeader == "" {
 		const message = "Missing auth token"
 		return "", &AuthenticationError{ErrString: message}

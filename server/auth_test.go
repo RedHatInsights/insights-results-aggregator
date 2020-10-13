@@ -49,7 +49,7 @@ func TestMissingAuthToken(t *testing.T) {
 		Endpoint:     server.ClustersForOrganizationEndpoint,
 		EndpointArgs: []interface{}{1},
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusForbidden,
+		StatusCode: http.StatusUnauthorized,
 		Body:       `{"status": "Missing auth token"}`,
 	})
 }
@@ -76,7 +76,7 @@ func TestJWTTokenMalformed(t *testing.T) {
 		// do not pass token itself
 		AuthorizationToken: "Bearer",
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusForbidden,
+		StatusCode: http.StatusUnauthorized,
 		Body:       `{"status":"Invalid/Malformed auth token"}`,
 	})
 }
@@ -90,7 +90,7 @@ func TestJWTTokenMalformedJSON(t *testing.T) {
 		// pass bad json
 		AuthorizationToken: "Bearer bm90LWpzb24K.bm90LWpzb24K.bm90LWpzb24K",
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusForbidden,
+		StatusCode: http.StatusUnauthorized,
 		Body:       `{"status":"Malformed authentication token"}`,
 	})
 }
@@ -103,7 +103,7 @@ func TestMalformedAuthToken(t *testing.T) {
 		EndpointArgs: []interface{}{1},
 		XRHIdentity:  "!",
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusForbidden,
+		StatusCode: http.StatusUnauthorized,
 		Body:       `{"status": "Malformed authentication token"}`,
 	})
 }
@@ -116,7 +116,7 @@ func TestInvalidAuthToken(t *testing.T) {
 		EndpointArgs: []interface{}{1},
 		XRHIdentity:  "123456qwerty",
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusForbidden,
+		StatusCode: http.StatusUnauthorized,
 		Body:       `{"status": "Malformed authentication token"}`,
 	})
 }
@@ -130,7 +130,7 @@ func TestInvalidJsonAuthToken(t *testing.T) {
 		EndpointArgs: []interface{}{1},
 		XRHIdentity:  "aW52YWxpZCBqc29uCg==",
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusForbidden,
+		StatusCode: http.StatusUnauthorized,
 		Body:       `{"status": "Malformed authentication token"}`,
 	})
 }
@@ -143,7 +143,7 @@ func TestBadOrganizationID(t *testing.T) {
 		EndpointArgs: []interface{}{12345},
 		XRHIdentity:  "eyJpZGVudGl0eSI6IHsiaW50ZXJuYWwiOiB7Im9yZ19pZCI6ICIxMjM0In19fQo=",
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusForbidden,
+		StatusCode: http.StatusUnauthorized,
 		Body:       `{"status":"You have no permissions to get or change info about this organization"}`,
 	})
 }
