@@ -270,11 +270,11 @@
       "get": {
         "summary": "Returns the latest reports for the given list of clusters.",
         "operationId": "getReportsForClusters",
-        "description": "Reports that are going to be returned are specified by list of cluster IDs that is part of request body.",
+        "description": "Reports that are going to be returned are specified by list of cluster IDs that is part of URL (limited to 2000 characters!).",
         "parameters": [
           {
             "name": "clusterIDs",
-            "in": "path",
+            "in": "query",
             "required": true,
             "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
             "schema": {
@@ -374,6 +374,104 @@
         "tags": [
           "prod"
         ]
+      },
+      "post": {
+        "summary": "Returns the latest reports for the given list of clusters.",
+        "operationId": "getReportsForClustersPost",
+        "description": "Reports that are going to be returned are specified by list of cluster IDs that is part of request body.",
+        "requestBody": {
+            "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+            "required": true,
+            "content": {
+              "text/plain": {
+                "schema": {
+                }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Latest available report for the given list of cluster IDs. Returns rules and their descriptions that were hit by the cluster.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    },
+                    "reports": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cluster": {
+                            "type": "string",
+                             "minLength": 36,
+                             "maxLength": 36,
+                             "format": "uuid"
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "count": {
+                                "type": "integer",
+                                "description": "Number of rules that were hit by the cluster. -1 is returned when no rules are defined for the cluster.",
+                                "example": "1"
+                              },
+                              "last_checked_at": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "2020-01-23T16:15:59.478901889Z"
+                              }
+                            }
+                          },
+                          "report": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "component": {
+                                  "type": "string",
+                                  "description": "The rule identifier for the hit rule.",
+                                  "example": "some.python.module"
+                                },
+                                "key": {
+                                  "type": "string",
+                                  "description": "The erroy key triggered for this rule in the cluster.",
+                                  "example": "SOME_ERROR_KEY"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/organizations/{orgId}/clusters/{clusterId}/users/{userId}/rules/{ruleId}": {
