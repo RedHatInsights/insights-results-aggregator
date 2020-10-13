@@ -266,6 +266,131 @@
         ]
       }
     },
+    "/clusters/reports/": {
+      "get": {
+        "summary": "Returns the latest reports for the given list of clusters.",
+        "operationId": "getReportsForClusters",
+        "description": "Reports that are going to be returned are specified by list of cluster IDs that is part of request body.",
+        "parameters": [
+          {
+            "name": "clusterIDs",
+            "in": "body",
+            "required": true,
+            "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest available report for the given list of cluster IDs. Returns rules and their descriptions that were hit by the cluster.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    },
+                    "reports": {
+                      "type": "array",
+                      "items": {
+                        "report": {
+                          "type": "object",
+                          "properties": {
+                            "cluster": {
+                              "type": "string",
+                               "minLength": 36,
+                               "maxLength": 36,
+                               "format": "uuid"
+                            },
+                            "meta": {
+                              "type": "object",
+                              "properties": {
+                                "count": {
+                                  "type": "integer",
+                                  "description": "Number of rules that were hit by the cluster. -1 is returned when no rules are defined for the cluster.",
+                                  "example": "1"
+                                },
+                                "last_checked_at": {
+                                  "type": "string",
+                                  "format": "date",
+                                  "example": "2020-01-23T16:15:59.478901889Z"
+                                }
+                              }
+                            },
+                            "report": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "component": {
+                                    "type": "string",
+                                    "description": "The rule identifier for the hit rule.",
+                                    "example": "some.python.module"
+                                  },
+                                  "key": {
+                                    "type": "string",
+                                    "description": "The erroy key triggered for this rule in the cluster.",
+                                    "example": "SOME_ERROR_KEY"
+                                  },
+                                  "user_vote": {
+                                    "type": "integer",
+                                    "description": "User vote - value of user voting. -1 is dislike vote, 0 is no vote, 1 is like vote.",
+                                    "enum": [
+                                      -1,
+                                      0,
+                                      1
+                                    ]
+                                  },
+                                  "disabled": {
+                                    "type": "boolean",
+                                    "description": "If this rule result disabled or not. This field can be used in the UI to show only specific set of rules results."
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
     "/organizations/{orgId}/clusters/{clusterId}/users/{userId}/rules/{ruleId}": {
       "get": {
         "summary": "Returns the latest rule report for the given organization, cluster, user and rule ids",
