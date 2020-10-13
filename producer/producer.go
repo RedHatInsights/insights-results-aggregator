@@ -106,7 +106,7 @@ func (producer *KafkaProducer) produceMessage(trackerMsg PayloadTrackerMessage) 
 // Instead, only a warning is logged and no error is returned.
 func (producer *KafkaProducer) TrackPayload(reqID types.RequestID, timestamp time.Time, status string) error {
 	if len(reqID) == 0 {
-		log.Warn().Msg("request ID is missing, null or empty")
+		log.Warn().Str("Operation", "TrackPayload").Msg("request ID is missing, null or empty")
 		return nil
 	}
 
