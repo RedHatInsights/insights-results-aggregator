@@ -71,3 +71,13 @@ which you can investigate by either of those commands:
 - `go tool cover -func=coverage.out`
 - `go tool cover -html=coverage.out` if your system supports it, this command will open a browser with a nice colored report
 
+## OpenAPI checks
+
+Content of file `openapi.json` can be checked by using:
+
+```shell
+make openapi-check
+```
+
+It is also possible to use online checker that is available on
+[https://apitools.dev/swagger-parser/online/](https://apitools.dev/swagger-parser/online/)
