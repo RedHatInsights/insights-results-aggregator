@@ -182,6 +182,14 @@ limitations under the License.</p>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;Missing required param from request: organization&#34;</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
+<div class="keyword">func</div> <div class="ident">TestReadClusterListFromPathMissing</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">request</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterListFromPath</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">False</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
 <div class="keyword">func</div> <div class="ident">mustGetRequestWithMuxVars</div><div class="operator">(</div>
 	<div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">,</div>
 	<div class="ident">method</div> <div class="ident">string</div><div class="operator">,</div>

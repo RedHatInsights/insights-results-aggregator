@@ -63,6 +63,14 @@ func TestReadOrganizationIDMissing(t *testing.T) {
 	assert.EqualError(t, err, "Missing required param from request: organization")
 }
 
+func TestReadClusterListFromPathMissing(t *testing.T) {
+	request, err := http.NewRequest(http.MethodGet, "", nil)
+	helpers.FailOnError(t, err)
+
+	_, successful := server.ReadClusterListFromPath(httptest.NewRecorder(), request)
+	assert.False(t, successful)
+}
+
 func mustGetRequestWithMuxVars(
 	t *testing.T,
 	method string,
