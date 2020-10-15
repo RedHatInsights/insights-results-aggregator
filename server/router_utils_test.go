@@ -15,6 +15,7 @@
 package server_test
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -27,6 +28,11 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	cluster1ID = "715e10eb-e6ac-49b3-bd72-61734c35b6fb"
+	cluster2ID = "931f1495-7b16-4637-a41e-963e117bfd02"
 )
 
 func TestGetRouterIntParamMissing(t *testing.T) {
@@ -151,4 +157,29 @@ func TestReadRuleIDMissing(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, `{"status":"Missing required param from request: rule_id"}`, strings.TrimSpace(string(body)))
+}
+
+func TestReadClusterListFromPath(t *testing.T) {
+	request := mustGetRequestWithMuxVars(t, http.MethodGet, "", nil, map[string]string{
+		"cluster_list": fmt.Sprintf("%v,%v", cluster1ID, cluster2ID),
+	})
+
+	list, successful := server.ReadClusterListFromPath(httptest.NewRecorder(), request)
+	assert.True(t, successful)
+
+	assert.ElementsMatch(t, list, []string{cluster1ID, cluster2ID})
+}
+
+func TestReadClusterListFromBody(t *testing.T) {
+	request, err := http.NewRequest(
+		http.MethodGet,
+		"",
+		strings.NewReader(fmt.Sprintf(`{"clusters": ["%v","%v"]}`, cluster1ID, cluster2ID)),
+	)
+	helpers.FailOnError(t, err)
+
+	list, successful := server.ReadClusterListFromBody(httptest.NewRecorder(), request)
+	assert.True(t, successful)
+
+	assert.ElementsMatch(t, list, []string{cluster1ID, cluster2ID})
 }
