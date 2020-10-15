@@ -30,4 +30,6 @@ var (
 	ReadClusterNames          = readClusterNames
 	GetRouterPositiveIntParam = getRouterPositiveIntParam
 	ReadRuleID                = readRuleID
+	ReadClusterListFromPath   = readClusterListFromPath
+	ReadClusterListFromBody   = readClusterListFromBody
 )

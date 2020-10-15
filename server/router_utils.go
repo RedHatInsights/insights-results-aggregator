@@ -15,6 +15,8 @@
 package server
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -25,6 +27,11 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
+
+// ClusterList is a data structure that store list of cluster IDs (names).
+type ClusterList struct {
+	Clusters []string `json:"clusters"`
+}
 
 var (
 	readRuleID                = httputils.ReadRuleID
@@ -69,6 +76,44 @@ func readOrgID(writer http.ResponseWriter, request *http.Request) (types.OrgID, 
 	}
 
 	return types.OrgID(orgID), true
+}
+
+// readClusterListFromPath retrieves list of clusters from request's path
+// if it's not possible, it writes http error to the writer and returns false
+func readClusterListFromPath(writer http.ResponseWriter, request *http.Request) ([]string, bool) {
+	rawClusterList, err := getRouterParam(request, "cluster_list")
+	if err != nil {
+		handleServerError(writer, err)
+		return []string{}, false
+	}
+
+	// basic check that should not happen in reality (because of Gorilla mux checks)
+	if rawClusterList == "" {
+		handleServerError(writer, errors.New("cluster list is empty"))
+		return []string{}, false
+	}
+
+	// split the list into items
+	clusterList := strings.Split(rawClusterList, ",")
+
+	// everything seems ok -> return list of clusters
+	return clusterList, true
+}
+
+// readClusterListFromBody retrieves list of clusters from request's body
+// if it's not possible, it writes http error to the writer and returns false
+func readClusterListFromBody(writer http.ResponseWriter, request *http.Request) ([]string, bool) {
+	var clusterList ClusterList
+
+	// try to read cluster list from request parameter
+	err := json.NewDecoder(request.Body).Decode(&clusterList)
+	if err != nil {
+		handleServerError(writer, err)
+		return []string{}, false
+	}
+
+	// everything seems ok -> return list of clusters
+	return clusterList.Clusters, true
 }
 
 func readRuleIDWithErrorKey(writer http.ResponseWriter, request *http.Request) (types.RuleID, types.ErrorKey, bool) {
