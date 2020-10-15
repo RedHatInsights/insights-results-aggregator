@@ -316,7 +316,7 @@ if it's not possible, it writes http error to the writer and returns false</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>readClusterList retrieves list of clusters from request's path
+	<td class="doc"><p>readClusterListFromPath retrieves list of clusters from request's path
 if it's not possible, it writes http error to the writer and returns false</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">readClusterListFromPath</div><div class="operator">(</div><div class="ident">writer</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ResponseWriter</div><div class="operator">,</div> <div class="ident">request</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">bool</div><div class="operator">)</div> <div class="operator">{</div>
@@ -358,7 +358,7 @@ if it's not possible, it writes http error to the writer and returns false</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>readClusterList retrieves list of clusters from request's body
+	<td class="doc"><p>readClusterListFromBody retrieves list of clusters from request's body
 if it's not possible, it writes http error to the writer and returns false</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">readClusterListFromBody</div><div class="operator">(</div><div class="ident">writer</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">ResponseWriter</div><div class="operator">,</div> <div class="ident">request</div> <div class="operator">*</div><div class="ident">http</div><div class="operator">.</div><div class="ident">Request</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">bool</div><div class="operator">)</div> <div class="operator">{</div>

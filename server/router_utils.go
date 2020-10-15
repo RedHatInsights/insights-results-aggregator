@@ -153,7 +153,7 @@ func readOrgID(writer http.ResponseWriter, request *http.Request) (types.OrgID, 
 	return types.OrgID(orgID), true
 }
 
-// readClusterList retrieves list of clusters from request's path
+// readClusterListFromPath retrieves list of clusters from request's path
 // if it's not possible, it writes http error to the writer and returns false
 func readClusterListFromPath(writer http.ResponseWriter, request *http.Request) ([]string, bool) {
 	rawClusterList, err := getRouterParam(request, "cluster_list")
@@ -175,7 +175,7 @@ func readClusterListFromPath(writer http.ResponseWriter, request *http.Request) 
 	return clusterList, true
 }
 
-// readClusterList retrieves list of clusters from request's body
+// readClusterListFromBody retrieves list of clusters from request's body
 // if it's not possible, it writes http error to the writer and returns false
 func readClusterListFromBody(writer http.ResponseWriter, request *http.Request) ([]string, bool) {
 	var clusterList ClusterList
