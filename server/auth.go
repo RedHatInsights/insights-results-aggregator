@@ -68,7 +68,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 		decoded, err := jwt.DecodeSegment(token) // Decode token to JSON string
 		if err != nil {                          // Malformed token, returns with http code 403 as usual
 			log.Error().Err(err).Msg(malformedTokenMessage)
-			handleServerError(w, &AuthenticationError{ErrString: malformedTokenMessage})
+			handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
 			return
 		}
 
@@ -80,7 +80,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 			err = json.Unmarshal([]byte(decoded), jwtPayload)
 			if err != nil { //Malformed token, returns with http code 403 as usual
 				log.Error().Err(err).Msg(malformedTokenMessage)
-				handleServerError(w, &AuthenticationError{ErrString: malformedTokenMessage})
+				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
 				return
 			}
 			// Map JWT token to inner token
@@ -90,7 +90,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 
 			if err != nil { //Malformed token, returns with http code 403 as usual
 				log.Error().Err(err).Msg(malformedTokenMessage)
-				handleServerError(w, &AuthenticationError{ErrString: malformedTokenMessage})
+				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
 				return
 			}
 		}
@@ -108,7 +108,8 @@ func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID,
 	i := request.Context().Value(types.ContextKeyUser)
 
 	if i == nil {
-		return "", &AuthenticationError{ErrString: "user id is not provided"}
+		log.Error().Msgf("user id was not found in request's context")
+		return "", &UnauthorizedError{ErrString: "user id is not provided"}
 	}
 
 	identity, ok := i.(Identity)
@@ -127,7 +128,7 @@ func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Requ
 		splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
 		if len(splitted) != 2 {
 			const message = "Invalid/Malformed auth token"
-			return "", &AuthenticationError{ErrString: message}
+			return "", &UnauthorizedError{ErrString: message}
 		}
 
 		// Here we take JWT token which include 3 parts, we need only second one
@@ -136,11 +137,10 @@ func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Requ
 	} else {
 		tokenHeader = r.Header.Get("x-rh-identity") //Grab the token from the header
 	}
-	// Token is missing, SHOULD RETURN with error code 403 Unauthorized - changes in utils necessary
-	// TODO: Change SendUnauthorized in utils to accept string instead of map interface and change here
+
 	if tokenHeader == "" {
 		const message = "Missing auth token"
-		return "", &AuthenticationError{ErrString: message}
+		return "", &UnauthorizedError{ErrString: message}
 	}
 
 	return tokenHeader, nil

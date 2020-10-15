@@ -19,6 +19,7 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -111,10 +112,10 @@ func checkClustersEndpointForImproperOrganizations() {
 		setAuthHeaderForOrganization(f, improperOrganization)
 		f.Send()
 		if improperOrganization == 0 {
-			f.ExpectStatus(400)
+			f.ExpectStatus(http.StatusBadRequest)
 		} else {
 			// negative values are not unmarshalled properly
-			f.ExpectStatus(403)
+			f.ExpectStatus(http.StatusUnauthorized)
 		}
 		f.PrintReport()
 	}

@@ -103,9 +103,8 @@ func (server *HTTPServer) listOfOrganizations(writer http.ResponseWriter, _ *htt
 }
 
 func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) {
-	organizationID, err := readOrganizationID(writer, request, server.Config.Auth)
-
-	if err != nil {
+	organizationID, successful := readOrganizationID(writer, request, server.Config.Auth)
+	if !successful {
 		// everything has been handled already
 		return
 	}
@@ -220,26 +219,27 @@ func (server *HTTPServer) readSingleRule(writer http.ResponseWriter, request *ht
 }
 
 // checkUserClusterPermissions retrieves organization ID by checking the owner of cluster ID, checks if it matches the one from request
-func (server *HTTPServer) checkUserClusterPermissions(writer http.ResponseWriter, request *http.Request, clusterID types.ClusterName) error {
+func (server *HTTPServer) checkUserClusterPermissions(writer http.ResponseWriter, request *http.Request, clusterID types.ClusterName) bool {
 	if server.Config.Auth {
 		orgID, err := server.Storage.GetOrgIDByClusterID(clusterID)
 		if err != nil {
 			log.Error().Err(err).Msg("Unable to get org id")
 			handleServerError(writer, err)
-			return err
+			return false
 		}
 
-		err = checkPermissions(writer, request, orgID, server.Config.Auth)
-		if err != nil {
-			return err
+		successful := checkPermissions(writer, request, orgID, server.Config.Auth)
+		if !successful {
+			return false
 		}
 	}
-	return nil
+
+	return true
 }
 
 func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {
-	orgIds, err := readOrganizationIDs(writer, request)
-	if err != nil {
+	orgIds, successful := readOrganizationIDs(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
@@ -252,15 +252,15 @@ func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, reques
 		}
 	}
 
-	err = responses.SendOK(writer, responses.BuildOkResponse())
+	err := responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
 }
 
 func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *http.Request) {
-	clusterNames, err := readClusterNames(writer, request)
-	if err != nil {
+	clusterNames, successful := readClusterNames(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
@@ -273,7 +273,7 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 		}
 	}
 
-	err = responses.SendOK(writer, responses.BuildOkResponse())
+	err := responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}

@@ -45,8 +45,8 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err := server.checkUserClusterPermissions(writer, request, clusterID)
-	if err != nil {
+	successful = server.checkUserClusterPermissions(writer, request, clusterID)
+	if !successful {
 		// everything has been handled already
 		return
 	}
@@ -57,7 +57,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err = server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote, voteMessage)
+	err := server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote, voteMessage)
 	if err != nil {
 		handleServerError(writer, err)
 		return
@@ -76,8 +76,8 @@ func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	err := server.checkUserClusterPermissions(writer, request, clusterID)
-	if err != nil {
+	successful = server.checkUserClusterPermissions(writer, request, clusterID)
+	if !successful {
 		// everything has been handled already
 		return
 	}

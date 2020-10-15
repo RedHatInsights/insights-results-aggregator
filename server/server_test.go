@@ -211,7 +211,7 @@ func TestServerStart(t *testing.T) {
 			helpers.FailOnError(t, err)
 
 			response := helpers.ExecuteRequest(s, req).Result()
-			checkResponseCode(t, http.StatusForbidden, response.StatusCode)
+			checkResponseCode(t, http.StatusUnauthorized, response.StatusCode)
 
 			// stopping the server
 			err = s.Stop(context.Background())
@@ -781,7 +781,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
 		Body: `{
-				"status":"You have no permissions to get or change info about this organization"
+				"status":"you have no permissions to get or change info about this organization"
 			}`,
 	})
 }
