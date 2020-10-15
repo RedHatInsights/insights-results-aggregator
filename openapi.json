@@ -270,7 +270,7 @@
       "get": {
         "summary": "Returns the latest reports for the given list of clusters.",
         "operationId": "getReportsForClusters",
-        "description": "Reports that are going to be returned are specified by list of cluster IDs that is part of request body.",
+        "description": "Reports that are going to be returned are specified by list of cluster IDs that is part of path.",
         "parameters": [
           {
             "name": "orgId",
