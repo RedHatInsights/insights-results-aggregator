@@ -388,6 +388,20 @@ a unique identifier of payloads. Empty string represents a missing request ID.</
 </code></pre></td>
       </tr>
       
+      <tr class="section">
+	<td class="doc"><p>ClusterReports is a data structure containing list of clusters, list of
+errors and dictionary with results per cluster.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ClusterReports</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">ClusterList</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div>               <div class="literal">`json:&#34;clusters&#34;`</div><div class="operator"></div>
+	<div class="ident">Errors</div>      <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div>               <div class="literal">`json:&#34;errors&#34;`</div><div class="operator"></div>
+	<div class="ident">Reports</div>     <div class="keyword">map</div><div class="operator">[</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div> <div class="literal">`json:&#34;reports&#34;`</div><div class="operator"></div>
+	<div class="ident">GeneratedAt</div> <div class="ident">string</div>                            <div class="literal">`json:&#34;generated_at&#34;`</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
     </tbody>
   </table>
 </div>
