@@ -105,3 +105,12 @@ type FeedbackRequest struct {
 
 // ReportItem represents a single (hit) rule of the string encoded report
 type ReportItem = types.ReportItem
+
+// ClusterReports is a data structure containing list of clusters, list of
+// errors and dictionary with results per cluster.
+type ClusterReports struct {
+	ClusterList []types.ClusterName               `json:"clusters"`
+	Errors      []types.ClusterName               `json:"errors"`
+	Reports     map[types.ClusterName]interface{} `json:"reports"`
+	GeneratedAt string                            `json:"generated_at"`
+}
