@@ -39,6 +39,11 @@ const (
 	SQLHooksKeyQueryBeginTime = sqlHooksKeyQueryBeginTime
 )
 
+var (
+	ConstructInClausule  = constructInClausule
+	ArgsWithClusterNames = argsWithClusterNames
+)
+
 func GetConnection(storage *DBStorage) *sql.DB {
 	return storage.connection
 }

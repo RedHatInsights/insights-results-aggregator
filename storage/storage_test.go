@@ -790,3 +790,137 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 	_, err = connection.Exec(query)
 	helpers.FailOnError(t, err)
 }
+
+// TestConstructInClausule checks the helper function constructInClausule
+func TestConstructInClausule(t *testing.T) {
+	c0 := storage.ConstructInClausule(0)
+	assert.Equal(t, c0, "$1")
+
+	c1 := storage.ConstructInClausule(1)
+	assert.Equal(t, c1, "$1")
+
+	c2 := storage.ConstructInClausule(2)
+	assert.Equal(t, c2, "$1,$2")
+
+	c3 := storage.ConstructInClausule(3)
+	assert.Equal(t, c3, "$1,$2,$3")
+}
+
+// TestArgsWithClusterNames checks the helper function argsWithClusterNames
+func TestArgsWithClusterNames(t *testing.T) {
+	cn0 := []types.ClusterName{}
+	args0 := storage.ArgsWithClusterNames(cn0)
+	assert.Equal(t, len(args0), 0)
+
+	cn1 := []types.ClusterName{"aaa"}
+	args1 := storage.ArgsWithClusterNames(cn1)
+	assert.Equal(t, len(args1), 1)
+	assert.Equal(t, args1[0], types.ClusterName("aaa"))
+
+	cn2 := []types.ClusterName{"aaa", "bbb"}
+	args2 := storage.ArgsWithClusterNames(cn2)
+	assert.Equal(t, len(args2), 2)
+	assert.Equal(t, args2[0], types.ClusterName("aaa"))
+	assert.Equal(t, args2[1], types.ClusterName("bbb"))
+}
+
+// TestDBStorageReadReportsForClusters1 check the behaviour of method
+// ReadReportForClusters
+func TestDBStorageReadReportsForClusters1(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
+
+	// try to read reports for clusters
+	cn1 := []types.ClusterName{"not-a-cluster"}
+	results, err := mockStorage.ReadReportsForClusters(cn1)
+	helpers.FailOnError(t, err)
+
+	// and check the read report with expected one
+	assert.Equal(t, len(results), 0)
+}
+
+// TestDBStorageReadReportsForClusters2 check the behaviour of method
+// ReadReportForClusters
+func TestDBStorageReadReportsForClusters2(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
+
+	// try to read reports for clusters
+	cn1 := []types.ClusterName{testdata.ClusterName}
+	results, err := mockStorage.ReadReportsForClusters(cn1)
+	helpers.FailOnError(t, err)
+
+	// and check the read report with expected one
+	assert.Equal(t, len(results), 1)
+}
+
+// TestDBStorageReadReportsForClusters3 check the behaviour of method
+// ReadReportForClusters
+func TestDBStorageReadReportsForClusters3(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
+
+	// try to read reports for clusters
+	cn1 := []types.ClusterName{}
+	_, err := mockStorage.ReadReportsForClusters(cn1)
+
+	// error is expected in this case
+	assert.NotNil(t, err)
+}
+
+// TestDBStorageReadOrgIDsForClusters1 check the behaviour of method
+// ReadOrgIDsForClusters
+func TestDBStorageReadOrgIDsForClusters1(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
+
+	// try to read org IDs for clusters
+	cn1 := []types.ClusterName{"not-a-cluster"}
+	results, err := mockStorage.ReadOrgIDsForClusters(cn1)
+	helpers.FailOnError(t, err)
+
+	// and check the read report with expected one
+	assert.Equal(t, len(results), 0)
+}
+
+// TestDBStorageReadOrgIDsForClusters2 check the behaviour of method
+// ReadOrgIDsForClusters
+func TestDBStorageReadOrgIDsForClusters2(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
+
+	// try to read org IDs for clusters
+	cn1 := []types.ClusterName{testdata.ClusterName}
+	results, err := mockStorage.ReadOrgIDsForClusters(cn1)
+	helpers.FailOnError(t, err)
+
+	// and check the read report with expected one
+	assert.Equal(t, len(results), 1)
+	assert.Equal(t, results[0], testdata.OrgID)
+}
+
+// TestDBStorageReadOrgIDsForClusters3 check the behaviour of method
+// ReadOrgIDsForClusters
+func TestDBStorageReadOrgIDsForClusters3(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
+
+	// try to read org IDs for clusters
+	cn1 := []types.ClusterName{}
+	_, err := mockStorage.ReadOrgIDsForClusters(cn1)
+
+	// error is expected in this case
+	assert.NotNil(t, err)
+}

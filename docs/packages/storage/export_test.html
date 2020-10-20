@@ -163,6 +163,11 @@ to see why this trick is needed.</p>
 	<div class="ident">SQLHooksKeyQueryBeginTime</div> <div class="operator">=</div> <div class="ident">sqlHooksKeyQueryBeginTime</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
+<div class="keyword">var</div> <div class="operator">(</div>
+	<div class="ident">ConstructInClausule</div>  <div class="operator">=</div> <div class="ident">constructInClausule</div><div class="operator"></div>
+	<div class="ident">ArgsWithClusterNames</div> <div class="operator">=</div> <div class="ident">argsWithClusterNames</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
 <div class="keyword">func</div> <div class="ident">GetConnection</div><div class="operator">(</div><div class="ident">storage</div> <div class="operator">*</div><div class="ident">DBStorage</div><div class="operator">)</div> <div class="operator">*</div><div class="ident">sql</div><div class="operator">.</div><div class="ident">DB</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">connection</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>

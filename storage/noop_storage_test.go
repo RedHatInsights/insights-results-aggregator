@@ -46,6 +46,11 @@ func TestNoopStorage_Methods(t *testing.T) {
 	_ = noopStorage.LoadRuleContent(content.RuleContentDirectory{})
 	_, _ = noopStorage.GetRuleByID("")
 	_, _ = noopStorage.GetOrgIDByClusterID("")
+}
+
+func TestNoopStorage_Methods_Cont(t *testing.T) {
+	noopStorage := storage.NoopStorage{}
+
 	_ = noopStorage.CreateRule(types.Rule{})
 	_ = noopStorage.DeleteRule("")
 	_ = noopStorage.CreateRuleErrorKey(types.RuleErrorKey{})
@@ -57,4 +62,9 @@ func TestNoopStorage_Methods(t *testing.T) {
 	_, _ = noopStorage.GetTogglesForRules("", nil, "")
 	_, _ = noopStorage.GetUserFeedbackOnRules("", nil, "")
 	_, _ = noopStorage.GetRuleWithContent("", "")
+	_, _ = noopStorage.ReadOrgIDsForClusters([]types.ClusterName{})
+	_, _ = noopStorage.ReadReportsForClusters([]types.ClusterName{})
+	_, _ = noopStorage.ReadSingleRuleTemplateData(0, "", "", "")
+	_, _ = noopStorage.GetUserDisableFeedbackOnRules("", []types.RuleOnReport{}, "")
+	_, _ = noopStorage.DoesClusterExist("")
 }

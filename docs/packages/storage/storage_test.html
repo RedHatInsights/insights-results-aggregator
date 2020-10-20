@@ -1083,6 +1083,240 @@ not null in table creation</p>
 </code></pre></td>
       </tr>
       
+      <tr class="section">
+	<td class="doc"><p>TestConstructInClausule checks the helper function constructInClausule</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestConstructInClausule</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">c0</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">ConstructInClausule</div><div class="operator">(</div><div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">c0</div><div class="operator">,</div> <div class="literal">&#34;$1&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">c1</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">ConstructInClausule</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">c1</div><div class="operator">,</div> <div class="literal">&#34;$1&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">c2</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">ConstructInClausule</div><div class="operator">(</div><div class="literal">2</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">c2</div><div class="operator">,</div> <div class="literal">&#34;$1,$2&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">c3</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">ConstructInClausule</div><div class="operator">(</div><div class="literal">3</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">c3</div><div class="operator">,</div> <div class="literal">&#34;$1,$2,$3&#34;</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestArgsWithClusterNames checks the helper function argsWithClusterNames</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestArgsWithClusterNames</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">cn0</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">args0</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">ArgsWithClusterNames</div><div class="operator">(</div><div class="ident">cn0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">args0</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">cn1</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">{</div><div class="literal">&#34;aaa&#34;</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">args1</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">ArgsWithClusterNames</div><div class="operator">(</div><div class="ident">cn1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">args1</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">args1</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">(</div><div class="literal">&#34;aaa&#34;</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">cn2</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">{</div><div class="literal">&#34;aaa&#34;</div><div class="operator">,</div> <div class="literal">&#34;bbb&#34;</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">args2</div> <div class="operator">:=</div> <div class="ident">storage</div><div class="operator">.</div><div class="ident">ArgsWithClusterNames</div><div class="operator">(</div><div class="ident">cn2</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">args2</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">2</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">args2</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">(</div><div class="literal">&#34;aaa&#34;</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">args2</div><div class="operator">[</div><div class="literal">1</div><div class="operator">]</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">(</div><div class="literal">&#34;bbb&#34;</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestDBStorageReadReportsForClusters1 check the behaviour of method
+ReadReportForClusters</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestDBStorageReadReportsForClusters1</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ReportEmptyRulesParsed</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read reports for clusters</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">cn1</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">{</div><div class="literal">&#34;not-a-cluster&#34;</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">results</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportsForClusters</div><div class="operator">(</div><div class="ident">cn1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>and check the read report with expected one</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">results</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestDBStorageReadReportsForClusters2 check the behaviour of method
+ReadReportForClusters</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestDBStorageReadReportsForClusters2</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ReportEmptyRulesParsed</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read reports for clusters</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">cn1</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">{</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">results</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportsForClusters</div><div class="operator">(</div><div class="ident">cn1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>and check the read report with expected one</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">results</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestDBStorageReadReportsForClusters3 check the behaviour of method
+ReadReportForClusters</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestDBStorageReadReportsForClusters3</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ReportEmptyRulesParsed</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read reports for clusters</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">cn1</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadReportsForClusters</div><div class="operator">(</div><div class="ident">cn1</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>error is expected in this case</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">NotNil</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestDBStorageReadOrgIDsForClusters1 check the behaviour of method
+ReadOrgIDsForClusters</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestDBStorageReadOrgIDsForClusters1</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ReportEmptyRulesParsed</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read org IDs for clusters</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">cn1</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">{</div><div class="literal">&#34;not-a-cluster&#34;</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">results</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadOrgIDsForClusters</div><div class="operator">(</div><div class="ident">cn1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>and check the read report with expected one</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">results</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestDBStorageReadOrgIDsForClusters2 check the behaviour of method
+ReadOrgIDsForClusters</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestDBStorageReadOrgIDsForClusters2</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ReportEmptyRulesParsed</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read org IDs for clusters</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">cn1</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">{</div><div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">results</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadOrgIDsForClusters</div><div class="operator">(</div><div class="ident">cn1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>and check the read report with expected one</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">results</div><div class="operator">)</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">results</div><div class="operator">[</div><div class="literal">0</div><div class="operator">]</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestDBStorageReadOrgIDsForClusters3 check the behaviour of method
+ReadOrgIDsForClusters</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestDBStorageReadOrgIDsForClusters3</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">closer</div> <div class="operator">:=</div> <div class="ident">ira_helpers</div><div class="operator">.</div><div class="ident">MustGetMockStorage</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">defer</div> <div class="ident">closer</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">writeReportForCluster</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">mockStorage</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="literal">`{&#34;report&#34;:{}}`</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ReportEmptyRulesParsed</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read org IDs for clusters</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">cn1</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">mockStorage</div><div class="operator">.</div><div class="ident">ReadOrgIDsForClusters</div><div class="operator">(</div><div class="ident">cn1</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>error is expected in this case</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">NotNil</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
     </tbody>
   </table>
 </div>
