@@ -176,7 +176,7 @@ limitations under the License.</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>ReportEndpoint returns report for provided {organization}</p>
+	<td class="doc"><p>ReportEndpoint returns report for provided {organization}, {cluster}, and {user_id}</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">ReportEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;organizations/{org_id}/clusters/{cluster}/users/{user_id}/report&#34;</div><div class="operator"></div>
 </code></pre></td>
@@ -186,6 +186,22 @@ limitations under the License.</p>
 	<td class="doc"><p>RuleEndpoint returns rule report for provided {organization} {cluster} and {rule_id}</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">RuleEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;organizations/{org_id}/clusters/{cluster}/users/{user_id}/rules/{rule_id}&#34;</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ReportForListOfClustersEndpoint returns rule returns reports for provided list of clusters
+Reports that are going to be returned are specified by list of cluster IDs that is part of path</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ReportForListOfClustersEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;organizations/{org_id}/clusters/{cluster_list}/reports&#34;</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ReportForListOfClustersPayloadEndpoint returns the latest reports for the given list of clusters
+Reports that are going to be returned are specified by list of cluster IDs that is part of request body</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ReportForListOfClustersPayloadEndpoint</div> <div class="operator">=</div> <div class="literal">&#34;organizations/{org_id}/clusters/reports&#34;</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
@@ -298,6 +314,8 @@ limitations under the License.</p>
 	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">&#43;</div><div class="ident">DisableRuleForClusterEndpoint</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">disableRuleForCluster</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPut</div><div class="operator">,</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodOptions</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">&#43;</div><div class="ident">EnableRuleForClusterEndpoint</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">enableRuleForCluster</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPut</div><div class="operator">,</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodOptions</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">&#43;</div><div class="ident">DisableRuleFeedbackEndpoint</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">saveDisableFeedback</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPost</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">&#43;</div><div class="ident">ReportForListOfClustersEndpoint</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">reportForListOfClusters</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">router</div><div class="operator">.</div><div class="ident">HandleFunc</div><div class="operator">(</div><div class="ident">apiPrefix</div><div class="operator">&#43;</div><div class="ident">ReportForListOfClustersPayloadEndpoint</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">reportForListOfClustersPayload</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Methods</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodPost</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
