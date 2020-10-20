@@ -163,9 +163,16 @@ limitations under the License.</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>AuthenticationError happens during auth problems, for example malformed token</p>
+	<td class="doc"><p>UnauthorizedError means server can't authorize you, for example the token is missing or malformed</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">AuthenticationError</div> <div class="operator">=</div> <div class="ident">operator_utils_types</div><div class="operator">.</div><div class="ident">AuthenticationError</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">UnauthorizedError</div> <div class="operator">=</div> <div class="ident">operator_utils_types</div><div class="operator">.</div><div class="ident">UnauthorizedError</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ForbiddenError means you don't have permission to do a particular action,</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">ForbiddenError</div> <div class="operator">=</div> <div class="ident">operator_utils_types</div><div class="operator">.</div><div class="ident">ForbiddenError</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>

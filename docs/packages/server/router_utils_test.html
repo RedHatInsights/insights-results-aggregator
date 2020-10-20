@@ -134,6 +134,7 @@ limitations under the License.</p>
 	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">server_test</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;io&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;io/ioutil&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
@@ -146,6 +147,11 @@ limitations under the License.</p>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/gorilla/mux&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/stretchr/testify/assert&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
+<div class="keyword">const</div> <div class="operator">(</div>
+	<div class="ident">cluster1ID</div> <div class="operator">=</div> <div class="literal">&#34;715e10eb-e6ac-49b3-bd72-61734c35b6fb&#34;</div><div class="operator"></div>
+	<div class="ident">cluster2ID</div> <div class="operator">=</div> <div class="literal">&#34;931f1495-7b16-4637-a41e-963e117bfd02&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestGetRouterIntParamMissing</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
@@ -178,15 +184,7 @@ limitations under the License.</p>
 	<div class="ident">request</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadOrganizationID</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;Missing required param from request: organization&#34;</div><div class="operator">)</div><div class="operator"></div>
-<div class="operator">}</div><div class="operator"></div>
-
-<div class="keyword">func</div> <div class="ident">TestReadClusterListFromPathMissing</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
-	<div class="ident">request</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterListFromPath</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadOrganizationID</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">False</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -242,16 +240,16 @@ limitations under the License.</p>
 	<div class="ident">request</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterNames</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;Missing required param from request: clusters&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterNames</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">False</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestReadOrganizationIDsMissing</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">request</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">_</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadOrganizationIDs</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;Missing required param from request: organizations&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">_</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadOrganizationIDs</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">False</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestReadRuleIDMissing</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
@@ -270,6 +268,246 @@ limitations under the License.</p>
 	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">assert</div><div class="operator">.</div><div class="ident">Equal</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="literal">`{&#34;status&#34;:&#34;Missing required param from request: rule_id&#34;}`</div><div class="operator">,</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">TrimSpace</div><div class="operator">(</div><div class="ident">string</div><div class="operator">(</div><div class="ident">body</div><div class="operator">)</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestReadClusterListFromPathMissingClusterList function checks if missing
+cluster list in path is detected and processed correctly by function
+ReadClusterListFromPath.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestReadClusterListFromPathMissingClusterList</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">request</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read list of clusters from path</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterListFromPath</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>missing list means that the read operation should fail</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">False</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestReadClusterListFromPathEmptyClusterList function checks if empty cluster
+list in path is detected and processed correctly by function
+ReadClusterListFromPath.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestReadClusterListFromPathEmptyClusterList</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">request</div> <div class="operator">:=</div> <div class="ident">mustGetRequestWithMuxVars</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="literal">&#34;cluster_list&#34;</div><div class="operator">:</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read list of clusters from path</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterListFromPath</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>empty list means that the read operation should fail</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">False</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestReadClusterListFromPathOneCluster function checks if list with one
+cluster ID is processed correctly by function ReadClusterListFromPath.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestReadClusterListFromPathOneCluster</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">request</div> <div class="operator">:=</div> <div class="ident">mustGetRequestWithMuxVars</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="literal">&#34;cluster_list&#34;</div><div class="operator">:</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%v&#34;</div><div class="operator">,</div> <div class="ident">cluster1ID</div><div class="operator">)</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read list of clusters from path</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">list</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterListFromPath</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>cluster list exists so the read operation should not fail</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">True</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>we expect do get list with one cluster ID</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">ElementsMatch</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">list</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="ident">cluster1ID</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestReadClusterListFromPathTwoClusters function checks if list with two
+cluster IDs is processed correctly by function ReadClusterListFromPath.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestReadClusterListFromPathTwoClusters</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">request</div> <div class="operator">:=</div> <div class="ident">mustGetRequestWithMuxVars</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator">,</div> <div class="keyword">map</div><div class="operator">[</div><div class="ident">string</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="literal">&#34;cluster_list&#34;</div><div class="operator">:</div> <div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;%v,%v&#34;</div><div class="operator">,</div> <div class="ident">cluster1ID</div><div class="operator">,</div> <div class="ident">cluster2ID</div><div class="operator">)</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read list of clusters from path</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">list</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterListFromPath</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>cluster list exists so the read operation should not fail</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">True</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>we expect do get list with two cluster IDs</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">ElementsMatch</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">list</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="ident">cluster1ID</div><div class="operator">,</div> <div class="ident">cluster2ID</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestReadClusterListFromBodyNoJSON function checks if reading list of
+clusters from empty request body is detected properly by function
+ReadClusterListFromBody.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestReadClusterListFromBodyNoJSON</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">request</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div>
+		<div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div>
+		<div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">strings</div><div class="operator">.</div><div class="ident">NewReader</div><div class="operator">(</div><div class="literal">&#34;&#34;</div><div class="operator">)</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read list of clusters from path</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterListFromBody</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>the read should fail because of empty request body</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">False</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestReadClusterListFromBodyCorrectJSON function checks if reading list of
+clusters from correct request body containing JSON data is done correctly by
+function ReadClusterListFromBody.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestReadClusterListFromBodyCorrectJSON</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">request</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div>
+		<div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div>
+		<div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">strings</div><div class="operator">.</div><div class="ident">NewReader</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">`{&#34;clusters&#34;: [&#34;%v&#34;,&#34;%v&#34;]}`</div><div class="operator">,</div> <div class="ident">cluster1ID</div><div class="operator">,</div> <div class="ident">cluster2ID</div><div class="operator">)</div><div class="operator">)</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read list of clusters from path</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">list</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterListFromBody</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>cluster list exists so the call should not fail</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">True</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>we expect do get list with two cluster IDs</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">ElementsMatch</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">list</div><div class="operator">,</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="ident">cluster1ID</div><div class="operator">,</div> <div class="ident">cluster2ID</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>TestReadClusterListFromBodyWrongJSON function checks if reading list of
+clusters from request body with improper format is processed correctly by
+function ReadClusterListFromBody.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">TestReadClusterListFromBodyWrongJSON</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">request</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">http</div><div class="operator">.</div><div class="ident">NewRequest</div><div class="operator">(</div>
+		<div class="ident">http</div><div class="operator">.</div><div class="ident">MethodGet</div><div class="operator">,</div>
+		<div class="literal">&#34;&#34;</div><div class="operator">,</div>
+		<div class="ident">strings</div><div class="operator">.</div><div class="ident">NewReader</div><div class="operator">(</div><div class="literal">&#34;this-is-not-json&#34;</div><div class="operator">)</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
+	<div class="ident">helpers</div><div class="operator">.</div><div class="ident">FailOnError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>try to read list of clusters from path</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">_</div><div class="operator">,</div> <div class="ident">successful</div> <div class="operator">:=</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReadClusterListFromBody</div><div class="operator">(</div><div class="ident">httptest</div><div class="operator">.</div><div class="ident">NewRecorder</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">request</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>the read should fail because of broken JSON</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">assert</div><div class="operator">.</div><div class="ident">False</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">successful</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

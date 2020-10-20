@@ -138,6 +138,7 @@ limitations under the License.
 <div class="keyword">import</div> <div class="operator">(</div>
 	<div class="literal">&#34;encoding/json&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;net/http&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;strconv&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/google/uuid&#34;</div><div class="operator"></div>
@@ -265,7 +266,7 @@ limitations under the License.
 		<div class="ident">setAuthHeaderForOrganization</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">improperOrganization</div><div class="operator">)</div><div class="operator"></div>
 		<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">if</div> <div class="ident">improperOrganization</div> <div class="operator">==</div> <div class="literal">0</div> <div class="operator">{</div>
-			<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">400</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">StatusBadRequest</div><div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
 </code></pre></td>
       </tr>
@@ -273,7 +274,7 @@ limitations under the License.
       <tr class="section">
 	<td class="doc"><p>negative values are not unmarshalled properly</p>
 </td>
-	<td class="code"><pre><code>			<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">403</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>			<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="ident">http</div><div class="operator">.</div><div class="ident">StatusUnauthorized</div><div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 		<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
