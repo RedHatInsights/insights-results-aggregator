@@ -31,7 +31,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-const IncludeTimestamp = false
+const includeTimestamp = false
 
 // validateClusterID function checks if the cluster ID is a valid UUID.
 func validateClusterID(clusterID string) error {
@@ -102,7 +102,7 @@ func fillInGeneratedReports(clusterNames []types.ClusterName, reports map[types.
 
 	// prepare its attributes
 	// TODO: make sure it is really needed
-	if IncludeTimestamp {
+	if includeTimestamp {
 		generatedReports.GeneratedAt = time.Now().UTC().Format(time.RFC3339)
 	}
 	generatedReports.Reports = make(map[types.ClusterName]interface{})
