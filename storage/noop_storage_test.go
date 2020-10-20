@@ -57,4 +57,9 @@ func TestNoopStorage_Methods(t *testing.T) {
 	_, _ = noopStorage.GetTogglesForRules("", nil, "")
 	_, _ = noopStorage.GetUserFeedbackOnRules("", nil, "")
 	_, _ = noopStorage.GetRuleWithContent("", "")
+	_, _ = noopStorage.ReadOrgIDsForClusters([]types.ClusterName{})
+	_, _ = noopStorage.ReadReportsForClusters([]types.ClusterName{})
+	_, _ = noopStorage.ReadSingleRuleTemplateData(0, "", "", "")
+	_, _ = noopStorage.GetUserDisableFeedbackOnRules("", []types.RuleOnReport{}, "")
+	_, _ = noopStorage.DoesClusterExist("")
 }

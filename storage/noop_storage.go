@@ -222,3 +222,14 @@ func (*NoopStorage) GetUserDisableFeedbackOnRules(
 func (*NoopStorage) DoesClusterExist(types.ClusterName) (bool, error) {
 	return false, nil
 }
+
+// ReadOrgIDsForClusters read organization IDs for given list of cluster names.
+func (*NoopStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]types.OrgID, error) {
+	return nil, nil
+}
+
+// ReadReportsForClusters function reads reports for given list of cluster
+// names.
+func (*NoopStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
+	return nil, nil
+}
