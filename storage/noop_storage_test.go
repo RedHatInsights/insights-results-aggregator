@@ -46,6 +46,11 @@ func TestNoopStorage_Methods(t *testing.T) {
 	_ = noopStorage.LoadRuleContent(content.RuleContentDirectory{})
 	_, _ = noopStorage.GetRuleByID("")
 	_, _ = noopStorage.GetOrgIDByClusterID("")
+}
+
+func TestNoopStorage_Methods_Cont(t *testing.T) {
+	noopStorage := storage.NoopStorage{}
+
 	_ = noopStorage.CreateRule(types.Rule{})
 	_ = noopStorage.DeleteRule("")
 	_ = noopStorage.CreateRuleErrorKey(types.RuleErrorKey{})
