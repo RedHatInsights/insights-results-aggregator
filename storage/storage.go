@@ -54,6 +54,10 @@ type Storage interface {
 	ReadReportForCluster(
 		orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error,
 	)
+	ReadReportsForClusters(
+		clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error)
+	ReadOrgIDsForClusters(
+		clusterNames []types.ClusterName) ([]types.OrgID, error)
 	ReadSingleRuleTemplateData(
 		orgID types.OrgID, clusterName types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey,
 	) (interface{}, error)
@@ -377,6 +381,105 @@ func parseRuleRows(rows *sql.Rows) ([]types.RuleOnReport, error) {
 	}
 
 	return report, nil
+}
+
+// constructInClausule is a helper function to construct `in` clausule for SQL
+// statement.
+func constructInClausule(howMany int) string {
+	// construct the `in` clausule in SQL query statement
+	inClausule := "$1"
+	for i := 2; i <= howMany; i++ {
+		inClausule += fmt.Sprintf(",$%d", i)
+	}
+	return inClausule
+}
+
+// argsWithClusterNames is a helper function to construct arguments for SQL
+// statement.
+func argsWithClusterNames(clusterNames []types.ClusterName) []interface{} {
+	// prepare arguments
+	args := make([]interface{}, len(clusterNames))
+
+	for i, clusterName := range clusterNames {
+		args[i] = clusterName
+	}
+	return args
+}
+
+// ReadOrgIDsForClusters read organization IDs for given list of cluster names.
+func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]types.OrgID, error) {
+	// stub for return value
+	ids := make([]types.OrgID, 0)
+
+	// prepare arguments
+	args := argsWithClusterNames(clusterNames)
+
+	// construct the `in` clausule in SQL query statement
+	inClausule := constructInClausule(len(clusterNames))
+	query := "SELECT DISTINCT org_id FROM report WHERE cluster in (" + inClausule + ");"
+
+	// select results from the database
+	rows, err := storage.connection.Query(query, args...)
+	if err != nil {
+		log.Error().Err(err).Msg("query to get org ids")
+		return ids, err
+	}
+
+	// process results returned from database
+	for rows.Next() {
+		var orgID types.OrgID
+
+		err := rows.Scan(&orgID)
+		if err != nil {
+			log.Error().Err(err).Msg("read one org id")
+			return ids, err
+		}
+
+		ids = append(ids, orgID)
+	}
+
+	// everything seems ok -> return ids
+	return ids, nil
+}
+
+// ReadReportsForClusters function reads reports for given list of cluster
+// names.
+func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
+	// stub for return value
+	reports := make(map[types.ClusterName]types.ClusterReport)
+
+	// prepare arguments
+	args := argsWithClusterNames(clusterNames)
+
+	// construct the `in` clausule in SQL query statement
+	inClausule := constructInClausule(len(clusterNames))
+	query := "SELECT cluster, report FROM report WHERE cluster in (" + inClausule + ");"
+
+	// select results from the database
+	rows, err := storage.connection.Query(query, args...)
+	if err != nil {
+		return reports, err
+	}
+
+	// process results returned from database
+	for rows.Next() {
+		// convert into requested type
+		var (
+			clusterName   types.ClusterName
+			clusterReport types.ClusterReport
+		)
+
+		err := rows.Scan(&clusterName, &clusterReport)
+		if err != nil {
+			log.Error().Err(err).Msg("ReadReportsForClusters")
+			return reports, err
+		}
+
+		reports[clusterName] = clusterReport
+	}
+
+	// everything seems ok -> return reports
+	return reports, nil
 }
 
 // ReadReportForCluster reads result (health status) for selected cluster
