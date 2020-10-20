@@ -24,12 +24,19 @@ package server
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
 var (
-	ReadOrganizationID        = readOrganizationID
-	ReadOrganizationIDs       = readOrganizationIDs
-	ReadClusterName           = readClusterName
-	ReadClusterNames          = readClusterNames
-	GetRouterPositiveIntParam = getRouterPositiveIntParam
-	ReadRuleID                = readRuleID
-	ReadClusterListFromPath   = readClusterListFromPath
-	ReadClusterListFromBody   = readClusterListFromBody
+	ReadOrganizationID            = readOrganizationID
+	ReadOrganizationIDs           = readOrganizationIDs
+	ReadClusterName               = readClusterName
+	ReadClusterNames              = readClusterNames
+	GetRouterPositiveIntParam     = getRouterPositiveIntParam
+	ReadRuleID                    = readRuleID
+	ReadClusterListFromPath       = readClusterListFromPath
+	ReadClusterListFromBody       = readClusterListFromBody
+	ValidateClusterID             = validateClusterID
+	ConstructClusterNames         = constructClusterNames
+	SendWrongClusterIDResponse    = sendWrongClusterIDResponse
+	SendWrongClusterOrgIDResponse = sendWrongClusterOrgIDResponse
+	SendDBErrorResponse           = sendDBErrorResponse
+	SendMarshallErrorResponse     = sendMarshallErrorResponse
+	FillInGeneratedReports        = fillInGeneratedReports
 )
