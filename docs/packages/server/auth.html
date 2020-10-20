@@ -221,7 +221,7 @@ limitations under the License.
 		<div class="ident">decoded</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">jwt</div><div class="operator">.</div><div class="ident">DecodeSegment</div><div class="operator">(</div><div class="ident">token</div><div class="operator">)</div> <div class="operator"></div><div class="comment">// Decode token to JSON string</div>
 		<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>                          <div class="comment">// Malformed token, returns with http code 403 as usual</div>
 			<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">malformedTokenMessage</div><div class="operator">)</div><div class="operator"></div>
-			<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">w</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">AuthenticationError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">malformedTokenMessage</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+			<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">w</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">UnauthorizedError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">malformedTokenMessage</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 			<div class="keyword">return</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 
@@ -238,7 +238,7 @@ limitations under the License.
 			<div class="ident">err</div> <div class="operator">=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Unmarshal</div><div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">byte</div><div class="operator">(</div><div class="ident">decoded</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">jwtPayload</div><div class="operator">)</div><div class="operator"></div>
 			<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div> <div class="comment">//Malformed token, returns with http code 403 as usual</div>
 				<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">malformedTokenMessage</div><div class="operator">)</div><div class="operator"></div>
-				<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">w</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">AuthenticationError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">malformedTokenMessage</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+				<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">w</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">UnauthorizedError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">malformedTokenMessage</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 				<div class="keyword">return</div><div class="operator"></div>
 			<div class="operator">}</div><div class="operator"></div>
 </code></pre></td>
@@ -253,7 +253,7 @@ limitations under the License.
 
 			<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div> <div class="comment">//Malformed token, returns with http code 403 as usual</div>
 				<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Err</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msg</div><div class="operator">(</div><div class="ident">malformedTokenMessage</div><div class="operator">)</div><div class="operator"></div>
-				<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">w</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">AuthenticationError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">malformedTokenMessage</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
+				<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">w</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">UnauthorizedError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">malformedTokenMessage</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
 				<div class="keyword">return</div><div class="operator"></div>
 			<div class="operator">}</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
@@ -281,7 +281,8 @@ limitations under the License.
 	<div class="ident">i</div> <div class="operator">:=</div> <div class="ident">request</div><div class="operator">.</div><div class="ident">Context</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Value</div><div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ContextKeyUser</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="keyword">if</div> <div class="ident">i</div> <div class="operator">==</div> <div class="ident">nil</div> <div class="operator">{</div>
-		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">AuthenticationError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="literal">&#34;user id is not provided&#34;</div><div class="operator">}</div><div class="operator"></div>
+		<div class="ident">log</div><div class="operator">.</div><div class="ident">Error</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Msgf</div><div class="operator">(</div><div class="literal">&#34;user id was not found in request&#39;s context&#34;</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">UnauthorizedError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="literal">&#34;user id is not provided&#34;</div><div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">identity</div><div class="operator">,</div> <div class="ident">ok</div> <div class="operator">:=</div> <div class="ident">i</div><div class="operator">.</div><div class="operator">(</div><div class="ident">Identity</div><div class="operator">)</div><div class="operator"></div>
@@ -305,7 +306,7 @@ limitations under the License.
 		<div class="ident">splitted</div> <div class="operator">:=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">Split</div><div class="operator">(</div><div class="ident">tokenHeader</div><div class="operator">,</div> <div class="literal">&#34; &#34;</div><div class="operator">)</div> <div class="operator"></div><div class="comment">//The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement</div>
 		<div class="keyword">if</div> <div class="ident">len</div><div class="operator">(</div><div class="ident">splitted</div><div class="operator">)</div> <div class="operator">!=</div> <div class="literal">2</div> <div class="operator">{</div>
 			<div class="keyword">const</div> <div class="ident">message</div> <div class="operator">=</div> <div class="literal">&#34;Invalid/Malformed auth token&#34;</div><div class="operator"></div>
-			<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">AuthenticationError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">message</div><div class="operator">}</div><div class="operator"></div>
+			<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">UnauthorizedError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">message</div><div class="operator">}</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -319,16 +320,10 @@ limitations under the License.
 	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
 		<div class="ident">tokenHeader</div> <div class="operator">=</div> <div class="ident">r</div><div class="operator">.</div><div class="ident">Header</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="literal">&#34;x-rh-identity&#34;</div><div class="operator">)</div> <div class="operator"></div><div class="comment">//Grab the token from the header</div>
 	<div class="operator">}</div><div class="operator"></div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>Token is missing, SHOULD RETURN with error code 403 Unauthorized - changes in utils necessary
-TODO: Change SendUnauthorized in utils to accept string instead of map interface and change here</p>
-</td>
-	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">tokenHeader</div> <div class="operator">==</div> <div class="literal">&#34;&#34;</div> <div class="operator">{</div>
+
+	<div class="keyword">if</div> <div class="ident">tokenHeader</div> <div class="operator">==</div> <div class="literal">&#34;&#34;</div> <div class="operator">{</div>
 		<div class="keyword">const</div> <div class="ident">message</div> <div class="operator">=</div> <div class="literal">&#34;Missing auth token&#34;</div><div class="operator"></div>
-		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">AuthenticationError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">message</div><div class="operator">}</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="literal">&#34;&#34;</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">UnauthorizedError</div><div class="operator">{</div><div class="ident">ErrString</div><div class="operator">:</div> <div class="ident">message</div><div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="keyword">return</div> <div class="ident">tokenHeader</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
