@@ -515,6 +515,27 @@ limitations under the License.</p>
 </code></pre></td>
       </tr>
       
+      <tr class="section">
+	<td class="doc"><p>ReadOrgIDsForClusters read organization IDs for given list of cluster names.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">ReadOrgIDsForClusters</div><div class="operator">(</div><div class="ident">clusterNames</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">(</div><div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>ReadReportsForClusters function reads reports for given list of cluster
+names.</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">ReadReportsForClusters</div><div class="operator">(</div><div class="ident">clusterNames</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">(</div><div class="keyword">map</div><div class="operator">[</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
     </tbody>
   </table>
 </div>
