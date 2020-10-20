@@ -33,10 +33,16 @@ const (
 	DeleteClustersEndpoint = "clusters/{clusters}"
 	// OrganizationsEndpoint returns all organizations
 	OrganizationsEndpoint = "organizations"
-	// ReportEndpoint returns report for provided {organization}
+	// ReportEndpoint returns report for provided {organization}, {cluster}, and {user_id}
 	ReportEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/report"
 	// RuleEndpoint returns rule report for provided {organization} {cluster} and {rule_id}
 	RuleEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/rules/{rule_id}"
+	// ReportForListOfClustersEndpoint returns rule returns reports for provided list of clusters
+	// Reports that are going to be returned are specified by list of cluster IDs that is part of path
+	ReportForListOfClustersEndpoint = "organizations/{org_id}/clusters/{cluster_list}/reports"
+	// ReportForListOfClustersPayloadEndpoint returns the latest reports for the given list of clusters
+	// Reports that are going to be returned are specified by list of cluster IDs that is part of request body
+	ReportForListOfClustersPayloadEndpoint = "organizations/{org_id}/clusters/reports"
 	// LikeRuleEndpoint likes rule with {rule_id} for {cluster} using current user(from auth header)
 	LikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/users/{user_id}/like"
 	// DislikeRuleEndpoint dislikes rule with {rule_id} for {cluster} using current user(from auth header)
@@ -89,6 +95,8 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+DisableRuleFeedbackEndpoint, server.saveDisableFeedback).Methods(http.MethodPost)
+	router.HandleFunc(apiPrefix+ReportForListOfClustersEndpoint, server.reportForListOfClusters).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+ReportForListOfClustersPayloadEndpoint, server.reportForListOfClustersPayload).Methods(http.MethodPost)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
