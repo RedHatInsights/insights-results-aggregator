@@ -153,7 +153,7 @@ func TestReadReportsForClustersKnownCluster(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body: `{
-			"clusters": null,"errors": ["84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc"],"reports": {},"generated_at": ""
+			"clusters": null,"errors": ["84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc"],"reports": {},"generated_at": "","status": "OK"
 		}`,
 	})
 }
@@ -168,7 +168,7 @@ func TestReadReportsForClustersTwoClusters(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body: `{
-			"clusters": null,"errors": ["84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc","84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc"],"reports": {},"generated_at": ""
+			"clusters": null,"errors": ["84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc","84f7eedc-0dd8-49cd-9d4d-f6646df3a5bc"],"reports": {},"generated_at": "","status": "OK"
 		}`,
 	})
 }
