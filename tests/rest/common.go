@@ -38,6 +38,9 @@ const (
 	// ContentTypeText represents MIME type for plain text format
 	ContentTypeText = "text/plain; charset=utf-8"
 
+	// unknownOrganizationID represents ID of inknown organization
+	unknownOrganizationID = "100000"
+
 	knownClusterForOrganization1   = "00000000-0000-0000-0000-000000000000"
 	unknownClusterForOrganization1 = "00000000-0000-0000-0000-000000000001"
 )
