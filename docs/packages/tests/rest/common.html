@@ -172,6 +172,14 @@ limitations under the License.
 </td>
 	<td class="code"><pre><code>	<div class="ident">ContentTypeText</div> <div class="operator">=</div> <div class="literal">&#34;text/plain; charset=utf-8&#34;</div><div class="operator"></div>
 
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>unknownOrganizationID represents ID of inknown organization</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">unknownOrganizationID</div> <div class="operator">=</div> <div class="literal">&#34;100000&#34;</div><div class="operator"></div>
+
 	<div class="ident">knownClusterForOrganization1</div>   <div class="operator">=</div> <div class="literal">&#34;00000000-0000-0000-0000-000000000000&#34;</div><div class="operator"></div>
 	<div class="ident">unknownClusterForOrganization1</div> <div class="operator">=</div> <div class="literal">&#34;00000000-0000-0000-0000-000000000001&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
@@ -315,6 +323,18 @@ limitations under the License.
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkOkStatusResponse</div><div class="operator">(</div><div class="ident">f</div> <div class="operator">*</div><div class="ident">frisby</div><div class="operator">.</div><div class="ident">Frisby</div><div class="operator">,</div> <div class="ident">response</div> <div class="ident">ClustersResponse</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">if</div> <div class="ident">response</div><div class="operator">.</div><div class="ident">Status</div> <div class="operator">!=</div> <div class="literal">&#34;ok&#34;</div> <div class="operator">{</div>
 		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;Expected status is &#39;ok&#39;, but got &#39;%s&#39; instead&#34;</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkErrorStatusResponse tests whether the response (JSON) contains status attribute not set to 'ok'</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkErrorStatusResponse</div><div class="operator">(</div><div class="ident">f</div> <div class="operator">*</div><div class="ident">frisby</div><div class="operator">.</div><div class="ident">Frisby</div><div class="operator">,</div> <div class="ident">response</div> <div class="ident">StatusOnlyResponse</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">response</div><div class="operator">.</div><div class="ident">Status</div> <div class="operator">==</div> <div class="literal">&#34;ok&#34;</div> <div class="operator">{</div>
+		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;Expected error status, but got &#39;%s&#39; instead&#34;</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 

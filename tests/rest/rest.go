@@ -83,6 +83,11 @@ func ReportsTests() {
 	checkReportEndpointForUnknownOrganizationAndUnknownCluster()
 	checkReportEndpointForImproperOrganization()
 	checkReportEndpointWrongMethods()
+	checkReportEndpointForKnownOrganizationAndKnownClusterUnauthorizedCase()
+	checkReportEndpointForKnownOrganizationAndUnknownClusterUnauthorizedCase()
+	checkReportEndpointForUnknownOrganizationAndKnownClusterUnauthorizedCase()
+	checkReportEndpointForUnknownOrganizationAndUnknownClusterUnauthorizedCase()
+	checkReportEndpointForImproperOrganizationUnauthorizedCase()
 	reproducerForIssue384()
 }
 
