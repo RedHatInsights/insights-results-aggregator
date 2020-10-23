@@ -123,3 +123,10 @@ func checkOkStatusResponse(f *frisby.Frisby, response ClustersResponse) {
 		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", response.Status))
 	}
 }
+
+// checkErrorStatusResponse tests whether the response (JSON) contains status attribute not set to 'ok'
+func checkErrorStatusResponse(f *frisby.Frisby, response StatusOnlyResponse) {
+	if response.Status == "ok" {
+		f.AddError(fmt.Sprintf("Expected error status, but got '%s' instead", response.Status))
+	}
+}
