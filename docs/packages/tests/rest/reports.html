@@ -136,8 +136,6 @@ limitations under the License.
 <div class="keyword">package</div> <div class="ident">tests</div><div class="operator"></div>
 
 <div class="keyword">import</div> <div class="operator">(</div>
-	<div class="literal">&#34;fmt&#34;</div><div class="operator"></div>
-
 	<div class="ident">httputils</div> <div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/http&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator-data/testdata&#34;</div><div class="operator"></div>
 	<div class="literal">&#34;github.com/verdverm/frisby&#34;</div><div class="operator"></div>
@@ -146,7 +144,14 @@ limitations under the License.
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
-<div class="keyword">func</div> <div class="ident">constructURLForReportForOrgCluster</div><div class="operator">(</div><div class="ident">organizationID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">clusterID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>constructURLForReportForOrgCluster function constructs an URL to access the
+endpoint to retrieve results for given cluster from selected organization</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">constructURLForReportForOrgCluster</div><div class="operator">(</div><div class="ident">organizationID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">clusterID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">httputils</div><div class="operator">.</div><div class="ident">MakeURLToEndpoint</div><div class="operator">(</div><div class="ident">apiURL</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportEndpoint</div><div class="operator">,</div> <div class="ident">organizationID</div><div class="operator">,</div> <div class="ident">clusterID</div><div class="operator">,</div> <div class="ident">userID</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -245,9 +250,7 @@ limitations under the License.
 	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">statusResponse</div> <div class="operator">:=</div> <div class="ident">readStatusFromResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
-	<div class="keyword">if</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div> <div class="operator">==</div> <div class="literal">&#34;ok&#34;</div> <div class="operator">{</div>
-		<div class="ident">f</div><div class="operator">.</div><div class="ident">AddError</div><div class="operator">(</div><div class="ident">fmt</div><div class="operator">.</div><div class="ident">Sprintf</div><div class="operator">(</div><div class="literal">&#34;Expected error status, but got &#39;%s&#39; instead&#34;</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">.</div><div class="ident">Status</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div><div class="operator"></div>
+	<div class="ident">checkErrorStatusResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -261,6 +264,106 @@ limitations under the License.
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkReportEndpointWrongMethods</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgCluster</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkGetEndpointByOtherMethods</div><div class="operator">(</div><div class="ident">url</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkReportEndpointForKnownOrganizationAndKnownClusterUnauthorizedCase check if the endpoint to return report works as expected
+This test variant does not sent authorization header</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkReportEndpointForKnownOrganizationAndKnownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgCluster</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and cluster ID&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">statusResponse</div> <div class="operator">:=</div> <div class="ident">readStatusFromResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkErrorStatusResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkReportEndpointForKnownOrganizationAndUnknownClusterUnauthorizedCase check if the endpoint to return report works as expected
+This test variant does not sent authorization header</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkReportEndpointForKnownOrganizationAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgCluster</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">,</div> <div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and non-existing cluster ID&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">statusResponse</div> <div class="operator">:=</div> <div class="ident">readStatusFromResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkErrorStatusResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkReportEndpointForUnknownOrganizationAndKnownClusterUnauthorizedCase check if the endpoint to return report works as expected
+This test variant does not sent authorization header</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkReportEndpointForUnknownOrganizationAndKnownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgCluster</div><div class="operator">(</div><div class="literal">&#34;100000&#34;</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for non-existing organization and non-existing cluster ID&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">statusResponse</div> <div class="operator">:=</div> <div class="ident">readStatusFromResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkErrorStatusResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkReportEndpointForUnknownOrganizationAndUnknownClusterUnauthorizedCase check if the endpoint to return report works as expected
+This test variant does not sent authorization header</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkReportEndpointForUnknownOrganizationAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgCluster</div><div class="operator">(</div><div class="literal">&#34;100000&#34;</div><div class="operator">,</div> <div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for non-existing organization and non-existing cluster ID&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">statusResponse</div> <div class="operator">:=</div> <div class="ident">readStatusFromResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkErrorStatusResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkReportEndpointForImproperOrganizationUnauthorizedCase check if the endpoint to return report works as expected
+This test variant does not sent authorization header</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkReportEndpointForImproperOrganizationUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgCluster</div><div class="operator">(</div><div class="literal">&#34;foobar&#34;</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for improper organization&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">statusResponse</div> <div class="operator">:=</div> <div class="ident">readStatusFromResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkErrorStatusResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">statusResponse</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
