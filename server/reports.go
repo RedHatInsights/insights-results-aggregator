@@ -126,6 +126,10 @@ func fillInGeneratedReports(clusterNames []types.ClusterName, reports map[types.
 			generatedReports.Errors = append(generatedReports.Errors, clusterName)
 		}
 	}
+
+	// it must be ok now
+	generatedReports.Status = "OK"
+
 	return generatedReports
 }
 
