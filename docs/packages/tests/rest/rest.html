@@ -166,6 +166,7 @@ limitations under the License.
 	<div class="ident">OrganizationsTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">ClustersTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">ReportsTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">MultipleReportsTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">VoteTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
@@ -262,12 +263,55 @@ implementation of these tests is stored in metrics.go</p>
 	<div class="ident">checkReportEndpointForUnknownOrganizationAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkReportEndpointForImproperOrganization</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkReportEndpointWrongMethods</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">checkReportEndpointForKnownOrganizationAndKnownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>unauthorized access</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkReportEndpointForKnownOrganizationAndKnownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkReportEndpointForKnownOrganizationAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkReportEndpointForUnknownOrganizationAndKnownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkReportEndpointForUnknownOrganizationAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkReportEndpointForImproperOrganizationUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">reproducerForIssue384</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>reproducers</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">reproducerForIssue384</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MultipleReportsTests implements tests for REST API endpoints apiPrefix+&quot;organizations/{organization}/clusters/reports&quot;</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MultipleReportsTests</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd1KnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownClusters</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownClusters</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAndKnownAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForUnknownOrganizationAnd1KnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>unauthorized access</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkMultipleReportsForKnownOrganizationAnd1KnownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownClustersUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownClustersUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

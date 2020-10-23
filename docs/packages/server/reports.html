@@ -150,7 +150,7 @@ limitations under the License.
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
-<div class="keyword">const</div> <div class="ident">IncludeTimestamp</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
+<div class="keyword">const</div> <div class="ident">includeTimestamp</div> <div class="operator">=</div> <div class="ident">false</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -271,7 +271,7 @@ array of strings</p>
 	<td class="doc"><p>prepare its attributes
 TODO: make sure it is really needed</p>
 </td>
-	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">IncludeTimestamp</div> <div class="operator">{</div>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">includeTimestamp</div> <div class="operator">{</div>
 		<div class="ident">generatedReports</div><div class="operator">.</div><div class="ident">GeneratedAt</div> <div class="operator">=</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">UTC</div><div class="operator">(</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Format</div><div class="operator">(</div><div class="ident">time</div><div class="operator">.</div><div class="ident">RFC3339</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 	<div class="ident">generatedReports</div><div class="operator">.</div><div class="ident">Reports</div> <div class="operator">=</div> <div class="ident">make</div><div class="operator">(</div><div class="keyword">map</div><div class="operator">[</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">]</div><div class="keyword">interface</div><div class="operator">{</div><div class="operator">}</div><div class="operator">)</div><div class="operator"></div>
@@ -310,6 +310,15 @@ TODO: make sure it is really needed</p>
 			<div class="ident">generatedReports</div><div class="operator">.</div><div class="ident">Errors</div> <div class="operator">=</div> <div class="ident">append</div><div class="operator">(</div><div class="ident">generatedReports</div><div class="operator">.</div><div class="ident">Errors</div><div class="operator">,</div> <div class="ident">clusterName</div><div class="operator">)</div><div class="operator"></div>
 		<div class="operator">}</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>it must be ok now</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">generatedReports</div><div class="operator">.</div><div class="ident">Status</div> <div class="operator">=</div> <div class="literal">&#34;OK&#34;</div><div class="operator"></div>
+
 	<div class="keyword">return</div> <div class="ident">generatedReports</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
