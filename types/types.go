@@ -113,4 +113,5 @@ type ClusterReports struct {
 	Errors      []types.ClusterName               `json:"errors"`
 	Reports     map[types.ClusterName]interface{} `json:"reports"`
 	GeneratedAt string                            `json:"generated_at"`
+	Status      string                            `json:"status"`
 }
