@@ -15,15 +15,22 @@
 """
 Simple checker of all JSONs in the given directory (usually repository).
 
-usage: json_check.py [-h] [-v]
+Usage:
+-----
+    json_check.py [-h] [-v] [-n] -d DIRECTORY
 
-optional arguments:
-  -h, --help     show this help message and exit
-  -v, --verbose  make it verbose
-  -n, --no-colors  disable color output
-  -d DIRECTORY, --directory DIRECTORY
-                        directory with JSON files to check
+Optional arguments:
+------------------
+    -h, --help       show this help message and exit
+    -v, --verbose    make it verbose
+    -n, --no-colors  disable color output
+    -d DIRECTORY--directory DIRECTORY
+                     directory with JSON files to check
 """
+
+# Link to generated documentation for this script:
+# -----------------------------------------------
+# <https://redhatinsights.github.io/insights-results-aggregator/json_check.html>
 
 from pathlib import Path
 from json import load
