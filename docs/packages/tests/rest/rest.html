@@ -167,6 +167,7 @@ limitations under the License.
 	<div class="ident">ClustersTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">ReportsTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">MultipleReportsTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">MultipleReportsTestsUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">VoteTests</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
@@ -287,7 +288,8 @@ implementation of these tests is stored in metrics.go</p>
       </tr>
       
       <tr class="section">
-	<td class="doc"><p>MultipleReportsTests implements tests for REST API endpoints apiPrefix+&quot;organizations/{organization}/clusters/reports&quot;</p>
+	<td class="doc"><p>MultipleReportsTests function implements tests for REST API endpoints
+apiPrefix+&quot;organizations/{organization}/clusters/{clusterList}/reports&quot;</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MultipleReportsTests</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="ident">checkMultipleReportsForKnownOrganizationAnd1KnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
@@ -298,6 +300,7 @@ implementation of these tests is stored in metrics.go</p>
 	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkMultipleReportsForUnknownOrganizationAnd1KnownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForUnknownOrganizationAndUnknownCluster</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 </code></pre></td>
       </tr>
       
@@ -312,6 +315,42 @@ implementation of these tests is stored in metrics.go</p>
 	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForUnknownOrganizationAndUnknownClusterUnauthorizedCase</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>MultipleReportsTestsUsingPostMethod function implements tests for REST API
+endpoints apiPrefix+&quot;organizations/{organization}/clusters/reports&quot; in a
+variant that accepts cluster list in request payload</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">MultipleReportsTestsUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd1KnownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownClustersUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownClustersUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForUnknownOrganizationAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>unauthorized access</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">checkMultipleReportsForKnownOrganizationAnd1KnownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownClustersUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownClustersUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMultipleReportsForUnknownOrganizationAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
