@@ -38,6 +38,7 @@ func ServerTests() {
 	ClustersTests()
 	ReportsTests()
 	MultipleReportsTests()
+	MultipleReportsTestsUsingPostMethod()
 	VoteTests()
 
 	// tests for OpenAPI specification that is accessible via its endpoint as well
@@ -94,7 +95,8 @@ func ReportsTests() {
 	reproducerForIssue384()
 }
 
-// MultipleReportsTests implements tests for REST API endpoints apiPrefix+"organizations/{organization}/clusters/reports"
+// MultipleReportsTests function implements tests for REST API endpoints
+// apiPrefix+"organizations/{organization}/clusters/{clusterList}/reports"
 func MultipleReportsTests() {
 	checkMultipleReportsForKnownOrganizationAnd1KnownCluster()
 	checkMultipleReportsForKnownOrganizationAnd2KnownClusters()
@@ -104,6 +106,7 @@ func MultipleReportsTests() {
 	checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownCluster()
 	checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownCluster()
 	checkMultipleReportsForUnknownOrganizationAnd1KnownCluster()
+	checkMultipleReportsForUnknownOrganizationAndUnknownCluster()
 	// unauthorized access
 	checkMultipleReportsForKnownOrganizationAnd1KnownClusterUnauthorizedCase()
 	checkMultipleReportsForKnownOrganizationAnd2KnownClustersUnauthorizedCase()
@@ -113,6 +116,32 @@ func MultipleReportsTests() {
 	checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUnauthorizedCase()
 	checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUnauthorizedCase()
 	checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUnauthorizedCase()
+	checkMultipleReportsForUnknownOrganizationAndUnknownClusterUnauthorizedCase()
+}
+
+// MultipleReportsTestsUsingPostMethod function implements tests for REST API
+// endpoints apiPrefix+"organizations/{organization}/clusters/reports" in a
+// variant that accepts cluster list in request payload
+func MultipleReportsTestsUsingPostMethod() {
+	checkMultipleReportsForKnownOrganizationAnd1KnownClusterUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAnd2KnownClustersUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAnd3KnownClustersUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAndUnknownClusterUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUsingPostMethod()
+	checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUsingPostMethod()
+	checkMultipleReportsForUnknownOrganizationAndUnknownClusterUsingPostMethod()
+	// unauthorized access
+	checkMultipleReportsForKnownOrganizationAnd1KnownClusterUnauthorizedCaseUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAnd2KnownClustersUnauthorizedCaseUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAnd3KnownClustersUnauthorizedCaseUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAndUnknownClusterUnauthorizedCaseUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUnauthorizedCaseUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUnauthorizedCaseUsingPostMethod()
+	checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUnauthorizedCaseUsingPostMethod()
+	checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUnauthorizedCaseUsingPostMethod()
+	checkMultipleReportsForUnknownOrganizationAndUnknownClusterUnauthorizedCaseUsingPostMethod()
 }
 
 // VoteTests implements tests for REST API endpoints for voting about rules
