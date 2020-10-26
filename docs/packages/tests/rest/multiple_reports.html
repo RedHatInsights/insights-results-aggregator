@@ -141,13 +141,7 @@ limitations under the License.
 	<div class="literal">&#34;strings&#34;</div><div class="operator"></div>
 
 	<div class="ident">httputils</div> <div class="literal">&#34;github.com/RedHatInsights/insights-operator-utils/http&#34;</div><div class="operator"></div>
-</code></pre></td>
-      </tr>
-      
-      <tr class="section">
-	<td class="doc"><p>&quot;github.com/RedHatInsights/insights-results-aggregator-data/testdata&quot;</p>
-</td>
-	<td class="code"><pre><code>	<div class="literal">&#34;github.com/verdverm/frisby&#34;</div><div class="operator"></div>
+	<div class="literal">&#34;github.com/verdverm/frisby&#34;</div><div class="operator"></div>
 
 	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/server&#34;</div><div class="operator"></div>
 </code></pre></td>
@@ -177,12 +171,72 @@ results for multiple clusters together with overall status</p>
       </tr>
       
       <tr class="section">
+	<td class="doc"><p>ClusterListInRequest represents request body containing list of clusters</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">type</div> <div class="ident">ClusterListInRequest</div> <div class="keyword">struct</div> <div class="operator">{</div>
+	<div class="ident">Clusters</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div> <div class="literal">`json:&#34;clusters&#34;`</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
 	<td class="doc"><p>constructURLForReportForOrgClusters function construct an URL to access the
 endpoint to retrieve results for given list of clusters</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">constructURLForReportForOrgClusters</div><div class="operator">(</div><div class="ident">organizationID</div> <div class="ident">string</div><div class="operator">,</div> <div class="ident">clusterIDs</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
 	<div class="ident">cls</div> <div class="operator">:=</div> <div class="ident">strings</div><div class="operator">.</div><div class="ident">Join</div><div class="operator">(</div><div class="ident">clusterIDs</div><div class="operator">,</div> <div class="literal">&#34;,&#34;</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">return</div> <div class="ident">httputils</div><div class="operator">.</div><div class="ident">MakeURLToEndpoint</div><div class="operator">(</div><div class="ident">apiURL</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportForListOfClustersEndpoint</div><div class="operator">,</div> <div class="ident">organizationID</div><div class="operator">,</div> <div class="ident">cls</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>constructURLForReportForOrgClustersPostMethod function construct an URL to
+access the endpoint to retrieve results for given list of clusters using
+POST method</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="ident">organizationID</div> <div class="ident">string</div><div class="operator">)</div> <div class="ident">string</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">httputils</div><div class="operator">.</div><div class="ident">MakeURLToEndpoint</div><div class="operator">(</div><div class="ident">apiURL</div><div class="operator">,</div> <div class="ident">server</div><div class="operator">.</div><div class="ident">ReportForListOfClustersPayloadEndpoint</div><div class="operator">,</div> <div class="ident">organizationID</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>sendClusterListInPayload function sends the cluster list in request payload
+to server</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div> <div class="operator">*</div><div class="ident">frisby</div><div class="operator">.</div><div class="ident">Frisby</div><div class="operator">,</div> <div class="ident">clusterList</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">,</div> <div class="ident">addAuthHeader</div> <div class="ident">bool</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">var</div> <div class="ident">payload</div> <div class="ident">ClusterListInRequest</div> <div class="operator">=</div> <div class="ident">ClusterListInRequest</div><div class="operator">{</div>
+		<div class="ident">Clusters</div><div class="operator">:</div> <div class="ident">clusterList</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>create payload</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">SetJson</div><div class="operator">(</div><div class="ident">payload</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>set auth header if required</p>
+</td>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">addAuthHeader</div> <div class="operator">{</div>
+		<div class="ident">setAuthHeader</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>and perform send</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -784,7 +838,7 @@ contains expected error</p>
       <tr class="section">
 	<td class="doc"><p>check the response from server</p>
 </td>
-	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">400</div><div class="operator">)</div><div class="operator"></div>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
@@ -1083,6 +1137,730 @@ contains expected error</p>
 	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClusters</div><div class="operator">(</div><div class="ident">unknownOrganizationID</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for unknown organization and unknown cluster ID without authorization&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Get</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">f</div><div class="operator">.</div><div class="ident">Send</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd1KnownClusterUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd1KnownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and one cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the payload returned from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">readMultipleReportsResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfClusters</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfErrors</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfReports</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectOkStatus</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd2KnownClustersUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownClustersUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster2ForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and two cluster IDs (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the payload returned from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">readMultipleReportsResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfClusters</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">2</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfErrors</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfReports</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">2</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster2ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster2ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectOkStatus</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd3KnownClustersUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownClustersUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster2ForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster3ForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and three cluster IDs (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the payload returned from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">readMultipleReportsResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfClusters</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">3</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfErrors</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfReports</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">3</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster2ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster3ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster2ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster3ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectOkStatus</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAndUnknownClusterUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and one unknown cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the payload returned from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">readMultipleReportsResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfClusters</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfErrors</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfReports</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">0</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectErrorClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">unknownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectOkStatus</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and one known and one unknown cluster IDs (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the payload returned from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">readMultipleReportsResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfClusters</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfErrors</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfReports</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectErrorClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">unknownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectOkStatus</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster2ForOrganization1</div><div class="operator">,</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and two knowns and one unknown cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the payload returned from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">readMultipleReportsResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfClusters</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">2</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfErrors</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfReports</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">2</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster2ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster2ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectErrorClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">unknownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectOkStatus</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster2ForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster3ForOrganization1</div><div class="operator">,</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and three knowns and one unknown cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">200</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the payload returned from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">response</div> <div class="operator">:=</div> <div class="ident">readMultipleReportsResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfClusters</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">3</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfErrors</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectNumberOfReports</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="literal">3</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster2ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster3ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster2ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownCluster3ForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectReportInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">knownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectErrorClusterInResponse</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">,</div> <div class="ident">unknownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">expectOkStatus</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">response</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="ident">unknownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for unknown organization and known cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">400</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForUnknownOrganizationAndUnknownClusterUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForUnknownOrganizationAndUnknownClusterUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="ident">unknownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for unknown organization and unknown cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">true</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">400</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd1KnownClusterUnauthorizedCaseUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd1KnownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and one cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd2KnownClustersUnauthorizedCaseUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownClustersUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster2ForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and two cluster IDs (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd3KnownClustersUnauthorizedCaseUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownClustersUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster2ForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster3ForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and three cluster IDs (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAndUnknownClusterUnauthorizedCaseUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and one unknown cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUnauthorizedCaseUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and one known and one unknown cluster IDs (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUnauthorizedCaseUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster2ForOrganization1</div><div class="operator">,</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and two knowns and one unknown cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUnauthorizedCaseUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster2ForOrganization1</div><div class="operator">,</div>
+		<div class="ident">knownCluster3ForOrganization1</div><div class="operator">,</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="literal">&#34;1&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for existing organization and three knowns and one unknown cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUnauthorizedCaseUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">knownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="ident">unknownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for unknown organization and known cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>check the response from server</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectStatus</div><div class="operator">(</div><div class="literal">401</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">ExpectHeader</div><div class="operator">(</div><div class="ident">contentTypeHeader</div><div class="operator">,</div> <div class="ident">ContentTypeJSON</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="ident">f</div><div class="operator">.</div><div class="ident">PrintReport</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMultipleReportsForUnknownOrganizationAndUnknownClusterUnauthorizedCaseUsingPostMethod check the endpoint that returns multiple results</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMultipleReportsForUnknownOrganizationAndUnknownClusterUnauthorizedCaseUsingPostMethod</div><div class="operator">(</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="ident">clusterList</div> <div class="operator">:=</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div>
+		<div class="ident">unknownClusterForOrganization1</div><div class="operator">,</div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>send request to the endpoint</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">url</div> <div class="operator">:=</div> <div class="ident">constructURLForReportForOrgClustersPostMethod</div><div class="operator">(</div><div class="ident">unknownClusterForOrganization1</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">f</div> <div class="operator">:=</div> <div class="ident">frisby</div><div class="operator">.</div><div class="ident">Create</div><div class="operator">(</div><div class="literal">&#34;Check the endpoint to return report for unknown organization and unknown cluster ID (POST variant)&#34;</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Post</div><div class="operator">(</div><div class="ident">url</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">sendClusterListInPayload</div><div class="operator">(</div><div class="ident">f</div><div class="operator">,</div> <div class="ident">clusterList</div><div class="operator">,</div> <div class="ident">false</div><div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
