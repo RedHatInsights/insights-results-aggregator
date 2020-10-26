@@ -19,6 +19,7 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	httputils "github.com/RedHatInsights/insights-operator-utils/http"
@@ -186,7 +187,7 @@ func checkMultipleReportsForKnownOrganizationAnd1KnownCluster() {
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -215,7 +216,7 @@ func checkMultipleReportsForKnownOrganizationAnd2KnownClusters() {
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -247,7 +248,7 @@ func checkMultipleReportsForKnownOrganizationAnd3KnownClusters() {
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -279,7 +280,7 @@ func checkMultipleReportsForKnownOrganizationAndUnknownCluster() {
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -307,7 +308,7 @@ func checkMultipleReportsForKnownOrganizationAndKnownAndUnknownCluster() {
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -338,7 +339,7 @@ func checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownCluster() {
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -372,7 +373,7 @@ func checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownCluster() {
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -405,7 +406,7 @@ func checkMultipleReportsForUnknownOrganizationAnd1KnownCluster() {
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(400)
+	f.ExpectStatus(http.StatusBadRequest)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -424,7 +425,7 @@ func checkMultipleReportsForUnknownOrganizationAndUnknownCluster() {
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -442,7 +443,7 @@ func checkMultipleReportsForKnownOrganizationAnd1KnownClusterUnauthorizedCase() 
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -461,7 +462,7 @@ func checkMultipleReportsForKnownOrganizationAnd2KnownClustersUnauthorizedCase()
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -481,7 +482,7 @@ func checkMultipleReportsForKnownOrganizationAnd3KnownClustersUnauthorizedCase()
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -499,7 +500,7 @@ func checkMultipleReportsForKnownOrganizationAndUnknownClusterUnauthorizedCase()
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -518,7 +519,7 @@ func checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUnauthoriz
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -538,7 +539,7 @@ func checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUnauthori
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -559,7 +560,7 @@ func checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUnauthori
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -577,7 +578,7 @@ func checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUnauthorizedCase(
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -595,7 +596,7 @@ func checkMultipleReportsForUnknownOrganizationAndUnknownClusterUnauthorizedCase
 	f.Send()
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -613,7 +614,7 @@ func checkMultipleReportsForKnownOrganizationAnd1KnownClusterUsingPostMethod() {
 	sendClusterListInPayload(f, clusterList, true)
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -641,7 +642,7 @@ func checkMultipleReportsForKnownOrganizationAnd2KnownClustersUsingPostMethod() 
 	sendClusterListInPayload(f, clusterList, true)
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -672,7 +673,7 @@ func checkMultipleReportsForKnownOrganizationAnd3KnownClustersUsingPostMethod() 
 	sendClusterListInPayload(f, clusterList, true)
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -703,7 +704,7 @@ func checkMultipleReportsForKnownOrganizationAndUnknownClusterUsingPostMethod() 
 	sendClusterListInPayload(f, clusterList, true)
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -730,7 +731,7 @@ func checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUsingPostM
 	sendClusterListInPayload(f, clusterList, true)
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -760,7 +761,7 @@ func checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUsingPost
 	sendClusterListInPayload(f, clusterList, true)
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -793,7 +794,7 @@ func checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUsingPost
 	sendClusterListInPayload(f, clusterList, true)
 
 	// check the response from server
-	f.ExpectStatus(200)
+	f.ExpectStatus(http.StatusOK)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	// check the payload returned from server
@@ -825,7 +826,7 @@ func checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUsingPostMethod()
 	sendClusterListInPayload(f, clusterList, true)
 
 	// check the response from server
-	f.ExpectStatus(400)
+	f.ExpectStatus(http.StatusBadRequest)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -843,7 +844,7 @@ func checkMultipleReportsForUnknownOrganizationAndUnknownClusterUsingPostMethod(
 	sendClusterListInPayload(f, clusterList, true)
 
 	// check the response from server
-	f.ExpectStatus(400)
+	f.ExpectStatus(http.StatusBadRequest)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -861,7 +862,7 @@ func checkMultipleReportsForKnownOrganizationAnd1KnownClusterUnauthorizedCaseUsi
 	sendClusterListInPayload(f, clusterList, false)
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -880,7 +881,7 @@ func checkMultipleReportsForKnownOrganizationAnd2KnownClustersUnauthorizedCaseUs
 	sendClusterListInPayload(f, clusterList, false)
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -900,7 +901,7 @@ func checkMultipleReportsForKnownOrganizationAnd3KnownClustersUnauthorizedCaseUs
 	sendClusterListInPayload(f, clusterList, false)
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -918,7 +919,7 @@ func checkMultipleReportsForKnownOrganizationAndUnknownClusterUnauthorizedCaseUs
 	sendClusterListInPayload(f, clusterList, false)
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -937,7 +938,7 @@ func checkMultipleReportsForKnownOrganizationAndKnownAndUnknownClusterUnauthoriz
 	sendClusterListInPayload(f, clusterList, false)
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -957,7 +958,7 @@ func checkMultipleReportsForKnownOrganizationAnd2KnownAndUnknownClusterUnauthori
 	sendClusterListInPayload(f, clusterList, false)
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -978,7 +979,7 @@ func checkMultipleReportsForKnownOrganizationAnd3KnownAndUnknownClusterUnauthori
 	sendClusterListInPayload(f, clusterList, false)
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -996,7 +997,7 @@ func checkMultipleReportsForUnknownOrganizationAnd1KnownClusterUnauthorizedCaseU
 	sendClusterListInPayload(f, clusterList, false)
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
@@ -1014,7 +1015,7 @@ func checkMultipleReportsForUnknownOrganizationAndUnknownClusterUnauthorizedCase
 	sendClusterListInPayload(f, clusterList, false)
 
 	// check the response from server
-	f.ExpectStatus(401)
+	f.ExpectStatus(http.StatusUnauthorized)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	f.PrintReport()
