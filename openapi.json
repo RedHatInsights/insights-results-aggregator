@@ -106,7 +106,7 @@
     "/organizations/{orgId}/clusters": {
       "get": {
         "summary": "Returns a list of clusters associated with the specified organization ID.",
-        "description": "Returns a list of clusters associated with the specified unique organization ID.",
+        "description": "Returns a list of clusters, ie. cluster IDs, that are associated with the specified organization ID. Please note that there is 1:N organization to cluster mapping, ie. one cluster belongs exactly to one organization.",
         "operationId": "getClustersForOrganization",
         "parameters": [
           {
@@ -174,7 +174,8 @@
             "name": "clusterId",
             "in": "path",
             "required": true,
-            "description": "ID of the cluster which must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266`",
+            "description": "ID of the cluster which must conform to UUID format.",
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266",
             "schema": {
               "type": "string",
               "minLength": 36,
@@ -924,19 +925,20 @@
             "name": "clusterId",
             "in": "path",
             "required": true,
-            "description": "ID of the cluster which must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266`",
+            "description": "ID of the cluster which must conform to UUID format",
             "schema": {
               "type": "string",
               "minLength": 36,
               "maxLength": 36,
               "format": "uuid"
-            }
+            },
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266"
           },
           {
             "name": "ruleId",
             "in": "path",
             "required": true,
-            "description": "ID of a rule. An example: `some.python.module`",
+            "description": "ID of a rule",
             "schema": {
               "type": "string"
             }
@@ -948,7 +950,8 @@
             "description": "Numeric ID of the user. An example: `42`",
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "some.python.module"
           }
         ],
         "responses": {
@@ -1052,8 +1055,9 @@
           {
             "name": "clusterId",
             "in": "path",
+            "description": "ID of the cluster which must conform to UUID format",
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266",
             "required": true,
-            "description": "ID of the cluster which must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266`",
             "schema": {
               "type": "string",
               "minLength": 36,
@@ -1065,10 +1069,11 @@
             "name": "ruleId",
             "in": "path",
             "required": true,
-            "description": "ID of a rule. An example: `some.python.module`",
+            "description": "ID of a rule",
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "some.python.module"
           },
           {
             "name": "userId",
