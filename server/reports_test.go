@@ -196,9 +196,9 @@ func TestReadReportsForClustersPayloadPositiveOrgID(t *testing.T) {
 		Endpoint:     server.ReportForListOfClustersPayloadEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
-		StatusCode: http.StatusInternalServerError,
+		StatusCode: http.StatusBadRequest,
 		Body: `{
-			"status":"Internal Server Error"
+			"status":"client didn't provide request body"
 		}`,
 	})
 }

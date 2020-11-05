@@ -105,6 +105,13 @@ func readClusterListFromPath(writer http.ResponseWriter, request *http.Request) 
 func readClusterListFromBody(writer http.ResponseWriter, request *http.Request) ([]string, bool) {
 	var clusterList ClusterList
 
+	// check if there's any body provided in the request sent by client
+	if request.ContentLength <= 0 {
+		err := &NoBodyError{}
+		handleServerError(writer, err)
+		return []string{}, false
+	}
+
 	// try to read cluster list from request parameter
 	err := json.NewDecoder(request.Body).Decode(&clusterList)
 	if err != nil {
