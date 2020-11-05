@@ -268,6 +268,18 @@ if it's not possible, it writes http error to the writer and returns false</p>
       </tr>
       
       <tr class="section">
+	<td class="doc"><p>check if there's any body provided in the request sent by client</p>
+</td>
+	<td class="code"><pre><code>	<div class="keyword">if</div> <div class="ident">request</div><div class="operator">.</div><div class="ident">ContentLength</div> <div class="operator">&lt;=</div> <div class="literal">0</div> <div class="operator">{</div>
+		<div class="ident">err</div> <div class="operator">:=</div> <div class="operator">&amp;</div><div class="ident">NoBodyError</div><div class="operator">{</div><div class="operator">}</div><div class="operator"></div>
+		<div class="ident">handleServerError</div><div class="operator">(</div><div class="ident">writer</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="operator">[</div><div class="operator">]</div><div class="ident">string</div><div class="operator">{</div><div class="operator">}</div><div class="operator">,</div> <div class="ident">false</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
 	<td class="doc"><p>try to read cluster list from request parameter</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">NewDecoder</div><div class="operator">(</div><div class="ident">request</div><div class="operator">.</div><div class="ident">Body</div><div class="operator">)</div><div class="operator">.</div><div class="ident">Decode</div><div class="operator">(</div><div class="operator">&amp;</div><div class="ident">clusterList</div><div class="operator">)</div><div class="operator"></div>
