@@ -82,6 +82,7 @@ func New(config Configuration, storage storage.Storage) *HTTPServer {
 	}
 }
 
+// mainEndpoint method handles requests to the main endpoint.
 func (server *HTTPServer) mainEndpoint(writer http.ResponseWriter, _ *http.Request) {
 	err := responses.SendOK(writer, responses.BuildOkResponse())
 	if err != nil {
