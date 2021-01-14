@@ -1,5 +1,6 @@
 #!/bin/bash
-# Copyright 2020 Red Hat, Inc
+
+# Copyright 2020, 2021  Red Hat, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+BLUE=$(tput setaf 4)
+RED_BG=$(tput setab 1)
+GREEN_BG=$(tput setab 2)
+NC=$(tput sgr0) # No Color
+
+echo -e "${BLUE}Detecting ineffectual assignments in Go code${NC}"
 
 if ! [ -x "$(command -v ineffassign)" ]
 then
@@ -20,4 +27,11 @@ then
     GO111MODULE=off go get github.com/gordonklaus/ineffassign
 fi
 
-ineffassign .
+if ! ineffassign ./...
+then
+    echo -e "${RED_BG}[FAIL]${NC} Code with ineffectual assignments detected"
+    exit 1
+else
+    echo -e "${GREEN_BG}[OK]${NC} No ineffectual assignments has been detected"
+    exit 0
+fi
