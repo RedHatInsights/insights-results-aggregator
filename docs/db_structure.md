@@ -18,6 +18,9 @@ table (i.e. number of records) scales linearly with the number of clusters,
 because only latest report for given cluster is stored (it is guarantied by DB
 constraints). That table has defined compound key `org_id+cluster`,
 additionally `cluster` name needs to be unique across all organizations.
+Additionally `kafka_offset` is used to speedup consuming messages from Kafka
+topic in case the offset is lost due to issues in Kafka, Kafka library, or
+the service itself (messages with lower offset are skipped):
 
 ```sql
 CREATE TABLE report (
@@ -36,7 +39,7 @@ CREATE TABLE report (
 These tables represent the content for Insights rules to be displayed by OCM.
 The table `rule` represents more general information about the rule, whereas the `rule_error_key`
 contains information about the specific type of error which occurred. The combination of these two
-create a unique rule.
+create an unique rule.
 Very trivialized example could be:
 
 * rule "REQUIREMENTS_CHECK"
