@@ -34,3 +34,13 @@ Optionally, an organization allowlist can be enabled by the configuration variab
 specified by the config variable `org_allowlist`) and allows report processing only for these
 organizations. This feature is disabled by default, and might be removed altogether in the near
 future.
+
+---
+**NOTE**
+
+Detailed information about the exact format of consumed data from Kafka topic is
+available at
+
+https://redhatinsights.github.io/insights-data-schemas/ccx_ocp_results_topic.html
+
+---
