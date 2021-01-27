@@ -116,8 +116,8 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	tRead := time.Now()
 
 	if message.Version != currentSchemaVersion {
-		const cause = "Received data with unexpected version."
-		logMessageWarning(consumer, msg, message, cause, err)
+		const warning = "Received data with unexpected version."
+		logMessageWarning(consumer, msg, message, warning)
 	}
 
 	if consumer.Configuration.OrgAllowlistEnabled {
