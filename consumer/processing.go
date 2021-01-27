@@ -37,8 +37,9 @@ type incomingMessage struct {
 	ClusterName  *types.ClusterName `json:"ClusterName"`
 	Report       *Report            `json:"Report"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
-	LastChecked string          `json:"LastChecked"`
-	RequestID   types.RequestID `json:"RequestId"`
+	LastChecked string              `json:"LastChecked"`
+	Version     types.SchemaVersion `json:"Version"`
+	RequestID   types.RequestID     `json:"RequestId"`
 	ParsedHits  []types.ReportItem
 }
 
@@ -113,6 +114,11 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 
 	logMessageInfo(consumer, msg, message, "Read")
 	tRead := time.Now()
+
+	if message.Version != currentSchemaVersion {
+		const cause = "Received data with unexpected version."
+		logMessageWarning(consumer, msg, message, cause, err)
+	}
 
 	if consumer.Configuration.OrgAllowlistEnabled {
 		logMessageInfo(consumer, msg, message, "Checking organization ID against allow list")
