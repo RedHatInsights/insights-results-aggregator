@@ -35,5 +35,4 @@ type Configuration struct {
 	Enabled             bool          `mapstructure:"enabled" toml:"enabled"`
 	OrgAllowlist        mapset.Set    `mapstructure:"org_allowlist_file" toml:"org_allowlist_file"`
 	OrgAllowlistEnabled bool          `mapstructure:"enable_org_allowlist" toml:"enable_org_allowlist"`
-	//TODO: Allow version checks via config?
 }
