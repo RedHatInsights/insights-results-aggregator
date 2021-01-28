@@ -551,7 +551,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithExpectedSchemaVersion(t *testin
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report":` + testdata.ConsumerReport + `,
 		"LastChecked": "` + time.Now().Add(-24*time.Hour).Format(time.RFC3339) + `",
-		"Version": ` + fmt.Sprintf("%d", consumer.CurrentSchemaVersion)+`
+		"Version": ` + fmt.Sprintf("%d", consumer.CurrentSchemaVersion) + `
 	}`
 
 	err := consumerProcessMessage(mockConsumer, message)
