@@ -554,7 +554,6 @@ func TestKafkaConsumer_ProcessMessage_MessageWithExpectedSchemaVersion(t *testin
 		"Version": ` + fmt.Sprintf("%d", consumer.CurrentSchemaVersion)+`
 	}`
 
-	fmt.Println(message)
 	err := consumerProcessMessage(mockConsumer, message)
 	helpers.FailOnError(t, err)
 	assert.NotContains(t, buf.String(), "\"level\":\"warn\"")
