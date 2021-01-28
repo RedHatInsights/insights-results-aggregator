@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
- Copyright 2020 Red Hat, Inc
+ Copyright 2021 Red Hat, Inc
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -133,6 +133,10 @@ limitations under the License.</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">package</div> <div class="ident">consumer</div><div class="operator"></div>
 
+<div class="keyword">import</div> <div class="operator">(</div>
+	<div class="literal">&#34;github.com/RedHatInsights/insights-results-aggregator/types&#34;</div><div class="operator"></div>
+<div class="operator">)</div><div class="operator"></div>
+
 <div class="keyword">const</div> <div class="operator">(</div>
 </code></pre></td>
       </tr>
@@ -183,6 +187,20 @@ limitations under the License.</p>
 	<td class="doc"><p>key for duration message type used in structured log messages</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">durationKey</div> <div class="operator">=</div> <div class="literal">&#34;duration&#34;</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>key for data schema version message type used in structured log messages</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">versionKey</div> <div class="operator">=</div> <div class="literal">&#34;version&#34;</div><div class="operator"></div>
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>currently supported data schema version</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">CurrentSchemaVersion</div> <div class="operator">=</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">SchemaVersion</div><div class="operator">(</div><div class="literal">1</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 </code></pre></td>
