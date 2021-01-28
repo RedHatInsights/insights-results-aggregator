@@ -28,6 +28,7 @@ func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMes
 		Str(topicKey, consumer.Configuration.Topic).
 		Int(organizationKey, int(*parsedMessage.Organization)).
 		Str(clusterKey, string(*parsedMessage.ClusterName)).
+		Int(versionKey, int(parsedMessage.Version)).
 		Msg(event)
 }
 
@@ -45,7 +46,19 @@ func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMe
 		Str(topicKey, consumer.Configuration.Topic).
 		Int(organizationKey, int(*parsedMessage.Organization)).
 		Str(clusterKey, string(*parsedMessage.ClusterName)).
+		Int(versionKey, int(parsedMessage.Version)).
 		Err(err).
+		Msg(event)
+}
+
+func logMessageWarning(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
+	log.Warn().
+		Int(offsetKey, int(originalMessage.Offset)).
+		Int(partitionKey, int(originalMessage.Partition)).
+		Str(topicKey, consumer.Configuration.Topic).
+		Int(organizationKey, int(*parsedMessage.Organization)).
+		Str(clusterKey, string(*parsedMessage.ClusterName)).
+		Int(versionKey, int(parsedMessage.Version)).
 		Msg(event)
 }
 

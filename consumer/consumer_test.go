@@ -516,6 +516,50 @@ func TestKafkaConsumer_ProcessMessage_MoreRecentReportAlreadyExists(t *testing.T
 	assert.Contains(t, buf.String(), "Skipping because a more recent report already exists for this cluster")
 }
 
+func TestKafkaConsumer_ProcessMessage_MessageWithUnexpectedSchemaVersion(t *testing.T) {
+	buf := new(bytes.Buffer)
+	zerolog_log.Logger = zerolog.New(buf)
+
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mockConsumer := &consumer.KafkaConsumer{
+		Configuration: wrongBrokerCfg,
+		Storage:       mockStorage,
+	}
+
+	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	helpers.FailOnError(t, err)
+	assert.Contains(t, buf.String(), "\"level\":\"warn\"")
+	assert.Contains(t, buf.String(), "Received data with unexpected version")
+}
+
+func TestKafkaConsumer_ProcessMessage_MessageWithExpectedSchemaVersion(t *testing.T) {
+	buf := new(bytes.Buffer)
+	zerolog_log.Logger = zerolog.New(buf)
+
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mockConsumer := &consumer.KafkaConsumer{
+		Configuration: wrongBrokerCfg,
+		Storage:       mockStorage,
+	}
+
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report":` + testdata.ConsumerReport + `,
+		"LastChecked": "` + time.Now().Add(-24*time.Hour).Format(time.RFC3339) + `",
+		"Version": ` + fmt.Sprintf("%d", consumer.CurrentSchemaVersion) + `
+	}`
+
+	err := consumerProcessMessage(mockConsumer, message)
+	helpers.FailOnError(t, err)
+	assert.NotContains(t, buf.String(), "\"level\":\"warn\"")
+	assert.NotContains(t, buf.String(), "Received data with unexpected version")
+}
+
 func TestKafkaConsumer_ConsumeClaim(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()

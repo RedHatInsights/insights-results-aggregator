@@ -115,3 +115,6 @@ type ClusterReports struct {
 	GeneratedAt string                            `json:"generated_at"`
 	Status      string                            `json:"status"`
 }
+
+//SchemaVersion represents the current version of data schema
+type SchemaVersion = types.SchemaVersion

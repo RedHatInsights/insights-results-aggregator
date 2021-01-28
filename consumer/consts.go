@@ -14,6 +14,10 @@
 
 package consumer
 
+import (
+	"github.com/RedHatInsights/insights-results-aggregator/types"
+)
+
 const (
 	// key for topic name used in structured log messages
 	topicKey = "topic"
@@ -29,4 +33,8 @@ const (
 	clusterKey = "cluster"
 	// key for duration message type used in structured log messages
 	durationKey = "duration"
+	// key for data schema version message type used in structured log messages
+	versionKey = "version"
+	// CurrentSchemaVersion represents the currently supported data schema version
+	CurrentSchemaVersion = types.SchemaVersion(1)
 )

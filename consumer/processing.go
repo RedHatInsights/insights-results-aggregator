@@ -37,8 +37,9 @@ type incomingMessage struct {
 	ClusterName  *types.ClusterName `json:"ClusterName"`
 	Report       *Report            `json:"Report"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
-	LastChecked string          `json:"LastChecked"`
-	RequestID   types.RequestID `json:"RequestId"`
+	LastChecked string              `json:"LastChecked"`
+	Version     types.SchemaVersion `json:"Version"`
+	RequestID   types.RequestID     `json:"RequestId"`
 	ParsedHits  []types.ReportItem
 }
 
@@ -100,6 +101,32 @@ func (consumer KafkaConsumer) updatePayloadTracker(requestID types.RequestID, ti
 	}
 }
 
+// checkMessageVersion - verifies incoming data's version is the expected one
+func checkMessageVersion(consumer *KafkaConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) {
+	if message.Version != CurrentSchemaVersion {
+		const warning = "Received data with unexpected version."
+		logMessageWarning(consumer, msg, *message, warning)
+	}
+}
+
+// checkMessageOrgInAllowList - checks up incoming data's OrganizationID against allowed orgs list
+func checkMessageOrgInAllowList(consumer *KafkaConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) (bool, string) {
+	if consumer.Configuration.OrgAllowlistEnabled {
+		logMessageInfo(consumer, msg, *message, "Checking organization ID against allow list")
+
+		if ok := organizationAllowed(consumer, *message.Organization); !ok {
+			const cause = "organization ID is not in allow list"
+			return false, cause
+		}
+
+		logMessageInfo(consumer, msg, *message, "Organization is in allow list")
+
+	} else {
+		logMessageInfo(consumer, msg, *message, "Organization allow listing disabled")
+	}
+	return true, ""
+}
+
 // ProcessMessage processes an incoming message
 func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error) {
 	tStart := time.Now()
@@ -114,21 +141,13 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	logMessageInfo(consumer, msg, message, "Read")
 	tRead := time.Now()
 
-	if consumer.Configuration.OrgAllowlistEnabled {
-		logMessageInfo(consumer, msg, message, "Checking organization ID against allow list")
+	checkMessageVersion(consumer, &message, msg)
 
-		if ok := organizationAllowed(consumer, *message.Organization); !ok {
-			const cause = "organization ID is not in allow list"
-			// now we have all required information about the incoming message,
-			// the right time to record structured log entry
-			logMessageError(consumer, msg, message, cause, err)
-			return message.RequestID, errors.New(cause)
-		}
-
-		logMessageInfo(consumer, msg, message, "Organization is in allow list")
-	} else {
-		logMessageInfo(consumer, msg, message, "Organization allow listing disabled")
+	if ok, cause := checkMessageOrgInAllowList(consumer, &message, msg); !ok {
+		logMessageError(consumer, msg, message, cause, err)
+		return message.RequestID, errors.New(cause)
 	}
+
 	tAllowlisted := time.Now()
 
 	reportAsStr, err := json.Marshal(*message.Report)
