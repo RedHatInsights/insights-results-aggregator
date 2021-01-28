@@ -101,6 +101,14 @@ func (consumer KafkaConsumer) updatePayloadTracker(requestID types.RequestID, ti
 	}
 }
 
+// checkMessageVersion - stateless function that verifies incoming data's version
+func checkMessageVersion(consumer *KafkaConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) {
+	if message.Version != CurrentSchemaVersion {
+		const warning = "Received data with unexpected version."
+		logMessageWarning(consumer, msg, *message, warning)
+	}
+}
+
 // ProcessMessage processes an incoming message
 func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error) {
 	tStart := time.Now()
@@ -115,10 +123,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	logMessageInfo(consumer, msg, message, "Read")
 	tRead := time.Now()
 
-	if message.Version != CurrentSchemaVersion {
-		const warning = "Received data with unexpected version."
-		logMessageWarning(consumer, msg, message, warning)
-	}
+	checkMessageVersion(consumer, &message, msg)
 
 	if consumer.Configuration.OrgAllowlistEnabled {
 		logMessageInfo(consumer, msg, message, "Checking organization ID against allow list")
