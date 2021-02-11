@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-operator-utils/tests/saramahelpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set"
@@ -568,8 +569,8 @@ func TestKafkaConsumer_ConsumeClaim(t *testing.T) {
 		Storage: mockStorage,
 	}
 
-	mockConsumerGroupSession := &ira_helpers.MockConsumerGroupSession{}
-	mockConsumerGroupClaim := ira_helpers.NewMockConsumerGroupClaim(nil)
+	mockConsumerGroupSession := &saramahelpers.MockConsumerGroupSession{}
+	mockConsumerGroupClaim := saramahelpers.NewMockConsumerGroupClaim(nil)
 
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
 	helpers.FailOnError(t, err)
@@ -586,8 +587,8 @@ func TestKafkaConsumer_ConsumeClaim_DBError(t *testing.T) {
 		Storage: mockStorage,
 	}
 
-	mockConsumerGroupSession := &ira_helpers.MockConsumerGroupSession{}
-	mockConsumerGroupClaim := ira_helpers.NewMockConsumerGroupClaim(nil)
+	mockConsumerGroupSession := &saramahelpers.MockConsumerGroupSession{}
+	mockConsumerGroupClaim := saramahelpers.NewMockConsumerGroupClaim(nil)
 
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
 	helpers.FailOnError(t, err)
@@ -603,9 +604,9 @@ func TestKafkaConsumer_ConsumeClaim_OKMessage(t *testing.T) {
 		Storage: mockStorage,
 	}
 
-	mockConsumerGroupSession := &ira_helpers.MockConsumerGroupSession{}
-	mockConsumerGroupClaim := ira_helpers.NewMockConsumerGroupClaim([]*sarama.ConsumerMessage{
-		ira_helpers.StringToSaramaConsumerMessage(testdata.ConsumerMessage),
+	mockConsumerGroupSession := &saramahelpers.MockConsumerGroupSession{}
+	mockConsumerGroupClaim := saramahelpers.NewMockConsumerGroupClaim([]*sarama.ConsumerMessage{
+		saramahelpers.StringToSaramaConsumerMessage(testdata.ConsumerMessage),
 	})
 
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
