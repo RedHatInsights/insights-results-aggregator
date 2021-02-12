@@ -129,7 +129,7 @@ func readRuleIDWithErrorKey(writer http.ResponseWriter, request *http.Request) (
 		const message = "unable to get rule id"
 		log.Error().Err(err).Msg(message)
 		handleServerError(writer, err)
-		return types.RuleID(0), types.ErrorKey(0), false
+		return types.RuleID("0"), types.ErrorKey("0"), false
 	}
 
 	splitedRuleID := strings.Split(string(ruleIDWithErrorKey), "|")
@@ -142,7 +142,7 @@ func readRuleIDWithErrorKey(writer http.ResponseWriter, request *http.Request) (
 			ParamValue: ruleIDWithErrorKey,
 			ErrString:  err.Error(),
 		})
-		return types.RuleID(0), types.ErrorKey(0), false
+		return types.RuleID("0"), types.ErrorKey("0"), false
 	}
 
 	IDValidator := regexp.MustCompile(`^[a-zA-Z_0-9.]+$`)
@@ -158,7 +158,7 @@ func readRuleIDWithErrorKey(writer http.ResponseWriter, request *http.Request) (
 			ParamValue: ruleIDWithErrorKey,
 			ErrString:  err.Error(),
 		})
-		return types.RuleID(0), types.ErrorKey(0), false
+		return types.RuleID("0"), types.ErrorKey("0"), false
 	}
 
 	return types.RuleID(splitedRuleID[0]), types.ErrorKey(splitedRuleID[1]), true
