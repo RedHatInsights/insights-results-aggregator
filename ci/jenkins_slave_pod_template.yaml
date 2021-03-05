@@ -58,7 +58,7 @@ spec:
         limits:
           cpu: 300m
           memory: 512Mi
-    - image: quay.io/redhatqe/go-toolset-custom:1.13
+    - image: quay.io/redhatqe/go-toolset-custom:1.14
       name: builder
       tty: True
       env:
