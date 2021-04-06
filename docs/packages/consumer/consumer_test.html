@@ -118,7 +118,7 @@
       <tr class="section">
 	<td class="doc"></td>
 	<td class="code"><pre><code><div class="comment">/*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
 you may not use this file except in compliance with the License.
@@ -170,6 +170,14 @@ limitations under the License.
 </td>
 	<td class="code"><pre><code>	<div class="ident">testCaseTimeLimit</div> <div class="operator">=</div> <div class="literal">60</div> <div class="operator">*</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Second</div><div class="operator"></div>
 	<div class="ident">saramaLogPrefix</div>   <div class="operator">=</div> <div class="literal">&#34;[sarama]&#34;</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>message to be checked</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">organizationIDNotInAllowList</div> <div class="operator">=</div> <div class="literal">&#34;organization ID is not in allow list&#34;</div><div class="operator"></div>
 <div class="operator">)</div><div class="operator"></div>
 
 <div class="keyword">var</div> <div class="operator">(</div>
@@ -585,7 +593,7 @@ assert.EqualError(t, err, &quot;kafka server: Unexpected (unknown?) server error
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;organization ID is not in allow list&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="ident">organizationIDNotInAllowList</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
@@ -605,7 +613,7 @@ assert.EqualError(t, err, &quot;kafka server: Unexpected (unknown?) server error
 	<div class="operator">}</div><div class="operator"></div>
 
 	<div class="ident">err</div> <div class="operator">:=</div> <div class="ident">consumerProcessMessage</div><div class="operator">(</div><div class="ident">mockConsumer</div><div class="operator">,</div> <div class="ident">testdata</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="literal">&#34;organization ID is not in allow list&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">assert</div><div class="operator">.</div><div class="ident">EqualError</div><div class="operator">(</div><div class="ident">t</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">,</div> <div class="ident">organizationIDNotInAllowList</div><div class="operator">)</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 <div class="keyword">func</div> <div class="ident">TestKafkaConsumer_ProcessMessage_MessageFromTheFuture</div><div class="operator">(</div><div class="ident">t</div> <div class="operator">*</div><div class="ident">testing</div><div class="operator">.</div><div class="ident">T</div><div class="operator">)</div> <div class="operator">{</div>
