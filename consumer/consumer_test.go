@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -46,6 +46,9 @@ const (
 	// time limit for *some* tests which can stuck in forever loop
 	testCaseTimeLimit = 60 * time.Second
 	saramaLogPrefix   = "[sarama]"
+
+	// message to be checked
+	organizationIDNotInAllowList = "organization ID is not in allow list"
 )
 
 var (
@@ -434,7 +437,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 	}
 
 	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
-	assert.EqualError(t, err, "organization ID is not in allow list")
+	assert.EqualError(t, err, organizationIDNotInAllowList)
 }
 
 func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testing.T) {
@@ -454,7 +457,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testi
 	}
 
 	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
-	assert.EqualError(t, err, "organization ID is not in allow list")
+	assert.EqualError(t, err, organizationIDNotInAllowList)
 }
 
 func TestKafkaConsumer_ProcessMessage_MessageFromTheFuture(t *testing.T) {
