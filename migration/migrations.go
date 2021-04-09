@@ -30,4 +30,5 @@ var migrations = []Migration{
 	mig0011RemoveFKAndContentTables,
 	mig0012CreateClusterUserRuleDisableFeedback,
 	mig0013AddRuleHitTable,
+	mig0014ModifyClusterRuleToggle,
 }

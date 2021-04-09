@@ -46,6 +46,7 @@ const (
 	ruleErrorKeyTable            = "rule_error_key"
 	clusterRuleUserFeedbackTable = "cluster_rule_user_feedback"
 	clusterReportTable           = "report"
+	clusterRuleToggleTable       = "cluster_rule_toggle"
 )
 
 // GetMaxVersion returns the highest available migration version.
