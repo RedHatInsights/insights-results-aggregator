@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
- Copyright 2020 Red Hat, Inc
+ Copyright 2021 Red Hat, Inc
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -419,7 +419,7 @@ limitations under the License.</p>
 	<td class="doc"><p>ToggleRuleForCluster noop</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">ToggleRuleForCluster</div><div class="operator">(</div>
-	<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div> <div class="ident">RuleToggle</div><div class="operator">,</div>
+	<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">RuleToggle</div><div class="operator">,</div>
 <div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -431,8 +431,7 @@ limitations under the License.</p>
 	<td class="doc"><p>DeleteFromRuleClusterToggle noop</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">DeleteFromRuleClusterToggle</div><div class="operator">(</div>
-	<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
-<div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
+	<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
@@ -445,7 +444,6 @@ limitations under the License.</p>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">GetFromClusterRuleToggle</div><div class="operator">(</div>
 	<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 	<div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
-	<div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 <div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">ClusterRuleToggle</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
@@ -459,7 +457,6 @@ limitations under the License.</p>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">NoopStorage</div><div class="operator">)</div> <div class="ident">GetTogglesForRules</div><div class="operator">(</div>
 	<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 	<div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">,</div>
-	<div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 <div class="operator">)</div> <div class="operator">(</div><div class="keyword">map</div><div class="operator">[</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">]</div><div class="ident">bool</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">nil</div><div class="operator">,</div> <div class="ident">nil</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>

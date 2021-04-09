@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
- Copyright 2020 Red Hat, Inc
+ Copyright 2021 Red Hat, Inc
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -231,23 +231,19 @@ DataSource - specification of data source. The content of this parameter depends
 	<div class="ident">ToggleRuleForCluster</div><div class="operator">(</div>
 		<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 		<div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
-		<div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 		<div class="ident">ruleToggle</div> <div class="ident">RuleToggle</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
 	<div class="ident">GetFromClusterRuleToggle</div><div class="operator">(</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
-		<div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="operator">(</div><div class="operator">*</div><div class="ident">ClusterRuleToggle</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">GetTogglesForRules</div><div class="operator">(</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 		<div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleOnReport</div><div class="operator">,</div>
-		<div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="operator">(</div><div class="keyword">map</div><div class="operator">[</div><div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">]</div><div class="ident">bool</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">DeleteFromRuleClusterToggle</div><div class="operator">(</div>
 		<div class="ident">clusterID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
 		<div class="ident">ruleID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">RuleID</div><div class="operator">,</div>
-		<div class="ident">userID</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">UserID</div><div class="operator">,</div>
 	<div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
 	<div class="ident">GetOrgIDByClusterID</div><div class="operator">(</div><div class="ident">cluster</div> <div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">types</div><div class="operator">.</div><div class="ident">OrgID</div><div class="operator">,</div> <div class="ident">error</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">WriteConsumerError</div><div class="operator">(</div><div class="ident">msg</div> <div class="operator">*</div><div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">,</div> <div class="ident">consumerErr</div> <div class="ident">error</div><div class="operator">)</div> <div class="ident">error</div><div class="operator"></div>
@@ -660,7 +656,16 @@ statement.</p>
 	<td class="doc"><p>construct the <code>in</code> clausule in SQL query statement</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">inClausule</div> <div class="operator">:=</div> <div class="ident">constructInClausule</div><div class="operator">(</div><div class="ident">len</div><div class="operator">(</div><div class="ident">clusterNames</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">query</div> <div class="operator">:=</div> <div class="literal">&#34;SELECT DISTINCT org_id FROM report WHERE cluster in (&#34;</div> <div class="operator">&#43;</div> <div class="ident">inClausule</div> <div class="operator">&#43;</div> <div class="literal">&#34;);&#34;</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>disable &quot;G202 (CWE-89): SQL string concatenation&quot;</p>
+
+<h1>nosec G202</h1>
+</td>
+	<td class="code"><pre><code>	<div class="ident">query</div> <div class="operator">:=</div> <div class="literal">&#34;SELECT DISTINCT org_id FROM report WHERE cluster in (&#34;</div> <div class="operator">&#43;</div> <div class="ident">inClausule</div> <div class="operator">&#43;</div> <div class="literal">&#34;);&#34;</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
@@ -732,7 +737,16 @@ names.</p>
 	<td class="doc"><p>construct the <code>in</code> clausule in SQL query statement</p>
 </td>
 	<td class="code"><pre><code>	<div class="ident">inClausule</div> <div class="operator">:=</div> <div class="ident">constructInClausule</div><div class="operator">(</div><div class="ident">len</div><div class="operator">(</div><div class="ident">clusterNames</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
-	<div class="ident">query</div> <div class="operator">:=</div> <div class="literal">&#34;SELECT cluster, report FROM report WHERE cluster in (&#34;</div> <div class="operator">&#43;</div> <div class="ident">inClausule</div> <div class="operator">&#43;</div> <div class="literal">&#34;);&#34;</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>disable &quot;G202 (CWE-89): SQL string concatenation&quot;</p>
+
+<h1>nosec G202</h1>
+</td>
+	<td class="code"><pre><code>	<div class="ident">query</div> <div class="operator">:=</div> <div class="literal">&#34;SELECT cluster, report FROM report WHERE cluster in (&#34;</div> <div class="operator">&#43;</div> <div class="ident">inClausule</div> <div class="operator">&#43;</div> <div class="literal">&#34;);&#34;</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
