@@ -102,23 +102,19 @@ type Storage interface {
 	ToggleRuleForCluster(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
-		userID types.UserID,
 		ruleToggle RuleToggle,
 	) error
 	GetFromClusterRuleToggle(
 		types.ClusterName,
 		types.RuleID,
-		types.UserID,
 	) (*ClusterRuleToggle, error)
 	GetTogglesForRules(
 		types.ClusterName,
 		[]types.RuleOnReport,
-		types.UserID,
 	) (map[types.RuleID]bool, error)
 	DeleteFromRuleClusterToggle(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
-		userID types.UserID,
 	) error
 	GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error)
 	WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error
@@ -416,6 +412,9 @@ func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName)
 
 	// construct the `in` clausule in SQL query statement
 	inClausule := constructInClausule(len(clusterNames))
+
+	// disable "G202 (CWE-89): SQL string concatenation"
+	// #nosec G202
 	query := "SELECT DISTINCT org_id FROM report WHERE cluster in (" + inClausule + ");"
 
 	// select results from the database
@@ -453,6 +452,9 @@ func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName
 
 	// construct the `in` clausule in SQL query statement
 	inClausule := constructInClausule(len(clusterNames))
+
+	// disable "G202 (CWE-89): SQL string concatenation"
+	// #nosec G202
 	query := "SELECT cluster, report FROM report WHERE cluster in (" + inClausule + ");"
 
 	// select results from the database

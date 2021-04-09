@@ -37,7 +37,7 @@ func (server *HTTPServer) enableRuleForCluster(writer http.ResponseWriter, reque
 
 // toggleRuleForCluster contains shared functionality for enable/disable
 func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, request *http.Request, toggleRule storage.RuleToggle) {
-	clusterID, ruleID, userID, successful := server.readClusterRuleUserParams(writer, request)
+	clusterID, ruleID, successful := server.readClusterRuleParams(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
@@ -49,7 +49,7 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	err := server.Storage.ToggleRuleForCluster(clusterID, ruleID, userID, toggleRule)
+	err := server.Storage.ToggleRuleForCluster(clusterID, ruleID, toggleRule)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to toggle rule for selected cluster")
 		handleServerError(writer, err)
@@ -68,7 +68,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 	userID types.UserID,
 	rules []types.RuleOnReport,
 ) ([]types.RuleOnReport, error) {
-	togglesRules, err := server.Storage.GetTogglesForRules(clusterName, rules, userID)
+	togglesRules, err := server.Storage.GetTogglesForRules(clusterName, rules)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to retrieve disabled status from database")
 		return nil, err
@@ -148,7 +148,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 	userID types.UserID,
 	rule types.RuleOnReport,
 ) types.RuleOnReport {
-	ruleToggle, err := server.Storage.GetFromClusterRuleToggle(clusterName, rule.Module, userID)
+	ruleToggle, err := server.Storage.GetFromClusterRuleToggle(clusterName, rule.Module)
 	if err != nil {
 		log.Error().Err(err).Msg("Rule toggle was not found")
 		rule.Disabled = false
