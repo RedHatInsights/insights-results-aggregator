@@ -596,49 +596,23 @@ func TestRuleToggle(t *testing.T) {
 			helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
-				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
 			})
 
-			toggledRule, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+			toggledRule, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID)
 			helpers.FailOnError(t, err)
 
 			assert.Equal(t, testdata.ClusterName, toggledRule.ClusterID)
 			assert.Equal(t, testdata.Rule1ID, toggledRule.RuleID)
-			assert.Equal(t, testdata.UserID, toggledRule.UserID)
 			assert.Equal(t, expectedState, toggledRule.Disabled)
 			if toggledRule.Disabled == storage.RuleToggleDisable {
 				assert.Equal(t, sql.NullTime{}, toggledRule.EnabledAt)
 			} else {
 				assert.Equal(t, sql.NullTime{}, toggledRule.DisabledAt)
 			}
-		}(endpoint)
-	}
-}
-
-func TestRuleToggle_EmptyUserID(t *testing.T) {
-	for _, endpoint := range []string{
-		server.DisableRuleForClusterEndpoint, server.EnableRuleForClusterEndpoint,
-	} {
-		func(endpoint string) {
-			mockStorage, closer := helpers.MustGetMockStorage(t, true)
-			defer closer()
-
-			err := mockStorage.WriteReportForCluster(
-				testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
-			)
-			helpers.FailOnError(t, err)
-
-			helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
-				Method:       http.MethodPut,
-				Endpoint:     endpoint,
-				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, " "}, // space is crucial here
-			}, &helpers.APIResponse{
-				StatusCode: http.StatusBadRequest,
-				Body:       `{"status": "Missing required param from request: user_id"}`,
-			})
 		}(endpoint)
 	}
 }

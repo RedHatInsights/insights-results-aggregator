@@ -209,7 +209,7 @@ func TestReadReportDisableRule(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -228,7 +228,7 @@ func TestReadReportDisableRule(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.EnableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -245,7 +245,7 @@ func TestReadReportDisableRule(t *testing.T) {
 	})
 }
 
-// TestReadReportDisableRuleMultipleUsers is a reproducer for bug issues 811 and 814
+// TestReadReportDisableRuleMultipleUsers tests behaviour of disabling rules
 func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
@@ -271,11 +271,11 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 		BodyChecker: helpers.AssertReportResponsesEqual,
 	})
 
-	// user 2 disables rule1
+	// someone disables rule1
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.User2ID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -292,22 +292,22 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 		BodyChecker: helpers.AssertReportResponsesEqual,
 	})
 
-	// user 1 is not affected
+	// user 1 IS ALSO affected
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode:  http.StatusOK,
-		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
+		Body:        testdata.Report2RulesDisabledRule1ExpectedResponse,
 		BodyChecker: helpers.AssertReportResponsesEqual,
 	})
 
-	// user 2 re-enables rule
+	// someone re-enables rule
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.EnableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.User2ID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -324,21 +324,32 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 		BodyChecker: helpers.AssertReportResponsesEqual,
 	})
 
-	// user 1 disables rule1
+	// user 1 also sees no rules disabled
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ReportEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
+		BodyChecker: helpers.AssertReportResponsesEqual,
+	})
+
+	// someone disables rule1
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
 	})
 
-	// user 1 disables rule2
+	// someone disables rule2
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule2ID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule2ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -355,14 +366,14 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 		BodyChecker: helpers.AssertReportResponsesEqual,
 	})
 
-	// user 2 is not affected
+	// user 2 is also affected
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportEndpoint,
 		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName, testdata.User2ID},
 	}, &helpers.APIResponse{
 		StatusCode:  http.StatusOK,
-		Body:        testdata.Report2RulesEnabledRulesExpectedResponse,
+		Body:        testdata.Report2RulesDisabledExpectedResponse,
 		BodyChecker: helpers.AssertReportResponsesEqual,
 	})
 }
@@ -394,7 +405,7 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
