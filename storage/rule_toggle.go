@@ -39,7 +39,6 @@ const (
 type ClusterRuleToggle struct {
 	ClusterID  types.ClusterName
 	RuleID     types.RuleID
-	UserID     types.UserID
 	Disabled   RuleToggle
 	DisabledAt sql.NullTime
 	EnabledAt  sql.NullTime
@@ -48,39 +47,40 @@ type ClusterRuleToggle struct {
 
 // ToggleRuleForCluster toggles rule for specified cluster
 func (storage DBStorage) ToggleRuleForCluster(
-	clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID, ruleToggle RuleToggle,
+	clusterID types.ClusterName, ruleID types.RuleID, ruleToggle RuleToggle,
 ) error {
 
 	var query string
-	var enabledAt, disabledAt sql.NullTime
+	var enabledAt, disabledAt, updatedAt sql.NullTime
 
 	now := time.Now()
+	updatedAt = sql.NullTime{Time: now, Valid: true}
 
 	switch ruleToggle {
 	case RuleToggleDisable:
-		disabledAt = sql.NullTime{Time: now, Valid: true}
+		disabledAt = updatedAt
 	case RuleToggleEnable:
-		enabledAt = sql.NullTime{Time: now, Valid: true}
+		enabledAt = updatedAt
 	default:
 		return fmt.Errorf("Unexpected rule toggle value")
 	}
 
 	query = `
 		INSERT INTO cluster_rule_toggle(
-			cluster_id, rule_id, user_id, disabled, disabled_at, enabled_at, updated_at
+			cluster_id, rule_id, disabled, disabled_at, enabled_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		ON CONFLICT (cluster_id, rule_id, user_id) DO UPDATE SET
-			disabled = $4,
-			disabled_at = $5,
-			enabled_at = $6
+		VALUES ($1, $2, $3, $4, $5, $6)
+		ON CONFLICT (cluster_id, rule_id) DO UPDATE SET
+			disabled = $3,
+			disabled_at = $4,
+			enabled_at = $5,
+			updated_at = $6
 	`
 
 	_, err := storage.connection.Exec(
 		query,
 		clusterID,
 		ruleID,
-		userID,
 		ruleToggle,
 		disabledAt,
 		enabledAt,
@@ -96,15 +96,17 @@ func (storage DBStorage) ToggleRuleForCluster(
 
 // GetFromClusterRuleToggle gets a rule from cluster_rule_toggle
 func (storage DBStorage) GetFromClusterRuleToggle(
-	clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+	clusterID types.ClusterName, ruleID types.RuleID,
 ) (*ClusterRuleToggle, error) {
 	var disabledRule ClusterRuleToggle
 
+	// query has LIMIT 1 and ORDER BY updated_at because of old functionality where
+	// disabling was per USER (compared to per CLUSTER now) therefore it'd be possible
+	// to retrieve more than 1 record from this query
 	query := `
 	SELECT
 		cluster_id,
 		rule_id,
-		user_id,
 		disabled,
 		disabled_at,
 		enabled_at,
@@ -113,19 +115,19 @@ func (storage DBStorage) GetFromClusterRuleToggle(
 		cluster_rule_toggle
 	WHERE
 		cluster_id = $1 AND
-		rule_id = $2 AND
-		user_id = $3
+		rule_id = $2
+	ORDER BY
+		updated_at DESC
+	LIMIT 1
 	`
 
 	err := storage.connection.QueryRow(
 		query,
 		clusterID,
 		ruleID,
-		userID,
 	).Scan(
 		&disabledRule.ClusterID,
 		&disabledRule.RuleID,
-		&disabledRule.UserID,
 		&disabledRule.Disabled,
 		&disabledRule.DisabledAt,
 		&disabledRule.EnabledAt,
@@ -140,7 +142,7 @@ func (storage DBStorage) GetFromClusterRuleToggle(
 
 // GetTogglesForRules gets enable/disable toggle for rules
 func (storage DBStorage) GetTogglesForRules(
-	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
+	clusterID types.ClusterName, rulesReport []types.RuleOnReport,
 ) (map[types.RuleID]bool, error) {
 	ruleIDs := make([]string, 0)
 	for _, rule := range rulesReport {
@@ -157,13 +159,12 @@ func (storage DBStorage) GetTogglesForRules(
 		cluster_rule_toggle
 	WHERE
 		cluster_id = $1 AND
-		rule_id in (%v) AND
-		user_id = $2
+		rule_id in (%v)
 	`
 	whereInStatement := "'" + strings.Join(ruleIDs, "','") + "'"
 	query = fmt.Sprintf(query, whereInStatement)
 
-	rows, err := storage.connection.Query(query, clusterID, userID)
+	rows, err := storage.connection.Query(query, clusterID)
 	if err != nil {
 		return toggles, err
 	}
@@ -190,16 +191,15 @@ func (storage DBStorage) GetTogglesForRules(
 
 // DeleteFromRuleClusterToggle deletes a record from the table rule_cluster_toggle. Only exposed in debug mode.
 func (storage DBStorage) DeleteFromRuleClusterToggle(
-	clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+	clusterID types.ClusterName, ruleID types.RuleID,
 ) error {
 	query := `
 	DELETE FROM
 		cluster_rule_toggle
 	WHERE
 		cluster_id = $1 AND
-		rule_id = $2 AND
-		user_id = $3
+		rule_id = $2
 	`
-	_, err := storage.connection.Exec(query, clusterID, ruleID, userID)
+	_, err := storage.connection.Exec(query, clusterID, ruleID)
 	return err
 }

@@ -165,15 +165,14 @@ func (*NoopStorage) WriteConsumerError(*sarama.ConsumerMessage, error) error {
 
 // ToggleRuleForCluster noop
 func (*NoopStorage) ToggleRuleForCluster(
-	types.ClusterName, types.RuleID, types.UserID, RuleToggle,
+	types.ClusterName, types.RuleID, RuleToggle,
 ) error {
 	return nil
 }
 
 // DeleteFromRuleClusterToggle noop
 func (*NoopStorage) DeleteFromRuleClusterToggle(
-	types.ClusterName, types.RuleID, types.UserID,
-) error {
+	types.ClusterName, types.RuleID) error {
 	return nil
 }
 
@@ -181,7 +180,6 @@ func (*NoopStorage) DeleteFromRuleClusterToggle(
 func (*NoopStorage) GetFromClusterRuleToggle(
 	types.ClusterName,
 	types.RuleID,
-	types.UserID,
 ) (*ClusterRuleToggle, error) {
 	return nil, nil
 }
@@ -190,7 +188,6 @@ func (*NoopStorage) GetFromClusterRuleToggle(
 func (*NoopStorage) GetTogglesForRules(
 	types.ClusterName,
 	[]types.RuleOnReport,
-	types.UserID,
 ) (map[types.RuleID]bool, error) {
 	return nil, nil
 }

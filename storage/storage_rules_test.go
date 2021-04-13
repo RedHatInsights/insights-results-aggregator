@@ -53,10 +53,10 @@ func TestDBStorage_ToggleRuleForCluster(t *testing.T) {
 			mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, state,
+				testdata.ClusterName, testdata.Rule1ID, state,
 			))
 
-			_, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+			_, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID)
 			helpers.FailOnError(t, err)
 		}(state)
 	}
@@ -67,7 +67,7 @@ func TestDBStorage_ToggleRuleForCluster_UnexpectedRuleToggleValue(t *testing.T) 
 	defer closer()
 
 	err := mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, -999,
+		testdata.ClusterName, testdata.Rule1ID, -999,
 	)
 	assert.EqualError(t, err, "Unexpected rule toggle value")
 }
@@ -77,7 +77,7 @@ func TestDBStorage_ToggleRuleForCluster_DBError(t *testing.T) {
 	closer()
 
 	err := mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
+		testdata.ClusterName, testdata.Rule1ID, storage.RuleToggleDisable,
 	)
 	assert.EqualError(t, err, "sql: database is closed")
 }
@@ -87,7 +87,7 @@ func TestDBStorageGetTogglesForRules_NoRules(t *testing.T) {
 	defer closer()
 
 	_, err := mockStorage.GetTogglesForRules(
-		testdata.ClusterName, nil, testdata.UserID,
+		testdata.ClusterName, nil,
 	)
 	helpers.FailOnError(t, err)
 }
@@ -97,7 +97,7 @@ func TestDBStorageGetTogglesForRules_AllRulesEnabled(t *testing.T) {
 	defer closer()
 
 	_, err := mockStorage.GetTogglesForRules(
-		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+		testdata.ClusterName, testdata.RuleOnReportResponses,
 	)
 	helpers.FailOnError(t, err)
 }
@@ -107,11 +107,11 @@ func TestDBStorageGetTogglesForRules_OneRuleDisabled(t *testing.T) {
 	defer closer()
 
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
+		testdata.ClusterName, testdata.Rule1ID, storage.RuleToggleDisable,
 	))
 
 	result, err := mockStorage.GetTogglesForRules(
-		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+		testdata.ClusterName, testdata.RuleOnReportResponses,
 	)
 
 	helpers.FailOnError(t, err)
@@ -136,15 +136,14 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 			mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, state,
+				testdata.ClusterName, testdata.Rule1ID, state,
 			))
 
-			toggledRule, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+			toggledRule, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID)
 			helpers.FailOnError(t, err)
 
 			assert.Equal(t, testdata.ClusterName, toggledRule.ClusterID)
 			assert.Equal(t, testdata.Rule1ID, toggledRule.RuleID)
-			assert.Equal(t, testdata.UserID, toggledRule.UserID)
 			assert.Equal(t, state, toggledRule.Disabled)
 			if toggledRule.Disabled == storage.RuleToggleDisable {
 				assert.Equal(t, sql.NullTime{}, toggledRule.EnabledAt)
