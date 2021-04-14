@@ -71,10 +71,12 @@ type ConfigStruct struct {
 	Processing struct {
 		OrgAllowlistFile string `mapstructure:"org_allowlist_file" toml:"org_allowlist_file"`
 	} `mapstructure:"processing"`
-	Storage    storage.Configuration          `mapstructure:"storage" toml:"storage"`
-	Logging    logger.LoggingConfiguration    `mapstructure:"logging" toml:"logging"`
-	CloudWatch logger.CloudWatchConfiguration `mapstructure:"cloudwatch" toml:"cloudwatch"`
-	Metrics    MetricsConfiguration           `mapstructure:"metrics" toml:"metrics"`
+	Storage           storage.Configuration             `mapstructure:"storage" toml:"storage"`
+	Logging           logger.LoggingConfiguration       `mapstructure:"logging" toml:"logging"`
+	CloudWatch        logger.CloudWatchConfiguration    `mapstructure:"cloudwatch" toml:"cloudwatch"`
+	Metrics           MetricsConfiguration              `mapstructure:"metrics" toml:"metrics"`
+	SentryLoggingConf logger.SentryLoggingConfiguration `mapstructure:"sentry" toml:"sentry"`
+	KafkaZerologConf  logger.KafkaZerologConfiguration  `mapstructure:"kafka_zerolog" toml:"kafka_zerolog"`
 }
 
 // Config has exactly the same structure as *.toml file
@@ -174,6 +176,16 @@ func GetLoggingConfiguration() logger.LoggingConfiguration {
 // GetCloudWatchConfiguration returns cloudwatch configuration
 func GetCloudWatchConfiguration() logger.CloudWatchConfiguration {
 	return Config.CloudWatch
+}
+
+// GetSentryLoggingConfiguration returns the sentry log configuration
+func GetSentryLoggingConfiguration() logger.SentryLoggingConfiguration {
+	return Config.SentryLoggingConf
+}
+
+// GetKafkaZerologConfiguration returns the kafkazero log configuration
+func GetKafkaZerologConfiguration() logger.KafkaZerologConfiguration {
+	return Config.KafkaZerologConf
 }
 
 // GetServerConfiguration returns server configuration

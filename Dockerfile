@@ -28,6 +28,11 @@ FROM registry.redhat.io/ubi8-minimal
 COPY --from=builder /opt/app-root/src/insights-results-aggregator .
 COPY --from=builder /opt/app-root/src/openapi.json /openapi/openapi.json
 
+RUN curl -L -o /usr/bin/haberdasher \
+    https://github.com/RedHatInsights/haberdasher/releases/download/v0.1.3/haberdasher_linux_amd64 && \
+    chmod 755 /usr/bin/haberdasher
+
 USER 1001
 
+ENTRYPOINT ["/usr/bin/haberdasher"]
 CMD ["/insights-results-aggregator"]
