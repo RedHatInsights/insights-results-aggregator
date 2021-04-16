@@ -58,6 +58,7 @@ def runStages() {
                 sh "./check_coverage.sh --verbose --do-not-run-tests"
             }
             withCredentials([string(credentialsId: "ira-codecov", variable: "CODECOV_TOKEN")]) {
+                sh "env"
                 sh "curl -s https://codecov.io/bash | bash -s -- -C ${gitUtils.getBaseCommit()}"
             }
         }
