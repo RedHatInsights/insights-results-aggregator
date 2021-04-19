@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
- Copyright 2020 Red Hat, Inc
+ Copyright 2021 Red Hat, Inc
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -205,10 +205,12 @@ https://redhatinsights.github.io/insights-results-aggregator/packages/conf/confi
 	<div class="ident">Processing</div> <div class="keyword">struct</div> <div class="operator">{</div>
 		<div class="ident">OrgAllowlistFile</div> <div class="ident">string</div> <div class="literal">`mapstructure:&#34;org_allowlist_file&#34; toml:&#34;org_allowlist_file&#34;`</div><div class="operator"></div>
 	<div class="operator">}</div> <div class="literal">`mapstructure:&#34;processing&#34;`</div><div class="operator"></div>
-	<div class="ident">Storage</div>    <div class="ident">storage</div><div class="operator">.</div><div class="ident">Configuration</div>          <div class="literal">`mapstructure:&#34;storage&#34; toml:&#34;storage&#34;`</div><div class="operator"></div>
-	<div class="ident">Logging</div>    <div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div>    <div class="literal">`mapstructure:&#34;logging&#34; toml:&#34;logging&#34;`</div><div class="operator"></div>
-	<div class="ident">CloudWatch</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">CloudWatchConfiguration</div> <div class="literal">`mapstructure:&#34;cloudwatch&#34; toml:&#34;cloudwatch&#34;`</div><div class="operator"></div>
-	<div class="ident">Metrics</div>    <div class="ident">MetricsConfiguration</div>           <div class="literal">`mapstructure:&#34;metrics&#34; toml:&#34;metrics&#34;`</div><div class="operator"></div>
+	<div class="ident">Storage</div>           <div class="ident">storage</div><div class="operator">.</div><div class="ident">Configuration</div>             <div class="literal">`mapstructure:&#34;storage&#34; toml:&#34;storage&#34;`</div><div class="operator"></div>
+	<div class="ident">Logging</div>           <div class="ident">logger</div><div class="operator">.</div><div class="ident">LoggingConfiguration</div>       <div class="literal">`mapstructure:&#34;logging&#34; toml:&#34;logging&#34;`</div><div class="operator"></div>
+	<div class="ident">CloudWatch</div>        <div class="ident">logger</div><div class="operator">.</div><div class="ident">CloudWatchConfiguration</div>    <div class="literal">`mapstructure:&#34;cloudwatch&#34; toml:&#34;cloudwatch&#34;`</div><div class="operator"></div>
+	<div class="ident">Metrics</div>           <div class="ident">MetricsConfiguration</div>              <div class="literal">`mapstructure:&#34;metrics&#34; toml:&#34;metrics&#34;`</div><div class="operator"></div>
+	<div class="ident">SentryLoggingConf</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">SentryLoggingConfiguration</div> <div class="literal">`mapstructure:&#34;sentry&#34; toml:&#34;sentry&#34;`</div><div class="operator"></div>
+	<div class="ident">KafkaZerologConf</div>  <div class="ident">logger</div><div class="operator">.</div><div class="ident">KafkaZerologConfiguration</div>  <div class="literal">`mapstructure:&#34;kafka_zerolog&#34; toml:&#34;kafka_zerolog&#34;`</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
@@ -363,6 +365,26 @@ config by itself</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">GetCloudWatchConfiguration</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">CloudWatchConfiguration</div> <div class="operator">{</div>
 	<div class="keyword">return</div> <div class="ident">Config</div><div class="operator">.</div><div class="ident">CloudWatch</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>GetSentryLoggingConfiguration returns the sentry log configuration</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">GetSentryLoggingConfiguration</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">SentryLoggingConfiguration</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">Config</div><div class="operator">.</div><div class="ident">SentryLoggingConf</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>GetKafkaZerologConfiguration returns the kafkazero log configuration</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">GetKafkaZerologConfiguration</div><div class="operator">(</div><div class="operator">)</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">KafkaZerologConfiguration</div> <div class="operator">{</div>
+	<div class="keyword">return</div> <div class="ident">Config</div><div class="operator">.</div><div class="ident">KafkaZerologConf</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>

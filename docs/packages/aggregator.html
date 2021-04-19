@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
- Copyright 2020 Red Hat, Inc
+ Copyright 2021 Red Hat, Inc
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -642,7 +642,12 @@ print the current DB migration version or to migrate to a different version.</p>
 		<div class="ident">panic</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
 
-	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">InitZerolog</div><div class="operator">(</div><div class="ident">conf</div><div class="operator">.</div><div class="ident">GetLoggingConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetCloudWatchConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">logger</div><div class="operator">.</div><div class="ident">InitZerolog</div><div class="operator">(</div>
+		<div class="ident">conf</div><div class="operator">.</div><div class="ident">GetLoggingConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="ident">conf</div><div class="operator">.</div><div class="ident">GetCloudWatchConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="ident">conf</div><div class="operator">.</div><div class="ident">GetSentryLoggingConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="ident">conf</div><div class="operator">.</div><div class="ident">GetKafkaZerologConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">,</div>
+	<div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="ident">panic</div><div class="operator">(</div><div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
