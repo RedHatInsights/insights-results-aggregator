@@ -915,11 +915,11 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/disable": {
+    "/clusters/{clusterId}/rules/{ruleId}/disable": {
       "put": {
         "summary": "Disables a rule/health check recommendation for specified cluster",
         "operationId": "disableRule",
-        "description": "Disables a rule (ruleId) for cluster (clusterId) for current organization/user",
+        "description": "Disables a rule (ruleId) for cluster (clusterId)",
         "parameters": [
           {
             "name": "clusterId",
@@ -942,16 +942,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
-            "schema": {
-              "type": "string"
-            },
-            "example": "some.python.module"
           }
         ],
         "responses": {
@@ -1046,11 +1036,11 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/users/{userId}/enable": {
+    "/clusters/{clusterId}/rules/{ruleId}/enable": {
       "put": {
         "summary": "Re-enables a rule/health check recommendation for specified cluster",
         "operationId": "enableRule",
-        "description": "Enables a rule (ruleId) for cluster (clusterId) for current organization/user",
+        "description": "Enables a rule (ruleId) for cluster (clusterId)",
         "parameters": [
           {
             "name": "clusterId",
@@ -1074,15 +1064,6 @@
               "type": "string"
             },
             "example": "some.python.module"
-          },
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
