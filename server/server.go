@@ -48,6 +48,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	// we just have to import this package in order to expose pprof interface in debug mode
 	// disable "G108 (CWE-): Profiling endpoint is automatically exposed on /debug/pprof"
@@ -64,8 +65,10 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// REPORT_RESPONSE constant that defining name of response field
-const REPORT_RESPONSE = "report"
+const (
+	// ReportResponse constant that defines the name of response field
+	ReportResponse = "report"
+)
 
 // HTTPServer in an implementation of Server interface
 type HTTPServer struct {
@@ -110,7 +113,10 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 		return
 	}
 
-	clusters, err := server.Storage.ListOfClustersForOrg(organizationID)
+	// TODO get limit from request param instead of hardcoded config param
+	timeLimit := time.Now().Add(-time.Duration(server.Config.OrgOverviewLimitHours) * time.Hour)
+
+	clusters, err := server.Storage.ListOfClustersForOrg(organizationID, timeLimit)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get list of clusters")
 		handleServerError(writer, err)
@@ -169,7 +175,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		Report: reports,
 	}
 
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData(REPORT_RESPONSE, response))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(ReportResponse, response))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -213,7 +219,7 @@ func (server *HTTPServer) readSingleRule(writer http.ResponseWriter, request *ht
 
 	reportRule = server.getFeedbackAndTogglesOnRule(clusterName, userID, reportRule)
 
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData(REPORT_RESPONSE, reportRule))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(ReportResponse, reportRule))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}

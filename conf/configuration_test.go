@@ -243,8 +243,10 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		APIPrefix:                    "/api/v1/",
 		APISpecFile:                  "openapi.json",
 		AuthType:                     "xrh",
+		Auth:                         false,
 		Debug:                        true,
 		MaximumFeedbackMessageLength: 255,
+		OrgOverviewLimitHours:        2,
 	}, conf.GetServerConfiguration())
 
 	orgAllowlist := conf.GetOrganizationAllowlist()
@@ -313,8 +315,10 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		APIPrefix:                    "/api/v1/",
 		APISpecFile:                  "openapi.json",
 		AuthType:                     "xrh",
+		Auth:                         false,
 		Debug:                        true,
 		MaximumFeedbackMessageLength: 255,
+		OrgOverviewLimitHours:        2,
 	}, conf.GetServerConfiguration())
 
 	orgAllowlist := conf.GetOrganizationAllowlist()

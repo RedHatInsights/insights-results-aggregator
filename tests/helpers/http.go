@@ -57,6 +57,7 @@ var DefaultServerConfig = server.Configuration{
 	Debug:                        true,
 	Auth:                         false,
 	MaximumFeedbackMessageLength: 255,
+	OrgOverviewLimitHours:        2,
 }
 
 // DefaultServerConfigAuth is a default config used by AssertAPIRequest with authentication set to true
@@ -67,6 +68,7 @@ var DefaultServerConfigAuth = server.Configuration{
 	Debug:                        true,
 	Auth:                         true,
 	MaximumFeedbackMessageLength: 255,
+	OrgOverviewLimitHours:        2,
 }
 
 // AssertAPIRequest creates new server with provided mockStorage
