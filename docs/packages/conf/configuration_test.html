@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
- Copyright 2020 Red Hat, Inc
+ Copyright 2021 Red Hat, Inc
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -412,8 +412,10 @@ str
 		<div class="ident">APIPrefix</div><div class="operator">:</div>                    <div class="literal">&#34;/api/v1/&#34;</div><div class="operator">,</div>
 		<div class="ident">APISpecFile</div><div class="operator">:</div>                  <div class="literal">&#34;openapi.json&#34;</div><div class="operator">,</div>
 		<div class="ident">AuthType</div><div class="operator">:</div>                     <div class="literal">&#34;xrh&#34;</div><div class="operator">,</div>
+		<div class="ident">Auth</div><div class="operator">:</div>                         <div class="ident">false</div><div class="operator">,</div>
 		<div class="ident">Debug</div><div class="operator">:</div>                        <div class="ident">true</div><div class="operator">,</div>
 		<div class="ident">MaximumFeedbackMessageLength</div><div class="operator">:</div> <div class="literal">255</div><div class="operator">,</div>
+		<div class="ident">OrgOverviewLimitHours</div><div class="operator">:</div>        <div class="literal">2</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetServerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">orgAllowlist</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationAllowlist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
@@ -482,8 +484,10 @@ str
 		<div class="ident">APIPrefix</div><div class="operator">:</div>                    <div class="literal">&#34;/api/v1/&#34;</div><div class="operator">,</div>
 		<div class="ident">APISpecFile</div><div class="operator">:</div>                  <div class="literal">&#34;openapi.json&#34;</div><div class="operator">,</div>
 		<div class="ident">AuthType</div><div class="operator">:</div>                     <div class="literal">&#34;xrh&#34;</div><div class="operator">,</div>
+		<div class="ident">Auth</div><div class="operator">:</div>                         <div class="ident">false</div><div class="operator">,</div>
 		<div class="ident">Debug</div><div class="operator">:</div>                        <div class="ident">true</div><div class="operator">,</div>
 		<div class="ident">MaximumFeedbackMessageLength</div><div class="operator">:</div> <div class="literal">255</div><div class="operator">,</div>
+		<div class="ident">OrgOverviewLimitHours</div><div class="operator">:</div>        <div class="literal">2</div><div class="operator">,</div>
 	<div class="operator">}</div><div class="operator">,</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetServerConfiguration</div><div class="operator">(</div><div class="operator">)</div><div class="operator">)</div><div class="operator"></div>
 
 	<div class="ident">orgAllowlist</div> <div class="operator">:=</div> <div class="ident">conf</div><div class="operator">.</div><div class="ident">GetOrganizationAllowlist</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>

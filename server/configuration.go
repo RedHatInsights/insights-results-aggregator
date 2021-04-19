@@ -25,4 +25,6 @@ type Configuration struct {
 	Auth                         bool   `mapstructure:"auth" toml:"auth"`
 	AuthType                     string `mapstructure:"auth_type" toml:"auth_type"`
 	MaximumFeedbackMessageLength int    `mapstructure:"maximum_feedback_message_length" toml:"maximum_feedback_message_length"`
+	// OrgOverviewLimitHours is temporary until request param parsing, but lets make it atleast configurable
+	OrgOverviewLimitHours int64 `mapstructure:"org_overview_limit_hours" toml:"org_overview_limit_hours"`
 }

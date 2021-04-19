@@ -30,7 +30,7 @@ func TestNoopStorage_Methods(t *testing.T) {
 	_ = noopStorage.Init()
 	_ = noopStorage.Close()
 	_, _ = noopStorage.ListOfOrgs()
-	_, _ = noopStorage.ListOfClustersForOrg(0)
+	_, _ = noopStorage.ListOfClustersForOrg(0, time.Now())
 	_, _, _ = noopStorage.ReadReportForCluster(0, "")
 	_, _, _ = noopStorage.ReadReportForClusterByClusterName("")
 	_, _ = noopStorage.GetLatestKafkaOffset()

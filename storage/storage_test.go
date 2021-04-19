@@ -381,31 +381,63 @@ func TestDBStorageListOfClustersForOrg(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	writeReportForCluster(t, mockStorage, 1, "eabb4fbf-edfa-45d0-9352-fb05332fdb82", testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
-	writeReportForCluster(t, mockStorage, 1, "edf5f242-0c12-4307-8c9f-29dcd289d045", testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+	cluster1ID, cluster2ID, cluster3ID := testdata.GetRandomClusterID(), testdata.GetRandomClusterID(), testdata.GetRandomClusterID()
+	// writeReportForCluster writes the report at time.Now()
+	writeReportForCluster(t, mockStorage, testdata.OrgID, cluster1ID, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+	writeReportForCluster(t, mockStorage, testdata.OrgID, cluster2ID, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
 
 	// also pushing cluster for different org
-	writeReportForCluster(t, mockStorage, 5, "4016d01b-62a1-4b49-a36e-c1c5a3d02750", testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+	writeReportForCluster(t, mockStorage, testdata.Org2ID, cluster3ID, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
 
-	result, err := mockStorage.ListOfClustersForOrg(1)
+	result, err := mockStorage.ListOfClustersForOrg(testdata.OrgID, time.Now().Add(-time.Hour))
 	helpers.FailOnError(t, err)
 
 	assert.ElementsMatch(t, []types.ClusterName{
-		"eabb4fbf-edfa-45d0-9352-fb05332fdb82",
-		"edf5f242-0c12-4307-8c9f-29dcd289d045",
+		cluster1ID,
+		cluster2ID,
 	}, result)
 
-	result, err = mockStorage.ListOfClustersForOrg(5)
+	result, err = mockStorage.ListOfClustersForOrg(testdata.Org2ID, time.Now().Add(-time.Hour))
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, []types.ClusterName{"4016d01b-62a1-4b49-a36e-c1c5a3d02750"}, result)
+	assert.Equal(t, []types.ClusterName{cluster3ID}, result)
+}
+
+func TestDBStorageListOfClustersTimeLimit(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	// writeReportForCluster writes the report at time.Now()
+	cluster1ID, cluster2ID := testdata.GetRandomClusterID(), testdata.GetRandomClusterID()
+	// writeReportForCluster writes the report at time.Now()
+	writeReportForCluster(t, mockStorage, testdata.OrgID, cluster1ID, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+	writeReportForCluster(t, mockStorage, testdata.OrgID, cluster2ID, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+
+	// since we can't easily change reported_at without changing the core source code, let's make a request from the "future"
+	// fetch org overview with T+2h
+	result, err := mockStorage.ListOfClustersForOrg(testdata.OrgID, time.Now().Add(time.Hour*2))
+	helpers.FailOnError(t, err)
+
+	// must fetch nothing
+	// assert.ElementsMatch(t, []types.ClusterName{}, result)
+	assert.Empty(t, result)
+
+	// request with T-2h
+	result, err = mockStorage.ListOfClustersForOrg(testdata.OrgID, time.Now().Add(-time.Hour*2))
+	helpers.FailOnError(t, err)
+
+	// must fetch all reports
+	assert.ElementsMatch(t, []types.ClusterName{
+		cluster1ID,
+		cluster2ID,
+	}, result)
 }
 
 func TestDBStorageListOfClustersNoTable(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
 
-	_, err := mockStorage.ListOfClustersForOrg(5)
+	_, err := mockStorage.ListOfClustersForOrg(5, time.Now().Add(-time.Hour))
 	assert.EqualError(t, err, "no such table: report")
 }
 
@@ -415,7 +447,7 @@ func TestDBStorageListOfClustersClosedStorage(t *testing.T) {
 	// we need to close storage right now
 	closer()
 
-	_, err := mockStorage.ListOfClustersForOrg(5)
+	_, err := mockStorage.ListOfClustersForOrg(5, time.Now().Add(-time.Hour))
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -529,7 +561,7 @@ func TestDBStorageListOfClustersForOrgScanError(t *testing.T) {
 		sqlmock.NewRows([]string{"cluster"}).AddRow(nil),
 	)
 
-	_, err := mockStorage.ListOfClustersForOrg(testdata.OrgID)
+	_, err := mockStorage.ListOfClustersForOrg(testdata.OrgID, time.Now().Add(-time.Hour))
 	helpers.FailOnError(t, err)
 
 	assert.Contains(t, buf.String(), "converting NULL to string is unsupported")

@@ -42,7 +42,7 @@ func (*NoopStorage) ListOfOrgs() ([]types.OrgID, error) {
 }
 
 // ListOfClustersForOrg noop
-func (*NoopStorage) ListOfClustersForOrg(types.OrgID) ([]types.ClusterName, error) {
+func (*NoopStorage) ListOfClustersForOrg(types.OrgID, time.Time) ([]types.ClusterName, error) {
 	return nil, nil
 }
 

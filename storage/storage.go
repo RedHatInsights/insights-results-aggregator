@@ -50,7 +50,9 @@ type Storage interface {
 	Init() error
 	Close() error
 	ListOfOrgs() ([]types.OrgID, error)
-	ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error)
+	ListOfClustersForOrg(
+		orgID types.OrgID, timeLimit time.Time) ([]types.ClusterName, error,
+	)
 	ReadReportForCluster(
 		orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error,
 	)
@@ -301,10 +303,19 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 }
 
 // ListOfClustersForOrg reads list of all clusters fro given organization
-func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID) ([]types.ClusterName, error) {
+func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.Time) ([]types.ClusterName, error) {
 	clusters := make([]types.ClusterName, 0)
 
-	rows, err := storage.connection.Query("SELECT cluster FROM report WHERE org_id = $1 ORDER BY cluster;", orgID)
+	q := `
+		SELECT cluster
+		FROM report
+		WHERE org_id = $1
+		AND reported_at >= $2
+		ORDER BY cluster;
+	`
+
+	rows, err := storage.connection.Query(q, orgID, timeLimit)
+
 	err = types.ConvertDBError(err, orgID)
 	if err != nil {
 		return clusters, err
