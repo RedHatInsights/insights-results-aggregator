@@ -405,7 +405,7 @@ func main() {
 		conf.GetKafkaZerologConfiguration(),
 	)
 	if err != nil {
-		panic(err)
+		log.Error().Err(err).Msg("Unable to init ZeroLog")
 	}
 
 	command := "start-service"
