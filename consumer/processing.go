@@ -150,7 +150,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 
 	tAllowlisted := time.Now()
 
-	reportAsStr, err := json.Marshal(*message.Report)
+	reportAsBytes, err := json.Marshal(*message.Report)
 	if err != nil {
 		logMessageError(consumer, msg, message, "Error marshalling report", err)
 		return message.RequestID, err
@@ -178,7 +178,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	err = consumer.Storage.WriteReportForCluster(
 		*message.Organization,
 		*message.ClusterName,
-		types.ClusterReport(reportAsStr),
+		types.ClusterReport(reportAsBytes),
 		message.ParsedHits,
 		lastCheckedTime,
 		types.KafkaOffset(msg.Offset),

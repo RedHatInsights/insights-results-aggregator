@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
- Copyright 2020 Red Hat, Inc
+ Copyright 2021 Red Hat, Inc
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -114,7 +114,7 @@
   <table>
     <thead><tr><th class="doc"><h1>processing.go</h1></th><th class="code"></th></tr></thead>
     <tbody>
-
+      
       <tr class="section">
 	<td class="doc"><p>Copyright 2020 Red Hat, Inc</p>
 
@@ -149,7 +149,7 @@ limitations under the License.</p>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>Report represents report send in a message consumed from any broker</p>
 </td>
@@ -157,7 +157,7 @@ limitations under the License.</p>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>incomingMessage is representation of message consumed from any broker</p>
 </td>
@@ -167,25 +167,19 @@ limitations under the License.</p>
 	<div class="ident">Report</div>       <div class="operator">*</div><div class="ident">Report</div>            <div class="literal">`json:&#34;Report&#34;`</div><div class="operator"></div>
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
-          <td class="doc"><p>LastChecked is a date in format &quot;2020-01-23T16:15:59.478901889Z&quot;</p>
-          </td>
-          <td class="code"><pre><code>	<div class="ident">LastChecked</div>  <div class="ident">string</div>             <div class="literal">`json:&#34;LastChecked&#34;`</div><div class="operator"></div>
-</code></pre></td>
-      </tr>
-
-      <tr class="section">
-          <td class="doc"><p>Version represents the incoming message's data schema version</p>
-          </td>
-          <td class="code"><pre><code>	<div class="ident">Version</div>      <div class="ident">types.SchemaVerison</div> <div class="literal">`json:&#34;Version&#34;`</div><div class="operator"></div>
-	<div class="ident">RequestID</div>   <div class="ident">types</div><div class="operator">.</div><div class="ident">RequestID</div> <div class="literal">`json:&#34;RequestId&#34;`</div><div class="operator"></div>
+	<td class="doc"><p>LastChecked is a date in format &quot;2020-01-23T16:15:59.478901889Z&quot;</p>
+</td>
+	<td class="code"><pre><code>	<div class="ident">LastChecked</div> <div class="ident">string</div>              <div class="literal">`json:&#34;LastChecked&#34;`</div><div class="operator"></div>
+	<div class="ident">Version</div>     <div class="ident">types</div><div class="operator">.</div><div class="ident">SchemaVersion</div> <div class="literal">`json:&#34;Version&#34;`</div><div class="operator"></div>
+	<div class="ident">RequestID</div>   <div class="ident">types</div><div class="operator">.</div><div class="ident">RequestID</div>     <div class="literal">`json:&#34;RequestId&#34;`</div><div class="operator"></div>
 	<div class="ident">ParsedHits</div>  <div class="operator">[</div><div class="operator">]</div><div class="ident">types</div><div class="operator">.</div><div class="ident">ReportItem</div><div class="operator"></div>
 <div class="operator">}</div><div class="operator"></div>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>HandleMessage handles the message and does all logging, metrics, etc</p>
 </td>
@@ -215,7 +209,7 @@ limitations under the License.</p>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>Something went wrong while processing the message.</p>
 </td>
@@ -234,7 +228,7 @@ limitations under the License.</p>
 	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>The message was processed successfully.</p>
 </td>
@@ -250,7 +244,7 @@ limitations under the License.</p>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>updatePayloadTracker</p>
 </td>
@@ -263,7 +257,43 @@ limitations under the License.</p>
 
 </code></pre></td>
       </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMessageVersion - verifies incoming data's version is the expected one</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMessageVersion</div><div class="operator">(</div><div class="ident">consumer</div> <div class="operator">*</div><div class="ident">KafkaConsumer</div><div class="operator">,</div> <div class="ident">message</div> <div class="operator">*</div><div class="ident">incomingMessage</div><div class="operator">,</div> <div class="ident">msg</div> <div class="operator">*</div><div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">message</div><div class="operator">.</div><div class="ident">Version</div> <div class="operator">!=</div> <div class="ident">CurrentSchemaVersion</div> <div class="operator">{</div>
+		<div class="keyword">const</div> <div class="ident">warning</div> <div class="operator">=</div> <div class="literal">&#34;Received data with unexpected version.&#34;</div><div class="operator"></div>
+		<div class="ident">logMessageWarning</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">,</div> <div class="ident">warning</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
 
+</code></pre></td>
+      </tr>
+      
+      <tr class="section">
+	<td class="doc"><p>checkMessageOrgInAllowList - checks up incoming data's OrganizationID against allowed orgs list</p>
+</td>
+	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkMessageOrgInAllowList</div><div class="operator">(</div><div class="ident">consumer</div> <div class="operator">*</div><div class="ident">KafkaConsumer</div><div class="operator">,</div> <div class="ident">message</div> <div class="operator">*</div><div class="ident">incomingMessage</div><div class="operator">,</div> <div class="ident">msg</div> <div class="operator">*</div><div class="ident">sarama</div><div class="operator">.</div><div class="ident">ConsumerMessage</div><div class="operator">)</div> <div class="operator">(</div><div class="ident">bool</div><div class="operator">,</div> <div class="ident">string</div><div class="operator">)</div> <div class="operator">{</div>
+	<div class="keyword">if</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">.</div><div class="ident">OrgAllowlistEnabled</div> <div class="operator">{</div>
+		<div class="ident">logMessageInfo</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">,</div> <div class="literal">&#34;Checking organization ID against allow list&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+		<div class="keyword">if</div> <div class="ident">ok</div> <div class="operator">:=</div> <div class="ident">organizationAllowed</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">Organization</div><div class="operator">)</div><div class="operator">;</div> <div class="operator">!</div><div class="ident">ok</div> <div class="operator">{</div>
+			<div class="keyword">const</div> <div class="ident">cause</div> <div class="operator">=</div> <div class="literal">&#34;organization ID is not in allow list&#34;</div><div class="operator"></div>
+			<div class="keyword">return</div> <div class="ident">false</div><div class="operator">,</div> <div class="ident">cause</div><div class="operator"></div>
+		<div class="operator">}</div><div class="operator"></div>
+
+		<div class="ident">logMessageInfo</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">,</div> <div class="literal">&#34;Organization is in allow list&#34;</div><div class="operator">)</div><div class="operator"></div>
+
+	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
+		<div class="ident">logMessageInfo</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">,</div> <div class="literal">&#34;Organization allow listing disabled&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="operator">}</div><div class="operator"></div>
+	<div class="keyword">return</div> <div class="ident">true</div><div class="operator">,</div> <div class="literal">&#34;&#34;</div><div class="operator"></div>
+<div class="operator">}</div><div class="operator"></div>
+
+</code></pre></td>
+      </tr>
+      
       <tr class="section">
 	<td class="doc"><p>ProcessMessage processes an incoming message</p>
 </td>
@@ -280,29 +310,16 @@ limitations under the License.</p>
 	<div class="ident">logMessageInfo</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">,</div> <div class="literal">&#34;Read&#34;</div><div class="operator">)</div><div class="operator"></div>
 	<div class="ident">tRead</div> <div class="operator">:=</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="keyword">if</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Configuration</div><div class="operator">.</div><div class="ident">OrgAllowlistEnabled</div> <div class="operator">{</div>
-		<div class="ident">logMessageInfo</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">,</div> <div class="literal">&#34;Checking organization ID against allow list&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">checkMessageVersion</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">message</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">)</div><div class="operator"></div>
 
-		<div class="keyword">if</div> <div class="ident">ok</div> <div class="operator">:=</div> <div class="ident">organizationAllowed</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">Organization</div><div class="operator">)</div><div class="operator">;</div> <div class="operator">!</div><div class="ident">ok</div> <div class="operator">{</div>
-			<div class="keyword">const</div> <div class="ident">cause</div> <div class="operator">=</div> <div class="literal">&#34;organization ID is not in allow list&#34;</div><div class="operator"></div>
-</code></pre></td>
-      </tr>
-
-      <tr class="section">
-	<td class="doc"><p>now we have all required information about the incoming message,
-the right time to record structured log entry</p>
-</td>
-	<td class="code"><pre><code>			<div class="ident">logMessageError</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">,</div> <div class="ident">cause</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
-			<div class="keyword">return</div> <div class="ident">message</div><div class="operator">.</div><div class="ident">RequestID</div><div class="operator">,</div> <div class="ident">errors</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">cause</div><div class="operator">)</div><div class="operator"></div>
-		<div class="operator">}</div><div class="operator"></div>
-
-		<div class="ident">logMessageInfo</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">,</div> <div class="literal">&#34;Organization is in allow list&#34;</div><div class="operator">)</div><div class="operator"></div>
-	<div class="operator">}</div> <div class="keyword">else</div> <div class="operator">{</div>
-		<div class="ident">logMessageInfo</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">,</div> <div class="literal">&#34;Organization allow listing disabled&#34;</div><div class="operator">)</div><div class="operator"></div>
+	<div class="keyword">if</div> <div class="ident">ok</div><div class="operator">,</div> <div class="ident">cause</div> <div class="operator">:=</div> <div class="ident">checkMessageOrgInAllowList</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="operator">&amp;</div><div class="ident">message</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">)</div><div class="operator">;</div> <div class="operator">!</div><div class="ident">ok</div> <div class="operator">{</div>
+		<div class="ident">logMessageError</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">,</div> <div class="ident">cause</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
+		<div class="keyword">return</div> <div class="ident">message</div><div class="operator">.</div><div class="ident">RequestID</div><div class="operator">,</div> <div class="ident">errors</div><div class="operator">.</div><div class="ident">New</div><div class="operator">(</div><div class="ident">cause</div><div class="operator">)</div><div class="operator"></div>
 	<div class="operator">}</div><div class="operator"></div>
+
 	<div class="ident">tAllowlisted</div> <div class="operator">:=</div> <div class="ident">time</div><div class="operator">.</div><div class="ident">Now</div><div class="operator">(</div><div class="operator">)</div><div class="operator"></div>
 
-	<div class="ident">reportAsStr</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Marshal</div><div class="operator">(</div><div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">)</div><div class="operator"></div>
+	<div class="ident">reportAsBytes</div><div class="operator">,</div> <div class="ident">err</div> <div class="operator">:=</div> <div class="ident">json</div><div class="operator">.</div><div class="ident">Marshal</div><div class="operator">(</div><div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">Report</div><div class="operator">)</div><div class="operator"></div>
 	<div class="keyword">if</div> <div class="ident">err</div> <div class="operator">!=</div> <div class="ident">nil</div> <div class="operator">{</div>
 		<div class="ident">logMessageError</div><div class="operator">(</div><div class="ident">consumer</div><div class="operator">,</div> <div class="ident">msg</div><div class="operator">,</div> <div class="ident">message</div><div class="operator">,</div> <div class="literal">&#34;Error marshalling report&#34;</div><div class="operator">,</div> <div class="ident">err</div><div class="operator">)</div><div class="operator"></div>
 		<div class="keyword">return</div> <div class="ident">message</div><div class="operator">.</div><div class="ident">RequestID</div><div class="operator">,</div> <div class="ident">err</div><div class="operator"></div>
@@ -330,7 +347,7 @@ the right time to record structured log entry</p>
 	<div class="ident">err</div> <div class="operator">=</div> <div class="ident">consumer</div><div class="operator">.</div><div class="ident">Storage</div><div class="operator">.</div><div class="ident">WriteReportForCluster</div><div class="operator">(</div>
 		<div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">Organization</div><div class="operator">,</div>
 		<div class="operator">*</div><div class="ident">message</div><div class="operator">.</div><div class="ident">ClusterName</div><div class="operator">,</div>
-		<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">(</div><div class="ident">reportAsStr</div><div class="operator">)</div><div class="operator">,</div>
+		<div class="ident">types</div><div class="operator">.</div><div class="ident">ClusterReport</div><div class="operator">(</div><div class="ident">reportAsBytes</div><div class="operator">)</div><div class="operator">,</div>
 		<div class="ident">message</div><div class="operator">.</div><div class="ident">ParsedHits</div><div class="operator">,</div>
 		<div class="ident">lastCheckedTime</div><div class="operator">,</div>
 		<div class="ident">types</div><div class="operator">.</div><div class="ident">KafkaOffset</div><div class="operator">(</div><div class="ident">msg</div><div class="operator">.</div><div class="ident">Offset</div><div class="operator">)</div><div class="operator">,</div>
@@ -349,7 +366,7 @@ the right time to record structured log entry</p>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>log durations for every message consumption steps</p>
 </td>
@@ -361,7 +378,7 @@ the right time to record structured log entry</p>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>message has been parsed and stored into storage</p>
 </td>
@@ -370,7 +387,7 @@ the right time to record structured log entry</p>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>organizationAllowed checks whether the given organization is on allow list or not</p>
 </td>
@@ -387,14 +404,14 @@ the right time to record structured log entry</p>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>checkReportStructure tests if the report has correct structure</p>
 </td>
 	<td class="code"><pre><code><div class="keyword">func</div> <div class="ident">checkReportStructure</div><div class="operator">(</div><div class="ident">r</div> <div class="ident">Report</div><div class="operator">)</div> <div class="ident">error</div> <div class="operator">{</div>
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>the structure is not well defined yet, so all we should do is to check if all keys are there</p>
 </td>
@@ -410,7 +427,7 @@ the right time to record structured log entry</p>
 
 </code></pre></td>
       </tr>
-
+      
       <tr class="section">
 	<td class="doc"><p>parseMessage tries to parse incoming message and read all required attributes from it</p>
 </td>
@@ -454,7 +471,7 @@ the right time to record structured log entry</p>
 
 </code></pre></td>
       </tr>
-
+      
     </tbody>
   </table>
 </div>
