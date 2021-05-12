@@ -17,7 +17,7 @@ if ! command -v shellcheck > /dev/null 2>&1; then
     scversion="stable" # or "v0.4.7", or "latest"
     wget -qO- "https://github.com/koalaman/shellcheck/releases/download/${scversion?}/shellcheck-${scversion?}.linux.x86_64.tar.xz" | tar -xJv
     shellcheck-stable/shellcheck --version
-    shellcheck-stable/shellcheck -- *.sh */*.sh
+    shellcheck-stable/shellcheck --exclude=SC1090,SC2086,SC2034,SC1091 -- *.sh */*.sh
 else
-    shellcheck -- *.sh */*.sh
+    shellcheck --exclude=SC1090,SC2086,SC2034,SC1091 -- *.sh */*.sh
 fi
