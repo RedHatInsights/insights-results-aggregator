@@ -22,6 +22,7 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/prometheus/client_golang v1.10.0
 	github.com/prometheus/client_model v0.2.0
+	github.com/redhatinsights/app-common-go v1.5.1
 	github.com/rs/zerolog v1.20.0
 	github.com/spf13/viper v1.7.2-0.20210415161207-7fdb267c730d
 	github.com/stretchr/testify v1.6.1
