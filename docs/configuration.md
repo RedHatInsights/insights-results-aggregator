@@ -40,6 +40,17 @@ the actual driver will be postgres with password "your secret password"
 It's very useful for deploying docker containers and keeping some of your configuration
 outside of main config file(like passwords).
 
+### Clowder configuration
+
+In Clowder environment, some configuration options are injected automatically.
+Currently Kafka broker configuration is injected this side. To test this
+behavior, it is possible to specify path to Clowder-related configuration file
+via `AGG_CONFIG` environment variable:
+
+```
+export ACG_CONFIG="clowder_config.json"
+```
+
 ## Broker configuration
 
 Broker configuration is in section `[broker]` in config file
