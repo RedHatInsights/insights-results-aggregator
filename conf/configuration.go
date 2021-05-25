@@ -137,14 +137,9 @@ func LoadConfiguration(defaultConfigFile string) error {
 		return fmt.Errorf("fatal - can not unmarshal configuration: %s", err)
 	}
 
-	if clowder.IsClowderEnabled() {
-		// can not use Zerolog at this moment!
-		fmt.Println("Clowder is enabled")
-
-		// TODO: insert logic to replace SELECTED configuration variables
-	} else {
-		// can not use Zerolog at this moment!
-		fmt.Println("Clowder is disabled")
+	if err := updateConfigFromClowder(&Config); err != nil {
+		fmt.Println("Error loading clowder configuration")
+		return err
 	}
 
 	// everything's should be ok
@@ -265,4 +260,31 @@ func loadAllowlistFromCSV(r io.Reader) (mapset.Set, error) {
 	}
 
 	return allowlist, nil
+}
+
+// updateConfigFromClowder updates the current config with the values defined in clowder
+func updateConfigFromClowder(c *ConfigStruct) error {
+	if clowder.IsClowderEnabled() {
+		// can not use Zerolog at this moment!
+		fmt.Println("Clowder is enabled")
+		if clowder.LoadedConfig.Kafka == nil {
+			fmt.Println("No Kafka configuration available in Clowder, using default one")
+			return nil
+		}
+
+		broker := clowder.LoadedConfig.Kafka.Brokers[0]
+
+		// port can be empty in clowder, so taking it into account
+		if broker.Port != nil {
+			c.Broker.Address = fmt.Sprintf("%s:%d", broker.Hostname, broker.Port)
+		} else {
+			c.Broker.Address = broker.Hostname
+		}
+
+	} else {
+		// can not use Zerolog at this moment!
+		fmt.Println("Clowder is disabled")
+	}
+
+	return nil
 }
