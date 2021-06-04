@@ -132,6 +132,7 @@ func prepareDBMigrations(dbStorage *storage.DBStorage) int {
 func prepareDB() int {
 	dbStorage, err := createStorage()
 	if err != nil {
+		log.Error().Err(err).Msg("Error creating storage")
 		return ExitStatusPrepareDbError
 	}
 	defer closeStorage(dbStorage)
