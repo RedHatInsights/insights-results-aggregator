@@ -71,5 +71,5 @@ func stopServer() error {
 
 func waitForServerToStartOrFail() {
 	log.Info().Msg("waiting for server to start")
-	_ = <-serverInstanceIsStarting.Done()
+	<-serverInstanceIsStarting.Done()
 }

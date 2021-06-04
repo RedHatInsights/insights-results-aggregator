@@ -1,0 +1,35 @@
+# Bonfire deployment configuration
+# Defines where to fetch the file that defines application configs
+
+appsFile:
+  host: gitlab
+  repo: insights-platform/cicd-common
+  path: bonfire_configs/ephemeral_apps.yaml
+
+apps:
+- name: ccx-data-pipeline
+  components:
+    - name: ccx-data-pipeline
+      host: gitlab
+      repo: ccx/ccx-data-pipeline
+      path: deploy/clowdapp.yaml
+      ref: master
+      parameters:
+        CLOWDER_ENABLED: "true"
+        IMAGE_TAG: qa
+    - name: insights-results
+      host: github
+      repo: <user>/insights-results-aggregator
+      path: deploy/clowdapp.yaml
+      ref: <branch>
+      parameters:
+        CLOWDER_ENABLED: "true"
+        IMAGE_TAG: latest
+    - name: insights-results-db
+      host: github
+      repo: <user>/insights-results-aggregator
+      path: deploy/irdb_clowdapp.yaml
+      ref: <branch>
+      parameters:
+        CLOWDER_ENABLED: "true"
+        IMAGE_TAG: latest

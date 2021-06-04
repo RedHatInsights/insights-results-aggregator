@@ -5,14 +5,10 @@ go 1.14
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/DATA-DOG/go-sqlmock v1.4.1
-	github.com/RedHatInsights/cloudwatch v0.0.0-20210111105023-1df2bdfe3291
 	github.com/RedHatInsights/insights-content-service v0.0.0-20201009081018-083923779f00
 	github.com/RedHatInsights/insights-operator-utils v1.8.2
 	github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20201109115720-126bd0348556
-	github.com/RedHatInsights/insights-results-aggregator-utils v0.0.0-20200616074815-67f30b0e724d // indirect
-	github.com/RedHatInsights/insights-results-smart-proxy v0.0.0-20200619163313-7d5e376de430 // indirect
 	github.com/Shopify/sarama v1.27.1
-	github.com/aws/aws-sdk-go v1.35.7
 	github.com/deckarep/golang-set v1.7.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gchaincl/sqlhooks v1.3.0
@@ -28,5 +24,4 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	gopkg.in/h2non/gock.v1 v1.0.15
 )
