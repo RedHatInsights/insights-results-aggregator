@@ -244,6 +244,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 	count, err := mockStorage.ReportsCount()
 	helpers.FailOnError(t, err)
 
+	// no record should be written into database
 	assert.Equal(
 		t,
 		0,
@@ -260,14 +261,15 @@ func TestProcessCorrectMessage(t *testing.T) {
 
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(testdata.ConsumerMessage)
-	// message is empty -> nothing should be written into storage
+	// message is correct -> one record should be written into storage
 	_, err := c.ProcessMessage(&message)
 	helpers.FailOnError(t, err)
 
 	count, err := mockStorage.ReportsCount()
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, 1, count)
+	// exactly one record should be written into database
+	assert.Equal(t, 1, count, "process message should write one record into DB")
 }
 
 func TestProcessingMessageWithClosedStorage(t *testing.T) {
