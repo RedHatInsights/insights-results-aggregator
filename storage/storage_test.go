@@ -274,6 +274,57 @@ func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 	assert.Equal(t, types.ErrOldReport, err)
 }
 
+// TestDBStorageClusterOrgTransfer checks the behaviour of report storage in case of cluster org transfer
+func TestDBStorageClusterOrgTransfer(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	cluster1ID, cluster2ID := types.ClusterName("aaaaaaaa-1234-cccc-dddd-eeeeeeeeeeee"),
+		types.ClusterName("aaaaaaaa-1234-5678-dddd-eeeeeeeeeeee")
+
+	writeReportForCluster(t, mockStorage, testdata.OrgID, cluster1ID, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+	writeReportForCluster(t, mockStorage, testdata.Org2ID, cluster2ID, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+
+	result, err := mockStorage.ListOfOrgs()
+	helpers.FailOnError(t, err)
+	assert.ElementsMatch(t, []types.OrgID{testdata.OrgID, testdata.Org2ID}, result)
+
+	// cluster1 owned by org1
+	orgID, err := mockStorage.GetOrgIDByClusterID(cluster1ID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, orgID, testdata.OrgID)
+
+	// cluster2 owned by org2
+	orgID, err = mockStorage.GetOrgIDByClusterID(cluster2ID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, orgID, testdata.Org2ID)
+
+	// org2 can read cluster2
+	_, _, err = mockStorage.ReadReportForCluster(testdata.Org2ID, cluster2ID)
+	helpers.FailOnError(t, err)
+
+	// "org transfer"
+	writeReportForCluster(t, mockStorage, testdata.OrgID, cluster2ID, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed)
+
+	// only 1 org now
+	result, err = mockStorage.ListOfOrgs()
+	helpers.FailOnError(t, err)
+	assert.ElementsMatch(t, []types.OrgID{testdata.OrgID}, result)
+
+	// cluster2 owned by org1
+	orgID, err = mockStorage.GetOrgIDByClusterID(cluster2ID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, orgID, testdata.OrgID)
+
+	// org2 can no longer read cluster2
+	_, _, err = mockStorage.ReadReportForCluster(testdata.Org2ID, cluster2ID)
+	assert.NotNil(t, err)
+
+	// org1 can now  read cluster2
+	_, _, err = mockStorage.ReadReportForCluster(testdata.OrgID, cluster2ID)
+	helpers.FailOnError(t, err)
+}
+
 // TestDBStorageWriteReportForClusterDroppedReportTable checks the error
 // returned when trying to SELECT from a dropped/missing report table.
 func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {

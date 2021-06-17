@@ -595,8 +595,8 @@ func (storage DBStorage) getReportUpsertQuery() string {
 	return `
 		INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		ON CONFLICT (org_id, cluster)
-		DO UPDATE SET report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6
+		ON CONFLICT (cluster)
+		DO UPDATE SET org_id = $1, report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6
 	`
 }
 
@@ -644,7 +644,9 @@ func (storage DBStorage) updateReport(
 	for _, rule := range rules {
 		_, err = tx.Exec(ruleUpsertQuery, orgID, clusterName, rule.Module, rule.ErrorKey, string(rule.TemplateData))
 		if err != nil {
-			log.Err(err).Msgf("Unable to upsert the cluster report (org: %v, cluster: %v)", orgID, clusterName)
+			log.Err(err).Msgf("Unable to upsert the cluster report rules (org: %v, cluster: %v, rule: %v|%v)",
+				orgID, clusterName, rule.Module, rule.ErrorKey,
+			)
 			return err
 		}
 	}
