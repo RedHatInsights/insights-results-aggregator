@@ -1,0 +1,137 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: ccx-insights-results-aggregator
+objects:
+
+- kind: HorizontalPodAutoscaler
+  apiVersion: autoscaling/v1
+  metadata:
+    labels:
+      app: ccx-data-pipeline
+    name: ccx-insights-results-aggregator
+  spec:
+    minReplicas: ${{MIN_REPLICAS}}
+    maxReplicas: ${{MAX_REPLICAS}}
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: results-aggregator
+    targetCPUUtilizationPercentage: 80
+
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: insights-results
+  spec:
+    envName: ${ENV_NAME}
+    dependencies:
+      - ingress
+      - insights-results-db
+      - ccx-data-pipeline
+    deployments:
+      - name: aggregator
+        minReplicas: ${{MIN_REPLICAS}}
+        webServices:
+          public:
+            enabled: false
+          private:
+            enabled: false
+          metrics:
+            enabled: true
+        podSpec:
+          env:
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
+              value: "false"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH
+              value: "/rules-content"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
+              value: ":8080"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
+              value: "${IRA_API_PREFIX}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
+              value: "/openapi/openapi.json"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG
+              value: "${DEBUG}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH
+              value: "${AUTH}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH_TYPE
+              value: "xrh"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
+              value: "true"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__MAXIMUM_FEEDBACK_MESSAGE_LENGTH
+              value: "255"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ORG_OVERVIEW_LIMIT_HOURS
+              value: "168"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
+              value: postgres
+            - name: HABERDASHER_EMITTER
+              value: ${HABERDASHER_EMITTER}
+            - name: HABERDASHER_KAFKA_BOOTSTRAP
+              value: ${HABERDASHER_KAFKA_BOOTSTRAP}
+            - name: HABERDASHER_KAFKA_TOPIC
+              value: ${HABERDASHER_KAFKA_TOPIC}
+            - name: HABERDASHER_LABELS
+              value: ${AGGREGATOR_HABERDASHER_LABELS}
+            - name: HABERDASHER_TAGS
+              value: ${HABERDASHER_TAGS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
+              value: sslmode=disable
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
+              value: "false"
+          image: ${IMAGE}:${IMAGE_TAG}
+          resources:
+            requests:
+              cpu: 100m
+              memory: 300Mi
+            limits:
+              cpu: 250m
+              memory: 600Mi
+    database:
+      sharedDbAppName: insights-results-db
+              
+parameters:
+- description: Image name
+  name: IMAGE
+  value: quay.io/cloudservices/insights-results-aggregator
+- description: Image tag
+  name: IMAGE_TAG
+  required: true
+- description: Determines Clowder deployment
+  name: CLOWDER_ENABLED
+  value: "false"
+- description: Env Name
+  name: ENV_NAME
+  required: true
+- description: Minimum number of pods to use when autoscaling is enabled
+  name: MIN_REPLICAS
+  value: '2'
+- description: Maximum number of pods to use when autoscaling is enabled
+  name: MAX_REPLICAS
+  value: '6'
+- name: PAYLOAD_TRACKER_TOPIC
+  description: Kafka topic for publishing updated for the Payload Tracker service
+  value: platform.payload-status
+- name: HABERDASHER_EMITTER
+  description: Emitter for haberdasher logs [stderr|kafka]
+  value: stderr
+- name: HABERDASHER_KAFKA_BOOTSTRAP
+  description: Bootstrap server for haberdasher kafka emitter
+  value: "mq-kafka:29092"
+- name: HABERDASHER_KAFKA_TOPIC
+  description: Kafka topic for haberdasher kafka emitter
+  value: "platform.logging.logs"
+- name: HABERDASHER_TAGS
+  description: Haberdasher tags for unstructured logs
+  value: '["ccx"]'
+- name: AGGREGATOR_HABERDASHER_LABELS
+  description: Haberdasher labels for unstructured logs
+  value: '{"app": "ccx-insights-results-aggregator"}'
+- name: DEBUG
+  value: "true"
+- name: AUTH
+  value: "false"
+- name: IRA_API_PREFIX
+  required: true
+  value: "/api/v1/"

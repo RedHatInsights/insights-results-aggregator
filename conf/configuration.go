@@ -269,20 +269,24 @@ func updateConfigFromClowder(c *ConfigStruct) error {
 		fmt.Println("Clowder is enabled")
 		if clowder.LoadedConfig.Kafka == nil {
 			fmt.Println("No Kafka configuration available in Clowder, using default one")
-			return nil
-		}
-
-		broker := clowder.LoadedConfig.Kafka.Brokers[0]
-
-		// port can be empty in clowder, so taking it into account
-		if broker.Port != nil {
-			c.Broker.Address = fmt.Sprintf("%s:%d", broker.Hostname, broker.Port)
 		} else {
-			c.Broker.Address = broker.Hostname
+			broker := clowder.LoadedConfig.Kafka.Brokers[0]
+			// port can be empty in clowder, so taking it into account
+			if broker.Port != nil {
+				c.Broker.Address = fmt.Sprintf("%s:%d", broker.Hostname, *broker.Port)
+			} else {
+				c.Broker.Address = broker.Hostname
+			}
 		}
+
+		//get DB configuraton from clowder
+		c.Storage.PGDBName = clowder.LoadedConfig.Database.Name
+		c.Storage.PGHost = clowder.LoadedConfig.Database.Hostname
+		c.Storage.PGPort = clowder.LoadedConfig.Database.Port
+		c.Storage.PGUsername = clowder.LoadedConfig.Database.Username
+		c.Storage.PGPassword = clowder.LoadedConfig.Database.Password
 
 	} else {
-		// can not use Zerolog at this moment!
 		fmt.Println("Clowder is disabled")
 	}
 

@@ -71,5 +71,5 @@ func stopConsumer() error {
 
 func waitForConsumerToStartOrFail() {
 	log.Info().Msg("waiting for consumer to start")
-	_ = <-consumerInstanceIsStarting.Done()
+	<-consumerInstanceIsStarting.Done()
 }
