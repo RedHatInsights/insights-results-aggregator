@@ -108,13 +108,7 @@ type ReportItem = types.ReportItem
 
 // ClusterReports is a data structure containing list of clusters, list of
 // errors and dictionary with results per cluster.
-type ClusterReports struct {
-	ClusterList []types.ClusterName               `json:"clusters"`
-	Errors      []types.ClusterName               `json:"errors"`
-	Reports     map[types.ClusterName]interface{} `json:"reports"`
-	GeneratedAt string                            `json:"generated_at"`
-	Status      string                            `json:"status"`
-}
+type ClusterReports = types.ClusterReports
 
 //SchemaVersion represents the current version of data schema
 type SchemaVersion = types.SchemaVersion
