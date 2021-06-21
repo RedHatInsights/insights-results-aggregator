@@ -105,14 +105,14 @@ func fillInGeneratedReports(clusterNames []types.ClusterName, reports map[types.
 	if includeTimestamp {
 		generatedReports.GeneratedAt = time.Now().UTC().Format(time.RFC3339)
 	}
-	generatedReports.Reports = make(map[types.ClusterName]interface{})
+	generatedReports.Reports = make(map[types.ClusterName]json.RawMessage)
 
 	// fill it by real cluster reports
 	for _, clusterName := range clusterNames {
 		stringReport, ok := reports[clusterName]
 		// report for given cluster has been found
 		if ok {
-			var jsonReport interface{}
+			var jsonReport json.RawMessage
 			err := json.Unmarshal([]byte(stringReport), &jsonReport)
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to unmarshal report for cluster")
