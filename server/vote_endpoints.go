@@ -39,8 +39,14 @@ func (server *HTTPServer) resetVoteOnRule(writer http.ResponseWriter, request *h
 }
 
 func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.Request, userVote types.UserVote) {
-	clusterID, ruleID, userID, successful := server.readClusterRuleUserParams(writer, request)
+	clusterID, ruleID, errorKey, successful := server.readClusterRuleParams(writer, request)
 	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	userID, succesful := readUserID(writer, request)
+	if !succesful {
 		// everything has been handled already
 		return
 	}
@@ -57,7 +63,7 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	err := server.Storage.VoteOnRule(clusterID, ruleID, userID, userVote, voteMessage)
+	err := server.Storage.VoteOnRule(clusterID, ruleID, errorKey, userID, userVote, voteMessage)
 	if err != nil {
 		handleServerError(writer, err)
 		return
@@ -70,8 +76,14 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 }
 
 func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *http.Request) {
-	clusterID, ruleID, userID, successful := server.readClusterRuleUserParams(writer, request)
+	clusterID, ruleID, errorKey, successful := server.readClusterRuleParams(writer, request)
 	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	userID, succesful := readUserID(writer, request)
+	if !succesful {
 		// everything has been handled already
 		return
 	}
@@ -82,7 +94,7 @@ func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	userFeedbackOnRule, err := server.Storage.GetUserFeedbackOnRule(clusterID, ruleID, userID)
+	userFeedbackOnRule, err := server.Storage.GetUserFeedbackOnRule(clusterID, ruleID, errorKey, userID)
 	if err != nil {
 		handleServerError(writer, err)
 		return

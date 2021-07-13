@@ -37,7 +37,7 @@ func (server *HTTPServer) enableRuleForCluster(writer http.ResponseWriter, reque
 
 // toggleRuleForCluster contains shared functionality for enable/disable
 func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, request *http.Request, toggleRule storage.RuleToggle) {
-	clusterID, ruleID, successful := server.readClusterRuleParams(writer, request)
+	clusterID, ruleID, errorKey, successful := server.readClusterRuleParams(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
@@ -49,7 +49,7 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	err := server.Storage.ToggleRuleForCluster(clusterID, ruleID, toggleRule)
+	err := server.Storage.ToggleRuleForCluster(clusterID, ruleID, errorKey, toggleRule)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to toggle rule for selected cluster")
 		handleServerError(writer, err)
@@ -110,8 +110,14 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 }
 
 func (server HTTPServer) saveDisableFeedback(writer http.ResponseWriter, request *http.Request) {
-	clusterID, ruleID, userID, successful := server.readClusterRuleUserParams(writer, request)
+	clusterID, ruleID, errorKey, successful := server.readClusterRuleParams(writer, request)
 	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	userID, succesful := readUserID(writer, request)
+	if !succesful {
 		// everything has been handled already
 		return
 	}
@@ -128,7 +134,7 @@ func (server HTTPServer) saveDisableFeedback(writer http.ResponseWriter, request
 		return
 	}
 
-	err = server.Storage.AddFeedbackOnRuleDisable(clusterID, ruleID, userID, feedback)
+	err = server.Storage.AddFeedbackOnRuleDisable(clusterID, ruleID, errorKey, userID, feedback)
 	if err != nil {
 		handleServerError(writer, err)
 		return
@@ -156,7 +162,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 		rule.Disabled = ruleToggle.Disabled == storage.RuleToggleDisable
 	}
 
-	feedback, err := server.Storage.GetUserFeedbackOnRule(clusterName, rule.Module, userID)
+	feedback, err := server.Storage.GetUserFeedbackOnRule(clusterName, rule.Module, rule.ErrorKey, userID)
 	if err != nil {
 		log.Error().Err(err).Msg("Feedback for rule was not found")
 		rule.UserVote = types.UserVoteNone
