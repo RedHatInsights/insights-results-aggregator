@@ -485,6 +485,18 @@ func TestDBStorageGetVotesForNoRules(t *testing.T) {
 	assert.Len(t, feedbacks, 0)
 }
 
+func TestDBStorageGetDisableFeedback(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	feedbacks, err := mockStorage.GetUserDisableFeedbackOnRules(
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+	)
+	helpers.FailOnError(t, err)
+
+	assert.Len(t, feedbacks, 0)
+}
+
 func TestDBStorageGetVotes(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
