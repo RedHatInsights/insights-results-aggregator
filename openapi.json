@@ -604,7 +604,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{error_key}/users/{userId}/like": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/like": {
       "put": {
         "summary": "Puts like for the rule with cluster for user",
         "operationId": "addLikeToRule",
@@ -675,7 +675,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{error_key}/users/{userId}/dislike": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/dislike": {
       "put": {
         "summary": "Puts dislike for the rule with cluster for user",
         "operationId": "addDislikeToRule",
@@ -746,7 +746,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{error_key}/users/{userId}/reset_vote": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/reset_vote": {
       "put": {
         "summary": "Resets vote for the rule with cluster for current user",
         "operationId": "resetVoteForRule",
@@ -817,7 +817,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{error_key}/users/{userId}/get_vote": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/get_vote": {
       "get": {
         "summary": "Returns vote for the rule with cluster for user",
         "operationId": "getVoteForRule",
@@ -1019,7 +1019,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{error_key}/users/{userId}/disable_feedback": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/disable_feedback": {
       "post": {
         "summary": "Returns rule/health check's disable feedback",
         "operationId": "disableRuleFeedback",
@@ -1049,7 +1049,7 @@
             "example": "some.python.module"
           },
           {
-            "name": "error_key",
+            "name": "errorKey",
             "in": "path",
             "required": true,
             "description": "ID of the error key",
