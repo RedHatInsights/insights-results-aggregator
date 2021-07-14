@@ -77,19 +77,19 @@ var knownErrorKeys []string = []string{
 }
 
 func constructURLLikeRule(clusterID, ruleID, errorKey, userID string) string {
-	return httputils.MakeURLToEndpoint(apiURL, server.LikeRuleEndpoint, clusterID, ruleID, userID)
+	return httputils.MakeURLToEndpoint(apiURL, server.LikeRuleEndpoint, clusterID, ruleID, errorKey, userID)
 }
 
 func constructURLDislikeRule(clusterID, ruleID, errorKey, userID string) string {
-	return httputils.MakeURLToEndpoint(apiURL, server.DislikeRuleEndpoint, clusterID, ruleID, userID)
+	return httputils.MakeURLToEndpoint(apiURL, server.DislikeRuleEndpoint, clusterID, ruleID, errorKey, userID)
 }
 
 func constructURLResetVoteForRule(clusterID, ruleID, errorKey, userID string) string {
-	return httputils.MakeURLToEndpoint(apiURL, server.ResetVoteOnRuleEndpoint, clusterID, ruleID, userID)
+	return httputils.MakeURLToEndpoint(apiURL, server.ResetVoteOnRuleEndpoint, clusterID, ruleID, errorKey, userID)
 }
 
 func constructURLGetVoteForRule(clusterID, ruleID, errorKey, userID string) string {
-	return httputils.MakeURLToEndpoint(apiURL, server.GetVoteOnRuleEndpoint, clusterID, ruleID, userID)
+	return httputils.MakeURLToEndpoint(apiURL, server.GetVoteOnRuleEndpoint, clusterID, ruleID, errorKey, userID)
 }
 
 func checkOkStatus(f *frisby.Frisby) {
