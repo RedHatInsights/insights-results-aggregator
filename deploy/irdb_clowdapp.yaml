@@ -129,7 +129,7 @@ objects:
               cpu: 200m
               memory: 300Mi
     database:
-      name: results-db
+      name: ccx-data-pipeline-db
       version: 12
     kafkaTopics:
       - replicas: 3
