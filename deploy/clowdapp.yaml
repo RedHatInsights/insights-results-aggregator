@@ -23,12 +23,11 @@ objects:
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
-    name: insights-results-aggregator
+    name: insights-results
   spec:
     envName: ${ENV_NAME}
     dependencies:
       - ingress
-      - insights-results-db-writer
       - ccx-data-pipeline
     deployments:
       - name: aggregator
@@ -88,19 +87,7 @@ objects:
             limits:
               cpu: 250m
               memory: 600Mi
-    database:
-      sharedDbAppName: insights-results-db-writer
-
-- apiVersion: cloud.redhat.com/v1alpha1
-  kind: ClowdApp
-  metadata:
-    name: insights-results-db-writer
-  spec:
-    envName: ${ENV_NAME}
-    dependencies:
-      - ingress
-    deployments:
-      - name: writer
+      - name: db-writer
         minReplicas: ${{DB_WRITER_REPLICAS}}
         webServices:
           public:
