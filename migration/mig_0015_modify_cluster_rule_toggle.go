@@ -268,6 +268,9 @@ var defaultErrorKeysPerRuleID map[string]string = map[string]string{
 	"ccx_rules_ocp.external.rules.unsupported_cni_plugin":                     "UNSUPPORTED_CNI_PLUGIN",
 	"ccx_rules_ocp.external.rules.vsphere_upi_machine_is_in_phase":            "VSPHERE_UPI_MACHINE_WITH_NO_RUNNING_PHASE",
 
+	"ccx_rules_ocp.external.security.CVE_2020_8555_kubernetes": "CVE_2020_8555_KUBERNETES",
+	"ccx_rules_ocp.external.security.CVE_2021_30465_runc":      "CVE_2021_30465_RUNC_VULN",
+
 	// Several ERROR_KEY
 	// "ccx_rules_ocp.external.rules.image_registry_storage"
 	// "ccx_rules_ocp.external.rules.ocp_version_end_of_life_eus"
