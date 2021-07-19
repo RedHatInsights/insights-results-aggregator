@@ -58,7 +58,7 @@ spec:
         limits:
           cpu: 300m
           memory: 512Mi
-    - image: registry.redhat.io/rhel8/go-toolset:1.16
+    - image: registry.redhat.io/rhel8/go-toolset:1.15
       name: builder
       tty: True
       env:
