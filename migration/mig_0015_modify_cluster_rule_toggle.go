@@ -197,7 +197,6 @@ var mig0015ClusterUserRuleDisableFeedback = Migration{
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		var err error
 		if driver == types.DBDriverPostgres {
 			_, err := tx.Exec(`
 				ALTER TABLE cluster_user_rule_disable_feedback DROP CONSTRAINT cluster_user_rule_disable_feedback_pkey,
@@ -205,11 +204,9 @@ var mig0015ClusterUserRuleDisableFeedback = Migration{
 				ALTER TABLE cluster_user_rule_disable_feedback DROP COLUMN error_key;
 			`)
 			return err
-		} else {
-			err = mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite.StepDown(tx, driver)
 		}
 
-		return err
+		return mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite.StepDown(tx, driver)
 	},
 }
 
