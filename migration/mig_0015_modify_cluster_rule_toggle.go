@@ -35,10 +35,9 @@ var mig0015ClusterRuleToggle = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		var err error
 
-		_, err = tx.Exec(`
-			ALTER TABLE cluster_rule_toggle ADD error_key VARCHAR DEFAULT "" NOT NULL;
-		`)
-		if err != nil {
+		if _, err = tx.Exec(`
+			ALTER TABLE cluster_rule_toggle ADD error_key VARCHAR NOT NULL DEFAULT '';
+		`); err != nil {
 			return err
 		}
 
@@ -49,7 +48,7 @@ var mig0015ClusterRuleToggle = Migration{
 			`)
 
 		} else {
-			err = mig0015UpdatePrimaryKeysClusterRuleToggle.StepUp(tx, driver)
+			err = mig0015ClusterRuleTogglePrimaryKeysSQLite.StepUp(tx, driver)
 		}
 
 		return err
@@ -57,19 +56,19 @@ var mig0015ClusterRuleToggle = Migration{
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverPostgres {
 			_, err := tx.Exec(`
-				ALTER TABLE cluster_rule_toggle DROP COLUMN error_key;
 				ALTER TABLE cluster_rule_toggle DROP CONSTRAINT cluster_rule_toggle_pkey,
-				ADD CONSTRAINT cluster_rule_toggle_pkey PRIMARY KEY (cluster_id, rule_id);
+					ADD CONSTRAINT cluster_rule_toggle_pkey PRIMARY KEY (cluster_id, rule_id);
+				ALTER TABLE cluster_rule_toggle DROP COLUMN error_key;
 			`)
 			return err
 		}
 
-		return mig0015UpdatePrimaryKeysClusterRuleToggle.StepDown(tx, driver)
+		return mig0015ClusterRuleTogglePrimaryKeysSQLite.StepDown(tx, driver)
 	},
 }
 
-// mig0015UpdatePrimaryKeysClusterRuleToggle is a helper to update PKs on cluster_rule_toggle table in SQLite
-var mig0015UpdatePrimaryKeysClusterRuleToggle = NewUpdateTableMigration(
+// mig0015ClusterRuleTogglePrimaryKeysSQLite is a helper to update PKs on cluster_rule_toggle table in SQLite
+var mig0015ClusterRuleTogglePrimaryKeysSQLite = NewUpdateTableMigration(
 	clusterRuleToggleTable,
 	`
 		CREATE TABLE cluster_rule_toggle (
@@ -107,45 +106,54 @@ var mig0015UpdatePrimaryKeysClusterRuleToggle = NewUpdateTableMigration(
 var mig0015ClusterRuleUserFeedback = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		var err error
-		_, err = tx.Exec(`
-			ALTER TABLE cluster_rule_user_feedback ADD error_key VARCHAR DEFAULT "" NOT NULL;
-		`)
-		if err != nil {
+		if _, err = tx.Exec(`
+			ALTER TABLE cluster_rule_user_feedback ADD error_key VARCHAR NOT NULL DEFAULT '';
+		`); err != nil {
 			return err
 		}
 
 		if driver == types.DBDriverPostgres {
 			_, err = tx.Exec(`
-				ALTER TABLE cluster_rule_user_feedback DROP CONSTRAINT cluster_rule_user_feedback_pkey,
-					ADD CONSTRAINT cluster_rule_user_feedback_pkey PRIMARY KEY (cluster_id, rule_id, user_id. error_key);
+				ALTER TABLE cluster_rule_user_feedback DROP CONSTRAINT cluster_rule_user_feedback_pkey1,
+					ADD CONSTRAINT cluster_rule_user_feedback_pkey PRIMARY KEY (cluster_id, rule_id, user_id, error_key);
 			`)
 
 		} else {
-			err = mig0015UpdatePrimaryKeysClusterRuleUserFeedback.StepUp(tx, driver)
+			err = mig0015ClusterRuleUserFeedbackPrimaryKeysSQLite.StepUp(tx, driver)
 		}
 
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		return mig0015UpdatePrimaryKeysClusterRuleUserFeedback.StepDown(tx, driver)
+		if driver == types.DBDriverPostgres {
+			_, err := tx.Exec(`
+				ALTER TABLE cluster_rule_user_feedback DROP CONSTRAINT cluster_rule_user_feedback_pkey,
+					ADD CONSTRAINT cluster_rule_user_feedback_pkey1 PRIMARY KEY (cluster_id, rule_id, user_id);
+				ALTER TABLE cluster_rule_user_feedback DROP COLUMN error_key;
+			`)
+			return err
+		}
+
+		return mig0015ClusterRuleUserFeedbackPrimaryKeysSQLite.StepDown(tx, driver)
 	},
 }
 
-var mig0015UpdatePrimaryKeysClusterRuleUserFeedback = NewUpdateTableMigration(
+// mig0015ClusterRuleUserFeedbackPrimaryKeysSQLite is a helper to update PKs on cluster_rule_user_feedback table in SQLite
+var mig0015ClusterRuleUserFeedbackPrimaryKeysSQLite = NewUpdateTableMigration(
 	clusterRuleUserFeedbackTable,
 	`
-		CREATE TABLE cluster_rule_user_feedback (
-			cluster_id VARCHAR NOT NULL,
-			rule_id VARCHAR NOT NULL,
-			user_id VARCHAR NOT NULL,
-			message VARCHAR NOT NULL,
-			user_vote SMALLINT NOT NULL,
-			added_at TIMESTAMP NOT NULL,
-			updated_at TIMESTAMP NOT NULL,
-			
-			PRIMARY KEY(cluster_id, rule_id, user_id),
-			FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
-		)
+	CREATE TABLE cluster_rule_user_feedback (
+		cluster_id VARCHAR NOT NULL,
+		rule_id VARCHAR NOT NULL,
+		user_id VARCHAR NOT NULL,
+		message VARCHAR NOT NULL,
+		user_vote SMALLINT NOT NULL,
+		added_at TIMESTAMP NOT NULL,
+		updated_at TIMESTAMP NOT NULL,
+
+		PRIMARY KEY(cluster_id, rule_id, user_id),
+		FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
+	)
 	`,
 	[]string{"cluster_id", "rule_id", "user_id", "message", "user_vote", "added_at", "updated_at"},
 	`
@@ -165,40 +173,110 @@ var mig0015UpdatePrimaryKeysClusterRuleUserFeedback = NewUpdateTableMigration(
 	`,
 )
 
+// mig0015ClusterUserRuleDisableFeedback is a helper for update the cluster_user_rule_disable_feedback
+var mig0015ClusterUserRuleDisableFeedback = Migration{
+	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
+		var err error
+
+		if _, err := tx.Exec(`
+			ALTER TABLE cluster_user_rule_disable_feedback ADD error_key VARCHAR NOT NULL DEFAULT '';
+		`); err != nil {
+			return err
+		}
+
+		if driver == types.DBDriverPostgres {
+			_, err = tx.Exec(`
+				ALTER TABLE cluster_user_rule_disable_feedback DROP CONSTRAINT cluster_user_rule_disable_feedback_pkey,
+					ADD CONSTRAINT cluster_user_rule_disable_feedback_pkey PRIMARY KEY (cluster_id, user_id, rule_id, error_key);
+			`)
+
+		} else {
+			err = mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite.StepUp(tx, driver)
+		}
+
+		return err
+	},
+	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
+		var err error
+		if driver == types.DBDriverPostgres {
+			_, err := tx.Exec(`
+				ALTER TABLE cluster_user_rule_disable_feedback DROP CONSTRAINT cluster_user_rule_disable_feedback_pkey,
+					ADD CONSTRAINT cluster_user_rule_disable_feedback_pkey PRIMARY KEY (cluster_id, user_id, rule_id);
+				ALTER TABLE cluster_user_rule_disable_feedback DROP COLUMN error_key;
+			`)
+			return err
+		} else {
+			err = mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite.StepDown(tx, driver)
+		}
+
+		return err
+	},
+}
+
+// mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite is a helper to update PKs on cluster_user_rule_disable_feedback table in SQLite
+var mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite = NewUpdateTableMigration(
+	clusterUserRuleDisableFeedbackTable,
+	`
+	CREATE TABLE cluster_user_rule_disable_feedback (
+		cluster_id VARCHAR NOT NULL,
+		user_id VARCHAR NOT NULL,
+		rule_id VARCHAR NOT NULL,
+		message VARCHAR NOT NULL,
+		added_at TIMESTAMP NOT NULL,
+		updated_at TIMESTAMP NOT NULL,
+			
+		PRIMARY KEY(cluster_id, user_id, rule_id)
+	)
+	`,
+	[]string{"cluster_id", "user_id", "rule_id", "message", "added_at", "updated_at"},
+	`
+	CREATE TABLE cluster_user_rule_disable_feedback (
+		cluster_id VARCHAR NOT NULL,
+		user_id VARCHAR NOT NULL,
+		rule_id VARCHAR NOT NULL,
+		message VARCHAR NOT NULL,
+		added_at TIMESTAMP NOT NULL,
+		updated_at TIMESTAMP NOT NULL,
+		error_key VARCHAR NOT NULL,
+		
+		PRIMARY KEY(cluster_id, user_id, rule_id, error_key)		
+	)
+	`,
+)
+
 // migrateClusterRoleToggleData is a helper to update the current data with default values
 // It takes the only possible value for error_key on the rules that only has one possible error key
 func migrateClusterRoleToggleData(tx *sql.Tx) error {
 	updateClusterRuleToggleQuery := `
 	UPDATE cluster_rule_toggle SET error_key=$1 WHERE rule_id LIKE $2
 	`
-	updateClusterRuleUserFeedback := `
+	updateClusterRuleUserFeedbackQuery := `
 	UPDATE cluster_rule_user_feedback SET error_key=$1 WHERE rule_id LIKE $2
+	`
+
+	updateClusterUserRuleDisableFeedbackQuery := `
+	UPDATE cluster_user_rule_disable_feedback SET error_key=$1 WHERE rule_id LIKE $2
 	`
 
 	for ruleID, errorKey := range defaultErrorKeysPerRuleID {
 		ruleIDWildcard := fmt.Sprintf("%s%%", ruleID)
 
 		log.Info().Str("rule_id", ruleIDWildcard).Str("errorKey", errorKey).Msg("Updating DB data")
-		result, err := tx.Exec(updateClusterRuleToggleQuery, errorKey, ruleIDWildcard)
+
+		err := updateTableData(tx, "cluster_rule_toggle", updateClusterRuleToggleQuery, errorKey, ruleIDWildcard)
+
 		if err != nil {
 			return err
 		}
 
-		rowsAffected, err := result.RowsAffected()
-		if err == nil {
-			log.Info().Str("table", "cluster_rule_toggle").Msgf("Rows affected: %d", rowsAffected)
-		} else {
-			log.Error().Err(err).Msg("Error looking at query result")
-		}
-
-		result, err = tx.Exec(updateClusterRuleUserFeedback, errorKey, ruleIDWildcard)
+		err = updateTableData(tx, "cluster_rule_user_feedback", updateClusterRuleUserFeedbackQuery, errorKey, ruleIDWildcard)
 		if err != nil {
 			return err
 		}
 
-		rowsAffected, err = result.RowsAffected()
-		if err == nil {
-			log.Info().Str("table", "cluster_rule_user_feedback").Msgf("Rows affected: %d", rowsAffected)
+		err = updateTableData(tx, "cluster_user_rule_disable_feedback", updateClusterUserRuleDisableFeedbackQuery, errorKey, ruleIDWildcard)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -206,13 +284,17 @@ func migrateClusterRoleToggleData(tx *sql.Tx) error {
 }
 
 // mig0015ModifyClusterRuleTables migrates the tables related to user toggle and feedback with error_key
-var mig0015ModifyClusterRuleTables = Migration{
+var mig0015ModifyFeedbackTables = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		if err := mig0015ClusterRuleToggle.StepUp(tx, driver); err != nil {
 			return err
 		}
 
 		if err := mig0015ClusterRuleUserFeedback.StepUp(tx, driver); err != nil {
+			return err
+		}
+
+		if err := mig0015ClusterUserRuleDisableFeedback.StepUp(tx, driver); err != nil {
 			return err
 		}
 
@@ -225,6 +307,10 @@ var mig0015ModifyClusterRuleTables = Migration{
 		}
 
 		if err := mig0015ClusterRuleUserFeedback.StepDown(tx, driver); err != nil {
+			return err
+		}
+
+		if err := mig0015ClusterUserRuleDisableFeedback.StepDown(tx, driver); err != nil {
 			return err
 		}
 

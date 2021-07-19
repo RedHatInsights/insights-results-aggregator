@@ -296,10 +296,10 @@ func (storage DBStorage) AddFeedbackOnRuleDisable(
 ) error {
 	statement, err := storage.connection.Prepare(`
 		INSERT INTO cluster_user_rule_disable_feedback
-		(cluster_id, user_id, rule_id, message, added_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		ON CONFLICT (cluster_id, user_id, rule_id)
-		DO UPDATE SET updated_at = $6, message = $4;
+		(cluster_id, user_id, rule_id, error_key, message, added_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (cluster_id, user_id, rule_id, error_key)
+		DO UPDATE SET updated_at = $7, message = $5;
 	`)
 	if err != nil {
 		return err
@@ -313,7 +313,7 @@ func (storage DBStorage) AddFeedbackOnRuleDisable(
 
 	now := time.Now()
 
-	_, err = statement.Exec(clusterID, userID, ruleID, message, now, now)
+	_, err = statement.Exec(clusterID, userID, ruleID, errorKey, message, now, now)
 	err = types.ConvertDBError(err, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("addOrUpdateUserFeedbackOnRuleDisableForCluster")

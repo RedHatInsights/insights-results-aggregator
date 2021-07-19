@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/rs/zerolog/log"
 )
 
 // NewUpdateTableMigration generates a migration which changes tables schema and copies data
@@ -96,4 +97,24 @@ func downgradeTable(tx *sql.Tx, tableName, oldTableDefinition string, columns []
 	}
 
 	return nil
+}
+
+//
+func updateTableData(tx *sql.Tx, table string, query string, args ...interface{}) error {
+	log.Debug().Str("table", table).Msg("Updating rows...")
+	result, err := tx.Exec(query, args...)
+
+	if err == nil {
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			log.Error().Err(err).Str("table", table).Msg("Error retrieving the number of affected rows")
+			err = nil
+		} else {
+			log.Debug().Str("table", table).Msgf("Updated %d rows", rowsAffected)
+		}
+	} else {
+		log.Error().Err(err).Str("table", table).Msg("Unable to update data")
+	}
+
+	return err
 }
