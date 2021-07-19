@@ -25,11 +25,3 @@ apps:
       parameters:
         CLOWDER_ENABLED: "true"
         IMAGE_TAG: latest
-    - name: insights-results-db
-      host: github
-      repo: <user>/insights-results-aggregator
-      path: deploy/irdb_clowdapp.yaml
-      ref: <branch>
-      parameters:
-        CLOWDER_ENABLED: "true"
-        IMAGE_TAG: latest
