@@ -81,20 +81,20 @@ func (*NoopStorage) ReportsCount() (int, error) {
 }
 
 // VoteOnRule noop
-func (*NoopStorage) VoteOnRule(types.ClusterName, types.RuleID, types.UserID, types.UserVote, string) error {
+func (*NoopStorage) VoteOnRule(types.ClusterName, types.RuleID, types.ErrorKey, types.UserID, types.UserVote, string) error {
 	return nil
 }
 
 // AddOrUpdateFeedbackOnRule noop
 func (*NoopStorage) AddOrUpdateFeedbackOnRule(
-	types.ClusterName, types.RuleID, types.UserID, string,
+	types.ClusterName, types.RuleID, types.ErrorKey, types.UserID, string,
 ) error {
 	return nil
 }
 
 // AddFeedbackOnRuleDisable noop
 func (*NoopStorage) AddFeedbackOnRuleDisable(
-	types.ClusterName, types.RuleID, types.UserID, string,
+	types.ClusterName, types.RuleID, types.ErrorKey, types.UserID, string,
 ) error {
 	return nil
 }
@@ -108,7 +108,7 @@ func (*NoopStorage) GetUserFeedbackOnRuleDisable(
 
 // GetUserFeedbackOnRule noop
 func (*NoopStorage) GetUserFeedbackOnRule(
-	types.ClusterName, types.RuleID, types.UserID,
+	types.ClusterName, types.RuleID, types.ErrorKey, types.UserID,
 ) (*UserFeedbackOnRule, error) {
 	return nil, nil
 }
@@ -165,7 +165,7 @@ func (*NoopStorage) WriteConsumerError(*sarama.ConsumerMessage, error) error {
 
 // ToggleRuleForCluster noop
 func (*NoopStorage) ToggleRuleForCluster(
-	types.ClusterName, types.RuleID, RuleToggle,
+	types.ClusterName, types.RuleID, types.ErrorKey, RuleToggle,
 ) error {
 	return nil
 }

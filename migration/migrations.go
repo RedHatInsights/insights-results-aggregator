@@ -31,4 +31,5 @@ var migrations = []Migration{
 	mig0012CreateClusterUserRuleDisableFeedback,
 	mig0013AddRuleHitTable,
 	mig0014ModifyClusterRuleToggle,
+	mig0015ModifyFeedbackTables,
 }

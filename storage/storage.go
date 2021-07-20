@@ -77,6 +77,7 @@ type Storage interface {
 	VoteOnRule(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
+		errorKey types.ErrorKey,
 		userID types.UserID,
 		userVote types.UserVote,
 		voteMessage string,
@@ -84,17 +85,22 @@ type Storage interface {
 	AddOrUpdateFeedbackOnRule(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
+		errorKey types.ErrorKey,
 		userID types.UserID,
 		message string,
 	) error
 	AddFeedbackOnRuleDisable(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
+		errorKey types.ErrorKey,
 		userID types.UserID,
 		message string,
 	) error
 	GetUserFeedbackOnRule(
-		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		errorKey types.ErrorKey,
+		userID types.UserID,
 	) (*UserFeedbackOnRule, error)
 	GetUserFeedbackOnRuleDisable(
 		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
@@ -104,6 +110,7 @@ type Storage interface {
 	ToggleRuleForCluster(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
+		errorKey types.ErrorKey,
 		ruleToggle RuleToggle,
 	) error
 	GetFromClusterRuleToggle(

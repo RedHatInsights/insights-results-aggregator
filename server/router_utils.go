@@ -197,29 +197,41 @@ func (server *HTTPServer) readClusterRuleUserParams(
 	return clusterID, ruleID, userID, true
 }
 
-// readClusterRuleParams gets cluster_name and rule_id from current request
+// readClusterRuleParams gets cluster_name, rule_id and error_key from current request
 func (server *HTTPServer) readClusterRuleParams(
 	writer http.ResponseWriter, request *http.Request,
-) (types.ClusterName, types.RuleID, bool) {
-	clusterID, successful := readClusterName(writer, request)
+) (clusterID types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey, successful bool) {
+	clusterID = ""
+	ruleID = ""
+	errorKey = ""
+	successful = false
+
+	clusterID, successful = readClusterName(writer, request)
 	if !successful {
-		return "", "", false
+		return
 	}
 
-	ruleID, successful := readRuleID(writer, request)
+	ruleID, successful = readRuleID(writer, request)
 	if !successful {
-		return "", "", false
+		return
+	}
+
+	errorKey, successful = readErrorKey(writer, request)
+	if !successful {
+		return
 	}
 
 	clusterExists, err := server.Storage.DoesClusterExist(clusterID)
 	if err != nil {
 		handleServerError(writer, err)
-		return "", "", false
+		successful = false
+		return
 	}
 	if !clusterExists {
 		handleServerError(writer, &types.ItemNotFoundError{ItemID: clusterID})
-		return "", "", false
+		successful = false
+		return
 	}
 
-	return clusterID, ruleID, true
+	return clusterID, ruleID, errorKey, true
 }
