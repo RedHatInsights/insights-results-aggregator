@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<database name="aggregator" schema="public" type="PostgreSQL - 9.6.10">
+<database name="aggregator" schema="public" type="PostgreSQL - 10.17 (Debian 10.17-1.pgdg90+1)">
    <tables>
       <table name="cluster_rule_toggle" numRows="0" remarks="" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="cluster_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
@@ -9,11 +9,14 @@
          <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="disabled_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="enabled_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="updated_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="''::character varying" digits="0" id="7" name="error_key" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
          <primaryKey column="cluster_id" sequenceNumberInPK="1"/>
          <primaryKey column="rule_id" sequenceNumberInPK="2"/>
+         <primaryKey column="error_key" sequenceNumberInPK="3"/>
          <index name="cluster_rule_toggle_pkey" unique="true">
             <column ascending="true" name="cluster_id"/>
             <column ascending="true" name="rule_id"/>
+            <column ascending="true" name="error_key"/>
          </index>
          <checkConstraint constraint="(((disabled &gt;= 0) AND (disabled &lt;= 1)))" name="cluster_rule_toggle_disabled_check"/>
       </table>
@@ -27,13 +30,16 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="user_vote" nullable="false" remarks="" size="5" type="int2" typeCode="5"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="added_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="updated_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="''::character varying" digits="0" id="7" name="error_key" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
          <primaryKey column="cluster_id" sequenceNumberInPK="1"/>
          <primaryKey column="rule_id" sequenceNumberInPK="2"/>
          <primaryKey column="user_id" sequenceNumberInPK="3"/>
-         <index name="cluster_rule_user_feedback_pkey1" unique="true">
+         <primaryKey column="error_key" sequenceNumberInPK="4"/>
+         <index name="cluster_rule_user_feedback_pkey" unique="true">
             <column ascending="true" name="cluster_id"/>
             <column ascending="true" name="rule_id"/>
             <column ascending="true" name="user_id"/>
+            <column ascending="true" name="error_key"/>
          </index>
       </table>
       <table name="cluster_user_rule_disable_feedback" numRows="0" remarks="" schema="public" type="TABLE">
@@ -43,13 +49,16 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="message" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="added_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="updated_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="''::character varying" digits="0" id="6" name="error_key" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
          <primaryKey column="cluster_id" sequenceNumberInPK="1"/>
          <primaryKey column="user_id" sequenceNumberInPK="2"/>
          <primaryKey column="rule_id" sequenceNumberInPK="3"/>
+         <primaryKey column="error_key" sequenceNumberInPK="4"/>
          <index name="cluster_user_rule_disable_feedback_pkey" unique="true">
             <column ascending="true" name="cluster_id"/>
             <column ascending="true" name="user_id"/>
             <column ascending="true" name="rule_id"/>
+            <column ascending="true" name="error_key"/>
          </index>
       </table>
       <table name="consumer_error" numRows="0" remarks="" schema="public" type="TABLE">
