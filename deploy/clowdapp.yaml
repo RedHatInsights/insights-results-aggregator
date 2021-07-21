@@ -17,18 +17,15 @@ objects:
     scaleTargetRef:
       apiVersion: apps/v1
       kind: Deployment
-      name: results-aggregator
+      name: ccx-insights-results-aggregator
     targetCPUUtilizationPercentage: 80
 
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
-    name: insights-results
+    name: ccx-insights-results
   spec:
     envName: ${ENV_NAME}
-    dependencies:
-      - ingress
-      - ccx-data-pipeline
     deployments:
       - name: aggregator
         minReplicas: ${{MIN_REPLICAS}}
@@ -36,7 +33,7 @@ objects:
           public:
             enabled: false
           private:
-            enabled: false
+            enabled: true
           metrics:
             enabled: true
         podSpec:
@@ -46,7 +43,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH
               value: "/rules-content"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
-              value: ":8080"
+              value: ":10000"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
               value: "${IRA_API_PREFIX}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
@@ -80,6 +77,26 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: "false"
           image: ${IMAGE}:${IMAGE_TAG}
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: ${IRA_API_PREFIX}openapi.json
+              port: 10000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: ${IRA_API_PREFIX}openapi.json
+              port: 10000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           resources:
             requests:
               cpu: 100m
@@ -93,7 +110,7 @@ objects:
           public:
             enabled: false
           private:
-            enabled: true
+            enabled: false
           metrics:
             enabled: true
         podSpec:
@@ -142,7 +159,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH
               value: "/rules-content"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
-              value: ":8080"
+              value: ":9000"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
               value: "${IRDW_API_PREFIX}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
@@ -178,7 +195,7 @@ objects:
             failureThreshold: 3
             httpGet:
               path: "${IRDW_API_PREFIX}metrics"
-              port: 8080
+              port: 9000
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -188,7 +205,7 @@ objects:
             failureThreshold: 3
             httpGet:
               path: "${IRDW_API_PREFIX}metrics"
-              port: 8080
+              port: 9000
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -213,6 +230,7 @@ objects:
         topicName: platform.payload-status
 
 parameters:
+# insights-results-aggregator
 - description: Image name
   name: IMAGE
   value: quay.io/cloudservices/insights-results-aggregator
@@ -257,7 +275,7 @@ parameters:
   required: true
   value: "/api/v1/"
 
-  # insights-results-db-writer
+# insights-results-db-writer
 - name: KAFKA_BOOTSTRAP_HOST
   required: true
   value: mq-kafka
