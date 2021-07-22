@@ -219,7 +219,9 @@ objects:
               cpu: 200m
               memory: 300Mi
     database:
-      name: ccx-data-pipeline-db
+      # the DB name should match to app-interface DB name without specifying environment
+      # https://gitlab.cee.redhat.com/service/app-interface/-/blob/ddd85c2ad79b40047391405b2d909eb38667bc43/data/services/insights/ccx-data-pipeline/namespaces/stage-ccx-data-pipeline-stage.yml#L60
+      name: ccx-data-pipeline
       version: 12
     kafkaTopics:
       - replicas: 3
