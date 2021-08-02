@@ -73,6 +73,10 @@ type Storage interface {
 		collectedAtTime time.Time,
 		kafkaOffset types.KafkaOffset,
 	) error
+	WriteRecommendationsForCluster(
+		clusterName types.ClusterName,
+		report types.ClusterReport,
+	) error
 	ReportsCount() (int, error)
 	VoteOnRule(
 		clusterID types.ClusterName,
@@ -667,6 +671,26 @@ func (storage DBStorage) updateReport(
 	return nil
 }
 
+func (storage DBStorage) insertRecommendations(
+	tx *sql.Tx,
+	clusterName types.ClusterName,
+	report types.ReportRules,
+) error {
+	for _, rule := range report.HitRules {
+		_, err := tx.Exec(`
+			INSERT INTO recommendations (
+				cluster_id, rule_fqdn, error_key
+			) VALUES ($1, $2, $3)
+		`, clusterName, rule.Module, rule.ErrorKey)
+		if err != nil {
+			log.Err(err).Msgf("Unable to insert the recommendation (cluster: %v, rule FQDN: %v, error_key: %v)", clusterName, rule.Module, rule.ErrorKey)
+			return err
+		}
+	}
+	return nil
+
+}
+
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
 func (storage DBStorage) WriteReportForCluster(
 	orgID types.OrgID,
@@ -729,6 +753,70 @@ func (storage DBStorage) WriteReportForCluster(
 	return err
 }
 
+// WriteRecommendationsForCluster writes hitting rules in received report for selected cluster
+func (storage DBStorage) WriteRecommendationsForCluster(
+	clusterName types.ClusterName,
+	stringReport types.ClusterReport,
+) (err error) {
+	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
+		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
+	}
+
+	// Begin a new transaction.
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	var deletedRows int
+	var insertedRows int
+
+	err = func(tx *sql.Tx) error {
+
+		// Delete current recommendations for the cluster
+		result, err := tx.Exec(
+			"DELETE FROM recommendations WHERE cluster_id = $1;", clusterName)
+		err = types.ConvertDBError(err, []interface{}{clusterName})
+		if err != nil {
+			log.Error().Err(err).Msgf("Unable to delete the existing recommendations for %s", clusterName)
+			return err
+		}
+
+		// As the documentation says:
+		// RowsAffected returns the number of rows affected by an
+		// update, insert, or delete. Not every database or database
+		// driver may support this.
+		// So we might run in a scenario where we don't have metrics
+		// if the driver doesn't help.
+		affected, err := result.RowsAffected()
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to retrieve number of deleted rows with current driver")
+			return err
+		}
+
+		var report types.ReportRules
+		err = json.Unmarshal([]byte(stringReport), &report)
+		if err != nil {
+			return err
+		}
+
+		err = storage.insertRecommendations(tx, clusterName, report)
+		if err != nil {
+			return err
+		}
+
+		deletedRows = int(affected)
+		insertedRows = len(report.HitRules)
+
+		//update metrics
+
+		return nil
+	}(tx)
+
+	finishTransaction(tx, err)
+
+	return err
+}
 // finishTransaction finishes the transaction depending on err. err == nil -> commit, err != nil -> rollback
 func finishTransaction(tx *sql.Tx, err error) {
 	if err != nil {
