@@ -279,7 +279,7 @@ func updateConfigFromClowder(c *ConfigStruct) error {
 			}
 		}
 
-		//get DB configuraton from clowder
+		//get DB configuration from clowder
 		c.Storage.PGDBName = clowder.LoadedConfig.Database.Name
 		c.Storage.PGHost = clowder.LoadedConfig.Database.Hostname
 		c.Storage.PGPort = clowder.LoadedConfig.Database.Port
