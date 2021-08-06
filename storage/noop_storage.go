@@ -75,6 +75,13 @@ func (*NoopStorage) WriteReportForCluster(
 	return nil
 }
 
+// WriteRecommendationsForCluster noop
+func (*NoopStorage) WriteRecommendationsForCluster(
+	types.ClusterName, types.ClusterReport,
+) error {
+	return nil
+}
+
 // ReportsCount noop
 func (*NoopStorage) ReportsCount() (int, error) {
 	return 0, nil
