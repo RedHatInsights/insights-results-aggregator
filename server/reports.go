@@ -128,7 +128,7 @@ func fillInGeneratedReports(clusterNames []types.ClusterName, reports map[types.
 	}
 
 	// it must be ok now
-	generatedReports.Status = "OK"
+	generatedReports.Status = "ok"
 
 	return generatedReports
 }
