@@ -98,7 +98,7 @@ func checkOkStatus(f *frisby.Frisby) {
 	f.ExpectStatus(200)
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 	statusResponse := readStatusFromResponse(f)
-	if statusResponse.Status != "ok" {
+	if statusResponse.Status != server.OkStatusPayload {
 		f.AddError(fmt.Sprintf("Expected ok status, but got '%s' instead", statusResponse.Status))
 	}
 }
@@ -120,7 +120,7 @@ func checkInvalidUUIDFormat(f *frisby.Frisby) {
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	statusResponse := readStatusFromResponse(f)
-	if statusResponse.Status == "ok" {
+	if statusResponse.Status == server.OkStatusPayload {
 		f.AddError(fmt.Sprintf(unexpectedErrorStatusMessage, statusResponse.Status))
 	}
 	if !strings.Contains(statusResponse.Status, "Error: 'invalid UUID ") {
@@ -147,7 +147,7 @@ func checkItemNotFound(f *frisby.Frisby) {
 	f.ExpectHeader(contentTypeHeader, ContentTypeJSON)
 
 	statusResponse := readStatusFromResponse(f)
-	if statusResponse.Status == "ok" {
+	if statusResponse.Status == server.OkStatusPayload {
 		f.AddError(fmt.Sprintf(unexpectedErrorStatusMessage, statusResponse.Status))
 	}
 	if !strings.Contains(statusResponse.Status, "was not found in the storage") {

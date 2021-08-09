@@ -127,7 +127,7 @@ func expectNumberOfReports(f *frisby.Frisby, response MultipleReportsResponse, e
 
 // expectOkStatus tests whether the response (JSON) contains status attribute set to 'ok'
 func expectOkStatus(f *frisby.Frisby, response MultipleReportsResponse) {
-	if response.Status != "ok" {
+	if response.Status != server.OkStatusPayload {
 		f.AddError(fmt.Sprintf("Expected ok status, but got '%s' instead", response.Status))
 	}
 }
