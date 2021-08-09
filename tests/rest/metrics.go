@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/verdverm/frisby"
 )
 
@@ -33,7 +34,7 @@ func checkPrometheusMetrics() {
 	f.Expect(func(F *frisby.Frisby) (bool, string) {
 		header := F.Resp.Header.Get(contentTypeHeader)
 		if strings.HasPrefix(header, "text/plain") {
-			return true, "ok"
+			return true, server.OkStatusPayload
 		}
 		return false, fmt.Sprintf("Expected Header %q to be %q, but got %q", contentTypeHeader, "text/plain", header)
 	})

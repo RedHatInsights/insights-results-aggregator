@@ -31,7 +31,12 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-const includeTimestamp = false
+const (
+	includeTimestamp = false
+
+	// OkStatusPayload is the text returned as body payload when an OK Status request is sent
+	OkStatusPayload = "ok"
+)
 
 // validateClusterID function checks if the cluster ID is a valid UUID.
 func validateClusterID(clusterID string) error {
@@ -128,7 +133,7 @@ func fillInGeneratedReports(clusterNames []types.ClusterName, reports map[types.
 	}
 
 	// it must be ok now
-	generatedReports.Status = "OK"
+	generatedReports.Status = OkStatusPayload
 
 	return generatedReports
 }

@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/verdverm/frisby"
 )
 
@@ -50,7 +51,7 @@ func readOrganizationsFromResponse(f *frisby.Frisby) OrganizationsResponse {
 func contentSizeForOrganizationResponse(orgIDs ...int) int {
 	r := OrganizationsResponse{
 		Organizations: orgIDs,
-		Status:        "ok",
+		Status:        server.OkStatusPayload,
 	}
 	m, err := json.Marshal(r)
 
@@ -73,7 +74,7 @@ func checkOrganizationsEndpointWithPostfix(postfix string) {
 	f.ExpectHeader(contentLengthHeader, strconv.Itoa(contentSizeForOrganizationResponse(1, 2, 3, 4)))
 
 	organizationsResponse := readOrganizationsFromResponse(f)
-	if organizationsResponse.Status != "ok" {
+	if organizationsResponse.Status != server.OkStatusPayload {
 		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", organizationsResponse.Status))
 	}
 

@@ -22,6 +22,8 @@ import (
 	"fmt"
 
 	"github.com/verdverm/frisby"
+
+	server "github.com/RedHatInsights/insights-results-aggregator/server"
 )
 
 // common constants used by REST API tests
@@ -124,14 +126,14 @@ func checkGetEndpointByOtherMethods(endpoint string, includingOptions bool) {
 
 // checkOkStatusResponse tests whether the response (JSON) contains status attribute set to 'ok'
 func checkOkStatusResponse(f *frisby.Frisby, response ClustersResponse) {
-	if response.Status != "ok" {
+	if response.Status != server.OkStatusPayload {
 		f.AddError(fmt.Sprintf("Expected status is 'ok', but got '%s' instead", response.Status))
 	}
 }
 
 // checkErrorStatusResponse tests whether the response (JSON) contains status attribute not set to 'ok'
 func checkErrorStatusResponse(f *frisby.Frisby, response StatusOnlyResponse) {
-	if response.Status == "ok" {
+	if response.Status == server.OkStatusPayload {
 		f.AddError(fmt.Sprintf("Expected error status, but got '%s' instead", response.Status))
 	}
 }
