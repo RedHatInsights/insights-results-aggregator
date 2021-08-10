@@ -20,6 +20,7 @@ You can download it here <https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plug
 * edit localhost line in your `/etc/hosts`:  `127.0.0.1       localhost kafka minio`
 * `ingress` image should present on your machine. You can build it locally from this repo
 <https://github.com/RedHatInsights/insights-ingress-go>
+* `ccx-data-pipeline` installed. You can doing it by cloning the [repository](https://github.com/RedHatInsights/ccx-data-pipeline) and running `pip install -r requirements.txt`.
 
 ## Usage
 
@@ -38,6 +39,18 @@ curl -k -vvvv -F "upload=@/path/to/your/archive.zip;type=application/vnd.redhat.
 ```
 
 or you can use integration tests suite. More details are [here](https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plugin).
+
+## Troubleshooting
+
+* If you find an error in the last step because no `migration_info` table was found in the DB, run
+```
+INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=config-devel.toml ./insights-results-aggregator migrate latest
+```
+
+* If the binary cannot find the `config-devel.toml` even if the relative path is right, use an absolute one instead i.e `/path/to/config-devel.toml`.
+
+* Make sure to read the contents of `config-devel.toml` as it has all the configuration about the connections to the containers and the API prefix.
+
 
 ## Kafka producer
 
