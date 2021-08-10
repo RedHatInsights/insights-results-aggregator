@@ -20,7 +20,7 @@ You can download it here <https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plug
 * edit localhost line in your `/etc/hosts`:  `127.0.0.1       localhost kafka minio`
 * `ingress` image should present on your machine. You can build it locally from this repo
 <https://github.com/RedHatInsights/insights-ingress-go>
-* `ccx-data-pipeline` installed. You can doing it by cloning the [repository](https://github.com/RedHatInsights/ccx-data-pipeline) and running `pip install -r requirements.txt`.
+* `ccx-data-pipeline` installed. You can doing it by cloning the [repository](https://github.com/RedHatInsights/ccx-data-pipeline) and running `pip install -r requirements.txt`. Make sure you are using the appropiate version of Python (look at `ccx-data-pipeline` README) and a virtualenv (optional but recommended).
 
 ## Usage
 
