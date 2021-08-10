@@ -13,7 +13,7 @@ Aggregator service for insights results
 ## Description
 
 Insights Results Aggregator is a service that provides Insight OCP data
-(offically called *recommendations*) that are being consumed by OpenShift
+(officially called *recommendations*) that are being consumed by OpenShift
 Cluster Manager (OCM), Advanced Cluster Manager (ACM), and OCP WebConsole via
 Insights Operator. That data contain information about clusters status
 (especially health, security, performance, etc.) and recommendations based on
