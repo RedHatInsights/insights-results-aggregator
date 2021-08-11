@@ -25,6 +25,8 @@ import (
 	main "github.com/RedHatInsights/insights-results-aggregator"
 )
 
+// TestRunMain function tries to start the service in test context with the
+// ability to stop the service.
 func TestRunMain(t *testing.T) {
 	interruptSignal := make(chan os.Signal, 1)
 	signal.Notify(interruptSignal, os.Interrupt)
