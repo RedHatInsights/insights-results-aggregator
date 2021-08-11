@@ -45,6 +45,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+// Exit codes
 const (
 	// ExitStatusOK means that the tool finished with success
 	ExitStatusOK = iota
@@ -58,23 +59,34 @@ const (
 	ExitStatusServerError
 	// ExitStatusMigrationError is returned in case of an error while attempting to perform DB migrations
 	ExitStatusMigrationError
-	defaultConfigFilename = "config"
-	typeStr               = "type"
+)
 
+// Messages
+const (
 	databasePreparationMessage = "database preparation exited with error code %v"
 )
 
+// Other constants
+const (
+	defaultConfigFilename = "config"
+	typeStr               = "type"
+)
+
 var (
-	// BuildVersion contains the major.minor version of the CLI client
+	// BuildVersion contains the major.minor version of the CLI client.
+	// It is set up during build process.
 	BuildVersion = "*not set*"
 
-	// BuildTime contains timestamp when the CLI client has been built
+	// BuildTime contains timestamp when the CLI client has been built.
+	// It is set up during build process.
 	BuildTime = "*not set*"
 
-	// BuildBranch contains Git branch used to build this application
+	// BuildBranch contains Git branch used to build this application.
+	// It is set up during build process.
 	BuildBranch = "*not set*"
 
-	// BuildCommit contains Git commit used to build this application
+	// BuildCommit contains Git commit used to build this application.
+	// It is set up during build process.
 	BuildCommit = "*not set*"
 
 	// autoMigrate determines if the prepareDB function upgrades
@@ -83,9 +95,12 @@ var (
 	autoMigrate = false
 )
 
+// createStorage function initializes connection to preconfigured storage,
+// usually SQLite, PostgreSQL, or AWS RDS.
 func createStorage() (*storage.DBStorage, error) {
 	storageCfg := conf.GetStorageConfiguration()
 
+	// try to initiazice connection to storage
 	dbStorage, err := storage.New(storageCfg)
 	if err != nil {
 		log.Error().Err(err).Msg("storage.New")
@@ -95,15 +110,19 @@ func createStorage() (*storage.DBStorage, error) {
 	return dbStorage, nil
 }
 
-// closeStorage closes specified DBStorage with proper error checking
+// closeStorage function closes specified DBStorage with proper error checking
 // whether the close operation was successful or not.
 func closeStorage(storage *storage.DBStorage) {
 	err := storage.Close()
 	if err != nil {
+		// TODO: error state might be returned from this function
 		log.Error().Err(err).Msg("Error during closing storage connection")
 	}
 }
 
+// prepareDBMigrations function checks the actual database version and when
+// autoMigrate is set performs migration to the latest schema version
+// available.
 func prepareDBMigrations(dbStorage *storage.DBStorage) int {
 	// This is only used by some unit tests.
 	if autoMigrate {
@@ -128,7 +147,8 @@ func prepareDBMigrations(dbStorage *storage.DBStorage) int {
 	return ExitStatusOK
 }
 
-// prepareDB opens a DB connection and loads all available rule content into it.
+// prepareDB function opens a connection to database and loads all available
+// rule content into it.
 func prepareDB() int {
 	dbStorage, err := createStorage()
 	if err != nil {
@@ -152,7 +172,9 @@ func prepareDB() int {
 	return ExitStatusOK
 }
 
-// startService starts service and returns error code
+// startService function starts service and returns error code in case the
+// service can't be started properly. If service is terminated correctly,
+// ExitStatusOK is returned instead.
 func startService() int {
 	metricsCfg := conf.GetMetricsConfiguration()
 	if metricsCfg.Namespace != "" {
@@ -214,6 +236,8 @@ func startService() int {
 	return ExitStatusOK
 }
 
+// stopService function stops the service and return error code indicating
+// service status.
 func stopService() int {
 	errCode := ExitStatusOK
 
@@ -235,10 +259,14 @@ func stopService() int {
 	return errCode
 }
 
+// initInfoLog is helper function to print value of one string parameter to
+// logs.
 func initInfoLog(msg string) {
 	log.Info().Str(typeStr, "init").Msg(msg)
 }
 
+// printVersionInfo function prints basic information about service version
+// into log file.
 func printVersionInfo() {
 	initInfoLog("Version: " + BuildVersion)
 	initInfoLog("Build time: " + BuildTime)
@@ -267,11 +295,14 @@ The commands are:
 
 `
 
+// printHelp function prints help to the standard output.
 func printHelp() int {
 	fmt.Printf(helpMessageTemplate, os.Args[0])
 	return ExitStatusOK
 }
 
+// printConfig function prints the actual service configuration to the standard
+// output.
 func printConfig() int {
 	configBytes, err := json.MarshalIndent(conf.Config, "", "    ")
 
@@ -285,6 +316,7 @@ func printConfig() int {
 	return ExitStatusOK
 }
 
+// printEnv function prints all environment variables to the standard output.
 func printEnv() int {
 	for _, keyVal := range os.Environ() {
 		fmt.Println(keyVal)
@@ -293,9 +325,9 @@ func printEnv() int {
 	return ExitStatusOK
 }
 
-// getDBForMigrations opens a DB connection and prepares the DB for migrations.
-// Non-OK exit code is returned as the last return value in case of an error.
-// Otherwise, database and connection pointers are returned.
+// getDBForMigrations function opens a DB connection and prepares the DB for
+// migrations. Non-OK exit code is returned as the last return value in case
+// of an error. Otherwise, database and connection pointers are returned.
 func getDBForMigrations() (*storage.DBStorage, *sql.DB, int) {
 	db, err := createStorage()
 	if err != nil {
@@ -314,8 +346,8 @@ func getDBForMigrations() (*storage.DBStorage, *sql.DB, int) {
 	return db, dbConn, ExitStatusOK
 }
 
-// printMigrationInfo prints information about current DB
-// migration version without making any modifications.
+// printMigrationInfo function prints information about current DB migration
+// version without making any modifications.
 func printMigrationInfo(dbConn *sql.DB) int {
 	currMigVer, err := migration.GetDBVersion(dbConn)
 	if err != nil {
@@ -328,7 +360,8 @@ func printMigrationInfo(dbConn *sql.DB) int {
 	return ExitStatusOK
 }
 
-// setMigrationVersion attempts to migrate the DB to the target version.
+// setMigrationVersion function attempts to migrate the DB to the target
+// version.
 func setMigrationVersion(dbConn *sql.DB, dbDriver types.DBDriver, versStr string) int {
 	var targetVersion migration.Version
 	if versStrLower := strings.ToLower(versStr); versStrLower == "latest" || versStrLower == "max" {
@@ -352,8 +385,9 @@ func setMigrationVersion(dbConn *sql.DB, dbDriver types.DBDriver, versStr string
 	return ExitStatusOK
 }
 
-// performMigrations handles migrations subcommand. This can be used to either
-// print the current DB migration version or to migrate to a different version.
+// performMigrations function handles migrations subcommand. This can be used
+// to either print the current DB migration version or to migrate to a
+// different version.
 func performMigrations() int {
 	migrationArgs := os.Args[2:]
 
@@ -393,6 +427,7 @@ func stopServiceOnProcessStopSignal() {
 	}()
 }
 
+// main function represents entry point to the service.
 func main() {
 	err := conf.LoadConfiguration(defaultConfigFilename)
 	if err != nil {
@@ -422,6 +457,8 @@ func main() {
 	}
 }
 
+// handleCommand function recognizes command provided via CLI and call the
+// relevant code. Unknown commands are handled properly.
 func handleCommand(command string) int {
 	switch command {
 	case "start-service":
