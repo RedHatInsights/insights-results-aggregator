@@ -28,7 +28,8 @@ var (
 	consumerInstanceIsStarting, finishConsumerInstanceInitialization = context.WithCancel(context.Background())
 )
 
-// startConsumer starts the consumer or returns an error
+// startConsumer function starts the consumer or returns an error in case of
+// any error. When consumer is started properly, nil is returned instead.
 func startConsumer(brokerConf broker.Configuration) error {
 	defer func() {
 		finishConsumerInstanceInitialization()
@@ -53,6 +54,8 @@ func startConsumer(brokerConf broker.Configuration) error {
 	return nil
 }
 
+// stopConsumer function tries to stop the consumer. If consumer is not started
+// or if it is not possible to stop it properly, error value is returned.
 func stopConsumer() error {
 	waitForConsumerToStartOrFail()
 
@@ -69,6 +72,8 @@ func stopConsumer() error {
 	return nil
 }
 
+// waitForConsumerToStartOrFail function perform synchronization with the
+// consumer goroutine via shared channel.
 func waitForConsumerToStartOrFail() {
 	log.Info().Msg("waiting for consumer to start")
 	<-consumerInstanceIsStarting.Done()
