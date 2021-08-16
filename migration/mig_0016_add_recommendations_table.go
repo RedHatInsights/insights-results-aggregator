@@ -26,7 +26,7 @@ var mig0016AddRecommendationsTable = Migration{
 			cluster_id      VARCHAR NOT NULL,
 			rule_fqdn       VARCHAR NOT NULL,
 			error_key		VARCHAR NOT NULL,
-			PRIMARY KEY(cluster_id, error_key)
+			PRIMARY KEY(cluster_id, rule_fqdn)
 		)`)
 		if err != nil {
 			return err
@@ -93,7 +93,7 @@ func writeRulesFromReportToRecommendations(
 
 	for _, rule := range report.HitRules {
 		_, err = tx.Exec(`
-			INSERT INTO recommendations (
+			INSERT OR IGNORE INTO recommendations (
 				cluster_id, rule_fqdn, error_key
 			) VALUES ($1, $2, $3)
 		`, clusterID, rule.Module, rule.ErrorKey)
