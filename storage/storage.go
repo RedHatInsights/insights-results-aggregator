@@ -789,26 +789,29 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 	}
 
 	err = func(tx *sql.Tx) error {
+		var deleted int64 = 0
+		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
+		if _, ok := storage.clustersLastChecked[clusterName]; ok {
+			result, err := tx.Exec(
+				"DELETE FROM recommendations WHERE cluster_id = $1;", clusterName)
+			err = types.ConvertDBError(err, []interface{}{clusterName})
+			if err != nil {
+				log.Error().Err(err).Msgf("Unable to delete the existing recommendations for %s", clusterName)
+				return err
+			}
 
-		// Delete current recommendations for the cluster
-		result, err := tx.Exec(
-			"DELETE FROM recommendations WHERE cluster_id = $1;", clusterName)
-		err = types.ConvertDBError(err, []interface{}{clusterName})
-		if err != nil {
-			log.Error().Err(err).Msgf("Unable to delete the existing recommendations for %s", clusterName)
-			return err
-		}
+			// As the documentation says:
+			// RowsAffected returns the number of rows affected by an
+			// update, insert, or delete. Not every database or database
+			// driver may support this.
+			// So we might run in a scenario where we don't have metrics
+			// if the driver doesn't help.
+			deleted, err = result.RowsAffected()
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to retrieve number of deleted rows with current driver")
+				return err
+			}
 
-		// As the documentation says:
-		// RowsAffected returns the number of rows affected by an
-		// update, insert, or delete. Not every database or database
-		// driver may support this.
-		// So we might run in a scenario where we don't have metrics
-		// if the driver doesn't help.
-		deleted, err := result.RowsAffected()
-		if err != nil {
-			log.Error().Err(err).Msg("Unable to retrieve number of deleted rows with current driver")
-			return err
 		}
 
 		var report types.ReportRules
@@ -816,11 +819,15 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 		if err != nil {
 			return err
 		}
-		err = storage.insertRecommendations(tx, clusterName, report)
-		if err != nil {
-			return err
+
+		numInserts := len(report.HitRules)
+		if numInserts > 0 {
+			err = storage.insertRecommendations(tx, clusterName, report)
+			if err != nil {
+				return err
+			}
 		}
-		updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(len(report.HitRules)))
+		updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(numInserts))
 
 		return nil
 	}(tx)
