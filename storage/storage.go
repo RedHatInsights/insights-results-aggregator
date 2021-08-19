@@ -31,6 +31,7 @@ import (
 	sql_driver "database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -687,17 +688,25 @@ func (storage DBStorage) insertRecommendations(
 	clusterName types.ClusterName,
 	report types.ReportRules,
 ) error {
+	statement := `INSERT INTO recommendations (cluster_id, rule_fqdn, error_key) VALUES %s`
+
+	var valuesIdx []string
+	var valuesArg []interface{}
+	currentLen := 0
+
 	for _, rule := range report.HitRules {
-		_, err := tx.Exec(`
-			INSERT INTO recommendations (
-				cluster_id, rule_fqdn, error_key
-			) VALUES ($1, $2, $3)
-		`, clusterName, rule.Module, rule.ErrorKey)
-		if err != nil {
-			log.Err(err).Msgf("Unable to insert the recommendation (cluster: %v, rule FQDN: %v, error_key: %v)", clusterName, rule.Module, rule.ErrorKey)
-			return err
-		}
+		valuesArg = append(valuesArg, clusterName, rule.Module, rule.ErrorKey)
+		currentLen = len(valuesArg)
+		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(currentLen-2)+", $"+fmt.Sprint(currentLen-1)+", $"+fmt.Sprint(currentLen)+")")
 	}
+
+	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
+	_, err := tx.Exec(statement, valuesArg...)
+	if err != nil {
+		log.Err(err).Msgf("Unable to insert the recommendations for cluster: %v)", clusterName)
+		return err
+	}
+
 	return nil
 
 }
