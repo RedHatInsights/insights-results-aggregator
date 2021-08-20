@@ -221,7 +221,13 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 // checkReportStructure tests if the report has correct structure
 func checkReportStructure(r Report) error {
 	// the structure is not well defined yet, so all we should do is to check if all keys are there
-	expectedKeys := []string{"fingerprints", "info", "reports", "skips", "system"}
+	expectedKeys := []string{"fingerprints", "info", "reports", "system"}
+
+	// 'skips' key is now optional, we should not expect it anymore:
+	// https://github.com/RedHatInsights/insights-results-aggregator/issues/1206
+	// expectedKeys := []string{"fingerprints", "info", "reports", "skips", "system"}
+
+	// check if the structure contains all expected keys
 	for _, expectedKey := range expectedKeys {
 		_, found := r[expectedKey]
 		if !found {
