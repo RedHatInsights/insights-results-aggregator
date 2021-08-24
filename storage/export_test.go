@@ -51,3 +51,7 @@ func GetConnection(storage *DBStorage) *sql.DB {
 func GetClustersLastChecked(storage *DBStorage) map[types.ClusterName]time.Time {
 	return storage.clustersLastChecked
 }
+
+func SetClustersLastChecked(storage *DBStorage, cluster types.ClusterName, lastChecked time.Time) {
+	storage.clustersLastChecked[cluster] = lastChecked
+}
