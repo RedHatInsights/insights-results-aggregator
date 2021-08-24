@@ -703,7 +703,7 @@ func (storage DBStorage) insertRecommendations(
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
 	_, err := tx.Exec(statement, valuesArg...)
 	if err != nil {
-		log.Err(err).Msgf("Unable to insert the recommendations for cluster: %v)", clusterName)
+		log.Err(err).Msgf("Unable to insert the recommendations for cluster: %v", clusterName)
 		return err
 	}
 
