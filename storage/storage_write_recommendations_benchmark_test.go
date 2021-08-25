@@ -321,12 +321,14 @@ func mustPrepareRecommendationsBenchmarkWithEntries(b *testing.B, numRows int) (
 	mockStorage, conn, closer := mustPrepareReportAndRecommendationsBenchmark(b)
 
 	for i := 0; i < numRows; i++ {
+		cluster := uuid.New().String()
 		_, err := conn.Exec(`
 			INSERT INTO recommendations (
 				cluster_id, rule_fqdn, error_key
 			) VALUES ($1, $2, $3)
-		`, uuid.New().String(), "a rule module", "an error key")
+		`, cluster, "a rule module", "an error key")
 		helpers.FailOnError(b, err)
+		storage.SetClustersLastChecked(mockStorage.(*storage.DBStorage), types.ClusterName(cluster), time.Now())
 	}
 
 	return mockStorage, conn, closer
@@ -405,13 +407,14 @@ func BenchmarkNewRecommendationsWithoutConflict(b *testing.B) {
 // BenchmarkNewRecommendationsExistingClusterConflict inserts 2 conflicting
 // rows into the benchmark table, forcing deletion of existing rows first
 func BenchmarkNewRecommendationsExistingClusterConflict(b *testing.B) {
-	storage, conn, closer := mustPrepareRecommendationsBenchmark(b)
+	mockStorage, conn, closer := mustPrepareRecommendationsBenchmark(b)
 
 	clusterIDSet := newSet()
 	for i := 0; i < 1; i++{
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
+			storage.SetClustersLastChecked(mockStorage.(*storage.DBStorage), types.ClusterName(id), time.Now())
 		}
 	}
 	clusterIds := make([]string, 2*len(clusterIDSet.content))
@@ -430,7 +433,7 @@ func BenchmarkNewRecommendationsExistingClusterConflict(b *testing.B) {
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for _, id := range clusterIds {
-			err := storage.WriteRecommendationsForCluster(types.ClusterName(id), testdata.Report2Rules)
+			err := mockStorage.WriteRecommendationsForCluster(types.ClusterName(id), testdata.Report2Rules)
 			helpers.FailOnError(b, err)
 		}
 	}
@@ -445,13 +448,14 @@ func BenchmarkNewRecommendationsExistingClusterConflict(b *testing.B) {
 // ones. This allows to benchmark the WriteRecommendationsForCluster method
 // when the table already has a lot of rows.
 func BenchmarkNewRecommendations2000initialEntries(b *testing.B) {
-	storage, conn, closer := mustPrepareRecommendationsBenchmarkWithEntries(b, 2000)
+	mockStorage, conn, closer := mustPrepareRecommendationsBenchmarkWithEntries(b, 2000)
 
 	clusterIDSet := newSet()
 	for i := 0; i < 2; i++{
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
+			storage.SetClustersLastChecked(mockStorage.(*storage.DBStorage), types.ClusterName(id), time.Now())
 		}
 	}
 
@@ -459,7 +463,7 @@ func BenchmarkNewRecommendations2000initialEntries(b *testing.B) {
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for id := range clusterIDSet.content {
-			err := storage.WriteRecommendationsForCluster(types.ClusterName(id), Report20Rules)
+			err := mockStorage.WriteRecommendationsForCluster(types.ClusterName(id), Report20Rules)
 			helpers.FailOnError(b, err)
 		}
 	}
