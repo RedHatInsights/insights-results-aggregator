@@ -426,14 +426,8 @@ func argsWithClusterNames(clusterNames []types.ClusterName) []interface{} {
 }
 
 func updateRecommendationsMetrics(cluster string, deleted float64, inserted float64) {
-	metrics.SQLRecommendationsUpdates.WithLabelValues(
-		cluster,
-		"deleted_rows",
-	).Observe(deleted)
-	metrics.SQLRecommendationsUpdates.WithLabelValues(
-		cluster,
-		"inserted_rows",
-	).Observe(inserted)
+	metrics.SQLRecommendationsDeletes.WithLabelValues(cluster).Observe(deleted)
+	metrics.SQLRecommendationsInserts.WithLabelValues(cluster).Observe(inserted)
 }
 
 // ReadOrgIDsForClusters read organization IDs for given list of cluster names.
