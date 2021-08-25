@@ -1049,7 +1049,32 @@ func TestDBStorageWriteRecommendationForClusterNoConflict(t *testing.T) {
 	)
 
 	helpers.FailOnError(t, err)
+}
 
+// TestDBStorageInsertRecommendations checks that all rules in the report
+// are inserted in the recommendation table
+func TestDBStorageInsertRecommendations(t *testing.T) {
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpectsForDriver(t, types.DBDriverPostgres)
+	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectBegin()
+
+	expects.ExpectExec("INSERT INTO recommendations \\(cluster_id, rule_fqdn, error_key\\) " +
+		"VALUES \\(\\$1, \\$2, \\$3\\),\\(\\$4, \\$5, \\$6\\),\\(\\$7, \\$8, \\$9\\),\\(\\$10, \\$11, \\$12\\)," +
+		"\\(\\$13, \\$14, \\$15\\),\\(\\$16, \\$17, \\$18\\),\\(\\$19, \\$20, \\$21\\),\\(\\$22, \\$23, \\$24\\)," +
+		"\\(\\$25, \\$26, \\$27\\)").WillReturnResult(driver.ResultNoRows)
+
+	expects.ExpectCommit()
+
+	report := types.ReportRules{
+		HitRules: testdata.RuleOnReportResponses,
+		SkippedRules: testdata.RuleOnReportResponses,
+		PassedRules:  testdata.RuleOnReportResponses,
+		TotalCount:   3 * len(testdata.RuleOnReportResponses),
+	}
+	err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.ClusterName, report)
+
+	helpers.FailOnError(t, err)
 }
 
 // TestDBStorageWriteRecommendationForClusterAlreadyStored checks that
