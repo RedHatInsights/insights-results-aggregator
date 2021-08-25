@@ -158,8 +158,8 @@ func TestWrittenRecommendationsMetricCorrectUpdate(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	//We expect one new metric in each histogramVect, one for deleted rows and one for inserted rows
-	assert.Equal(t, 1, testutil.CollectAndCount(metrics.SQLRecommendationsDeletes) - initialDeletes)
-	assert.Equal(t, 1, testutil.CollectAndCount(metrics.SQLRecommendationsInserts) - initialInserts)
+	assert.Equal(t, 1, testutil.CollectAndCount(metrics.SQLRecommendationsDeletes)-initialDeletes)
+	assert.Equal(t, 1, testutil.CollectAndCount(metrics.SQLRecommendationsInserts)-initialInserts)
 }
 
 // TODO: More tests for recommendations metrics, but in another PR
