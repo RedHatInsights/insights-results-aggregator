@@ -50,8 +50,8 @@ var mig0016AddRecommendationsTable = Migration{
 
 		for {
 			var (
-				clusterID     types.ClusterName
-				report        types.ClusterReport
+				clusterID types.ClusterName
+				report    types.ClusterReport
 			)
 
 			err := tx.QueryRow("FETCH NEXT FROM report_cursor").
