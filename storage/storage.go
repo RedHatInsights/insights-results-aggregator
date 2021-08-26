@@ -689,7 +689,9 @@ func (storage DBStorage) insertRecommendations(
 	inserted = 0
 
 	for _, rule := range report.HitRules {
-		valuesArg = append(valuesArg, clusterName, rule.Module, rule.ErrorKey)
+		//TODO: Figure out why report contains rule_id and component and if update the ReportRules types accordingly
+		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report") + "|" + string(rule.ErrorKey)
+		valuesArg = append(valuesArg, clusterName, ruleFqdn, rule.ErrorKey)
 		inserted = len(valuesArg)
 		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(inserted-2)+", $"+fmt.Sprint(inserted-1)+", $"+fmt.Sprint(inserted)+")")
 	}
