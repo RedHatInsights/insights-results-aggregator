@@ -788,7 +788,12 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 		return fmt.Errorf("writing recommendations with DB %v is not supported", storage.dbDriverType)
 	}
 
-	// Begin a new transaction.
+	var report types.ReportRules
+	err = json.Unmarshal([]byte(stringReport), &report)
+	if err != nil {
+		return err
+	}
+	
 	tx, err := storage.connection.Begin()
 	if err != nil {
 		return err
@@ -817,12 +822,6 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 				log.Error().Err(err).Msg("Unable to retrieve number of deleted rows with current driver")
 				return err
 			}
-		}
-
-		var report types.ReportRules
-		err = json.Unmarshal([]byte(stringReport), &report)
-		if err != nil {
-			return err
 		}
 
 		err = storage.insertRecommendations(tx, clusterName, report)
