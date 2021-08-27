@@ -700,18 +700,6 @@ func (storage DBStorage) insertRecommendations(
 		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(currentLen-2)+", $"+fmt.Sprint(currentLen-1)+", $"+fmt.Sprint(currentLen)+")")
 	}
 
-	for _, rule := range report.PassedRules {
-		valuesArg = append(valuesArg, clusterName, rule.Module, rule.ErrorKey)
-		currentLen = len(valuesArg)
-		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(currentLen-2)+", $"+fmt.Sprint(currentLen-1)+", $"+fmt.Sprint(currentLen)+")")
-	}
-
-	for _, rule := range report.SkippedRules {
-		valuesArg = append(valuesArg, clusterName, rule.Module, rule.ErrorKey)
-		currentLen = len(valuesArg)
-		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(currentLen-2)+", $"+fmt.Sprint(currentLen-1)+", $"+fmt.Sprint(currentLen)+")")
-	}
-
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
 	_, err := tx.Exec(statement, valuesArg...)
 	if err != nil {
@@ -832,12 +820,14 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 			return err
 		}
 
-		err = storage.insertRecommendations(tx, clusterName, report)
-		if err != nil {
-			return err
+		numInserts := len(report.HitRules)
+		if numInserts > 0 {
+			err = storage.insertRecommendations(tx, clusterName, report)
+			if err != nil {
+				return err
+			}
 		}
-
-		updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(report.TotalCount))
+		updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(numInserts))
 
 		return nil
 	}(tx)
