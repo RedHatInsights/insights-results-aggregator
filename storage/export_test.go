@@ -61,7 +61,7 @@ func InsertRecommendations(storage *DBStorage, clusterName types.ClusterName, re
 	if err != nil {
 		return err
 	}
-	_, err = storage.insertRecommendations(tx, clusterName, report)
+	err = storage.insertRecommendations(tx, clusterName, report)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
