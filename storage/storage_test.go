@@ -1085,18 +1085,25 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStored(t *testing.T) {
 	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
 	expects.ExpectBegin()
+
 	expects.ExpectExec("INSERT INTO recommendations").
 		WillReturnResult(driver.ResultNoRows)
+
 	expects.ExpectCommit()
+
+	mockStorage.Init()
 
 	err := mockStorage.WriteRecommendationsForCluster(
 		testdata.ClusterName, testdata.Report3Rules,
 	)
+
 	helpers.FailOnError(t, err)
 
 	expects.ExpectBegin()
+
 	expects.ExpectExec("INSERT INTO recommendations").
 		WillReturnError(fmt.Errorf("Unable to insert the recommendations for cluster: " + string(testdata.ClusterName)))
+
 	expects.ExpectRollback()
 
 	err = mockStorage.WriteRecommendationsForCluster(
@@ -1114,9 +1121,13 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpectsForDriver(t, types.DBDriverPostgres)
 	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
+	mockStorage.Init()
+
 	expects.ExpectBegin()
+
 	expects.ExpectExec("INSERT INTO recommendations").
 		WillReturnResult(driver.ResultNoRows)
+
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteRecommendationsForCluster(
@@ -1130,10 +1141,13 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	storage.SetClustersLastChecked(dbStorage, testdata.ClusterName, time.Now())
 
 	expects.ExpectBegin()
+
 	expects.ExpectExec("DELETE FROM recommendations").
 		WillReturnResult(driver.RowsAffected(3))
+
 	expects.ExpectExec("INSERT INTO recommendations").
 		WillReturnResult(driver.ResultNoRows)
+
 	expects.ExpectCommit()
 
 	err = mockStorage.WriteRecommendationsForCluster(
@@ -1141,4 +1155,5 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	)
 
 	helpers.FailOnError(t, err)
+
 }
