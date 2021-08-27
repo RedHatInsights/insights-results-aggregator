@@ -26,7 +26,7 @@ var mig0016AddRecommendationsTable = Migration{
 			cluster_id      VARCHAR NOT NULL,
 			rule_fqdn       VARCHAR NOT NULL,
 			error_key		VARCHAR NOT NULL,
-			PRIMARY KEY(cluster_id, error_key)
+			PRIMARY KEY(cluster_id)
 		)`)
 		if err != nil {
 			return err
