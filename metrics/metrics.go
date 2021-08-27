@@ -36,8 +36,6 @@ limitations under the License.
 // sql_queries_counter - total number of SQL queries
 //
 // sql_queries_durations - SQL queries durations
-//
-// sql_recommendations_updates - number of insert and deletes in recommendations table
 package metrics
 
 import (
@@ -107,12 +105,6 @@ var SQLQueriesDurations = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Help: "SQL queries durations",
 }, []string{"query"})
 
-// SQLRecommendationsUpdates shows deleted and created entries in recommendations table.
-var SQLRecommendationsUpdates = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Name: "sql_recommendations_updates",
-	Help: "SQL Recommendations table updates after report is written to storage",
-}, []string{"deleted_rows", "inserted_rows"})
-
 // AddMetricsWithNamespace register the desired metrics using a given namespace
 func AddMetricsWithNamespace(namespace string) {
 	metrics.AddAPIMetricsWithNamespace(namespace)
@@ -127,7 +119,6 @@ func AddMetricsWithNamespace(namespace string) {
 	prometheus.Unregister(FeedbackOnRules)
 	prometheus.Unregister(SQLQueriesCounter)
 	prometheus.Unregister(SQLQueriesDurations)
-	prometheus.Unregister(SQLRecommendationsUpdates)
 
 	ConsumedMessages = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
@@ -179,9 +170,4 @@ func AddMetricsWithNamespace(namespace string) {
 		Name:      "sql_queries_durations",
 		Help:      "SQL queries durations",
 	}, []string{"query"})
-	SQLRecommendationsUpdates = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Name: "sql_recommendations_updates",
-		Help: "Number of insert and deletes in 'recommendations' table after report is written to storage",
-	}, []string{"cluster", "operation"})
 }

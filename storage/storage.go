@@ -31,7 +31,6 @@ import (
 	sql_driver "database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -425,17 +424,6 @@ func argsWithClusterNames(clusterNames []types.ClusterName) []interface{} {
 	return args
 }
 
-func updateRecommendationsMetrics(cluster string, deleted float64, inserted float64) {
-	metrics.SQLRecommendationsUpdates.With(prometheus.Labels{
-		"cluster": cluster,
-		"operation":"deleted_rows",
-	}).Observe(deleted)
-	metrics.SQLRecommendationsUpdates.With(prometheus.Labels{
-		"cluster": cluster,
-		"operation":"inserted_rows",
-	}).Observe(inserted)
-}
-
 // ReadOrgIDsForClusters read organization IDs for given list of cluster names.
 func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]types.OrgID, error) {
 	// stub for return value
@@ -780,6 +768,9 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 		return err
 	}
 
+	var deletedRows int
+	var insertedRows int
+
 	err = func(tx *sql.Tx) error {
 
 		// Delete current recommendations for the cluster
@@ -797,7 +788,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 		// driver may support this.
 		// So we might run in a scenario where we don't have metrics
 		// if the driver doesn't help.
-		deleted, err := result.RowsAffected()
+		affected, err := result.RowsAffected()
 		if err != nil {
 			log.Error().Err(err).Msg("Unable to retrieve number of deleted rows with current driver")
 			return err
@@ -808,11 +799,16 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 		if err != nil {
 			return err
 		}
+
 		err = storage.insertRecommendations(tx, clusterName, report)
 		if err != nil {
 			return err
 		}
-		updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(len(report.HitRules)))
+
+		deletedRows = int(affected)
+		insertedRows = len(report.HitRules)
+
+		//update metrics
 
 		return nil
 	}(tx)
@@ -821,7 +817,6 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 
 	return err
 }
-
 // finishTransaction finishes the transaction depending on err. err == nil -> commit, err != nil -> rollback
 func finishTransaction(tx *sql.Tx, err error) {
 	if err != nil {
