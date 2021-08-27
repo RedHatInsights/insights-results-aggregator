@@ -401,4 +401,5 @@ func TestMigration16(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
+
 }

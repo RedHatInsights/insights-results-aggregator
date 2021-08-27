@@ -384,7 +384,7 @@ func BenchmarkNewRecommendationsWithoutConflict(b *testing.B) {
 	storage, conn, closer := mustPrepareRecommendationsBenchmark(b)
 
 	clusterIDSet := newSet()
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 1; i++{
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
@@ -410,7 +410,7 @@ func BenchmarkNewRecommendationsExistingClusterConflict(b *testing.B) {
 	mockStorage, conn, closer := mustPrepareRecommendationsBenchmark(b)
 
 	clusterIDSet := newSet()
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 1; i++{
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
@@ -451,7 +451,7 @@ func BenchmarkNewRecommendations2000initialEntries(b *testing.B) {
 	mockStorage, conn, closer := mustPrepareRecommendationsBenchmarkWithEntries(b, 2000)
 
 	clusterIDSet := newSet()
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 2; i++{
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
@@ -478,7 +478,7 @@ func BenchmarkWriteReportAndRecommendationsNoConflict(b *testing.B) {
 	storage, conn, closer := mustPrepareReportAndRecommendationsBenchmark(b)
 
 	clusterIDSet := newSet()
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 1; i++{
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
@@ -488,25 +488,25 @@ func BenchmarkWriteReportAndRecommendationsNoConflict(b *testing.B) {
 	resetTimerForBenchmark(b)
 
 	/*
-		for benchIter := 0; benchIter < b.N; benchIter++ {
-			for id := range clusterIDSet.content {
-				err := storage.WriteReportForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report0Rules, testdata.ReportEmptyRulesParsed, time.Now(), types.KafkaOffset(0))
-				helpers.FailOnError(b, err)
-			}
+	for benchIter := 0; benchIter < b.N; benchIter++ {
+		for id := range clusterIDSet.content {
+			err := storage.WriteReportForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report0Rules, testdata.ReportEmptyRulesParsed, time.Now(), types.KafkaOffset(0))
+			helpers.FailOnError(b, err)
 		}
+	}
 
-		b.ResetTimer()
-		b.StartTimer()
+	b.ResetTimer()
+	b.StartTimer()
 
-		for benchIter := 0; benchIter < b.N; benchIter++ {
-			for id := range clusterIDSet.content {
-				err := storage.WriteRecommendationsForCluster(types.ClusterName(id), testdata.Report0Rules)
-				helpers.FailOnError(b, err)
-			}
+	for benchIter := 0; benchIter < b.N; benchIter++ {
+		for id := range clusterIDSet.content {
+			err := storage.WriteRecommendationsForCluster(types.ClusterName(id), testdata.Report0Rules)
+			helpers.FailOnError(b, err)
 		}
+	}
 
-		b.ResetTimer()
-		b.StartTimer()*/
+	b.ResetTimer()
+	b.StartTimer()*/
 
 	tStart := time.Now()
 

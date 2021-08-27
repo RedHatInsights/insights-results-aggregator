@@ -1067,7 +1067,7 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 	expects.ExpectCommit()
 
 	report := types.ReportRules{
-		HitRules:     testdata.RuleOnReportResponses,
+		HitRules: testdata.RuleOnReportResponses,
 		SkippedRules: testdata.RuleOnReportResponses,
 		PassedRules:  testdata.RuleOnReportResponses,
 		TotalCount:   3 * len(testdata.RuleOnReportResponses),
@@ -1102,7 +1102,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStored(t *testing.T) {
 	expects.ExpectBegin()
 
 	expects.ExpectExec("INSERT INTO recommendations").
-		WillReturnError(fmt.Errorf("Unable to insert the recommendations for cluster: " + string(testdata.ClusterName)))
+		WillReturnError(fmt.Errorf("Unable to insert the recommendations for cluster: "+ string(testdata.ClusterName)))
 
 	expects.ExpectRollback()
 
