@@ -1027,7 +1027,7 @@ func TestDBStorageWriteRecommendationForClusterUnsupportedDriverError(t *testing
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
 	)
-	assert.EqualError(t, err, "writing recommendations with DB -1 is not supported")
+	assert.EqualError(t, err, "writing report with DB -1 is not supported")
 }
 
 // TestDBStorageWriteRecommendationForClusterNoConflict checks that
