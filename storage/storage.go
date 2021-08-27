@@ -681,27 +681,39 @@ func (storage DBStorage) insertRecommendations(
 	tx *sql.Tx,
 	clusterName types.ClusterName,
 	report types.ReportRules,
-) (inserted int, err error) {
+) error {
 	statement := `INSERT INTO recommendations (cluster_id, rule_fqdn, error_key) VALUES %s`
 
 	var valuesIdx []string
 	var valuesArg []interface{}
-	inserted = 0
+	currentLen := 0
 
 	for _, rule := range report.HitRules {
 		valuesArg = append(valuesArg, clusterName, rule.Module, rule.ErrorKey)
-		inserted = len(valuesArg)
-		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(inserted-2)+", $"+fmt.Sprint(inserted-1)+", $"+fmt.Sprint(inserted)+")")
+		currentLen = len(valuesArg)
+		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(currentLen-2)+", $"+fmt.Sprint(currentLen-1)+", $"+fmt.Sprint(currentLen)+")")
+	}
+
+	for _, rule := range report.PassedRules {
+		valuesArg = append(valuesArg, clusterName, rule.Module, rule.ErrorKey)
+		currentLen = len(valuesArg)
+		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(currentLen-2)+", $"+fmt.Sprint(currentLen-1)+", $"+fmt.Sprint(currentLen)+")")
+	}
+
+	for _, rule := range report.SkippedRules {
+		valuesArg = append(valuesArg, clusterName, rule.Module, rule.ErrorKey)
+		currentLen = len(valuesArg)
+		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(currentLen-2)+", $"+fmt.Sprint(currentLen-1)+", $"+fmt.Sprint(currentLen)+")")
 	}
 
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
-	_, err = tx.Exec(statement, valuesArg...)
+	_, err := tx.Exec(statement, valuesArg...)
 	if err != nil {
 		log.Err(err).Msgf("Unable to insert the recommendations for cluster: %v", clusterName)
-		return 0, err
+		return err
 	}
 
-	return
+	return nil
 
 }
 
@@ -781,7 +793,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 	if err != nil {
 		return err
 	}
-
+	
 	tx, err := storage.connection.Begin()
 	if err != nil {
 		return err
@@ -812,12 +824,12 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 			}
 		}
 
-		inserted, err := storage.insertRecommendations(tx, clusterName, report)
+		err = storage.insertRecommendations(tx, clusterName, report)
 		if err != nil {
 			return err
 		}
 
-		updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(inserted))
+		updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(report.TotalCount))
 
 		return nil
 	}(tx)
