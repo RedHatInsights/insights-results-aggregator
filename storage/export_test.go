@@ -55,17 +55,3 @@ func GetClustersLastChecked(storage *DBStorage) map[types.ClusterName]time.Time 
 func SetClustersLastChecked(storage *DBStorage, cluster types.ClusterName, lastChecked time.Time) {
 	storage.clustersLastChecked[cluster] = lastChecked
 }
-
-func InsertRecommendations(storage *DBStorage, clusterName types.ClusterName, report types.ReportRules, ) error {
-	tx, err := storage.connection.Begin()
-	if err != nil {
-		return err
-	}
-	err = storage.insertRecommendations(tx, clusterName, report)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	_ = tx.Commit()
-	return nil
-}
