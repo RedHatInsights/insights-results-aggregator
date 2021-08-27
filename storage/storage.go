@@ -785,7 +785,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 	stringReport types.ClusterReport,
 ) (err error) {
 	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
-		return fmt.Errorf("writing recommendations with DB %v is not supported", storage.dbDriverType)
+		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
 	// Begin a new transaction.
@@ -817,6 +817,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 				log.Error().Err(err).Msg("Unable to retrieve number of deleted rows with current driver")
 				return err
 			}
+
 		}
 
 		var report types.ReportRules
