@@ -214,10 +214,10 @@ objects:
           resources:
             requests:
               cpu: 100m
-              memory: 150Mi
-            limits:
-              cpu: 200m
               memory: 300Mi
+            limits:
+              cpu: 500m
+              memory: 600Mi
     database:
       # the DB name should match to app-interface DB name without specifying environment
       # https://gitlab.cee.redhat.com/service/app-interface/-/blob/ddd85c2ad79b40047391405b2d909eb38667bc43/data/services/insights/ccx-data-pipeline/namespaces/stage-ccx-data-pipeline-stage.yml#L60
