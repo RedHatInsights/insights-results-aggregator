@@ -365,3 +365,40 @@ func TestMigration13(t *testing.T) {
 	assertRule(testdata.Rule2ID, testdata.ErrorKey2, helpers.ToJSONString(testdata.Rule2ExtraData))
 	assertRule(testdata.Rule3ID, testdata.ErrorKey3, helpers.ToJSONString(testdata.Rule3ExtraData))
 }
+
+func TestMigration16(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// migration is not implemented for sqlite
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 15)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO recommendations (cluster, rule_fqdn, error_key)
+		VALUES ($1, $2, $3)
+	`,
+		testdata.ClusterName,
+		testdata.Rule1Name,
+		testdata.ErrorKey1,
+	)
+	assert.EqualError(t, err, "no such table: recommendations")
+
+	err = migration.SetDBVersion(db, dbDriver, 16)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO recommendations (cluster, rule_fqdn, error_key)
+		VALUES ($1, $2, $3)
+	`,
+		testdata.ClusterName,
+		testdata.Rule1Name,
+		testdata.ErrorKey1,
+	)
+	helpers.FailOnError(t, err)
+
+}
