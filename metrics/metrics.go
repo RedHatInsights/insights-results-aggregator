@@ -36,8 +36,6 @@ limitations under the License.
 // sql_queries_counter - total number of SQL queries
 //
 // sql_queries_durations - SQL queries durations
-//
-// sql_recommendations_updates - number of insert and deletes in recommendations table
 package metrics
 
 import (
@@ -107,18 +105,6 @@ var SQLQueriesDurations = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Help: "SQL queries durations",
 }, []string{"query"})
 
-// SQLRecommendationsDeletes shows deleted entries in recommendations table.
-var SQLRecommendationsDeletes = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Name: "sql_recommendations_deletes",
-	Help: "Number of rows removed from the SQL Recommendations table when new report is processed",
-}, []string{"cluster"})
-
-// SQLRecommendationsInserts shows inserted entries in recommendations table.
-var SQLRecommendationsInserts = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Name: "sql_recommendations_inserts",
-	Help: "Number of rows added to the SQL Recommendations table when new report is processed",
-}, []string{"cluster"})
-
 // AddMetricsWithNamespace register the desired metrics using a given namespace
 func AddMetricsWithNamespace(namespace string) {
 	metrics.AddAPIMetricsWithNamespace(namespace)
@@ -133,8 +119,6 @@ func AddMetricsWithNamespace(namespace string) {
 	prometheus.Unregister(FeedbackOnRules)
 	prometheus.Unregister(SQLQueriesCounter)
 	prometheus.Unregister(SQLQueriesDurations)
-	prometheus.Unregister(SQLRecommendationsDeletes)
-	prometheus.Unregister(SQLRecommendationsInserts)
 
 	ConsumedMessages = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
@@ -186,14 +170,4 @@ func AddMetricsWithNamespace(namespace string) {
 		Name:      "sql_queries_durations",
 		Help:      "SQL queries durations",
 	}, []string{"query"})
-	SQLRecommendationsDeletes = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Name:      "sql_recommendations_deletes",
-		Help:      "Number of rows removed from the SQL recommendation table when new report is processed",
-	}, []string{"cluster", "deleted_rows"})
-	SQLRecommendationsInserts = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace,
-		Name:      "sql_recommendations_inserts",
-		Help:      "Number of rows added to the SQL recommendation table when new report is processed",
-	}, []string{"cluster", "inserted_rows"})
 }
