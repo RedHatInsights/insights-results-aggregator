@@ -49,8 +49,6 @@ const (
 
 	// message to be checked
 	organizationIDNotInAllowList = "organization ID is not in allow list"
-
-	testReport = `{"fingerprints": [], "info": [], "skips": [], "system": {}, "analysis_metadata":{"metadata":"some metadata"},"reports":[{"rule_id":"rule_4|RULE_4","component":"ccx_rules_ocp.external.rules.rule_1.report","type":"rule","key":"RULE_4","details":"some details"},{"rule_id":"rule_4|RULE_4","component":"ccx_rules_ocp.external.rules.rule_2.report","type":"rule","key":"RULE_2","details":"some details"},{"rule_id":"rule_5|RULE_5","component":"ccx_rules_ocp.external.rules.rule_5.report","type":"rule","key":"RULE_3","details":"some details"}]}`
 )
 
 var (
@@ -60,12 +58,6 @@ var (
 		Topic:   "topic",
 		Group:   "group",
 	}
-	messageReportWithRuleHits = `{
-		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
-		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report":` + testReport + `,
-		"LastChecked": "` + testdata.LastCheckedAt.UTC().Format(time.RFC3339) + `"
-	}`
 )
 
 func init() {
@@ -263,13 +255,12 @@ func TestProcessEmptyMessage(t *testing.T) {
 
 func TestProcessCorrectMessage(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-
 	defer closer()
 
 	c := dummyConsumer(mockStorage, true)
 
 	message := sarama.ConsumerMessage{}
-	message.Value = []byte(messageReportWithRuleHits)
+	message.Value = []byte(testdata.ConsumerMessage)
 	// message is correct -> one record should be written into storage
 	_, err := c.ProcessMessage(&message)
 	helpers.FailOnError(t, err)
@@ -318,7 +309,7 @@ func TestKafkaConsumerMockOK(t *testing.T) {
 			t,
 			testTopicName,
 			testOrgAllowlist,
-			[]string{messageReportWithRuleHits},
+			[]string{testdata.ConsumerMessage},
 		)
 
 		go mockConsumer.Serve()
@@ -427,7 +418,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationAllowlistDisabled(t *testing.T
 
 	mockConsumer := dummyConsumer(mockStorage, false)
 
-	err := consumerProcessMessage(mockConsumer, messageReportWithRuleHits)
+	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
 	helpers.FailOnError(t, err)
 }
 
@@ -486,7 +477,7 @@ func TestKafkaConsumer_ProcessMessage_MessageFromTheFuture(t *testing.T) {
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report":` + testReport + `,
+		"Report":` + testdata.ConsumerReport + `,
 		"LastChecked": "` + time.Now().Add(24*time.Hour).Format(time.RFC3339) + `"
 	}`
 
@@ -511,7 +502,7 @@ func TestKafkaConsumer_ProcessMessage_MoreRecentReportAlreadyExists(t *testing.T
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report":` + testReport + `,
+		"Report":` + testdata.ConsumerReport + `,
 		"LastChecked": "` + time.Now().Format(time.RFC3339) + `"
 	}`
 
@@ -543,7 +534,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithUnexpectedSchemaVersion(t *test
 		Storage:       mockStorage,
 	}
 
-	err := consumerProcessMessage(mockConsumer, messageReportWithRuleHits)
+	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
 	helpers.FailOnError(t, err)
 	assert.Contains(t, buf.String(), "\"level\":\"warn\"")
 	assert.Contains(t, buf.String(), "Received data with unexpected version")
@@ -564,7 +555,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithExpectedSchemaVersion(t *testin
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report":` + testReport + `,
+		"Report":` + testdata.ConsumerReport + `,
 		"LastChecked": "` + time.Now().Add(-24*time.Hour).Format(time.RFC3339) + `",
 		"Version": ` + fmt.Sprintf("%d", consumer.CurrentSchemaVersion) + `
 	}`
