@@ -160,6 +160,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 		rule.Disabled = false
 	} else {
 		rule.Disabled = ruleToggle.Disabled == storage.RuleToggleDisable
+		rule.DisabledAt = types.Timestamp(ruleToggle.DisabledAt.Time.UTC().Format(time.RFC3339))
 	}
 
 	feedback, err := server.Storage.GetUserFeedbackOnRule(clusterName, rule.Module, rule.ErrorKey, userID)
@@ -168,6 +169,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 		rule.UserVote = types.UserVoteNone
 	} else {
 		rule.UserVote = feedback.UserVote
+		rule.DisableFeedback = feedback.Message
 	}
 
 	return rule
