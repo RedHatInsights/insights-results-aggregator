@@ -45,3 +45,7 @@ create_stream_if_not_exists = false
 
 [metrics]
 namespace = "aggregator"
+
+[amsclient]
+token = "some_token"
+url = "https://api.stage.openshift.com"

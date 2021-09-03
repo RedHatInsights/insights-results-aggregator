@@ -48,6 +48,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
+	"github.com/RedHatInsights/insights-results-aggregator/amsclient"
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
@@ -78,6 +79,7 @@ type ConfigStruct struct {
 	Metrics           MetricsConfiguration              `mapstructure:"metrics" toml:"metrics"`
 	SentryLoggingConf logger.SentryLoggingConfiguration `mapstructure:"sentry" toml:"sentry"`
 	KafkaZerologConf  logger.KafkaZerologConfiguration  `mapstructure:"kafka_zerolog" toml:"kafka_zerolog"`
+	AMSClientConf     amsclient.Configuration           `mapstructure:"amsclient" toml:"amsclient"`
 }
 
 // Config has exactly the same structure as *.toml file
@@ -213,6 +215,11 @@ func GetServerConfiguration() server.Configuration {
 // GetMetricsConfiguration returns metrics configuration
 func GetMetricsConfiguration() MetricsConfiguration {
 	return Config.Metrics
+}
+
+// GetAMSClientConfiguration returns the amsclient configuration
+func GetAMSClientConfiguration() amsclient.Configuration {
+	return Config.AMSClientConf
 }
 
 // checkIfFileExists returns nil if path doesn't exist or isn't a file,
