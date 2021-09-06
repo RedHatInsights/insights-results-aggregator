@@ -25,7 +25,7 @@ var mig0016AddRecommendationsTable = Migration{
 			CREATE TABLE recommendation
 				AS SELECT
 					cluster_id,
-					rule_fqdn,
+					REGEXP_REPLACE(rule_fqdn, 'report$', error_key) AS rule_fqdn,
 					error_key
 				FROM rule_hit;
 		`)
