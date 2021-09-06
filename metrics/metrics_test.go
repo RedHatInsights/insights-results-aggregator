@@ -24,7 +24,6 @@ import (
 	"github.com/Shopify/sarama/mocks"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/testutil"
 	prommodels "github.com/prometheus/client_model/go"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -142,27 +141,6 @@ func TestWrittenReportsMetric(t *testing.T) {
 
 	assertCounterValue(t, 100, metrics.WrittenReports, initValue)
 }
-
-// TestWrittenRecommendationsMetricCorrectUpdate verifies that every time
-// WriteRecommendationsForCluster is called, two entries are added to the
-// metrics.SQLRecommendationsUpdates HistogramVect. One entry for number
-// of deleted rows, and one for number of inserted rows.
-func TestWrittenRecommendationsMetricCorrectUpdate(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	initialDeletes := testutil.CollectAndCount(metrics.SQLRecommendationsDeletes)
-	initialInserts := testutil.CollectAndCount(metrics.SQLRecommendationsInserts)
-
-	err := mockStorage.WriteRecommendationsForCluster(testdata.ClusterName, testdata.Report3Rules)
-	helpers.FailOnError(t, err)
-
-	//We expect one new metric in each histogramVect, one for deleted rows and one for inserted rows
-	assert.Equal(t, 1, testutil.CollectAndCount(metrics.SQLRecommendationsDeletes)-initialDeletes)
-	assert.Equal(t, 1, testutil.CollectAndCount(metrics.SQLRecommendationsInserts)-initialInserts)
-}
-
-// TODO: More tests for recommendations metrics, but in another PR
 
 // TODO: write tests for sql queries metrics
 // - SQLQueriesCounter
