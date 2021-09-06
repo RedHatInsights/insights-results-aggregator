@@ -31,6 +31,7 @@ import (
 	sql_driver "database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -72,6 +73,10 @@ type Storage interface {
 		rules []types.ReportItem,
 		collectedAtTime time.Time,
 		kafkaOffset types.KafkaOffset,
+	) error
+	WriteRecommendationsForCluster(
+		clusterName types.ClusterName,
+		report types.ClusterReport,
 	) error
 	ReportsCount() (int, error)
 	VoteOnRule(
@@ -420,6 +425,11 @@ func argsWithClusterNames(clusterNames []types.ClusterName) []interface{} {
 	return args
 }
 
+func updateRecommendationsMetrics(cluster string, deleted float64, inserted float64) {
+	metrics.SQLRecommendationsDeletes.WithLabelValues(cluster).Observe(deleted)
+	metrics.SQLRecommendationsInserts.WithLabelValues(cluster).Observe(inserted)
+}
+
 // ReadOrgIDsForClusters read organization IDs for given list of cluster names.
 func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]types.OrgID, error) {
 	// stub for return value
@@ -667,6 +677,36 @@ func (storage DBStorage) updateReport(
 	return nil
 }
 
+func (storage DBStorage) insertRecommendations(
+	tx *sql.Tx,
+	clusterName types.ClusterName,
+	report types.ReportRules,
+) (inserted int, err error) {
+	statement := `INSERT INTO recommendation (cluster_id, rule_fqdn, error_key) VALUES %s`
+
+	var valuesIdx []string
+	var valuesArg []interface{}
+	inserted = 0
+
+	for _, rule := range report.HitRules {
+		//TODO: Figure out why report contains rule_id and component and if update the ReportRules types accordingly
+		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report") + "|" + string(rule.ErrorKey)
+		valuesArg = append(valuesArg, clusterName, ruleFqdn, rule.ErrorKey)
+		inserted = len(valuesArg)
+		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(inserted-2)+", $"+fmt.Sprint(inserted-1)+", $"+fmt.Sprint(inserted)+")")
+	}
+
+	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
+	_, err = tx.Exec(statement, valuesArg...)
+	if err != nil {
+		log.Err(err).Msgf("Unable to insert the recommendations for cluster: %v", clusterName)
+		return 0, err
+	}
+
+	return
+
+}
+
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
 func (storage DBStorage) WriteReportForCluster(
 	orgID types.OrgID,
@@ -720,6 +760,66 @@ func (storage DBStorage) WriteReportForCluster(
 
 		storage.clustersLastChecked[clusterName] = lastCheckedTime
 		metrics.WrittenReports.Inc()
+
+		return nil
+	}(tx)
+
+	finishTransaction(tx, err)
+
+	return err
+}
+
+// WriteRecommendationsForCluster writes hitting rules in received report for selected cluster
+func (storage DBStorage) WriteRecommendationsForCluster(
+	clusterName types.ClusterName,
+	stringReport types.ClusterReport,
+) (err error) {
+	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
+		return fmt.Errorf("writing recommendations with DB %v is not supported", storage.dbDriverType)
+	}
+
+	var report types.ReportRules
+	err = json.Unmarshal([]byte(stringReport), &report)
+	if err != nil {
+		return err
+	}
+
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = func(tx *sql.Tx) error {
+		var deleted int64 = 0
+		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
+		if _, ok := storage.clustersLastChecked[clusterName]; ok {
+			result, err := tx.Exec(
+				"DELETE FROM recommendation WHERE cluster_id = $1;", clusterName)
+			err = types.ConvertDBError(err, []interface{}{clusterName})
+			if err != nil {
+				log.Error().Err(err).Msgf("Unable to delete the existing recommendations for %s", clusterName)
+				return err
+			}
+
+			// As the documentation says:
+			// RowsAffected returns the number of rows affected by an
+			// update, insert, or delete. Not every database or database
+			// driver may support this.
+			// So we might run in a scenario where we don't have metrics
+			// if the driver doesn't help.
+			deleted, err = result.RowsAffected()
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to retrieve number of deleted rows with current driver")
+				return err
+			}
+		}
+
+		inserted, err := storage.insertRecommendations(tx, clusterName, report)
+		if err != nil {
+			return err
+		}
+
+		updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(inserted))
 
 		return nil
 	}(tx)
