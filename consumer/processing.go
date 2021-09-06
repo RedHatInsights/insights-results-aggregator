@@ -127,6 +127,22 @@ func checkMessageOrgInAllowList(consumer *KafkaConsumer, message *incomingMessag
 	return true, ""
 }
 
+func writeRecommendations(
+	consumer *KafkaConsumer, msg *sarama.ConsumerMessage, message incomingMessage, reportAsBytes []byte) (
+	time.Time, error) {
+	err := consumer.Storage.WriteRecommendationsForCluster(
+		*message.ClusterName,
+		types.ClusterReport(reportAsBytes),
+	)
+	if err != nil {
+		logMessageError(consumer, msg, message, "Error writing recommendations to database", err)
+		return time.Time{}, err
+	}
+	tStored := time.Now()
+	logMessageInfo(consumer, msg, message, "Stored recommendations")
+	return tStored, nil
+}
+
 // ProcessMessage processes an incoming message
 func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error) {
 	tStart := time.Now()
@@ -192,15 +208,21 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 		logMessageError(consumer, msg, message, "Error writing report to database", err)
 		return message.RequestID, err
 	}
-	logMessageInfo(consumer, msg, message, "Stored")
+	logMessageInfo(consumer, msg, message, "Stored report")
 	tStored := time.Now()
+
+	tRecommendationsStored, err := writeRecommendations(consumer, msg, message, reportAsBytes)
+	if err != nil {
+		return message.RequestID, err
+	}
 
 	// log durations for every message consumption steps
 	logDuration(tStart, tRead, msg.Offset, "read")
 	logDuration(tRead, tAllowlisted, msg.Offset, "org_filtering")
 	logDuration(tAllowlisted, tMarshalled, msg.Offset, "marshalling")
 	logDuration(tMarshalled, tTimeCheck, msg.Offset, "time_check")
-	logDuration(tTimeCheck, tStored, msg.Offset, "db_store")
+	logDuration(tTimeCheck, tStored, msg.Offset, "db_store_report")
+	logDuration(tStored, tRecommendationsStored, msg.Offset, "db_store_recommendations")
 
 	// message has been parsed and stored into storage
 	return message.RequestID, nil
