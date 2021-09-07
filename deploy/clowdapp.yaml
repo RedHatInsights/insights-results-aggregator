@@ -245,6 +245,46 @@ objects:
         partitions: 1
         topicName: platform.payload-status
 
+- kind: Service
+  apiVersion: v1
+  metadata:
+    annotations:
+      prometheus.io/path: /metrics
+      prometheus.io/port: "10000"
+      prometheus.io/scheme: http
+      prometheus.io/scrape: "true"
+    name: ccx-insights-results-aggregator-prometheus-exporter
+    labels:
+      app: ccx-insights-results
+  spec:
+    ports:
+      - name: ccx-insights-results-aggregator-port-metrics
+        port: 10000
+        protocol: TCP
+        targetPort: 10000
+    selector:
+      app: ccx-insights-results
+
+- kind: Service
+  apiVersion: v1
+  metadata:
+    annotations:
+      prometheus.io/path: /metrics
+      prometheus.io/port: "9000"
+      prometheus.io/scheme: http
+      prometheus.io/scrape: "true"
+    name: ccx-insights-results-db-writer-prometheus-exporter
+    labels:
+      app: ccx-insights-results
+  spec:
+    ports:
+      - name: ccx-insights-results-db-writer-port-metrics
+        port: 9000
+        protocol: TCP
+        targetPort: 9000
+    selector:
+      app: ccx-insights-results
+
 parameters:
 # insights-results-aggregator
 - description: Image name
