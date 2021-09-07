@@ -21,6 +21,22 @@ import (
 var mig0016AddRecommendationsTable = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		// Create recommendation table using currently stored rule hits
+		if driver != types.DBDriverPostgres {
+			_, err := tx.Exec(`
+			CREATE TABLE recommendation
+				AS SELECT
+					cluster_id,
+					rule_fqdn,
+					error_key
+				FROM rule_hit;
+			`)
+			if err != nil {
+				return err
+			}
+			// stop here if sqLite
+			return nil
+		}
+
 		_, err := tx.Exec(`
 			CREATE TABLE recommendation
 				AS SELECT
@@ -32,11 +48,6 @@ var mig0016AddRecommendationsTable = Migration{
 
 		if err != nil {
 			return err
-		}
-
-		if driver != types.DBDriverPostgres {
-			// stop here if sqLite
-			return nil
 		}
 
 		//Add the primary_key to the new table
