@@ -255,7 +255,7 @@ objects:
       prometheus.io/scrape: "true"
     name: ccx-insights-results-aggregator-prometheus-exporter
     labels:
-      app: ccx-insights-results
+      app: insights-results-aggregator
   spec:
     ports:
       - name: ccx-insights-results-aggregator-port-metrics
@@ -275,7 +275,7 @@ objects:
       prometheus.io/scrape: "true"
     name: ccx-insights-results-db-writer-prometheus-exporter
     labels:
-      app: ccx-insights-results
+      app: insights-results-db-writer
   spec:
     ports:
       - name: ccx-insights-results-db-writer-port-metrics
