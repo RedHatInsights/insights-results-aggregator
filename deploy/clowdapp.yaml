@@ -269,7 +269,7 @@ objects:
   apiVersion: v1
   metadata:
     annotations:
-      prometheus.io/path: /api/v1/metrics
+      prometheus.io/path: /metrics
       prometheus.io/port: "9000"
       prometheus.io/scheme: http
       prometheus.io/scrape: "true"
