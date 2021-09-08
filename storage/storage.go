@@ -689,10 +689,11 @@ func (storage DBStorage) insertRecommendations(
 	var valuesIdx []string
 	var valuesArg []interface{}
 	inserted = 0
+	selectors := make([]string, len(report.HitRules))
 
-	for _, rule := range report.HitRules {
-		//TODO: Figure out why report contains rule_id and component and if update the ReportRules types accordingly
+	for idx, rule := range report.HitRules {
 		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report") + "|" + string(rule.ErrorKey)
+		selectors[idx] = ruleFqdn
 		valuesArg = append(valuesArg, orgID, clusterName, ruleFqdn, rule.ErrorKey)
 		inserted = len(valuesArg)
 		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(inserted-3)+", $"+fmt.Sprint(inserted-2)+", $"+fmt.Sprint(inserted-1)+", $"+fmt.Sprint(inserted)+")")
@@ -701,9 +702,21 @@ func (storage DBStorage) insertRecommendations(
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
 	_, err = tx.Exec(statement, valuesArg...)
 	if err != nil {
-		log.Err(err).Msgf("Unable to insert the recommendations for cluster: %v", clusterName)
+		log.Error().
+			Int(organizationKey, int(orgID)).
+			Str(clusterKey, string(clusterName)).
+			Int(issuesCountKey, len(selectors)).
+			Strs(selectorsKey, selectors).
+			Err(err).
+			Msg("Unable to insert the recommendations")
 		return 0, err
 	}
+	log.Info().
+		Int(organizationKey, int(orgID)).
+		Str(clusterKey, string(clusterName)).
+		Int(issuesCountKey, len(selectors)).
+		Strs(selectorsKey, selectors).
+		Msg("Recommendations inserted successfully")
 
 	return
 
