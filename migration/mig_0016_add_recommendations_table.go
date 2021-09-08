@@ -25,7 +25,7 @@ var mig0016AddRecommendationsTable = Migration{
 			_, err := tx.Exec(`
 			CREATE TABLE recommendation
 				AS SELECT
-				        org_id,
+					org_id,
 					cluster_id,
 					rule_fqdn,
 					error_key
