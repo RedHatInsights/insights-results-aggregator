@@ -154,7 +154,7 @@ func TestWrittenRecommendationsMetricCorrectUpdate(t *testing.T) {
 	initialDeletes := testutil.CollectAndCount(metrics.SQLRecommendationsDeletes)
 	initialInserts := testutil.CollectAndCount(metrics.SQLRecommendationsInserts)
 
-	err := mockStorage.WriteRecommendationsForCluster(testdata.ClusterName, testdata.Report3Rules)
+	err := mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report3Rules)
 	helpers.FailOnError(t, err)
 
 	//We expect one new metric in each histogramVect, one for deleted rows and one for inserted rows

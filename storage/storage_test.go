@@ -1014,6 +1014,7 @@ func TestDBStorageWriteRecommendationsForClusterClosedStorage(t *testing.T) {
 	// we need to close storage right now
 	closer()
 	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
 	)
@@ -1024,6 +1025,7 @@ func TestDBStorageWriteRecommendationsForClusterClosedStorage(t *testing.T) {
 func TestDBStorageWriteRecommendationForClusterUnsupportedDriverError(t *testing.T) {
 	fakeStorage := storage.NewFromConnection(nil, -1)
 	err := fakeStorage.WriteRecommendationsForCluster(
+		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
 	)
@@ -1045,7 +1047,7 @@ func TestDBStorageWriteRecommendationForClusterNoConflict(t *testing.T) {
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
 	)
 
 	helpers.FailOnError(t, err)
@@ -1059,8 +1061,8 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 
 	expects.ExpectBegin()
 
-	expects.ExpectExec("INSERT INTO recommendation \\(cluster_id, rule_fqdn, error_key\\) " +
-		"VALUES \\(\\$1, \\$2, \\$3\\),\\(\\$4, \\$5, \\$6\\),\\(\\$7, \\$8, \\$9\\)").
+	expects.ExpectExec("INSERT INTO recommendation \\(org_id, cluster_id, rule_fqdn, error_key\\) " +
+		"VALUES \\(\\$1, \\$2, \\$3\\, \\$4\\),\\(\\$5, \\$6, \\$7\\, \\$8\\),\\(\\$9, \\$10, \\$11\\, \\$12\\)").
 		WillReturnResult(driver.ResultNoRows)
 
 	expects.ExpectCommit()
@@ -1071,7 +1073,7 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 		PassedRules:  testdata.RuleOnReportResponses,
 		TotalCount:   3 * len(testdata.RuleOnReportResponses),
 	}
-	err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.ClusterName, report)
+	err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report)
 
 	helpers.FailOnError(t, err)
 }
@@ -1089,7 +1091,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStored(t *testing.T) {
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1099,7 +1101,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStored(t *testing.T) {
 	expects.ExpectRollback()
 
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
 	)
 
 	assert.Error(t, err, "")
@@ -1119,7 +1121,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
 	)
 
 	helpers.FailOnError(t, err)
@@ -1136,7 +1138,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	expects.ExpectCommit()
 
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
 	)
 
 	helpers.FailOnError(t, err)

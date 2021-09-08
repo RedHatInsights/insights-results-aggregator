@@ -309,7 +309,7 @@ func mustPrepareRecommendationsBenchmark(b *testing.B) (storage.Storage, *sql.DB
 	_, err := conn.Exec("DROP TABLE IF EXISTS recommendation;")
 	helpers.FailOnError(b, err)
 
-	_, err = conn.Exec("CREATE TABLE recommendation (cluster_id VARCHAR NOT NULL, rule_fqdn VARCHAR NOT NULL, error_key VARCHAR NOT NULL, PRIMARY KEY(cluster_id, rule_fqdn, error_key));")
+	_, err = conn.Exec("CREATE TABLE recommendation (org_id INTEGER NOT NULL, cluster_id VARCHAR NOT NULL, rule_fqdn VARCHAR NOT NULL, error_key VARCHAR NOT NULL, PRIMARY KEY(cluster_id, rule_fqdn, error_key));")
 	helpers.FailOnError(b, err)
 
 	return mockStorage, conn, closer
@@ -350,7 +350,7 @@ func mustPrepareReportAndRecommendationsBenchmark(b *testing.B) (storage.Storage
 	_, err = conn.Exec("DROP TABLE IF EXISTS rule_hit;")
 	helpers.FailOnError(b, err)
 
-	_, err = conn.Exec("CREATE TABLE recommendation (cluster_id VARCHAR NOT NULL, rule_fqdn VARCHAR NOT NULL, error_key VARCHAR NOT NULL, PRIMARY KEY(cluster_id, rule_fqdn, error_key));")
+	_, err = conn.Exec("CREATE TABLE recommendation (org_id INTEGER NOT NULL, cluster_id VARCHAR NOT NULL, rule_fqdn VARCHAR NOT NULL, error_key VARCHAR NOT NULL, PRIMARY KEY(cluster_id, rule_fqdn, error_key));")
 	helpers.FailOnError(b, err)
 	_, err = conn.Exec("CREATE TABLE report (org_id INTEGER NOT NULL, cluster VARCHAR NOT NULL UNIQUE, report VARCHAR NOT NULL, reported_at TIMESTAMP, last_checked_at TIMESTAMP, kafka_offset BIGINT NOT NULL DEFAULT 0, PRIMARY KEY(org_id, cluster));")
 	helpers.FailOnError(b, err)
@@ -395,7 +395,7 @@ func BenchmarkNewRecommendationsWithoutConflict(b *testing.B) {
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for id := range clusterIDSet.content {
-			err := storage.WriteRecommendationsForCluster(types.ClusterName(id), testdata.Report3Rules)
+			err := storage.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report3Rules)
 			helpers.FailOnError(b, err)
 		}
 	}
@@ -433,7 +433,7 @@ func BenchmarkNewRecommendationsExistingClusterConflict(b *testing.B) {
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for _, id := range clusterIds {
-			err := mockStorage.WriteRecommendationsForCluster(types.ClusterName(id), testdata.Report2Rules)
+			err := mockStorage.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report2Rules)
 			helpers.FailOnError(b, err)
 		}
 	}
@@ -463,7 +463,7 @@ func BenchmarkNewRecommendations2000initialEntries(b *testing.B) {
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for id := range clusterIDSet.content {
-			err := mockStorage.WriteRecommendationsForCluster(types.ClusterName(id), Report20Rules)
+			err := mockStorage.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), Report20Rules)
 			helpers.FailOnError(b, err)
 		}
 	}
@@ -514,7 +514,7 @@ func BenchmarkWriteReportAndRecommendationsNoConflict(b *testing.B) {
 		for id := range clusterIDSet.content {
 			err := storage.WriteReportForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report2Rules, testdata.Report2RulesParsed, time.Now(), types.KafkaOffset(0))
 			helpers.FailOnError(b, err)
-			err = storage.WriteRecommendationsForCluster(types.ClusterName(id), Report20Rules)
+			err = storage.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), Report20Rules)
 			helpers.FailOnError(b, err)
 		}
 	}
