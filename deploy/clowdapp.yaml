@@ -263,7 +263,7 @@ objects:
         protocol: TCP
         targetPort: 10000
     selector:
-      app: ccx-insights-results
+      pod: ccx-insights-results-aggregator
 
 - kind: Service
   apiVersion: v1
@@ -283,7 +283,7 @@ objects:
         protocol: TCP
         targetPort: 9000
     selector:
-      app: ccx-insights-results
+      pod: ccx-insights-results-db-writer
 
 parameters:
 # insights-results-aggregator
