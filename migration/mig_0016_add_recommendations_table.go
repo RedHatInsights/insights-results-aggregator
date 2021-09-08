@@ -37,16 +37,9 @@ var mig0016AddRecommendationsTable = Migration{
 			return nil
 		}
 
-		_, err := tx.Exec(`DROP TABLE IF EXISTS recommendation;`)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.Exec(`
+		_, err := tx.Exec(`
 			CREATE TABLE recommendation
 				AS SELECT
-					org_id,
 					cluster_id,
 					REGEXP_REPLACE(rule_fqdn, 'report$', error_key) AS rule_fqdn,
 					error_key
