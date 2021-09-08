@@ -75,6 +75,7 @@ type Storage interface {
 		kafkaOffset types.KafkaOffset,
 	) error
 	WriteRecommendationsForCluster(
+		orgID types.OrgID,
 		clusterName types.ClusterName,
 		report types.ClusterReport,
 	) error
@@ -679,10 +680,11 @@ func (storage DBStorage) updateReport(
 
 func (storage DBStorage) insertRecommendations(
 	tx *sql.Tx,
+	orgID types.OrgID,
 	clusterName types.ClusterName,
 	report types.ReportRules,
 ) (inserted int, err error) {
-	statement := `INSERT INTO recommendation (cluster_id, rule_fqdn, error_key) VALUES %s`
+	statement := `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key) VALUES %s`
 
 	var valuesIdx []string
 	var valuesArg []interface{}
@@ -691,9 +693,9 @@ func (storage DBStorage) insertRecommendations(
 	for _, rule := range report.HitRules {
 		//TODO: Figure out why report contains rule_id and component and if update the ReportRules types accordingly
 		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report") + "|" + string(rule.ErrorKey)
-		valuesArg = append(valuesArg, clusterName, ruleFqdn, rule.ErrorKey)
+		valuesArg = append(valuesArg, orgID, clusterName, ruleFqdn, rule.ErrorKey)
 		inserted = len(valuesArg)
-		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(inserted-2)+", $"+fmt.Sprint(inserted-1)+", $"+fmt.Sprint(inserted)+")")
+		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(inserted-3)+", $"+fmt.Sprint(inserted-2)+", $"+fmt.Sprint(inserted-1)+", $"+fmt.Sprint(inserted)+")")
 	}
 
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
@@ -771,6 +773,7 @@ func (storage DBStorage) WriteReportForCluster(
 
 // WriteRecommendationsForCluster writes hitting rules in received report for selected cluster
 func (storage DBStorage) WriteRecommendationsForCluster(
+	orgID types.OrgID,
 	clusterName types.ClusterName,
 	stringReport types.ClusterReport,
 ) (err error) {
@@ -814,7 +817,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 			}
 		}
 
-		inserted, err := storage.insertRecommendations(tx, clusterName, report)
+		inserted, err := storage.insertRecommendations(tx, orgID, clusterName, report)
 		if err != nil {
 			return err
 		}

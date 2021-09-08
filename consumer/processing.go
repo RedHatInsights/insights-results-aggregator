@@ -131,6 +131,7 @@ func writeRecommendations(
 	consumer *KafkaConsumer, msg *sarama.ConsumerMessage, message incomingMessage, reportAsBytes []byte) (
 	time.Time, error) {
 	err := consumer.Storage.WriteRecommendationsForCluster(
+		*message.Organization,
 		*message.ClusterName,
 		types.ClusterReport(reportAsBytes),
 	)
