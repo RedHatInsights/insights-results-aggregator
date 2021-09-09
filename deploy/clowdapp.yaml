@@ -283,8 +283,9 @@ objects:
         protocol: TCP
         targetPort: 9000
     selector:
-      app: ccx-insights-results-db-writer
-
+      app: ccx-insights-results 
+      pod: ccx-insights-results-db-writer
+      
 parameters:
 # insights-results-aggregator
 - description: Image name
