@@ -711,7 +711,7 @@ func TestHTTPServer_SaveDisableFeedback(t *testing.T) {
 		Body:       `{"message":"user's feedback", "status":"ok"}`,
 	})
 
-	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, expectedFeedback, feedback.Message)

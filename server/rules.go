@@ -163,13 +163,21 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 		rule.DisabledAt = types.Timestamp(ruleToggle.DisabledAt.Time.UTC().Format(time.RFC3339))
 	}
 
-	feedback, err := server.Storage.GetUserFeedbackOnRule(clusterName, rule.Module, rule.ErrorKey, userID)
+	disableFeedback, err := server.Storage.GetUserFeedbackOnRuleDisable(clusterName, rule.Module, rule.ErrorKey, userID)
 	if err != nil {
 		log.Error().Err(err).Msg("Feedback for rule was not found")
+		rule.DisableFeedback = ""
+	} else {
+		log.Info().Msgf("feedback Message: '%v'", disableFeedback.Message)
+		rule.DisableFeedback = disableFeedback.Message
+	}
+
+	userVote, err := server.Storage.GetUserFeedbackOnRule(clusterName, rule.Module, rule.ErrorKey, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("User vote for rule was not found")
 		rule.UserVote = types.UserVoteNone
 	} else {
-		rule.UserVote = feedback.UserVote
-		rule.DisableFeedback = feedback.Message
+		rule.UserVote = userVote.UserVote
 	}
 
 	return rule

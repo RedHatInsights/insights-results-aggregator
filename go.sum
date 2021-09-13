@@ -43,6 +43,8 @@ github.com/RedHatInsights/insights-operator-utils v1.8.2/go.mod h1:L6alrkNSM+uBz
 github.com/RedHatInsights/insights-operator-utils v1.8.3/go.mod h1:L6alrkNSM+uBzlQdIihhGnwTpdw+bD8i8Fdh/OE9rdo=
 github.com/RedHatInsights/insights-operator-utils v1.10.0 h1:AqbWfO4Hx/Mu8+taqwEXfuGV3JIvDAzD7ZX0S52DgEo=
 github.com/RedHatInsights/insights-operator-utils v1.10.0/go.mod h1:mN5jURLpSG+j7y3VPAUTPyHsTWSxrqSHSerSacDBgFU=
+github.com/RedHatInsights/insights-operator-utils v1.12.0 h1:cQVdkkRRlQ23QVGFgXLNpvv/FcnH3ZB2tKszNQ6iL0c=
+github.com/RedHatInsights/insights-operator-utils v1.12.0/go.mod h1:mN5jURLpSG+j7y3VPAUTPyHsTWSxrqSHSerSacDBgFU=
 github.com/RedHatInsights/insights-results-aggregator v0.0.0-20200604090056-3534f6dd9c1c/go.mod h1:7Pc15NYXErx7BMJ4rF1Hacm+29G6atzjhwBpXNFMt+0=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200825113234-e84e924194bc/go.mod h1:DcDgoCCmBuUSKQOGrTi0BfFLdSjAp/KxIwyqKUd46sM=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20201014142608-de97c4b07d5c/go.mod h1:x8IvreR2g24veCKVMXDPOR6a0D86QK9UCBfi5Xm5Gnc=
@@ -50,6 +52,8 @@ github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20201109115720
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20201109115720-126bd0348556/go.mod h1:+j10GLCbx42McRJE7uU+aVayf5Elwx4nKULFiPkki6U=
 github.com/RedHatInsights/insights-results-aggregator-data v1.0.1-0.20210614072933-b25730b1e023 h1:Ot6Rk8utrv02RMVTrGU/+QLSp+m5341pvq8auwlbDls=
 github.com/RedHatInsights/insights-results-aggregator-data v1.0.1-0.20210614072933-b25730b1e023/go.mod h1:SDeBuNY8AIwkD4JB5/I54ArWG7qngP5/Ydn7xbu2iZo=
+github.com/RedHatInsights/insights-results-aggregator-data v1.1.0 h1:Xl6e52pP1C8KDxBiotS4pBfVcjtdil+NgpmFUlik0Fk=
+github.com/RedHatInsights/insights-results-aggregator-data v1.1.0/go.mod h1:rbiccYJ8whbpLLvNGMiaFzyMPs1A/2/Jh0P2U9DXF+4=
 github.com/RedHatInsights/kafka-zerolog v0.0.0-20210304172207-928f026dc7ec h1:/msFfckx6EIj0rZncrMUfNixFvsLbOiRIe4J0AurhDo=
 github.com/RedHatInsights/kafka-zerolog v0.0.0-20210304172207-928f026dc7ec/go.mod h1:HJul5oCsCRNiRlh/ayJDGdW3PzGlid/5aaQwJBn7was=
 github.com/Shopify/goreferrer v0.0.0-20181106222321-ec9c9a553398/go.mod h1:a1uqRtAwp2Xwc6WNPJEufxJ7fx3npB4UV/JOLmbu5I0=

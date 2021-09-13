@@ -39,7 +39,7 @@ func TestNoopStorage_Methods(t *testing.T) {
 	_ = noopStorage.VoteOnRule("", "", "", "", 0, "")
 	_ = noopStorage.AddOrUpdateFeedbackOnRule("", "", "", "", "")
 	_ = noopStorage.AddFeedbackOnRuleDisable("", "", "", "", "")
-	_, _ = noopStorage.GetUserFeedbackOnRuleDisable("", "", "")
+	_, _ = noopStorage.GetUserFeedbackOnRuleDisable("", "", "", "")
 	_, _ = noopStorage.GetUserFeedbackOnRule("", "", "", "")
 	_ = noopStorage.DeleteReportsForOrg(0)
 	_ = noopStorage.DeleteReportsForCluster("")
