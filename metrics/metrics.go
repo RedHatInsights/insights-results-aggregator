@@ -110,13 +110,13 @@ var SQLQueriesDurations = promauto.NewHistogramVec(prometheus.HistogramOpts{
 // SQLRecommendationsDeletes shows deleted entries in recommendations table.
 var SQLRecommendationsDeletes = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Name: "sql_recommendations_deletes",
-	Help: "Number of rows removed from the SQL Recommendations table when new report is processed",
+	Help: "Number of rows removed from the SQL recommendation table when new report is processed",
 }, []string{"cluster"})
 
 // SQLRecommendationsInserts shows inserted entries in recommendations table.
 var SQLRecommendationsInserts = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Name: "sql_recommendations_inserts",
-	Help: "Number of rows added to the SQL Recommendations table when new report is processed",
+	Help: "Number of rows added to the SQL recommendation table when new report is processed",
 }, []string{"cluster"})
 
 // AddMetricsWithNamespace register the desired metrics using a given namespace
@@ -194,6 +194,6 @@ func AddMetricsWithNamespace(namespace string) {
 	SQLRecommendationsInserts = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
 		Name:      "sql_recommendations_inserts",
-		Help:      "Number of rows added to the SQL Recommendations table when new report is processed",
+		Help:      "Number of rows added to the SQL recommendation table when new report is processed",
 	}, []string{"cluster"})
 }
