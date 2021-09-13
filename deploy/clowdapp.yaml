@@ -258,7 +258,7 @@ objects:
       app: insights-results-aggregator
   spec:
     ports:
-      - name: ccx-insights-results-aggregator-port-metrics
+      - name: web
         port: 10000
         protocol: TCP
         targetPort: 10000
@@ -278,7 +278,7 @@ objects:
       app: insights-results-db-writer
   spec:
     ports:
-      - name: ccx-insights-results-db-writer-port-metrics
+      - name: web
         port: 9000
         protocol: TCP
         targetPort: 9000
