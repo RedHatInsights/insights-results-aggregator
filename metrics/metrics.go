@@ -190,10 +190,10 @@ func AddMetricsWithNamespace(namespace string) {
 		Namespace: namespace,
 		Name:      "sql_recommendations_deletes",
 		Help:      "Number of rows removed from the SQL recommendation table when new report is processed",
-	}, []string{"cluster", "deleted_rows"})
+	}, []string{"cluster"})
 	SQLRecommendationsInserts = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: namespace,
 		Name:      "sql_recommendations_inserts",
-		Help:      "Number of rows added to the SQL recommendation table when new report is processed",
-	}, []string{"cluster", "inserted_rows"})
+		Help:      "Number of rows added to the SQL Recommendations table when new report is processed",
+	}, []string{"cluster"})
 }
