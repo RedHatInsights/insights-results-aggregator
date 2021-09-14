@@ -187,19 +187,20 @@ func (storage DBStorage) GetUserFeedbackOnRule(
 
 // GetUserFeedbackOnRuleDisable gets user feedback from DB
 func (storage DBStorage) GetUserFeedbackOnRuleDisable(
-	clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+	clusterID types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey, userID types.UserID,
 ) (*UserFeedbackOnRule, error) {
 	feedback := UserFeedbackOnRule{}
 
 	err := storage.connection.QueryRow(
-		`SELECT cluster_id, user_id, rule_id, message, added_at, updated_at
+		`SELECT cluster_id, rule_id, error_key, user_id, message, added_at, updated_at
 		FROM cluster_user_rule_disable_feedback
-		WHERE cluster_id = $1 AND user_id = $2 AND rule_id = $3`,
-		clusterID, userID, ruleID,
+		WHERE cluster_id = $1 AND rule_id = $2 AND error_key = $3 AND user_id = $4`,
+		clusterID, ruleID, errorKey, userID,
 	).Scan(
 		&feedback.ClusterID,
-		&feedback.UserID,
 		&feedback.RuleID,
+		&feedback.ErrorKey,
+		&feedback.UserID,
 		&feedback.Message,
 		&feedback.AddedAt,
 		&feedback.UpdatedAt,
@@ -265,21 +266,17 @@ func (storage DBStorage) GetUserFeedbackOnRules(
 func (storage DBStorage) GetUserDisableFeedbackOnRules(
 	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
 ) (map[types.RuleID]UserFeedbackOnRule, error) {
-	ruleIDs := make([]types.RuleID, 0)
-	for _, v := range rulesReport {
-		ruleIDs = append(ruleIDs, v.Module)
-	}
-
 	feedbacks := make(map[types.RuleID]UserFeedbackOnRule)
 
-	for _, ruleID := range ruleIDs {
-		feedback, err := storage.GetUserFeedbackOnRuleDisable(clusterID, ruleID, userID)
+	for _, rule := range rulesReport {
+		feedback, err := storage.GetUserFeedbackOnRuleDisable(clusterID, rule.Module, rule.ErrorKey, userID)
 		if err != nil {
 			if _, itemNotFound := err.(*types.ItemNotFoundError); !itemNotFound {
 				return nil, err
 			}
 		} else {
-			feedbacks[ruleID] = *feedback
+			// since rules always hit only 1 error key, it's enough to select via module
+			feedbacks[rule.Module] = *feedback
 		}
 	}
 

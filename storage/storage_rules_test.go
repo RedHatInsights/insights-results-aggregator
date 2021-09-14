@@ -533,7 +533,7 @@ func TestDBStorageTextDisableFeedback(t *testing.T) {
 	))
 
 	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID,
 	)
 	helpers.FailOnError(t, err)
 
@@ -560,7 +560,7 @@ func TestDBStorageDisableFeedbackChangeMessage(t *testing.T) {
 	))
 
 	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(
-		testdata.ClusterName, testdata.Rule1ID, testdata.UserID,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID,
 	)
 	helpers.FailOnError(t, err)
 
@@ -576,7 +576,7 @@ func TestDBStorageDisableFeedbackErrorItemNotFound(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
 	if _, ok := err.(*types.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
@@ -586,6 +586,6 @@ func TestDBStorageDisableFeedbackErrorDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.UserID)
+	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
 	assert.EqualError(t, err, "sql: database is closed")
 }

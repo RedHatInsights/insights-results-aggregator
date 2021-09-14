@@ -109,7 +109,10 @@ type Storage interface {
 		userID types.UserID,
 	) (*UserFeedbackOnRule, error)
 	GetUserFeedbackOnRuleDisable(
-		clusterID types.ClusterName, ruleID types.RuleID, userID types.UserID,
+		clusterID types.ClusterName,
+		ruleID types.RuleID,
+		errorKey types.ErrorKey,
+		userID types.UserID,
 	) (*UserFeedbackOnRule, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
