@@ -56,7 +56,7 @@ var mig0016AddRecommendationsTable = Migration{
 		_, err = tx.Exec(`
 			ALTER TABLE recommendation
 				ADD CONSTRAINT recommendation_pk
-					PRIMARY KEY (cluster_id, rule_fqdn, error_key);`)
+					PRIMARY KEY (org_id, cluster_id, rule_fqdn, error_key);`)
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
