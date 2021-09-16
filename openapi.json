@@ -1021,9 +1021,9 @@
     },
     "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/disable_feedback": {
       "post": {
-        "summary": "Returns rule/health check's disable feedback",
+        "summary": "Accepts a feedback from user when (s)he disables a rule",
         "operationId": "disableRuleFeedback",
-        "description": "Returns rule/health check's disable feedback",
+        "description": "Accepts a feedback from user when (s)he disables a rule",
         "parameters": [
           {
             "name": "clusterId",
