@@ -32,7 +32,7 @@ for more details about tables, indexes, and keys.
  public | rule_hit                           | table
 ```
 
-## Table report
+## Table `report`
 
 This table is used as a cache for reports consumed from broker. Size of this
 table (i.e. number of records) scales linearly with the number of clusters,
@@ -55,46 +55,22 @@ CREATE TABLE report (
 )
 ```
 
-## Tables rule and rule_error_key
+## Table `rule_hit`
 
-These tables represent the content for Insights rules to be displayed by OCM.
-The table `rule` represents more general information about the rule, whereas the `rule_error_key`
-contains information about the specific type of error which occurred. The combination of these two
-create an unique rule.
-Very trivialized example could be:
-
-* rule "REQUIREMENTS_CHECK"
-  * error_key "REQUIREMENTS_CHECK_LOW_MEMORY"
-  * error_key "REQUIREMENTS_CHECK_MISSING_SYSTEM_PACKAGE"
+This table represent the content for Insights rules to be displayed by OCM.
 
 ```sql
-CREATE TABLE rule (
-    module      VARCHAR PRIMARY KEY,
-    name        VARCHAR NOT NULL,
-    summary     VARCHAR NOT NULL,
-    reason      VARCHAR NOT NULL,
-    resolution  VARCHAR NOT NULL,
-    more_info   VARCHAR NOT NULL
+CREATE TABLE rule_hit (
+    org_id         INTEGER NOT NULL,
+    cluster_id     VARCHAR NOT NULL,
+    rule_fqdn      VARCHAR NOT NULL,
+    error_key      VARCHAR NOT NULL,
+    template_data  VARCHAR NOT NULL,
+    PRIMARY KEY(cluster_id, org_id, rule_fqdn, error_key)
 )
 ```
 
-```sql
-CREATE TABLE rule_error_key (
-    error_key       VARCHAR NOT NULL,
-    rule_module     VARCHAR NOT NULL REFERENCES rule(module),
-    condition       VARCHAR NOT NULL,
-    description     VARCHAR NOT NULL,
-    impact          INTEGER NOT NULL,
-    likelihood      INTEGER NOT NULL,
-    publish_date    TIMESTAMP NOT NULL,
-    active          BOOLEAN NOT NULL,
-    generic         VARCHAR NOT NULL,
-    tags            VARCHAR NOT NULL DEFAULT '',
-    PRIMARY KEY(error_key, rule_module)
-)
-```
-
-## Table cluster_rule_user_feedback
+## Table `cluster_rule_user_feedback`
 
 ```sql
 -- user_vote is user's vote,
@@ -104,13 +80,14 @@ CREATE TABLE rule_error_key (
 CREATE TABLE cluster_rule_user_feedback (
     cluster_id  VARCHAR NOT NULL,
     rule_id     VARCHAR NOT NULL,
+    error_key   VARCHAR NOT NULL,
     user_id     VARCHAR NOT NULL,
     message     VARCHAR NOT NULL,
     user_vote   SMALLINT NOT NULL,
     added_at    TIMESTAMP NOT NULL,
     updated_at  TIMESTAMP NOT NULL,
 
-    PRIMARY KEY(cluster_id, rule_id, user_id),
+    PRIMARY KEY(cluster_id, rule_id, user_id, error_key),
     FOREIGN KEY (cluster_id)
         REFERENCES report(cluster)
         ON DELETE CASCADE,
@@ -120,12 +97,13 @@ CREATE TABLE cluster_rule_user_feedback (
 )
 ```
 
-## Table cluster_rule_toggle
+## Table `cluster_rule_toggle`
 
 ```sql
 CREATE TABLE cluster_rule_toggle (
     cluster_id  VARCHAR NOT NULL,
     rule_id     VARCHAR NOT NULL,
+    error_key   VARCHAR NOT NULL,
     user_id     VARCHAR NOT NULL,
     disabled    SMALLINT NOT NULL,
     disabled_at TIMESTAMP NULL,
@@ -138,7 +116,39 @@ CREATE TABLE cluster_rule_toggle (
 )
 ```
 
-## Table consumer_error
+## Table `cluster_user_rule_disable_feedback`
+
+Feedback provided by user while disabling the rule on UI.
+
+```sql
+CREATE TABLE cluster_rule_toggle (
+    cluster_id  VARCHAR NOT NULL,
+    user_id     VARCHAR NOT NULL,
+    rule_id     VARCHAR NOT NULL,
+    error_key   VARCHAR NOT NULL,
+    message     VARCHAR NOT NULL,
+    updated_at  TIMESTAMP NOT NULL,
+
+    PRIMARY KEY(cluster_id, user_id, rule_id, error_key)
+)
+```
+
+## Table `recommendation`
+
+All recommendations per organization and cluster.
+
+```sql
+CREATE TABLE recommendations (
+    org_id      INTEGER NOT NULL,
+    cluster_id  VARCHAR NOT NULL,
+    rule_fqdn   VARCHAR NOT NULL,
+    error_key   VARCHAR NOT NULL,
+
+    PRIMARY KEY(org_id, cluster_id, rule_fqdn, error_key)
+)
+```
+
+## Table `consumer_error`
 
 Errors that happen while processing a message consumed from Kafka are logged into this table. This
 allows easier debugging of various issues, especially those related to unexpected input data format.
@@ -157,6 +167,18 @@ CREATE TABLE consumer_error (
     PRIMARY KEY(topic, partition, topic_offset)
 )
 ```
+
+## Table `migration_info`
+
+This table contains just one record with DB version value.
+
+```sql
+CREATE TABLE migration_info (
+    version         VARCHAR NOT NULL
+)
+```
+
+
 
 ## Schema description
 
