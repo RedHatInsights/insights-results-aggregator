@@ -57,7 +57,7 @@ CREATE TABLE report (
 
 ## Table `rule_hit`
 
-This table represent the content for Insights rules to be displayed by OCM.
+This table represents the content for Insights rules to be displayed by OCM.
 
 ```sql
 CREATE TABLE rule_hit (
