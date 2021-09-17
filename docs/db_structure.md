@@ -17,6 +17,21 @@ for more details about tables, indexes, and keys.
 1. TOC
 {:toc}
 
+## List of tables
+
+```
+ Schema |                Name                | Type 
+--------+------------------------------------+------
+ public | cluster_rule_toggle                | table
+ public | cluster_rule_user_feedback         | table
+ public | cluster_user_rule_disable_feedback | table
+ public | consumer_error                     | table
+ public | migration_info                     | table
+ public | recommendation                     | table
+ public | report                             | table
+ public | rule_hit                           | table
+```
+
 ## Table report
 
 This table is used as a cache for reports consumed from broker. Size of this
