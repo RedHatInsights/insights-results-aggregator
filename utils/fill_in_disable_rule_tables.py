@@ -38,7 +38,53 @@ from datetime import datetime
 import psycopg2
 
 
+# default values
 DEFAULT_RULE_DISABLE_PROBABILITY = 100
+
+ACCOUNT_IDS = (1, 2, 3, 4)
+
+CLUSTER_IDS = (
+    "00000001-624a-49a5-bab8-4fdc5e51a266",
+    "00000001-624a-49a5-bab8-4fdc5e51a267",
+    "00000001-624a-49a5-bab8-4fdc5e51a268",
+    "00000001-624a-49a5-bab8-4fdc5e51a269",
+    "00000001-624a-49a5-bab8-4fdc5e51a26a",
+    "00000001-624a-49a5-bab8-4fdc5e51a26b",
+    "00000001-624a-49a5-bab8-4fdc5e51a26c",
+    "00000001-624a-49a5-bab8-4fdc5e51a26d",
+    "00000001-624a-49a5-bab8-4fdc5e51a26e",
+    "00000001-624a-49a5-bab8-4fdc5e51a26f",
+    "00000001-6577-4e80-85e7-697cb646ff37",
+    "00000001-8933-4a3a-8634-3328fe806e08",
+    "00000001-8d6a-43cc-b82c-7007664bdf69",
+    "00000002-624a-49a5-bab8-4fdc5e51a266",
+    "00000002-6577-4e80-85e7-697cb646ff37",
+    "00000002-8933-4a3a-8634-3328fe806e08",
+    "00000003-8933-4a3a-8634-3328fe806e08",
+    "00000003-8d6a-43cc-b82c-7007664bdf69",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a266",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a267",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a268",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a269",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a26a",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a26b",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a26c",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a26d",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a26e",
+    "34c3ecc5-624a-49a5-bab8-4fdc5e51a26f",
+    "74ae54aa-6577-4e80-85e7-697cb646ff37",
+    "a7467445-8d6a-43cc-b82c-7007664bdf69",
+    "ee7d2bf4-8933-4a3a-8634-3328fe806e08")
+
+RULE_SELECTORS = (
+    ("ccx_rules_ocp.external.rules.ccxdev_auxiliary_rule", "CCXDEV_E2E_TEST_RULE"),
+    ("ccx_rules_ocp.external.bug_rules.bug_1821905.report", "BUGZILLA_BUG_1821905"),
+    ("ccx_rules_ocp.external.rules.nodes_requirements_check.report",
+        "NODES_MINIMUM_REQUIREMENTS_NOT_MET"),
+    ("ccx_rules_ocp.external.bug_rules.bug_1766907.report", "BUGZILLA_BUG_1766907"),
+    ("ccx_rules_ocp.external.rules.nodes_kubelet_version_check.report", "NODE_KUBELET_VERSION"),
+    ("ccx_rules_ocp.external.rules.samples_op_failed_image_import_check.report",
+        "SAMPLES_FAILED_IMAGE_IMPORT_ERR"))
 
 
 def main():
