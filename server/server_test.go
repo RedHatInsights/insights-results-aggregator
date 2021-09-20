@@ -597,7 +597,7 @@ func TestRuleToggle(t *testing.T) {
 			helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
-				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1},
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
 			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,

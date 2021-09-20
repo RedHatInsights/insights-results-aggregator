@@ -172,7 +172,7 @@ func (*NoopStorage) WriteConsumerError(*sarama.ConsumerMessage, error) error {
 
 // ToggleRuleForCluster noop
 func (*NoopStorage) ToggleRuleForCluster(
-	types.ClusterName, types.RuleID, types.ErrorKey, RuleToggle,
+	types.ClusterName, types.RuleID, types.ErrorKey, types.UserID, RuleToggle,
 ) error {
 	return nil
 }

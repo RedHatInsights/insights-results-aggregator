@@ -56,7 +56,7 @@ func TestNoopStorage_Methods_Cont(t *testing.T) {
 	_ = noopStorage.CreateRuleErrorKey(types.RuleErrorKey{})
 	_ = noopStorage.DeleteRuleErrorKey("", "")
 	_ = noopStorage.WriteConsumerError(nil, nil)
-	_ = noopStorage.ToggleRuleForCluster("", "", "", 0)
+	_ = noopStorage.ToggleRuleForCluster("", "", "", "", 0)
 	_ = noopStorage.DeleteFromRuleClusterToggle("", "")
 	_, _ = noopStorage.GetFromClusterRuleToggle("", "")
 	_, _ = noopStorage.GetTogglesForRules("", nil)
