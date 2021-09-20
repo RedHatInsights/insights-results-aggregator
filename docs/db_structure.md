@@ -121,12 +121,13 @@ CREATE TABLE cluster_rule_toggle (
 Feedback provided by user while disabling the rule on UI.
 
 ```sql
-CREATE TABLE cluster_rule_toggle (
+CREATE TABLE cluster_user_rule_disable_feedback (
     cluster_id  VARCHAR NOT NULL,
     user_id     VARCHAR NOT NULL,
     rule_id     VARCHAR NOT NULL,
     error_key   VARCHAR NOT NULL,
     message     VARCHAR NOT NULL,
+    added_at    TIMESTAMP NOT NULL,
     updated_at  TIMESTAMP NOT NULL,
 
     PRIMARY KEY(cluster_id, user_id, rule_id, error_key)
