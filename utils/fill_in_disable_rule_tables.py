@@ -87,6 +87,86 @@ RULE_SELECTORS = (
         "SAMPLES_FAILED_IMAGE_IMPORT_ERR"))
 
 
+def fill_in_database(connection, verbose, feedback, probability):
+    """Fill-in database with test data."""
+    # add new info about rule disable, but only with some probability.
+    for cluster_id in CLUSTER_IDS:
+        if verbose:
+            print("\tCluster ID {}".format(cluster_id))
+        for rule_selector in RULE_SELECTORS:
+            if random()*100 < probability:
+                account_id = choice(ACCOUNT_IDS)
+                if verbose:
+                    print("\t\tAccount ID: {}".format(account_id))
+                    print("\t\tAdding new rule disable info: {}".format(rule_selector))
+                insert_into_db(connection, account_id, cluster_id, rule_selector, feedback)
+
+
+def check_if_postgres_is_running():
+    """Check if Postgresql service is active."""
+    p = Popen(["systemctl", "is-active", "--quiet", "postgresql"])
+    assert p is not None
+
+    # interact with the process:
+    p.communicate()
+
+    # check the return code
+    assert p.returncode == 0, \
+        "Postgresql service not running: got return code {code}".format(code=p.returncode)
+
+
+def connect_to_database(database, user, password):
+    """Perform connection to selected database."""
+    connection_string = "dbname={} user={} password={}".format(database, user, password)
+    return psycopg2.connect(connection_string)
+
+
+def disconnect_from_database(connection):
+    """Close the connection to database."""
+    connection.close()
+
+
+def insert_into_db(connection, account_id, cluster_id, rule_selector, feedback):
+    """Insert new record(s) into database."""
+    cursor = connection.cursor()
+
+    try:
+        # try to perform insert statement
+        insertStatement = """INSERT INTO cluster_rule_toggle
+                             (cluster_id, rule_id, error_key, user_id, disabled, disabled_at,
+                             updated_at)
+                             VALUES(%s, %s, %s, %s, 1, %s, %s);"""
+
+        # generate timestamp to be stored in database
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+
+        # insert in transaction
+        cursor.execute(insertStatement, (
+            cluster_id, rule_selector[0], rule_selector[1], account_id, timestamp, timestamp))
+
+        if feedback:
+            # perform insert into cluster_user_rule_disable_feedback
+            insertStatement = """INSERT INTO cluster_user_rule_disable_feedback
+                                 (cluster_id, user_id, rule_id, error_key, message, added_at,
+                                 updated_at)
+                                 VALUES(%s, %s, %s, %s, %s, %s, %s);"""
+
+            # some nice feedback from user
+            message = "Rule {}|{} for cluster {} disabled by {}".format(rule_selector[0],
+                                                                        rule_selector[1],
+                                                                        cluster_id, account_id)
+
+            # insert in transaction
+            cursor.execute(insertStatement, (
+                cluster_id, account_id, rule_selector[0], rule_selector[1],
+                message, timestamp, timestamp))
+
+        connection.commit()
+    except Exception as e:
+        connection.rollback()
+        raise e
+
+
 def main():
     """Entry point to this tool."""
     # First of all, we need to specify all command line flags that are
@@ -114,6 +194,17 @@ def main():
     # Now it is time to parse flags, check the actual content of command line
     # and fill in the object stored in variable named `args`.
     args = parser.parse_args()
+
+    # try to connect to database
+    check_if_postgres_is_running()
+    connection = connect_to_database(args.database, args.user, args.password)
+    assert connection is not None
+
+    # fill the database by test data
+    fill_in_database(connection, args.verbose, args.feedback, args.probability)
+
+    # everything's seems ok, let's disconnect
+    disconnect_from_database(connection)
 
 
 # If this script is started from command line, run the `main` function
