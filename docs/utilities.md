@@ -25,6 +25,28 @@ optional arguments:
 
 [Annotated source code](json_check.html)
 
+## `fill_in_disable_rule_tables.py`
+
+Simple script to fill in rule disable tables with test data.
+
+### Script usage
+
+```text
+usage: fill_in_disable_rule_tables.py [-h] [-v] [-f] [-p PROBABILITY]
+                                      [-d DATABASE] [-U USER] [-P PASSWORD]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --verbose         make it verbose
+  -f, --feedback        fill-in cluster_user_rule_disable_feedback
+  -p PROBABILITY, --probability PROBABILITY
+                        probability of rule to be disabled
+  -d DATABASE, --database DATABASE
+                        database name
+  -U USER, --user USER  user in database
+  -P PASSWORD, --password PASSWORD
+                        password to connect to database
+```
 
 ## `docgo.sh`
 
