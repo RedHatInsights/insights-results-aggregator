@@ -53,7 +53,7 @@ func TestDBStorage_ToggleRuleForCluster(t *testing.T) {
 			mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-				testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, state,
+				testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID, state,
 			))
 
 			_, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID)
@@ -67,7 +67,7 @@ func TestDBStorage_ToggleRuleForCluster_UnexpectedRuleToggleValue(t *testing.T) 
 	defer closer()
 
 	err := mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, -999,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID, -999,
 	)
 	assert.EqualError(t, err, "Unexpected rule toggle value")
 }
@@ -77,7 +77,7 @@ func TestDBStorage_ToggleRuleForCluster_DBError(t *testing.T) {
 	closer()
 
 	err := mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, storage.RuleToggleDisable,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID, storage.RuleToggleDisable,
 	)
 	assert.EqualError(t, err, "sql: database is closed")
 }
@@ -107,7 +107,7 @@ func TestDBStorageGetTogglesForRules_OneRuleDisabled(t *testing.T) {
 	defer closer()
 
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, storage.RuleToggleDisable,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID, storage.RuleToggleDisable,
 	))
 
 	result, err := mockStorage.GetTogglesForRules(
@@ -136,7 +136,7 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 			mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-				testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, state,
+				testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID, state,
 			))
 
 			toggledRule, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID)

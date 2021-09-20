@@ -955,7 +955,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/disable": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/{userId}/disable": {
       "put": {
         "summary": "Disables a rule/health check recommendation for specified cluster",
         "operationId": "disableRule",
@@ -993,6 +993,16 @@
               "type": "string"
             },
             "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the user",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1234"
           }
         ],
         "responses": {
@@ -1097,7 +1107,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/enable": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/{userId}/enable": {
       "put": {
         "summary": "Re-enables a rule/health check recommendation for specified cluster",
         "operationId": "enableRule",
@@ -1135,6 +1145,16 @@
               "type": "string"
             },
             "example": "ERROR_COOL_KEY"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the user",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1234"
           }
         ],
         "responses": {

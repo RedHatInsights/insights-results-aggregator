@@ -120,6 +120,7 @@ type Storage interface {
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
+		userID types.UserID,
 		ruleToggle RuleToggle,
 	) error
 	GetFromClusterRuleToggle(
