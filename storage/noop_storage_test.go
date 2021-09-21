@@ -24,6 +24,8 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+// Don't decrease code coverage by non-functional and not covered code.
+
 func TestNoopStorage_Methods(t *testing.T) {
 	noopStorage := storage.NoopStorage{}
 
@@ -67,4 +69,6 @@ func TestNoopStorage_Methods_Cont(t *testing.T) {
 	_, _ = noopStorage.ReadSingleRuleTemplateData(0, "", "", "")
 	_, _ = noopStorage.GetUserDisableFeedbackOnRules("", []types.RuleOnReport{}, "")
 	_, _ = noopStorage.DoesClusterExist("")
+	_, _ = noopStorage.ListOfDisabledRules("")
+	_ = noopStorage.WriteRecommendationsForCluster(0, "", "")
 }
