@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021  Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,6 +59,8 @@ const (
 	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/enable"
 	// DisableRuleFeedbackEndpoint accepts a feedback from user when (s)he disables a rule
 	DisableRuleFeedbackEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/disable_feedback"
+	// ListOfDisabledRules returns a list of rules disabled from current account
+	ListOfDisabledRules = "rules/{user_id}/disabled"
 	// MetricsEndpoint returns prometheus metrics
 	MetricsEndpoint = "metrics"
 )
@@ -97,6 +99,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+DisableRuleFeedbackEndpoint, server.saveDisableFeedback).Methods(http.MethodPost)
 	router.HandleFunc(apiPrefix+ReportForListOfClustersEndpoint, server.reportForListOfClusters).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ReportForListOfClustersPayloadEndpoint, server.reportForListOfClustersPayload).Methods(http.MethodPost)
+	router.HandleFunc(apiPrefix+ListOfDisabledRules, server.listOfDisabledRules).Methods(http.MethodGet)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)

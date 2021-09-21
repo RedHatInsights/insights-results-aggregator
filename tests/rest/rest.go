@@ -40,6 +40,7 @@ func ServerTests() {
 	MultipleReportsTests()
 	MultipleReportsTestsUsingPostMethod()
 	VoteTests()
+	DisableRuleTests()
 
 	// tests for OpenAPI specification that is accessible via its endpoint as well
 	// implementation of these tests is stored in openapi.go
@@ -164,4 +165,10 @@ func VoteTests() {
 	checkGetUserVoteAfterUnvote()
 	checkGetUserVoteAfterDoubleVote()
 	checkGetUserVoteAfterDoubleUnvote()
+}
+
+// DisableRuleTests impements tests for REST API endpoinds for disabling etc.
+// rules
+func DisableRuleTests() {
+	checkListOfDisabledRules()
 }

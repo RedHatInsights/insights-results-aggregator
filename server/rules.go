@@ -68,6 +68,35 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 	}
 }
 
+// listOfDisabledRules returns list of rules disabled from an account
+func (server HTTPServer) listOfDisabledRules(writer http.ResponseWriter, request *http.Request) {
+	log.Info().Msg("Lisf of disabled rules")
+
+	// retrieve account (user) ID
+	userID, succesful := readUserID(writer, request)
+	if !succesful {
+		// everything has been handled already
+		return
+	}
+	log.Info().Str("account", string(userID)).Msg("disabled rules for account")
+
+	// try to read list of disabled rules by an account/user from database
+	disabledRules, err := server.Storage.ListOfDisabledRules(userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to read list of disabled rules")
+		handleServerError(writer, err)
+		return
+	}
+	log.Info().Int("disabled rules", len(disabledRules)).Msg("list of disabled rules")
+
+	// try to send JSON payload to the client in a HTTP response
+	err = responses.SendOK(writer,
+		responses.BuildOkResponseWithData("rules", disabledRules))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
 // getFeedbackAndTogglesOnRules
 func (server HTTPServer) getFeedbackAndTogglesOnRules(
 	clusterName types.ClusterName,

@@ -801,3 +801,17 @@ func TestHTTPServer_SaveDisableFeedback_Error_DBError(t *testing.T) {
 		Body:       `{"status": "Internal Server Error"}`,
 	})
 }
+
+func TestListDisabledRules(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ListOfDisabledRules,
+		EndpointArgs: []interface{}{testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"rules":[],"status":"ok"}`,
+	})
+}

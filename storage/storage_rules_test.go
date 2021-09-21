@@ -156,6 +156,79 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 	}
 }
 
+// TestDBStorageListOfDisabledRulesDBError checks that no rules are returned
+// for DB error.
+func TestDBStorageListOfDisabledRulesDBError(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	// close storage immediatelly
+	closer()
+
+	// try to read list of disabled rules
+	_, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+// TestDBStorageListOfDisabledRulesEmptyDB checks that no rules are returned
+// for empty DB.
+func TestDBStorageListOfDisabledRulesEmptyDB(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	// try to read list of disabled rules
+	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect no rules to be returned
+	assert.Len(t, disabledRules, 0)
+}
+
+// TestDBStorageListOfDisabledRulesOneRule checks that one rule is returned
+// for non empty DB.
+// TODO: enable when user_id is properly handled (stored) into database!
+func TestDBStorageListOfDisabledRulesOneRule(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	// write some rules into database
+	mustWriteReport3Rules(t, mockStorage)
+
+	// disable one rule
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// try to read list of disabled rules
+	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 rule to be returned
+	assert.Len(t, disabledRules, 1)
+}
+
+// TestDBStorageListOfDisabledRulesNoRule checks that no rule is returned
+// for non empty DB when all rules are enabled.
+func TestDBStorageListOfDisabledRulesNoRule(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	// write some rules into database
+	mustWriteReport3Rules(t, mockStorage)
+
+	// enable one rule
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleEnable,
+	))
+
+	// try to read list of disabled rules
+	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect no rules to be returned
+	assert.Len(t, disabledRules, 0)
+}
+
 // TODO: make it work with the new arch
 //func TestDBStorageToggleRulesAndList(t *testing.T) {
 //	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
