@@ -377,3 +377,26 @@ func checkGetUserVoteAfterDoubleUnvote() {
 	resetVoteForRule(cluster, rule, errorKey)
 	checkVoteForClusterAndRule(cluster, rule, errorKey, 0)
 }
+
+func checkListOfDisabledRules() {
+	url := httputils.MakeURLToEndpoint(apiURL, server.ListOfDisabledRules, testdata.UserID)
+
+	f := frisby.Create("Read list of disabled rules").Get(url)
+	r := RuleVoteResponse{}
+	setAuthHeader(f)
+	f.Send()
+	f.ExpectStatus(200)
+
+	text, err := f.Resp.Content()
+	if err != nil {
+		f.AddError(err.Error())
+		return
+	}
+
+	err = json.Unmarshal(text, &r)
+	if err != nil {
+		f.AddError(err.Error())
+		return
+	}
+
+}
