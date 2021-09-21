@@ -1107,7 +1107,7 @@
         ]
       }
     },
-    "rules/{userId}/disabled": {
+    "/rules/{userId}/disabled": {
       "get": {
         "summary": "Returns a list of rules disabled from current account",
         "operationId": "ListOfDisabledRules",
