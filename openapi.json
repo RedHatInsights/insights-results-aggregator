@@ -955,7 +955,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/{userId}/disable": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/disable": {
       "put": {
         "summary": "Disables a rule/health check recommendation for specified cluster",
         "operationId": "disableRule",
@@ -1169,7 +1169,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/{userId}/enable": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/enable": {
       "put": {
         "summary": "Re-enables a rule/health check recommendation for specified cluster",
         "operationId": "enableRule",

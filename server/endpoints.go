@@ -54,9 +54,9 @@ const (
 	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
 	// DisableRuleForClusterEndpoint disables a rule for specified cluster
-	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/{user_id}/disable"
+	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/disable"
 	// EnableRuleForClusterEndpoint re-enables a rule for specified cluster
-	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/{user_id}/enable"
+	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/enable"
 	// DisableRuleFeedbackEndpoint accepts a feedback from user when (s)he disables a rule
 	DisableRuleFeedbackEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/disable_feedback"
 	// ListOfDisabledRules returns a list of rules disabled from current account
