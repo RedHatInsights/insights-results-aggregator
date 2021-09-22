@@ -33,4 +33,5 @@ var migrations = []Migration{
 	mig0014ModifyClusterRuleToggle,
 	mig0015ModifyFeedbackTables,
 	mig0016AddRecommendationsTable,
+	mig0017AddRatingsTable,
 }
