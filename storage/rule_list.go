@@ -56,7 +56,7 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRul
 
 	// return empty list in case of any error
 	if err != nil {
-		return nil, err
+		return disabledRules, err
 	}
 	defer closeRows(rows)
 
@@ -72,12 +72,14 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRul
 
 		if err != nil {
 			log.Error().Err(err).Msg("ReadListOfDisabledRules")
-			return nil, err
+			// return partially filled slice + error
+			return disabledRules, err
 		}
 
 		// append disabled rule read from database to a slice
 		disabledRules = append(disabledRules, disabledRule)
 	}
 
+	// everything seems ok -> return slice with all the data
 	return disabledRules, nil
 }
