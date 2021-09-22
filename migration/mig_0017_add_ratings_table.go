@@ -24,14 +24,14 @@ var mig0017AddRatingsTable = Migration{
 		// Create recommendation table using currently stored rule hits
 		_, err := tx.Exec(`
 		CREATE TABLE advisor_ratings (
-		    user_id VARCHR NOT NULL,
-			rule_id VARCHAT NOT NULL,
+		    user_id VARCHAR NOT NULL,
+			org_id VARCHAR NOT NULL,
+			rule_id VARCHAR NOT NULL,
 			error_key VARCHAR NOT NULL,
 			rated_at TIMESTAMP,
 			last_updated_at TIMESTAMP,
 			rating SMALLINT,
-			PRIMARY KEY(user_id, rule_id, error_key)
-			;
+			PRIMARY KEY(user_id, org_id, rule_id, error_key)
 		)`)
 		return err
 	},
