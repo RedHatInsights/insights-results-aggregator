@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -184,7 +184,6 @@ func TestDBStorageListOfDisabledRulesEmptyDB(t *testing.T) {
 
 // TestDBStorageListOfDisabledRulesOneRule checks that one rule is returned
 // for non empty DB.
-// TODO: enable when user_id is properly handled (stored) into database!
 func TestDBStorageListOfDisabledRulesOneRule(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
@@ -204,6 +203,49 @@ func TestDBStorageListOfDisabledRulesOneRule(t *testing.T) {
 
 	// we expect 1 rule to be returned
 	assert.Len(t, disabledRules, 1)
+
+	// check the content of returned data
+	disabledRule := disabledRules[0]
+	assert.Equal(t, testdata.ClusterName, disabledRule.ClusterID)
+	assert.Equal(t, testdata.Rule1ID, disabledRule.RuleID)
+	assert.Equal(t, testdata.ErrorKey1, string(disabledRule.ErrorKey))
+	assert.Equal(t, storage.RuleToggleDisable, disabledRule.Disabled)
+}
+
+// TestDBStorageListOfDisabledRulesTwoRules checks that two rules are returned
+// for non empty DB.
+func TestDBStorageListOfDisabledRulesTwoRules(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	// write some rules into database
+	mustWriteReport3Rules(t, mockStorage)
+
+	// disable two rules
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		testdata.ClusterName, testdata.Rule2ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// try to read list of disabled rules
+	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect 2 rules to be returned
+	assert.Len(t, disabledRules, 2)
+
+	// check the content of returned data
+	disabledRule := disabledRules[0]
+	assert.Equal(t, testdata.ClusterName, disabledRule.ClusterID)
+	assert.Equal(t, storage.RuleToggleDisable, disabledRule.Disabled)
+
+	disabledRule = disabledRules[1]
+	assert.Equal(t, testdata.ClusterName, disabledRule.ClusterID)
+	assert.Equal(t, storage.RuleToggleDisable, disabledRule.Disabled)
 }
 
 // TestDBStorageListOfDisabledRulesNoRule checks that no rule is returned

@@ -22,7 +22,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// DisabledRule represents a record from rule_cluster_toggle
+// DisabledRule represents a record from rule_cluster_toggle table
 type DisabledRule struct {
 	ClusterID  types.ClusterName
 	RuleID     types.RuleID
@@ -42,7 +42,8 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRul
 			 rule_id,
 			 error_key,
 			 disabled_at,
-			 updated_at
+			 updated_at,
+			 disabled
 	FROM
 		cluster_rule_toggle
 	WHERE
@@ -55,7 +56,7 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRul
 
 	// return empty list in case of any error
 	if err != nil {
-		return nil, err
+		return disabledRules, err
 	}
 	defer closeRows(rows)
 
@@ -66,16 +67,19 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRul
 			&disabledRule.RuleID,
 			&disabledRule.ErrorKey,
 			&disabledRule.DisabledAt,
-			&disabledRule.UpdatedAt)
+			&disabledRule.UpdatedAt,
+			&disabledRule.Disabled)
 
 		if err != nil {
 			log.Error().Err(err).Msg("ReadListOfDisabledRules")
-			return nil, err
+			// return partially filled slice + error
+			return disabledRules, err
 		}
 
 		// append disabled rule read from database to a slice
 		disabledRules = append(disabledRules, disabledRule)
 	}
 
+	// everything seems ok -> return slice with all the data
 	return disabledRules, nil
 }
