@@ -802,7 +802,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_DBError(t *testing.T) {
 	})
 }
 
-func TestListDisabledRules(t *testing.T) {
+func TestHTTPServer_ListDisabledRules(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
@@ -813,5 +813,19 @@ func TestListDisabledRules(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"rules":[],"status":"ok"}`,
+	})
+}
+
+func TestHTTPServer_ListOfReasons(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ListOfReasons,
+		EndpointArgs: []interface{}{testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"reasons":[],"status":"ok"}`,
 	})
 }
