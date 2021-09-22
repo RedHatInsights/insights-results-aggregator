@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -204,6 +204,13 @@ func TestDBStorageListOfDisabledRulesOneRule(t *testing.T) {
 
 	// we expect 1 rule to be returned
 	assert.Len(t, disabledRules, 1)
+
+	// check the content of returned data
+	disabledRule := disabledRules[0]
+	assert.Equal(t, testdata.ClusterName, disabledRule.ClusterID)
+	assert.Equal(t, testdata.Rule1ID, disabledRule.RuleID)
+	assert.Equal(t, testdata.ErrorKey1, string(disabledRule.ErrorKey))
+	assert.Equal(t, storage.RuleToggleDisable, disabledRule.Disabled)
 }
 
 // TestDBStorageListOfDisabledRulesNoRule checks that no rule is returned
