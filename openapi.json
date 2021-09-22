@@ -1169,6 +1169,73 @@
         ]
       }
     },
+    "/rules/{userId}/reason": {
+      "get": {
+        "summary": "Returns a list of reasons why rule or rules has been disabled",
+        "operationId": "ListOfReasons",
+        "description": "Returns a list of reasons why rule or rules has been disabled",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of reasons for disabled rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "component": {
+                                "type": "string",
+                                "description": "The rule identifier for the hit rule.",
+                                "example": "some.python.module"
+                              },
+                              "key": {
+                                "type": "string",
+                                "description": "The erroy key triggered for this rule in the cluster.",
+                                "example": "SOME_ERROR_KEY"
+                              },
+                              "message": {
+                                "type": "string",
+                                "description": "Feedback provided by user",
+                                "example": "I don't like this rule!!!"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
     "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/enable": {
       "put": {
         "summary": "Re-enables a rule/health check recommendation for specified cluster",
