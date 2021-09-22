@@ -243,3 +243,9 @@ func (*NoopStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (ma
 func (*NoopStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRule, error) {
 	return nil, nil
 }
+
+// ListOfReasons function returns list of reasons for all rules disabled from a
+// specified account (noop).
+func (*NoopStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
+	return nil, nil
+}
