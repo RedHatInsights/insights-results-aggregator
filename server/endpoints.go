@@ -61,6 +61,8 @@ const (
 	DisableRuleFeedbackEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/disable_feedback"
 	// ListOfDisabledRules returns a list of rules disabled from current account
 	ListOfDisabledRules = "rules/{user_id}/disabled"
+	// ListOfReasons returns a list of reasons why rule has been disabled
+	ListOfReasons = "rules/{user_id}/reason"
 	// MetricsEndpoint returns prometheus metrics
 	MetricsEndpoint = "metrics"
 )
@@ -100,6 +102,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ReportForListOfClustersEndpoint, server.reportForListOfClusters).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ReportForListOfClustersPayloadEndpoint, server.reportForListOfClustersPayload).Methods(http.MethodPost)
 	router.HandleFunc(apiPrefix+ListOfDisabledRules, server.listOfDisabledRules).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+ListOfReasons, server.listOfReasons).Methods(http.MethodGet)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
