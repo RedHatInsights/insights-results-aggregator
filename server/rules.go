@@ -97,6 +97,36 @@ func (server HTTPServer) listOfDisabledRules(writer http.ResponseWriter, request
 	}
 }
 
+// listOfReasons returns list of reasons why rule(s) have been disabled from an
+// account
+func (server HTTPServer) listOfReasons(writer http.ResponseWriter, request *http.Request) {
+	log.Info().Msg("Lisf of reasons")
+
+	// retrieve account (user) ID
+	userID, succesful := readUserID(writer, request)
+	if !succesful {
+		// everything has been handled already
+		return
+	}
+	log.Info().Str("account", string(userID)).Msg("reasons for disabling rules")
+
+	// try to read list of reasons by an account/user from database
+	reasons, err := server.Storage.ListOfReasons(userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to read list of reasons")
+		handleServerError(writer, err)
+		return
+	}
+	log.Info().Int("reasons", len(reasons)).Msg("list of reasons")
+
+	// try to send JSON payload to the client in a HTTP response
+	err = responses.SendOK(writer,
+		responses.BuildOkResponseWithData("reasons", reasons))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
 // getFeedbackAndTogglesOnRules
 func (server HTTPServer) getFeedbackAndTogglesOnRules(
 	clusterName types.ClusterName,
