@@ -22,7 +22,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// DisabledRule represents a record from rule_cluster_toggle
+// DisabledRule represents a record from rule_cluster_toggle table
 type DisabledRule struct {
 	ClusterID  types.ClusterName
 	RuleID     types.RuleID
@@ -42,7 +42,8 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRul
 			 rule_id,
 			 error_key,
 			 disabled_at,
-			 updated_at
+			 updated_at,
+			 disabled
 	FROM
 		cluster_rule_toggle
 	WHERE
@@ -66,7 +67,8 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRul
 			&disabledRule.RuleID,
 			&disabledRule.ErrorKey,
 			&disabledRule.DisabledAt,
-			&disabledRule.UpdatedAt)
+			&disabledRule.UpdatedAt,
+			&disabledRule.Disabled)
 
 		if err != nil {
 			log.Error().Err(err).Msg("ReadListOfDisabledRules")
