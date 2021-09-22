@@ -156,6 +156,65 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 	}
 }
 
+// TestDBStorageListRulesReasonsOnDBError checks that no rules reasons are
+// returned for DB error.
+func TestDBStorageListRulesReasonsOnDBError(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	// close storage immediatelly
+	closer()
+
+	// try to read list of reasons
+	_, err := mockStorage.ListOfReasons(testdata.UserID)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+// TestDBStorageListRulesReasonsEmptyDB checks that no rules reasons are
+// returned for empty DB.
+func TestDBStorageListRulesReasonsEmptyDB(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	// try to read list of reasons
+	reasons, err := mockStorage.ListOfReasons(testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect no rules reasons to be returned
+	assert.Len(t, reasons, 0)
+}
+
+// TestDBStorageListOfRulesReasonsOneRule checks that one rule is returned
+// for non empty DB.
+// TODO: enable when user_id is properly handled (stored) into database!
+func TestDBStorageListOfRulesReasonsOneRule(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	// write some rules into database
+	mustWriteReport3Rules(t, mockStorage)
+
+	const feedbackMessage = "feedback message"
+
+	// store one reason
+	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, feedbackMessage,
+	))
+
+	// try to read list of reasons
+	reasons, err := mockStorage.ListOfReasons(testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 rule reason to be returned
+	assert.Len(t, reasons, 1)
+
+	// check the content of returned data
+	reason := reasons[0]
+	assert.Equal(t, testdata.ClusterName, reason.ClusterID)
+	assert.Equal(t, testdata.Rule1ID, reason.RuleID)
+	assert.Equal(t, testdata.ErrorKey1, string(reason.ErrorKey))
+	assert.Equal(t, feedbackMessage, reason.Message)
+}
+
 // TestDBStorageListOfDisabledRulesDBError checks that no rules are returned
 // for DB error.
 func TestDBStorageListOfDisabledRulesDBError(t *testing.T) {
