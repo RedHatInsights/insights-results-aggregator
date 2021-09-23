@@ -822,7 +822,7 @@ func TestHTTPServer_ListOfReasons(t *testing.T) {
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
-		Endpoint:     server.ListOfReasons,
+		Endpoint:     server.ListOfDisabledRulesFeedback,
 		EndpointArgs: []interface{}{testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
