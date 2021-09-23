@@ -19,30 +19,82 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// DisabledRule represents a record from rule_cluster_toggle
-type DisabledRule struct {
-	ClusterID  types.ClusterName
-	RuleID     types.RuleID
-	ErrorKey   types.ErrorKey
-	Disabled   RuleToggle
-	DisabledAt sql.NullTime
-	EnabledAt  sql.NullTime
-	UpdatedAt  sql.NullTime
+// DisabledRuleReason represents a record from
+// cluster_user_rule_disable_feedback table
+type DisabledRuleReason struct {
+	ClusterID types.ClusterName
+	RuleID    types.RuleID
+	ErrorKey  types.ErrorKey
+	Message   string
+	AddedAt   sql.NullTime
+	UpdatedAt sql.NullTime
+}
+
+// ListOfReasons function returns list of reasons for all disabled rules
+func (storage DBStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
+	reasons := make([]DisabledRuleReason, 0)
+	query := `SELECT
+                         cluster_id,
+			 rule_id,
+			 error_key,
+			 message,
+			 added_at,
+			 updated_at
+	FROM
+		cluster_user_rule_disable_feedback
+	WHERE
+		user_id = $1
+	`
+
+	// run the query against database
+	rows, err := storage.connection.Query(query, userID)
+
+	// return empty list in case of any error
+	if err != nil {
+		return reasons, err
+	}
+	defer closeRows(rows)
+
+	for rows.Next() {
+		var reason DisabledRuleReason
+
+		err = rows.Scan(&reason.ClusterID,
+			&reason.RuleID,
+			&reason.ErrorKey,
+			&reason.Message,
+			&reason.AddedAt,
+			&reason.UpdatedAt)
+
+		if err != nil {
+			log.Error().Err(err).Msg("ReadListOfReasons")
+			// return partially filled slice + error
+			return reasons, err
+		}
+
+		// append reasons about disabled rule read from database to a
+		// slice
+		reasons = append(reasons, reason)
+	}
+
+	// everything seems ok -> return slice with all the data
+	return reasons, nil
 }
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account.
-func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRule, error) {
-	disabledRules := make([]DisabledRule, 0)
+func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]utypes.DisabledRule, error) {
+	disabledRules := make([]utypes.DisabledRule, 0)
 	query := `SELECT
                          cluster_id,
 			 rule_id,
 			 error_key,
 			 disabled_at,
-			 updated_at
+			 updated_at,
+			 disabled
 	FROM
 		cluster_rule_toggle
 	WHERE
@@ -55,27 +107,30 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRul
 
 	// return empty list in case of any error
 	if err != nil {
-		return nil, err
+		return disabledRules, err
 	}
 	defer closeRows(rows)
 
 	for rows.Next() {
-		var disabledRule DisabledRule
+		var disabledRule utypes.DisabledRule
 
 		err = rows.Scan(&disabledRule.ClusterID,
 			&disabledRule.RuleID,
 			&disabledRule.ErrorKey,
 			&disabledRule.DisabledAt,
-			&disabledRule.UpdatedAt)
+			&disabledRule.UpdatedAt,
+			&disabledRule.Disabled)
 
 		if err != nil {
 			log.Error().Err(err).Msg("ReadListOfDisabledRules")
-			return nil, err
+			// return partially filled slice + error
+			return disabledRules, err
 		}
 
 		// append disabled rule read from database to a slice
 		disabledRules = append(disabledRules, disabledRule)
 	}
 
+	// everything seems ok -> return slice with all the data
 	return disabledRules, nil
 }
