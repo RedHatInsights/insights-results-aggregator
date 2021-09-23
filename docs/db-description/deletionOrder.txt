@@ -1,7 +1,9 @@
 rule_hit
+recommendation
 migration_info
 consumer_error
 cluster_user_rule_disable_feedback
 cluster_rule_toggle
+advisor_ratings
 cluster_rule_user_feedback
 report
