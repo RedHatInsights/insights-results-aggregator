@@ -268,7 +268,7 @@ func TestDBStorageListOfDisabledRulesOneRule(t *testing.T) {
 	assert.Equal(t, testdata.ClusterName, disabledRule.ClusterID)
 	assert.Equal(t, testdata.Rule1ID, disabledRule.RuleID)
 	assert.Equal(t, testdata.ErrorKey1, string(disabledRule.ErrorKey))
-	assert.Equal(t, storage.RuleToggleDisable, disabledRule.Disabled)
+	assert.Equal(t, int(storage.RuleToggleDisable), int(disabledRule.Disabled))
 }
 
 // TestDBStorageListOfDisabledRulesTwoRules checks that two rules are returned
@@ -300,11 +300,11 @@ func TestDBStorageListOfDisabledRulesTwoRules(t *testing.T) {
 	// check the content of returned data
 	disabledRule := disabledRules[0]
 	assert.Equal(t, testdata.ClusterName, disabledRule.ClusterID)
-	assert.Equal(t, storage.RuleToggleDisable, disabledRule.Disabled)
+	assert.Equal(t, int(storage.RuleToggleDisable), int(disabledRule.Disabled))
 
 	disabledRule = disabledRules[1]
 	assert.Equal(t, testdata.ClusterName, disabledRule.ClusterID)
-	assert.Equal(t, storage.RuleToggleDisable, disabledRule.Disabled)
+	assert.Equal(t, int(storage.RuleToggleDisable), int(disabledRule.Disabled))
 }
 
 // TestDBStorageListOfDisabledRulesNoRule checks that no rule is returned

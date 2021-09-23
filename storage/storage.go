@@ -41,6 +41,7 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 	"github.com/rs/zerolog/log"
 
+	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -148,7 +149,7 @@ type Storage interface {
 		userID types.UserID,
 	) (map[types.RuleID]UserFeedbackOnRule, error)
 	DoesClusterExist(clusterID types.ClusterName) (bool, error)
-	ListOfDisabledRules(userID types.UserID) ([]DisabledRule, error)
+	ListOfDisabledRules(userID types.UserID) ([]utypes.DisabledRule, error)
 	ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error)
 }
 

@@ -19,19 +19,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
-
-// DisabledRule represents a record from rule_cluster_toggle table
-type DisabledRule struct {
-	ClusterID  types.ClusterName
-	RuleID     types.RuleID
-	ErrorKey   types.ErrorKey
-	Disabled   RuleToggle
-	DisabledAt sql.NullTime
-	EnabledAt  sql.NullTime
-	UpdatedAt  sql.NullTime
-}
 
 // DisabledRuleReason represents a record from
 // cluster_user_rule_disable_feedback table
@@ -96,8 +86,8 @@ func (storage DBStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReaso
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account.
-func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRule, error) {
-	disabledRules := make([]DisabledRule, 0)
+func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]utypes.DisabledRule, error) {
+	disabledRules := make([]utypes.DisabledRule, 0)
 	query := `SELECT
                          cluster_id,
 			 rule_id,
@@ -122,7 +112,7 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRul
 	defer closeRows(rows)
 
 	for rows.Next() {
-		var disabledRule DisabledRule
+		var disabledRule utypes.DisabledRule
 
 		err = rows.Scan(&disabledRule.ClusterID,
 			&disabledRule.RuleID,
