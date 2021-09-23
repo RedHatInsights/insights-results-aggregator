@@ -112,3 +112,9 @@ type ClusterReports = types.ClusterReports
 
 //SchemaVersion represents the current version of data schema
 type SchemaVersion = types.SchemaVersion
+
+// RuleRating represents a rule rating element sent by the user
+type RuleRating struct {
+	Rule   string         `json:"rule"`
+	Rating types.UserVote `json:"rating"`
+}
