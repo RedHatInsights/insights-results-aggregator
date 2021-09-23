@@ -955,6 +955,80 @@
         ]
       }
     },
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/enable": {
+      "put": {
+        "summary": "Re-enables a rule/health check recommendation for specified cluster",
+        "operationId": "enableRule",
+        "description": "Enables a rule (ruleId) for cluster (clusterId)",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "description": "ID of the cluster which must conform to UUID format",
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of a rule",
+            "schema": {
+              "type": "string"
+            },
+            "example": "some.python.module"
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_KEY"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the user",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1234"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
+      }
+    },
     "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/disable": {
       "put": {
         "summary": "Disables a rule/health check recommendation for specified cluster",
@@ -1169,78 +1243,67 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/enable": {
-      "put": {
-        "summary": "Re-enables a rule/health check recommendation for specified cluster",
-        "operationId": "enableRule",
-        "description": "Enables a rule (ruleId) for cluster (clusterId)",
+    "/rules/organizations/{orgId}/users/{userId}/rating": {
+      "post": {
+        "tags": ["prod"],
         "parameters": [
           {
-            "name": "clusterId",
-            "in": "path",
-            "description": "ID of the cluster which must conform to UUID format",
-            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "minLength": 36,
-              "maxLength": 36,
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "ruleId",
+            "name": "orgId",
             "in": "path",
             "required": true,
-            "description": "ID of a rule",
+            "description": "Numeric ID of the organization",
             "schema": {
               "type": "string"
             },
-            "example": "some.python.module"
-          },
-          {
-            "name": "errorKey",
-            "in": "path",
-            "required": true,
-            "description": "",
-            "schema": {
-              "type": "string"
-            },
-            "example": "ERROR_COOL_KEY"
+            "example": 42
           },
           {
             "name": "userId",
             "in": "path",
             "required": true,
-            "description": "ID of the user",
+            "description": "Numeric ID of the user",
             "schema": {
               "type": "string"
             },
-            "example": "1234"
+            "example": 42
           }
         ],
+        "requestBody": {
+          "description": "A JSON object with the current rule and its rating.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ratingSchema"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
-            "description": "Status ok",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "ok"
-                    }
-                  }
+                  "$ref":"#/components/schemas/ratingSchema"
                 }
               }
-            }
+            },
+            "description": "The current ratings for the given rule IDs"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ratingSchema"
+                }
+              }
+            },
+            "description": "The current rating value for the rule"
+          },
+          "400": {
+            "description": "Invalid request, usually caused when some rule identifier doesn't exist"
           }
-        },
-        "tags": [
-          "rule",
-          "prod"
-        ]
+        }
       }
     }
   },
@@ -1249,6 +1312,19 @@
   "components": {
     "links": {},
     "callbacks": {},
-    "schemas": {}
+    "schemas": {
+      "ratingSchema": {
+        "description": "An object representing the rating given from a user for a rule",
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer"
+          }
+        }
+      }
+    }
   }
 }
