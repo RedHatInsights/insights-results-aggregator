@@ -15,7 +15,6 @@
 package storage
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -32,15 +31,6 @@ func (storage *DBStorage) RateOnRule(
 	errorKey types.ErrorKey,
 	rating types.UserVote,
 ) error {
-	if storage.dbDriverType != types.DBDriverSQLite3 &&
-		storage.dbDriverType != types.DBDriverPostgres &&
-		storage.dbDriverType != types.DBDriverGeneral {
-		err := fmt.Errorf("DB driver %v is not supported", storage.dbDriverType)
-		log.Error().Err(err).Msg("")
-
-		return err
-	}
-
 	query := `
 		INSERT INTO advisor_ratings
 		(user_id, org_id, rule_id, error_key, rated_at, last_updated_at, rating)
