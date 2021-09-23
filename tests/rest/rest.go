@@ -171,4 +171,5 @@ func VoteTests() {
 // rules
 func DisableRuleTests() {
 	checkListOfDisabledRules()
+	checkListOfDisabledRulesFeedback()
 }

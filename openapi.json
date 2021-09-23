@@ -1107,7 +1107,7 @@
         ]
       }
     },
-    "/rules/{userId}/disabled": {
+    "/rules/users/{userId}/disabled": {
       "get": {
         "summary": "Returns a list of rules disabled from current account",
         "operationId": "ListOfDisabledRules",
@@ -1169,7 +1169,7 @@
         ]
       }
     },
-    "/rules/{userId}/reason": {
+    "/rules/users/{userId}/disabled/feedback": {
       "get": {
         "summary": "Returns a list of reasons why rule or rules has been disabled",
         "operationId": "ListOfReasons",
