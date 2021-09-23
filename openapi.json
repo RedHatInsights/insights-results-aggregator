@@ -1322,7 +1322,7 @@
             "schema": {
               "type": "string"
             },
-            "example": 42
+            "example": "42"
           },
           {
             "name": "userId",
@@ -1332,7 +1332,7 @@
             "schema": {
               "type": "string"
             },
-            "example": 42
+            "example": "42"
           }
         ],
         "requestBody": {
