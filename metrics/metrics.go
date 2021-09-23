@@ -95,6 +95,12 @@ var FeedbackOnRules = promauto.NewCounter(prometheus.CounterOpts{
 	Help: "The total number of left feedback",
 })
 
+// RatingOnRules shows how many times users sends a rating on rules
+var RatingOnRules = promauto.NewCounter(prometheus.CounterOpts{
+	Name: "rating_on_rules",
+	Help: "The total number of left rating",
+})
+
 // SQLQueriesCounter shows number of sql queries
 var SQLQueriesCounter = promauto.NewCounter(prometheus.CounterOpts{
 	Name: "sql_queries_counter",

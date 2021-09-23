@@ -149,6 +149,13 @@ type Storage interface {
 	) (map[types.RuleID]UserFeedbackOnRule, error)
 	DoesClusterExist(clusterID types.ClusterName) (bool, error)
 	ListOfDisabledRules(userID types.UserID) ([]DisabledRule, error)
+	RateOnRule(
+		types.UserID,
+		types.OrgID,
+		types.RuleID,
+		types.ErrorKey,
+		types.UserVote,
+	) error
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database

@@ -243,3 +243,14 @@ func (*NoopStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (ma
 func (*NoopStorage) ListOfDisabledRules(userID types.UserID) ([]DisabledRule, error) {
 	return nil, nil
 }
+
+// RateOnRule function stores the vote (rating) given by an user to a rule+error key
+func (*NoopStorage) RateOnRule(
+	types.UserID,
+	types.OrgID,
+	types.RuleID,
+	types.ErrorKey,
+	types.UserVote,
+) error {
+	return nil
+}
