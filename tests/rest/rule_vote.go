@@ -400,3 +400,26 @@ func checkListOfDisabledRules() {
 	}
 
 }
+
+func checkListOfDisabledRulesFeedback() {
+	url := httputils.MakeURLToEndpoint(apiURL, server.ListOfDisabledRulesFeedback, testdata.UserID)
+
+	f := frisby.Create("Read list of disabled rules feedback").Get(url)
+	r := RuleVoteResponse{}
+	setAuthHeader(f)
+	f.Send()
+	f.ExpectStatus(200)
+
+	text, err := f.Resp.Content()
+	if err != nil {
+		f.AddError(err.Error())
+		return
+	}
+
+	err = json.Unmarshal(text, &r)
+	if err != nil {
+		f.AddError(err.Error())
+		return
+	}
+
+}
