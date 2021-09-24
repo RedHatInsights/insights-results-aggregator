@@ -19,26 +19,26 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-var mig0017AddRatingsTable = Migration{
+var mig0017AddSystemWideRuleDisableTable = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		// Create recommendation table using currently stored rule hits
 		_, err := tx.Exec(`
-		CREATE TABLE advisor_ratings (
-		    user_id VARCHAR NOT NULL,
-			org_id VARCHAR NOT NULL,
-			rule_id VARCHAR NOT NULL,
-			error_key VARCHAR NOT NULL,
-			rated_at TIMESTAMP,
-			last_updated_at TIMESTAMP,
-			rating SMALLINT,
-			PRIMARY KEY(user_id, org_id, rule_id, error_key)
-		)`)
+                    CREATE TABLE rule_disable (
+                        org_id        VARCHAR NOT NULL,
+                        user_id       VARCHAR NOT NULL,
+                        rule_id       VARCHAR NOT NULL,
+                        error_key     VARCHAR NOT NULL,
+                        justification VARCHAR,
+                        created_at    TIMESTAMP NOT NULL,
+                        updated_at    TIMESTAMP,
+                        PRIMARY KEY(user_id, org_id, rule_id, error_key)
+                    )`)
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		_, err := tx.Exec(`
-			DROP TABLE advisor_ratings;
-		`)
+                        DROP TABLE rule_disable;
+                       `)
 		return err
 	},
 }
