@@ -39,6 +39,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -v, --verbose         make it verbose
   -f, --feedback        fill-in cluster_user_rule_disable_feedback
+  -r, --rule-disable    fill-in rule_disable table
   -p PROBABILITY, --probability PROBABILITY
                         probability of rule to be disabled
   -d DATABASE, --database DATABASE
