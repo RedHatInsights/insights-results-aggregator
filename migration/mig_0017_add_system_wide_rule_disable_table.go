@@ -28,7 +28,7 @@ var mig0017AddSystemWideRuleDisableTable = Migration{
                         user_id       VARCHAR NOT NULL,
                         rule_id       VARCHAR NOT NULL,
                         error_key     VARCHAR NOT NULL,
-			justification VARCHAR,
+                        justification VARCHAR,
                         created_at    TIMESTAMP NOT NULL,
                         updated_at    TIMESTAMP,
                         PRIMARY KEY(user_id, org_id, rule_id, error_key)
