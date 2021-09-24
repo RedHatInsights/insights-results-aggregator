@@ -250,3 +250,14 @@ func (*NoopStorage) ListOfDisabledRules(userID types.UserID) ([]utypes.DisabledR
 func (*NoopStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
 	return nil, nil
 }
+
+// RateOnRule function stores the vote (rating) given by an user to a rule+error key
+func (*NoopStorage) RateOnRule(
+	types.UserID,
+	types.OrgID,
+	types.RuleID,
+	types.ErrorKey,
+	types.UserVote,
+) error {
+	return nil
+}

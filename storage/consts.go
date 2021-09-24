@@ -23,4 +23,7 @@ const (
 	issuesCountKey = "issues found"
 	// key for recommendations selectors used in structured log messages
 	selectorsKey = "selectors"
+
+	// closeStatementError error string
+	closeStatementError = "Unable to close statement"
 )

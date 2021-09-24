@@ -34,4 +34,5 @@ var migrations = []Migration{
 	mig0015ModifyFeedbackTables,
 	mig0016AddRecommendationsTable,
 	mig0017AddSystemWideRuleDisableTable,
+	mig0018AddRatingsTable,
 }

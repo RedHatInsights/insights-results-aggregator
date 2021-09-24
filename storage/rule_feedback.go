@@ -100,7 +100,7 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	defer func() {
 		err := statement.Close()
 		if err != nil {
-			log.Error().Err(err).Msg("Unable to close statement")
+			log.Error().Err(err).Msg(closeStatementError)
 		}
 	}()
 
@@ -304,7 +304,7 @@ func (storage DBStorage) AddFeedbackOnRuleDisable(
 	defer func() {
 		err := statement.Close()
 		if err != nil {
-			log.Error().Err(err).Msg("Unable to close statement")
+			log.Error().Err(err).Msg(closeStatementError)
 		}
 	}()
 
