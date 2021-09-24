@@ -22,6 +22,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -v, --verbose         make it verbose
   -f, --feedback        fill-in cluster_user_rule_disable_feedback
+  -r, --rule-disable    fill-in rule_disable table
   -p PROBABILITY, --probability PROBABILITY
                         probability of rule to be disabled
   -d DATABASE, --database DATABASE
@@ -41,7 +42,7 @@ import psycopg2
 # default values
 DEFAULT_RULE_DISABLE_PROBABILITY = 100
 
-ACCOUNT_IDS = (1, 2, 3, 4)
+ACCOUNT_IDS = (1, 2, 3, 4, 5, 6)
 
 CLUSTER_IDS = (
     "00000001-624a-49a5-bab8-4fdc5e51a266",
@@ -77,6 +78,12 @@ CLUSTER_IDS = (
     "ee7d2bf4-8933-4a3a-8634-3328fe806e08")
 
 RULE_SELECTORS = (
+    ("ccx_rules_ocp.external.test.rule_A", "ERROR_KEY_1"),
+    ("ccx_rules_ocp.external.test.rule_A", "ERROR_KEY_2"),
+    ("ccx_rules_ocp.external.test.rule_A", "ERROR_KEY_3"),
+    ("ccx_rules_ocp.external.test.rule_B", "ERROR_KEY_1"),
+    ("ccx_rules_ocp.external.test.rule_B", "ERROR_KEY_2"),
+    ("ccx_rules_ocp.external.test.rule_B", "ERROR_KEY_3"),
     ("ccx_rules_ocp.external.rules.ccxdev_auxiliary_rule", "CCXDEV_E2E_TEST_RULE"),
     ("ccx_rules_ocp.external.bug_rules.bug_1821905.report", "BUGZILLA_BUG_1821905"),
     ("ccx_rules_ocp.external.rules.nodes_requirements_check.report",
@@ -87,8 +94,8 @@ RULE_SELECTORS = (
         "SAMPLES_FAILED_IMAGE_IMPORT_ERR"))
 
 
-def fill_in_database(connection, verbose, feedback, probability):
-    """Fill-in database with test data."""
+def fill_in_database_for_clusters(connection, verbose, feedback, probability):
+    """Fill-in database with test data assigned to clusters."""
     # add new info about rule disable, but only with some probability.
     for cluster_id in CLUSTER_IDS:
         if verbose:
@@ -99,7 +106,20 @@ def fill_in_database(connection, verbose, feedback, probability):
                 if verbose:
                     print("\t\tAccount ID: {}".format(account_id))
                     print("\t\tAdding new rule disable info: {}".format(rule_selector))
-                insert_into_db(connection, account_id, cluster_id, rule_selector, feedback)
+                insert_into_db_for_clusters(connection, account_id, cluster_id, rule_selector,
+                                            feedback)
+
+
+def fill_in_database_system_wide_rule_disable(connection, verbose, probability):
+    """Fill-in database with system-wide test data."""
+    # add new info about rule disable, but only with some probability.
+    for rule_selector in RULE_SELECTORS:
+        if random()*100 < probability:
+            account_id = choice(ACCOUNT_IDS)
+            if verbose:
+                print("\t\tAccount ID: {}".format(account_id))
+                print("\t\tAdding new rule disable info: {}".format(rule_selector))
+            insert_into_db_system_wide_disable(connection, account_id, rule_selector)
 
 
 def check_if_postgres_is_running():
@@ -126,7 +146,7 @@ def disconnect_from_database(connection):
     connection.close()
 
 
-def insert_into_db(connection, account_id, cluster_id, rule_selector, feedback):
+def insert_into_db_for_clusters(connection, account_id, cluster_id, rule_selector, feedback):
     """Insert new record(s) into database."""
     cursor = connection.cursor()
 
@@ -167,6 +187,35 @@ def insert_into_db(connection, account_id, cluster_id, rule_selector, feedback):
         raise e
 
 
+def insert_into_db_system_wide_disable(connection, account_id, rule_selector):
+    """Insert new record(s) into database."""
+    cursor = connection.cursor()
+
+    try:
+        # try to perform insert statement
+        insertStatement = """INSERT INTO rule_disable
+                             (rule_id, error_key, org_id, user_id, created_at,
+                             updated_at, justification)
+                             VALUES(%s, %s, 1, %s, %s, %s, %s);"""
+
+        # some nice feedback from user
+        justification = "Rule {}|{} has been disabled by {}".format(rule_selector[0],
+                                                                    rule_selector[1],
+                                                                    account_id)
+
+        # generate timestamp to be stored in database
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+
+        # insert in transaction
+        cursor.execute(insertStatement, (
+            rule_selector[0], rule_selector[1], account_id, timestamp, timestamp, justification))
+
+        connection.commit()
+    except Exception as e:
+        connection.rollback()
+        raise e
+
+
 def main():
     """Entry point to this tool."""
     # First of all, we need to specify all command line flags that are
@@ -177,6 +226,9 @@ def main():
                         action="store_true", default=None)
     parser.add_argument("-f", "--feedback", dest="feedback",
                         help="fill-in cluster_user_rule_disable_feedback",
+                        action="store_true", default=None)
+    parser.add_argument("-r", "--rule-disable", dest="rule_disable",
+                        help="fill-in rule_disable table",
                         action="store_true", default=None)
     parser.add_argument("-p", "--probability", dest="probability",
                         help="probability of rule to be disabled",
@@ -201,7 +253,10 @@ def main():
     assert connection is not None
 
     # fill the database by test data
-    fill_in_database(connection, args.verbose, args.feedback, args.probability)
+    if args.rule_disable:
+        fill_in_database_system_wide_rule_disable(connection, args.verbose, args.probability)
+    else:
+        fill_in_database_for_clusters(connection, args.verbose, args.feedback, args.probability)
 
     # everything's seems ok, let's disconnect
     disconnect_from_database(connection)
