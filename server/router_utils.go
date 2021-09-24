@@ -252,7 +252,11 @@ func getRuleAndErrorKeyFromRuleID(ruleIDWithErrorKey string) (
 	splitedRuleID := strings.Split(string(ruleIDWithErrorKey), "|")
 
 	if len(splitedRuleID) != 2 {
-		err = fmt.Errorf("invalid rule ID, it must contain only rule ID and error key separated by |")
+		err = &types.ValidationError{
+			ParamName:  "rule",
+			ParamValue: ruleIDWithErrorKey,
+			ErrString:  "invalid rule ID, it must contain only rule ID and error key separated by |",
+		}
 		return
 	}
 

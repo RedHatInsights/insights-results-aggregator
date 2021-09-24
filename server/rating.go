@@ -22,24 +22,28 @@ import (
 )
 
 func (server *HTTPServer) setRuleRating(writer http.ResponseWriter, request *http.Request) {
+	// Read&parse rating JSON from body content
 	rating, ok := readRuleRatingFromBody(writer, request)
 	if !ok {
 		// all errors handled inside
 		return
 	}
 
+	// Extract user_id from URL
 	userID, ok := readUserID(writer, request)
 	if !ok {
 		// everything is handled
 		return
 	}
 
+	// extract org_id from URL
 	orgID, ok := readOrgID(writer, request)
 	if !ok {
 		// everything is handled
 		return
 	}
 
+	// Split the rule_fqdn (RuleID) and ErrorKey from the received rule
 	ruleID, errorKey, err := getRuleAndErrorKeyFromRuleID(rating.Rule)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to parse rule identifier")
@@ -47,6 +51,7 @@ func (server *HTTPServer) setRuleRating(writer http.ResponseWriter, request *htt
 		return
 	}
 
+	// Store to the db
 	err = server.Storage.RateOnRule(userID, orgID, ruleID, errorKey, rating.Rating)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to store rating")
