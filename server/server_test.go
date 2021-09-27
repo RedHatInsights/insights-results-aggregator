@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021  Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -827,5 +827,53 @@ func TestHTTPServer_ListOfReasons(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"reasons":[],"status":"ok"}`,
+	})
+}
+
+func TestHTTPServer_EnableRuleSystemWide(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodPut,
+		Endpoint: server.EnableRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status":"rule enabled"}`,
+	})
+}
+
+func TestHTTPServer_EnableRuleSystemWideWrongOrgID(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodPut,
+		Endpoint: server.EnableRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			"xyzzy", testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status":"Error during parsing param 'org_id' with value 'xyzzy'. Error: 'unsigned integer expected'"}`,
+	})
+}
+
+func TestHTTPServer_EnableRuleSystemWideWrongUserID(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodPut,
+		Endpoint: server.EnableRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			testdata.OrgID, "   "},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status":"Missing required param from request: user_id"}`,
 	})
 }
