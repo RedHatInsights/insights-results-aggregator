@@ -67,9 +67,24 @@ func TestNoopStorage_Methods_Cont(t *testing.T) {
 	_, _ = noopStorage.ReadOrgIDsForClusters([]types.ClusterName{})
 	_, _ = noopStorage.ReadReportsForClusters([]types.ClusterName{})
 	_, _ = noopStorage.ReadSingleRuleTemplateData(0, "", "", "")
-	_, _ = noopStorage.GetUserDisableFeedbackOnRules("", []types.RuleOnReport{}, "")
+	_, _ = noopStorage.GetUserDisableFeedbackOnRules("",
+		[]types.RuleOnReport{}, "")
 	_, _ = noopStorage.DoesClusterExist("")
 	_, _ = noopStorage.ListOfDisabledRules("")
 	_, _ = noopStorage.ListOfReasons("")
 	_ = noopStorage.WriteRecommendationsForCluster(0, "", "")
+	_ = noopStorage.RateOnRule(types.UserID("99"), types.OrgID(1), "", "",
+		types.UserVote(1))
+}
+
+func TestNoopStorage_Methods_Cont2(t *testing.T) {
+	noopStorage := storage.NoopStorage{}
+	orgID := types.OrgID(1)
+	userID := types.UserID("1")
+
+	_ = noopStorage.DisableRuleSystemWide(orgID, userID, "", "", "")
+	_ = noopStorage.EnableRuleSystemWide(orgID, userID, "", "")
+	_ = noopStorage.UpdateDisabledRuleJustification(orgID, userID, "", "", "justification")
+	_, _, _ = noopStorage.ReadDisabledRule(orgID, userID, "", "")
+	_, _ = noopStorage.ListOfSystemWideDisabledRules(orgID, userID)
 }
