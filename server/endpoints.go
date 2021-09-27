@@ -114,6 +114,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 
 	// Endpoints to handle rules to be enabled, disabled, updated, and queried system-wide
 	router.HandleFunc(apiPrefix+EnableRuleSystemWide, server.enableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+DisableRuleSystemWide, server.disableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)

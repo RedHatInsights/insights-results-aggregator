@@ -280,3 +280,43 @@ func (server HTTPServer) enableRuleSystemWide(writer http.ResponseWriter, reques
 	}
 
 }
+
+// disableRuleSystemWide method disables a rule for all clusters
+func (server HTTPServer) disableRuleSystemWide(writer http.ResponseWriter, request *http.Request) {
+	log.Info().Msg("disableRuleSystemWide")
+
+	// read unique rule+user selector
+	selector, successful := readSystemWideRuleSelectors(writer, request)
+	if !successful {
+		// everything has been handled
+		return
+	}
+
+	// read justification from request body
+	justification, err := server.getJustificationFromBody(request)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	// try to disable rule
+	err = server.Storage.DisableRuleSystemWide(
+		selector.OrgID, selector.UserID,
+		selector.RuleID, selector.ErrorKey,
+		justification)
+
+	// handle any storage error
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	// try to send JSON payload to the client in a HTTP response
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(
+		"justification", justification,
+	))
+
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
