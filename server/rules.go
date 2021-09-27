@@ -247,3 +247,36 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 
 	return rule
 }
+
+// enableRuleSystemWide method re-enables a rule for all clusters
+func (server HTTPServer) enableRuleSystemWide(writer http.ResponseWriter, request *http.Request) {
+	log.Info().Msg("enableRuleSystemWide")
+
+	// read unique rule+user selector
+	selector, successful := readSystemWideRuleSelectors(writer, request)
+	if !successful {
+		// everything has been handled
+		return
+	}
+
+	// try to enable rule
+	err := server.Storage.EnableRuleSystemWide(
+		selector.OrgID, selector.UserID,
+		selector.RuleID, selector.ErrorKey)
+
+	// handle any storage error
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	// try to send JSON payload to the client in a HTTP response
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(
+		"status", "rule enabled",
+	))
+
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+
+}

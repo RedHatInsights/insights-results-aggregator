@@ -63,6 +63,11 @@ const (
 	ListOfDisabledRules = "rules/users/{user_id}/disabled"
 	// ListOfDisabledRulesFeedback returns a list of reasons why rule has been disabled
 	ListOfDisabledRulesFeedback = "rules/users/{user_id}/disabled/feedback"
+
+	// Endpoints to handle rules to be enabled, disabled, updated, and queried system-wide
+
+	// EnableRuleSystemWide re-enables a rule for all clusters
+	EnableRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/enable"
 	// Rating accepts a list of ratings in the request body and store them in the database for the given user
 	Rating = "rules/organizations/{org_id}/users/{user_id}/rating"
 	// MetricsEndpoint returns prometheus metrics
@@ -106,6 +111,9 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ListOfDisabledRules, server.listOfDisabledRules).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ListOfDisabledRulesFeedback, server.listOfReasons).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+Rating, server.setRuleRating).Methods(http.MethodPost)
+
+	// Endpoints to handle rules to be enabled, disabled, updated, and queried system-wide
+	router.HandleFunc(apiPrefix+EnableRuleSystemWide, server.enableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
