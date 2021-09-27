@@ -261,3 +261,42 @@ func (*NoopStorage) RateOnRule(
 ) error {
 	return nil
 }
+
+// DisableRuleSystemWide disables the selected rule for all clusters visible to
+// given user
+func (*NoopStorage) DisableRuleSystemWide(
+	orgID types.OrgID, userID types.UserID,
+	ruleID types.RuleID, errorKey types.ErrorKey,
+	justification string) error {
+	return nil
+}
+
+// EnableRuleSystemWide enables the selected rule for all clusters visible to
+// given user
+func (*NoopStorage) EnableRuleSystemWide(
+	orgID types.OrgID, userID types.UserID,
+	ruleID types.RuleID, errorKey types.ErrorKey) error {
+	return nil
+}
+
+// UpdateDisabledRuleJustification change justification for already disabled rule
+func (*NoopStorage) UpdateDisabledRuleJustification(
+	orgID types.OrgID, userID types.UserID,
+	ruleID types.RuleID, errorKey types.ErrorKey,
+	justification string) error {
+	return nil
+}
+
+// ReadDisabledRule function returns disabled rule (if disabled) from database
+func (*NoopStorage) ReadDisabledRule(
+	orgID types.OrgID, userID types.UserID,
+	ruleID types.RuleID, errorKey types.ErrorKey) (utypes.SystemWideRuleDisable, bool, error) {
+	return utypes.SystemWideRuleDisable{}, true, nil
+}
+
+// ListOfSystemWideDisabledRules function returns list of all rules that have been
+// disabled for all clusters by given user
+func (*NoopStorage) ListOfSystemWideDisabledRules(
+	orgID types.OrgID, userID types.UserID) ([]utypes.SystemWideRuleDisable, error) {
+	return nil, nil
+}
