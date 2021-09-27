@@ -68,6 +68,15 @@ const (
 
 	// EnableRuleSystemWide re-enables a rule for all clusters
 	EnableRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/enable"
+	// DisableRuleSystemWide disables a rule for all clusters
+	DisableRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/disable"
+	// UpdateRuleSystemWide updates disable justification of a rule for all clusters
+	UpdateRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/update"
+	// ReadRuleSystemWide queries rule disabled system-wide
+	ReadRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}"
+	// ListOfDisabledRulesSystemWide returns a list of rules disabled from current account
+	ListOfDisabledRulesSystemWide = "rules/organizations/{org_id}/users/{user_id}/disabled_system_wide"
+
 	// Rating accepts a list of ratings in the request body and store them in the database for the given user
 	Rating = "rules/organizations/{org_id}/users/{user_id}/rating"
 	// MetricsEndpoint returns prometheus metrics
@@ -117,6 +126,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+DisableRuleSystemWide, server.disableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+UpdateRuleSystemWide, server.updateRuleSystemWide).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ReadRuleSystemWide, server.readRuleSystemWide).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+ListOfDisabledRulesSystemWide, server.listOfDisabledRulesSystemWide).Methods(http.MethodGet)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)

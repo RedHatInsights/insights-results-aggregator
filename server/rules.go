@@ -402,3 +402,80 @@ func (server HTTPServer) readRuleSystemWide(writer http.ResponseWriter, request 
 		log.Error().Err(err).Msg(responseDataError)
 	}
 }
+
+// listOfDisabledRulesSystemWide returns a list of rules disabled from current account
+func (server HTTPServer) listOfDisabledRulesSystemWide(writer http.ResponseWriter, request *http.Request) {
+	log.Info().Msg("listOfDisabledRulesSystemWide")
+
+	orgID, successful := readOrgID(writer, request)
+	if !successful {
+		return
+	}
+
+	userID, successful := readUserID(writer, request)
+	if !successful {
+		return
+	}
+
+	// try to retrieve list of disabled rules from storage
+	disabledRules, err := server.Storage.ListOfSystemWideDisabledRules(
+		orgID, userID)
+
+	// handle any storage error
+	if err != nil {
+		log.Error().Err(err).Msg("System-wide rules disable not found")
+		handleServerError(writer, err)
+		return
+	}
+
+	// try to send JSON payload to the client in a HTTP response
+	err = responses.SendOK(writer,
+		responses.BuildOkResponseWithData("disabledRules", disabledRules))
+
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+// SystemWideRuleSelector contains all four fields that are used to select
+// system-wide rule disable
+type SystemWideRuleSelector struct {
+	OrgID    types.OrgID
+	UserID   types.UserID
+	RuleID   types.RuleID
+	ErrorKey types.ErrorKey
+}
+
+// readSystemWideRuleSelectors helper function read all four parameters that
+// are used to select system-wide rule disable
+func readSystemWideRuleSelectors(writer http.ResponseWriter, request *http.Request) (SystemWideRuleSelector, bool) {
+	var selector SystemWideRuleSelector = SystemWideRuleSelector{}
+	var successful bool
+
+	selector.OrgID, successful = readOrgID(writer, request)
+	if !successful {
+		return selector, false
+	}
+
+	selector.UserID, successful = readUserID(writer, request)
+	if !successful {
+		return selector, false
+	}
+
+	selector.RuleID, successful = readRuleID(writer, request)
+	if !successful {
+		return selector, false
+	}
+
+	selector.ErrorKey, successful = readErrorKey(writer, request)
+	if !successful {
+		return selector, false
+	}
+
+	log.Info().Msgf(
+		"System-wide disabled rule selector: org: %v  user: %v  rule ID: %v  error key: %v",
+		selector.OrgID, selector.UserID,
+		selector.RuleID, selector.ErrorKey)
+
+	return selector, true
+}
