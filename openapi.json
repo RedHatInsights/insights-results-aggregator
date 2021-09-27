@@ -1310,6 +1310,278 @@
         ]
       }
     },
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/enable": {
+      "put": {
+        "summary": "Re-enables a rule for all clusters",
+        "operationId": "EnableRuleSystemWide",
+        "description": "Re-enables a rule for all clusters",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "description": "ID of rule",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_key",
+            "in": "path",
+            "required": true,
+            "description": "Rule error key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/disable": {
+      "put": {
+        "summary": "Disables a rule for all clusters",
+        "operationId": "DisableRuleSystemWide",
+        "description": "Disables a rule for all clusters",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "description": "ID of rule",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_key",
+            "in": "path",
+            "required": true,
+            "description": "Rule error key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+            "description": "Justification why rule was disabled",
+            "required": true,
+            "content": {
+              "text/plain": {
+                "schema": {
+                }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/update": {
+      "post": {
+        "summary": "Updates disable justification of a rule disabled for all clusters",
+        "operationId": "UpdateRuleSystemWide",
+        "description": "Updates disable justification of a rule disabled for all clusters",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "description": "ID of rule",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_key",
+            "in": "path",
+            "required": true,
+            "description": "Rule error key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+            "description": "Justification why rule was disabled",
+            "required": true,
+            "content": {
+              "text/plain": {
+                "schema": {
+                }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}": {
+      "get": {
+        "summary": "Returns info about rule disabled system-wide",
+        "operationId": "ReadRuleSystemWide",
+        "description": "Returns info about rule disabled system-wide",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "description": "ID of rule",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_key",
+            "in": "path",
+            "required": true,
+            "description": "Rule error key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules/organizations/{org_id}/users/{user_id}/disabled_system_wide": {
+      "get": {
+        "summary": "Returns a list of all rules disabled system-wide",
+        "operationId": "ListOfDisabledRulesSystemWide",
+        "description": "Returns a list of all rules disabled system-wide",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+              }
+            }
+          }
+        }
+      }
+    },
     "/rules/organizations/{orgId}/users/{userId}/rating": {
       "post": {
         "tags": ["prod"],

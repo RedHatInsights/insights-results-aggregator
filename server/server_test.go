@@ -1084,3 +1084,18 @@ func TestHTTPServer_ReadRuleSystemWideWrongUserID(t *testing.T) {
 		Body:       `{"status":"Missing required param from request: user_id"}`,
 	})
 }
+
+func TestHTTPServer_ListOfDisabledRulesSystemWide(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.ListOfDisabledRulesSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"disabledRules":[],"status":"ok"}`,
+	})
+}
