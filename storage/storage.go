@@ -158,6 +158,23 @@ type Storage interface {
 		types.ErrorKey,
 		types.UserVote,
 	) error
+	DisableRuleSystemWide(
+		orgID types.OrgID, userID types.UserID,
+		ruleID types.RuleID, errorKey types.ErrorKey,
+		justification string) error
+	EnableRuleSystemWide(
+		orgID types.OrgID, userID types.UserID,
+		ruleID types.RuleID, errorKey types.ErrorKey,
+	) error
+	UpdateDisabledRuleJustification(
+		orgID types.OrgID, userID types.UserID,
+		ruleID types.RuleID, errorKey types.ErrorKey,
+		justification string) error
+	ReadDisabledRule(
+		orgID types.OrgID, userID types.UserID,
+		ruleID types.RuleID, errorKey types.ErrorKey) (utypes.SystemWideRuleDisable, bool, error)
+	ListOfSystemWideDisabledRules(
+		orgID types.OrgID, userID types.UserID) ([]utypes.SystemWideRuleDisable, error)
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
