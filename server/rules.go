@@ -360,3 +360,45 @@ func (server HTTPServer) updateRuleSystemWide(writer http.ResponseWriter, reques
 		log.Error().Err(err).Msg(responseDataError)
 	}
 }
+
+// readRuleSystemWide method returns information about rule that has been
+// disabled for all systems. In case such rule does not exists or was not
+// disabled, HTTP code 404/Not Found is returned instead
+func (server HTTPServer) readRuleSystemWide(writer http.ResponseWriter, request *http.Request) {
+	log.Info().Msg("readRuleSystemWide")
+
+	// read unique rule+user selector
+	selector, successful := readSystemWideRuleSelectors(writer, request)
+	if !successful {
+		// everything has been handled
+		return
+	}
+
+	// try to retrieve disabled rule from storage
+	disabledRule, found, err := server.Storage.ReadDisabledRule(
+		selector.OrgID, selector.UserID,
+		selector.RuleID, selector.ErrorKey)
+
+	// handle any storage error
+	if err != nil {
+		log.Error().Err(err).Msg("System-wide rule disable not found")
+		handleServerError(writer, err)
+		return
+	}
+
+	// handle situation when rule was not disabled ie. found in the storage
+	if !found {
+		const message = "Rule was not disabled"
+		log.Info().Msg(message)
+		responses.SendNotFound(writer, message)
+		return
+	}
+
+	// try to send JSON payload to the client in a HTTP response
+	err = responses.SendOK(writer,
+		responses.BuildOkResponseWithData("disabledRule", disabledRule))
+
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
