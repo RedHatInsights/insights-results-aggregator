@@ -942,3 +942,68 @@ func TestHTTPServer_DisableRuleSystemWideNoJustification(t *testing.T) {
 		Body:       `{"status":"client didn't provide request body"}`,
 	})
 }
+
+func TestHTTPServer_UpdateRuleSystemWide(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodPost,
+		Endpoint: server.UpdateRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			testdata.OrgID, testdata.UserID},
+		Body: `{"justification": "***justification***"}`,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"justification":"***justification***","status":"ok"}`,
+	})
+}
+
+func TestHTTPServer_UpdateRuleSystemWideWrongOrgID(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodPost,
+		Endpoint: server.UpdateRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			"xyzzy", testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status":"Error during parsing param 'org_id' with value 'xyzzy'. Error: 'unsigned integer expected'"}`,
+	})
+}
+
+func TestHTTPServer_UpdateRuleSystemWideWrongUserID(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodPost,
+		Endpoint: server.UpdateRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			testdata.OrgID, "   "},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status":"Missing required param from request: user_id"}`,
+	})
+}
+
+func TestHTTPServer_UpdateRuleSystemWideNoJustification(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodPost,
+		Endpoint: server.UpdateRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status":"client didn't provide request body"}`,
+	})
+}
