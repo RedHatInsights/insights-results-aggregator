@@ -63,6 +63,8 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+
+	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 )
 
 const (
@@ -400,4 +402,32 @@ func (server *HTTPServer) getFeedbackMessageFromBody(request *http.Request) (str
 	}
 
 	return feedback.Message, nil
+}
+
+// getJustificationFromBody retrieves the justification provided by user from body of the request
+func (server *HTTPServer) getJustificationFromBody(request *http.Request) (string, error) {
+	var justification utypes.AcknowledgementJustification
+
+	err := json.NewDecoder(request.Body).Decode(&justification)
+	if err != nil {
+		if err == io.EOF {
+			err = &NoBodyError{}
+		}
+
+		return "", err
+	}
+
+	if len(justification.Value) > server.Config.MaximumFeedbackMessageLength {
+		justification.Value = justification.Value[0:server.Config.MaximumFeedbackMessageLength] + "..."
+
+		return "", &types.ValidationError{
+			ParamName:  "justification",
+			ParamValue: justification.Value,
+			ErrString: fmt.Sprintf(
+				"justification is longer than %v bytes", server.Config.MaximumFeedbackMessageLength,
+			),
+		}
+	}
+
+	return justification.Value, nil
 }
