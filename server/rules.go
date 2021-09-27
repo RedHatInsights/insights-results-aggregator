@@ -390,7 +390,10 @@ func (server HTTPServer) readRuleSystemWide(writer http.ResponseWriter, request 
 	if !found {
 		const message = "Rule was not disabled"
 		log.Info().Msg(message)
-		responses.SendNotFound(writer, message)
+		err := responses.SendNotFound(writer, message)
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to send response data")
+		}
 		return
 	}
 
