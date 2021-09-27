@@ -1007,3 +1007,80 @@ func TestHTTPServer_UpdateRuleSystemWideNoJustification(t *testing.T) {
 		Body:       `{"status":"client didn't provide request body"}`,
 	})
 }
+
+func TestHTTPServer_ReadRuleSystemWideNoRule(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.ReadRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusNotFound,
+		Body:       `{"status":"Rule was not disabled"}`,
+	})
+}
+
+func TestHTTPServer_ReadRuleSystemWideExistingRule(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	// disable rule first
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodPut,
+		Endpoint: server.DisableRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			testdata.OrgID, testdata.UserID},
+		Body: `{"justification": "***justification***"}`,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"justification":"***justification***","status":"ok"}`,
+	})
+
+	// check the rule read from storage
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.ReadRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+	})
+}
+
+func TestHTTPServer_ReadRuleSystemWideWrongOrgID(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.ReadRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			"xyzzy", testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status":"Error during parsing param 'org_id' with value 'xyzzy'. Error: 'unsigned integer expected'"}`,
+	})
+}
+
+func TestHTTPServer_ReadRuleSystemWideWrongUserID(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: server.ReadRuleSystemWide,
+		EndpointArgs: []interface{}{
+			testdata.Rule1ID, testdata.ErrorKey1,
+			testdata.OrgID, "   "},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status":"Missing required param from request: user_id"}`,
+	})
+}
