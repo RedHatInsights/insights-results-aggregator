@@ -41,7 +41,11 @@ var mig0016AddRecommendationsTable = Migration{
 		_, err := tx.Exec(`
 			CREATE TABLE recommendation
 				AS SELECT
-					org_id, cluster_id, REGEXP_REPLACE(rule_fqdn, '.report$', CONCAT('|', error_key)) AS rule_fqdn, error_key, FROM rule_hit;
+					org_id,
+					cluster_id,
+					REGEXP_REPLACE(rule_fqdn, '.report$', CONCAT('|', error_key)) AS rule_fqdn,
+					error_key,
+				FROM rule_hit;
 		`)
 
 		if err != nil {
