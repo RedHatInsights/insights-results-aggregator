@@ -21,7 +21,7 @@ import (
 
 var mig0017AddSystemWideRuleDisableTable = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
-		// Create recommendation table using currently stored rule hits
+		// Create rule_disable table
 		_, err := tx.Exec(`
                     CREATE TABLE rule_disable (
                         org_id        VARCHAR NOT NULL,

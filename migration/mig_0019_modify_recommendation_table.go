@@ -18,47 +18,30 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-var mig0016AddRecommendationsTable = Migration{
+var mig0019ModifyRecommendationTable = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
-		// Create recommendation table using currently stored rule hits
 		if driver != types.DBDriverPostgres {
-			_, err := tx.Exec(`
-			CREATE TABLE recommendation
-				AS SELECT
-					org_id,
-					cluster_id,
-					rule_fqdn,
-					error_key
-				FROM rule_hit;
-			`)
-			if err != nil {
-				return err
-			}
-			// stop here if sqLite
 			return nil
 		}
 
+		// Fix rule_fqdn value for records created in migration 16
 		_, err := tx.Exec(`
-			CREATE TABLE recommendation
-				AS SELECT
-					org_id, cluster_id, REGEXP_REPLACE(rule_fqdn, '.report$', CONCAT('|', error_key)) AS rule_fqdn, error_key, FROM rule_hit;
+			UPDATE recommendation
+				SET rule_fqdn = REGEXP_REPLACE(rule_fqdn, '\.(?!.*\|)(?!.*\.)', '|');
 		`)
 
 		if err != nil {
 			return err
 		}
 
-		//Add the primary_key to the new table
+		//Add the created_at column with current time as value
 		_, err = tx.Exec(`
 			ALTER TABLE recommendation
-				ADD CONSTRAINT recommendation_pk
-					PRIMARY KEY (org_id, cluster_id, rule_fqdn, error_key);`)
+				ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP.
+		`)
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		_, err := tx.Exec(`
-			DROP TABLE recommendation
-		`)
-		return err
+		return nil
 	},
 }
