@@ -370,18 +370,14 @@ func TestMigration16(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	if dbDriver == types.DBDriverSQLite3 {
-		// migration is not implemented for sqlite
-		return
-	}
-
 	err := migration.SetDBVersion(db, dbDriver, 15)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`
-		INSERT INTO recommendations (cluster, rule_fqdn, error_key)
-		VALUES ($1, $2, $3)
+		INSERT INTO recommendations (org_id, cluster, rule_fqdn, error_key)
+		VALUES ($1, $2, $3, $4)
 	`,
+		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.Rule1Name,
 		testdata.ErrorKey1,
@@ -392,13 +388,71 @@ func TestMigration16(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`
-		INSERT INTO recommendations (cluster, rule_fqdn, error_key)
-		VALUES ($1, $2, $3)
+		INSERT INTO recommendations (org_id, cluster, rule_fqdn, error_key)
+		VALUES ($1, $2, $3, $4)
 	`,
+		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.Rule1Name,
 		testdata.ErrorKey1,
 	)
 	helpers.FailOnError(t, err)
 
+}
+
+func TestMigration19(t *testing.T) {
+
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// migration is not implemented for sqlite
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 18)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO recommendations (org_id, cluster, rule_fqdn, error_key)
+		VALUES ($1, $2, $3, $4)
+	`,
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.Rule1ID +"|"+testdata.ErrorKey1,
+		testdata.ErrorKey1,
+	)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO recommendations (org_id, cluster, rule_fqdn, error_key)
+		VALUES ($1, $2, $3, $4)
+	`,
+		testdata.Org2ID,
+		testdata.ClusterName,
+		testdata.Rule1ID +"|"+testdata.ErrorKey1,
+		testdata.ErrorKey1,
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, dbDriver, 19)
+	helpers.FailOnError(t, err)
+
+	var (
+		ruleFQDN string
+	)
+	err = db.QueryRow(`
+			SELECT
+				rule_fqdn
+			FROM
+				recommendation
+			WHERE
+			    org_id = $1`,
+		testdata.OrgID,
+	).Scan(
+		&ruleFQDN,
+	)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.Rule1ID +"|"+testdata.ErrorKey1, ruleFQDN)
 }
