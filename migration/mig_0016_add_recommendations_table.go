@@ -31,11 +31,9 @@ var mig0016AddRecommendationsTable = Migration{
 					error_key
 				FROM rule_hit;
 			`)
-			if err != nil {
-				return err
-			}
-			// stop here if sqLite
-			return nil
+
+			// stop here if not working with postgres
+			return err
 		}
 
 		// Create recommendation table using records from rule_hit table
@@ -62,7 +60,7 @@ var mig0016AddRecommendationsTable = Migration{
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		_, err := tx.Exec(`
-			DROP TABLE recommendation
+			DROP TABLE recommendation;
 		`)
 		return err
 	},

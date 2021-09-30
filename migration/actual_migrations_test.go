@@ -384,7 +384,12 @@ func TestMigration16(t *testing.T) {
 		testdata.ErrorKey1,
 	)
 	assert.Error(t, err, `Expected error since recommendation table does not exist yet`)
-	assert.Contains(t, err.Error(), `relation "recommendation" does not exist`)
+
+	if dbDriver == types.DBDriverSQLite3 {
+		assert.Contains(t, err.Error(), "no such table: recommendation")
+	} else if dbDriver == types.DBDriverPostgres {
+		assert.Contains(t, err.Error(), `relation "recommendation" does not exist`)
+	}
 
 	err = migration.SetDBVersion(db, dbDriver, 16)
 	helpers.FailOnError(t, err)
@@ -407,7 +412,7 @@ func TestMigration19(t *testing.T) {
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
-		// migration is not implemented for sqlite
+		// nothing worth testing for sqlite
 		return
 	}
 
@@ -422,7 +427,7 @@ func TestMigration19(t *testing.T) {
 	_, err = db.Exec(`
 		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
-	`,
+		`,
 		testdata.OrgID,
 		testdata.ClusterName,
 		incorrectRuleFQDN,
@@ -433,7 +438,7 @@ func TestMigration19(t *testing.T) {
 	_, err = db.Exec(`
 		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
-	`,
+		`,
 		testdata.Org2ID,
 		testdata.ClusterName,
 		correctRuleFQDN,
@@ -444,10 +449,7 @@ func TestMigration19(t *testing.T) {
 	err = migration.SetDBVersion(db, dbDriver, 19)
 	helpers.FailOnError(t, err)
 
-	var (
-		ruleFQDN  string
-		timestamp time.Time
-	)
+	var ruleFQDN string
 
 	err = db.QueryRow(`
 			SELECT
@@ -476,6 +478,8 @@ func TestMigration19(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 	assert.Equal(t, expectedRuleAfterMigration, ruleFQDN)
+
+	var timestamp time.Time
 
 	err = db.QueryRow(`
 			SELECT

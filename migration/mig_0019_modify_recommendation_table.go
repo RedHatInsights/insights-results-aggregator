@@ -21,7 +21,12 @@ import (
 var mig0019ModifyRecommendationRuleFQDN = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver != types.DBDriverPostgres {
-			return nil
+			//Add the created_at column
+			_, err := tx.Exec(`
+			ALTER TABLE recommendation
+				ADD COLUMN created_at TIMESTAMP WITHOUT TIME ZONE;
+			`)
+			return err
 		}
 
 		// Recreate table to fix rule_fqdn value for records created in migration 16
@@ -33,7 +38,7 @@ var mig0019ModifyRecommendationRuleFQDN = Migration{
 		_, err := tx.Exec(`
 			UPDATE recommendation
 				SET rule_fqdn = REGEXP_REPLACE(rule_fqdn, '(\.(?!.*\|)(?!.*\.|\|).*)|(\|.*)', '');
-		`)
+			`)
 
 		if err != nil {
 			return err
@@ -42,12 +47,20 @@ var mig0019ModifyRecommendationRuleFQDN = Migration{
 		//Add the created_at column with current UTC time as value
 		_, err = tx.Exec(`
 			ALTER TABLE recommendation
-				ADD COLUMN created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc')
+				ADD COLUMN created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc');
 		`)
 
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
+		if driver == types.DBDriverPostgres {
+			//Remove the created_at column with current UTC time as value
+			_, err := tx.Exec(`
+			ALTER TABLE recommendation DROP COLUMN IF EXISTS created_at;
+			`)
+
+			return err
+		}
 		return nil
 	},
 }
