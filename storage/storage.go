@@ -723,7 +723,7 @@ func (storage DBStorage) insertRecommendations(
 	selectors := make([]string, len(report.HitRules))
 
 	for idx, rule := range report.HitRules {
-		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report") + "|" + string(rule.ErrorKey)
+		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report")
 		selectors[idx] = ruleFqdn
 		valuesArg = append(valuesArg, orgID, clusterName, ruleFqdn, rule.ErrorKey)
 		inserted = len(valuesArg)
