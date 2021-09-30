@@ -715,6 +715,14 @@ func (storage DBStorage) insertRecommendations(
 	clusterName types.ClusterName,
 	report types.ReportRules,
 ) (inserted int, err error) {
+	if len(report.HitRules) == 0 {
+		log.Info().
+			Int(organizationKey, int(orgID)).
+			Str(clusterKey, string(clusterName)).
+			Int(issuesCountKey, 0).
+			Msg("No new recommendation to insert")
+		return 0, nil
+	}
 	statement := `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, created_at) VALUES %s`
 
 	var valuesIdx []string
