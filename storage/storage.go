@@ -715,19 +715,19 @@ func (storage DBStorage) insertRecommendations(
 	clusterName types.ClusterName,
 	report types.ReportRules,
 ) (inserted int, err error) {
-	statement := `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key) VALUES %s`
+	statement := `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, created_at) VALUES %s`
 
 	var valuesIdx []string
 	var valuesArg []interface{}
 	inserted = 0
 	selectors := make([]string, len(report.HitRules))
-
+	creationtime := time.Now().UTC()
 	for idx, rule := range report.HitRules {
 		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report")
 		selectors[idx] = ruleFqdn
-		valuesArg = append(valuesArg, orgID, clusterName, ruleFqdn, rule.ErrorKey)
+		valuesArg = append(valuesArg, orgID, clusterName, ruleFqdn, rule.ErrorKey, creationtime)
 		inserted = len(valuesArg)
-		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(inserted-3)+", $"+fmt.Sprint(inserted-2)+", $"+fmt.Sprint(inserted-1)+", $"+fmt.Sprint(inserted)+")")
+		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(inserted-4)+", $"+fmt.Sprint(inserted-3)+", $"+fmt.Sprint(inserted-2)+", $"+fmt.Sprint(inserted-1)+", $"+fmt.Sprint(inserted)+")")
 	}
 
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
@@ -737,6 +737,7 @@ func (storage DBStorage) insertRecommendations(
 			Int(organizationKey, int(orgID)).
 			Str(clusterKey, string(clusterName)).
 			Int(issuesCountKey, len(selectors)).
+			Time(createdAtKey, creationtime).
 			Strs(selectorsKey, selectors).
 			Err(err).
 			Msg("Unable to insert the recommendations")
@@ -746,6 +747,7 @@ func (storage DBStorage) insertRecommendations(
 		Int(organizationKey, int(orgID)).
 		Str(clusterKey, string(clusterName)).
 		Int(issuesCountKey, len(selectors)).
+		Time(createdAtKey, creationtime).
 		Strs(selectorsKey, selectors).
 		Msg("Recommendations inserted successfully")
 

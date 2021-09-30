@@ -19,6 +19,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
@@ -444,7 +445,8 @@ func TestMigration19(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	var (
-		ruleFQDN string
+		ruleFQDN  string
+		timestamp time.Time
 	)
 
 	err = db.QueryRow(`
@@ -474,4 +476,19 @@ func TestMigration19(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 	assert.Equal(t, expectedRuleAfterMigration, ruleFQDN)
+
+	err = db.QueryRow(`
+			SELECT
+				created_at
+			FROM
+				recommendation
+			WHERE
+			    org_id = $1`,
+		testdata.OrgID,
+	).Scan(
+		&timestamp,
+	)
+	helpers.FailOnError(t, err)
+	assert.False(t, timestamp.IsZero(), "The timestamp column was not created with a default value")
+	assert.True(t, timestamp.UTC().Equal(timestamp), "The stored timestamp is not in UTC format")
 }

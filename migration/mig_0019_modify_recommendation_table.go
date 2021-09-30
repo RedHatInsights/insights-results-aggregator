@@ -35,6 +35,16 @@ var mig0019ModifyRecommendationRuleFQDN = Migration{
 				SET rule_fqdn = REGEXP_REPLACE(rule_fqdn, '(\.(?!.*\|)(?!.*\.|\|).*)|(\|.*)', '');
 		`)
 
+		if err != nil {
+			return err
+		}
+
+		//Add the created_at column with current UTC time as value
+		_, err = tx.Exec(`
+			ALTER TABLE recommendation
+				ADD COLUMN created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc')
+		`)
+
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
