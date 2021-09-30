@@ -374,7 +374,7 @@ func TestMigration16(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`
-		INSERT INTO recommendations (org_id, cluster, rule_fqdn, error_key)
+		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
 	`,
 		testdata.OrgID,
@@ -382,13 +382,14 @@ func TestMigration16(t *testing.T) {
 		testdata.Rule1Name,
 		testdata.ErrorKey1,
 	)
-	assert.EqualError(t, err, "no such table: recommendations")
+	assert.Error(t, err, `Expected error since recommendation table does not exist yet`)
+	assert.Contains(t, err.Error(), `relation "recommendation" does not exist`)
 
 	err = migration.SetDBVersion(db, dbDriver, 16)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`
-		INSERT INTO recommendations (org_id, cluster, rule_fqdn, error_key)
+		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
 	`,
 		testdata.OrgID,
@@ -397,7 +398,6 @@ func TestMigration16(t *testing.T) {
 		testdata.ErrorKey1,
 	)
 	helpers.FailOnError(t, err)
-
 }
 
 func TestMigration19(t *testing.T) {
@@ -413,24 +413,29 @@ func TestMigration19(t *testing.T) {
 	err := migration.SetDBVersion(db, dbDriver, 18)
 	helpers.FailOnError(t, err)
 
+	correctRuleFQDN := testdata.Rule1ID + "|" + testdata.ErrorKey1
+	incorrectRuleFQDN := testdata.Rule1ID + "." + testdata.ErrorKey1
+
+	expectedRuleAfterMigration := string(testdata.Rule1ID)
+
 	_, err = db.Exec(`
-		INSERT INTO recommendations (org_id, cluster, rule_fqdn, error_key)
+		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
 	`,
 		testdata.OrgID,
 		testdata.ClusterName,
-		testdata.Rule1ID +"|"+testdata.ErrorKey1,
+		incorrectRuleFQDN,
 		testdata.ErrorKey1,
 	)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`
-		INSERT INTO recommendations (org_id, cluster, rule_fqdn, error_key)
+		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
 	`,
 		testdata.Org2ID,
 		testdata.ClusterName,
-		testdata.Rule1ID +"|"+testdata.ErrorKey1,
+		correctRuleFQDN,
 		testdata.ErrorKey1,
 	)
 	helpers.FailOnError(t, err)
@@ -441,6 +446,7 @@ func TestMigration19(t *testing.T) {
 	var (
 		ruleFQDN string
 	)
+
 	err = db.QueryRow(`
 			SELECT
 				rule_fqdn
@@ -453,6 +459,19 @@ func TestMigration19(t *testing.T) {
 		&ruleFQDN,
 	)
 	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedRuleAfterMigration, ruleFQDN)
 
-	assert.Equal(t, testdata.Rule1ID +"|"+testdata.ErrorKey1, ruleFQDN)
+	err = db.QueryRow(`
+			SELECT
+				rule_fqdn
+			FROM
+				recommendation
+			WHERE
+			    org_id = $1`,
+		testdata.Org2ID,
+	).Scan(
+		&ruleFQDN,
+	)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedRuleAfterMigration, ruleFQDN)
 }
