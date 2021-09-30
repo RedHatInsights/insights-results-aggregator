@@ -727,24 +727,25 @@ func (storage DBStorage) insertRecommendations(
 
 	var valuesIdx []string
 	var valuesArg []interface{}
-	inserted = 0
+	statementIdx := 0
 	selectors := make([]string, len(report.HitRules))
 	creationtime := time.Now().UTC()
 	for idx, rule := range report.HitRules {
 		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report")
 		selectors[idx] = ruleFqdn
 		valuesArg = append(valuesArg, orgID, clusterName, ruleFqdn, rule.ErrorKey, creationtime)
-		inserted = len(valuesArg)
-		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(inserted-4)+", $"+fmt.Sprint(inserted-3)+", $"+fmt.Sprint(inserted-2)+", $"+fmt.Sprint(inserted-1)+", $"+fmt.Sprint(inserted)+")")
+		statementIdx = len(valuesArg)
+		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(statementIdx-4)+", $"+fmt.Sprint(statementIdx-3)+", $"+fmt.Sprint(statementIdx-2)+", $"+fmt.Sprint(statementIdx-1)+", $"+fmt.Sprint(statementIdx)+")")
 	}
 
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
+	inserted = len(selectors)
 	_, err = tx.Exec(statement, valuesArg...)
 	if err != nil {
 		log.Error().
 			Int(organizationKey, int(orgID)).
 			Str(clusterKey, string(clusterName)).
-			Int(issuesCountKey, len(selectors)).
+			Int(issuesCountKey, inserted).
 			Time(createdAtKey, creationtime).
 			Strs(selectorsKey, selectors).
 			Err(err).
@@ -754,10 +755,10 @@ func (storage DBStorage) insertRecommendations(
 	log.Info().
 		Int(organizationKey, int(orgID)).
 		Str(clusterKey, string(clusterName)).
-		Int(issuesCountKey, len(selectors)).
+		Int(issuesCountKey, inserted).
 		Time(createdAtKey, creationtime).
 		Strs(selectorsKey, selectors).
-		Msg("Recommendations inserted successfully")
+		Msg("Recommendations statementIdx successfully")
 
 	return
 
