@@ -37,10 +37,11 @@ var mig0019ModifyRecommendationTable = Migration{
 			return err
 		}
 
-		// Recreate table to fix rule_fqdn value for records created in migration 16
+		// Fix rule_fqdn value for records created in migration 16
 		// The regex expression has two parts separated by a logical or `|`:
-		// (\.(?!.*\|)(?!.*\.|\|).*) finds the last dot and all the characters that follows it
-		// (\|.*) finds the '|' and all the characters that follow it
+		// - (\.(?!.*\|)(?!.*\.|\|).*) finds the last dot and all the characters that follow it,
+		// if and only if there is no '|' in the whole string
+		// - (\|.*) finds the '|' and all the characters that follow it
 		// Both patterns are replaced by an empty string, so we are left with only the rule's
 		// component ID in the `rule_fqdn` column
 		_, err := tx.Exec(`
