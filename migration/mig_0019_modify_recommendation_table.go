@@ -18,7 +18,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-var mig0019ModifyRecommendationRuleFQDN = Migration{
+var mig0019ModifyRecommendationTable = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver != types.DBDriverPostgres {
 			// Add rule_id column
