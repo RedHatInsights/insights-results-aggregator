@@ -1075,8 +1075,8 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 		PassedRules:  testdata.RuleOnReportResponses,
 		TotalCount:   3 * len(testdata.RuleOnReportResponses),
 	}
-	err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report)
-
+	inserted, err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report)
+	assert.Equal(t, 3, inserted)
 	helpers.FailOnError(t, err)
 }
 
@@ -1143,5 +1143,22 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
 	)
 
+	helpers.FailOnError(t, err)
+}
+
+// TestDBStorageInsertRecommendationsNoRuleHit checks that no
+// recommendations are inserted if there is no rule hits in the report
+func TestDBStorageInsertRecommendationsNoRuleHit(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	report := types.ReportRules{
+		SkippedRules: testdata.RuleOnReportResponses,
+		PassedRules:  testdata.RuleOnReportResponses,
+		TotalCount:   2 * len(testdata.RuleOnReportResponses),
+	}
+	inserted, err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report)
+
+	assert.Equal(t, 0, inserted)
 	helpers.FailOnError(t, err)
 }

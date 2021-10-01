@@ -24,7 +24,7 @@ var mig0019ModifyRecommendationRuleFQDN = Migration{
 			// Add rule_id column
 			_, err := tx.Exec(`
 				ALTER TABLE recommendation ADD COLUMN rule_id VARCHAR NOT NULL DEFAULT '.';
-				UPDATE recommendation SET rule_id = CONCAT(rule_fqdn, '|', error_key);
+				UPDATE recommendation SET rule_id = rule_fqdn + '|' + error_key;
 			`)
 			if err != nil {
 				return err
