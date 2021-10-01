@@ -20,7 +20,7 @@ for more details about tables, indexes, and keys.
 ## List of tables
 
 ```
- Schema |                Name                | Type 
+ Schema |                Name                | Type
 --------+------------------------------------+------
  public | cluster_rule_toggle                | table
  public | cluster_rule_user_feedback         | table
@@ -144,6 +144,8 @@ CREATE TABLE recommendations (
     cluster_id  VARCHAR NOT NULL,
     rule_fqdn   VARCHAR NOT NULL,
     error_key   VARCHAR NOT NULL,
+    rule_id     VARCHAR NOT NULL,
+    created_at  TIMESTAMP WITHOUT TIME ZONE,
 
     PRIMARY KEY(org_id, cluster_id, rule_fqdn, error_key)
 )
