@@ -76,7 +76,8 @@ var mig0019ModifyRecommendationRuleFQDN = Migration{
 		if driver == types.DBDriverPostgres {
 			//Remove the created_at column
 			_, err := tx.Exec(`
-			ALTER TABLE recommendation DROP COLUMN IF EXISTS created_at;
+				ALTER TABLE recommendation DROP COLUMN IF EXISTS created_at;
+				ALTER TABLE recommendation DROP COLUMN IF EXISTS rule_id;
 			`)
 
 			return err
