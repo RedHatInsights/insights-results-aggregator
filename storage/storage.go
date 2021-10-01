@@ -732,9 +732,9 @@ func (storage DBStorage) insertRecommendations(
 	creationtime := time.Now().UTC()
 	for idx, rule := range report.HitRules {
 		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report")
-		ruleId := ruleFqdn + "|" + string(rule.ErrorKey)
-		selectors[idx] = ruleId
-		valuesArg = append(valuesArg, orgID, clusterName, ruleFqdn, rule.ErrorKey, ruleId, creationtime)
+		ruleID := ruleFqdn + "|" + string(rule.ErrorKey)
+		selectors[idx] = ruleID
+		valuesArg = append(valuesArg, orgID, clusterName, ruleFqdn, rule.ErrorKey, ruleID, creationtime)
 		statementIdx = len(valuesArg)
 		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(statementIdx-5)+", $"+fmt.Sprint(statementIdx-4)+", $"+fmt.Sprint(statementIdx-3)+", $"+fmt.Sprint(statementIdx-2)+", $"+fmt.Sprint(statementIdx-1)+", $"+fmt.Sprint(statementIdx)+")")
 	}
