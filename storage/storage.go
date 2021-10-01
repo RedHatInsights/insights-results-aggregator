@@ -709,6 +709,36 @@ func (storage DBStorage) updateReport(
 	return nil
 }
 
+func prepareInsertRecommendationsStatement(
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+	report types.ReportRules,
+	createdAt time.Time,
+) (selectors []string, statement string, statementArgs []interface{}) {
+	statement = `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at) VALUES %s`
+
+	var valuesIdx []string
+	statementIdx := 0
+	selectors = make([]string, len(report.HitRules))
+
+	for idx, rule := range report.HitRules {
+		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report")
+		ruleID := ruleFqdn + "|" + string(rule.ErrorKey)
+		selectors[idx] = ruleID
+		statementArgs = append(statementArgs, orgID, clusterName, ruleFqdn, rule.ErrorKey, ruleID, createdAt)
+		statementIdx = len(statementArgs)
+		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(statementIdx-5)+
+			", $"+fmt.Sprint(statementIdx-4)+
+			", $"+fmt.Sprint(statementIdx-3)+
+			", $"+fmt.Sprint(statementIdx-2)+
+			", $"+fmt.Sprint(statementIdx-1)+
+			", $"+fmt.Sprint(statementIdx)+")")
+	}
+
+	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
+	return
+
+}
 func (storage DBStorage) insertRecommendations(
 	tx *sql.Tx,
 	orgID types.OrgID,
@@ -723,31 +753,18 @@ func (storage DBStorage) insertRecommendations(
 			Msg("No new recommendation to insert")
 		return 0, nil
 	}
-	statement := `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at) VALUES %s`
 
-	var valuesIdx []string
-	var valuesArg []interface{}
-	statementIdx := 0
-	selectors := make([]string, len(report.HitRules))
-	creationtime := time.Now().UTC()
-	for idx, rule := range report.HitRules {
-		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report")
-		ruleID := ruleFqdn + "|" + string(rule.ErrorKey)
-		selectors[idx] = ruleID
-		valuesArg = append(valuesArg, orgID, clusterName, ruleFqdn, rule.ErrorKey, ruleID, creationtime)
-		statementIdx = len(valuesArg)
-		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(statementIdx-5)+", $"+fmt.Sprint(statementIdx-4)+", $"+fmt.Sprint(statementIdx-3)+", $"+fmt.Sprint(statementIdx-2)+", $"+fmt.Sprint(statementIdx-1)+", $"+fmt.Sprint(statementIdx)+")")
-	}
+	creationTime := time.Now().UTC()
+	selectors, statement, args := prepareInsertRecommendationsStatement(orgID, clusterName, report, creationTime)
 
-	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
 	inserted = len(selectors)
-	_, err = tx.Exec(statement, valuesArg...)
+	_, err = tx.Exec(statement, args...)
 	if err != nil {
 		log.Error().
 			Int(organizationKey, int(orgID)).
 			Str(clusterKey, string(clusterName)).
 			Int(issuesCountKey, inserted).
-			Time(createdAtKey, creationtime).
+			Time(createdAtKey, creationTime).
 			Strs(selectorsKey, selectors).
 			Err(err).
 			Msg("Unable to insert the recommendations")
@@ -757,7 +774,7 @@ func (storage DBStorage) insertRecommendations(
 		Int(organizationKey, int(orgID)).
 		Str(clusterKey, string(clusterName)).
 		Int(issuesCountKey, inserted).
-		Time(createdAtKey, creationtime).
+		Time(createdAtKey, creationTime).
 		Strs(selectorsKey, selectors).
 		Msg("Recommendations inserted successfully")
 
