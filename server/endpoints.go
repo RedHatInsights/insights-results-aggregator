@@ -77,6 +77,9 @@ const (
 	// ListOfDisabledRulesSystemWide returns a list of rules disabled from current account
 	ListOfDisabledRulesSystemWide = "rules/organizations/{org_id}/users/{user_id}/disabled_system_wide"
 
+	// RecommendationsListEndpoint receives a list of clusters in POST body and returns a list of all recommendations hitting for them
+	RecommendationsListEndpoint = "recommendations/organizations/{org_id}/users/{user_id}/list"
+
 	// Rating accepts a list of ratings in the request body and store them in the database for the given user
 	Rating = "rules/organizations/{org_id}/users/{user_id}/rating"
 	// MetricsEndpoint returns prometheus metrics
@@ -127,6 +130,9 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+UpdateRuleSystemWide, server.updateRuleSystemWide).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ReadRuleSystemWide, server.readRuleSystemWide).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ListOfDisabledRulesSystemWide, server.listOfDisabledRulesSystemWide).Methods(http.MethodGet)
+
+	// Insights Advisor related endpoints
+	router.HandleFunc(apiPrefix+RecommendationsListEndpoint, server.getRecommendations).Methods(http.MethodPost, http.MethodOptions)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)

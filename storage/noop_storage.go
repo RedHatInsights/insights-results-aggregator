@@ -300,3 +300,10 @@ func (*NoopStorage) ListOfSystemWideDisabledRules(
 	orgID types.OrgID, userID types.UserID) ([]utypes.SystemWideRuleDisable, error) {
 	return nil, nil
 }
+
+// ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization
+func (*NoopStorage) ReadRecommendationsForClusters(
+	clusterList []types.ClusterName,
+) (utypes.RecommendationImpactedClusters, error) {
+	return nil, nil
+}
