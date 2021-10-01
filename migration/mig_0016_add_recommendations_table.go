@@ -42,7 +42,7 @@ var mig0016AddRecommendationsTable = Migration{
 				AS SELECT
 					org_id,
 					cluster_id,
-					REGEXP_REPLACE(rule_fqdn, '.report$', '') AS rule_fqdn,
+					REGEXP_REPLACE(rule_fqdn, 'report$', error_key) AS rule_fqdn,
 					error_key
 				FROM rule_hit;
 		`)
