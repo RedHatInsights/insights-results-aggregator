@@ -419,7 +419,7 @@ func TestMigration19(t *testing.T) {
 	err := migration.SetDBVersion(db, dbDriver, 18)
 	helpers.FailOnError(t, err)
 
-	correctRuleFQDN := testdata.Rule1ID + "|" + testdata.ErrorKey1
+	correctRuleID := testdata.Rule1ID + "|" + testdata.ErrorKey1
 	incorrectRuleFQDN := testdata.Rule1ID + "." + testdata.ErrorKey1
 
 	expectedRuleAfterMigration := string(testdata.Rule1ID)
@@ -441,7 +441,7 @@ func TestMigration19(t *testing.T) {
 		`,
 		testdata.Org2ID,
 		testdata.ClusterName,
-		correctRuleFQDN,
+		correctRuleID,
 		testdata.ErrorKey1,
 	)
 	helpers.FailOnError(t, err)
@@ -449,36 +449,40 @@ func TestMigration19(t *testing.T) {
 	err = migration.SetDBVersion(db, dbDriver, 19)
 	helpers.FailOnError(t, err)
 
-	var ruleFQDN string
+	var (
+		ruleFQDN string
+		ruleID   string
+	)
 
 	err = db.QueryRow(`
 			SELECT
-				rule_fqdn
+				rule_fqdn, rule_id
 			FROM
 				recommendation
 			WHERE
 			    org_id = $1`,
 		testdata.OrgID,
 	).Scan(
-		&ruleFQDN,
+		&ruleFQDN, &ruleID,
 	)
 	helpers.FailOnError(t, err)
 	assert.Equal(t, expectedRuleAfterMigration, ruleFQDN)
+	assert.Equal(t, string(correctRuleID), ruleID)
 
 	err = db.QueryRow(`
 			SELECT
-				rule_fqdn
+				rule_fqdn, rule_id
 			FROM
 				recommendation
 			WHERE
 			    org_id = $1`,
 		testdata.Org2ID,
 	).Scan(
-		&ruleFQDN,
+		&ruleFQDN, &ruleID,
 	)
 	helpers.FailOnError(t, err)
 	assert.Equal(t, expectedRuleAfterMigration, ruleFQDN)
-
+	assert.Equal(t, string(correctRuleID), ruleID)
 	var timestamp time.Time
 
 	err = db.QueryRow(`
