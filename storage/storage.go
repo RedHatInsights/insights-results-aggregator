@@ -759,7 +759,7 @@ func (storage DBStorage) insertRecommendations(
 		Int(issuesCountKey, inserted).
 		Time(createdAtKey, creationtime).
 		Strs(selectorsKey, selectors).
-		Msg("Recommendations statementIdx successfully")
+		Msg("Recommendations inserted successfully")
 
 	return
 
