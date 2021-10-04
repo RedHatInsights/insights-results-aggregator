@@ -19,6 +19,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
@@ -370,35 +371,132 @@ func TestMigration16(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	if dbDriver == types.DBDriverSQLite3 {
-		// migration is not implemented for sqlite
-		return
-	}
-
 	err := migration.SetDBVersion(db, dbDriver, 15)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`
-		INSERT INTO recommendations (cluster, rule_fqdn, error_key)
-		VALUES ($1, $2, $3)
+		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
+		VALUES ($1, $2, $3, $4)
 	`,
+		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.Rule1Name,
 		testdata.ErrorKey1,
 	)
-	assert.EqualError(t, err, "no such table: recommendations")
+	assert.Error(t, err, `Expected error since recommendation table does not exist yet`)
+
+	if dbDriver == types.DBDriverSQLite3 {
+		assert.Contains(t, err.Error(), "no such table: recommendation")
+	} else if dbDriver == types.DBDriverPostgres {
+		assert.Contains(t, err.Error(), `relation "recommendation" does not exist`)
+	}
 
 	err = migration.SetDBVersion(db, dbDriver, 16)
 	helpers.FailOnError(t, err)
 
 	_, err = db.Exec(`
-		INSERT INTO recommendations (cluster, rule_fqdn, error_key)
-		VALUES ($1, $2, $3)
+		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
+		VALUES ($1, $2, $3, $4)
 	`,
+		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.Rule1Name,
 		testdata.ErrorKey1,
 	)
 	helpers.FailOnError(t, err)
+}
 
+func TestMigration19(t *testing.T) {
+
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// nothing worth testing for sqlite
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 18)
+	helpers.FailOnError(t, err)
+
+	correctRuleID := testdata.Rule1ID + "|" + testdata.ErrorKey1
+	incorrectRuleFQDN := testdata.Rule1ID + "." + testdata.ErrorKey1
+
+	expectedRuleAfterMigration := string(testdata.Rule1ID)
+
+	_, err = db.Exec(`
+		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
+		VALUES ($1, $2, $3, $4)
+		`,
+		testdata.OrgID,
+		testdata.ClusterName,
+		incorrectRuleFQDN,
+		testdata.ErrorKey1,
+	)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
+		VALUES ($1, $2, $3, $4)
+		`,
+		testdata.Org2ID,
+		testdata.ClusterName,
+		correctRuleID,
+		testdata.ErrorKey1,
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, dbDriver, 19)
+	helpers.FailOnError(t, err)
+
+	var (
+		ruleFQDN string
+		ruleID   string
+	)
+
+	err = db.QueryRow(`
+			SELECT
+				rule_fqdn, rule_id
+			FROM
+				recommendation
+			WHERE
+			    org_id = $1`,
+		testdata.OrgID,
+	).Scan(
+		&ruleFQDN, &ruleID,
+	)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedRuleAfterMigration, ruleFQDN)
+	assert.Equal(t, string(correctRuleID), ruleID)
+
+	err = db.QueryRow(`
+			SELECT
+				rule_fqdn, rule_id
+			FROM
+				recommendation
+			WHERE
+			    org_id = $1`,
+		testdata.Org2ID,
+	).Scan(
+		&ruleFQDN, &ruleID,
+	)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedRuleAfterMigration, ruleFQDN)
+	assert.Equal(t, string(correctRuleID), ruleID)
+	var timestamp time.Time
+
+	err = db.QueryRow(`
+			SELECT
+				created_at
+			FROM
+				recommendation
+			WHERE
+			    org_id = $1`,
+		testdata.OrgID,
+	).Scan(
+		&timestamp,
+	)
+	helpers.FailOnError(t, err)
+	assert.False(t, timestamp.IsZero(), "The timestamp column was not created with a default value")
+	assert.True(t, timestamp.UTC().Equal(timestamp), "The stored timestamp is not in UTC format")
 }
