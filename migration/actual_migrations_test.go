@@ -419,6 +419,11 @@ func TestMigration19(t *testing.T) {
 	err := migration.SetDBVersion(db, dbDriver, 18)
 	helpers.FailOnError(t, err)
 
+	err = db.QueryRow(`SELECT created_at FROM recommendation`).Err()
+	assert.Error(t, err, "created_at column should not exist")
+	err = db.QueryRow(`SELECT rule_id FROM recommendation`).Err()
+	assert.Error(t, err, "rule_id column should not exist")
+
 	correctRuleID := testdata.Rule1ID + "|" + testdata.ErrorKey1
 	incorrectRuleFQDN := testdata.Rule1ID + "." + testdata.ErrorKey1
 
@@ -499,4 +504,13 @@ func TestMigration19(t *testing.T) {
 	helpers.FailOnError(t, err)
 	assert.False(t, timestamp.IsZero(), "The timestamp column was not created with a default value")
 	assert.True(t, timestamp.UTC().Equal(timestamp), "The stored timestamp is not in UTC format")
+
+	//Step down should remove created_at and rule_id columns
+	err = migration.SetDBVersion(db, dbDriver, 18)
+	helpers.FailOnError(t, err)
+
+	err = db.QueryRow(`SELECT created_at FROM recommendation`).Err()
+	assert.Error(t, err, "created_at column should not exist")
+	err = db.QueryRow(`SELECT rule_id FROM recommendation`).Err()
+	assert.Error(t, err, "rule_id column should not exist")
 }

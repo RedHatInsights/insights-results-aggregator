@@ -82,6 +82,14 @@ var mig0019ModifyRecommendationTable = Migration{
 			`)
 
 			return err
+		} else if driver == types.DBDriverSQLite3 {
+			// Why would SQLite allow you to drop a column...
+			_, err := tx.Exec(`
+				CREATE TABLE recommendation_temp AS SELECT org_id, cluster_id, rule_fqdn, error_key FROM recommendation;
+				DROP TABLE recommendation;
+				ALTER TABLE recommendation_temp RENAME TO recommendation;
+			`)
+			return err
 		}
 		return nil
 	},
