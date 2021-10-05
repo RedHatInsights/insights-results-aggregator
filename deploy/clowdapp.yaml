@@ -140,6 +140,8 @@ objects:
                   value: postgres
                 - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
                   value: sslmode=disable
+                - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES
+                  value: "true"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
                   value: "false"
               resources:
@@ -283,9 +285,9 @@ objects:
         protocol: TCP
         targetPort: 9000
     selector:
-      app: ccx-insights-results 
+      app: ccx-insights-results
       pod: ccx-insights-results-db-writer
-      
+
 parameters:
 # insights-results-aggregator
 - description: Image name
