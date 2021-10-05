@@ -457,10 +457,12 @@ func argsWithClusterNames(clusterNames []types.ClusterName) []interface{} {
 	return args
 }
 
+/*
 func updateRecommendationsMetrics(cluster string, deleted float64, inserted float64) {
 	metrics.SQLRecommendationsDeletes.WithLabelValues(cluster).Observe(deleted)
 	metrics.SQLRecommendationsInserts.WithLabelValues(cluster).Observe(inserted)
 }
+*/
 
 // ReadOrgIDsForClusters read organization IDs for given list of cluster names.
 func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]types.OrgID, error) {
@@ -895,7 +897,13 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 			return err
 		}
 
-		updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(inserted))
+		log.Info().
+			Int64("Deleted", deleted).
+			Int("Inserted", inserted).
+			Int(organizationKey, int(orgID)).
+			Str(clusterKey, string(clusterName)).
+			Msg("Updated recommendation table")
+		// updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(inserted))
 
 		return nil
 	}(tx)
