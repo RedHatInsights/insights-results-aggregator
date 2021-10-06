@@ -721,8 +721,8 @@ func TestDBStorageWriteConsumerError(t *testing.T) {
 	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
 	row := conn.QueryRow(`
 		SELECT key, message, produced_at, consumed_at, error
-		FROM consumer_error
-		WHERE topic = $1 AND partition = $2 AND topic_offset = $3
+		  FROM consumer_error
+		 WHERE topic = $1 AND partition = $2 AND topic_offset = $3
 	`, testTopic, testPartition, testOffset)
 
 	var storageKey []byte
@@ -836,7 +836,7 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 			report          VARCHAR NOT NULL,
 			reported_at     TIMESTAMP,
 			last_checked_at TIMESTAMP,
-			kafka_offset BIGINT NOT NULL DEFAULT 0,
+			kafka_offset    BIGINT NOT NULL DEFAULT 0,
 			PRIMARY KEY(org_id, cluster)
 		)
 	`
@@ -849,7 +849,7 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 				report          VARCHAR NOT NULL,
 				reported_at     TIMESTAMP,
 				last_checked_at TIMESTAMP,
-				kafka_offset BIGINT NOT NULL DEFAULT 0,
+				kafka_offset    BIGINT NOT NULL DEFAULT 0,
 				PRIMARY KEY(org_id, cluster)
 			)
 		`
@@ -861,10 +861,10 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 
 	query = `
 		CREATE TABLE rule_hit (
-			org_id			INTEGER NOT NULL,
+			org_id          INTEGER NOT NULL,
 			cluster_id      VARCHAR NOT NULL,
-			rule_fqdn 		VARCHAR NOT NULL,
-			error_key        VARCHAR NOT NULL,
+			rule_fqdn       VARCHAR NOT NULL,
+			error_key       VARCHAR NOT NULL,
 			template_data   VARCHAR NOT NULL,
 			PRIMARY KEY(cluster_id, org_id, rule_fqdn, error_key)
 		)

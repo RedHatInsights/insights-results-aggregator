@@ -351,10 +351,10 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.
 	clusters := make([]types.ClusterName, 0)
 
 	q := `
-		SELECT cluster
-		FROM report
-		WHERE org_id = $1
-		AND reported_at >= $2
+		  SELECT cluster
+		    FROM report
+		   WHERE org_id = $1
+		     AND reported_at >= $2
 		ORDER BY cluster;
 	`
 

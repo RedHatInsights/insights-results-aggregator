@@ -28,7 +28,7 @@ var mig0013AddRuleHitTable = Migration{
 			org_id          INTEGER NOT NULL,
 			cluster_id      VARCHAR NOT NULL,
 			rule_fqdn       VARCHAR NOT NULL,
-			error_key		VARCHAR NOT NULL,
+			error_key       VARCHAR NOT NULL,
 			template_data   VARCHAR NOT NULL,
 			PRIMARY KEY(cluster_id, org_id, rule_fqdn, error_key)
 		)`)

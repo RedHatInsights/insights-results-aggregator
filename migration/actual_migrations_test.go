@@ -465,7 +465,7 @@ func TestMigration19(t *testing.T) {
 			FROM
 				recommendation
 			WHERE
-			    org_id = $1`,
+				org_id = $1`,
 		testdata.OrgID,
 	).Scan(
 		&ruleFQDN, &ruleID,
@@ -480,7 +480,7 @@ func TestMigration19(t *testing.T) {
 			FROM
 				recommendation
 			WHERE
-			    org_id = $1`,
+				org_id = $1`,
 		testdata.Org2ID,
 	).Scan(
 		&ruleFQDN, &ruleID,
@@ -496,7 +496,7 @@ func TestMigration19(t *testing.T) {
 			FROM
 				recommendation
 			WHERE
-			    org_id = $1`,
+				org_id = $1`,
 		testdata.OrgID,
 	).Scan(
 		&timestamp,
