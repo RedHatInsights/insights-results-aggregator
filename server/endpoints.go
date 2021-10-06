@@ -124,15 +124,11 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ListOfDisabledRulesFeedback, server.listOfReasons).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+Rating, server.setRuleRating).Methods(http.MethodPost)
 
-	// Endpoints to handle rules to be enabled, disabled, updated, and queried system-wide
-	router.HandleFunc(apiPrefix+EnableRuleSystemWide, server.enableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc(apiPrefix+DisableRuleSystemWide, server.disableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc(apiPrefix+UpdateRuleSystemWide, server.updateRuleSystemWide).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc(apiPrefix+ReadRuleSystemWide, server.readRuleSystemWide).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+ListOfDisabledRulesSystemWide, server.listOfDisabledRulesSystemWide).Methods(http.MethodGet)
+	// Rule Enable/Disable/etc endpoints
+	server.addRuleEnableDisableEndpointsToRouter(router, apiPrefix)
 
-	// Insights Advisor related endpoints
-	router.HandleFunc(apiPrefix+RecommendationsListEndpoint, server.getRecommendations).Methods(http.MethodPost, http.MethodOptions)
+	// Endpoints related to the Insights Advisor application
+	server.addInsightsAdvisorEndpointsToRouter(router, apiPrefix)
 
 	// Prometheus metrics
 	router.Handle(apiPrefix+MetricsEndpoint, promhttp.Handler()).Methods(http.MethodGet)
@@ -142,4 +138,21 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 		openAPIURL,
 		httputils.CreateOpenAPIHandler(server.Config.APISpecFile, server.Config.Debug, true),
 	).Methods(http.MethodGet)
+}
+
+// addRuleEnableDisableEndpointsToRouter method registers handlers for endpoints that
+// allow for rules to be enabled, disabled, updated, and queried system-wide
+func (server *HTTPServer) addRuleEnableDisableEndpointsToRouter(router *mux.Router, apiPrefix string) {
+	router.HandleFunc(apiPrefix+EnableRuleSystemWide, server.enableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+DisableRuleSystemWide, server.disableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+UpdateRuleSystemWide, server.updateRuleSystemWide).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc(apiPrefix+ReadRuleSystemWide, server.readRuleSystemWide).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+ListOfDisabledRulesSystemWide, server.listOfDisabledRulesSystemWide).Methods(http.MethodGet)
+}
+
+// addRuleEnableDisableEndpointsToRouter method registers handlers for endpoints that
+// are related to the Insights Advisor application
+func (server *HTTPServer) addInsightsAdvisorEndpointsToRouter(router *mux.Router, apiPrefix string) {
+	router.HandleFunc(apiPrefix+RecommendationsListEndpoint, server.getRecommendations).Methods(http.MethodPost, http.MethodOptions)
+
 }

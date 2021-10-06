@@ -28,6 +28,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog"
@@ -1161,4 +1162,142 @@ func TestDBStorageInsertRecommendationsNoRuleHit(t *testing.T) {
 
 	assert.Equal(t, 0, inserted)
 	helpers.FailOnError(t, err)
+}
+
+// TestDBStorageReadRecommendationsForClusters checks that stored recommendations
+// are retrieved correctly
+func TestDBStorageReadRecommendationsForClusters(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	expectingImpactedC := utypes.ImpactedClustersCnt(1)
+	expect := utypes.RecommendationImpactedClusters{
+		testdata.Rule1CompositeID: expectingImpactedC,
+		testdata.Rule2CompositeID: expectingImpactedC,
+		testdata.Rule3CompositeID: expectingImpactedC,
+	}
+
+	res, err := mockStorage.ReadRecommendationsForClusters([]types.ClusterName{testdata.ClusterName})
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, expect, res)
+}
+
+// TestDBStorageReadRecommendationsForClustersMoreClusters checks that stored recommendations
+// for multiplpe clusters is calculated correctly
+func TestDBStorageReadRecommendationsForClustersMoreClusters(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterList := make([]types.ClusterName, 3)
+	for i := range clusterList {
+		clusterList[i] = testdata.GetRandomClusterID()
+	}
+
+	// cluster 0 has 0 rules == should not affect the results
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, clusterList[0], testdata.Report0Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	// cluster 1 has rule1 and rule2
+	err = mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, clusterList[1], testdata.Report2Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	// cluster 2 has rule1 and rule2 and rule3
+	err = mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, clusterList[2], testdata.Report3Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	expect2Impacted := utypes.ImpactedClustersCnt(2)
+	expect := utypes.RecommendationImpactedClusters{
+		testdata.Rule1CompositeID: expect2Impacted,
+		testdata.Rule2CompositeID: expect2Impacted,
+		testdata.Rule3CompositeID: utypes.ImpactedClustersCnt(1),
+	}
+
+	res, err := mockStorage.ReadRecommendationsForClusters(clusterList)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, expect, res)
+}
+
+// TestDBStorageReadRecommendationsForClustersNoRecommendations checks that when no recommendations
+// are stored, it is an OK state
+func TestDBStorageReadRecommendationsForClustersNoRecommendations(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty,
+	)
+	helpers.FailOnError(t, err)
+
+	expect := utypes.RecommendationImpactedClusters{}
+
+	res, err := mockStorage.ReadRecommendationsForClusters([]types.ClusterName{testdata.ClusterName})
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, expect, res)
+}
+
+// TestDBStorageReadRecommendationsGetSelectedClusters loads several recommendations for the same org
+// but "simulates" a situation where we only get a subset of them from the AMS API
+func TestDBStorageReadRecommendationsGetSelectedClusters(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterList := make([]types.ClusterName, 3)
+	for i := range clusterList {
+		randomClusterID := testdata.GetRandomClusterID()
+
+		clusterList[i] = randomClusterID
+
+		err := mockStorage.WriteRecommendationsForCluster(
+			testdata.OrgID, randomClusterID, testdata.Report3Rules,
+		)
+		helpers.FailOnError(t, err)
+	}
+
+	// we only retrieve one cluster
+	res, err := mockStorage.ReadRecommendationsForClusters([]types.ClusterName{clusterList[0]})
+	helpers.FailOnError(t, err)
+
+	expect1Impacted := utypes.ImpactedClustersCnt(1)
+	expect := utypes.RecommendationImpactedClusters{
+		testdata.Rule1CompositeID: expect1Impacted,
+		testdata.Rule2CompositeID: expect1Impacted,
+		testdata.Rule3CompositeID: expect1Impacted,
+	}
+
+	assert.Equal(t, expect, res)
+}
+
+// TestDBStorageReadRecommendationsForNonexistingClusters simulates getting a list of clusters where
+// we have none in the DB
+func TestDBStorageReadRecommendationsForNonexistingClusters(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	clusterList := make([]types.ClusterName, 3)
+	for i := range clusterList {
+		clusterList[i] = testdata.GetRandomClusterID()
+	}
+	res, err := mockStorage.ReadRecommendationsForClusters(clusterList)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, utypes.RecommendationImpactedClusters{}, res)
 }

@@ -36,6 +36,9 @@ const (
 
 	// OkStatusPayload is the text returned as body payload when an OK Status request is sent
 	OkStatusPayload = "ok"
+
+	// orgIDStr used in log messages
+	orgIDStr = "orgID"
 )
 
 // validateClusterID function checks if the cluster ID is a valid UUID.
@@ -200,7 +203,7 @@ func (server *HTTPServer) reportForListOfClusters(writer http.ResponseWriter, re
 		// wrong state has been handled already
 		return
 	}
-	log.Info().Int("orgID", int(orgID)).Msg("reportForListOfClusters")
+	log.Info().Int(orgIDStr, int(orgID)).Msg("reportForListOfClusters")
 
 	// try to read list of cluster IDs
 	listOfClusters, successful := readClusterListFromPath(writer, request)
@@ -224,7 +227,7 @@ func (server *HTTPServer) reportForListOfClustersPayload(writer http.ResponseWri
 		// wrong state has been handled already
 		return
 	}
-	log.Info().Int("orgID", int(orgID)).Msg("reportForListOfClustersPayload")
+	log.Info().Int(orgIDStr, int(orgID)).Msg("reportForListOfClustersPayload")
 
 	// try to read list of cluster IDs
 	listOfClusters, successful := readClusterListFromBody(writer, request)
@@ -253,7 +256,7 @@ func (server *HTTPServer) getRecommendations(writer http.ResponseWriter, request
 		// everything has been handled
 		return
 	}
-	log.Info().Int("orgID", int(orgID)).Msg("getRecommendations")
+	log.Info().Int(orgIDStr, int(orgID)).Msg("getRecommendations")
 
 	var listOfClusters []types.ClusterName
 	err := json.NewDecoder(request.Body).Decode(&listOfClusters)
