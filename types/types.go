@@ -114,7 +114,4 @@ type ClusterReports = types.ClusterReports
 type SchemaVersion = types.SchemaVersion
 
 // RuleRating represents a rule rating element sent by the user
-type RuleRating struct {
-	Rule   string         `json:"rule"`
-	Rating types.UserVote `json:"rating"`
-}
+type RuleRating = types.RuleRating

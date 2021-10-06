@@ -721,8 +721,8 @@ func TestDBStorageWriteConsumerError(t *testing.T) {
 	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
 	row := conn.QueryRow(`
 		SELECT key, message, produced_at, consumed_at, error
-		FROM consumer_error
-		WHERE topic = $1 AND partition = $2 AND topic_offset = $3
+		  FROM consumer_error
+		 WHERE topic = $1 AND partition = $2 AND topic_offset = $3
 	`, testTopic, testPartition, testOffset)
 
 	var storageKey []byte
@@ -836,7 +836,7 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 			report          VARCHAR NOT NULL,
 			reported_at     TIMESTAMP,
 			last_checked_at TIMESTAMP,
-			kafka_offset BIGINT NOT NULL DEFAULT 0,
+			kafka_offset    BIGINT NOT NULL DEFAULT 0,
 			PRIMARY KEY(org_id, cluster)
 		)
 	`
@@ -849,7 +849,7 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 				report          VARCHAR NOT NULL,
 				reported_at     TIMESTAMP,
 				last_checked_at TIMESTAMP,
-				kafka_offset BIGINT NOT NULL DEFAULT 0,
+				kafka_offset    BIGINT NOT NULL DEFAULT 0,
 				PRIMARY KEY(org_id, cluster)
 			)
 		`
@@ -861,10 +861,10 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 
 	query = `
 		CREATE TABLE rule_hit (
-			org_id			INTEGER NOT NULL,
+			org_id          INTEGER NOT NULL,
 			cluster_id      VARCHAR NOT NULL,
-			rule_fqdn 		VARCHAR NOT NULL,
-			error_key        VARCHAR NOT NULL,
+			rule_fqdn       VARCHAR NOT NULL,
+			error_key       VARCHAR NOT NULL,
 			template_data   VARCHAR NOT NULL,
 			PRIMARY KEY(cluster_id, org_id, rule_fqdn, error_key)
 		)
@@ -1061,8 +1061,10 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 
 	expects.ExpectBegin()
 
-	expects.ExpectExec("INSERT INTO recommendation \\(org_id, cluster_id, rule_fqdn, error_key\\) " +
-		"VALUES \\(\\$1, \\$2, \\$3\\, \\$4\\),\\(\\$5, \\$6, \\$7\\, \\$8\\),\\(\\$9, \\$10, \\$11\\, \\$12\\)").
+	expects.ExpectExec("INSERT INTO recommendation \\(org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at\\) " +
+		"VALUES \\(\\$1, \\$2, \\$3\\, \\$4\\, \\$5\\, \\$6\\)," +
+		"\\(\\$7, \\$8, \\$9\\, \\$10\\, \\$11\\, \\$12\\)," +
+		"\\(\\$13, \\$14, \\$15\\, \\$16\\, \\$17\\, \\$18\\)").
 		WillReturnResult(driver.ResultNoRows)
 
 	expects.ExpectCommit()
@@ -1073,8 +1075,8 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 		PassedRules:  testdata.RuleOnReportResponses,
 		TotalCount:   3 * len(testdata.RuleOnReportResponses),
 	}
-	err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report)
-
+	inserted, err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report)
+	assert.Equal(t, 3, inserted)
 	helpers.FailOnError(t, err)
 }
 
@@ -1141,5 +1143,22 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
 	)
 
+	helpers.FailOnError(t, err)
+}
+
+// TestDBStorageInsertRecommendationsNoRuleHit checks that no
+// recommendations are inserted if there is no rule hits in the report
+func TestDBStorageInsertRecommendationsNoRuleHit(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	report := types.ReportRules{
+		SkippedRules: testdata.RuleOnReportResponses,
+		PassedRules:  testdata.RuleOnReportResponses,
+		TotalCount:   2 * len(testdata.RuleOnReportResponses),
+	}
+	inserted, err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report)
+
+	assert.Equal(t, 0, inserted)
 	helpers.FailOnError(t, err)
 }

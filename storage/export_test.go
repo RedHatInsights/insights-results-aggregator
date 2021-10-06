@@ -56,16 +56,16 @@ func SetClustersLastChecked(storage *DBStorage, cluster types.ClusterName, lastC
 	storage.clustersLastChecked[cluster] = lastChecked
 }
 
-func InsertRecommendations(storage *DBStorage, orgID types.OrgID, clusterName types.ClusterName, report types.ReportRules) error {
+func InsertRecommendations(storage *DBStorage, orgID types.OrgID, clusterName types.ClusterName, report types.ReportRules) (inserted int, err error) {
 	tx, err := storage.connection.Begin()
 	if err != nil {
-		return err
+		return 0, err
 	}
-	_, err = storage.insertRecommendations(tx, orgID, clusterName, report)
+	inserted, err = storage.insertRecommendations(tx, orgID, clusterName, report)
 	if err != nil {
 		_ = tx.Rollback()
-		return err
+		return 0, err
 	}
 	_ = tx.Commit()
-	return nil
+	return inserted, nil
 }

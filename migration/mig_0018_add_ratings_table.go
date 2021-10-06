@@ -21,7 +21,7 @@ import (
 
 var mig0018AddRatingsTable = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
-		// Create recommendation table using currently stored rule hits
+		// Create advisor_ratings
 		_, err := tx.Exec(`
 		CREATE TABLE advisor_ratings (
 		    user_id VARCHAR NOT NULL,
