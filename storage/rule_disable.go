@@ -129,14 +129,14 @@ func (storage DBStorage) ReadDisabledRule(
 	var disabledRule utypes.SystemWideRuleDisable
 
 	query := `SELECT
-                         org_id,
+			 org_id,
 			 user_id,
 			 rule_id,
 			 error_key,
 			 justification,
 			 created_at,
 			 updated_at
-		FROM  rule_disable
+		 FROM rule_disable
 		WHERE org_id = $1
 		  AND user_id = $2
 		  AND rule_id = $3
@@ -187,7 +187,7 @@ func (storage DBStorage) ListOfSystemWideDisabledRules(
 			 justification,
 			 created_at,
 			 updated_at
-		FROM rule_disable
+		 FROM rule_disable
 		WHERE org_id = $1
 		  AND user_id = $2
 	`
