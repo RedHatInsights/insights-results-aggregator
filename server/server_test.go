@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -1097,5 +1098,120 @@ func TestHTTPServer_ListOfDisabledRulesSystemWide(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"disabledRules":[],"status":"ok"}`,
+	})
+}
+
+func TestHTTPServer_RecommendationsListEndpoint_NoRecommendations(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	clusterList := []types.ClusterName{testdata.GetRandomClusterID()}
+	reqBody, _ := json.Marshal(clusterList)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RecommendationsListEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		Body:         reqBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"recommendations":{},"status":"ok"}`,
+	})
+}
+
+func TestHTTPServer_RecommendationsListEndpoint_DifferentClusters(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	clusterList := []types.ClusterName{testdata.GetRandomClusterID(), testdata.GetRandomClusterID()}
+	reqBody, _ := json.Marshal(clusterList)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RecommendationsListEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		Body:         reqBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"recommendations":{},"status":"ok"}`,
+	})
+}
+
+func TestHTTPServer_RecommendationsListEndpoint_3Recs1Cluster(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	clusterList := []types.ClusterName{testdata.ClusterName}
+	reqBody, _ := json.Marshal(clusterList)
+
+	respBody := `{"recommendations":{"%v":%v,"%v":%v,"%v":%v},"status":"ok"}`
+	respBody = fmt.Sprintf(respBody,
+		testdata.Rule1CompositeID, 1,
+		testdata.Rule2CompositeID, 1,
+		testdata.Rule3CompositeID, 1,
+	)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RecommendationsListEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		Body:         reqBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       respBody,
+	})
+}
+
+func TestHTTPServer_RecommendationsListEndpoint_3Recs2Clusters(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterList := make([]types.ClusterName, 2)
+	for i := range clusterList {
+		clusterList[i] = testdata.GetRandomClusterID()
+	}
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, clusterList[0], testdata.Report2Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, clusterList[1], testdata.Report3Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	reqBody, _ := json.Marshal(clusterList)
+
+	respBody := `{"recommendations":{"%v":%v,"%v":%v,"%v":%v},"status":"ok"}`
+	respBody = fmt.Sprintf(respBody,
+		testdata.Rule1CompositeID, 2,
+		testdata.Rule2CompositeID, 2,
+		testdata.Rule3CompositeID, 1,
+	)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RecommendationsListEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		Body:         reqBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       respBody,
 	})
 }
