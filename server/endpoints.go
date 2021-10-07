@@ -154,5 +154,4 @@ func (server *HTTPServer) addRuleEnableDisableEndpointsToRouter(router *mux.Rout
 // are related to the Insights Advisor application
 func (server *HTTPServer) addInsightsAdvisorEndpointsToRouter(router *mux.Router, apiPrefix string) {
 	router.HandleFunc(apiPrefix+RecommendationsListEndpoint, server.getRecommendations).Methods(http.MethodPost, http.MethodOptions)
-
 }

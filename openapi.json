@@ -1181,6 +1181,81 @@
         ]
       }
     },
+    "/recommendations/organizations/{org_id}/users/{user_id}/list": {
+      "post": {
+        "summary": "Returns a list of recommendations and a number of clusters each one is hitting.",
+        "operationId": "getRecommendationsPost",
+        "description": "Recommendations will be retrieved based on the list of cluster IDs that is part of request body.",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID represented as positive integer",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+            "description": "List of cluster IDs. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of recommendations and a number of clusters each one is hitting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recommendations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rule_id": {
+                            "type": "string",
+                            "description": "The rule ID in the | format.",
+                            "example": "rule.module|ERROR_KEY"
+                          },
+                          "impacted_clusters_cnt": {
+                            "type": "int",
+                            "description": "The number of clusters impacted by this rule.",
+                            "example": 42
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/rules/users/{userId}/disabled": {
       "get": {
         "summary": "Returns a list of rules disabled from current account",
