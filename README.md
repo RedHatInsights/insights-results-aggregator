@@ -25,3 +25,7 @@ exposed via REST API endpoints.
 
 Documentation is hosted on Github Pages <https://redhatinsights.github.io/insights-results-aggregator/>.
 Sources are located in [docs](https://github.com/RedHatInsights/insights-results-aggregator/tree/master/docs).
+
+## Package manifest
+
+Package manifest is available at [docs/manifest.txt](docs/manifest.txt).
