@@ -36,6 +36,9 @@ const (
 
 	// OkStatusPayload is the text returned as body payload when an OK Status request is sent
 	OkStatusPayload = "ok"
+
+	// orgIDStr used in log messages
+	orgIDStr = "orgID"
 )
 
 // validateClusterID function checks if the cluster ID is a valid UUID.
@@ -200,7 +203,7 @@ func (server *HTTPServer) reportForListOfClusters(writer http.ResponseWriter, re
 		// wrong state has been handled already
 		return
 	}
-	log.Info().Int("orgID", int(orgID)).Msg("reportForListOfClusters")
+	log.Info().Int(orgIDStr, int(orgID)).Msg("reportForListOfClusters")
 
 	// try to read list of cluster IDs
 	listOfClusters, successful := readClusterListFromPath(writer, request)
@@ -224,7 +227,7 @@ func (server *HTTPServer) reportForListOfClustersPayload(writer http.ResponseWri
 		// wrong state has been handled already
 		return
 	}
-	log.Info().Int("orgID", int(orgID)).Msg("reportForListOfClustersPayload")
+	log.Info().Int(orgIDStr, int(orgID)).Msg("reportForListOfClustersPayload")
 
 	// try to read list of cluster IDs
 	listOfClusters, successful := readClusterListFromBody(writer, request)
@@ -235,4 +238,43 @@ func (server *HTTPServer) reportForListOfClustersPayload(writer http.ResponseWri
 
 	// we were able to read the cluster IDs, let's process them
 	processListOfClusters(server, writer, request, orgID, listOfClusters)
+}
+
+// getRecommendations retrieves all recommendations hitting for all clusters in the org
+func (server *HTTPServer) getRecommendations(writer http.ResponseWriter, request *http.Request) {
+	// Extract user_id from URL
+	userID, ok := readUserID(writer, request)
+	if !ok {
+		// everything has been handled
+		return
+	}
+	log.Info().Str("userID", string(userID)).Msg("getRecommendations")
+
+	// extract org_id from URL
+	orgID, ok := readOrgID(writer, request)
+	if !ok {
+		// everything has been handled
+		return
+	}
+	log.Info().Int(orgIDStr, int(orgID)).Msg("getRecommendations")
+
+	var listOfClusters []types.ClusterName
+	err := json.NewDecoder(request.Body).Decode(&listOfClusters)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+	log.Info().Msgf("getRecommendations list of clusters: %v", listOfClusters)
+
+	recommendations, err := server.Storage.ReadRecommendationsForClusters(listOfClusters)
+	if err != nil {
+		log.Error().Err(err).Msg("Errors retrieving recommendations")
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("recommendations", recommendations))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
 }

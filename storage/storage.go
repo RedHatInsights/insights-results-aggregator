@@ -175,6 +175,7 @@ type Storage interface {
 		ruleID types.RuleID, errorKey types.ErrorKey) (utypes.SystemWideRuleDisable, bool, error)
 	ListOfSystemWideDisabledRules(
 		orgID types.OrgID, userID types.UserID) ([]utypes.SystemWideRuleDisable, error)
+	ReadRecommendationsForClusters([]types.ClusterName) (utypes.RecommendationImpactedClusters, error)
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
@@ -926,6 +927,58 @@ func finishTransaction(tx *sql.Tx, err error) {
 			log.Err(commitError).Msgf("error when trying to commit a transaction")
 		}
 	}
+}
+
+// ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization
+func (storage DBStorage) ReadRecommendationsForClusters(
+	clusterList []types.ClusterName,
+) (utypes.RecommendationImpactedClusters, error) {
+
+	recommendationsMap := make(utypes.RecommendationImpactedClusters, 0)
+
+	// prepare arguments
+	args := argsWithClusterNames(clusterList)
+
+	// construct the `in` clausule in SQL query statement
+	inClausule := constructInClausule(len(clusterList))
+
+	// disable "G202 (CWE-89): SQL string concatenation"
+	// #nosec G202
+	query := `
+	SELECT
+		rule_id, count(*) as impacted_clusters_c
+	FROM
+		recommendation
+	WHERE
+		cluster_id in (` + inClausule + `)
+	GROUP BY
+		rule_id
+	`
+	rows, err := storage.connection.Query(query, args...)
+	if err != nil {
+		log.Error().Err(err).Msg("query to get recommendations")
+		return recommendationsMap, err
+	}
+
+	for rows.Next() {
+		var (
+			ruleID      types.RuleID
+			impactedCnt utypes.ImpactedClustersCnt
+		)
+
+		err := rows.Scan(
+			&ruleID,
+			&impactedCnt,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("read one recommendation")
+			return recommendationsMap, err
+		}
+
+		recommendationsMap[ruleID] = impactedCnt
+	}
+
+	return recommendationsMap, nil
 }
 
 // ReportsCount reads number of all records stored in database
