@@ -55,6 +55,9 @@ type Storage interface {
 	ListOfClustersForOrg(
 		orgID types.OrgID, timeLimit time.Time) ([]types.ClusterName, error,
 	)
+	ListOfClustersForOrgSpecificRule(
+		orgID types.OrgID, ruleID types.RuleSelector,
+	) ([]utypes.HittingClustersData, error)
 	ReadReportForCluster(
 		orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error,
 	)
@@ -378,6 +381,40 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.
 		}
 	}
 	return clusters, nil
+}
+
+// ListOfClustersForOrgSpecificRule returns list of all clusters for given organization that are affect by given rule
+func (storage DBStorage) ListOfClustersForOrgSpecificRule(orgID types.OrgID, ruleID types.RuleSelector) ([]utypes.HittingClustersData, error) {
+	results := make([]utypes.HittingClustersData, 0)
+
+	q := `
+		  SELECT cluster_id
+		    FROM recommendation
+		   WHERE org_id = $1
+		     AND rule_id = $2
+		ORDER BY cluster_id;
+	`
+
+	rows, err := storage.connection.Query(q, orgID, ruleID)
+
+	err = types.ConvertDBError(err, orgID)
+	if err != nil {
+		return results, err
+	}
+	defer closeRows(rows)
+
+	var (
+		clusterName types.ClusterName
+	)
+	for rows.Next() {
+		err = rows.Scan(&clusterName)
+		if err == nil {
+			results = append(results, utypes.HittingClustersData{clusterName})
+		} else {
+			log.Error().Err(err).Msg("ListOfClustersForOrgSpecificRule")
+		}
+	}
+	return results, nil
 }
 
 // GetOrgIDByClusterID reads OrgID for specified cluster

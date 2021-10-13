@@ -36,9 +36,10 @@ const (
 
 	// OkStatusPayload is the text returned as body payload when an OK Status request is sent
 	OkStatusPayload = "ok"
-
 	// orgIDStr used in log messages
 	orgIDStr = "orgID"
+	// userIDstr used in log messages
+	userIDstr = "userID"
 )
 
 // validateClusterID function checks if the cluster ID is a valid UUID.
@@ -248,7 +249,7 @@ func (server *HTTPServer) getRecommendations(writer http.ResponseWriter, request
 		// everything has been handled
 		return
 	}
-	log.Info().Str("userID", string(userID)).Msg("getRecommendations")
+	log.Info().Str(userIDstr, string(userID)).Msg("getRecommendations")
 
 	// extract org_id from URL
 	orgID, ok := readOrgID(writer, request)

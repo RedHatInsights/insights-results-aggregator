@@ -36,6 +36,7 @@ type ClusterList struct {
 var (
 	readRuleID                = httputils.ReadRuleID
 	readErrorKey              = httputils.ReadErrorKey
+	readRuleSelector          = httputils.ReadRuleSelector
 	getRouterParam            = httputils.GetRouterParam
 	getRouterPositiveIntParam = httputils.GetRouterPositiveIntParam
 	validateClusterName       = httputils.ValidateClusterName
