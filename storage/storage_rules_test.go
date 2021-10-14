@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 	"os"
 	"strings"
 	"testing"
@@ -762,4 +763,74 @@ func TestDBStorageDisableFeedbackErrorDBError(t *testing.T) {
 
 	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
 	assert.EqualError(t, err, "sql: database is closed")
+}
+
+// TestDBStorageListClustersForHittingRules checks the list of HittingClustersData
+// objects retrieved when ListOfClustersForOrgSpecificRule is called
+func TestDBStorageListClustersForHittingRules(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterIds := []utypes.ClusterName{
+		testdata.GetRandomClusterID(),
+		testdata.GetRandomClusterID(),
+		testdata.GetRandomClusterID(),
+	}
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, clusterIds[0], testdata.Report3Rules,
+	))
+	//ClusterIds[1] is not associated to any rule hit is not expected in any response
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, clusterIds[1], testdata.Report0Rules,
+	))
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.Org2ID, clusterIds[2], testdata.Report2Rules,
+	))
+
+	//TODO: Add these to test data to ensure consistency
+
+	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
+	//but only clusters for testdata.OrgID are returned
+	expectedClustersOrg1Rule1Err1 := []utypes.HittingClustersData{
+		{clusterIds[0]},
+	}
+	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
+	//but only clusters for testdata.OrgID are returned
+	expectedClustersOrg1Rule2Err2 := []utypes.HittingClustersData{
+		{clusterIds[0]},
+	}
+	//Rule3|ERR_KEY3 is present in testdata.Report3Rules
+	expectedClustersOrg1Rule3Err3 := []utypes.HittingClustersData{
+		{clusterIds[0]},
+	}
+	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
+	//but only clusters for testdata.Org2ID are returned
+	expectedClustersOrg2Rule1Err1 := []utypes.HittingClustersData{
+		{clusterIds[2]},
+	}
+	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
+	//but only clusters for testdata.Org2ID are returned
+	expectedClustersOrg2Rule2Err2 := []utypes.HittingClustersData{
+		{clusterIds[2]},
+	}
+
+	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID))
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg1Rule1Err1, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule2CompositeID))
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg1Rule2Err2, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID))
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg1Rule3Err3, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID))
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg2Rule1Err1, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID))
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg2Rule2Err2, list)
 }
