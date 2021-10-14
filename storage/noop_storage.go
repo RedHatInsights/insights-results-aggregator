@@ -307,3 +307,11 @@ func (*NoopStorage) ReadRecommendationsForClusters(
 ) (utypes.RecommendationImpactedClusters, error) {
 	return nil, nil
 }
+
+// ListOfClustersForOrgSpecificRule returns list of all clusters for
+// given organization that are affected by given rule
+func (*NoopStorage) ListOfClustersForOrgSpecificRule(
+	orgID types.OrgID, ruleID types.RuleSelector,
+) ([]utypes.HittingClustersData, error) {
+	return nil, nil
+}

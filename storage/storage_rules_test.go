@@ -834,3 +834,52 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 	helpers.FailOnError(t, err)
 	assert.Equal(t, expectedClustersOrg2Rule2Err2, list)
 }
+
+// TestDBStorageListClustersForHittingRulesOrgNotFound checks that an empty
+// list of HittingClustersData objects is returned when the given org ID
+// has no associated entries in the recommendation table
+func TestDBStorageListClustersForHittingRulesOrgNotFound(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report3Rules,
+	))
+
+	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID))
+	helpers.FailOnError(t, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
+}
+
+// TestDBStorageListClustersForHittingRulesOrgNotFound checks that an empty
+// list of HittingClustersData objects is returned when the given rule selector
+// has no associated entries in the recommendation table
+func TestDBStorageListClustersForHittingRulesRuleNotFound(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules,
+	))
+
+	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID))
+	helpers.FailOnError(t, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
+}
+
+// TestDBStorageListClustersForHittingRulesNoRowsFound checks that an empty
+// list of HittingClustersData objects is returned, as well as an
+// ItemNotFoundError (converted in a Error 404), when the SQL query for
+// hitting recommendations returns no rows (Any other DB error will
+// be indicated to client as a 503).
+func TestDBStorageListClustersForHittingRulesNoRowsFound(t *testing.T) {
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
+	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(sql.ErrNoRows)
+
+	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID))
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
+}

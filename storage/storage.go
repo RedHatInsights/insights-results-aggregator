@@ -384,7 +384,8 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.
 }
 
 // ListOfClustersForOrgSpecificRule returns list of all clusters for given organization that are affect by given rule
-func (storage DBStorage) ListOfClustersForOrgSpecificRule(orgID types.OrgID, ruleID types.RuleSelector) ([]utypes.HittingClustersData, error) {
+func (storage DBStorage) ListOfClustersForOrgSpecificRule(orgID types.OrgID, ruleID types.RuleSelector) (
+	[]utypes.HittingClustersData, error) {
 	results := make([]utypes.HittingClustersData, 0)
 
 	q := `
@@ -890,10 +891,6 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 	clusterName types.ClusterName,
 	stringReport types.ClusterReport,
 ) (err error) {
-	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
-		return fmt.Errorf("writing recommendations with DB %v is not supported", storage.dbDriverType)
-	}
-
 	var report types.ReportRules
 	err = json.Unmarshal([]byte(stringReport), &report)
 	if err != nil {
