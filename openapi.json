@@ -337,9 +337,9 @@
                         "properties": {
                           "cluster": {
                             "type": "string",
-                             "minLength": 36,
-                             "maxLength": 36,
-                             "format": "uuid"
+                            "minLength": 36,
+                            "maxLength": 36,
+                            "format": "uuid"
                           },
                           "meta": {
                             "type": "object",
@@ -411,12 +411,12 @@
           }
         ],
         "requestBody": {
-            "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
-            "required": true,
-            "content": {
-              "text/plain": {
-                "schema": {
-                }
+          "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+              }
             }
           }
         },
@@ -456,9 +456,9 @@
                         "properties": {
                           "cluster": {
                             "type": "string",
-                             "minLength": 36,
-                             "maxLength": 36,
-                             "format": "uuid"
+                            "minLength": 36,
+                            "maxLength": 36,
+                            "format": "uuid"
                           },
                           "meta": {
                             "type": "object",
@@ -1209,12 +1209,12 @@
           }
         ],
         "requestBody": {
-            "description": "List of cluster IDs. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                }
+          "description": "List of cluster IDs. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+              }
             }
           }
         },
@@ -1483,12 +1483,12 @@
           }
         ],
         "requestBody": {
-            "description": "Justification why rule was disabled",
-            "required": true,
-            "content": {
-              "text/plain": {
-                "schema": {
-                }
+          "description": "Justification why rule was disabled",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+              }
             }
           }
         },
@@ -1547,12 +1547,12 @@
           }
         ],
         "requestBody": {
-            "description": "Justification why rule was disabled",
-            "required": true,
-            "content": {
-              "text/plain": {
-                "schema": {
-                }
+          "description": "Justification why rule was disabled",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+              }
             }
           }
         },
@@ -1659,7 +1659,9 @@
     },
     "/rules/organizations/{orgId}/users/{userId}/rating": {
       "post": {
-        "tags": ["prod"],
+        "tags": [
+          "prod"
+        ],
         "parameters": [
           {
             "name": "orgId",
@@ -1698,7 +1700,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref":"#/components/schemas/ratingSchema"
+                  "$ref": "#/components/schemas/ratingSchema"
                 }
               }
             },
@@ -1721,7 +1723,10 @@
       }
     },
     "rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail": {
-      "post": {
+      "get": {
+        "summary": "Returns a list of cluster where the given rule is active.",
+        "description": "Provided a correct rule selector and a valid organization ID, this method will query the DB for all the organization's clusters being currently affected by the rule, if any.",
+        "operationId": "getClustersForRecommendation",
         "parameters": [
           {
             "name": "rule_selector",
@@ -1756,7 +1761,7 @@
         ],
         "responses": {
           "200": {
-            "description": "List of disabled rules",
+            "description": "List of cluster data for provided rule",
             "content": {
               "application/json": {
                 "schema": {
@@ -1783,7 +1788,6 @@
                               "description": "The erroy key included in the received rule selector.",
                               "example": "SOME_ERROR_KEY"
                             }
-
                           }
                         },
                         "data": {
@@ -1811,34 +1815,35 @@
               }
             }
           },
-	  "404": {
+          "404": {
             "description": "Resource not found, usually caused when some rule selector, organization or user doesn't exist"
           },
-	  "500": {
-             "description": "Internal server error, should only be returned if unexpected error happened when querying from the DB" 
-	  }
+          "500": {
+            "description": "Internal server error, should only be returned if unexpected error happened when querying from the DB"
+          }
         },
-	"tags": [
+        "tags": [
           "rule",
           "prod"
         ]
-     }
-  },
-  "security": [],
-  "servers": [],
-  "components": {
-    "links": {},
-    "callbacks": {},
-    "schemas": {
-      "ratingSchema": {
-        "description": "An object representing the rating given from a user for a rule",
-        "type": "object",
-        "properties": {
-          "rule": {
-            "type": "string"
-          },
-          "rating": {
-            "type": "integer"
+      }
+    },
+    "security": [],
+    "servers": [],
+    "components": {
+      "links": {},
+      "callbacks": {},
+      "schemas": {
+        "ratingSchema": {
+          "description": "An object representing the rating given from a user for a rule",
+          "type": "object",
+          "properties": {
+            "rule": {
+              "type": "string"
+            },
+            "rating": {
+              "type": "integer"
+            }
           }
         }
       }
