@@ -1719,7 +1719,110 @@
           }
         }
       }
-    }
+    },
+    "rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail": {
+      "post": {
+        "parameters": [
+          {
+            "name": "rule_selector",
+            "in": "path",
+            "required": true,
+            "description": "Recommendation identifier, in the plugin_name|error_key format",
+            "schema": {
+              "type": "string"
+            },
+            "example": "existing.plugin.name|ERROR_KEY"
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "123422"
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of disabled rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "meta": {
+                          "type": "object",
+                          "properties": {
+                            "count": {
+                              "type": "integer",
+                              "description": "Number of clusters affected by the received rule.",
+                              "example": "1"
+                            },
+                            "component": {
+                              "type": "string",
+                              "description": "The rule identifier included in the received rule selector.",
+                              "example": "some.python.module"
+                            },
+                            "error_key": {
+                              "type": "string",
+                              "description": "The erroy key included in the received rule selector.",
+                              "example": "SOME_ERROR_KEY"
+                            }
+
+                          }
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "cluster": {
+                                "type": "string",
+                                "minLength": 36,
+                                "maxLength": 36,
+                                "format": "uuid"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          },
+	  "404": {
+            "description": "Resource not found, usually caused when some rule selector, organization or user doesn't exist"
+          },
+	  "500": {
+             "description": "Internal server error, should only be returned if unexpected error happened when querying from the DB" 
+	  }
+        },
+	"tags": [
+          "rule",
+          "prod"
+        ]
+     }
   },
   "security": [],
   "servers": [],
