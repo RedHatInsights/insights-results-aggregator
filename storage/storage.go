@@ -415,6 +415,13 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(orgID types.OrgID, rul
 			log.Error().Err(err).Msg("ListOfClustersForOrgSpecificRule")
 		}
 	}
+
+	// This is to ensure 404 when no recommendation is found for the given orgId + selector.
+	// We can, alternatively, return something like this with a 204 (no content):
+	// {"data":[],"meta":{"count":0,"component":"test.rule","error_key":"ek"},"status":"not_found"}
+	if len(results) == 0 {
+		return results, &types.ItemNotFoundError{ItemID: ruleID}
+	}
 	return results, nil
 }
 
