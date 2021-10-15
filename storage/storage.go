@@ -410,7 +410,7 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(orgID types.OrgID, rul
 	for rows.Next() {
 		err = rows.Scan(&clusterName)
 		if err == nil {
-			results = append(results, utypes.HittingClustersData{clusterName})
+			results = append(results, utypes.HittingClustersData{Cluster: clusterName})
 		} else {
 			log.Error().Err(err).Msg("ListOfClustersForOrgSpecificRule")
 		}

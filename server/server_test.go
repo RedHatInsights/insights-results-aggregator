@@ -1295,8 +1295,8 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 
 	respBody := `{"data":[{"cluster":"%v"}],"meta":{"component":"%v","count":%v, "error_key":"%v"},"status":"ok"}`
 
-	mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
-	mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules)
 
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName, testdata.Rule1ID, 1, testdata.ErrorKey1,

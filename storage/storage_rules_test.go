@@ -792,26 +792,26 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
 	//but only clusters for testdata.OrgID are returned
 	expectedClustersOrg1Rule1Err1 := []utypes.HittingClustersData{
-		{clusterIds[0]},
+		{Cluster: clusterIds[0]},
 	}
 	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
 	//but only clusters for testdata.OrgID are returned
 	expectedClustersOrg1Rule2Err2 := []utypes.HittingClustersData{
-		{clusterIds[0]},
+		{Cluster: clusterIds[0]},
 	}
 	//Rule3|ERR_KEY3 is present in testdata.Report3Rules
 	expectedClustersOrg1Rule3Err3 := []utypes.HittingClustersData{
-		{clusterIds[0]},
+		{Cluster: clusterIds[0]},
 	}
 	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
 	//but only clusters for testdata.Org2ID are returned
 	expectedClustersOrg2Rule1Err1 := []utypes.HittingClustersData{
-		{clusterIds[2]},
+		{Cluster: clusterIds[2]},
 	}
 	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
 	//but only clusters for testdata.Org2ID are returned
 	expectedClustersOrg2Rule2Err2 := []utypes.HittingClustersData{
-		{clusterIds[2]},
+		{Cluster: clusterIds[2]},
 	}
 
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID))
