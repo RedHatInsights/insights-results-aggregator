@@ -741,6 +741,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 	)
 	helpers.FailOnError(t, err)
 
+	body := fmt.Sprintf(`{"status":"you have no permissions to get or change info about the organization with ID %v; you can access info about organization with ID %v"}`, testdata.OrgID, testdata.Org2ID)
 	helpers.AssertAPIRequest(t, mockStorage, &helpers.DefaultServerConfigAuth, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.DisableRuleFeedbackEndpoint,
@@ -756,9 +757,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 		}),
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
-		Body: `{
-				"status":"you have no permissions to get or change info about this organization"
-			}`,
+		Body:       body,
 	})
 }
 
