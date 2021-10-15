@@ -1722,7 +1722,7 @@
         }
       }
     },
-    "rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail": {
+    "/rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail": {
       "get": {
         "summary": "Returns a list of cluster where the given rule is active.",
         "description": "Provided a correct rule selector and a valid organization ID, this method will query the DB for all the organization's clusters being currently affected by the rule, if any.",
@@ -1827,23 +1827,23 @@
           "prod"
         ]
       }
-    },
-    "security": [],
-    "servers": [],
-    "components": {
-      "links": {},
-      "callbacks": {},
-      "schemas": {
-        "ratingSchema": {
-          "description": "An object representing the rating given from a user for a rule",
-          "type": "object",
-          "properties": {
-            "rule": {
-              "type": "string"
-            },
-            "rating": {
-              "type": "integer"
-            }
+    }
+  },
+  "security": [],
+  "servers": [],
+  "components": {
+    "links": {},
+    "callbacks": {},
+    "schemas": {
+      "ratingSchema": {
+        "description": "An object representing the rating given from a user for a rule",
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer"
           }
         }
       }
