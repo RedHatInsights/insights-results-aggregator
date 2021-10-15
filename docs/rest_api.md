@@ -98,3 +98,17 @@ curl -k -v $ADDRESS/organizations/{orgId}/clusters/reports -d @cluster_list.json
 ```
 /organizations/{orgId}/clusters/{clusterId}/users/{userId}/rules/{ruleId}
 ```
+
+#### List of clusters for a given rule selector (plugin_name|error_key) within the specified organization ID
+
+```
+/rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail
+```
+
+##### Usage:
+
+```
+curl -k -v $ADDRESS/rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail
+```
+
+Plase note that user ID is expected, but is only used for improving logging.
