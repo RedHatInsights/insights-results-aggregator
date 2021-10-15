@@ -847,13 +847,15 @@ func TestDBStorageListClustersForHittingRulesOrgNotFound(t *testing.T) {
 	))
 
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID))
-	helpers.FailOnError(t, err)
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
 	assert.Equal(t, []utypes.HittingClustersData{}, list)
 }
 
 // TestDBStorageListClustersForHittingRulesOrgNotFound checks that an empty
 // list of HittingClustersData objects is returned when the given rule selector
-// has no associated entries in the recommendation table
+// has no associated entries in the recommendation table, as well as an
+// ItemNotFoundError
 func TestDBStorageListClustersForHittingRulesRuleNotFound(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
@@ -863,7 +865,8 @@ func TestDBStorageListClustersForHittingRulesRuleNotFound(t *testing.T) {
 	))
 
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID))
-	helpers.FailOnError(t, err)
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
 	assert.Equal(t, []utypes.HittingClustersData{}, list)
 }
 
@@ -873,10 +876,8 @@ func TestDBStorageListClustersForHittingRulesRuleNotFound(t *testing.T) {
 // hitting recommendations returns no rows (Any other DB error will
 // be indicated to client as a 503).
 func TestDBStorageListClustersForHittingRulesNoRowsFound(t *testing.T) {
-	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
-	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
-
-	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(sql.ErrNoRows)
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
 
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID))
 	assert.Error(t, err)

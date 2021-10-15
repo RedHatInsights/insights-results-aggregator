@@ -1312,7 +1312,7 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
-		EndpointArgs: []interface{}{testdata.Rule2CompositeID, testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.Org2ID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       expected,
