@@ -56,7 +56,7 @@ type Storage interface {
 		orgID types.OrgID, timeLimit time.Time) ([]types.ClusterName, error,
 	)
 	ListOfClustersForOrgSpecificRule(
-		orgID types.OrgID, ruleID types.RuleSelector,
+		orgID types.OrgID, ruleID types.RuleSelector, activeClusters interface{},
 	) ([]utypes.HittingClustersData, error)
 	ReadReportForCluster(
 		orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error,
@@ -384,19 +384,23 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.
 }
 
 // ListOfClustersForOrgSpecificRule returns list of all clusters for given organization that are affect by given rule
-func (storage DBStorage) ListOfClustersForOrgSpecificRule(orgID types.OrgID, ruleID types.RuleSelector) (
+func (storage DBStorage) ListOfClustersForOrgSpecificRule(
+	orgID types.OrgID,
+	ruleID types.RuleSelector,
+	activeClusters interface{}) (
 	[]utypes.HittingClustersData, error) {
 	results := make([]utypes.HittingClustersData, 0)
 
-	q := `
-		  SELECT cluster_id
-		    FROM recommendation
-		   WHERE org_id = $1
-		     AND rule_id = $2
-		ORDER BY cluster_id;
-	`
+	var whereClause string
+	if activeClusters != nil {
+		whereClause = fmt.Sprintf(`WHERE org_id = $1 AND rule_id = $2 AND cluster_id IN (%v)`,
+			"'"+strings.Join(activeClusters.([]string), `','`)+`'`)
+	} else {
+		whereClause = `WHERE org_id = $1 AND rule_id = $2`
+	}
+	query := `SELECT cluster_id FROM recommendation ` + whereClause + ` ORDER BY cluster_id;`
 
-	rows, err := storage.connection.Query(q, orgID, ruleID)
+	rows, err := storage.connection.Query(query, orgID, ruleID)
 
 	err = types.ConvertDBError(err, orgID)
 	if err != nil {

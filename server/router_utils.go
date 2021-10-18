@@ -28,11 +28,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// ClusterList is a data structure that store list of cluster IDs (names).
-type ClusterList struct {
-	Clusters []string `json:"clusters"`
-}
-
 var (
 	readRuleID                = httputils.ReadRuleID
 	readErrorKey              = httputils.ReadErrorKey
@@ -47,6 +42,7 @@ var (
 	checkPermissions          = httputils.CheckPermissions
 	readClusterNames          = httputils.ReadClusterNames
 	readOrganizationIDs       = httputils.ReadOrganizationIDs
+	readClusterListFromBody   = httputils.ReadClusterListFromBody
 )
 
 // readUserID retrieves user_id from request
@@ -99,29 +95,6 @@ func readClusterListFromPath(writer http.ResponseWriter, request *http.Request) 
 
 	// everything seems ok -> return list of clusters
 	return clusterList, true
-}
-
-// readClusterListFromBody retrieves list of clusters from request's body
-// if it's not possible, it writes http error to the writer and returns false
-func readClusterListFromBody(writer http.ResponseWriter, request *http.Request) ([]string, bool) {
-	var clusterList ClusterList
-
-	// check if there's any body provided in the request sent by client
-	if request.ContentLength <= 0 {
-		err := &NoBodyError{}
-		handleServerError(writer, err)
-		return []string{}, false
-	}
-
-	// try to read cluster list from request parameter
-	err := json.NewDecoder(request.Body).Decode(&clusterList)
-	if err != nil {
-		handleServerError(writer, err)
-		return []string{}, false
-	}
-
-	// everything seems ok -> return list of clusters
-	return clusterList.Clusters, true
 }
 
 func readRuleIDWithErrorKey(writer http.ResponseWriter, request *http.Request) (types.RuleID, types.ErrorKey, bool) {

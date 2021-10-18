@@ -451,7 +451,17 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 		Str(userIDstr, string(userID)).
 		Msgf("GET clusters detail for rule %s", selector)
 
-	clusters, err := server.Storage.ListOfClustersForOrgSpecificRule(orgID, selector)
+	var clusters []utypes.HittingClustersData
+	var err error
+
+	if request.ContentLength > 0 {
+		if activeClusters, successful := readClusterListFromBody(writer, request); successful {
+			clusters, err = server.Storage.ListOfClustersForOrgSpecificRule(orgID, selector, activeClusters)
+		}
+	} else {
+		clusters, err = server.Storage.ListOfClustersForOrgSpecificRule(orgID, selector, nil)
+	}
+
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get list of clusters for specific rule %s", selector)
 		//err received from this call can be either TableNotFoundError (500) or ItemNotFoundError (404)
