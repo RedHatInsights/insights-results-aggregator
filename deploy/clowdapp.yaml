@@ -90,6 +90,36 @@ objects:
               value: sslmode=disable
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: "false"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG
+              value: ${CLOUDWATCH_DEBUG}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__STREAM_NAME
+              value: ${IRDW_LOG_STREAM}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__CREATE_STREAM_IF_NOT_EXISTS
+              value: ${CREATE_STREAM_IF_NOT_EXISTS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_region
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_GROUP
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: log_group_name
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_ACCESS_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_access_key_id
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_secret_access_key
+                  optional: true
           image: ${IMAGE}:${IMAGE_TAG}
           livenessProbe:
             failureThreshold: 3
@@ -144,6 +174,36 @@ objects:
                   value: "true"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
                   value: "false"
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG
+                  value: ${CLOUDWATCH_DEBUG}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__STREAM_NAME
+                  value: ${IRDW_LOG_STREAM}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__CREATE_STREAM_IF_NOT_EXISTS
+                  value: ${CREATE_STREAM_IF_NOT_EXISTS}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: aws_region
+                      optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_GROUP
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: log_group_name
+                      optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_ACCESS_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: aws_access_key_id
+                      optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: aws_secret_access_key
+                      optional: true
               resources:
                 requests:
                   cpu: 100m
@@ -206,6 +266,36 @@ objects:
               value: sslmode=disable
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: "false"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG
+              value: ${CLOUDWATCH_DEBUG}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__STREAM_NAME
+              value: ${IRDW_LOG_STREAM}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__CREATE_STREAM_IF_NOT_EXISTS
+              value: ${CREATE_STREAM_IF_NOT_EXISTS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_region
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_GROUP
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: log_group_name
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_ACCESS_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_access_key_id
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_secret_access_key
+                  optional: true
           image: ${IMAGE}:${IMAGE_TAG}
           livenessProbe:
             failureThreshold: 3
@@ -366,3 +456,8 @@ parameters:
 - name: DBWRITER_HABERDASHER_LABELS
   description: Haberdasher labels for unstructured logs
   value: '{"app": "ccx-insights-results-db-writer"}'
+- name: CLOUDWATCH_DEBUG
+  value: "false"
+  required: true
+- name: CREATE_STREAM_IF_NOT_EXISTS
+  value: "true"
