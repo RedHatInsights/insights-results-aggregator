@@ -64,6 +64,8 @@ type (
 	DisabledRuleResponse = types.DisabledRuleResponse
 	// RuleID represents type for rule id
 	RuleID = types.RuleID
+	// RuleSelector represents type for rule id + error key in the rule_id|error_key format
+	RuleSelector = types.RuleSelector
 	// ErrorKey represents type for error key
 	ErrorKey = types.ErrorKey
 	// Rule represents the content of rule table

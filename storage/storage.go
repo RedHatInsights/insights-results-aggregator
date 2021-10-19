@@ -55,6 +55,9 @@ type Storage interface {
 	ListOfClustersForOrg(
 		orgID types.OrgID, timeLimit time.Time) ([]types.ClusterName, error,
 	)
+	ListOfClustersForOrgSpecificRule(
+		orgID types.OrgID, ruleID types.RuleSelector, activeClusters interface{},
+	) ([]utypes.HittingClustersData, error)
 	ReadReportForCluster(
 		orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error,
 	)
@@ -380,6 +383,52 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.
 	return clusters, nil
 }
 
+// ListOfClustersForOrgSpecificRule returns list of all clusters for given organization that are affect by given rule
+func (storage DBStorage) ListOfClustersForOrgSpecificRule(
+	orgID types.OrgID,
+	ruleID types.RuleSelector,
+	activeClusters interface{}) (
+	[]utypes.HittingClustersData, error) {
+	results := make([]utypes.HittingClustersData, 0)
+
+	var whereClause string
+	if activeClusters != nil {
+		whereClause = fmt.Sprintf(`WHERE org_id = $1 AND rule_id = $2 AND cluster_id IN (%v)`,
+			inClauseFromSlice(activeClusters))
+	} else {
+		whereClause = `WHERE org_id = $1 AND rule_id = $2`
+	}
+	query := `SELECT cluster_id FROM recommendation ` + whereClause + ` ORDER BY cluster_id;`
+
+	rows, err := storage.connection.Query(query, orgID, ruleID)
+
+	err = types.ConvertDBError(err, orgID)
+	if err != nil {
+		return results, err
+	}
+	defer closeRows(rows)
+
+	var (
+		clusterName types.ClusterName
+	)
+	for rows.Next() {
+		err = rows.Scan(&clusterName)
+		if err == nil {
+			results = append(results, utypes.HittingClustersData{Cluster: clusterName})
+		} else {
+			log.Error().Err(err).Msg("ListOfClustersForOrgSpecificRule")
+		}
+	}
+
+	// This is to ensure 404 when no recommendation is found for the given orgId + selector.
+	// We can, alternatively, return something like this with a 204 (no content):
+	// {"data":[],"meta":{"count":0,"component":"test.rule","error_key":"ek"},"status":"not_found"}
+	if len(results) == 0 {
+		return results, &types.ItemNotFoundError{ItemID: ruleID}
+	}
+	return results, nil
+}
+
 // GetOrgIDByClusterID reads OrgID for specified cluster
 func (storage DBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error) {
 	row := storage.connection.QueryRow("SELECT org_id FROM report WHERE cluster = $1 ORDER BY org_id;", cluster)
@@ -456,6 +505,17 @@ func argsWithClusterNames(clusterNames []types.ClusterName) []interface{} {
 		args[i] = clusterName
 	}
 	return args
+}
+
+// inClauseFromSlice is a helper function to construct `in` clause for SQL
+// statement from a given slice of items. The received slice must be []string
+// or any other type that can be asserted to []string, or else '1=1' will be
+// returned, making the IN clause act like a wildcard.
+func inClauseFromSlice(slice interface{}) string {
+	if slice, ok := slice.([]string); ok {
+		return "'" + strings.Join(slice, `','`) + `'`
+	}
+	return "1=1"
 }
 
 /*
@@ -853,10 +913,6 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 	clusterName types.ClusterName,
 	stringReport types.ClusterReport,
 ) (err error) {
-	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
-		return fmt.Errorf("writing recommendations with DB %v is not supported", storage.dbDriverType)
-	}
-
 	var report types.ReportRules
 	err = json.Unmarshal([]byte(stringReport), &report)
 	if err != nil {

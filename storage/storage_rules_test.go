@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 	"os"
 	"strings"
 	"testing"
@@ -762,4 +763,162 @@ func TestDBStorageDisableFeedbackErrorDBError(t *testing.T) {
 
 	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
 	assert.EqualError(t, err, "sql: database is closed")
+}
+
+// TestDBStorageListClustersForHittingRules checks the list of HittingClustersData
+// objects retrieved when ListOfClustersForOrgSpecificRule is called
+func TestDBStorageListClustersForHittingRules(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterIds := []utypes.ClusterName{
+		testdata.GetRandomClusterID(),
+		testdata.GetRandomClusterID(),
+		testdata.GetRandomClusterID(),
+	}
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, clusterIds[0], testdata.Report3Rules,
+	))
+	//ClusterIds[1] is not associated to any rule hit and is not expected in any response
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, clusterIds[1], testdata.Report0Rules,
+	))
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.Org2ID, clusterIds[2], testdata.Report2Rules,
+	))
+
+	//TODO: Add these to test data to ensure consistency
+
+	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
+	//but only clusters for testdata.OrgID are returned
+	expectedClustersOrg1Rule1Err1 := []utypes.HittingClustersData{
+		{Cluster: clusterIds[0]},
+	}
+	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
+	//but only clusters for testdata.OrgID are returned
+	expectedClustersOrg1Rule2Err2 := []utypes.HittingClustersData{
+		{Cluster: clusterIds[0]},
+	}
+	//Rule3|ERR_KEY3 is present in testdata.Report3Rules
+	expectedClustersOrg1Rule3Err3 := []utypes.HittingClustersData{
+		{Cluster: clusterIds[0]},
+	}
+	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
+	//but only clusters for testdata.Org2ID are returned
+	expectedClustersOrg2Rule1Err1 := []utypes.HittingClustersData{
+		{Cluster: clusterIds[2]},
+	}
+	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
+	//but only clusters for testdata.Org2ID are returned
+	expectedClustersOrg2Rule2Err2 := []utypes.HittingClustersData{
+		{Cluster: clusterIds[2]},
+	}
+
+	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID), nil)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg1Rule1Err1, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule2CompositeID), nil)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg1Rule2Err2, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), nil)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg1Rule3Err3, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), nil)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg2Rule1Err1, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), nil)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedClustersOrg2Rule2Err2, list)
+
+	//Now let's add some active clusters filtering
+	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
+	//but only clusters for testdata.OrgID are returned, and since clusterIds[0] is
+	//not active, an empty list of hitting clusters should be returned as well as an
+	//ItemNotFoundError
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID), []string{string(clusterIds[1]), string(clusterIds[2])})
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), []string{string(clusterIds[0]), string(clusterIds[1])})
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
+}
+
+// TestDBStorageListClustersForHittingRulesOrgNotFound checks that an empty
+// list of HittingClustersData objects is returned when the given org ID
+// has no associated entries in the recommendation table
+func TestDBStorageListClustersForHittingRulesOrgNotFound(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report3Rules,
+	))
+
+	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), nil)
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
+}
+
+// TestDBStorageListClustersForHittingRulesOrgNotFound checks that an empty
+// list of HittingClustersData objects is returned when the given rule selector
+// has no associated entries in the recommendation table, as well as an
+// ItemNotFoundError, independently of if a list of active clusters is passed
+// as the SQL query filter.
+func TestDBStorageListClustersForHittingRulesRuleNotFound(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules,
+	))
+
+	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), nil)
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
+
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), []string{string(testdata.GetRandomClusterID())})
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
+}
+
+// TestDBStorageListClustersForHittingRulesNoRowsFound checks that an empty
+// list of HittingClustersData objects is returned, as well as an
+// ItemNotFoundError (converted in a Error 404), when the SQL query for
+// hitting recommendations returns no rows (Any other DB error will
+// be indicated to client as a 503).
+func TestDBStorageListClustersForHittingRulesNoRowsFound(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), nil)
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
+}
+
+// TestDBStorageListClustersForHittingRulesNoRowsFound checks that an empty
+// list of HittingClustersData objects is returned, as well as an
+// ItemNotFoundError (converted in a Error 404), when the SQL query for
+// hitting recommendations returns no rows (Any other DB error will
+// be indicated to client as a 503). In this case, a list of active clusters
+// is given, which changes the query made to the DB, but not the expected
+// behavior.
+func TestDBStorageListFilteredClustersForHittingRulesNoRowsFound(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), []string{string(testdata.ClusterName)})
+	assert.Error(t, err)
+	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
+	assert.Equal(t, []utypes.HittingClustersData{}, list)
 }

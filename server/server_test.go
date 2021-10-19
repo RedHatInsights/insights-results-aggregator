@@ -741,6 +741,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 	)
 	helpers.FailOnError(t, err)
 
+	body := fmt.Sprintf(`{"status":"you have no permissions to get or change info about the organization with ID %v; you can access info about organization with ID %v"}`, testdata.OrgID, testdata.Org2ID)
 	helpers.AssertAPIRequest(t, mockStorage, &helpers.DefaultServerConfigAuth, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.DisableRuleFeedbackEndpoint,
@@ -756,9 +757,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 		}),
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
-		Body: `{
-				"status":"you have no permissions to get or change info about this organization"
-			}`,
+		Body:       body,
 	})
 }
 
@@ -1213,5 +1212,128 @@ func TestHTTPServer_RecommendationsListEndpoint_3Recs2Clusters(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       respBody,
+	})
+}
+
+func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenOrgDBError(t *testing.T) {
+	const errStr = "Item with ID 1 was not found in the storage"
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(sql.ErrNoRows)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusNotFound,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+}
+
+func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenSelectorDBError(t *testing.T) {
+	const errStr = "Item with ID test.rule3|ek3 was not found in the storage"
+
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule3CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusNotFound,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+}
+
+func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
+	const errStr = "Internal Server Error"
+
+	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
+	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(sql.ErrConnDone)
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule3CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+
+	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(sql.ErrTxDone)
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule3CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+
+	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(fmt.Errorf("any error"))
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule3CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+}
+
+func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	respBody := `{"data":[{"cluster":"%v"}],"meta":{"component":"%v","count":%v, "error_key":"%v"},"status":"ok"}`
+
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules)
+
+	expected := fmt.Sprintf(respBody,
+		testdata.ClusterName, testdata.Rule1ID, 1, testdata.ErrorKey1,
+	)
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       expected,
+	})
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.Org2ID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       expected,
+	})
+
+	expected = fmt.Sprintf(respBody,
+		testdata.ClusterName, testdata.Rule2ID, 1, testdata.ErrorKey2,
+	)
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule2CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       expected,
+	})
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule2CompositeID, testdata.Org2ID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       expected,
 	})
 }
