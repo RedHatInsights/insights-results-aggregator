@@ -457,6 +457,8 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 	if request.ContentLength > 0 {
 		if activeClusters, successful := readClusterListFromBody(writer, request); successful {
 			clusters, err = server.Storage.ListOfClustersForOrgSpecificRule(orgID, selector, activeClusters)
+		} else {
+			return
 		}
 	} else {
 		clusters, err = server.Storage.ListOfClustersForOrgSpecificRule(orgID, selector, nil)
@@ -464,23 +466,15 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get list of clusters for specific rule %s", selector)
-		//err received from this call can be either TableNotFoundError (500) or ItemNotFoundError (404)
+		//err received at this point can be either TableNotFoundError (500) or ItemNotFoundError (404)
 		handleServerError(writer, err)
 		return
 	}
 
-	//err = responses.SendOK(writer, responses.BuildOkResponseWithData("clusters", clusters))
 	resp := responses.BuildOkResponse()
-
-	ruleID, errorKey, err := getRuleAndErrorKeyFromRuleID(string(selector))
-	if err != nil {
-		log.Error().Err(err).Msg("Error splitting the rule selector")
-
-	}
 	resp["meta"] = utypes.HittingClustersMetadata{
-		Count:     len(clusters),
-		Component: utypes.Component(ruleID),
-		ErrorKey:  errorKey,
+		Count:    len(clusters),
+		Selector: selector,
 	}
 	resp["data"] = clusters
 	err = responses.SendOK(writer, resp)
