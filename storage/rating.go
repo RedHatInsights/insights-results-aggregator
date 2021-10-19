@@ -27,16 +27,16 @@ import (
 func (storage *DBStorage) RateOnRule(
 	userID types.UserID,
 	orgID types.OrgID,
-	ruleID types.RuleID,
+	ruleFqdn types.RuleID,
 	errorKey types.ErrorKey,
 	rating types.UserVote,
 ) error {
 	query := `
 		INSERT INTO advisor_ratings
-		(user_id, org_id, rule_id, error_key, rated_at, last_updated_at, rating)
+		(user_id, org_id, rule_fqdn, error_key, rated_at, last_updated_at, rating, rule_id)
 		VALUES
-		($1, $2, $3, $4, $5, $6, $7)
-		ON CONFLICT (user_id, org_id, rule_id, error_key) DO UPDATE SET
+		($1, $2, $3, $4, $5, $6, $7, $8)
+		ON CONFLICT (user_id, org_id, rule_fqdn, error_key) DO UPDATE SET
 		last_updated_at = $6, rating = $7
 	`
 	statement, err := storage.connection.Prepare(query)
@@ -52,7 +52,8 @@ func (storage *DBStorage) RateOnRule(
 	}()
 
 	now := time.Now()
-	_, err = statement.Exec(userID, orgID, ruleID, errorKey, now, now, rating)
+	ruleID := string(ruleFqdn) + "|" + string(errorKey)
+	_, err = statement.Exec(userID, orgID, ruleFqdn, errorKey, now, now, rating, ruleID)
 	err = types.ConvertDBError(err, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("RateOnRule")
