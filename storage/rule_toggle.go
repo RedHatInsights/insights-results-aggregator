@@ -17,7 +17,6 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -168,7 +167,7 @@ func (storage DBStorage) GetTogglesForRules(
 		cluster_id = $1 AND
 		rule_id in (%v)
 	`
-	whereInStatement := "'" + strings.Join(ruleIDs, "','") + "'"
+	whereInStatement := inClauseFromSlice(ruleIDs)
 	query = fmt.Sprintf(query, whereInStatement)
 
 	rows, err := storage.connection.Query(query, clusterID)

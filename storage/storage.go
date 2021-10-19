@@ -394,7 +394,7 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 	var whereClause string
 	if activeClusters != nil {
 		whereClause = fmt.Sprintf(`WHERE org_id = $1 AND rule_id = $2 AND cluster_id IN (%v)`,
-			"'"+strings.Join(activeClusters.([]string), `','`)+`'`)
+			inClauseFromSlice(activeClusters))
 	} else {
 		whereClause = `WHERE org_id = $1 AND rule_id = $2`
 	}
@@ -505,6 +505,17 @@ func argsWithClusterNames(clusterNames []types.ClusterName) []interface{} {
 		args[i] = clusterName
 	}
 	return args
+}
+
+// inClauseFromSlice is a helper function to construct `in` clause for SQL
+// statement from a given slice of items. The received slice must be []string
+// or any other type that can be asserted to []string, or else '1=1' will be
+// returned, making the IN clause act like a wildcard.
+func inClauseFromSlice(slice interface{}) string {
+	if slice, ok := slice.([]string); ok {
+		return "'" + strings.Join(slice, `','`) + `'`
+	}
+	return "1=1"
 }
 
 /*

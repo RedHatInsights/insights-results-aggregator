@@ -233,7 +233,7 @@ func (storage DBStorage) GetUserFeedbackOnRules(
 		FROM cluster_rule_user_feedback
 		WHERE cluster_id = $1 AND rule_id in (%v) AND user_id = $2`
 
-	whereInStatement := "'" + strings.Join([]string(ruleIDs), "','") + "'"
+	whereInStatement := inClauseFromSlice(ruleIDs)
 	query = fmt.Sprintf(query, whereInStatement)
 
 	rows, err := storage.connection.Query(query, clusterID, userID)
