@@ -406,6 +406,7 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 	if err != nil {
 		return results, err
 	}
+
 	defer closeRows(rows)
 
 	var (
