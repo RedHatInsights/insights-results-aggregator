@@ -17,6 +17,7 @@ limitations under the License.
 package server_test
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -137,13 +138,16 @@ func TestInvalidJsonAuthToken(t *testing.T) {
 
 // TestBadOrganizationID checks if organization ID is checked properly
 func TestBadOrganizationID(t *testing.T) {
+	providedOrgID := 12345
+	orgIDInXRH := 1234
+	body := fmt.Sprintf(`{"status":"you have no permissions to get or change info about the organization with ID %v; you can access info about organization with ID %v"}`, providedOrgID, orgIDInXRH)
 	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ClustersForOrganizationEndpoint,
-		EndpointArgs: []interface{}{12345},
+		EndpointArgs: []interface{}{providedOrgID},
 		XRHIdentity:  "eyJpZGVudGl0eSI6IHsiaW50ZXJuYWwiOiB7Im9yZ19pZCI6ICIxMjM0In19fQo=",
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
-		Body:       `{"status":"you have no permissions to get or change info about this organization"}`,
+		Body:       body,
 	})
 }

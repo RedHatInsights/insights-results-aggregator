@@ -87,4 +87,6 @@ func TestNoopStorage_Methods_Cont2(t *testing.T) {
 	_ = noopStorage.UpdateDisabledRuleJustification(orgID, userID, "", "", "justification")
 	_, _, _ = noopStorage.ReadDisabledRule(orgID, userID, "", "")
 	_, _ = noopStorage.ListOfSystemWideDisabledRules(orgID, userID)
+	_, _ = noopStorage.ListOfClustersForOrgSpecificRule(0, "", nil)
+	_, _ = noopStorage.ListOfClustersForOrgSpecificRule(0, "", []string{"a"})
 }

@@ -337,9 +337,9 @@
                         "properties": {
                           "cluster": {
                             "type": "string",
-                             "minLength": 36,
-                             "maxLength": 36,
-                             "format": "uuid"
+                            "minLength": 36,
+                            "maxLength": 36,
+                            "format": "uuid"
                           },
                           "meta": {
                             "type": "object",
@@ -411,12 +411,12 @@
           }
         ],
         "requestBody": {
-            "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
-            "required": true,
-            "content": {
-              "text/plain": {
-                "schema": {
-                }
+          "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+              }
             }
           }
         },
@@ -456,9 +456,9 @@
                         "properties": {
                           "cluster": {
                             "type": "string",
-                             "minLength": 36,
-                             "maxLength": 36,
-                             "format": "uuid"
+                            "minLength": 36,
+                            "maxLength": 36,
+                            "format": "uuid"
                           },
                           "meta": {
                             "type": "object",
@@ -1209,12 +1209,12 @@
           }
         ],
         "requestBody": {
-            "description": "List of cluster IDs. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                }
+          "description": "List of cluster IDs. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+              }
             }
           }
         },
@@ -1483,12 +1483,12 @@
           }
         ],
         "requestBody": {
-            "description": "Justification why rule was disabled",
-            "required": true,
-            "content": {
-              "text/plain": {
-                "schema": {
-                }
+          "description": "Justification why rule was disabled",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+              }
             }
           }
         },
@@ -1547,12 +1547,12 @@
           }
         ],
         "requestBody": {
-            "description": "Justification why rule was disabled",
-            "required": true,
-            "content": {
-              "text/plain": {
-                "schema": {
-                }
+          "description": "Justification why rule was disabled",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+              }
             }
           }
         },
@@ -1659,7 +1659,9 @@
     },
     "/rules/organizations/{orgId}/users/{userId}/rating": {
       "post": {
-        "tags": ["prod"],
+        "tags": [
+          "prod"
+        ],
         "parameters": [
           {
             "name": "orgId",
@@ -1698,7 +1700,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref":"#/components/schemas/ratingSchema"
+                  "$ref": "#/components/schemas/ratingSchema"
                 }
               }
             },
@@ -1718,6 +1720,112 @@
             "description": "Invalid request, usually caused when some rule identifier doesn't exist"
           }
         }
+      }
+    },
+    "/rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail": {
+      "get": {
+        "summary": "Returns a list of cluster where the given rule is active.",
+        "description": "Provided a correct rule selector and a valid organization ID, this method will query the DB for all the organization's clusters being currently affected by the rule, if any.",
+        "operationId": "getClustersForRecommendation",
+        "parameters": [
+          {
+            "name": "rule_selector",
+            "in": "path",
+            "required": true,
+            "description": "Recommendation identifier, in the plugin_name|error_key format",
+            "schema": {
+              "type": "string"
+            },
+            "example": "existing.plugin.name|ERROR_KEY"
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "123422"
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of cluster data for provided rule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "meta": {
+                          "type": "object",
+                          "properties": {
+                            "count": {
+                              "type": "integer",
+                              "description": "Number of clusters affected by the received rule.",
+                              "example": "1"
+                            },
+                            "component": {
+                              "type": "string",
+                              "description": "The rule identifier included in the received rule selector.",
+                              "example": "some.python.module"
+                            },
+                            "error_key": {
+                              "type": "string",
+                              "description": "The erroy key included in the received rule selector.",
+                              "example": "SOME_ERROR_KEY"
+                            }
+                          }
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "cluster": {
+                                "type": "string",
+                                "minLength": 36,
+                                "maxLength": 36,
+                                "format": "uuid"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found, usually caused when some rule selector, organization or user doesn't exist"
+          },
+          "500": {
+            "description": "Internal server error, should only be returned if unexpected error happened when querying from the DB"
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
       }
     }
   },

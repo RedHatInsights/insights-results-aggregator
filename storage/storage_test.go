@@ -1022,17 +1022,6 @@ func TestDBStorageWriteRecommendationsForClusterClosedStorage(t *testing.T) {
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
-// TestDBStorageWriteReportForClusterClosedStorage check the behaviour of method WriteReportForCluster
-func TestDBStorageWriteRecommendationForClusterUnsupportedDriverError(t *testing.T) {
-	fakeStorage := storage.NewFromConnection(nil, -1)
-	err := fakeStorage.WriteRecommendationsForCluster(
-		testdata.OrgID,
-		testdata.ClusterName,
-		testdata.ClusterReportEmpty,
-	)
-	assert.EqualError(t, err, "writing recommendations with DB -1 is not supported")
-}
-
 // TestDBStorageWriteRecommendationForClusterNoConflict checks that
 // recommendation is inserted correctly if there is not a more recent
 // one stored.
