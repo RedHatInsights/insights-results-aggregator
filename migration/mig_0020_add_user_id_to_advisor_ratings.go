@@ -39,15 +39,16 @@ var mig0020ModifyAdvisorRatingsTable = Migration{
 			`)
 
 			return err
+		} else if driver == types.DBDriverPostgres {
+			// only postgres
+			// Rename rule_id to rule_fqdn
+			_, err = tx.Exec(`
+				UPDATE advisor_ratings SET rule_id = CONCAT(rule_fqdn, '|', error_key);
+			`)
+			return err
 		}
 
-		// only postgres
-		// Rename rule_id to rule_fqdn
-		_, err = tx.Exec(`
-			UPDATE advisor_ratings SET rule_id = CONCAT(rule_fqdn, '|', error_key);
-		`)
-
-		return err
+		return nil
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		// Remove the rule_id column

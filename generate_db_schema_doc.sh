@@ -37,28 +37,24 @@ DB_KEEP_RUNNING=1
 OUTPUT_DIR=docs/db-description-3
 
 # Launch local postgres from scratch
-podman run --name=$DB_POD_NAME --rm --network=host -e POSTGRES_PASSWORD=$DB_PASSWORD -e POSTGRES_USER=$DB_LOGIN -e POSTGRES_DB=$DB_NAME -d postgres:10
-
-if [[ $? != 0 ]]; then
+if ! podman run --name=$DB_POD_NAME --rm --network=host -e POSTGRES_PASSWORD=$DB_PASSWORD -e POSTGRES_USER=$DB_LOGIN -e POSTGRES_DB=$DB_NAME -d postgres:10; then
     echo "Cannot launch postgress database locally"
     cleanUpAndExit 1
 fi
 
 # Run migration to latest
-make  # compiles aggregator
-if [[ $? != 0 ]]; then
+if ! make; then
     echo "Cannot build aggregator"
     cleanUpAndExit 2
 fi
 
 sleep 5
-INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./config-devel.toml ./insights-results-aggregator migration latest
+export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./config-devel.toml
 
-if [[ $? != 0 ]]; then
+if ! ./insights-results-aggregator migration latest; then
     echo "Failure generating latest migration"
     cleanUpAndExit 3
 fi
 
 java -jar schemaspy-6.1.0.jar -cp . -t pgsql -u ${DB_LOGIN} -p ${DB_PASSWORD} -host ${DB_ADDRESS} -s public -o ${OUTPUT_DIR} -db ${DB_NAME} -dp postgresql-42.2.20.jre7.jar
-
 cleanUpAndExit $?
