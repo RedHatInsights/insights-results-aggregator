@@ -4,19 +4,20 @@
       <table name="advisor_ratings" numRows="0" remarks="" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="user_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="org_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="rule_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="rule_fqdn" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="error_key" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="rated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="last_updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="rating" nullable="true" remarks="" size="5" type="int2" typeCode="5"/>
+         <column autoUpdated="false" defaultValue="'.'::character varying" digits="0" id="7" name="rule_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
          <primaryKey column="user_id" sequenceNumberInPK="1"/>
          <primaryKey column="org_id" sequenceNumberInPK="2"/>
-         <primaryKey column="rule_id" sequenceNumberInPK="3"/>
+         <primaryKey column="rule_fqdn" sequenceNumberInPK="3"/>
          <primaryKey column="error_key" sequenceNumberInPK="4"/>
          <index name="advisor_ratings_pkey" unique="true">
             <column ascending="true" name="user_id"/>
             <column ascending="true" name="org_id"/>
-            <column ascending="true" name="rule_id"/>
+            <column ascending="true" name="rule_fqdn"/>
             <column ascending="true" name="error_key"/>
          </index>
       </table>
@@ -106,6 +107,8 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="cluster_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="rule_fqdn" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="error_key" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="'.'::character varying" digits="0" id="4" name="rule_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="timezone('utc'::text, now())" digits="6" id="5" name="created_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
          <primaryKey column="org_id" sequenceNumberInPK="1"/>
          <primaryKey column="cluster_id" sequenceNumberInPK="2"/>
          <primaryKey column="rule_fqdn" sequenceNumberInPK="3"/>
@@ -137,6 +140,25 @@
          </index>
          <index name="report_kafka_offset_btree_idx" unique="false">
             <column ascending="true" name="kafka_offset"/>
+         </index>
+      </table>
+      <table name="rule_disable" numRows="0" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="org_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="user_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="rule_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="error_key" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="justification" nullable="true" remarks="" size="2147483647" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="created_at" nullable="false" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="updated_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
+         <primaryKey column="user_id" sequenceNumberInPK="1"/>
+         <primaryKey column="org_id" sequenceNumberInPK="2"/>
+         <primaryKey column="rule_id" sequenceNumberInPK="3"/>
+         <primaryKey column="error_key" sequenceNumberInPK="4"/>
+         <index name="rule_disable_pkey" unique="true">
+            <column ascending="true" name="user_id"/>
+            <column ascending="true" name="org_id"/>
+            <column ascending="true" name="rule_id"/>
+            <column ascending="true" name="error_key"/>
          </index>
       </table>
       <table name="rule_hit" numRows="0" remarks="" schema="public" type="TABLE">

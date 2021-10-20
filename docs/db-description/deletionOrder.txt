@@ -1,4 +1,5 @@
 rule_hit
+rule_disable
 recommendation
 migration_info
 consumer_error
