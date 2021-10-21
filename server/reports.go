@@ -54,6 +54,17 @@ func validateClusterID(clusterID string) error {
 	return nil
 }
 
+// validateClusterIDs function checks the validity of an array of cluster IDs
+func validateClusterIDs(clusterIDs []string) error {
+	for _, clusterID := range clusterIDs {
+		if err := validateClusterID(clusterID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // sendWrongClusterIDResponse function sends response to client when
 // bad/improper cluster ID is detected
 func sendWrongClusterIDResponse(writer http.ResponseWriter, err error) {
@@ -66,8 +77,8 @@ func sendWrongClusterIDResponse(writer http.ResponseWriter, err error) {
 
 // sendWrongClusterOrgIDResponse function sends response to client when
 // bad/improper cluster organization ID is detected
-func sendWrongClusterOrgIDResponse(writer http.ResponseWriter, orgID types.OrgID) {
-	log.Error().Int("organization", int(orgID)).Msg("wrong cluster organization ID detected")
+func sendWrongClusterOrgIDResponse(writer http.ResponseWriter, orgIDs []types.OrgID) {
+	log.Error().Str("organizations", fmt.Sprint(orgIDs)).Msg("wrong cluster organization IDs detected")
 	err := responses.SendBadRequest(writer, "Improper organization ID")
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
@@ -144,18 +155,15 @@ func fillInGeneratedReports(clusterNames []types.ClusterName, reports map[types.
 
 // processListOfClusters function retrieves list of cluster IDs and process
 // them accordingly: check, read report from DB, serialize etc.
-func processListOfClusters(server *HTTPServer, writer http.ResponseWriter, request *http.Request, orgID types.OrgID, clusters []string) {
+func (server *HTTPServer) processListOfClusters(writer http.ResponseWriter, request *http.Request, orgID types.OrgID, clusters []string) {
 	log.Info().Int("number of clusters", len(clusters)).Str("list", strings.Join(clusters, ", ")).Msg("processListOfClusters")
 
 	// first step: check if all cluster IDs have proper format
-	for _, clusterID := range clusters {
-		// all clusters should be identified by proper ID
-		err := validateClusterID(clusterID)
-		if err != nil {
-			sendWrongClusterIDResponse(writer, err)
-			return
-		}
+	if err := validateClusterIDs(clusters); err != nil {
+		sendWrongClusterIDResponse(writer, err)
+		return
 	}
+
 	log.Debug().Msg("all clusters have proper UUID format")
 
 	clusterNames := constructClusterNames(clusters)
@@ -165,12 +173,11 @@ func processListOfClusters(server *HTTPServer, writer http.ResponseWriter, reque
 	}
 
 	// second step: check if all clusters belongs to given organization ID
-	for _, id := range orgIDs {
-		if id != orgID {
-			sendWrongClusterOrgIDResponse(writer, id)
-			return
-		}
+	if len(orgIDs) > 1 || (len(orgIDs) == 1 && orgIDs[0] != orgID) {
+		sendWrongClusterOrgIDResponse(writer, orgIDs)
+		return
 	}
+
 	log.Debug().Msg("all clusters have proper organization ID")
 
 	reports, err := server.Storage.ReadReportsForClusters(clusterNames)
@@ -214,7 +221,7 @@ func (server *HTTPServer) reportForListOfClusters(writer http.ResponseWriter, re
 	}
 
 	// we were able to read the cluster IDs, let's process them
-	processListOfClusters(server, writer, request, orgID, listOfClusters)
+	server.processListOfClusters(writer, request, orgID, listOfClusters)
 }
 
 // reportForListOfClustersPayload function returns reports for several clusters
@@ -238,7 +245,7 @@ func (server *HTTPServer) reportForListOfClustersPayload(writer http.ResponseWri
 	}
 
 	// we were able to read the cluster IDs, let's process them
-	processListOfClusters(server, writer, request, orgID, listOfClusters)
+	server.processListOfClusters(writer, request, orgID, listOfClusters)
 }
 
 // getRecommendations retrieves all recommendations hitting for all clusters in the org

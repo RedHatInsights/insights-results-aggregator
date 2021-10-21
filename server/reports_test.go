@@ -149,7 +149,7 @@ func TestReadReportsForClustersKnownCluster(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportForListOfClustersEndpoint,
-		EndpointArgs: []interface{}{1, testdata.ClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body: `{
