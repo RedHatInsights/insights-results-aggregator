@@ -161,6 +161,11 @@ type Storage interface {
 		types.ErrorKey,
 		types.UserVote,
 	) error
+	GetRuleRating(
+		types.UserID,
+		types.OrgID,
+		types.RuleSelector,
+	) (types.RuleRating, error)
 	DisableRuleSystemWide(
 		orgID types.OrgID, userID types.UserID,
 		ruleID types.RuleID, errorKey types.ErrorKey,

@@ -67,3 +67,38 @@ func (server *HTTPServer) setRuleRating(writer http.ResponseWriter, request *htt
 		return
 	}
 }
+
+// getRuleRating handles getting the rating for a specific rule and user
+func (server *HTTPServer) getRuleRating(writer http.ResponseWriter, request *http.Request) {
+	log.Info().Msg("getRuleRating")
+
+	userID, ok := readUserID(writer, request)
+	if !ok {
+		return
+	}
+
+	orgID, ok := readOrgID(writer, request)
+	if !ok {
+		return
+	}
+
+	ruleSelector, ok := readRuleSelector(writer, request)
+	if !ok {
+		return
+	}
+
+	rating, err := server.Storage.GetRuleRating(userID, orgID, ruleSelector)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to get rating")
+		handleServerError(writer, err)
+		return
+	}
+
+	// If everythig goes fine, we should send the same ratings as response to the client
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("rating", rating))
+	if err != nil {
+		log.Error().Err(err).Msg("Errors sending response back to client")
+		handleServerError(writer, err)
+		return
+	}
+}
