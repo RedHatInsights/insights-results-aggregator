@@ -1827,6 +1827,62 @@
           "prod"
         ]
       }
+    },
+    "/rules/{rule_selector}/organizations/{org_id}/users/{user_id}/rating": {
+      "get": {
+        "summary": "Returns the user rating for given rule ID.",
+        "operationId": "getRatingForRecommendation",
+        "parameters": [
+          {
+            "name": "rule_selector",
+            "in": "path",
+            "required": true,
+            "description": "Recommendation identifier, in the plugin_name|error_key format",
+            "schema": {
+              "type": "string"
+            },
+            "example": "existing.plugin.name|ERROR_KEY"
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "123422"
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ratingSchema"
+                }
+              }
+            },
+            "description": "The current rating for the given rule ID"
+          },
+          "404": {
+            "description": "Rating for this rule was not found"
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
     }
   },
   "security": [],
