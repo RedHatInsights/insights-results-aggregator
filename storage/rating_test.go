@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -34,4 +35,37 @@ func TestDBStorage_RateOnRule(t *testing.T) {
 		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
 	)
 	helpers.FailOnError(t, err)
+}
+
+func TestDBStorage_GetRuleRating(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	err := mockStorage.RateOnRule(
+		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+	)
+	helpers.FailOnError(t, err)
+
+	rating, err := mockStorage.GetRuleRating(testdata.UserID, testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID))
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, types.UserVoteLike, rating.Rating)
+	assert.Equal(t, string(testdata.Rule1CompositeID), rating.Rule)
+}
+
+func TestDBStorage_GetRuleRating_NotFound(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mustWriteReport3Rules(t, mockStorage)
+
+	err := mockStorage.RateOnRule(
+		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+	)
+	helpers.FailOnError(t, err)
+
+	_, err = mockStorage.GetRuleRating(testdata.UserID, testdata.OrgID, types.RuleSelector(testdata.Rule2CompositeID))
+	assert.NotNil(t, err)
 }

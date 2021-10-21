@@ -262,6 +262,18 @@ func (*NoopStorage) RateOnRule(
 	return nil
 }
 
+// GetRuleRating retrieves rating for given rule and user
+func (*NoopStorage) GetRuleRating(
+	userID types.UserID,
+	orgID types.OrgID,
+	ruleSelector types.RuleSelector,
+) (
+	ruleRating types.RuleRating,
+	err error,
+) {
+	return
+}
+
 // DisableRuleSystemWide disables the selected rule for all clusters visible to
 // given user
 func (*NoopStorage) DisableRuleSystemWide(
