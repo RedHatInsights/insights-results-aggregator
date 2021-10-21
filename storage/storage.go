@@ -393,11 +393,13 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 
 	var whereClause string
 	if activeClusters != nil {
+		// #nosec G201
 		whereClause = fmt.Sprintf(`WHERE org_id = $1 AND rule_id = $2 AND cluster_id IN (%v)`,
 			inClauseFromSlice(activeClusters))
 	} else {
 		whereClause = `WHERE org_id = $1 AND rule_id = $2`
 	}
+	// #nosec G202
 	query := `SELECT cluster_id FROM recommendation ` + whereClause + ` ORDER BY cluster_id;`
 
 	rows, err := storage.connection.Query(query, orgID, ruleID)
