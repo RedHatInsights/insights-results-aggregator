@@ -22,6 +22,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func TestHTTPServer_RateOnRule(t *testing.T) {
@@ -62,5 +63,77 @@ func TestHTTPServer_RateOnRuleBadContent(t *testing.T) {
 		Body:         ratingBody,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
+	})
+}
+
+func TestHTTPServer_getRuleRating_NoRating(t *testing.T) {
+	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.GetRating,
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusNotFound,
+	})
+}
+
+func TestHTTPServer_getRuleRating_OK(t *testing.T) {
+
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.RateOnRule(
+		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+	)
+	helpers.FailOnError(t, err)
+
+	ratingBody := fmt.Sprintf(`{"rule": "%v", "rating": 1}`, testdata.Rule1CompositeID)
+	expectedResponseBody := fmt.Sprintf(`{"rating":%s, "status":"ok"}`, ratingBody)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.GetRating,
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       expectedResponseBody,
+	})
+}
+
+func TestHTTPServer_getRuleRating_MultipleOK(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.RateOnRule(
+		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+	)
+	helpers.FailOnError(t, err)
+
+	ratingBody := fmt.Sprintf(`{"rule": "%v", "rating": 1}`, testdata.Rule1CompositeID)
+	expectedResponseBody := fmt.Sprintf(`{"rating":%s, "status":"ok"}`, ratingBody)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.GetRating,
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       expectedResponseBody,
+	})
+
+	err = mockStorage.RateOnRule(
+		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteDislike,
+	)
+	helpers.FailOnError(t, err)
+
+	ratingBody = fmt.Sprintf(`{"rule": "%v", "rating": -1}`, testdata.Rule1CompositeID)
+	expectedResponseBody = fmt.Sprintf(`{"rating":%s, "status":"ok"}`, ratingBody)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.GetRating,
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       expectedResponseBody,
 	})
 }

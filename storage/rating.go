@@ -15,6 +15,8 @@
 package storage
 
 import (
+	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -41,7 +43,7 @@ func (storage *DBStorage) RateOnRule(
 	`
 	statement, err := storage.connection.Prepare(query)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable")
+		log.Error().Err(err).Msg("RateOnRule Unable to prepare statement")
 	}
 
 	defer func() {
@@ -63,4 +65,34 @@ func (storage *DBStorage) RateOnRule(
 	metrics.RatingOnRules.Inc()
 
 	return nil
+}
+
+// GetRuleRating retrieves rating for given rule and user
+func (storage *DBStorage) GetRuleRating(
+	userID types.UserID,
+	orgID types.OrgID,
+	ruleSelector types.RuleSelector,
+) (
+	ruleRating types.RuleRating,
+	err error,
+) {
+	err = storage.connection.QueryRow(
+		`SELECT rule_id, rating
+		FROM advisor_ratings
+		WHERE org_id = $1 AND user_id = $2 AND rule_id = $3`,
+		orgID, userID, ruleSelector,
+	).Scan(
+		&ruleRating.Rule,
+		&ruleRating.Rating,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = &types.ItemNotFoundError{
+				ItemID: fmt.Sprintf("%v/%v/%v/rating", orgID, userID, ruleSelector),
+			}
+		}
+	}
+
+	return
 }

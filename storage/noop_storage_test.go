@@ -75,6 +75,7 @@ func TestNoopStorage_Methods_Cont(t *testing.T) {
 	_ = noopStorage.WriteRecommendationsForCluster(0, "", "")
 	_ = noopStorage.RateOnRule(types.UserID("99"), types.OrgID(1), "", "",
 		types.UserVote(1))
+	_, _ = noopStorage.GetRuleRating(types.UserID("99"), types.OrgID(1), "id")
 }
 
 func TestNoopStorage_Methods_Cont2(t *testing.T) {

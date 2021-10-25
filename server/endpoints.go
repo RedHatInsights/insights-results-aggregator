@@ -84,6 +84,9 @@ const (
 
 	// Rating accepts a list of ratings in the request body and store them in the database for the given user
 	Rating = "rules/organizations/{org_id}/users/{user_id}/rating"
+	// GetRating retrieves the rating for a specific rule and user
+	GetRating = "rules/{rule_selector}/organizations/{org_id}/users/{user_id}/rating"
+
 	// MetricsEndpoint returns prometheus metrics
 	MetricsEndpoint = "metrics"
 )
@@ -125,6 +128,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ListOfDisabledRules, server.listOfDisabledRules).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ListOfDisabledRulesFeedback, server.listOfReasons).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+Rating, server.setRuleRating).Methods(http.MethodPost)
+	router.HandleFunc(apiPrefix+GetRating, server.getRuleRating).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+RuleClusterDetailEndpoint, server.RuleClusterDetailEndpoint).Methods(http.MethodGet)
 
 	// Rule Enable/Disable/etc endpoints
