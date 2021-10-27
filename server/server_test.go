@@ -1314,7 +1314,7 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"data":[{"cluster":"%v"}],"meta":{"count":%v, "rule_selector":"%v"},"status":"ok"}`
+	respBody := `{"data":[{"cluster":"%v"}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules)
@@ -1364,7 +1364,7 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"data":[{"cluster":"%v"}],"meta":{"count":%v, "rule_selector":"%v"},"status":"ok"}`
+	respBody := `{"data":[{"cluster":"%v"}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules)
