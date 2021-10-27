@@ -153,10 +153,34 @@ func fillInGeneratedReports(clusterNames []types.ClusterName, reports map[types.
 	return generatedReports
 }
 
+// sendGeneratedResponse send the response with the generated cluster reports
+func sendGeneratedResponse(writer http.ResponseWriter, clusterReports types.ClusterReports) {
+	bytes, err := json.MarshalIndent(clusterReports, "", "\t")
+	if err != nil {
+		sendMarshallErrorResponse(writer, err)
+		return
+	}
+
+	err = responses.Send(http.StatusOK, writer, bytes)
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
 // processListOfClusters function retrieves list of cluster IDs and process
 // them accordingly: check, read report from DB, serialize etc.
 func (server *HTTPServer) processListOfClusters(writer http.ResponseWriter, request *http.Request, orgID types.OrgID, clusters []string) {
 	log.Info().Int("number of clusters", len(clusters)).Str("list", strings.Join(clusters, ", ")).Msg("processListOfClusters")
+
+	// avoid accessing to storage and return ASAP
+	if len(clusters) == 0 {
+		generatedReports := fillInGeneratedReports(
+			[]types.ClusterName{},
+			map[types.ClusterName]types.ClusterReport{},
+		)
+		sendGeneratedResponse(writer, generatedReports)
+		return
+	}
 
 	// first step: check if all cluster IDs have proper format
 	if err := validateClusterIDs(clusters); err != nil {
@@ -187,17 +211,7 @@ func (server *HTTPServer) processListOfClusters(writer http.ResponseWriter, requ
 	}
 
 	generatedReports := fillInGeneratedReports(clusterNames, reports)
-
-	bytes, err := json.MarshalIndent(generatedReports, "", "\t")
-	if err != nil {
-		sendMarshallErrorResponse(writer, err)
-		return
-	}
-
-	err = responses.Send(http.StatusOK, writer, bytes)
-	if err != nil {
-		log.Error().Err(err).Msg(responseDataError)
-	}
+	sendGeneratedResponse(writer, generatedReports)
 }
 
 // reportForListOfClusters function returns reports for several clusters that
