@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/responses"
@@ -157,6 +156,7 @@ func fillInGeneratedReports(clusterNames []types.ClusterName, reports map[types.
 func sendGeneratedResponse(writer http.ResponseWriter, clusterReports types.ClusterReports) {
 	bytes, err := json.MarshalIndent(clusterReports, "", "\t")
 	if err != nil {
+		log.Error().Err(err).Msg("Cannot marshal the ClusterReports response data")
 		sendMarshallErrorResponse(writer, err)
 		return
 	}
@@ -170,7 +170,7 @@ func sendGeneratedResponse(writer http.ResponseWriter, clusterReports types.Clus
 // processListOfClusters function retrieves list of cluster IDs and process
 // them accordingly: check, read report from DB, serialize etc.
 func (server *HTTPServer) processListOfClusters(writer http.ResponseWriter, request *http.Request, orgID types.OrgID, clusters []string) {
-	log.Info().Int("number of clusters", len(clusters)).Str("list", strings.Join(clusters, ", ")).Msg("processListOfClusters")
+	log.Info().Int("number of clusters", len(clusters)).Strs("list", clusters).Msg("processListOfClusters")
 
 	// avoid accessing to storage and return ASAP
 	if len(clusters) == 0 {
