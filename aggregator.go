@@ -89,6 +89,10 @@ var (
 	// It is set up during build process.
 	BuildCommit = "*not set*"
 
+	// UtilsVersions contains currently used version of
+	// github.com/RedHatInsights/insights-operator-utils package
+	UtilsVersion = "*not set*"
+
 	// autoMigrate determines if the prepareDB function upgrades
 	// the database to the latest migration version. This is necessary
 	// for certain tests that work with a temporary, empty SQLite DB.
@@ -272,6 +276,7 @@ func printVersionInfo() {
 	initInfoLog("Build time: " + BuildTime)
 	initInfoLog("Branch: " + BuildBranch)
 	initInfoLog("Commit: " + BuildCommit)
+	initInfoLog("Utils version:" + UtilsVersion)
 }
 
 const helpMessageTemplate = `
