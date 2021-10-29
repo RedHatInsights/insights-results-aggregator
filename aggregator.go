@@ -89,7 +89,7 @@ var (
 	// It is set up during build process.
 	BuildCommit = "*not set*"
 
-	// UtilsVersions contains currently used version of
+	// UtilsVersion contains currently used version of
 	// github.com/RedHatInsights/insights-operator-utils package
 	UtilsVersion = "*not set*"
 
