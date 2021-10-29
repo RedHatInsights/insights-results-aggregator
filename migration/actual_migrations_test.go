@@ -514,3 +514,145 @@ func TestMigration19(t *testing.T) {
 	err = db.QueryRow(`SELECT rule_id FROM recommendation`).Err()
 	assert.Error(t, err, "rule_id column should not exist")
 }
+
+func TestMigration18(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	err := migration.SetDBVersion(db, dbDriver, 17)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO advisor_ratings
+		(user_id, org_id, rule_id, error_key, rated_at, last_updated_at, rating)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7)
+	`,
+		testdata.UserID,
+		testdata.OrgID,
+		testdata.Rule1Name,
+		testdata.ErrorKey1,
+		time.Now(),
+		time.Now(),
+		types.UserVoteLike,
+	)
+	assert.Error(t, err, `Expected error since advisor_ratings table does not exist yet`)
+
+	if dbDriver == types.DBDriverSQLite3 {
+		assert.Contains(t, err.Error(), "no such table: advisor_ratings")
+	} else if dbDriver == types.DBDriverPostgres {
+		assert.Contains(t, err.Error(), `relation "advisor_ratings" does not exist`)
+	}
+
+	err = migration.SetDBVersion(db, dbDriver, 18)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO advisor_ratings
+		(user_id, org_id, rule_id, error_key, rated_at, last_updated_at, rating)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7)
+	`,
+		testdata.UserID,
+		testdata.OrgID,
+		testdata.Rule1Name,
+		testdata.ErrorKey1,
+		time.Now(),
+		time.Now(),
+		types.UserVoteLike,
+	)
+	helpers.FailOnError(t, err)
+}
+
+/*
+	_, err = db.Exec(`
+		INSERT INTO advisor_ratings
+		(user_id, org_id, rule_fqdn, error_key, rated_at, last_updated_at, rating, rule_id)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7, $8)
+	`,
+		testdata.UserID,
+		testdata.OrgID,
+		testdata.Rule1Name,
+		testdata.ErrorKey1,
+		time.Now(),
+		time.Now(),
+		types.UserVoteLike,
+		testdata.Rule1CompositeID,
+	)
+*/
+
+func TestMigration20(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// nothing worth testing for sqlite
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 19)
+	helpers.FailOnError(t, err)
+
+	err = db.QueryRow(`SELECT rule_fqdn FROM advisor_ratings`).Err()
+	assert.Error(t, err, "rule_fqdn column should not exist")
+
+	_, err = db.Exec(`
+		INSERT INTO advisor_ratings
+		(user_id, org_id, rule_id, error_key, rated_at, last_updated_at, rating)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7)
+	`,
+		testdata.UserID,
+		testdata.OrgID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		time.Now(),
+		time.Now(),
+		types.UserVoteLike,
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, dbDriver, 20)
+	helpers.FailOnError(t, err)
+
+	var (
+		ruleFQDN string
+		ruleID   string
+	)
+
+	err = db.QueryRow(`
+			SELECT
+				rule_fqdn, rule_id
+			FROM
+				advisor_ratings
+			WHERE
+				user_id = $1 AND org_id = $2`,
+		testdata.UserID, testdata.OrgID,
+	).Scan(
+		&ruleFQDN, &ruleID,
+	)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, testdata.Rule1ID, ruleFQDN)
+	assert.Equal(t, testdata.Rule1CompositeID, ruleID)
+
+	//Step down should rename rule_fqdn column to rule_id and it contains only plugin name
+	err = migration.SetDBVersion(db, dbDriver, 19)
+	helpers.FailOnError(t, err)
+
+	err = db.QueryRow(`SELECT rule_fqdn FROM advisor_ratings`).Err()
+	assert.Error(t, err, "rule_fqdn column should not exist")
+	err = db.QueryRow(`
+			SELECT
+				rule_id
+			FROM
+				advisor_ratings
+			WHERE
+				user_id = $1 AND org_id = $2`,
+		testdata.UserID, testdata.OrgID,
+	).Scan(
+		&ruleID,
+	)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, testdata.Rule1ID, ruleID)
+}
