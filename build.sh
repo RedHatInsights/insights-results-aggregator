@@ -20,5 +20,7 @@ buildtime=$(date)
 branch=$(git rev-parse --abbrev-ref HEAD)
 commit=$(git rev-parse HEAD)
 
-go build -ldflags="-X 'main.BuildTime=$buildtime' -X 'main.BuildVersion=$version' -X 'main.BuildBranch=$branch' -X 'main.BuildCommit=$commit'"
+utils_version=$(go list -m github.com/RedHatInsights/insights-operator-utils | awk '{print $2}')
+
+go build -ldflags="-X 'main.BuildTime=$buildtime' -X 'main.BuildVersion=$version' -X 'main.BuildBranch=$branch' -X 'main.BuildCommit=$commit' -X 'main.UtilsVersion=$utils_version'"
 exit $?
