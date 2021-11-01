@@ -74,16 +74,18 @@ const (
 
 // HTTPServer in an implementation of Server interface
 type HTTPServer struct {
-	Config  Configuration
-	Storage storage.Storage
-	Serv    *http.Server
+	Config     Configuration
+	Storage    storage.Storage
+	Serv       *http.Server
+	InfoParams map[string]string
 }
 
 // New constructs new implementation of Server interface
 func New(config Configuration, storage storage.Storage) *HTTPServer {
 	return &HTTPServer{
-		Config:  config,
-		Storage: storage,
+		Config:     config,
+		Storage:    storage,
+		InfoParams: make(map[string]string),
 	}
 }
 
