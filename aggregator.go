@@ -99,6 +99,16 @@ var (
 	autoMigrate = false
 )
 
+// fillInInfoParams function fills-in additional info used by /info endpoint
+// handler
+func fillInInfoParams(params map[string]string) {
+	params["BuildVersion"] = BuildVersion
+	params["BuildTime"] = BuildTime
+	params["BuildBranch"] = BuildBranch
+	params["BuildCommit"] = BuildCommit
+	params["UtilsVersion"] = UtilsVersion
+}
+
 // createStorage function initializes connection to preconfigured storage,
 // usually SQLite, PostgreSQL, or AWS RDS.
 func createStorage() (*storage.DBStorage, error) {
