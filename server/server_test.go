@@ -1430,3 +1430,16 @@ func TestRuleClusterDetailEndpoint_InvalidParametersActiveClusters(t *testing.T)
 		Body:       `{"status": "` + errStr + `"}`,
 	})
 }
+
+// TestServeInfoMap checks the REST API server behaviour for info endpoint
+func TestServeInfoMap(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: "info",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+	})
+}
