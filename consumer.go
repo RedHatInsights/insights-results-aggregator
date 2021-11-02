@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,9 +31,7 @@ var (
 // startConsumer function starts the consumer or returns an error in case of
 // any error. When consumer is started properly, nil is returned instead.
 func startConsumer(brokerConf broker.Configuration) error {
-	defer func() {
-		finishConsumerInstanceInitialization()
-	}()
+	defer finishConsumerInstanceInitialization()
 
 	dbStorage, err := createStorage()
 	if err != nil {
