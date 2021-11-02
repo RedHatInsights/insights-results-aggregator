@@ -877,17 +877,21 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Stor
 
 // TestConstructInClausule checks the helper function constructInClausule
 func TestConstructInClausule(t *testing.T) {
-	c0 := storage.ConstructInClausule(0)
-	assert.Equal(t, c0, "$1")
+	_, err := storage.ConstructInClausule(0)
+	assert.NotNil(t, err)
+	assert.EqualErrorf(t, err, err.Error(), "at least one value needed")
 
-	c1 := storage.ConstructInClausule(1)
+	c1, err := storage.ConstructInClausule(1)
 	assert.Equal(t, c1, "$1")
+	helpers.FailOnError(t, err)
 
-	c2 := storage.ConstructInClausule(2)
+	c2, err := storage.ConstructInClausule(2)
 	assert.Equal(t, c2, "$1,$2")
+	helpers.FailOnError(t, err)
 
-	c3 := storage.ConstructInClausule(3)
+	c3, err := storage.ConstructInClausule(3)
 	assert.Equal(t, c3, "$1,$2,$3")
+	helpers.FailOnError(t, err)
 }
 
 // TestArgsWithClusterNames checks the helper function argsWithClusterNames
@@ -951,11 +955,32 @@ func TestDBStorageReadReportsForClusters3(t *testing.T) {
 	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
 
 	// try to read reports for clusters
-	cn1 := []types.ClusterName{}
-	_, err := mockStorage.ReadReportsForClusters(cn1)
+	noClusters := []types.ClusterName{}
+	results, err := mockStorage.ReadReportsForClusters(noClusters)
 
-	// error is expected in this case
-	assert.NotNil(t, err)
+	// previously would fail on the DB due to improper SQL syntax, now returns empty list
+	helpers.FailOnError(t, err)
+
+	// and check the read report with expected one
+	assert.Equal(t, len(results), 0)
+}
+
+// TestDBStorageReadOrgIDsForClusters0_Reproducer reproduces a bug caused by improper in clause handling
+func TestDBStorageReadOrgIDsForClusters0_Reproducer(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
+
+	// try to read org IDs for clusters
+	noClusters := []types.ClusterName{}
+	results, err := mockStorage.ReadOrgIDsForClusters(noClusters)
+
+	// previously would fail on the DB due to improper SQL syntax, now returns empty list
+	helpers.FailOnError(t, err)
+
+	// and check the read report with expected one
+	assert.Equal(t, len(results), 0)
 }
 
 // TestDBStorageReadOrgIDsForClusters1 check the behaviour of method
@@ -991,22 +1016,6 @@ func TestDBStorageReadOrgIDsForClusters2(t *testing.T) {
 	// and check the read report with expected one
 	assert.Equal(t, len(results), 1)
 	assert.Equal(t, results[0], testdata.OrgID)
-}
-
-// TestDBStorageReadOrgIDsForClusters3 check the behaviour of method
-// ReadOrgIDsForClusters
-func TestDBStorageReadOrgIDsForClusters3(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	defer closer()
-
-	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
-
-	// try to read org IDs for clusters
-	cn1 := []types.ClusterName{}
-	_, err := mockStorage.ReadOrgIDsForClusters(cn1)
-
-	// error is expected in this case
-	assert.NotNil(t, err)
 }
 
 // TestDBStorageWriteRecommendationsForClusterClosedStorage check the behaviour of method WriteRecommendationsForCluster
@@ -1235,6 +1244,24 @@ func TestDBStorageReadRecommendationsForClustersNoRecommendations(t *testing.T) 
 	res, err := mockStorage.ReadRecommendationsForClusters([]types.ClusterName{testdata.ClusterName})
 	helpers.FailOnError(t, err)
 
+	assert.Equal(t, expect, res)
+}
+
+// TestDBStorageReadRecommendationsForClustersEmptyList_Reproducer reproduces a bug caused by improper in clause handling
+func TestDBStorageReadRecommendationsForClustersEmptyList_Reproducer(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty,
+	)
+	helpers.FailOnError(t, err)
+
+	expect := utypes.RecommendationImpactedClusters{}
+
+	res, err := mockStorage.ReadRecommendationsForClusters([]types.ClusterName{})
+
+	helpers.FailOnError(t, err)
 	assert.Equal(t, expect, res)
 }
 

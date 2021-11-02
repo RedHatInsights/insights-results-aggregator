@@ -494,13 +494,16 @@ func parseRuleRows(rows *sql.Rows) ([]types.RuleOnReport, error) {
 
 // constructInClausule is a helper function to construct `in` clausule for SQL
 // statement.
-func constructInClausule(howMany int) string {
+func constructInClausule(howMany int) (string, error) {
 	// construct the `in` clausule in SQL query statement
+	if howMany < 1 {
+		return "", fmt.Errorf("at least one value needed")
+	}
 	inClausule := "$1"
 	for i := 2; i <= howMany; i++ {
 		inClausule += fmt.Sprintf(",$%d", i)
 	}
-	return inClausule
+	return inClausule, nil
 }
 
 // argsWithClusterNames is a helper function to construct arguments for SQL
@@ -538,11 +541,19 @@ func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName)
 	// stub for return value
 	ids := make([]types.OrgID, 0)
 
+	if len(clusterNames) < 1 {
+		return ids, nil
+	}
+
 	// prepare arguments
 	args := argsWithClusterNames(clusterNames)
 
 	// construct the `in` clausule in SQL query statement
-	inClausule := constructInClausule(len(clusterNames))
+	inClausule, err := constructInClausule(len(clusterNames))
+	if err != nil {
+		log.Error().Err(err).Msg(inClauseError)
+		return ids, err
+	}
 
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
@@ -578,11 +589,19 @@ func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName
 	// stub for return value
 	reports := make(map[types.ClusterName]types.ClusterReport)
 
+	if len(clusterNames) < 1 {
+		return reports, nil
+	}
+
 	// prepare arguments
 	args := argsWithClusterNames(clusterNames)
 
 	// construct the `in` clausule in SQL query statement
-	inClausule := constructInClausule(len(clusterNames))
+	inClausule, err := constructInClausule(len(clusterNames))
+	if err != nil {
+		log.Error().Err(err).Msg(inClauseError)
+		return reports, err
+	}
 
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
@@ -1000,11 +1019,19 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 
 	recommendationsMap := make(utypes.RecommendationImpactedClusters, 0)
 
+	if len(clusterList) < 1 {
+		return recommendationsMap, nil
+	}
+
 	// prepare arguments
 	args := argsWithClusterNames(clusterList)
 
 	// construct the `in` clausule in SQL query statement
-	inClausule := constructInClausule(len(clusterList))
+	inClausule, err := constructInClausule(len(clusterList))
+	if err != nil {
+		log.Error().Err(err).Msg(inClauseError)
+		return recommendationsMap, err
+	}
 
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
