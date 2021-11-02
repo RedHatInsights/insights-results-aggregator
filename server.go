@@ -32,9 +32,7 @@ var (
 
 // startServer starts the server or returns an error
 func startServer() error {
-	defer func() {
-		finishServerInstanceInitialization()
-	}()
+	defer finishServerInstanceInitialization()
 
 	dbStorage, err := createStorage()
 	if err != nil {
