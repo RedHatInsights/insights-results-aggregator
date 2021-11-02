@@ -28,4 +28,7 @@ const (
 
 	// closeStatementError error string
 	closeStatementError = "Unable to close statement"
+
+	// inClauseError when constructing IN clause fails
+	inClauseError = "error constructing WHERE IN clause"
 )

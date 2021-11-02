@@ -551,7 +551,7 @@ func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName)
 	// construct the `in` clausule in SQL query statement
 	inClausule, err := constructInClausule(len(clusterNames))
 	if err != nil {
-		log.Error().Err(err).Msg("error constructing WHERE IN clause")
+		log.Error().Err(err).Msg(inClauseError)
 		return ids, err
 	}
 
@@ -599,7 +599,7 @@ func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName
 	// construct the `in` clausule in SQL query statement
 	inClausule, err := constructInClausule(len(clusterNames))
 	if err != nil {
-		log.Error().Err(err).Msg("error constructing WHERE IN clause")
+		log.Error().Err(err).Msg(inClauseError)
 		return reports, err
 	}
 
@@ -1029,7 +1029,7 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 	// construct the `in` clausule in SQL query statement
 	inClausule, err := constructInClausule(len(clusterList))
 	if err != nil {
-		log.Error().Err(err).Msg("error constructing WHERE IN clause")
+		log.Error().Err(err).Msg(inClauseError)
 		return recommendationsMap, err
 	}
 
