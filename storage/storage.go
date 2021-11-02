@@ -56,7 +56,7 @@ type Storage interface {
 		orgID types.OrgID, timeLimit time.Time) ([]types.ClusterName, error,
 	)
 	ListOfClustersForOrgSpecificRule(
-		orgID types.OrgID, ruleID types.RuleSelector, activeClusters interface{},
+		orgID types.OrgID, ruleID types.RuleSelector, activeClusters []string,
 	) ([]utypes.HittingClustersData, error)
 	ReadReportForCluster(
 		orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error,
@@ -392,12 +392,12 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.
 func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 	orgID types.OrgID,
 	ruleID types.RuleSelector,
-	activeClusters interface{}) (
+	activeClusters []string) (
 	[]utypes.HittingClustersData, error) {
 	results := make([]utypes.HittingClustersData, 0)
 
 	var whereClause string
-	if activeClusters != nil {
+	if len(activeClusters) > 0 {
 		// #nosec G201
 		whereClause = fmt.Sprintf(`WHERE org_id = $1 AND rule_id = $2 AND cluster_id IN (%v)`,
 			inClauseFromSlice(activeClusters))
