@@ -16,10 +16,12 @@ package main
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 )
 
@@ -46,6 +48,17 @@ func startServer() error {
 
 	// fill-in additional info used by /info endpoint handler
 	fillInInfoParams(serverInstance.InfoParams)
+
+	// try to retrieve the actual DB migration version
+	// and add it into the `params` map
+	currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection())
+	if err != nil {
+		const msg = "Unable to retrieve DB migration version"
+		log.Error().Err(err).Msg(msg)
+		serverInstance.InfoParams["DB_version"] = msg
+	} else {
+		serverInstance.InfoParams["DB_version"] = strconv.Itoa(int(currentVersion))
+	}
 
 	err = serverInstance.Start(finishServerInstanceInitialization)
 	if err != nil {
