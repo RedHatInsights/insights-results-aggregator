@@ -440,3 +440,25 @@ func TestPerformMigrationsTooManyArgs(t *testing.T) {
 
 	os.Args = oldArgs
 }
+
+// TestFillInInfoParams test the behaviour of function fillInInfoParams
+func TestFillInInfoParams(t *testing.T) {
+	// map to be used by this unit test
+	m := make(map[string]string)
+
+	// preliminary test if Go Universe is still ok
+	assert.Empty(t, m, "Map should be empty at the beginning")
+
+	// try to fill-in all info params
+	main.FillInInfoParams(m)
+
+	// preliminary test if Go Universe is still ok
+	assert.Len(t, m, 5, "Map should contains exactly five items")
+
+	// does the map contain all expected keys?
+	assert.Contains(t, m, "BuildVersion")
+	assert.Contains(t, m, "BuildTime")
+	assert.Contains(t, m, "BuildBranch")
+	assert.Contains(t, m, "BuildCommit")
+	assert.Contains(t, m, "UtilsVersion")
+}

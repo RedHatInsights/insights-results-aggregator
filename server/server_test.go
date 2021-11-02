@@ -1251,6 +1251,28 @@ func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenSelectorDBError(t *testing
 	})
 }
 
+func TestRuleClusterDetailEndpoint_BadBodyInRequest(t *testing.T) {
+	errStr := "Internal Server Error"
+
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
+
+	// A request body omitting the closing '"'
+	getRequestBody := fmt.Sprintf(`{"clusters":["%v]}`, testdata.ClusterName)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule3CompositeID, testdata.OrgID, testdata.UserID},
+		Body:         getRequestBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+}
+
 func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 	const errStr = "Internal Server Error"
 
@@ -1292,13 +1314,13 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"data":[{"cluster":"%v"}],"meta":{"component":"%v","count":%v, "error_key":"%v"},"status":"ok"}`
+	respBody := `{"data":[{"cluster":"%v"}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules)
 
 	expected := fmt.Sprintf(respBody,
-		testdata.ClusterName, testdata.Rule1ID, 1, testdata.ErrorKey1,
+		testdata.ClusterName, 1, testdata.Rule1CompositeID,
 	)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1318,7 +1340,7 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	})
 
 	expected = fmt.Sprintf(respBody,
-		testdata.ClusterName, testdata.Rule2ID, 1, testdata.ErrorKey2,
+		testdata.ClusterName, 1, testdata.Rule2CompositeID,
 	)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1335,5 +1357,89 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       expected,
+	})
+}
+
+func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	respBody := `{"data":[{"cluster":"%v"}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
+
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules)
+
+	getRequestBody := fmt.Sprintf(`{"clusters":["%v"]}`, testdata.ClusterName)
+	expected := fmt.Sprintf(respBody,
+		testdata.ClusterName, 1, testdata.Rule1CompositeID,
+	)
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+		Body:         getRequestBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       expected,
+	})
+
+	expected = fmt.Sprintf(respBody,
+		testdata.ClusterName, 1, testdata.Rule2CompositeID,
+	)
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule2CompositeID, testdata.OrgID, testdata.UserID},
+		Body:         getRequestBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       expected,
+	})
+}
+
+func TestRuleClusterDetailEndpoint_InvalidParametersActiveClusters(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	errStr := `Error during parsing param 'org_id' with value 'x'. Error: 'unsigned integer expected'`
+
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules)
+
+	getRequestBody := fmt.Sprintf(`{"clusters":["%v"]}`, testdata.ClusterName)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, "x", testdata.UserID},
+		Body:         getRequestBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+
+	errStr = fmt.Sprintf(`Error during parsing param 'rule_selector' with value '%v'. Error: 'Param rule_selector is not a valid rule selector (plugin_name|error_key)'`, testdata.Rule1.Module)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.RuleClusterDetailEndpoint,
+		EndpointArgs: []interface{}{testdata.Rule1.Module, testdata.OrgID, testdata.UserID},
+		Body:         getRequestBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+		Body:       `{"status": "` + errStr + `"}`,
+	})
+}
+
+// TestServeInfoMap checks the REST API server behaviour for info endpoint
+func TestServeInfoMap(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:   http.MethodGet,
+		Endpoint: "info",
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
 	})
 }

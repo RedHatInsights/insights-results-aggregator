@@ -15,6 +15,7 @@
 package server_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -149,7 +150,7 @@ func TestReadReportsForClustersKnownCluster(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ReportForListOfClustersEndpoint,
-		EndpointArgs: []interface{}{1, testdata.ClusterName},
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.ClusterName},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body: `{
@@ -200,5 +201,24 @@ func TestReadReportsForClustersPayloadPositiveOrgID(t *testing.T) {
 		Body: `{
 			"status":"client didn't provide request body"
 		}`,
+	})
+}
+
+// TestReadReportsForClustersPayloadNoClusters check if an empty list
+// of clusters returns the appropriate response
+func TestReadReportsForClustersPayloadNoClusters(t *testing.T) {
+	expectedResponse := types.ClusterReports{
+		Status:  "ok",
+		Reports: make(map[types.ClusterName]json.RawMessage),
+	}
+
+	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.ReportForListOfClustersPayloadEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID},
+		Body:         `{"clusters":[]}`,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       helpers.ToJSONString(expectedResponse),
 	})
 }

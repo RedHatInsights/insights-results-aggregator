@@ -50,6 +50,37 @@
         "parameters": []
       }
     },
+    "/info": {
+      "get": {
+        "summary": "Returns basic information about Insights Results Aggregator.",
+        "description": "InfoEndpoint returns basic information about Insights Results Aggregator version, utils repository version, commit hash etc.",
+        "operationId": "InfoEndpoint",
+        "responses": {
+          "200": {
+            "description": "A map containing information about Insights Results Aggregator.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "info": {
+                      "type": "object",
+                      "additionalProperties": {
+                         "type": "string"
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/metrics": {
       "get": {
         "summary": "Read all metrics exposed by this service",
@@ -1814,6 +1845,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Request body could not be parsed, so the query is not processed"
           },
           "404": {
             "description": "Resource not found, usually caused when some rule selector, organization or user doesn't exist"

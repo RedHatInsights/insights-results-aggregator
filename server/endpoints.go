@@ -87,6 +87,10 @@ const (
 	// GetRating retrieves the rating for a specific rule and user
 	GetRating = "rules/{rule_selector}/organizations/{org_id}/users/{user_id}/rating"
 
+	// InfoEndpoint returns basic information about Insights Aggregator
+	// version, utils repository version, commit hash etc.
+	InfoEndpoint = "info"
+
 	// MetricsEndpoint returns prometheus metrics
 	MetricsEndpoint = "metrics"
 )
@@ -130,6 +134,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+Rating, server.setRuleRating).Methods(http.MethodPost)
 	router.HandleFunc(apiPrefix+GetRating, server.getRuleRating).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+RuleClusterDetailEndpoint, server.RuleClusterDetailEndpoint).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+InfoEndpoint, server.infoMap).Methods(http.MethodGet, http.MethodOptions)
 
 	// Rule Enable/Disable/etc endpoints
 	server.addRuleEnableDisableEndpointsToRouter(router, apiPrefix)

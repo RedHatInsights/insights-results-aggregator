@@ -44,6 +44,9 @@ func startServer() error {
 
 	serverInstance = server.New(serverCfg, dbStorage)
 
+	// fill-in additional info used by /info endpoint handler
+	fillInInfoParams(serverInstance.InfoParams)
+
 	err = serverInstance.Start(finishServerInstanceInitialization)
 	if err != nil {
 		log.Error().Err(err).Msg("HTTP(s) start error")
