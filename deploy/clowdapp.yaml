@@ -449,7 +449,7 @@ parameters:
   required: true
   value: /
 - name: IRDW_LOG_STREAM
-  value: insights-results-db-writer
+  value: $HOSTNAME
 - name: DB_WRITER_REPLICAS
   description: The number of replicas to use for the insights-results-db-writer deployment
   value: "1"
@@ -457,7 +457,7 @@ parameters:
   description: Haberdasher labels for unstructured logs
   value: '{"app": "ccx-insights-results-db-writer"}'
 - name: CLOUDWATCH_DEBUG
-  value: "true"
+  value: "false"
   required: true
 - name: CLOUDWATCH_ENABLED
   value: "true"
