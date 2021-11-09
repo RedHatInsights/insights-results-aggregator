@@ -39,10 +39,10 @@ func logClusterInfo(message *incomingMessage) {
 		return
 	}
 
-	logMessage := fmt.Sprintf("rule hits for %v.%v:", message.Organization, message.ClusterName)
+	logMessage := fmt.Sprintf("rule hits for %d.%s:", *message.Organization, *message.ClusterName)
 	if message.ParsedHits != nil && len(message.ParsedHits) > 0 {
 		for _, ph := range message.ParsedHits {
-			newLine := fmt.Sprintf("\n\trule: %v; error key: %v", ph.Module, ph.ErrorKey)
+			newLine := fmt.Sprintf("\n\trule: %s; error key: %s", ph.Module, ph.ErrorKey)
 			logMessage += newLine
 		}
 		log.Info().Msg(logMessage)
