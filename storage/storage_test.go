@@ -1180,7 +1180,7 @@ func TestDBStorageReadRecommendationsForClusters(t *testing.T) {
 		testdata.Rule3CompositeID: expectingImpactedC,
 	}
 
-	res, err := mockStorage.ReadRecommendationsForClusters([]types.ClusterName{testdata.ClusterName})
+	res, err := mockStorage.ReadRecommendationsForClusters([]string{string(testdata.ClusterName)}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, expect, res)
@@ -1192,26 +1192,26 @@ func TestDBStorageReadRecommendationsForClustersMoreClusters(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	clusterList := make([]types.ClusterName, 3)
+	clusterList := make([]string, 3)
 	for i := range clusterList {
-		clusterList[i] = testdata.GetRandomClusterID()
+		clusterList[i] = string(testdata.GetRandomClusterID())
 	}
 
 	// cluster 0 has 0 rules == should not affect the results
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, clusterList[0], testdata.Report0Rules,
+		testdata.OrgID, types.ClusterName(clusterList[0]), testdata.Report0Rules,
 	)
 	helpers.FailOnError(t, err)
 
 	// cluster 1 has rule1 and rule2
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, clusterList[1], testdata.Report2Rules,
+		testdata.OrgID, types.ClusterName(clusterList[1]), testdata.Report2Rules,
 	)
 	helpers.FailOnError(t, err)
 
 	// cluster 2 has rule1 and rule2 and rule3
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, clusterList[2], testdata.Report3Rules,
+		testdata.OrgID, types.ClusterName(clusterList[2]), testdata.Report3Rules,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1222,7 +1222,7 @@ func TestDBStorageReadRecommendationsForClustersMoreClusters(t *testing.T) {
 		testdata.Rule3CompositeID: utypes.ImpactedClustersCnt(1),
 	}
 
-	res, err := mockStorage.ReadRecommendationsForClusters(clusterList)
+	res, err := mockStorage.ReadRecommendationsForClusters(clusterList, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, expect, res)
@@ -1241,7 +1241,7 @@ func TestDBStorageReadRecommendationsForClustersNoRecommendations(t *testing.T) 
 
 	expect := utypes.RecommendationImpactedClusters{}
 
-	res, err := mockStorage.ReadRecommendationsForClusters([]types.ClusterName{testdata.ClusterName})
+	res, err := mockStorage.ReadRecommendationsForClusters([]string{string(testdata.ClusterName)}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, expect, res)
@@ -1259,7 +1259,7 @@ func TestDBStorageReadRecommendationsForClustersEmptyList_Reproducer(t *testing.
 
 	expect := utypes.RecommendationImpactedClusters{}
 
-	res, err := mockStorage.ReadRecommendationsForClusters([]types.ClusterName{})
+	res, err := mockStorage.ReadRecommendationsForClusters([]string{}, testdata.OrgID)
 
 	helpers.FailOnError(t, err)
 	assert.Equal(t, expect, res)
@@ -1271,11 +1271,11 @@ func TestDBStorageReadRecommendationsGetSelectedClusters(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	clusterList := make([]types.ClusterName, 3)
+	clusterList := make([]string, 3)
 	for i := range clusterList {
 		randomClusterID := testdata.GetRandomClusterID()
 
-		clusterList[i] = randomClusterID
+		clusterList[i] = string(randomClusterID)
 
 		err := mockStorage.WriteRecommendationsForCluster(
 			testdata.OrgID, randomClusterID, testdata.Report3Rules,
@@ -1284,7 +1284,7 @@ func TestDBStorageReadRecommendationsGetSelectedClusters(t *testing.T) {
 	}
 
 	// we only retrieve one cluster
-	res, err := mockStorage.ReadRecommendationsForClusters([]types.ClusterName{clusterList[0]})
+	res, err := mockStorage.ReadRecommendationsForClusters([]string{string(clusterList[0])}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	expect1Impacted := utypes.ImpactedClustersCnt(1)
@@ -1308,11 +1308,11 @@ func TestDBStorageReadRecommendationsForNonexistingClusters(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	clusterList := make([]types.ClusterName, 3)
+	clusterList := make([]string, 3)
 	for i := range clusterList {
-		clusterList[i] = testdata.GetRandomClusterID()
+		clusterList[i] = string(testdata.GetRandomClusterID())
 	}
-	res, err := mockStorage.ReadRecommendationsForClusters(clusterList)
+	res, err := mockStorage.ReadRecommendationsForClusters(clusterList, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, utypes.RecommendationImpactedClusters{}, res)

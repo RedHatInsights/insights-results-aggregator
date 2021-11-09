@@ -264,6 +264,7 @@ func (server *HTTPServer) reportForListOfClustersPayload(writer http.ResponseWri
 
 // getRecommendations retrieves all recommendations hitting for all clusters in the org
 func (server *HTTPServer) getRecommendations(writer http.ResponseWriter, request *http.Request) {
+	tStart := time.Now()
 	// Extract user_id from URL
 	userID, ok := readUserID(writer, request)
 	if !ok {
@@ -280,21 +281,24 @@ func (server *HTTPServer) getRecommendations(writer http.ResponseWriter, request
 	}
 	log.Info().Int(orgIDStr, int(orgID)).Msg("getRecommendations")
 
-	var listOfClusters []types.ClusterName
+	var listOfClusters []string
 	err := json.NewDecoder(request.Body).Decode(&listOfClusters)
 	if err != nil {
 		handleServerError(writer, err)
 		return
 	}
-	log.Info().Msgf("getRecommendations list of clusters: %v", listOfClusters)
+	log.Info().Msgf("getRecommendations number of clusters: %v", len(listOfClusters))
 
-	recommendations, err := server.Storage.ReadRecommendationsForClusters(listOfClusters)
+	recommendations, err := server.Storage.ReadRecommendationsForClusters(listOfClusters, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("Errors retrieving recommendations")
 		handleServerError(writer, err)
 		return
 	}
 
+	log.Info().Uint32(orgIDStr, uint32(orgID)).Msgf(
+		"getRecommendations took %s", time.Since(tStart),
+	)
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData("recommendations", recommendations))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)

@@ -183,7 +183,7 @@ type Storage interface {
 		ruleID types.RuleID, errorKey types.ErrorKey) (utypes.SystemWideRuleDisable, bool, error)
 	ListOfSystemWideDisabledRules(
 		orgID types.OrgID, userID types.UserID) ([]utypes.SystemWideRuleDisable, error)
-	ReadRecommendationsForClusters([]types.ClusterName) (utypes.RecommendationImpactedClusters, error)
+	ReadRecommendationsForClusters([]string, types.OrgID) (utypes.RecommendationImpactedClusters, error)
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
@@ -1014,7 +1014,8 @@ func finishTransaction(tx *sql.Tx, err error) {
 
 // ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization
 func (storage DBStorage) ReadRecommendationsForClusters(
-	clusterList []types.ClusterName,
+	clusterList []string,
+	orgID types.OrgID,
 ) (utypes.RecommendationImpactedClusters, error) {
 
 	recommendationsMap := make(utypes.RecommendationImpactedClusters, 0)
@@ -1023,15 +1024,8 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 		return recommendationsMap, nil
 	}
 
-	// prepare arguments
-	args := argsWithClusterNames(clusterList)
-
-	// construct the `in` clausule in SQL query statement
-	inClausule, err := constructInClausule(len(clusterList))
-	if err != nil {
-		log.Error().Err(err).Msg(inClauseError)
-		return recommendationsMap, err
-	}
+	// #nosec G201
+	whereClause := fmt.Sprintf(`WHERE org_id = $1 AND cluster_id IN (%v)`, inClauseFromSlice(clusterList))
 
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
@@ -1040,12 +1034,11 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 		rule_id, count(*) as impacted_clusters_c
 	FROM
 		recommendation
-	WHERE
-		cluster_id in (` + inClausule + `)
+	` + whereClause + `
 	GROUP BY
 		rule_id
 	`
-	rows, err := storage.connection.Query(query, args...)
+	rows, err := storage.connection.Query(query, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("query to get recommendations")
 		return recommendationsMap, err
