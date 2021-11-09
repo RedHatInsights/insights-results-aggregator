@@ -141,6 +141,7 @@ func writeRecommendations(
 	}
 	tStored := time.Now()
 	logMessageInfo(consumer, msg, message, "Stored recommendations")
+	logClusterInfo(&message)
 	return tStored, nil
 }
 
@@ -216,6 +217,8 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	if err != nil {
 		return message.RequestID, err
 	}
+
+	logClusterInfo(&message)
 
 	// log durations for every message consumption steps
 	logDuration(tStart, tRead, msg.Offset, "read")

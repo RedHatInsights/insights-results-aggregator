@@ -15,6 +15,7 @@
 package consumer
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -30,6 +31,24 @@ func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMes
 		Str(clusterKey, string(*parsedMessage.ClusterName)).
 		Int(versionKey, int(parsedMessage.Version)).
 		Msg(event)
+}
+
+func logClusterInfo(message *incomingMessage) {
+	if message == nil {
+		log.Info().Msg("nil incoming message, no cluster info will be logged")
+		return
+	}
+
+	logMessage := fmt.Sprintf("rule hits for %v.%v:", message.Organization, message.ClusterName)
+	if message.ParsedHits != nil && len(message.ParsedHits) > 0 {
+		for _, ph := range message.ParsedHits {
+			newLine := fmt.Sprintf("\n\trule: %v; error key: %v", ph.Module, ph.ErrorKey)
+			logMessage += newLine
+		}
+		log.Info().Msg(logMessage)
+	} else {
+		log.Info().Msg("no rule hits found")
+	}
 }
 
 func logUnparsedMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, event string, err error) {
