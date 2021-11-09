@@ -49,6 +49,9 @@ func ServerTests() {
 	// tests for metrics hat is accessible via its endpoint as well
 	// implementation of these tests is stored in metrics.go
 	checkPrometheusMetrics()
+
+	// tests for /info endpoint
+	checkInfoEndpoint()
 }
 
 // BasicTests implements basic tests for REST API apiPrefix

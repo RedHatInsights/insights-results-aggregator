@@ -30,6 +30,7 @@ for more details about tables, indexes, and keys.
  public | recommendation                     | table
  public | report                             | table
  public | rule_hit                           | table
+ public | advisor_ratings                    | table
 ```
 
 ## Table `report`
@@ -148,6 +149,24 @@ CREATE TABLE recommendations (
     created_at  TIMESTAMP WITHOUT TIME ZONE,
 
     PRIMARY KEY(org_id, cluster_id, rule_fqdn, error_key)
+)
+```
+
+## Table `advisor_ratings`
+
+Cluster independent ratings of a recommendation, per user
+
+```sql
+CREATE TABLE advisor_ratings (
+    user_id VARCHAR NOT NULL,
+    org_id VARCHAR NOT NULL,
+    rule_fqdn VARCHAR NOT NULL,
+    error_key VARCHAR NOT NULL,
+    rated_at TIMESTAMP,
+    last_updated_at TIMESTAMP,
+    rating SMALLINT,
+    rule_id VARCHAR NOT NULL,
+    PRIMARY KEY(user_id, org_id, rule_fqdn, error_key)
 )
 ```
 

@@ -89,32 +89,32 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
               value: sslmode=disable
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
-              value: "false"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG
+              value: ${CLOUDWATCH_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
               value: ${CLOUDWATCH_DEBUG}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__STREAM_NAME
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
               value: ${IRDW_LOG_STREAM}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__CREATE_STREAM_IF_NOT_EXISTS
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
               value: ${CREATE_STREAM_IF_NOT_EXISTS}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_REGION
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
               valueFrom:
                 secretKeyRef:
                   name: cloudwatch
                   key: aws_region
                   optional: true
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_GROUP
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__LOG_GROUP
               valueFrom:
                 secretKeyRef:
                   name: cloudwatch
                   key: log_group_name
                   optional: true
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_ACCESS_ID
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_ACCESS_ID
               valueFrom:
                 secretKeyRef:
                   name: cloudwatch
                   key: aws_access_key_id
                   optional: true
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_SECRET_KEY
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: cloudwatch
@@ -173,14 +173,14 @@ objects:
                 - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES
                   value: "true"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
-                  value: "false"
-                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG
+                  value: ${CLOUDWATCH_ENABLED}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
                   value: ${CLOUDWATCH_DEBUG}
-                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__STREAM_NAME
+                - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
                   value: ${IRDW_LOG_STREAM}
-                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__CREATE_STREAM_IF_NOT_EXISTS
+                - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
                   value: ${CREATE_STREAM_IF_NOT_EXISTS}
-                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_REGION
+                - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
                   valueFrom:
                     secretKeyRef:
                       name: cloudwatch
@@ -265,32 +265,32 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
               value: sslmode=disable
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
-              value: "false"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG
+              value: ${CLOUDWATCH_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
               value: ${CLOUDWATCH_DEBUG}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__STREAM_NAME
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
               value: ${IRDW_LOG_STREAM}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__CREATE_STREAM_IF_NOT_EXISTS
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
               value: ${CREATE_STREAM_IF_NOT_EXISTS}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_REGION
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
               valueFrom:
                 secretKeyRef:
                   name: cloudwatch
                   key: aws_region
                   optional: true
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_GROUP
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__LOG_GROUP
               valueFrom:
                 secretKeyRef:
                   name: cloudwatch
                   key: log_group_name
                   optional: true
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_ACCESS_ID
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_ACCESS_ID
               valueFrom:
                 secretKeyRef:
                   name: cloudwatch
                   key: aws_access_key_id
                   optional: true
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_SECRET_KEY
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: cloudwatch
@@ -449,7 +449,7 @@ parameters:
   required: true
   value: /
 - name: IRDW_LOG_STREAM
-  value: insights-results-db-writer
+  value: $HOSTNAME
 - name: DB_WRITER_REPLICAS
   description: The number of replicas to use for the insights-results-db-writer deployment
   value: "1"
@@ -458,6 +458,9 @@ parameters:
   value: '{"app": "ccx-insights-results-db-writer"}'
 - name: CLOUDWATCH_DEBUG
   value: "false"
+  required: true
+- name: CLOUDWATCH_ENABLED
+  value: "true"
   required: true
 - name: CREATE_STREAM_IF_NOT_EXISTS
   value: "true"
