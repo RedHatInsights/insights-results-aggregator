@@ -1044,6 +1044,18 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 		return recommendationsMap, err
 	}
 
+	// EXPLAIN query to check performance and index usage
+	explRows, err := storage.connection.Query("EXPLAIN ANALYZE "+query, orgID)
+	if err != nil {
+		log.Error().Err(err).Msg("error explaining query")
+		return recommendationsMap, err
+	}
+	for explRows.Next() {
+		var step string
+		_ = explRows.Scan(&step)
+		log.Info().Msgf("EXPLAIN ReadRecommendationsForClusters: %v", step)
+	}
+
 	for rows.Next() {
 		var (
 			ruleID      types.RuleID
