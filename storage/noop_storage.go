@@ -315,7 +315,8 @@ func (*NoopStorage) ListOfSystemWideDisabledRules(
 
 // ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization
 func (*NoopStorage) ReadRecommendationsForClusters(
-	clusterList []types.ClusterName,
+	clusterList []string,
+	orgID types.OrgID,
 ) (utypes.RecommendationImpactedClusters, error) {
 	return nil, nil
 }
