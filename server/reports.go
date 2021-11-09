@@ -287,7 +287,7 @@ func (server *HTTPServer) getRecommendations(writer http.ResponseWriter, request
 		handleServerError(writer, err)
 		return
 	}
-	log.Info().Msgf("getRecommendations number of clusters: %v", len(listOfClusters))
+	log.Info().Msgf("getRecommendations number of clusters: %d", len(listOfClusters))
 
 	recommendations, err := server.Storage.ReadRecommendationsForClusters(listOfClusters, orgID)
 	if err != nil {
