@@ -29,8 +29,8 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	operator_utils_types "github.com/RedHatInsights/insights-operator-utils/types"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
+	ctypes "github.com/RedHatInsights/insights-results-types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -748,9 +748,9 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
 		Body:         `{"message": ""}`,
 		XRHIdentity: helpers.MakeXRHTokenString(t, &types.Token{
-			Identity: operator_utils_types.Identity{
+			Identity: ctypes.Identity{
 				AccountNumber: testdata.UserID,
-				Internal: operator_utils_types.Internal{
+				Internal: ctypes.Internal{
 					OrgID: testdata.Org2ID,
 				},
 			},
@@ -1314,7 +1314,7 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"data":[{"cluster":"%v"}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
+	respBody := `{"data":[{"cluster":"%v", "cluster_name":""}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules)
@@ -1364,7 +1364,7 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"data":[{"cluster":"%v"}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
+	respBody := `{"data":[{"cluster":"%v", "cluster_name":""}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules)

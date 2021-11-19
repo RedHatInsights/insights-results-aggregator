@@ -17,7 +17,7 @@
 package types
 
 import (
-	"github.com/RedHatInsights/insights-operator-utils/types"
+	types "github.com/RedHatInsights/insights-results-types"
 )
 
 // OrgID represents organization ID

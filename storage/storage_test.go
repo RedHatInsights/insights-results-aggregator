@@ -28,8 +28,8 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
-	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
+	ctypes "github.com/RedHatInsights/insights-results-types"
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -1173,8 +1173,8 @@ func TestDBStorageReadRecommendationsForClusters(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	expectingImpactedC := utypes.ImpactedClustersCnt(1)
-	expect := utypes.RecommendationImpactedClusters{
+	expectingImpactedC := ctypes.ImpactedClustersCnt(1)
+	expect := ctypes.RecommendationImpactedClusters{
 		testdata.Rule1CompositeID: expectingImpactedC,
 		testdata.Rule2CompositeID: expectingImpactedC,
 		testdata.Rule3CompositeID: expectingImpactedC,
@@ -1215,11 +1215,11 @@ func TestDBStorageReadRecommendationsForClustersMoreClusters(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	expect2Impacted := utypes.ImpactedClustersCnt(2)
-	expect := utypes.RecommendationImpactedClusters{
+	expect2Impacted := ctypes.ImpactedClustersCnt(2)
+	expect := ctypes.RecommendationImpactedClusters{
 		testdata.Rule1CompositeID: expect2Impacted,
 		testdata.Rule2CompositeID: expect2Impacted,
-		testdata.Rule3CompositeID: utypes.ImpactedClustersCnt(1),
+		testdata.Rule3CompositeID: ctypes.ImpactedClustersCnt(1),
 	}
 
 	res, err := mockStorage.ReadRecommendationsForClusters(clusterList, testdata.OrgID)
@@ -1239,7 +1239,7 @@ func TestDBStorageReadRecommendationsForClustersNoRecommendations(t *testing.T) 
 	)
 	helpers.FailOnError(t, err)
 
-	expect := utypes.RecommendationImpactedClusters{}
+	expect := ctypes.RecommendationImpactedClusters{}
 
 	res, err := mockStorage.ReadRecommendationsForClusters([]string{string(testdata.ClusterName)}, testdata.OrgID)
 	helpers.FailOnError(t, err)
@@ -1257,7 +1257,7 @@ func TestDBStorageReadRecommendationsForClustersEmptyList_Reproducer(t *testing.
 	)
 	helpers.FailOnError(t, err)
 
-	expect := utypes.RecommendationImpactedClusters{}
+	expect := ctypes.RecommendationImpactedClusters{}
 
 	res, err := mockStorage.ReadRecommendationsForClusters([]string{}, testdata.OrgID)
 
@@ -1287,8 +1287,8 @@ func TestDBStorageReadRecommendationsGetSelectedClusters(t *testing.T) {
 	res, err := mockStorage.ReadRecommendationsForClusters([]string{string(clusterList[0])}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
-	expect1Impacted := utypes.ImpactedClustersCnt(1)
-	expect := utypes.RecommendationImpactedClusters{
+	expect1Impacted := ctypes.ImpactedClustersCnt(1)
+	expect := ctypes.RecommendationImpactedClusters{
 		testdata.Rule1CompositeID: expect1Impacted,
 		testdata.Rule2CompositeID: expect1Impacted,
 		testdata.Rule3CompositeID: expect1Impacted,
@@ -1315,5 +1315,5 @@ func TestDBStorageReadRecommendationsForNonexistingClusters(t *testing.T) {
 	res, err := mockStorage.ReadRecommendationsForClusters(clusterList, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, utypes.RecommendationImpactedClusters{}, res)
+	assert.Equal(t, ctypes.RecommendationImpactedClusters{}, res)
 }

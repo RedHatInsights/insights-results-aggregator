@@ -42,8 +42,9 @@ github.com/RedHatInsights/insights-operator-utils v1.8.3/go.mod h1:L6alrkNSM+uBz
 github.com/RedHatInsights/insights-operator-utils v1.12.0/go.mod h1:mN5jURLpSG+j7y3VPAUTPyHsTWSxrqSHSerSacDBgFU=
 github.com/RedHatInsights/insights-operator-utils v1.21.0/go.mod h1:B2hizFGwXCc8MT34QqVJ1A8ANTyGQZQWXQw/gSCEsaU=
 github.com/RedHatInsights/insights-operator-utils v1.21.2/go.mod h1:3Pfsgsi7GCu2wgIqQlt1llpyQyyxsDWEGdgnPvadM40=
-github.com/RedHatInsights/insights-operator-utils v1.21.5 h1:hnb2M4sbzbfp7LzQeMxY58MwC2WAXnmzLYRsA1K2W4A=
-github.com/RedHatInsights/insights-operator-utils v1.21.5/go.mod h1:qa1a8NdarIzcZkr5mu9fBw4OarOfg1qZFZC1vNGbyas=
+github.com/RedHatInsights/insights-operator-utils v1.21.8/go.mod h1:qa1a8NdarIzcZkr5mu9fBw4OarOfg1qZFZC1vNGbyas=
+github.com/RedHatInsights/insights-operator-utils v1.22.0 h1:rXK/n6gJca5u/jmi62QyOeAR0EaUcoBLmGdBwqMBG7s=
+github.com/RedHatInsights/insights-operator-utils v1.22.0/go.mod h1:4G1aWUV3SBc5tRflpAZX2BjoWB8afxXtSutg+5/sLE8=
 github.com/RedHatInsights/insights-results-aggregator v0.0.0-20200604090056-3534f6dd9c1c/go.mod h1:7Pc15NYXErx7BMJ4rF1Hacm+29G6atzjhwBpXNFMt+0=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200825113234-e84e924194bc/go.mod h1:DcDgoCCmBuUSKQOGrTi0BfFLdSjAp/KxIwyqKUd46sM=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20201014142608-de97c4b07d5c/go.mod h1:x8IvreR2g24veCKVMXDPOR6a0D86QK9UCBfi5Xm5Gnc=
@@ -51,8 +52,11 @@ github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20201109115720
 github.com/RedHatInsights/insights-results-aggregator-data v1.0.1-0.20210614072933-b25730b1e023/go.mod h1:SDeBuNY8AIwkD4JB5/I54ArWG7qngP5/Ydn7xbu2iZo=
 github.com/RedHatInsights/insights-results-aggregator-data v1.1.2/go.mod h1:rbiccYJ8whbpLLvNGMiaFzyMPs1A/2/Jh0P2U9DXF+4=
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.1/go.mod h1:Ylo2cWFmraBzkwKLew54kZSsUTgeVvFJdIi/oRkdxtc=
-github.com/RedHatInsights/insights-results-aggregator-data v1.3.2 h1:3QdTNy2f7ly4Iioae4r86QYCyxdW0itmfs4QYhsy3eY=
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.2/go.mod h1:E1UaB+IjJ/muxvMstVoqJrB82zVKNykjTtCiM3tMHoM=
+github.com/RedHatInsights/insights-results-aggregator-data v1.3.3 h1:K6j+Sr+S0iUqFEfevl+MI0dEXn5AxFeJn9FTU5razWA=
+github.com/RedHatInsights/insights-results-aggregator-data v1.3.3/go.mod h1:udHNC7lBxYnu9AqMahABqvuclCzWUWSkbacQbUaehfI=
+github.com/RedHatInsights/insights-results-types v1.2.0 h1:tFaGQE2h/4OIhf8sI/lRwJ/Fh0soO7a47de9x4irIJs=
+github.com/RedHatInsights/insights-results-types v1.2.0/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
 github.com/RedHatInsights/kafka-zerolog v0.0.0-20210304172207-928f026dc7ec h1:/msFfckx6EIj0rZncrMUfNixFvsLbOiRIe4J0AurhDo=
 github.com/RedHatInsights/kafka-zerolog v0.0.0-20210304172207-928f026dc7ec/go.mod h1:HJul5oCsCRNiRlh/ayJDGdW3PzGlid/5aaQwJBn7was=
 github.com/Shopify/goreferrer v0.0.0-20181106222321-ec9c9a553398/go.mod h1:a1uqRtAwp2Xwc6WNPJEufxJ7fx3npB4UV/JOLmbu5I0=

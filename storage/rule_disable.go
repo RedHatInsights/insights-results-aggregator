@@ -19,7 +19,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	utypes "github.com/RedHatInsights/insights-operator-utils/types"
+	ctypes "github.com/RedHatInsights/insights-results-types"
+
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -125,8 +126,8 @@ func (storage DBStorage) UpdateDisabledRuleJustification(
 // ReadDisabledRule function returns disabled rule (if disabled) from database
 func (storage DBStorage) ReadDisabledRule(
 	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey) (utypes.SystemWideRuleDisable, bool, error) {
-	var disabledRule utypes.SystemWideRuleDisable
+	ruleID types.RuleID, errorKey types.ErrorKey) (ctypes.SystemWideRuleDisable, bool, error) {
+	var disabledRule ctypes.SystemWideRuleDisable
 
 	query := `SELECT
 			 org_id,
@@ -177,8 +178,8 @@ func (storage DBStorage) ReadDisabledRule(
 // ListOfSystemWideDisabledRules function returns list of all rules that have been
 // disabled for all clusters by given user
 func (storage DBStorage) ListOfSystemWideDisabledRules(
-	orgID types.OrgID, userID types.UserID) ([]utypes.SystemWideRuleDisable, error) {
-	disabledRules := make([]utypes.SystemWideRuleDisable, 0)
+	orgID types.OrgID, userID types.UserID) ([]ctypes.SystemWideRuleDisable, error) {
+	disabledRules := make([]ctypes.SystemWideRuleDisable, 0)
 	query := `SELECT
 			 org_id,
 			 user_id,
@@ -202,7 +203,7 @@ func (storage DBStorage) ListOfSystemWideDisabledRules(
 	defer closeRows(rows)
 
 	for rows.Next() {
-		var disabledRule utypes.SystemWideRuleDisable
+		var disabledRule ctypes.SystemWideRuleDisable
 
 		err = rows.Scan(&disabledRule.OrgID,
 			&disabledRule.UserID,
