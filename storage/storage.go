@@ -41,7 +41,8 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite database driver
 	"github.com/rs/zerolog/log"
 
-	utypes "github.com/RedHatInsights/insights-operator-utils/types"
+	ctypes "github.com/RedHatInsights/insights-results-types"
+
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -57,7 +58,7 @@ type Storage interface {
 	)
 	ListOfClustersForOrgSpecificRule(
 		orgID types.OrgID, ruleID types.RuleSelector, activeClusters []string,
-	) ([]utypes.HittingClustersData, error)
+	) ([]ctypes.HittingClustersData, error)
 	ReadReportForCluster(
 		orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error,
 	)
@@ -152,7 +153,7 @@ type Storage interface {
 		userID types.UserID,
 	) (map[types.RuleID]UserFeedbackOnRule, error)
 	DoesClusterExist(clusterID types.ClusterName) (bool, error)
-	ListOfDisabledRules(userID types.UserID) ([]utypes.DisabledRule, error)
+	ListOfDisabledRules(userID types.UserID) ([]ctypes.DisabledRule, error)
 	ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error)
 	RateOnRule(
 		types.UserID,
@@ -180,10 +181,10 @@ type Storage interface {
 		justification string) error
 	ReadDisabledRule(
 		orgID types.OrgID, userID types.UserID,
-		ruleID types.RuleID, errorKey types.ErrorKey) (utypes.SystemWideRuleDisable, bool, error)
+		ruleID types.RuleID, errorKey types.ErrorKey) (ctypes.SystemWideRuleDisable, bool, error)
 	ListOfSystemWideDisabledRules(
-		orgID types.OrgID, userID types.UserID) ([]utypes.SystemWideRuleDisable, error)
-	ReadRecommendationsForClusters([]string, types.OrgID) (utypes.RecommendationImpactedClusters, error)
+		orgID types.OrgID, userID types.UserID) ([]ctypes.SystemWideRuleDisable, error)
+	ReadRecommendationsForClusters([]string, types.OrgID) (ctypes.RecommendationImpactedClusters, error)
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
@@ -393,8 +394,8 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 	orgID types.OrgID,
 	ruleID types.RuleSelector,
 	activeClusters []string) (
-	[]utypes.HittingClustersData, error) {
-	results := make([]utypes.HittingClustersData, 0)
+	[]ctypes.HittingClustersData, error) {
+	results := make([]ctypes.HittingClustersData, 0)
 
 	var whereClause string
 	if len(activeClusters) > 0 {
@@ -417,12 +418,12 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 	defer closeRows(rows)
 
 	var (
-		clusterName types.ClusterName
+		clusterName ctypes.ClusterName
 	)
 	for rows.Next() {
 		err = rows.Scan(&clusterName)
 		if err == nil {
-			results = append(results, utypes.HittingClustersData{Cluster: clusterName})
+			results = append(results, ctypes.HittingClustersData{Cluster: clusterName})
 		} else {
 			log.Error().Err(err).Msg("ListOfClustersForOrgSpecificRule")
 		}
@@ -1016,9 +1017,9 @@ func finishTransaction(tx *sql.Tx, err error) {
 func (storage DBStorage) ReadRecommendationsForClusters(
 	clusterList []string,
 	orgID types.OrgID,
-) (utypes.RecommendationImpactedClusters, error) {
+) (ctypes.RecommendationImpactedClusters, error) {
 
-	recommendationsMap := make(utypes.RecommendationImpactedClusters, 0)
+	recommendationsMap := make(ctypes.RecommendationImpactedClusters, 0)
 
 	if len(clusterList) < 1 {
 		return recommendationsMap, nil
@@ -1061,7 +1062,7 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 	for rows.Next() {
 		var (
 			ruleID      types.RuleID
-			impactedCnt utypes.ImpactedClustersCnt
+			impactedCnt ctypes.ImpactedClustersCnt
 		)
 
 		err := rows.Scan(

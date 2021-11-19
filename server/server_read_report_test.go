@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	operator_utils_types "github.com/RedHatInsights/insights-operator-utils/types"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
+	ctypes "github.com/RedHatInsights/insights-results-types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
@@ -433,8 +433,8 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 				t, expected, got,
 				func(
 					t testing.TB,
-					expectedRules []operator_utils_types.RuleOnReport,
-					gotRules []operator_utils_types.RuleOnReport,
+					expectedRules []ctypes.RuleOnReport,
+					gotRules []ctypes.RuleOnReport,
 				) {
 					assert.Equal(t, len(expectedRules), len(gotRules))
 

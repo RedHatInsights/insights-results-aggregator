@@ -19,14 +19,15 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	utypes "github.com/RedHatInsights/insights-operator-utils/types"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
+	ctypes "github.com/RedHatInsights/insights-results-types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -771,7 +772,7 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	clusterIds := []utypes.ClusterName{
+	clusterIds := []ctypes.ClusterName{
 		testdata.GetRandomClusterID(),
 		testdata.GetRandomClusterID(),
 		testdata.GetRandomClusterID(),
@@ -791,26 +792,26 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 
 	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
 	//but only clusters for testdata.OrgID are returned
-	expectedClustersOrg1Rule1Err1 := []utypes.HittingClustersData{
+	expectedClustersOrg1Rule1Err1 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[0]},
 	}
 	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
 	//but only clusters for testdata.OrgID are returned
-	expectedClustersOrg1Rule2Err2 := []utypes.HittingClustersData{
+	expectedClustersOrg1Rule2Err2 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[0]},
 	}
 	//Rule3|ERR_KEY3 is present in testdata.Report3Rules
-	expectedClustersOrg1Rule3Err3 := []utypes.HittingClustersData{
+	expectedClustersOrg1Rule3Err3 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[0]},
 	}
 	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
 	//but only clusters for testdata.Org2ID are returned
-	expectedClustersOrg2Rule1Err1 := []utypes.HittingClustersData{
+	expectedClustersOrg2Rule1Err1 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[2]},
 	}
 	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
 	//but only clusters for testdata.Org2ID are returned
-	expectedClustersOrg2Rule2Err2 := []utypes.HittingClustersData{
+	expectedClustersOrg2Rule2Err2 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[2]},
 	}
 
@@ -842,12 +843,12 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID), []string{string(clusterIds[1]), string(clusterIds[2])})
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
-	assert.Equal(t, []utypes.HittingClustersData{}, list)
+	assert.Equal(t, []ctypes.HittingClustersData{}, list)
 
 	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), []string{string(clusterIds[0]), string(clusterIds[1])})
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
-	assert.Equal(t, []utypes.HittingClustersData{}, list)
+	assert.Equal(t, []ctypes.HittingClustersData{}, list)
 }
 
 // TestDBStorageListClustersForHittingRulesOrgNotFound checks that an empty
@@ -864,7 +865,7 @@ func TestDBStorageListClustersForHittingRulesOrgNotFound(t *testing.T) {
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), nil)
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
-	assert.Equal(t, []utypes.HittingClustersData{}, list)
+	assert.Equal(t, []ctypes.HittingClustersData{}, list)
 }
 
 // TestDBStorageListClustersForHittingRulesOrgNotFound checks that an empty
@@ -883,12 +884,12 @@ func TestDBStorageListClustersForHittingRulesRuleNotFound(t *testing.T) {
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), nil)
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
-	assert.Equal(t, []utypes.HittingClustersData{}, list)
+	assert.Equal(t, []ctypes.HittingClustersData{}, list)
 
 	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), []string{string(testdata.GetRandomClusterID())})
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
-	assert.Equal(t, []utypes.HittingClustersData{}, list)
+	assert.Equal(t, []ctypes.HittingClustersData{}, list)
 }
 
 // TestDBStorageListClustersForHittingRulesNoRowsFound checks that an empty
@@ -903,7 +904,7 @@ func TestDBStorageListClustersForHittingRulesNoRowsFound(t *testing.T) {
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), nil)
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
-	assert.Equal(t, []utypes.HittingClustersData{}, list)
+	assert.Equal(t, []ctypes.HittingClustersData{}, list)
 }
 
 // TestDBStorageListClustersForHittingRulesNoRowsFound checks that an empty
@@ -920,5 +921,5 @@ func TestDBStorageListFilteredClustersForHittingRulesNoRowsFound(t *testing.T) {
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), []string{string(testdata.ClusterName)})
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
-	assert.Equal(t, []utypes.HittingClustersData{}, list)
+	assert.Equal(t, []ctypes.HittingClustersData{}, list)
 }

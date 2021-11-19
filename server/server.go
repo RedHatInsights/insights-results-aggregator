@@ -65,7 +65,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 
-	utypes "github.com/RedHatInsights/insights-operator-utils/types"
+	ctypes "github.com/RedHatInsights/insights-results-types"
 )
 
 const (
@@ -409,7 +409,7 @@ func (server *HTTPServer) getFeedbackMessageFromBody(request *http.Request) (str
 
 // getJustificationFromBody retrieves the justification provided by user from body of the request
 func (server *HTTPServer) getJustificationFromBody(request *http.Request) (string, error) {
-	var justification utypes.AcknowledgementJustification
+	var justification ctypes.AcknowledgementJustification
 
 	err := json.NewDecoder(request.Body).Decode(&justification)
 	if err != nil {
@@ -454,7 +454,7 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 		Str(userIDstr, string(userID)).
 		Msgf("GET clusters detail for rule %s", selector)
 
-	var clusters []utypes.HittingClustersData
+	var clusters []ctypes.HittingClustersData
 	var err error
 
 	if request.ContentLength > 0 {
@@ -475,7 +475,7 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 	}
 
 	resp := responses.BuildOkResponse()
-	resp["meta"] = utypes.HittingClustersMetadata{
+	resp["meta"] = ctypes.HittingClustersMetadata{
 		Count:    len(clusters),
 		Selector: selector,
 	}

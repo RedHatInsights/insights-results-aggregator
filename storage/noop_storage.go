@@ -20,7 +20,8 @@ import (
 	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/Shopify/sarama"
 
-	utypes "github.com/RedHatInsights/insights-operator-utils/types"
+	ctypes "github.com/RedHatInsights/insights-results-types"
+
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -241,7 +242,7 @@ func (*NoopStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (ma
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account (noop).
-func (*NoopStorage) ListOfDisabledRules(userID types.UserID) ([]utypes.DisabledRule, error) {
+func (*NoopStorage) ListOfDisabledRules(userID types.UserID) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
 
@@ -302,14 +303,14 @@ func (*NoopStorage) UpdateDisabledRuleJustification(
 // ReadDisabledRule function returns disabled rule (if disabled) from database
 func (*NoopStorage) ReadDisabledRule(
 	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey) (utypes.SystemWideRuleDisable, bool, error) {
-	return utypes.SystemWideRuleDisable{}, true, nil
+	ruleID types.RuleID, errorKey types.ErrorKey) (ctypes.SystemWideRuleDisable, bool, error) {
+	return ctypes.SystemWideRuleDisable{}, true, nil
 }
 
 // ListOfSystemWideDisabledRules function returns list of all rules that have been
 // disabled for all clusters by given user
 func (*NoopStorage) ListOfSystemWideDisabledRules(
-	orgID types.OrgID, userID types.UserID) ([]utypes.SystemWideRuleDisable, error) {
+	orgID types.OrgID, userID types.UserID) ([]ctypes.SystemWideRuleDisable, error) {
 	return nil, nil
 }
 
@@ -317,7 +318,7 @@ func (*NoopStorage) ListOfSystemWideDisabledRules(
 func (*NoopStorage) ReadRecommendationsForClusters(
 	clusterList []string,
 	orgID types.OrgID,
-) (utypes.RecommendationImpactedClusters, error) {
+) (ctypes.RecommendationImpactedClusters, error) {
 	return nil, nil
 }
 
@@ -325,6 +326,6 @@ func (*NoopStorage) ReadRecommendationsForClusters(
 // given organization that are affected by given rule
 func (*NoopStorage) ListOfClustersForOrgSpecificRule(
 	orgID types.OrgID, ruleID types.RuleSelector, activeClusters []string,
-) ([]utypes.HittingClustersData, error) {
+) ([]ctypes.HittingClustersData, error) {
 	return nil, nil
 }
