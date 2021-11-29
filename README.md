@@ -11,6 +11,14 @@
 
 Aggregator service for insights results
 
+<!-- vim-markdown-toc GFM -->
+
+* [Description](#description)
+* [Documentation](#documentation)
+* [Package manifest](#package-manifest)
+
+<!-- vim-markdown-toc -->
+
 ## Description
 
 Insights Results Aggregator is a service that provides Insight OCP data
