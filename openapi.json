@@ -1287,6 +1287,99 @@
         }
       }
     },
+    "/clusters/organizations/{org_id}/users/{user_id}/recommendations": {
+      "post": {
+        "summary": "getClustersRecommendationsList retrieves all hitting recommendations for all clusters given in the POST body",
+        "operationId": "getClustersRecommendationsPost",
+        "description": "Recommendations will be retrieved based on the list of cluster IDs that is part of request body.",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID represented as positive integer",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "List of cluster IDs. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Map of clusters and a list of hitting recommendations for corresponding clusters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "created_at": {
+                            "type": "string",
+                            "description": "The cluster ID in UUID format."
+                          },
+                          "recommendations": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "description": "The recommendation ID.",
+                              "example": "rule.module|ERROR_KEY"
+                            }
+                          }
+                        }
+                      },
+                      "example": {
+                        "1234ecc5-624a-49a5-bab8-4fdc5e51a266": {
+                          "created_at": "2021-09-07T15:50+00Z",
+                          "recommendations": [
+                            "rule.module1|ERROR_KEY1",
+                            "rule.module2|ERROR_KEY2"
+                          ]
+                        },
+                        "5678ecc5-624a-49a5-bab8-4fdc5e51a266": {
+                          "created_at": "2021-09-07T15:50+00Z",
+                          "recommendations": [
+                            "rule.module1|ERROR_KEY1",
+                            "rule.module2|ERROR_KEY2"
+                          ]
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/rules/users/{userId}/disabled": {
       "get": {
         "summary": "Returns a list of rules disabled from current account",
