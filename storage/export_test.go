@@ -35,8 +35,9 @@ import (
 type SQLHooks = sqlHooks
 
 const (
-	LogFormatterString        = logFormatterString
-	SQLHooksKeyQueryBeginTime = sqlHooksKeyQueryBeginTime
+	LogFormatterString            = logFormatterString
+	SQLHooksKeyQueryBeginTime     = sqlHooksKeyQueryBeginTime
+	RecommendationTimestampFormat = recommendationTimestampFormat
 )
 
 var (

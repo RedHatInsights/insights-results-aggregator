@@ -1099,27 +1099,37 @@ func (storage DBStorage) ReadClusterListRecommendations(
 	}
 
 	for rows.Next() {
-		var row ctypes.RecommendationRow
+		var (
+			clusterID ctypes.ClusterName
+			ruleID    ctypes.RuleID
+			timestamp string
+		)
 
 		err := rows.Scan(
-			&row.ClusterID,
-			&row.RuleID,
-			&row.CreatedAt,
+			&clusterID,
+			&ruleID,
+			&timestamp,
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("read one recommendation")
 			return clusterMap, err
 		}
 
-		if cluster, exists := clusterMap[row.ClusterID]; exists {
-			cluster.Recommendations = append(cluster.Recommendations, row.RuleID)
-			clusterMap[row.ClusterID] = cluster
+		parsedT, err := time.Parse(recommendationTimestampFormat, timestamp)
+		if err != nil {
+			log.Error().Err(err).Msgf("unparsable timestamp %v", timestamp)
+			return clusterMap, err
+		}
+
+		if cluster, exists := clusterMap[clusterID]; exists {
+			cluster.Recommendations = append(cluster.Recommendations, ruleID)
+			clusterMap[clusterID] = cluster
 		} else {
 			// create entry in map for new cluster ID
-			clusterMap[row.ClusterID] = ctypes.ClusterRecommendationList{
+			clusterMap[clusterID] = ctypes.ClusterRecommendationList{
 				// created at is the same for all rows for each cluster
-				CreatedAt:       row.CreatedAt,
-				Recommendations: []ctypes.RuleID{row.RuleID},
+				CreatedAt:       parsedT,
+				Recommendations: []ctypes.RuleID{ruleID},
 			}
 		}
 

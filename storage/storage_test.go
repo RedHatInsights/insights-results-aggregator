@@ -1391,12 +1391,8 @@ func TestDBStorageReadClusterListRecommendationsGet1Cluster(t *testing.T) {
 	expectedClusterID := types.ClusterName(clusterList[0])
 	assert.Contains(t, res, expectedClusterID)
 	assert.ElementsMatch(t, expectList, res[expectedClusterID].Recommendations)
-
-	/*
-		parsedTimestamp, err := time.Parse("2021-01-01 13:39:35.715453148+00:00", res[expectedClusterID].CreatedAt)
-		helpers.FailOnError(t, err)
-		assert.True(t, time.Now().Add(-time.Hour).Before(parsedTimestamp))
-	*/
+	// trivial timestamp check
+	assert.True(t, res[expectedClusterID].CreatedAt.After(time.Now().Add(-time.Hour)))
 }
 
 // TestDBStorageReadClusterListRecommendationsGet1Cluster loads several recommendations for the same org
@@ -1433,4 +1429,6 @@ func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
 	assert.Contains(t, res, expectedCluster2ID)
 	assert.ElementsMatch(t, expectRuleList, res[expectedCluster1ID].Recommendations)
 	assert.ElementsMatch(t, expectRuleList, res[expectedCluster2ID].Recommendations)
+	assert.True(t, res[expectedCluster1ID].CreatedAt.After(time.Now().Add(-time.Hour)))
+	assert.True(t, res[expectedCluster2ID].CreatedAt.After(time.Now().Add(-time.Hour)))
 }
