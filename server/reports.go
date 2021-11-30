@@ -304,3 +304,45 @@ func (server *HTTPServer) getRecommendations(writer http.ResponseWriter, request
 		log.Error().Err(err).Msg(responseDataError)
 	}
 }
+
+// getClustersRecommendationsList retrieves all recommendations hitting for all clusters in the org
+func (server *HTTPServer) getClustersRecommendationsList(writer http.ResponseWriter, request *http.Request) {
+	tStart := time.Now()
+
+	userID, ok := readUserID(writer, request)
+	if !ok {
+		// everything has been handled
+		return
+	}
+	log.Info().Str(userIDstr, string(userID)).Msg("getClustersRecommendationsList")
+
+	orgID, ok := readOrgID(writer, request)
+	if !ok {
+		// everything has been handled
+		return
+	}
+	log.Info().Int(orgIDStr, int(orgID)).Msg("getClustersRecommendationsList")
+
+	var listOfClusters []string
+	err := json.NewDecoder(request.Body).Decode(&listOfClusters)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+	log.Info().Msgf("getClustersRecommendationsList number of clusters: %d", len(listOfClusters))
+
+	clustersRecommendations, err := server.Storage.ReadClusterListRecommendations(listOfClusters, orgID)
+	if err != nil {
+		log.Error().Err(err).Msg("Errors retrieving recommendations")
+		handleServerError(writer, err)
+		return
+	}
+
+	log.Info().Uint32(orgIDStr, uint32(orgID)).Msgf(
+		"getClustersRecommendationsList took %s", time.Since(tStart),
+	)
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("clusters", clustersRecommendations))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}

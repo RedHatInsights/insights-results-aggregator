@@ -1317,3 +1317,120 @@ func TestDBStorageReadRecommendationsForNonexistingClusters(t *testing.T) {
 
 	assert.Equal(t, ctypes.RecommendationImpactedClusters{}, res)
 }
+
+// TestDBStorageReadClusterListRecommendationsNoRecommendations checks that when no recommendations
+// are stored, it is an OK state
+func TestDBStorageReadClusterListRecommendationsNoRecommendations(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty,
+	)
+	helpers.FailOnError(t, err)
+
+	expect := make(ctypes.ClusterRecommendationMap)
+
+	res, err := mockStorage.ReadClusterListRecommendations([]string{string(testdata.ClusterName)}, testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, expect, res)
+}
+
+// TestDBStorageReadClusterListRecommendationsDifferentCluster checks that when no recommendations
+// are stored, it is an OK state
+func TestDBStorageReadClusterListRecommendationsDifferentCluster(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	clusterList := make([]string, 3)
+	for i := range clusterList {
+		clusterList[i] = string(testdata.GetRandomClusterID())
+	}
+	expect := make(ctypes.ClusterRecommendationMap)
+
+	res, err := mockStorage.ReadClusterListRecommendations(clusterList, testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, expect, res)
+}
+
+// TestDBStorageReadClusterListRecommendationsGet1Cluster loads several recommendations for the same org
+// but "simulates" a situation where we only get one of them from the AMS API
+func TestDBStorageReadClusterListRecommendationsGet1Cluster(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterList := make([]string, 3)
+	for i := range clusterList {
+		randomClusterID := testdata.GetRandomClusterID()
+
+		clusterList[i] = string(randomClusterID)
+
+		err := mockStorage.WriteRecommendationsForCluster(
+			testdata.OrgID, randomClusterID, testdata.Report3Rules,
+		)
+		helpers.FailOnError(t, err)
+	}
+
+	// we only retrieve one cluster
+	res, err := mockStorage.ReadClusterListRecommendations([]string{string(clusterList[0])}, testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	expectList := []ctypes.RuleID{
+		testdata.Rule1CompositeID,
+		testdata.Rule2CompositeID,
+		testdata.Rule3CompositeID,
+	}
+
+	expectedClusterID := types.ClusterName(clusterList[0])
+	assert.Contains(t, res, expectedClusterID)
+	assert.ElementsMatch(t, expectList, res[expectedClusterID].Recommendations)
+
+	/*
+		parsedTimestamp, err := time.Parse("2021-01-01 13:39:35.715453148+00:00", res[expectedClusterID].CreatedAt)
+		helpers.FailOnError(t, err)
+		assert.True(t, time.Now().Add(-time.Hour).Before(parsedTimestamp))
+	*/
+}
+
+// TestDBStorageReadClusterListRecommendationsGet1Cluster loads several recommendations for the same org
+// but "simulates" a situation where we only get one of them from the AMS API
+func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterList := make([]string, 3)
+	for i := range clusterList {
+		randomClusterID := testdata.GetRandomClusterID()
+
+		clusterList[i] = string(randomClusterID)
+
+		err := mockStorage.WriteRecommendationsForCluster(
+			testdata.OrgID, randomClusterID, testdata.Report3Rules,
+		)
+		helpers.FailOnError(t, err)
+	}
+
+	// we only retrieve one cluster
+	res, err := mockStorage.ReadClusterListRecommendations([]string{string(clusterList[0]), string(clusterList[1])}, testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	expectRuleList := []ctypes.RuleID{
+		testdata.Rule1CompositeID,
+		testdata.Rule2CompositeID,
+		testdata.Rule3CompositeID,
+	}
+
+	expectedCluster1ID := types.ClusterName(clusterList[0])
+	expectedCluster2ID := types.ClusterName(clusterList[1])
+	assert.Contains(t, res, expectedCluster1ID)
+	assert.Contains(t, res, expectedCluster2ID)
+	assert.ElementsMatch(t, expectRuleList, res[expectedCluster1ID].Recommendations)
+	assert.ElementsMatch(t, expectRuleList, res[expectedCluster2ID].Recommendations)
+}

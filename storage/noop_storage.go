@@ -329,3 +329,10 @@ func (*NoopStorage) ListOfClustersForOrgSpecificRule(
 ) ([]ctypes.HittingClustersData, error) {
 	return nil, nil
 }
+
+// ReadClusterListRecommendations retrieves cluster IDs and a list of hitting rules for each one
+func (*NoopStorage) ReadClusterListRecommendations(
+	clusterList []string, orgID types.OrgID,
+) (ctypes.ClusterRecommendationMap, error) {
+	return nil, nil
+}
