@@ -305,7 +305,7 @@ func (server *HTTPServer) getRecommendations(writer http.ResponseWriter, request
 	}
 }
 
-// getClustersRecommendationsList retrieves all recommendations hitting for all clusters in the org
+// getClustersRecommendationsList retrieves all recommendations hitting for all clusters specified in the request body
 func (server *HTTPServer) getClustersRecommendationsList(writer http.ResponseWriter, request *http.Request) {
 	tStart := time.Now()
 
