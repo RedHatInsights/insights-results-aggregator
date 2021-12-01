@@ -74,7 +74,7 @@ func writeReportForCluster(
 	clusterReport types.ClusterReport,
 	rules []types.ReportItem,
 ) {
-	err := storage.WriteReportForCluster(orgID, clusterName, clusterReport, rules, time.Now(), testdata.KafkaOffset)
+	err := storage.WriteReportForCluster(orgID, clusterName, clusterReport, rules, time.Now(), time.Now(), testdata.KafkaOffset)
 	helpers.FailOnError(t, err)
 }
 
@@ -222,6 +222,7 @@ func TestDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 		testdata.ClusterReportEmpty,
 		testdata.ReportEmptyRulesParsed,
 		time.Now(),
+		time.Now(),
 		testdata.KafkaOffset,
 	)
 	assert.EqualError(t, err, "sql: database is closed")
@@ -237,6 +238,7 @@ func TestDBStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
 		testdata.ReportEmptyRulesParsed,
+		time.Now(),
 		time.Now(),
 		testdata.KafkaOffset,
 	)
@@ -259,6 +261,7 @@ func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testdata.ClusterReportEmpty,
 		testdata.ReportEmptyRulesParsed,
 		newerTime,
+		time.Now(),
 		testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
@@ -270,6 +273,7 @@ func TestDBStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testdata.ClusterReportEmpty,
 		testdata.ReportEmptyRulesParsed,
 		olderTime,
+		time.Now(),
 		testdata.KafkaOffset,
 	)
 	assert.Equal(t, types.ErrOldReport, err)
@@ -344,7 +348,7 @@ func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed, time.Now(), testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty, testdata.ReportEmptyRulesParsed, time.Now(), time.Now(), testdata.KafkaOffset,
 	)
 	assert.EqualError(t, err, "no such table: report")
 }
@@ -356,7 +360,7 @@ func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	createReportTableWithBadClusterField(t, mockStorage)
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, time.Now(), testdata.KafkaOffset,
 	)
 	assert.Error(t, err)
 
@@ -391,7 +395,7 @@ func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, time.Now(), testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 }
@@ -634,6 +638,7 @@ func TestDBStorageDeleteReports(t *testing.T) {
 				testdata.Report3Rules,
 				testdata.Report3RulesParsed,
 				testdata.LastCheckedAt,
+				time.Now(),
 				testdata.KafkaOffset,
 			)
 			helpers.FailOnError(t, err)
@@ -773,6 +778,7 @@ func TestDBStorage_GetLatestKafkaOffset_ZeroOffset(t *testing.T) {
 		testdata.Report3Rules,
 		testdata.Report3RulesParsed,
 		testdata.LastCheckedAt,
+		time.Now(),
 		types.KafkaOffset(0),
 	)
 	helpers.FailOnError(t, err)

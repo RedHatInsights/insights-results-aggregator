@@ -193,12 +193,16 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	logMessageInfo(consumer, msg, message, "Time ok")
 	tTimeCheck := time.Now()
 
+	// timestamp when the report is about to be written into database
+	storedAtTime := time.Now()
+
 	err = consumer.Storage.WriteReportForCluster(
 		*message.Organization,
 		*message.ClusterName,
 		types.ClusterReport(reportAsBytes),
 		message.ParsedHits,
 		lastCheckedTime,
+		storedAtTime,
 		types.KafkaOffset(msg.Offset),
 	)
 	if err != nil {
