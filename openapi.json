@@ -1339,14 +1339,17 @@
                         "properties": {
                           "created_at": {
                             "type": "string",
-                            "description": "The cluster ID in UUID format."
+                            "description": "The time of last analysis for this cluster."
                           },
                           "recommendations": {
                             "type": "array",
                             "items": {
                               "type": "string",
-                              "description": "The recommendation ID.",
-                              "example": "rule.module|ERROR_KEY"
+                              "description": "The array of recommendation IDs",
+                              "example": [
+                                "rule.module|ERROR_KEY",
+                                "rule.another.module|SPECIFIC_KEY"
+                              ]
                             }
                           }
                         }
