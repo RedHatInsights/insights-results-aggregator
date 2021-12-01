@@ -1100,25 +1100,40 @@ func (storage DBStorage) ReadClusterListRecommendations(
 
 	for rows.Next() {
 		var (
-			clusterID ctypes.ClusterName
-			ruleID    ctypes.RuleID
-			timestamp string
+			clusterID    ctypes.ClusterName
+			ruleID       ctypes.RuleID
+			timestampStr string
+			timestamp    time.Time
 		)
 
-		err := rows.Scan(
-			&clusterID,
-			&ruleID,
-			&timestamp,
-		)
-		if err != nil {
-			log.Error().Err(err).Msg("read one recommendation")
-			return clusterMap, err
-		}
+		if storage.dbDriverType != types.DBDriverSQLite3 {
+			// postgres is able to auto scan created_at into time.Time
+			err := rows.Scan(
+				&clusterID,
+				&ruleID,
+				&timestamp,
+			)
+			if err != nil {
+				log.Error().Err(err).Msg("read one recommendation")
+				return clusterMap, err
+			}
+		} else {
+			// sqlite cannot auto scan into time.Time, needs manual parse
+			err := rows.Scan(
+				&clusterID,
+				&ruleID,
+				&timestampStr,
+			)
+			if err != nil {
+				log.Error().Err(err).Msg("read one recommendation")
+				return clusterMap, err
+			}
 
-		parsedT, err := time.Parse(recommendationTimestampFormat, timestamp)
-		if err != nil {
-			log.Error().Err(err).Msgf("unparsable timestamp %v", timestamp)
-			return clusterMap, err
+			timestamp, err = time.Parse(recommendationTimestampFormat, timestampStr)
+			if err != nil {
+				log.Error().Err(err).Msgf("unparsable timestamp %v", timestamp)
+				return clusterMap, err
+			}
 		}
 
 		if cluster, exists := clusterMap[clusterID]; exists {
@@ -1128,7 +1143,7 @@ func (storage DBStorage) ReadClusterListRecommendations(
 			// create entry in map for new cluster ID
 			clusterMap[clusterID] = ctypes.ClusterRecommendationList{
 				// created at is the same for all rows for each cluster
-				CreatedAt:       parsedT,
+				CreatedAt:       timestamp,
 				Recommendations: []ctypes.RuleID{ruleID},
 			}
 		}
