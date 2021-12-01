@@ -185,6 +185,9 @@ type Storage interface {
 	ListOfSystemWideDisabledRules(
 		orgID types.OrgID, userID types.UserID) ([]ctypes.SystemWideRuleDisable, error)
 	ReadRecommendationsForClusters([]string, types.OrgID) (ctypes.RecommendationImpactedClusters, error)
+	ReadClusterListRecommendations(clusterList []string, orgID types.OrgID) (
+		ctypes.ClusterRecommendationMap, error,
+	)
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database
@@ -1045,20 +1048,6 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 		return recommendationsMap, err
 	}
 
-	if storage.dbDriverType != types.DBDriverSQLite3 {
-		// EXPLAIN query to check performance and index usage
-		explRows, err := storage.connection.Query("EXPLAIN ANALYZE "+query, orgID)
-		if err != nil {
-			log.Error().Err(err).Msg("error explaining query")
-			return recommendationsMap, err
-		}
-		for explRows.Next() {
-			var step string
-			_ = explRows.Scan(&step)
-			log.Info().Msgf("EXPLAIN ReadRecommendationsForClusters: %v", step)
-		}
-	}
-
 	for rows.Next() {
 		var (
 			ruleID      types.RuleID
@@ -1078,6 +1067,74 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 	}
 
 	return recommendationsMap, nil
+}
+
+// ReadClusterListRecommendations retrieves cluster IDs and a list of hitting rules for each one
+func (storage DBStorage) ReadClusterListRecommendations(
+	clusterList []string,
+	orgID types.OrgID,
+) (ctypes.ClusterRecommendationMap, error) {
+
+	clusterMap := make(ctypes.ClusterRecommendationMap, 0)
+
+	if len(clusterList) < 1 {
+		return clusterMap, nil
+	}
+
+	// disable "G202 (CWE-89): SQL string concatenation"
+	// #nosec G202
+	query := `
+	SELECT
+		cluster_id, rule_id, created_at
+	FROM
+		recommendation
+	WHERE org_id = $1 AND cluster_id IN (%v)`
+	// #nosec G201
+	query = fmt.Sprintf(query, inClauseFromSlice(clusterList))
+
+	rows, err := storage.connection.Query(query, orgID)
+	if err != nil {
+		log.Error().Err(err).Msg("query to get recommendations")
+		return clusterMap, err
+	}
+
+	for rows.Next() {
+		var (
+			clusterID ctypes.ClusterName
+			ruleID    ctypes.RuleID
+			timestamp string
+		)
+
+		err := rows.Scan(
+			&clusterID,
+			&ruleID,
+			&timestamp,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("read one recommendation")
+			return clusterMap, err
+		}
+
+		parsedT, err := time.Parse(recommendationTimestampFormat, timestamp)
+		if err != nil {
+			log.Error().Err(err).Msgf("unparsable timestamp %v", timestamp)
+			return clusterMap, err
+		}
+
+		if cluster, exists := clusterMap[clusterID]; exists {
+			cluster.Recommendations = append(cluster.Recommendations, ruleID)
+			clusterMap[clusterID] = cluster
+		} else {
+			// create entry in map for new cluster ID
+			clusterMap[clusterID] = ctypes.ClusterRecommendationList{
+				// created at is the same for all rows for each cluster
+				CreatedAt:       parsedT,
+				Recommendations: []ctypes.RuleID{ruleID},
+			}
+		}
+
+	}
+	return clusterMap, nil
 }
 
 // ReportsCount reads number of all records stored in database

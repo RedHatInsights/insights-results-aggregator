@@ -1443,3 +1443,83 @@ func TestServeInfoMap(t *testing.T) {
 		StatusCode: http.StatusOK,
 	})
 }
+
+func TestHTTPServer_ClustersRecommendationsListEndpoint_NoRecommendations(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	clusterList := []types.ClusterName{testdata.GetRandomClusterID()}
+	reqBody, _ := json.Marshal(clusterList)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.ClustersRecommendationsListEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		Body:         reqBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"clusters":{},"status":"ok"}`,
+	})
+}
+
+func TestHTTPServer_ClustersRecommendationsListEndpoint_2Recs1Cluster(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report2Rules,
+	)
+	helpers.FailOnError(t, err)
+
+	clusterList := []types.ClusterName{testdata.ClusterName}
+	reqBody, _ := json.Marshal(clusterList)
+
+	// can't check body directly because of variable created_at timestamp, contents are tested in storage tests
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.RecommendationsListEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		Body:         reqBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+	})
+}
+
+func TestHTTPServer_ClustersRecommendationsListEndpoint_BadOrgIDBadRequest(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterList := []types.ClusterName{testdata.GetRandomClusterID()}
+	reqBody, _ := json.Marshal(clusterList)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.ClustersRecommendationsListEndpoint,
+		EndpointArgs: []interface{}{"string", testdata.UserID},
+		Body:         reqBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+	})
+}
+
+func TestHTTPServer_ClustersRecommendationsListEndpoint_MissingClusterListBadRequest(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	var clusterListBadType string
+	reqBody, _ := json.Marshal(clusterListBadType)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.ClustersRecommendationsListEndpoint,
+		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		Body:         reqBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusBadRequest,
+	})
+}
