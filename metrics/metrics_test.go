@@ -122,7 +122,7 @@ func TestWrittenReportsMetric(t *testing.T) {
 	// other tests may run at the same process
 	initValue := int64(getCounterValue(metrics.WrittenReports))
 
-	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, 0)
+	err := mockStorage.WriteReportForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, time.Now(), 0)
 	helpers.FailOnError(t, err)
 
 	assertCounterValue(t, 1, metrics.WrittenReports, initValue)
@@ -134,6 +134,7 @@ func TestWrittenReportsMetric(t *testing.T) {
 			testdata.Report3Rules,
 			testdata.Report3RulesParsed,
 			testdata.LastCheckedAt.Add(time.Duration(i+1)*time.Second),
+			time.Now(),
 			types.KafkaOffset(i+1),
 		)
 		helpers.FailOnError(t, err)
