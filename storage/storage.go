@@ -77,6 +77,7 @@ type Storage interface {
 		report types.ClusterReport,
 		rules []types.ReportItem,
 		collectedAtTime time.Time,
+		storedAtTime time.Time,
 		kafkaOffset types.KafkaOffset,
 	) error
 	WriteRecommendationsForCluster(
@@ -771,6 +772,7 @@ func (storage DBStorage) updateReport(
 	report types.ClusterReport,
 	rules []types.ReportItem,
 	lastCheckedTime time.Time,
+	reportedAtTime time.Time,
 	kafkaOffset types.KafkaOffset,
 ) error {
 	// Get the UPSERT query for writing a report into the database.
@@ -787,7 +789,6 @@ func (storage DBStorage) updateReport(
 	}
 
 	// Perform the report upsert.
-	reportedAtTime := time.Now()
 
 	for _, rule := range rules {
 		_, err = tx.Exec(ruleUpsertQuery, orgID, clusterName, rule.Module, rule.ErrorKey, string(rule.TemplateData))
@@ -888,6 +889,7 @@ func (storage DBStorage) WriteReportForCluster(
 	report types.ClusterReport,
 	rules []types.ReportItem,
 	lastCheckedTime time.Time,
+	storedAtTime time.Time,
 	kafkaOffset types.KafkaOffset,
 ) error {
 	// Skip writing the report if it isn't newer than a report
@@ -927,7 +929,7 @@ func (storage DBStorage) WriteReportForCluster(
 			return nil
 		}
 
-		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, kafkaOffset)
+		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, storedAtTime, kafkaOffset)
 		if err != nil {
 			return err
 		}
