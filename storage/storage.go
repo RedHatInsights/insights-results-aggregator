@@ -643,14 +643,19 @@ func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
 ) ([]types.RuleOnReport, types.Timestamp, error) {
 	var lastChecked time.Time
+
 	report := make([]types.RuleOnReport, 0)
 
 	err := storage.connection.QueryRow(
 		"SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2;", orgID, clusterName,
 	).Scan(&lastChecked)
+
+	// convert timestamp to string
+	var lastCheckedStr = types.Timestamp(lastChecked.UTC().Format(time.RFC3339))
+
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
-		return report, types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), err
+		return report, lastCheckedStr, err
 	}
 
 	rows, err := storage.connection.Query(
@@ -659,12 +664,12 @@ func (storage DBStorage) ReadReportForCluster(
 
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
-		return report, types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), err
+		return report, lastCheckedStr, err
 	}
 
 	report, err = parseRuleRows(rows)
 
-	return report, types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), err
+	return report, lastCheckedStr, err
 }
 
 // ReadSingleRuleTemplateData reads template data for a single rule
