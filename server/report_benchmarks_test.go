@@ -136,7 +136,7 @@ func initTestReports(b *testing.B, n uint, mockStorage storage.Storage, reportPr
 		clusterID := testdata.GetRandomClusterID()
 		report, rules := reportProvider()
 
-		err := mockStorage.WriteReportForCluster(orgID, clusterID, report, rules, time.Now(), testdata.KafkaOffset)
+		err := mockStorage.WriteReportForCluster(orgID, clusterID, report, rules, time.Now(), time.Now(), testdata.KafkaOffset)
 		helpers.FailOnError(b, err)
 
 		testReportDataItems = append(testReportDataItems, testReportData{

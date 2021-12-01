@@ -84,7 +84,7 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -131,6 +131,7 @@ func TestReadReport(t *testing.T) {
 		testdata.Report3Rules,
 		testdata.Report3RulesParsed,
 		testdata.LastCheckedAt,
+		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
@@ -155,6 +156,7 @@ func TestReadRuleReport(t *testing.T) {
 		testdata.ClusterName,
 		testdata.Report3Rules,
 		testdata.Report3RulesParsed,
+		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)
@@ -191,6 +193,7 @@ func TestReadReportDisableRule(t *testing.T) {
 		testdata.ClusterName,
 		testdata.Report2Rules,
 		testdata.Report2RulesParsed,
+		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)
@@ -255,6 +258,7 @@ func TestReadReportDisableRuleMultipleUsers(t *testing.T) {
 		testdata.ClusterName,
 		testdata.Report2Rules,
 		testdata.Report2RulesParsed,
+		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)
@@ -387,6 +391,7 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 		testdata.ClusterName,
 		testdata.Report2Rules,
 		testdata.Report2RulesParsed,
+		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)
