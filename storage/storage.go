@@ -1114,7 +1114,7 @@ func (storage DBStorage) ReadClusterListRecommendations(
 				&timestamp,
 			)
 			if err != nil {
-				log.Error().Err(err).Msg("read one recommendation")
+				log.Error().Err(err).Msg("problem reading one recommendation")
 				return clusterMap, err
 			}
 		} else {
@@ -1125,7 +1125,7 @@ func (storage DBStorage) ReadClusterListRecommendations(
 				&timestampStr,
 			)
 			if err != nil {
-				log.Error().Err(err).Msg("read one recommendation")
+				log.Error().Err(err).Msg("problem reading one recommendation")
 				return clusterMap, err
 			}
 
