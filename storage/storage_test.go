@@ -59,7 +59,7 @@ func checkReportForCluster(
 	expected []types.RuleOnReport,
 ) {
 	// try to read report for cluster
-	result, _, err := s.ReadReportForCluster(orgID, clusterName)
+	result, _, _, err := s.ReadReportForCluster(orgID, clusterName)
 	helpers.FailOnError(t, err)
 
 	// and check the read report with expected one
@@ -104,7 +104,7 @@ func TestDBStorageReadReportForClusterEmptyTable(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_, _, err := mockStorage.ReadReportForCluster(testdata.OrgID, testdata.ClusterName)
+	_, _, _, err := mockStorage.ReadReportForCluster(testdata.OrgID, testdata.ClusterName)
 	if _, ok := err.(*types.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
@@ -125,7 +125,7 @@ func TestDBStorageReadReportForClusterClosedStorage(t *testing.T) {
 	// we need to close storage right now
 	closer()
 
-	_, _, err := mockStorage.ReadReportForCluster(testdata.OrgID, testdata.ClusterName)
+	_, _, _, err := mockStorage.ReadReportForCluster(testdata.OrgID, testdata.ClusterName)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -206,7 +206,7 @@ func TestDBStorageReadReportNoTable(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
 
-	_, _, err := mockStorage.ReadReportForCluster(testdata.OrgID, testdata.ClusterName)
+	_, _, _, err := mockStorage.ReadReportForCluster(testdata.OrgID, testdata.ClusterName)
 	assert.EqualError(t, err, "no such table: report")
 }
 
@@ -305,7 +305,7 @@ func TestDBStorageClusterOrgTransfer(t *testing.T) {
 	assert.Equal(t, orgID, testdata.Org2ID)
 
 	// org2 can read cluster2
-	_, _, err = mockStorage.ReadReportForCluster(testdata.Org2ID, cluster2ID)
+	_, _, _, err = mockStorage.ReadReportForCluster(testdata.Org2ID, cluster2ID)
 	helpers.FailOnError(t, err)
 
 	// "org transfer"
@@ -322,11 +322,11 @@ func TestDBStorageClusterOrgTransfer(t *testing.T) {
 	assert.Equal(t, orgID, testdata.OrgID)
 
 	// org2 can no longer read cluster2
-	_, _, err = mockStorage.ReadReportForCluster(testdata.Org2ID, cluster2ID)
+	_, _, _, err = mockStorage.ReadReportForCluster(testdata.Org2ID, cluster2ID)
 	assert.NotNil(t, err)
 
 	// org1 can now  read cluster2
-	_, _, err = mockStorage.ReadReportForCluster(testdata.OrgID, cluster2ID)
+	_, _, _, err = mockStorage.ReadReportForCluster(testdata.OrgID, cluster2ID)
 	helpers.FailOnError(t, err)
 }
 
