@@ -30,5 +30,5 @@ const (
 	// inClauseError when constructing IN clause fails
 	inClauseError = "error constructing WHERE IN clause"
 	// recommendationTimestampFormat represents the datetime format of the created_at of recommendation table
-	recommendationTimestampFormat = "2006-01-02 15:04:05.000000000+00:00"
+	recommendationTimestampFormat = "2006-01-02 15:04:05+00:00"
 )
