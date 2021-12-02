@@ -157,19 +157,13 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	hitRulesCount := len(reports)
+	hitRulesCount := getHitRulesCount(reports)
 
 	reports, err = server.getFeedbackAndTogglesOnRules(clusterName, userID, reports)
 
 	if err != nil {
 		log.Error().Err(err).Msg("An error has occurred when getting feedback or toggles")
 		handleServerError(writer, err)
-	}
-
-	// -1 as count in response means there are no rules for this cluster
-	// as opposed to no rules hit for the cluster
-	if hitRulesCount == 0 {
-		hitRulesCount = -1
 	}
 
 	response := types.ReportResponse{
@@ -184,6 +178,23 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
+}
+
+// getHitRulesCount function computes number of rule hits from given report.
+//
+// Special values:
+// -1 means there are no rules for this cluster
+// 0 means there are no rules hits for this cluter
+func getHitRulesCount(reports []ctypes.RuleOnReport) int {
+	hitRulesCount := len(reports)
+
+	// -1 as count in response means there are no rules for this cluster
+	// as opposed to no rules hit for the cluster
+	if hitRulesCount == 0 {
+		return -1
+	}
+
+	return hitRulesCount
 }
 
 // readSingleRule returns a rule by cluster ID, org ID and rule ID
