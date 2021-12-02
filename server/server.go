@@ -150,7 +150,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	reports, lastChecked, err := server.Storage.ReadReportForCluster(orgID, clusterName)
+	reports, lastChecked, _, err := server.Storage.ReadReportForCluster(orgID, clusterName)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read report for cluster")
 		handleServerError(writer, err)
