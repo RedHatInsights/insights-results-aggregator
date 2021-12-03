@@ -69,8 +69,11 @@ import (
 )
 
 const (
-	// ReportResponse constant that defines the name of response field
+	// ReportResponse constant defines the name of response field
 	ReportResponse = "report"
+
+	// ReportResponseMetainfo constant defines the name of response field
+	ReportResponseMetainfo = "metainfo"
 )
 
 // HTTPServer in an implementation of Server interface
@@ -175,6 +178,42 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	}
 
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData(ReportResponse, response))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+// readReportForCluster method retrieves metainformations for report stored in
+// database and return the retrieved info to requester via response payload.
+// The payload has type types.ReportResponseMetainfo
+func (server *HTTPServer) readReportMetainfoForCluster(writer http.ResponseWriter, request *http.Request) {
+	clusterName, successful := readClusterName(writer, request)
+	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	orgID, successful := readOrgID(writer, request)
+	if !successful {
+		return
+	}
+
+	reports, lastChecked, storedAt, err := server.Storage.ReadReportForCluster(orgID, clusterName)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to read report for cluster")
+		handleServerError(writer, err)
+		return
+	}
+
+	hitRulesCount := getHitRulesCount(reports)
+
+	response := ctypes.ReportResponseMetainfo{
+		Count:         hitRulesCount,
+		LastCheckedAt: lastChecked,
+		StoredAt:      storedAt,
+	}
+
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(ReportResponseMetainfo, response))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}

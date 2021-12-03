@@ -47,6 +47,8 @@ const (
 	knownCluster2ForOrganization1  = "00000000-0000-0000-ffff-000000000000"
 	knownCluster3ForOrganization1  = "00000000-0000-0000-0000-ffffffffffff"
 	unknownClusterForOrganization1 = "00000000-0000-0000-0000-000000000001"
+
+	wrongOrganizationID = "foobar"
 )
 
 // StatusOnlyResponse represents response containing just a status
