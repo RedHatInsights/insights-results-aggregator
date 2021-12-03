@@ -72,7 +72,7 @@ const (
 	// ReportResponse constant defines the name of response field
 	ReportResponse = "report"
 
-	// ReportResponseMeta constant defines the name of response field
+	// ReportResponseMetainfo constant defines the name of response field
 	ReportResponseMetainfo = "metainfo"
 )
 
