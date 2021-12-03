@@ -35,6 +35,8 @@ const (
 	OrganizationsEndpoint = "organizations"
 	// ReportEndpoint returns report for provided {organization}, {cluster}, and {user_id}
 	ReportEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/report"
+	// ReportMetainfoEndpoint returns (meta)information about report for provided {organization} {cluster} and {rule_id}
+	ReportMetainfoEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/report/info"
 	// RuleEndpoint returns rule report for provided {organization} {cluster} and {rule_id}
 	RuleEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/rules/{rule_id}"
 	// ReportForListOfClustersEndpoint returns rule returns reports for provided list of clusters
@@ -121,6 +123,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	// common REST API endpoints
 	router.HandleFunc(apiPrefix+MainEndpoint, server.mainEndpoint).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ReportEndpoint, server.readReportForCluster).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc(apiPrefix+ReportMetainfoEndpoint, server.readReportMetainfoForCluster).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc(apiPrefix+RuleEndpoint, server.readSingleRule).Methods(http.MethodGet, http.MethodOptions)
 	router.HandleFunc(apiPrefix+LikeRuleEndpoint, server.likeRule).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+DislikeRuleEndpoint, server.dislikeRule).Methods(http.MethodPut, http.MethodOptions)
