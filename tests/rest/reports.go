@@ -88,7 +88,7 @@ func reproducerForIssue384() {
 
 // checkReportEndpointForImproperOrganization check if the endpoint to return report works as expected
 func checkReportEndpointForImproperOrganization() {
-	url := constructURLForReportForOrgCluster("foobar", knownClusterForOrganization1, testdata.UserID)
+	url := constructURLForReportForOrgCluster(wrongOrganizationID, knownClusterForOrganization1, testdata.UserID)
 	f := frisby.Create("Check the endpoint to return report for improper organization").Get(url)
 	setAuthHeader(f)
 	f.Send()
@@ -170,7 +170,7 @@ func checkReportEndpointForUnknownOrganizationAndUnknownClusterUnauthorizedCase(
 // checkReportEndpointForImproperOrganizationUnauthorizedCase check if the endpoint to return report works as expected
 // This test variant does not sent authorization header
 func checkReportEndpointForImproperOrganizationUnauthorizedCase() {
-	url := constructURLForReportForOrgCluster("foobar", knownClusterForOrganization1, testdata.UserID)
+	url := constructURLForReportForOrgCluster(wrongOrganizationID, knownClusterForOrganization1, testdata.UserID)
 	f := frisby.Create("Check the endpoint to return report for improper organization w/o authorization token").Get(url)
 	f.Send()
 	f.ExpectStatus(401)

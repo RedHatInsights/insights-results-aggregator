@@ -85,7 +85,7 @@ func checkReportInfoEndpointForUnknownOrganizationAndUnknownCluster() {
 // checkReportInfoEndpointForImproperOrganization check if the endpoint to
 // return report metadata works as expected
 func checkReportInfoEndpointForImproperOrganization() {
-	url := constructURLForReportInfoForOrgCluster("foobar", knownClusterForOrganization1, testdata.UserID)
+	url := constructURLForReportInfoForOrgCluster(wrongOrganizationID, knownClusterForOrganization1, testdata.UserID)
 	f := frisby.Create("Check the endpoint to return report metadata for improper organization").Get(url)
 	setAuthHeader(f)
 	f.Send()
@@ -157,7 +157,7 @@ func checkReportInfoEndpointForUnknownOrganizationAndUnknownClusterUnauthorizedC
 // endpoint to return report metadata works as expected.
 // This test variant does not sent authorization header
 func checkReportInfoEndpointForImproperOrganizationUnauthorizedCase() {
-	url := constructURLForReportInfoForOrgCluster("foobar", knownClusterForOrganization1, testdata.UserID)
+	url := constructURLForReportInfoForOrgCluster(wrongOrganizationID, knownClusterForOrganization1, testdata.UserID)
 	f := frisby.Create("Check the endpoint to return report metadata for improper organization").Get(url)
 	f.Send()
 	f.ExpectStatus(401)
