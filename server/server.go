@@ -207,12 +207,6 @@ func (server *HTTPServer) readReportMetainfoForCluster(writer http.ResponseWrite
 
 	hitRulesCount := getHitRulesCount(reports)
 
-	// -1 as count in response means there are no rules for this cluster
-	// as opposed to no rules hit for the cluster
-	if hitRulesCount == 0 {
-		hitRulesCount = -1
-	}
-
 	response := ctypes.ReportResponseMetainfo{
 		Count:         hitRulesCount,
 		LastCheckedAt: lastChecked,
