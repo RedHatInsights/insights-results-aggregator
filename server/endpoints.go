@@ -35,7 +35,7 @@ const (
 	OrganizationsEndpoint = "organizations"
 	// ReportEndpoint returns report for provided {organization}, {cluster}, and {user_id}
 	ReportEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/report"
-	// ReportMetainfoEndpoint returns (meta)information about report for provided {organization} {cluster} and {rule_id}
+	// ReportMetainfoEndpoint returns (meta)information about report for provided {organization} {cluster} and {user_id}
 	ReportMetainfoEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/report/info"
 	// RuleEndpoint returns rule report for provided {organization} {cluster} and {rule_id}
 	RuleEndpoint = "organizations/{org_id}/clusters/{cluster}/users/{user_id}/rules/{rule_id}"
