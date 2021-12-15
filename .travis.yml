@@ -1,0 +1,51 @@
+# Copyright 2021 Red Hat, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+language: go
+go:
+- "1.16"
+
+jobs:
+  include:
+    - name: "Build 1.16"
+      stage: build
+      script:
+        - make
+    - stage: style
+      script:
+        - make style
+    - stage: unit tests
+      script:
+        - make test
+        - ./check_coverage.sh
+      after_success:
+        - env
+        - bash <(curl -s https://codecov.io/bash)
+    - stage: openapi-checks
+      language: node_js
+      node_js:
+        - node
+      script:
+        - npm install -g @openapitools/openapi-generator-cli
+        - openapi-generator-cli validate -i openapi.json
+    - stage: integration tests
+      script:
+        - make integration_tests
+
+stages:
+  - build
+  - style
+  - unit tests
+  - openapi-checks
+  - integration tests
