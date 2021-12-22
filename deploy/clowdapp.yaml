@@ -40,6 +40,8 @@ objects:
     name: ccx-insights-results
   spec:
     envName: ${ENV_NAME}
+    testing:
+      iqePlugin: ccx
     deployments:
       - name: aggregator
         minReplicas: ${{MIN_REPLICAS}}

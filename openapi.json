@@ -298,6 +298,92 @@
         ]
       }
     },
+    "/organizations/{orgId}/clusters/{clusterId}/users/{userId}/report/info": {
+      "get": {
+        "summary": "Returns metainformations about the latest report for the given organization and cluster.",
+        "operationId": "getReportMetainfoForCluster",
+        "description": "The report is specified by the organization ID and the cluster ID. Metainformation about the latest report available for the given combination will be returned.",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the organization that owns the cluster.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format.",
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metainformation about the latest available report for the given organization and cluster combination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "metainfo": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "Number of rules that were hit by the cluster. -1 is returned when no rules are defined for the cluster.",
+                          "example": "1"
+                        },
+                        "last_checked_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Timestamp when the report has been produced.",
+                          "example": "2020-01-23T16:15:59.478901889Z"
+                        },
+                        "stored_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Timestamp when the report has been written into database.",
+                          "example": "2020-01-23T16:15:59.478901889Z"
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
     "/organizations/{orgId}/clusters/{clusterList}/reports": {
       "get": {
         "summary": "Returns the latest reports for the given list of clusters.",

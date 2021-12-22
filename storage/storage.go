@@ -60,7 +60,8 @@ type Storage interface {
 		orgID types.OrgID, ruleID types.RuleSelector, activeClusters []string,
 	) ([]ctypes.HittingClustersData, error)
 	ReadReportForCluster(
-		orgID types.OrgID, clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error,
+		orgID types.OrgID, clusterName types.ClusterName) (
+		[]types.RuleOnReport, types.Timestamp, types.Timestamp, error,
 	)
 	ReadReportsForClusters(
 		clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error)
@@ -77,6 +78,7 @@ type Storage interface {
 		report types.ClusterReport,
 		rules []types.ReportItem,
 		collectedAtTime time.Time,
+		storedAtTime time.Time,
 		kafkaOffset types.KafkaOffset,
 	) error
 	WriteRecommendationsForCluster(
@@ -646,16 +648,23 @@ func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName
 // ReadReportForCluster reads result (health status) for selected cluster
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
-) ([]types.RuleOnReport, types.Timestamp, error) {
+) ([]types.RuleOnReport, types.Timestamp, types.Timestamp, error) {
 	var lastChecked time.Time
+	var reportedAt time.Time
+
 	report := make([]types.RuleOnReport, 0)
 
 	err := storage.connection.QueryRow(
-		"SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2;", orgID, clusterName,
-	).Scan(&lastChecked)
+		"SELECT last_checked_at, reported_at FROM report WHERE org_id = $1 AND cluster = $2;", orgID, clusterName,
+	).Scan(&lastChecked, &reportedAt)
+
+	// convert timestamps to string
+	var lastCheckedStr = types.Timestamp(lastChecked.UTC().Format(time.RFC3339))
+	var reportedAtStr = types.Timestamp(reportedAt.UTC().Format(time.RFC3339))
+
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
-		return report, types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), err
+		return report, lastCheckedStr, reportedAtStr, err
 	}
 
 	rows, err := storage.connection.Query(
@@ -664,12 +673,12 @@ func (storage DBStorage) ReadReportForCluster(
 
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
-		return report, types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), err
+		return report, lastCheckedStr, reportedAtStr, err
 	}
 
 	report, err = parseRuleRows(rows)
 
-	return report, types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), err
+	return report, lastCheckedStr, reportedAtStr, err
 }
 
 // ReadSingleRuleTemplateData reads template data for a single rule
@@ -771,6 +780,7 @@ func (storage DBStorage) updateReport(
 	report types.ClusterReport,
 	rules []types.ReportItem,
 	lastCheckedTime time.Time,
+	reportedAtTime time.Time,
 	kafkaOffset types.KafkaOffset,
 ) error {
 	// Get the UPSERT query for writing a report into the database.
@@ -787,7 +797,6 @@ func (storage DBStorage) updateReport(
 	}
 
 	// Perform the report upsert.
-	reportedAtTime := time.Now()
 
 	for _, rule := range rules {
 		_, err = tx.Exec(ruleUpsertQuery, orgID, clusterName, rule.Module, rule.ErrorKey, string(rule.TemplateData))
@@ -888,6 +897,7 @@ func (storage DBStorage) WriteReportForCluster(
 	report types.ClusterReport,
 	rules []types.ReportItem,
 	lastCheckedTime time.Time,
+	storedAtTime time.Time,
 	kafkaOffset types.KafkaOffset,
 ) error {
 	// Skip writing the report if it isn't newer than a report
@@ -927,7 +937,7 @@ func (storage DBStorage) WriteReportForCluster(
 			return nil
 		}
 
-		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, kafkaOffset)
+		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, storedAtTime, kafkaOffset)
 		if err != nil {
 			return err
 		}

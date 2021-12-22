@@ -69,8 +69,11 @@ import (
 )
 
 const (
-	// ReportResponse constant that defines the name of response field
+	// ReportResponse constant defines the name of response field
 	ReportResponse = "report"
+
+	// ReportResponseMetainfo constant defines the name of response field
+	ReportResponseMetainfo = "metainfo"
 )
 
 // HTTPServer in an implementation of Server interface
@@ -150,26 +153,20 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	reports, lastChecked, err := server.Storage.ReadReportForCluster(orgID, clusterName)
+	reports, lastChecked, _, err := server.Storage.ReadReportForCluster(orgID, clusterName)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read report for cluster")
 		handleServerError(writer, err)
 		return
 	}
 
-	hitRulesCount := len(reports)
+	hitRulesCount := getHitRulesCount(reports)
 
 	reports, err = server.getFeedbackAndTogglesOnRules(clusterName, userID, reports)
 
 	if err != nil {
 		log.Error().Err(err).Msg("An error has occurred when getting feedback or toggles")
 		handleServerError(writer, err)
-	}
-
-	// -1 as count in response means there are no rules for this cluster
-	// as opposed to no rules hit for the cluster
-	if hitRulesCount == 0 {
-		hitRulesCount = -1
 	}
 
 	response := types.ReportResponse{
@@ -184,6 +181,59 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
+}
+
+// readReportForCluster method retrieves metainformations for report stored in
+// database and return the retrieved info to requester via response payload.
+// The payload has type types.ReportResponseMetainfo
+func (server *HTTPServer) readReportMetainfoForCluster(writer http.ResponseWriter, request *http.Request) {
+	clusterName, successful := readClusterName(writer, request)
+	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	orgID, successful := readOrgID(writer, request)
+	if !successful {
+		return
+	}
+
+	reports, lastChecked, storedAt, err := server.Storage.ReadReportForCluster(orgID, clusterName)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to read report for cluster")
+		handleServerError(writer, err)
+		return
+	}
+
+	hitRulesCount := getHitRulesCount(reports)
+
+	response := ctypes.ReportResponseMetainfo{
+		Count:         hitRulesCount,
+		LastCheckedAt: lastChecked,
+		StoredAt:      storedAt,
+	}
+
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(ReportResponseMetainfo, response))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+// getHitRulesCount function computes number of rule hits from given report.
+//
+// Special values:
+// -1 means there are no rules for this cluster
+// 0 means there are no rules hits for this cluter
+func getHitRulesCount(reports []ctypes.RuleOnReport) int {
+	hitRulesCount := len(reports)
+
+	// -1 as count in response means there are no rules for this cluster
+	// as opposed to no rules hit for the cluster
+	if hitRulesCount == 0 {
+		return -1
+	}
+
+	return hitRulesCount
 }
 
 // readSingleRule returns a rule by cluster ID, org ID and rule ID

@@ -37,6 +37,7 @@ func ServerTests() {
 	OrganizationsTests()
 	ClustersTests()
 	ReportsTests()
+	ReportsMetadataTests()
 	MultipleReportsTests()
 	MultipleReportsTestsUsingPostMethod()
 	VoteTests()
@@ -97,6 +98,23 @@ func ReportsTests() {
 	checkReportEndpointForImproperOrganizationUnauthorizedCase()
 	// reproducers
 	reproducerForIssue384()
+}
+
+// ReportsMetadataTests implements tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}/info"
+func ReportsMetadataTests() {
+	// implementation of these tests is stored in reports_info.go
+	checkReportInfoEndpointForKnownOrganizationAndKnownCluster()
+	checkReportInfoEndpointForKnownOrganizationAndUnknownCluster()
+	checkReportInfoEndpointForUnknownOrganizationAndKnownCluster()
+	checkReportInfoEndpointForUnknownOrganizationAndUnknownCluster()
+	checkReportInfoEndpointForImproperOrganization()
+	checkReportInfoEndpointWrongMethods()
+	checkReportInfoEndpointForKnownOrganizationAndKnownClusterUnauthorizedCase()
+	checkReportInfoEndpointForKnownOrganizationAndUnknownClusterUnauthorizedCase()
+	checkReportInfoEndpointForUnknownOrganizationAndKnownClusterUnauthorizedCase()
+	checkReportInfoEndpointForUnknownOrganizationAndUnknownClusterUnauthorizedCase()
+	checkReportInfoEndpointForImproperOrganizationUnauthorizedCase()
+	// unauthorized access
 }
 
 // MultipleReportsTests function implements tests for REST API endpoints

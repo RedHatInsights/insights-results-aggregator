@@ -103,9 +103,17 @@ def display_report(passes, failures, nocolors):
     if failures == 0:
         # If there are no failures, then check if any JSON file has been found at all.
         if passes == 0:
-            print("{}[WARN]{}: no JSON files detected".format(magenta_background, no_color))
+            print(
+                "{}[WARN]{}: no JSON files detected".format(
+                    magenta_background, no_color
+                )
+            )
         else:
-            print("{}[OK]{}: all JSONs have proper format".format(green_background, no_color))
+            print(
+                "{}[OK]{}: all JSONs have proper format".format(
+                    green_background, no_color
+                )
+            )
     else:
         print("{}[FAIL]{}: invalid JSON(s) detected".format(red_background, no_color))
 
@@ -120,13 +128,30 @@ def main():
     # First of all, we need to specify all command line flags that are
     # recognized by this tool.
     parser = ArgumentParser()
-    parser.add_argument("-v", "--verbose", dest="verbose", help="make it verbose",
-                        action="store_true", default=None)
-    parser.add_argument("-n", "--no-colors", dest="nocolors", help="disable color output",
-                        action="store_true", default=None)
-    parser.add_argument("-d", "--directory", dest="directory",
-                        help="directory with JSON files to check",
-                        action="store", default=".")
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        help="make it verbose",
+        action="store_true",
+        default=None,
+    )
+    parser.add_argument(
+        "-n",
+        "--no-colors",
+        dest="nocolors",
+        help="disable color output",
+        action="store_true",
+        default=None,
+    )
+    parser.add_argument(
+        "-d",
+        "--directory",
+        dest="directory",
+        help="directory with JSON files to check",
+        action="store",
+        default=".",
+    )
 
     # Now it is time to parse flags, check the actual content of command line
     # and fill in the object stored in variable named `args`.
