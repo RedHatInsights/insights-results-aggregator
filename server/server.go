@@ -474,13 +474,7 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 		return
 	}
 
-	resp := responses.BuildOkResponse()
-	resp["meta"] = ctypes.HittingClustersMetadata{
-		Count:    len(clusters),
-		Selector: selector,
-	}
-	resp["data"] = clusters
-	err = responses.SendOK(writer, resp)
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("clusters", clusters))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}

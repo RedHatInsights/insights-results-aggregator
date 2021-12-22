@@ -127,6 +127,45 @@ func (server HTTPServer) listOfReasons(writer http.ResponseWriter, request *http
 	}
 }
 
+// listOfDisabledClusters returns list of clusters disabled for a rule and user
+func (server HTTPServer) listOfDisabledClusters(writer http.ResponseWriter, request *http.Request) {
+	log.Info().Msg("Lisf of disabled clusters")
+
+	userID, succesful := readUserID(writer, request)
+	if !succesful {
+		// everything has been handled already
+		return
+	}
+	log.Info().Str("account", string(userID)).Msg("disabled clusters for account")
+
+	ruleID, successful := readRuleID(writer, request)
+	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	errorKey, successful := readErrorKey(writer, request)
+	if !successful {
+		// everything has been handled already
+		return
+	}
+	log.Info().Str("account", string(userID)).Msgf("disabled clusters for rule ID %v|%v", ruleID, errorKey)
+
+	// get disabled rules from DB
+	disabledClusters, err := server.Storage.ListOfDisabledClusters(userID, ruleID, errorKey)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to read list of disabled clusters")
+		handleServerError(writer, err)
+		return
+	}
+	log.Info().Str("account", string(userID)).Int("number of disabled clusters", len(disabledClusters)).Msg("list of disabled clusters")
+
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("clusters", disabledClusters))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
 // getFeedbackAndTogglesOnRules
 func (server HTTPServer) getFeedbackAndTogglesOnRules(
 	clusterName types.ClusterName,
