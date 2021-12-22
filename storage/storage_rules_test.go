@@ -44,6 +44,13 @@ func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 	helpers.FailOnError(t, err)
 }
 
+func mustWriteReport3RulesForCluster(t *testing.T, mockStorage storage.Storage, clusterName types.ClusterName) {
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, clusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
+}
+
 func TestDBStorage_ToggleRuleForCluster(t *testing.T) {
 	for _, state := range []storage.RuleToggle{
 		storage.RuleToggleDisable, storage.RuleToggleEnable,
@@ -922,4 +929,169 @@ func TestDBStorageListFilteredClustersForHittingRulesNoRowsFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
 	assert.Equal(t, []ctypes.HittingClustersData{}, list)
+}
+
+// TestDBStorageListOfDisabledClustersOneRule checks that one cluster is returned
+func TestDBStorageListOfDisabledClustersOneRule(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]types.ClusterName, 2)
+	for i := range clusters {
+		clusters[i] = testdata.GetRandomClusterID()
+		mustWriteReport3RulesForCluster(t, mockStorage, clusters[i])
+	}
+
+	// disable one cluster
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// try to read list of disabled clusters
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 cluster to be returned
+	assert.Len(t, disabledClusters, 1)
+
+	// check the content of returned data
+	assert.Equal(t, clusters[0], disabledClusters[0].ClusterID)
+}
+
+// TestDBStorageListOfDisabledClustersTwoClusters checks that two specific clusters are returned
+func TestDBStorageListOfDisabledClustersTwoClusters(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]types.ClusterName, 3)
+	for i := range clusters {
+		clusters[i] = testdata.GetRandomClusterID()
+		mustWriteReport3RulesForCluster(t, mockStorage, clusters[i])
+	}
+
+	// disable two clusters, same rule
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		clusters[2], testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// try to read list of disabled clusters
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 cluster to be returned
+	assert.Len(t, disabledClusters, 2)
+
+	// cluster index 1 wasn't disabled, we are checking only for 0 and 2
+	// they are expected to be in the opposite order, they are sorted by disabled_at DESC
+	assert.Equal(t, clusters[2], disabledClusters[0].ClusterID)
+	assert.Equal(t, clusters[0], disabledClusters[1].ClusterID)
+}
+
+// TestDBStorageListOfDisabledClustersDifferentRule checks that no cluster is returned
+// when a different rule is disabled.
+func TestDBStorageListOfDisabledClustersDifferentRule(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]types.ClusterName, 2)
+	for i := range clusters {
+		clusters[i] = testdata.GetRandomClusterID()
+		mustWriteReport3RulesForCluster(t, mockStorage, clusters[i])
+	}
+
+	// disable one cluster
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// try to read list of disabled clusters, but requesting different rule than disabled
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule4ID, testdata.ErrorKey4)
+	helpers.FailOnError(t, err)
+
+	// we expect no cluster, we disabled different rule
+	assert.Len(t, disabledClusters, 0)
+}
+
+// TestDBStorageListOfDisabledClustersFeedback tests that the disable feedback is properly returned
+func TestDBStorageListOfDisabledClustersFeedback(t *testing.T) {
+	const feedback = "feedback test"
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]types.ClusterName, 2)
+	for i := range clusters {
+		clusters[i] = testdata.GetRandomClusterID()
+		mustWriteReport3RulesForCluster(t, mockStorage, clusters[i])
+	}
+
+	// disable one cluster
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// add feedback
+	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID, feedback,
+	))
+
+	// try to read list of disabled clusters
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 cluster
+	assert.Len(t, disabledClusters, 1)
+	disabledCluster := disabledClusters[0]
+	assert.Equal(t, clusters[0], disabledCluster.ClusterID)
+	assert.Equal(t, feedback, disabledCluster.Justification)
+}
+
+// TestDBStorageListOfDisabledClustersFeedbackUpdate tests that the latest feedback is returned
+func TestDBStorageListOfDisabledClustersFeedbackUpdate(t *testing.T) {
+	const oldFeedback = "feedback old"
+	const newFeedback = "feedback new"
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]types.ClusterName, 2)
+	for i := range clusters {
+		clusters[i] = testdata.GetRandomClusterID()
+		mustWriteReport3RulesForCluster(t, mockStorage, clusters[i])
+	}
+
+	// disable one cluster
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// add feedback
+	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID, oldFeedback,
+	))
+
+	time.Sleep(5 * time.Millisecond)
+
+	// update feedback with new one
+	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID, newFeedback,
+	))
+
+	// try to read list of disabled clusters
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 cluster
+	assert.Len(t, disabledClusters, 1)
+	disabledCluster := disabledClusters[0]
+	assert.Equal(t, clusters[0], disabledCluster.ClusterID)
+	assert.Equal(t, newFeedback, disabledCluster.Justification)
 }

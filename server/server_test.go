@@ -1314,13 +1314,13 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"data":[{"cluster":"%v", "cluster_name":""}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":""}],"status":"ok"}`
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules)
 
 	expected := fmt.Sprintf(respBody,
-		testdata.ClusterName, 1, testdata.Rule1CompositeID,
+		testdata.ClusterName,
 	)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1340,7 +1340,7 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	})
 
 	expected = fmt.Sprintf(respBody,
-		testdata.ClusterName, 1, testdata.Rule2CompositeID,
+		testdata.ClusterName,
 	)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1364,14 +1364,14 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"data":[{"cluster":"%v", "cluster_name":""}],"meta":{"count":%v, "rule_id":"%v"},"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":""}],"status":"ok"}`
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules)
 
 	getRequestBody := fmt.Sprintf(`{"clusters":["%v"]}`, testdata.ClusterName)
 	expected := fmt.Sprintf(respBody,
-		testdata.ClusterName, 1, testdata.Rule1CompositeID,
+		testdata.ClusterName,
 	)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1384,7 +1384,7 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	})
 
 	expected = fmt.Sprintf(respBody,
-		testdata.ClusterName, 1, testdata.Rule2CompositeID,
+		testdata.ClusterName,
 	)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1522,4 +1522,133 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_MissingClusterListBadReq
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 	})
+}
+
+func TestHTTPServer_ListOfDisabledClusters_NoneDisabled(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ListOfDisabledClusters,
+		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+	})
+
+	// check from storage
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	helpers.FailOnError(t, err)
+
+	// we expect no clusters
+	assert.Len(t, disabledClusters, 0)
+}
+
+func TestHTTPServer_ListOfDisabledClusters_OneDisabled(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]types.ClusterName, 2)
+	for i := range clusters {
+		clusters[i] = testdata.GetRandomClusterID()
+	}
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, clusters[0], testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.DisableRuleForClusterEndpoint,
+		EndpointArgs: []interface{}{clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ListOfDisabledClusters,
+		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+	})
+}
+
+func TestHTTPServer_ListOfDisabledClusters_JustificationTests(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]types.ClusterName, 2)
+	for i := range clusters {
+		clusters[i] = testdata.GetRandomClusterID()
+	}
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, clusters[0], testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPut,
+		Endpoint:     server.DisableRuleForClusterEndpoint,
+		EndpointArgs: []interface{}{clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"status": "ok"}`,
+	})
+
+	const expectedFeedback = "user's feedback"
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.DisableRuleFeedbackEndpoint,
+		EndpointArgs: []interface{}{clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		Body:         fmt.Sprintf(`{"message": "%v"}`, expectedFeedback),
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       fmt.Sprintf(`{"message":"%v", "status":"ok"}`, expectedFeedback),
+	})
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ListOfDisabledClusters,
+		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+	})
+
+	// check justification from storage
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 cluster with expected justification
+	assert.Len(t, disabledClusters, 1)
+	disabledCluster := disabledClusters[0]
+	assert.Equal(t, clusters[0], disabledCluster.ClusterID)
+	assert.Equal(t, expectedFeedback, disabledCluster.Justification)
+
+	// update feedback to new one
+	const updatedFeedback = "updated feedback"
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.DisableRuleFeedbackEndpoint,
+		EndpointArgs: []interface{}{clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		Body:         fmt.Sprintf(`{"message": "%v"}`, updatedFeedback),
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       fmt.Sprintf(`{"message":"%v", "status":"ok"}`, updatedFeedback),
+	})
+
+	// check justification from storage
+	disabledClusters, err = mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 cluster with updated justification
+	assert.Len(t, disabledClusters, 1)
+	disabledCluster = disabledClusters[0]
+	assert.Equal(t, clusters[0], disabledCluster.ClusterID)
+	assert.Equal(t, updatedFeedback, disabledCluster.Justification)
 }
