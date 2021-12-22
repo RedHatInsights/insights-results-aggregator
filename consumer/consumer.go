@@ -59,7 +59,8 @@ type KafkaConsumer struct {
 	numberOfErrorsConsumingMessages      uint64
 	ready                                chan bool
 	cancel                               context.CancelFunc
-	payloadTrackerProducer               *producer.KafkaProducer
+	payloadTrackerProducer               *producer.PayloadTrackerProducer
+	deadLetterProducer                   *producer.DeadLetterProducer
 }
 
 // DefaultSaramaConfig is a config which will be used by default
@@ -94,9 +95,15 @@ func NewWithSaramaConfig(
 		return nil, err
 	}
 
-	payloadTrackerProducer, err := producer.New(brokerCfg)
+	payloadTrackerProducer, err := producer.NewPayloadTrackerProducer(brokerCfg)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to construct producer")
+		log.Error().Err(err).Msg("unable to construct payload tracker producer")
+		return nil, err
+	}
+
+	deadLetterProducer, err := producer.NewDeadLetterProducer(brokerCfg)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to construct dead letter producer")
 		return nil, err
 	}
 
@@ -108,6 +115,7 @@ func NewWithSaramaConfig(
 		numberOfErrorsConsumingMessages:      0,
 		ready:                                make(chan bool),
 		payloadTrackerProducer:               payloadTrackerProducer,
+		deadLetterProducer:                   deadLetterProducer,
 	}
 
 	return consumer, nil
@@ -210,6 +218,12 @@ func (consumer *KafkaConsumer) Close() error {
 	if consumer.payloadTrackerProducer != nil {
 		if err := consumer.payloadTrackerProducer.Close(); err != nil {
 			log.Error().Err(err).Msg("unable to close payload tracker Kafka producer")
+		}
+	}
+
+	if consumer.deadLetterProducer != nil {
+		if err := consumer.deadLetterProducer.Close(); err != nil {
+			log.Error().Err(err).Msg("unable to close dead letter Kafka producer")
 		}
 	}
 

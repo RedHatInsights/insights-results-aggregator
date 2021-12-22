@@ -2,6 +2,7 @@
 address = "localhost:29092"
 topic = "ccx.ocp.results"
 payload_tracker_topic = "platform.payload-status"
+dead_letter_queue_topic = "dead.letter.queue"
 service_name = "insights-results-aggregator"
 group = "aggregator"
 enabled = true
