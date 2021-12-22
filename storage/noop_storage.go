@@ -252,6 +252,16 @@ func (*NoopStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, er
 	return nil, nil
 }
 
+// ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
+// specified account (noop).
+func (*NoopStorage) ListOfDisabledClusters(
+	userID types.UserID,
+	ruleID types.RuleID,
+	errorKey types.ErrorKey,
+) ([]ctypes.DisabledClusterInfo, error) {
+	return nil, nil
+}
+
 // RateOnRule function stores the vote (rating) given by an user to a rule+error key
 func (*NoopStorage) RateOnRule(
 	types.UserID,

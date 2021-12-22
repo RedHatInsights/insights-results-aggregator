@@ -155,6 +155,11 @@ type Storage interface {
 	DoesClusterExist(clusterID types.ClusterName) (bool, error)
 	ListOfDisabledRules(userID types.UserID) ([]ctypes.DisabledRule, error)
 	ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error)
+	ListOfDisabledClusters(
+		userID types.UserID,
+		ruleID types.RuleID,
+		errorKey types.ErrorKey,
+	) ([]ctypes.DisabledClusterInfo, error)
 	RateOnRule(
 		types.UserID,
 		types.OrgID,
@@ -1205,4 +1210,76 @@ func (storage DBStorage) DoesClusterExist(clusterID types.ClusterName) (bool, er
 	}
 
 	return true, nil
+}
+
+// ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
+// specified account.
+func (storage DBStorage) ListOfDisabledClusters(
+	userID types.UserID,
+	ruleID types.RuleID,
+	errorKey types.ErrorKey,
+) (
+	disabledClusters []ctypes.DisabledClusterInfo,
+	err error,
+) {
+	// select disabled rules from toggle table and the latest feedback from disable_feedback table
+	// LEFT join and COALESCE are used for the feedback, because feedback is filled by different
+	// request than toggle, so it might be empty/null
+	query := `
+	SELECT
+        toggle.cluster_id,
+		toggle.disabled_at,
+		COALESCE(feedback.message, '')
+	FROM
+		cluster_rule_toggle toggle
+	LEFT JOIN
+		cluster_user_rule_disable_feedback feedback
+	ON feedback.updated_at = (
+		SELECT updated_at
+		FROM cluster_user_rule_disable_feedback
+		WHERE cluster_id = toggle.cluster_id
+		AND user_id = $1
+		AND rule_id = $2
+		AND error_key = $3
+		ORDER BY updated_at DESC
+		LIMIT 1
+	)
+	WHERE
+		toggle.user_id = $1
+		AND toggle.rule_id = $2
+		AND toggle.error_key = $3
+		AND toggle.disabled = $4
+	ORDER BY
+		toggle.disabled_at DESC
+	`
+
+	// run the query against database
+	rows, err := storage.connection.Query(query, userID, ruleID, errorKey, RuleToggleDisable)
+
+	// return empty list in case of any error
+	if err != nil {
+		return disabledClusters, err
+	}
+	defer closeRows(rows)
+
+	for rows.Next() {
+		var disabledCluster ctypes.DisabledClusterInfo
+
+		err = rows.Scan(
+			&disabledCluster.ClusterID,
+			&disabledCluster.DisabledAt,
+			&disabledCluster.Justification,
+		)
+
+		if err != nil {
+			log.Error().Err(err).Msg("ReadListOfDisabledRules")
+			// return partially filled slice + error
+			return disabledClusters, err
+		}
+
+		// append disabled cluster read from database to a slice
+		disabledClusters = append(disabledClusters, disabledCluster)
+	}
+
+	return disabledClusters, nil
 }
