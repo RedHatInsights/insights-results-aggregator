@@ -64,7 +64,11 @@ func TestDBStorageDisableRuleSystemWideDoubleDisable(t *testing.T) {
 		"x")
 
 	// we expect the error to happen
-	assert.EqualError(t, err, "UNIQUE constraint failed: rule_disable.user_id, rule_disable.org_id, rule_disable.rule_id, rule_disable.error_key")
+	const sqliteErrMessage = "UNIQUE constraint failed: rule_disable.user_id, rule_disable.org_id, rule_disable.rule_id, rule_disable.error_key"
+	const postgresErrMessage = "pq: duplicate key value violates unique constraint \"rule_disable_pkey\""
+	if err.Error() != sqliteErrMessage && err.Error() != postgresErrMessage {
+		t.Fatalf("expected one of: \n%v\n%v\ngot:\n%v", sqliteErrMessage, postgresErrMessage, err.Error())
+	}
 
 	// close storage
 	closer()

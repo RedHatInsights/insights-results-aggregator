@@ -633,8 +633,8 @@ func TestMigration20(t *testing.T) {
 		&ruleFQDN, &ruleID,
 	)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, testdata.Rule1ID, ruleFQDN)
-	assert.Equal(t, testdata.Rule1CompositeID, ruleID)
+	assert.Equal(t, testdata.Rule1ID, types.RuleID(ruleFQDN))
+	assert.Equal(t, testdata.Rule1CompositeID, types.RuleID(ruleID))
 
 	//Step down should rename rule_fqdn column to rule_id and it contains only plugin name
 	err = migration.SetDBVersion(db, dbDriver, 19)
@@ -654,5 +654,5 @@ func TestMigration20(t *testing.T) {
 		&ruleID,
 	)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, testdata.Rule1ID, ruleID)
+	assert.Equal(t, testdata.Rule1ID, types.RuleID(ruleID))
 }

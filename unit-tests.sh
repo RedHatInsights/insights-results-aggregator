@@ -17,7 +17,7 @@ STORAGE=$1
 
 function run_unit_tests() {
     # shellcheck disable=SC2046
-    if ! go test -timeout 2m -coverprofile coverage.out $(go list ./... | grep -v tests | tr '\n' ' ')
+    if ! go test -timeout 3m -coverprofile coverage.out $(go list ./... | grep -v tests | tr '\n' ' ')
     then
         echo "unit tests failed"
         exit 1
@@ -28,7 +28,8 @@ if [ -z "$STORAGE" ] ; then
     # tests with sqlite
     echo "running unit tests with sqlite in memory"
     # shellcheck disable=SC2034
-    CONFIG_FILE=config.toml
+    path_to_config=$(pwd)/config.toml
+    export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE="$path_to_config"
     run_unit_tests
 fi
 
@@ -36,6 +37,9 @@ if [ "$STORAGE" == "postgres" ]; then
     # tests with postgres
     echo "running unit tests with postgres"
     # shellcheck disable=SC2034
-    CONFIG_FILE=config-devel.toml
+    path_to_config=$(pwd)/config-devel.toml
+    export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE="$path_to_config"
+    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="postgres"
+    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="admin"
     run_unit_tests
 fi
