@@ -214,7 +214,7 @@ func (storage DBStorage) ListOfSystemWideDisabledRules(
 			&disabledRule.UpdatedAT)
 
 		if err != nil {
-			log.Error().Err(err).Msg("ReadListOfDisabledRules")
+			log.Error().Err(err).Msg("ReadListOfDisabledRules storage error")
 			// return partially filled slice + error
 			return disabledRules, err
 		}
