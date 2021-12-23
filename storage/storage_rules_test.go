@@ -985,7 +985,7 @@ func TestDBStorageListOfDisabledClustersTwoClusters(t *testing.T) {
 	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
 	helpers.FailOnError(t, err)
 
-	// we expect 1 cluster to be returned
+	// we expect 2 clusters to be returned
 	assert.Len(t, disabledClusters, 2)
 
 	// cluster index 1 wasn't disabled, we are checking only for 0 and 2
