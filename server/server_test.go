@@ -1554,7 +1554,7 @@ func TestHTTPServer_ListOfDisabledClusters_OneDisabled(t *testing.T) {
 	}
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, clusters[0], testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, clusters[0], testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, time.Now(), testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1586,7 +1586,7 @@ func TestHTTPServer_ListOfDisabledClusters_JustificationTests(t *testing.T) {
 	}
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, clusters[0], testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, clusters[0], testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, time.Now(), testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 

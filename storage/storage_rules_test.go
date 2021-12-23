@@ -46,7 +46,7 @@ func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 
 func mustWriteReport3RulesForCluster(t *testing.T, mockStorage storage.Storage, clusterName types.ClusterName) {
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, clusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID, clusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, time.Now(), testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 }
