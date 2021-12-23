@@ -17,7 +17,7 @@ STORAGE=$1
 
 function run_unit_tests() {
     # shellcheck disable=SC2046
-    if ! go test -timeout 2m -coverprofile coverage.out $(go list ./... | grep -v tests | tr '\n' ' ')
+    if ! go test -timeout 3m -coverprofile coverage.out $(go list ./... | grep -v tests | tr '\n' ' ')
     then
         echo "unit tests failed"
         exit 1
