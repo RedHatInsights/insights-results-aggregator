@@ -65,6 +65,8 @@ const (
 	ListOfDisabledRules = "rules/users/{user_id}/disabled"
 	// ListOfDisabledRulesFeedback returns a list of reasons why rule has been disabled
 	ListOfDisabledRulesFeedback = "rules/users/{user_id}/disabled/feedback"
+	// ListOfDisabledClusters returns a list of clusters which the user disabled for a rule with latest justification
+	ListOfDisabledClusters = "clusters/rules/{rule_id}/error_key/{error_key}/users/{user_id}/disabled"
 	// RuleClusterDetailEndpoint returns a list of clusters affected by a given rule for current account
 	RuleClusterDetailEndpoint = "rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail"
 
@@ -136,6 +138,7 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+ReportForListOfClustersPayloadEndpoint, server.reportForListOfClustersPayload).Methods(http.MethodPost)
 	router.HandleFunc(apiPrefix+ListOfDisabledRules, server.listOfDisabledRules).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ListOfDisabledRulesFeedback, server.listOfReasons).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+ListOfDisabledClusters, server.listOfDisabledClusters).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+Rating, server.setRuleRating).Methods(http.MethodPost)
 	router.HandleFunc(apiPrefix+GetRating, server.getRuleRating).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+RuleClusterDetailEndpoint, server.RuleClusterDetailEndpoint).Methods(http.MethodGet)

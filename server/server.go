@@ -74,6 +74,8 @@ const (
 
 	// ReportResponseMetainfo constant defines the name of response field
 	ReportResponseMetainfo = "metainfo"
+
+	clustersStr = "clusters"
 )
 
 // HTTPServer in an implementation of Server interface
@@ -130,7 +132,7 @@ func (server *HTTPServer) listOfClustersForOrganization(writer http.ResponseWrit
 		handleServerError(writer, err)
 		return
 	}
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData("clusters", clusters))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(clustersStr, clusters))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -524,13 +526,7 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 		return
 	}
 
-	resp := responses.BuildOkResponse()
-	resp["meta"] = ctypes.HittingClustersMetadata{
-		Count:    len(clusters),
-		Selector: selector,
-	}
-	resp["data"] = clusters
-	err = responses.SendOK(writer, resp)
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(clustersStr, clusters))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}

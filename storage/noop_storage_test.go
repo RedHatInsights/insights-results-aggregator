@@ -92,4 +92,5 @@ func TestNoopStorage_Methods_Cont2(t *testing.T) {
 	_, _ = noopStorage.ListOfClustersForOrgSpecificRule(0, "", []string{"a"})
 	_, _ = noopStorage.ReadRecommendationsForClusters([]string{}, types.OrgID(1))
 	_, _ = noopStorage.ReadClusterListRecommendations([]string{}, types.OrgID(1))
+	_, _ = noopStorage.ListOfDisabledClusters(userID, "", "")
 }

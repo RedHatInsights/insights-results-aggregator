@@ -1298,6 +1298,91 @@
         ]
       }
     },
+    "/clusters/rules/{ruleId}/error_key/{errorKey}/users/{userId}/disabled": {
+      "get": {
+        "summary": "Returns a list of clusters disabled for given rule from current account",
+        "operationId": "ListOfDisabledClusters",
+        "description": "Returns a list of clusters disabled for given rule from current account",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of a rule",
+            "schema": {
+              "type": "string"
+            },
+            "example": "some.python.module"
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "ID of the error key",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of disabled clusters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cluster_id": {
+                            "type": "string",
+                            "description": "ID of the cluster which must conform to UUID format.",
+                            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266"
+                          },
+                          "cluster_name": {
+                            "type": "string",
+                            "description": "The display name of a cluster. Filled later in smart-proxy with info from AMS API"
+                          },
+                          "disabled_at": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "justification": {
+                            "type": "string",
+                            "description": "User given justification why rule was disabled.",
+                            "example": "Not useful for us."
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
     "/recommendations/organizations/{org_id}/users/{user_id}/list": {
       "post": {
         "summary": "Returns a list of recommendations and a number of clusters each one is hitting.",
@@ -1983,27 +2068,7 @@
                     "report": {
                       "type": "object",
                       "properties": {
-                        "meta": {
-                          "type": "object",
-                          "properties": {
-                            "count": {
-                              "type": "integer",
-                              "description": "Number of clusters affected by the received rule.",
-                              "example": "1"
-                            },
-                            "component": {
-                              "type": "string",
-                              "description": "The rule identifier included in the received rule selector.",
-                              "example": "some.python.module"
-                            },
-                            "error_key": {
-                              "type": "string",
-                              "description": "The erroy key included in the received rule selector.",
-                              "example": "SOME_ERROR_KEY"
-                            }
-                          }
-                        },
-                        "data": {
+                        "clusters": {
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -2013,6 +2078,10 @@
                                 "minLength": 36,
                                 "maxLength": 36,
                                 "format": "uuid"
+                              },
+                              "cluster_name": {
+                                "type": "string",
+                                "description": "The display name of a cluster. Filled later in smart-proxy with info from AMS API."
                               }
                             }
                           }

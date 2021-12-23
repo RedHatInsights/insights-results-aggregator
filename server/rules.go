@@ -25,6 +25,8 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+const accountStr = "account"
+
 // disableRuleForCluster disables a rule for specified cluster, excluding it from reports
 func (server *HTTPServer) disableRuleForCluster(writer http.ResponseWriter, request *http.Request) {
 	server.toggleRuleForCluster(writer, request, storage.RuleToggleDisable)
@@ -78,7 +80,7 @@ func (server HTTPServer) listOfDisabledRules(writer http.ResponseWriter, request
 		// everything has been handled already
 		return
 	}
-	log.Info().Str("account", string(userID)).Msg("disabled rules for account")
+	log.Info().Str(accountStr, string(userID)).Msg("disabled rules for account")
 
 	// try to read list of disabled rules by an account/user from database
 	disabledRules, err := server.Storage.ListOfDisabledRules(userID)
@@ -108,7 +110,7 @@ func (server HTTPServer) listOfReasons(writer http.ResponseWriter, request *http
 		// everything has been handled already
 		return
 	}
-	log.Info().Str("account", string(userID)).Msg("reasons for disabling rules")
+	log.Info().Str(accountStr, string(userID)).Msg("reasons for disabling rules")
 
 	// try to read list of reasons by an account/user from database
 	reasons, err := server.Storage.ListOfReasons(userID)
@@ -122,6 +124,45 @@ func (server HTTPServer) listOfReasons(writer http.ResponseWriter, request *http
 	// try to send JSON payload to the client in a HTTP response
 	err = responses.SendOK(writer,
 		responses.BuildOkResponseWithData("reasons", reasons))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+// listOfDisabledClusters returns list of clusters disabled for a rule and user
+func (server HTTPServer) listOfDisabledClusters(writer http.ResponseWriter, request *http.Request) {
+	log.Info().Msg("Lisf of disabled clusters")
+
+	userID, succesful := readUserID(writer, request)
+	if !succesful {
+		// everything has been handled already
+		return
+	}
+	log.Info().Str(accountStr, string(userID)).Msg("disabled clusters for account")
+
+	ruleID, successful := readRuleID(writer, request)
+	if !successful {
+		// everything has been handled already
+		return
+	}
+
+	errorKey, successful := readErrorKey(writer, request)
+	if !successful {
+		// everything has been handled already
+		return
+	}
+	log.Info().Str(accountStr, string(userID)).Msgf("disabled clusters for rule ID %v|%v", ruleID, errorKey)
+
+	// get disabled rules from DB
+	disabledClusters, err := server.Storage.ListOfDisabledClusters(userID, ruleID, errorKey)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to read list of disabled clusters")
+		handleServerError(writer, err)
+		return
+	}
+	log.Info().Str(accountStr, string(userID)).Int("number of disabled clusters", len(disabledClusters)).Msg("list of disabled clusters")
+
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("clusters", disabledClusters))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
