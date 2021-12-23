@@ -151,10 +151,12 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) 
 	storageConf := &conf.Config.Storage
 	storageConf.Driver = postgres
 	storageConf.PGDBName += "_test_db_" + strings.ReplaceAll(uuid.New().String(), "-", "_")
+	storageConf.PGPassword = dbAdminPassword
+	storageConf.PGUsername = postgres
 
 	connString := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s sslmode=disable",
-		storageConf.PGHost, storageConf.PGPort, postgres, dbAdminPassword,
+		storageConf.PGHost, storageConf.PGPort, storageConf.PGUsername, storageConf.PGPassword,
 	)
 
 	adminConn, err := sql.Open(storageConf.Driver, connString)
@@ -164,8 +166,10 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) 
 	_, err = adminConn.Exec(query)
 	helpers.FailOnError(tb, err)
 
-	postgresStorage, err := storage.New(conf.GetStorageConfiguration())
+	postgresStorage, err := storage.New(*storageConf)
+
 	helpers.FailOnError(tb, err)
+	helpers.FailOnError(tb, postgresStorage.GetConnection().Ping())
 
 	if init {
 		helpers.FailOnError(tb, postgresStorage.MigrateToLatest())
