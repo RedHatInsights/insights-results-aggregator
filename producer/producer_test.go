@@ -62,15 +62,15 @@ func TestProducerTrackPayload(t *testing.T) {
 	mockProducer := mocks.NewSyncProducer(t, nil)
 	mockProducer.ExpectSendMessageAndSucceed()
 
-	kafkaProducer := producer.KafkaProducer{
+	payloadTrackerProducer := producer.PayloadTrackerProducer{
+		KafkaProducer: producer.KafkaProducer{Producer: mockProducer},
 		Configuration: brokerCfg,
-		Producer:      mockProducer,
 	}
 	defer func() {
-		helpers.FailOnError(t, kafkaProducer.Close())
+		helpers.FailOnError(t, payloadTrackerProducer.Close())
 	}()
 
-	err := kafkaProducer.TrackPayload(testdata.TestRequestID, testTimestamp, producer.StatusReceived)
+	err := payloadTrackerProducer.TrackPayload(testdata.TestRequestID, testTimestamp, producer.StatusReceived)
 	assert.NoError(t, err, "payload tracking failed")
 }
 
@@ -80,15 +80,15 @@ func TestProducerTrackPayload(t *testing.T) {
 func TestProducerTrackPayloadEmptyRequestID(t *testing.T) {
 	mockProducer := mocks.NewSyncProducer(t, nil)
 
-	kafkaProducer := producer.KafkaProducer{
+	payloadTrackerProducer := producer.PayloadTrackerProducer{
+		KafkaProducer: producer.KafkaProducer{Producer: mockProducer},
 		Configuration: brokerCfg,
-		Producer:      mockProducer,
 	}
 	defer func() {
-		helpers.FailOnError(t, kafkaProducer.Close())
+		helpers.FailOnError(t, payloadTrackerProducer.Close())
 	}()
 
-	err := kafkaProducer.TrackPayload(types.RequestID(""), testTimestamp, producer.StatusReceived)
+	err := payloadTrackerProducer.TrackPayload(types.RequestID(""), testTimestamp, producer.StatusReceived)
 	assert.NoError(t, err, "payload tracking failed")
 }
 
@@ -100,27 +100,27 @@ func TestProducerTrackPayloadWithError(t *testing.T) {
 	mockProducer := mocks.NewSyncProducer(t, nil)
 	mockProducer.ExpectSendMessageAndFail(errors.New(producerErrorMessage))
 
-	kafkaProducer := producer.KafkaProducer{
+	payloadTrackerProducer := producer.PayloadTrackerProducer{
+		KafkaProducer: producer.KafkaProducer{Producer: mockProducer},
 		Configuration: brokerCfg,
-		Producer:      mockProducer,
 	}
 	defer func() {
-		helpers.FailOnError(t, kafkaProducer.Close())
+		helpers.FailOnError(t, payloadTrackerProducer.Close())
 	}()
 
-	err := kafkaProducer.TrackPayload(testdata.TestRequestID, testTimestamp, producer.StatusReceived)
+	err := payloadTrackerProducer.TrackPayload(testdata.TestRequestID, testTimestamp, producer.StatusReceived)
 	assert.EqualError(t, err, producerErrorMessage)
 }
 
 // TestProducerClose makes sure it's possible to close the producer.
 func TestProducerClose(t *testing.T) {
 	mockProducer := mocks.NewSyncProducer(t, nil)
-	prod := producer.KafkaProducer{
+	payloadTrackerProducer := producer.PayloadTrackerProducer{
+		KafkaProducer: producer.KafkaProducer{Producer: mockProducer},
 		Configuration: brokerCfg,
-		Producer:      mockProducer,
 	}
 
-	err := prod.Close()
+	err := payloadTrackerProducer.Close()
 	assert.NoError(t, err, "failed to close Kafka producer")
 }
 
@@ -140,4 +140,76 @@ func TestProducerNew(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	helpers.FailOnError(t, prod.Close())
+}
+
+// TestDeadLetterProducerNew checks that creating new DeadLetterProducer works fine
+func TestDeadLetterProducerNew(t *testing.T) {
+	mockBroker := sarama.NewMockBroker(t, 0)
+	defer mockBroker.Close()
+
+	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, brokerCfg.PayloadTrackerTopic))
+
+	prod, err := producer.NewDeadLetterProducer(
+		broker.Configuration{
+			Address:             mockBroker.Addr(),
+			Topic:               brokerCfg.Topic,
+			PayloadTrackerTopic: brokerCfg.PayloadTrackerTopic,
+			Enabled:             brokerCfg.Enabled,
+		})
+	helpers.FailOnError(t, err)
+
+	helpers.FailOnError(t, prod.Close())
+}
+
+// TestPayloadTrackerProducerNew checks that creating new PayloadTrackerProducer works fine
+func TestPayloadTrackerProducerNew(t *testing.T) {
+	mockBroker := sarama.NewMockBroker(t, 0)
+	defer mockBroker.Close()
+
+	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, brokerCfg.PayloadTrackerTopic))
+
+	prod, err := producer.NewPayloadTrackerProducer(
+		broker.Configuration{
+			Address:             mockBroker.Addr(),
+			Topic:               brokerCfg.Topic,
+			PayloadTrackerTopic: brokerCfg.PayloadTrackerTopic,
+			Enabled:             brokerCfg.Enabled,
+		})
+	helpers.FailOnError(t, err)
+
+	helpers.FailOnError(t, prod.Close())
+}
+
+// TestProducerSendDeadLetter calls the SendDeadLetter function using a mock Sarama producer.
+func TestProducerSendDeadLetter(t *testing.T) {
+	mockProducer := mocks.NewSyncProducer(t, nil)
+	mockProducer.ExpectSendMessageAndSucceed()
+
+	deadLetterProducer := producer.DeadLetterProducer{
+		KafkaProducer: producer.KafkaProducer{Producer: mockProducer},
+		Configuration: brokerCfg,
+	}
+	defer func() {
+		helpers.FailOnError(t, deadLetterProducer.Close())
+	}()
+
+	msg := &sarama.ConsumerMessage{}
+	err := deadLetterProducer.SendDeadLetter(msg)
+	assert.NoError(t, err, "sending dead letter failed")
+}
+
+// TestProducerSendDeadLetterMessageNil checks that the SendDeadLetter function verifies the parameter is not nil.
+func TestProducerSendDeadLetterMessageNil(t *testing.T) {
+	mockProducer := mocks.NewSyncProducer(t, nil)
+
+	deadLetterProducer := producer.DeadLetterProducer{
+		KafkaProducer: producer.KafkaProducer{Producer: mockProducer},
+		Configuration: brokerCfg,
+	}
+	defer func() {
+		helpers.FailOnError(t, deadLetterProducer.Close())
+	}()
+
+	err := deadLetterProducer.SendDeadLetter(nil)
+	assert.NoError(t, err, "sending dead letter failed")
 }

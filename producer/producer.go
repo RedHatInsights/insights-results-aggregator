@@ -19,15 +19,11 @@ limitations under the License.
 package producer
 
 import (
-	"encoding/json"
-	"time"
-
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 const (
@@ -48,8 +44,7 @@ type Producer interface {
 
 // KafkaProducer is an implementation of Producer interface
 type KafkaProducer struct {
-	Configuration broker.Configuration
-	Producer      sarama.SyncProducer
+	Producer sarama.SyncProducer
 }
 
 // New constructs new implementation of Producer interface
@@ -61,31 +56,16 @@ func New(brokerCfg broker.Configuration) (*KafkaProducer, error) {
 	}
 
 	return &KafkaProducer{
-		Configuration: brokerCfg,
-		Producer:      producer,
+		Producer: producer,
 	}, nil
-}
-
-// PayloadTrackerMessage represents content of messages
-// sent to the Payload Tracker topic in Kafka.
-type PayloadTrackerMessage struct {
-	Service   string `json:"service"`
-	RequestID string `json:"request_id"`
-	Status    string `json:"status"`
-	Date      string `json:"date"`
 }
 
 // produceMessage produces message to selected topic. That function returns
 // partition ID and offset of new message or an error value in case of any
 // problem on broker side.
-func (producer *KafkaProducer) produceMessage(trackerMsg PayloadTrackerMessage) (int32, int64, error) {
-	jsonBytes, err := json.Marshal(trackerMsg)
-	if err != nil {
-		return 0, 0, err
-	}
-
+func (producer *KafkaProducer) produceMessage(jsonBytes []byte, topic string) (int32, int64, error) {
 	producerMsg := &sarama.ProducerMessage{
-		Topic: producer.Configuration.PayloadTrackerTopic,
+		Topic: topic,
 		Value: sarama.ByteEncoder(jsonBytes),
 	}
 
@@ -97,34 +77,6 @@ func (producer *KafkaProducer) produceMessage(trackerMsg PayloadTrackerMessage) 
 		metrics.ProducedMessages.Inc()
 	}
 	return partition, offset, err
-}
-
-// TrackPayload publishes the status of a payload with the given request ID to
-// the payload tracker Kafka topic. Please keep in mind that if the request ID
-// is empty, the payload will not be tracked and no error will be raised because
-// this can happen in some scenarios and it is not considered an error.
-// Instead, only a warning is logged and no error is returned.
-func (producer *KafkaProducer) TrackPayload(reqID types.RequestID, timestamp time.Time, status string) error {
-	if len(reqID) == 0 {
-		log.Warn().Str("Operation", "TrackPayload").Msg("request ID is missing, null or empty")
-		return nil
-	}
-
-	_, _, err := producer.produceMessage(PayloadTrackerMessage{
-		Service:   producer.Configuration.ServiceName,
-		RequestID: string(reqID),
-		Status:    status,
-		Date:      timestamp.UTC().Format(time.RFC3339Nano),
-	})
-	if err != nil {
-		log.Error().Err(err).Msgf(
-			"unable to produce payload tracker message (request ID: '%s', timestamp: %v, status: '%s')",
-			reqID, timestamp, status)
-
-		return err
-	}
-
-	return nil
 }
 
 // Close allow the Sarama producer to be gracefully closed

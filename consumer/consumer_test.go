@@ -19,7 +19,9 @@ package consumer_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"log"
 	"os"
 	"testing"
@@ -651,4 +653,56 @@ func TestKafkaConsumer_SetupCleanup(t *testing.T) {
 	// so it's possible to just pass nil into them.
 	helpers.FailOnError(t, mockConsumer.Setup(nil))
 	helpers.FailOnError(t, mockConsumer.Cleanup(nil))
+}
+
+func TestKafkaConsumer_NewDeadLetterProducer_Error(t *testing.T) {
+	producer.NewDeadLetterProducer = func(brokerCfg broker.Configuration) (*producer.DeadLetterProducer, error) {
+		return nil, errors.New("error happened")
+	}
+
+	producer.NewPayloadTrackerProducer = func(brokerCfg broker.Configuration) (*producer.PayloadTrackerProducer, error) {
+		return nil, nil
+	}
+
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mockBroker := sarama.NewMockBroker(t, 0)
+	defer mockBroker.Close()
+
+	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
+
+	_, err := consumer.New(broker.Configuration{
+		Address: mockBroker.Addr(),
+		Topic:   testTopicName,
+		Enabled: true,
+	}, mockStorage)
+
+	assert.EqualError(t, err, "error happened")
+}
+
+func TestKafkaConsumer_NewPayloadTrackerProducer_Error(t *testing.T) {
+	producer.NewDeadLetterProducer = func(brokerCfg broker.Configuration) (*producer.DeadLetterProducer, error) {
+		return nil, nil
+	}
+
+	producer.NewPayloadTrackerProducer = func(brokerCfg broker.Configuration) (*producer.PayloadTrackerProducer, error) {
+		return nil, errors.New("error happened")
+	}
+
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mockBroker := sarama.NewMockBroker(t, 0)
+	defer mockBroker.Close()
+
+	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
+
+	_, err := consumer.New(broker.Configuration{
+		Address: mockBroker.Addr(),
+		Topic:   testTopicName,
+		Enabled: true,
+	}, mockStorage)
+
+	assert.EqualError(t, err, "error happened")
 }

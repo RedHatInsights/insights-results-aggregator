@@ -80,6 +80,8 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 			log.Error().Err(err).Msg("Unable to write consumer error to storage")
 		}
 
+		consumer.sendDeadLetter(msg)
+
 		consumer.updatePayloadTracker(requestID, time.Now(), producer.StatusError)
 	} else {
 		// The message was processed successfully.
@@ -95,9 +97,20 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 
 // updatePayloadTracker
 func (consumer KafkaConsumer) updatePayloadTracker(requestID types.RequestID, timestamp time.Time, status string) {
-	err := consumer.payloadTrackerProducer.TrackPayload(requestID, timestamp, status)
-	if err != nil {
-		log.Warn().Msgf(`Unable to send "%s" update to Payload Tracker service`, status)
+	if consumer.payloadTrackerProducer != nil {
+		err := consumer.payloadTrackerProducer.TrackPayload(requestID, timestamp, status)
+		if err != nil {
+			log.Warn().Msgf(`Unable to send "%s" update to Payload Tracker service`, status)
+		}
+	}
+}
+
+// sendDeadLetter - sends unprocessed message to dead letter queue
+func (consumer KafkaConsumer) sendDeadLetter(msg *sarama.ConsumerMessage) {
+	if consumer.deadLetterProducer != nil {
+		if err := consumer.deadLetterProducer.SendDeadLetter(msg); err != nil {
+			log.Error().Err(err).Msg("Failed to load message to dead letter queue")
+		}
 	}
 }
 

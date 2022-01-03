@@ -26,13 +26,14 @@ import (
 
 // Configuration represents configuration of Kafka broker
 type Configuration struct {
-	Address             string        `mapstructure:"address" toml:"address"`
-	Topic               string        `mapstructure:"topic" toml:"topic"`
-	Timeout             time.Duration `mapstructure:"timeout" toml:"timeout"`
-	PayloadTrackerTopic string        `mapstructure:"payload_tracker_topic" toml:"payload_tracker_topic"`
-	ServiceName         string        `mapstructure:"service_name" toml:"service_name"`
-	Group               string        `mapstructure:"group" toml:"group"`
-	Enabled             bool          `mapstructure:"enabled" toml:"enabled"`
-	OrgAllowlist        mapset.Set    `mapstructure:"org_allowlist_file" toml:"org_allowlist_file"`
-	OrgAllowlistEnabled bool          `mapstructure:"enable_org_allowlist" toml:"enable_org_allowlist"`
+	Address              string        `mapstructure:"address" toml:"address"`
+	Topic                string        `mapstructure:"topic" toml:"topic"`
+	Timeout              time.Duration `mapstructure:"timeout" toml:"timeout"`
+	PayloadTrackerTopic  string        `mapstructure:"payload_tracker_topic" toml:"payload_tracker_topic"`
+	DeadLetterQueueTopic string        `mapstructure:"dead_letter_queue_topic" toml:"dead_letter_queue_topic"`
+	ServiceName          string        `mapstructure:"service_name" toml:"service_name"`
+	Group                string        `mapstructure:"group" toml:"group"`
+	Enabled              bool          `mapstructure:"enabled" toml:"enabled"`
+	OrgAllowlist         mapset.Set    `mapstructure:"org_allowlist_file" toml:"org_allowlist_file"`
+	OrgAllowlistEnabled  bool          `mapstructure:"enable_org_allowlist" toml:"enable_org_allowlist"`
 }

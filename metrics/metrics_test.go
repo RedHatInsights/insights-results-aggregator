@@ -101,15 +101,15 @@ func TestProducedMessagesMetric(t *testing.T) {
 	mockProducer := mocks.NewSyncProducer(t, nil)
 	mockProducer.ExpectSendMessageAndSucceed()
 
-	kafkaProducer := producer.KafkaProducer{
+	payloadTrackerProducer := producer.PayloadTrackerProducer{
+		KafkaProducer: producer.KafkaProducer{Producer: mockProducer},
 		Configuration: brokerCfg,
-		Producer:      mockProducer,
 	}
 	defer func() {
-		helpers.FailOnError(t, kafkaProducer.Close())
+		helpers.FailOnError(t, payloadTrackerProducer.Close())
 	}()
 
-	err := kafkaProducer.TrackPayload(testdata.TestRequestID, testdata.LastCheckedAt, producer.StatusReceived)
+	err := payloadTrackerProducer.TrackPayload(testdata.TestRequestID, testdata.LastCheckedAt, producer.StatusReceived)
 	helpers.FailOnError(t, err)
 
 	assertCounterValue(t, 1, metrics.ProducedMessages, initValue)
