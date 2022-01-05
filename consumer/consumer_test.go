@@ -398,29 +398,6 @@ func TestKafkaConsumer_New(t *testing.T) {
 	}, testCaseTimeLimit)
 }
 
-// TODO: fix with new groups consumer
-//func TestKafkaConsumer_New_FindCoordinatorRequestError(t *testing.T) {
-//	helpers.RunTestWithTimeout(t, func(t *testing.T) {
-//		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
-//
-//		mockBroker := sarama.NewMockBroker(t, 0)
-//		defer mockBroker.Close()
-//
-//		handlersMap := helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName)
-//		handlersMap["FindCoordinatorRequest"] = sarama.NewMockFindCoordinatorResponse(t).
-//			SetError(sarama.CoordinatorGroup, "", sarama.ErrUnknown)
-//
-//		mockBroker.SetHandlerByMap(handlersMap)
-//
-//		_, err := consumer.New(broker.Configuration{
-//			Address: mockBroker.Addr(),
-//			Topic:   testTopicName,
-//			Enabled: true,
-//		}, nil)
-//		assert.EqualError(t, err, "kafka server: Unexpected (unknown?) server error.")
-//	}, testCaseTimeLimit)
-//}
-
 func TestKafkaConsumer_ProcessMessage_OrganizationAllowlistDisabled(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
