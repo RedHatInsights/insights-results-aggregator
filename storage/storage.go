@@ -416,7 +416,7 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 		whereClause = `WHERE org_id = $1 AND rule_id = $2`
 	}
 	// #nosec G202
-	query := `SELECT cluster_id FROM recommendation ` + whereClause + ` ORDER BY cluster_id;`
+	query := `SELECT cluster_id, created_at FROM recommendation ` + whereClause + ` ORDER BY cluster_id;`
 
 	rows, err := storage.connection.Query(query, orgID, ruleID)
 
@@ -429,11 +429,15 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 
 	var (
 		clusterName ctypes.ClusterName
+		lastSeen    string
 	)
 	for rows.Next() {
-		err = rows.Scan(&clusterName)
+		err = rows.Scan(&clusterName, &lastSeen)
 		if err == nil {
-			results = append(results, ctypes.HittingClustersData{Cluster: clusterName})
+			results = append(results, ctypes.HittingClustersData{
+				Cluster:  clusterName,
+				LastSeen: lastSeen,
+			})
 		} else {
 			log.Error().Err(err).Msg("ListOfClustersForOrgSpecificRule")
 		}
@@ -865,9 +869,7 @@ func (storage DBStorage) insertRecommendations(
 	creationTime := time.Now().UTC()
 	selectors, statement, args := prepareInsertRecommendationsStatement(orgID, clusterName, report, creationTime)
 
-	inserted = len(selectors)
-	_, err = tx.Exec(statement, args...)
-	if err != nil {
+	if _, err = tx.Exec(statement, args...); err != nil {
 		log.Error().
 			Int(organizationKey, int(orgID)).
 			Str(clusterKey, string(clusterName)).
@@ -886,6 +888,7 @@ func (storage DBStorage) insertRecommendations(
 		Strs(selectorsKey, selectors).
 		Msg("Recommendations inserted successfully")
 
+	inserted = len(selectors)
 	return
 
 }
