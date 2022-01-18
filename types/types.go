@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -112,7 +112,7 @@ type ReportItem = types.ReportItem
 // errors and dictionary with results per cluster.
 type ClusterReports = types.ClusterReports
 
-//SchemaVersion represents the current version of data schema
+// SchemaVersion represents the current version of data schema
 type SchemaVersion = types.SchemaVersion
 
 // RuleRating represents a rule rating element sent by the user
