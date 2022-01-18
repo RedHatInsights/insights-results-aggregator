@@ -653,7 +653,7 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// TODO: uncomment when issues upthere resolved
-	//assert.Contains(t, buf.String(), errStr)
+	// assert.Contains(t, buf.String(), errStr)
 }
 
 func TestDBStorageGetVotesForNoRules(t *testing.T) {
@@ -787,7 +787,7 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
 		testdata.OrgID, clusterIds[0], testdata.Report3Rules,
 	))
-	//ClusterIds[1] is not associated to any rule hit and is not expected in any response
+	// ClusterIds[1] is not associated to any rule hit and is not expected in any response
 	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
 		testdata.OrgID, clusterIds[1], testdata.Report0Rules,
 	))
