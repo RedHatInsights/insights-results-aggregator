@@ -1,4 +1,4 @@
-// Copyright 2020, 2021 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -795,29 +795,29 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 		testdata.Org2ID, clusterIds[2], testdata.Report2Rules,
 	))
 
-	//TODO: Add these to test data to ensure consistency
+	// TODO: Add these to test data to ensure consistency
 
-	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
-	//but only clusters for testdata.OrgID are returned
+	// Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
+	// but only clusters for testdata.OrgID are returned
 	expectedClustersOrg1Rule1Err1 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[0]},
 	}
-	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
-	//but only clusters for testdata.OrgID are returned
+	// Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
+	// but only clusters for testdata.OrgID are returned
 	expectedClustersOrg1Rule2Err2 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[0]},
 	}
-	//Rule3|ERR_KEY3 is present in testdata.Report3Rules
+	// Rule3|ERR_KEY3 is present in testdata.Report3Rules
 	expectedClustersOrg1Rule3Err3 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[0]},
 	}
-	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
-	//but only clusters for testdata.Org2ID are returned
+	// Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
+	// but only clusters for testdata.Org2ID are returned
 	expectedClustersOrg2Rule1Err1 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[2]},
 	}
-	//Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
-	//but only clusters for testdata.Org2ID are returned
+	// Rule2|ERR_KEY2 is present in testdata.Report3Rules and testdata.Report2Rules,
+	// but only clusters for testdata.Org2ID are returned
 	expectedClustersOrg2Rule2Err2 := []ctypes.HittingClustersData{
 		{Cluster: clusterIds[2]},
 	}
@@ -842,11 +842,11 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 	helpers.FailOnError(t, err)
 	assert.Equal(t, expectedClustersOrg2Rule2Err2, list)
 
-	//Now let's add some active clusters filtering
-	//Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
-	//but only clusters for testdata.OrgID are returned, and since clusterIds[0] is
-	//not active, an empty list of hitting clusters should be returned as well as an
-	//ItemNotFoundError
+	// Now let's add some active clusters filtering
+	// Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
+	// but only clusters for testdata.OrgID are returned, and since clusterIds[0] is
+	// not active, an empty list of hitting clusters should be returned as well as an
+	// ItemNotFoundError
 	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID), []string{string(clusterIds[1]), string(clusterIds[2])})
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
