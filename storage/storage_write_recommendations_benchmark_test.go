@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -423,7 +423,7 @@ func BenchmarkNewRecommendationsExistingClusterConflict(b *testing.B) {
 		clusterIds[idx] = id
 		idx++
 	}
-	//Now, we duplicate them
+	// Now, we duplicate them
 	for id := range clusterIDSet.content {
 		clusterIds[idx] = id
 		idx++

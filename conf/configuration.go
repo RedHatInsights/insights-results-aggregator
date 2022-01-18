@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -279,7 +279,7 @@ func updateConfigFromClowder(c *ConfigStruct) error {
 			}
 		}
 
-		//get DB configuration from clowder
+		// get DB configuration from clowder
 		c.Storage.PGDBName = clowder.LoadedConfig.Database.Name
 		c.Storage.PGHost = clowder.LoadedConfig.Database.Hostname
 		c.Storage.PGPort = clowder.LoadedConfig.Database.Port

@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	"github.com/verdverm/frisby"
 
 	"github.com/RedHatInsights/insights-results-aggregator/server"
-	//"github.com/RedHatInsights/insights-results-aggregator/types"
+	// "github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // MultipleReportsResponse represents response from the server that contains

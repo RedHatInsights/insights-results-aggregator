@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -141,8 +141,8 @@ func AddMetricsWithNamespace(namespace string) {
 	prometheus.Unregister(FeedbackOnRules)
 	prometheus.Unregister(SQLQueriesCounter)
 	prometheus.Unregister(SQLQueriesDurations)
-	//prometheus.Unregister(SQLRecommendationsDeletes)
-	//prometheus.Unregister(SQLRecommendationsInserts)
+	// prometheus.Unregister(SQLRecommendationsDeletes)
+	// prometheus.Unregister(SQLRecommendationsInserts)
 
 	ConsumedMessages = promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,

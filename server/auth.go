@@ -1,7 +1,7 @@
 // Auth implementation based on JWT
 
 /*
-Copyright © 2019, 2020 Red Hat, Inc.
+Copyright © 2019, 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 		if server.Config.AuthType == "jwt" {
 			jwtPayload := &JWTPayload{}
 			err = json.Unmarshal([]byte(decoded), jwtPayload)
-			if err != nil { //Malformed token, returns with http code 403 as usual
+			if err != nil { // Malformed token, returns with http code 403 as usual
 				log.Error().Err(err).Msg(malformedTokenMessage)
 				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
 				return
@@ -88,7 +88,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 		} else {
 			err = json.Unmarshal([]byte(decoded), tk)
 
-			if err != nil { //Malformed token, returns with http code 403 as usual
+			if err != nil { // Malformed token, returns with http code 403 as usual
 				log.Error().Err(err).Msg(malformedTokenMessage)
 				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
 				return
@@ -124,8 +124,8 @@ func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Requ
 	var tokenHeader string
 	// In case of testing on local machine we don't take x-rh-identity header, but instead Authorization with JWT token in it
 	if server.Config.AuthType == "jwt" {
-		tokenHeader = r.Header.Get("Authorization") //Grab the token from the header
-		splitted := strings.Split(tokenHeader, " ") //The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
+		tokenHeader = r.Header.Get("Authorization") // Grab the token from the header
+		splitted := strings.Split(tokenHeader, " ") // The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
 		if len(splitted) != 2 {
 			const message = "Invalid/Malformed auth token"
 			return "", &UnauthorizedError{ErrString: message}
@@ -135,7 +135,7 @@ func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Requ
 		splitted = strings.Split(splitted[1], ".")
 		tokenHeader = splitted[1]
 	} else {
-		tokenHeader = r.Header.Get("x-rh-identity") //Grab the token from the header
+		tokenHeader = r.Header.Get("x-rh-identity") // Grab the token from the header
 	}
 
 	if tokenHeader == "" {

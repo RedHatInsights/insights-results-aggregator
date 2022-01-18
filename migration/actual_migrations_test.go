@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -505,7 +505,7 @@ func TestMigration19(t *testing.T) {
 	assert.False(t, timestamp.IsZero(), "The timestamp column was not created with a default value")
 	assert.True(t, timestamp.UTC().Equal(timestamp), "The stored timestamp is not in UTC format")
 
-	//Step down should remove created_at and rule_id columns
+	// Step down should remove created_at and rule_id columns
 	err = migration.SetDBVersion(db, dbDriver, 18)
 	helpers.FailOnError(t, err)
 
@@ -636,7 +636,7 @@ func TestMigration20(t *testing.T) {
 	assert.Equal(t, testdata.Rule1ID, types.RuleID(ruleFQDN))
 	assert.Equal(t, testdata.Rule1CompositeID, types.RuleID(ruleID))
 
-	//Step down should rename rule_fqdn column to rule_id and it contains only plugin name
+	// Step down should rename rule_fqdn column to rule_id and it contains only plugin name
 	err = migration.SetDBVersion(db, dbDriver, 19)
 	helpers.FailOnError(t, err)
 
