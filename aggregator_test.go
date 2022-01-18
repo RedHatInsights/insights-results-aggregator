@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ func TestStartService(t *testing.T) {
 }
 
 // TODO: fix with new groups consumer
-//func TestStartServiceWithMockBroker(t *testing.T) {
+// func TestStartServiceWithMockBroker(t *testing.T) {
 //	const topicName = "topic"
 //	*main.AutoMigratePtr = true
 //
