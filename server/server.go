@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -521,7 +521,7 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get list of clusters for specific rule %s", selector)
-		//err received at this point can be either TableNotFoundError (500) or ItemNotFoundError (404)
+		// err received at this point can be either TableNotFoundError (500) or ItemNotFoundError (404)
 		handleServerError(writer, err)
 		return
 	}
