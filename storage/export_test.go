@@ -37,7 +37,6 @@ type SQLHooks = sqlHooks
 const (
 	LogFormatterString            = logFormatterString
 	SQLHooksKeyQueryBeginTime     = sqlHooksKeyQueryBeginTime
-	RecommendationTimestampFormat = recommendationTimestampFormat
 )
 
 var (

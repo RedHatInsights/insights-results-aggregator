@@ -428,19 +428,18 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 	defer closeRows(rows)
 
 	var (
-		clusterName ctypes.ClusterName
+		clusterName types.ClusterName
 		lastSeen    string
 	)
 	for rows.Next() {
 		err = rows.Scan(&clusterName, &lastSeen)
-		if err == nil {
-			results = append(results, ctypes.HittingClustersData{
-				Cluster:  clusterName,
-				LastSeen: lastSeen,
-			})
-		} else {
+		if err != nil {
 			log.Error().Err(err).Msg("ListOfClustersForOrgSpecificRule")
 		}
+		results = append(results, ctypes.HittingClustersData{
+			Cluster:  clusterName,
+			LastSeen: lastSeen,
+		})
 	}
 
 	// This is to ensure 404 when no recommendation is found for the given orgId + selector.
@@ -825,7 +824,7 @@ func prepareInsertRecommendationsStatement(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	report types.ReportRules,
-	createdAt time.Time,
+	createdAt types.Timestamp,
 ) (selectors []string, statement string, statementArgs []interface{}) {
 	statement = `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at) VALUES %s`
 
@@ -866,7 +865,7 @@ func (storage DBStorage) insertRecommendations(
 		return 0, nil
 	}
 
-	creationTime := time.Now().UTC()
+	creationTime := types.Timestamp(time.Now().UTC().Format(time.RFC3339))
 	selectors, statement, args := prepareInsertRecommendationsStatement(orgID, clusterName, report, creationTime)
 
 	if _, err = tx.Exec(statement, args...); err != nil {
@@ -874,7 +873,7 @@ func (storage DBStorage) insertRecommendations(
 			Int(organizationKey, int(orgID)).
 			Str(clusterKey, string(clusterName)).
 			Int(issuesCountKey, inserted).
-			Time(createdAtKey, creationTime).
+			Interface(createdAtKey, creationTime).
 			Strs(selectorsKey, selectors).
 			Err(err).
 			Msg("Unable to insert the recommendations")
@@ -884,7 +883,7 @@ func (storage DBStorage) insertRecommendations(
 		Int(organizationKey, int(orgID)).
 		Str(clusterKey, string(clusterName)).
 		Int(issuesCountKey, inserted).
-		Time(createdAtKey, creationTime).
+		Interface(createdAtKey, creationTime).
 		Strs(selectorsKey, selectors).
 		Msg("Recommendations inserted successfully")
 
@@ -1147,7 +1146,7 @@ func (storage DBStorage) ReadClusterListRecommendations(
 				return clusterMap, err
 			}
 
-			timestamp, err = time.Parse(recommendationTimestampFormat, timestampStr)
+			timestamp, err = time.Parse(time.RFC3339, timestampStr)
 			if err != nil {
 				log.Error().Err(err).Msgf("unparsable timestamp %v", timestamp)
 				return clusterMap, err
