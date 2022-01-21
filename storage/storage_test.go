@@ -41,6 +41,10 @@ import (
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
+var (
+	RecommendationCreatedAtTimestamp = types.Timestamp(testdata.LastCheckedAt.Format(time.RFC3339))
+)
+
 func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 }
@@ -1033,6 +1037,7 @@ func TestDBStorageWriteRecommendationsForClusterClosedStorage(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
+		"",
 	)
 	assert.EqualError(t, err, "sql: database is closed")
 }
@@ -1052,7 +1057,7 @@ func TestDBStorageWriteRecommendationForClusterNoConflict(t *testing.T) {
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
 
 	helpers.FailOnError(t, err)
@@ -1080,7 +1085,8 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 		PassedRules:  testdata.RuleOnReportResponses,
 		TotalCount:   3 * len(testdata.RuleOnReportResponses),
 	}
-	inserted, err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report)
+	inserted, err := storage.InsertRecommendations(
+		mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report, RecommendationCreatedAtTimestamp)
 	assert.Equal(t, 3, inserted)
 	helpers.FailOnError(t, err)
 }
@@ -1098,7 +1104,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStored(t *testing.T) {
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1108,7 +1114,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStored(t *testing.T) {
 	expects.ExpectRollback()
 
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
 
 	assert.Error(t, err, "")
@@ -1128,7 +1134,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
 
 	helpers.FailOnError(t, err)
@@ -1145,7 +1151,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	expects.ExpectCommit()
 
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
 
 	helpers.FailOnError(t, err)
@@ -1162,7 +1168,8 @@ func TestDBStorageInsertRecommendationsNoRuleHit(t *testing.T) {
 		PassedRules:  testdata.RuleOnReportResponses,
 		TotalCount:   2 * len(testdata.RuleOnReportResponses),
 	}
-	inserted, err := storage.InsertRecommendations(mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report)
+	inserted, err := storage.InsertRecommendations(
+		mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report, RecommendationCreatedAtTimestamp)
 
 	assert.Equal(t, 0, inserted)
 	helpers.FailOnError(t, err)
@@ -1175,7 +1182,7 @@ func TestDBStorageReadRecommendationsForClusters(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1205,19 +1212,19 @@ func TestDBStorageReadRecommendationsForClustersMoreClusters(t *testing.T) {
 
 	// cluster 0 has 0 rules == should not affect the results
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, types.ClusterName(clusterList[0]), testdata.Report0Rules,
+		testdata.OrgID, types.ClusterName(clusterList[0]), testdata.Report0Rules, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
 	// cluster 1 has rule1 and rule2
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, types.ClusterName(clusterList[1]), testdata.Report2Rules,
+		testdata.OrgID, types.ClusterName(clusterList[1]), testdata.Report2Rules, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
 	// cluster 2 has rule1 and rule2 and rule3
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, types.ClusterName(clusterList[2]), testdata.Report3Rules,
+		testdata.OrgID, types.ClusterName(clusterList[2]), testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1241,7 +1248,7 @@ func TestDBStorageReadRecommendationsForClustersNoRecommendations(t *testing.T) 
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty,
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1259,7 +1266,7 @@ func TestDBStorageReadRecommendationsForClustersEmptyList_Reproducer(t *testing.
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty,
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1284,7 +1291,7 @@ func TestDBStorageReadRecommendationsGetSelectedClusters(t *testing.T) {
 		clusterList[i] = string(randomClusterID)
 
 		err := mockStorage.WriteRecommendationsForCluster(
-			testdata.OrgID, randomClusterID, testdata.Report3Rules,
+			testdata.OrgID, randomClusterID, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 		)
 		helpers.FailOnError(t, err)
 	}
@@ -1310,7 +1317,7 @@ func TestDBStorageReadRecommendationsForNonexistingClusters(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1331,7 +1338,7 @@ func TestDBStorageReadClusterListRecommendationsNoRecommendations(t *testing.T) 
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty,
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1350,7 +1357,7 @@ func TestDBStorageReadClusterListRecommendationsDifferentCluster(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1379,7 +1386,7 @@ func TestDBStorageReadClusterListRecommendationsGet1Cluster(t *testing.T) {
 		clusterList[i] = string(randomClusterID)
 
 		err := mockStorage.WriteRecommendationsForCluster(
-			testdata.OrgID, randomClusterID, testdata.Report3Rules,
+			testdata.OrgID, randomClusterID, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 		)
 		helpers.FailOnError(t, err)
 	}
@@ -1398,7 +1405,7 @@ func TestDBStorageReadClusterListRecommendationsGet1Cluster(t *testing.T) {
 	assert.Contains(t, res, expectedClusterID)
 	assert.ElementsMatch(t, expectList, res[expectedClusterID].Recommendations)
 	// trivial timestamp check
-	assert.True(t, res[expectedClusterID].CreatedAt.After(time.Now().Add(-time.Hour)))
+	assert.True(t, res[expectedClusterID].CreatedAt == testdata.LastCheckedAt)
 }
 
 // TestDBStorageReadClusterListRecommendationsGet1Cluster loads several recommendations for the same org
@@ -1414,7 +1421,7 @@ func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
 		clusterList[i] = string(randomClusterID)
 
 		err := mockStorage.WriteRecommendationsForCluster(
-			testdata.OrgID, randomClusterID, testdata.Report3Rules,
+			testdata.OrgID, randomClusterID, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 		)
 		helpers.FailOnError(t, err)
 	}
@@ -1435,6 +1442,6 @@ func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
 	assert.Contains(t, res, expectedCluster2ID)
 	assert.ElementsMatch(t, expectRuleList, res[expectedCluster1ID].Recommendations)
 	assert.ElementsMatch(t, expectRuleList, res[expectedCluster2ID].Recommendations)
-	assert.True(t, res[expectedCluster1ID].CreatedAt.After(time.Now().Add(-time.Hour)))
-	assert.True(t, res[expectedCluster2ID].CreatedAt.After(time.Now().Add(-time.Hour)))
+	assert.True(t, res[expectedCluster1ID].CreatedAt == testdata.LastCheckedAt)
+	assert.True(t, res[expectedCluster2ID].CreatedAt == testdata.LastCheckedAt)
 }

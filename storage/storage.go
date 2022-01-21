@@ -85,6 +85,7 @@ type Storage interface {
 		orgID types.OrgID,
 		clusterName types.ClusterName,
 		report types.ClusterReport,
+		creationTime types.Timestamp,
 	) error
 	ReportsCount() (int, error)
 	VoteOnRule(
@@ -848,13 +849,14 @@ func prepareInsertRecommendationsStatement(
 
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
 	return
-
 }
+
 func (storage DBStorage) insertRecommendations(
 	tx *sql.Tx,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	report types.ReportRules,
+	createdAt types.Timestamp,
 ) (inserted int, err error) {
 	if len(report.HitRules) == 0 {
 		log.Info().
@@ -865,15 +867,14 @@ func (storage DBStorage) insertRecommendations(
 		return 0, nil
 	}
 
-	creationTime := types.Timestamp(time.Now().UTC().Format(time.RFC3339))
-	selectors, statement, args := prepareInsertRecommendationsStatement(orgID, clusterName, report, creationTime)
+	selectors, statement, args := prepareInsertRecommendationsStatement(orgID, clusterName, report, createdAt)
 
 	if _, err = tx.Exec(statement, args...); err != nil {
 		log.Error().
 			Int(organizationKey, int(orgID)).
 			Str(clusterKey, string(clusterName)).
 			Int(issuesCountKey, inserted).
-			Interface(createdAtKey, creationTime).
+			Interface(createdAtKey, createdAt).
 			Strs(selectorsKey, selectors).
 			Err(err).
 			Msg("Unable to insert the recommendations")
@@ -883,7 +884,7 @@ func (storage DBStorage) insertRecommendations(
 		Int(organizationKey, int(orgID)).
 		Str(clusterKey, string(clusterName)).
 		Int(issuesCountKey, inserted).
-		Interface(createdAtKey, creationTime).
+		Interface(createdAtKey, createdAt).
 		Strs(selectorsKey, selectors).
 		Msg("Recommendations inserted successfully")
 
@@ -960,6 +961,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	stringReport types.ClusterReport,
+	creationTime types.Timestamp,
 ) (err error) {
 	var report types.ReportRules
 	err = json.Unmarshal([]byte(stringReport), &report)
@@ -997,7 +999,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 			}
 		}
 
-		inserted, err := storage.insertRecommendations(tx, orgID, clusterName, report)
+		inserted, err := storage.insertRecommendations(tx, orgID, clusterName, report, creationTime)
 		if err != nil {
 			return err
 		}
