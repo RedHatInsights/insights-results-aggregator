@@ -147,6 +147,7 @@ func writeRecommendations(
 		*message.Organization,
 		*message.ClusterName,
 		types.ClusterReport(reportAsBytes),
+		types.Timestamp(time.Now().UTC().Format(time.RFC3339)),
 	)
 	if err != nil {
 		logMessageError(consumer, msg, message, "Error writing recommendations to database", err)

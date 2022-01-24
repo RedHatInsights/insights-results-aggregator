@@ -785,14 +785,14 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 		testdata.GetRandomClusterID(),
 	}
 	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, clusterIds[0], testdata.Report3Rules,
+		testdata.OrgID, clusterIds[0], testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	))
 	// ClusterIds[1] is not associated to any rule hit and is not expected in any response
 	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, clusterIds[1], testdata.Report0Rules,
+		testdata.OrgID, clusterIds[1], testdata.Report0Rules, RecommendationCreatedAtTimestamp,
 	))
 	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
-		testdata.Org2ID, clusterIds[2], testdata.Report2Rules,
+		testdata.Org2ID, clusterIds[2], testdata.Report2Rules, RecommendationCreatedAtTimestamp,
 	))
 
 	// TODO: Add these to test data to ensure consistency
@@ -824,23 +824,28 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID), nil)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, expectedClustersOrg1Rule1Err1, list)
+	assert.Equal(t, expectedClustersOrg1Rule1Err1[0].Cluster, list[0].Cluster)
+	assert.NotEqual(t, "", list[0].LastSeen)
 
 	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule2CompositeID), nil)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, expectedClustersOrg1Rule2Err2, list)
+	assert.Equal(t, expectedClustersOrg1Rule2Err2[0].Cluster, list[0].Cluster)
+	assert.NotEqual(t, "", list[0].LastSeen)
 
 	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), nil)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, expectedClustersOrg1Rule3Err3, list)
+	assert.Equal(t, expectedClustersOrg1Rule3Err3[0].Cluster, list[0].Cluster)
+	assert.NotEqual(t, "", list[0].LastSeen)
 
 	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), nil)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, expectedClustersOrg2Rule1Err1, list)
+	assert.Equal(t, expectedClustersOrg2Rule1Err1[0].Cluster, list[0].Cluster)
+	assert.NotEqual(t, "", list[0].LastSeen)
 
 	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), nil)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, expectedClustersOrg2Rule2Err2, list)
+	assert.Equal(t, expectedClustersOrg2Rule2Err2[0].Cluster, list[0].Cluster)
+	assert.NotEqual(t, "", list[0].LastSeen)
 
 	// Now let's add some active clusters filtering
 	// Rule1|ERR_KEY1 is present in testdata.Report3Rules and testdata.Report2Rules,
@@ -866,7 +871,7 @@ func TestDBStorageListClustersForHittingRulesOrgNotFound(t *testing.T) {
 	defer closer()
 
 	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report3Rules,
+		testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	))
 
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), nil)
@@ -885,7 +890,7 @@ func TestDBStorageListClustersForHittingRulesRuleNotFound(t *testing.T) {
 	defer closer()
 
 	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules,
+		testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules, RecommendationCreatedAtTimestamp,
 	))
 
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), nil)

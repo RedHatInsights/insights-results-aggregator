@@ -79,7 +79,7 @@ func (*NoopStorage) WriteReportForCluster(
 
 // WriteRecommendationsForCluster noop
 func (*NoopStorage) WriteRecommendationsForCluster(
-	types.OrgID, types.ClusterName, types.ClusterReport,
+	types.OrgID, types.ClusterName, types.ClusterReport, types.Timestamp,
 ) error {
 	return nil
 }

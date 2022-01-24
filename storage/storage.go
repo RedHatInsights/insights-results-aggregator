@@ -85,6 +85,7 @@ type Storage interface {
 		orgID types.OrgID,
 		clusterName types.ClusterName,
 		report types.ClusterReport,
+		creationTime types.Timestamp,
 	) error
 	ReportsCount() (int, error)
 	VoteOnRule(
@@ -416,7 +417,7 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 		whereClause = `WHERE org_id = $1 AND rule_id = $2`
 	}
 	// #nosec G202
-	query := `SELECT cluster_id FROM recommendation ` + whereClause + ` ORDER BY cluster_id;`
+	query := `SELECT cluster_id, created_at FROM recommendation ` + whereClause + ` ORDER BY cluster_id;`
 
 	rows, err := storage.connection.Query(query, orgID, ruleID)
 
@@ -428,15 +429,18 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 	defer closeRows(rows)
 
 	var (
-		clusterName ctypes.ClusterName
+		clusterName types.ClusterName
+		lastSeen    string
 	)
 	for rows.Next() {
-		err = rows.Scan(&clusterName)
-		if err == nil {
-			results = append(results, ctypes.HittingClustersData{Cluster: clusterName})
-		} else {
+		err = rows.Scan(&clusterName, &lastSeen)
+		if err != nil {
 			log.Error().Err(err).Msg("ListOfClustersForOrgSpecificRule")
 		}
+		results = append(results, ctypes.HittingClustersData{
+			Cluster:  clusterName,
+			LastSeen: lastSeen,
+		})
 	}
 
 	// This is to ensure 404 when no recommendation is found for the given orgId + selector.
@@ -821,7 +825,7 @@ func prepareInsertRecommendationsStatement(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	report types.ReportRules,
-	createdAt time.Time,
+	createdAt types.Timestamp,
 ) (selectors []string, statement string, statementArgs []interface{}) {
 	statement = `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at) VALUES %s`
 
@@ -845,13 +849,14 @@ func prepareInsertRecommendationsStatement(
 
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
 	return
-
 }
+
 func (storage DBStorage) insertRecommendations(
 	tx *sql.Tx,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	report types.ReportRules,
+	createdAt types.Timestamp,
 ) (inserted int, err error) {
 	if len(report.HitRules) == 0 {
 		log.Info().
@@ -862,17 +867,14 @@ func (storage DBStorage) insertRecommendations(
 		return 0, nil
 	}
 
-	creationTime := time.Now().UTC()
-	selectors, statement, args := prepareInsertRecommendationsStatement(orgID, clusterName, report, creationTime)
+	selectors, statement, args := prepareInsertRecommendationsStatement(orgID, clusterName, report, createdAt)
 
-	inserted = len(selectors)
-	_, err = tx.Exec(statement, args...)
-	if err != nil {
+	if _, err = tx.Exec(statement, args...); err != nil {
 		log.Error().
 			Int(organizationKey, int(orgID)).
 			Str(clusterKey, string(clusterName)).
 			Int(issuesCountKey, inserted).
-			Time(createdAtKey, creationTime).
+			Interface(createdAtKey, createdAt).
 			Strs(selectorsKey, selectors).
 			Err(err).
 			Msg("Unable to insert the recommendations")
@@ -882,10 +884,11 @@ func (storage DBStorage) insertRecommendations(
 		Int(organizationKey, int(orgID)).
 		Str(clusterKey, string(clusterName)).
 		Int(issuesCountKey, inserted).
-		Time(createdAtKey, creationTime).
+		Interface(createdAtKey, createdAt).
 		Strs(selectorsKey, selectors).
 		Msg("Recommendations inserted successfully")
 
+	inserted = len(selectors)
 	return
 
 }
@@ -958,6 +961,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	stringReport types.ClusterReport,
+	creationTime types.Timestamp,
 ) (err error) {
 	var report types.ReportRules
 	err = json.Unmarshal([]byte(stringReport), &report)
@@ -995,7 +999,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 			}
 		}
 
-		inserted, err := storage.insertRecommendations(tx, orgID, clusterName, report)
+		inserted, err := storage.insertRecommendations(tx, orgID, clusterName, report, creationTime)
 		if err != nil {
 			return err
 		}
@@ -1144,7 +1148,7 @@ func (storage DBStorage) ReadClusterListRecommendations(
 				return clusterMap, err
 			}
 
-			timestamp, err = time.Parse(recommendationTimestampFormat, timestampStr)
+			timestamp, err = time.Parse(time.RFC3339, timestampStr)
 			if err != nil {
 				log.Error().Err(err).Msgf("unparsable timestamp %v", timestamp)
 				return clusterMap, err

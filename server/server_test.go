@@ -42,6 +42,10 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+var (
+	RecommendationCreatedAtTimestamp = types.Timestamp(testdata.LastCheckedAt.Format(time.RFC3339))
+)
+
 func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 }
@@ -1105,7 +1109,7 @@ func TestHTTPServer_RecommendationsListEndpoint_NoRecommendations(t *testing.T) 
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1128,7 +1132,7 @@ func TestHTTPServer_RecommendationsListEndpoint_DifferentClusters(t *testing.T) 
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, "",
 	)
 	helpers.FailOnError(t, err)
 
@@ -1151,7 +1155,7 @@ func TestHTTPServer_RecommendationsListEndpoint_3Recs1Cluster(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, "",
 	)
 	helpers.FailOnError(t, err)
 
@@ -1186,12 +1190,12 @@ func TestHTTPServer_RecommendationsListEndpoint_3Recs2Clusters(t *testing.T) {
 	}
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, clusterList[0], testdata.Report2Rules,
+		testdata.OrgID, clusterList[0], testdata.Report2Rules, "",
 	)
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, clusterList[1], testdata.Report3Rules,
+		testdata.OrgID, clusterList[1], testdata.Report3Rules, "",
 	)
 	helpers.FailOnError(t, err)
 
@@ -1221,7 +1225,7 @@ func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenOrgDBError(t *testing.T) {
 	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
 	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
-	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(sql.ErrNoRows)
+	expects.ExpectQuery("SELECT cluster_id, created_at FROM recommendation").WillReturnError(sql.ErrNoRows)
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1239,7 +1243,7 @@ func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenSelectorDBError(t *testing
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, "")
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1257,7 +1261,7 @@ func TestRuleClusterDetailEndpoint_BadBodyInRequest(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, "")
 
 	// A request body omitting the closing '"'
 	getRequestBody := fmt.Sprintf(`{"clusters":["%v]}`, testdata.ClusterName)
@@ -1279,7 +1283,7 @@ func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
 	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
-	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(sql.ErrConnDone)
+	expects.ExpectQuery("SELECT cluster_id, created_at FROM recommendation").WillReturnError(sql.ErrConnDone)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1289,7 +1293,7 @@ func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 		Body:       `{"status": "` + errStr + `"}`,
 	})
 
-	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(sql.ErrTxDone)
+	expects.ExpectQuery("SELECT cluster_id, created_at FROM recommendation").WillReturnError(sql.ErrTxDone)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1299,7 +1303,7 @@ func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 		Body:       `{"status": "` + errStr + `"}`,
 	})
 
-	expects.ExpectQuery("SELECT cluster_id FROM recommendation").WillReturnError(fmt.Errorf("any error"))
+	expects.ExpectQuery("SELECT cluster_id, created_at FROM recommendation").WillReturnError(fmt.Errorf("any error"))
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1314,14 +1318,15 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":""}],"status":"ok"}`
-
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules)
-
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
+		RecommendationCreatedAtTimestamp,
 	)
+
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1339,9 +1344,6 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 		Body:       expected,
 	})
 
-	expected = fmt.Sprintf(respBody,
-		testdata.ClusterName,
-	)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1364,15 +1366,17 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":""}],"status":"ok"}`
-
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules)
-
-	getRequestBody := fmt.Sprintf(`{"clusters":["%v"]}`, testdata.ClusterName)
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
+		RecommendationCreatedAtTimestamp,
 	)
+
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+
+	getRequestBody := fmt.Sprintf(`{"clusters":["%v"]}`, testdata.ClusterName)
+
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1383,9 +1387,6 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 		Body:       expected,
 	})
 
-	expected = fmt.Sprintf(respBody,
-		testdata.ClusterName,
-	)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1403,8 +1404,8 @@ func TestRuleClusterDetailEndpoint_InvalidParametersActiveClusters(t *testing.T)
 
 	errStr := `Error during parsing param 'org_id' with value 'x'. Error: 'unsigned integer expected'`
 
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules)
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, "")
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules, "")
 
 	getRequestBody := fmt.Sprintf(`{"clusters":["%v"]}`, testdata.ClusterName)
 
@@ -1449,7 +1450,7 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_NoRecommendations(t *tes
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, "",
 	)
 	helpers.FailOnError(t, err)
 
@@ -1471,15 +1472,21 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_2Recs1Cluster(t *testing
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
+	respBody := `{"recommendations":{"%v":%v,"%v":%v},"status":"ok"}`
+
+	expected := fmt.Sprintf(respBody,
+		testdata.Rule1CompositeID, 1,
+		testdata.Rule2CompositeID, 1,
+	)
+
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report2Rules,
+		testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, "",
 	)
 	helpers.FailOnError(t, err)
 
 	clusterList := []types.ClusterName{testdata.ClusterName}
 	reqBody, _ := json.Marshal(clusterList)
 
-	// can't check body directly because of variable created_at timestamp, contents are tested in storage tests
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.RecommendationsListEndpoint,
@@ -1487,6 +1494,7 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_2Recs1Cluster(t *testing
 		Body:         reqBody,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
+		Body:       expected,
 	})
 }
 

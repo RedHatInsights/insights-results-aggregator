@@ -98,6 +98,7 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 			"status":"ok",
 			"report": {
 				"meta": {
+					"cluster_name":"",
 					"count": -1,
 					"last_checked_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `"
 				},
