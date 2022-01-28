@@ -224,6 +224,8 @@ objects:
               value: "${KAFKA_TIMEOUT}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC
               value: "${INCOMING_TOPIC}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__DEAD_LETTER_QUEUE_TOPIC
+              value: "$(DEAD_LETTER_QUEUE_TOPIC)"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__PAYLOAD_TRACKER_TOPIC
               value: "${PAYLOAD_TRACKER_TOPIC}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__SERVICE_NAME
@@ -437,6 +439,9 @@ parameters:
   value: 300s
 - name: INCOMING_TOPIC
   value: ccx.ocp.results
+  required: true
+- name: DEAD_LETTER_QUEUE_TOPIC
+  value: ccx.aggregator.dead.letter.queue
   required: true
 - name: PAYLOAD_TRACKER_TOPIC
   value: platform.payload-status
