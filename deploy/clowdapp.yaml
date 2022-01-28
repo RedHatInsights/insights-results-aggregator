@@ -225,7 +225,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC
               value: "${INCOMING_TOPIC}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__DEAD_LETTER_QUEUE_TOPIC
-              value: "$(DEAD_LETTER_QUEUE_TOPIC)"
+              value: "${DEAD_LETTER_QUEUE_TOPIC}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__PAYLOAD_TRACKER_TOPIC
               value: "${PAYLOAD_TRACKER_TOPIC}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__SERVICE_NAME
