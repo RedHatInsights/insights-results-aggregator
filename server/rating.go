@@ -82,7 +82,7 @@ func (server *HTTPServer) getRuleRating(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	ruleSelector, ok := readRuleSelector(writer, request)
+	ruleSelector, ok := readAndTrimRuleSelector(writer, request)
 	if !ok {
 		return
 	}
@@ -94,7 +94,7 @@ func (server *HTTPServer) getRuleRating(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	// If everythig goes fine, we should send the same ratings as response to the client
+	// If everything goes fine, we should send the same ratings as response to the client
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData("rating", rating))
 	if err != nil {
 		log.Error().Err(err).Msg("Errors sending response back to client")

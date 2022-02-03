@@ -493,7 +493,7 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 	if !successful {
 		return
 	}
-	selector, successful := readRuleSelector(writer, request)
+	selector, successful := readAndTrimRuleSelector(writer, request)
 	if !successful {
 		return
 	}
