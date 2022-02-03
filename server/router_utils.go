@@ -31,7 +31,7 @@ import (
 var (
 	readRuleID                = httputils.ReadRuleID
 	readErrorKey              = httputils.ReadErrorKey
-	readRuleSelector          = httputils.ReadRuleSelector
+	readAndTrimRuleSelector   = httputils.ReadAndTrimRuleSelector
 	getRouterParam            = httputils.GetRouterParam
 	getRouterPositiveIntParam = httputils.GetRouterPositiveIntParam
 	validateClusterName       = httputils.ValidateClusterName
