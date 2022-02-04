@@ -82,7 +82,7 @@ func (server *HTTPServer) getRuleRating(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	ruleSelector, ok := readAndTrimRuleSelector(writer, request)
+	ruleSelector, ok := readRuleSelector(writer, request)
 	if !ok {
 		return
 	}
