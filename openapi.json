@@ -1616,6 +1616,46 @@
         ]
       }
     },
+    "/rules/users/{userId}/disabled_for_clusters": {
+      "post": {
+        "summary": "Returns a list of rules disabled from current account for given list of clusters",
+        "operationId": "ListOfDisabledRulesForClusters",
+        "description": "Returns a list of rules disabled from current account for given list of clusters",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of disabled rules",
+            "content": {
+              "application/json": {
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
     "/rules/users/{userId}/disabled/feedback": {
       "get": {
         "summary": "Returns a list of reasons why rule or rules has been disabled",
