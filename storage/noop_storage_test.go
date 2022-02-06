@@ -72,6 +72,7 @@ func TestNoopStorage_Methods_Cont(t *testing.T) {
 	_, _ = noopStorage.DoesClusterExist("")
 	_, _ = noopStorage.ListOfDisabledRules("")
 	_, _ = noopStorage.ListOfReasons("")
+	_, _ = noopStorage.ListOfDisabledRulesForClusters([]string{}, types.UserID("99"))
 	_ = noopStorage.WriteRecommendationsForCluster(0, "", "", "")
 	_ = noopStorage.RateOnRule(types.UserID("99"), types.OrgID(1), "", "",
 		types.UserVote(1))

@@ -15,6 +15,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -124,6 +125,41 @@ func (server HTTPServer) listOfReasons(writer http.ResponseWriter, request *http
 	// try to send JSON payload to the client in a HTTP response
 	err = responses.SendOK(writer,
 		responses.BuildOkResponseWithData("reasons", reasons))
+	if err != nil {
+		log.Error().Err(err).Msg(responseDataError)
+	}
+}
+
+// listOfDisabledRulesForClusters returns list of rules disabled from an account for given clusters
+func (server HTTPServer) listOfDisabledRulesForClusters(writer http.ResponseWriter, request *http.Request) {
+	// Extract user_id from URL
+	userID, ok := readUserID(writer, request)
+	if !ok {
+		// everything has been handled
+		return
+	}
+	log.Info().Str(userIDstr, string(userID)).Msg("listOfDisabledRulesForClusters")
+
+	var listOfClusters []string
+	err := json.NewDecoder(request.Body).Decode(&listOfClusters)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+	log.Info().Str(userIDstr, string(userID)).Msgf("listOfDisabledRulesForClusters number of clusters: %d", len(listOfClusters))
+
+	// try to read list of disabled rules by an account/user from database for given list of clusters
+	disabledRules, err := server.Storage.ListOfDisabledRulesForClusters(listOfClusters, userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to read list of disabled rules")
+		handleServerError(writer, err)
+		return
+	}
+	log.Info().Str(userIDstr, string(userID)).Int("#disabled rules", len(disabledRules)).Msg("listOfDisabledRulesForClusters")
+
+	// try to send JSON payload to the client in a HTTP response
+	err = responses.SendOK(writer,
+		responses.BuildOkResponseWithData("rules", disabledRules))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}

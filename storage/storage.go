@@ -158,6 +158,10 @@ type Storage interface {
 	DoesClusterExist(clusterID types.ClusterName) (bool, error)
 	ListOfDisabledRules(userID types.UserID) ([]ctypes.DisabledRule, error)
 	ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error)
+	ListOfDisabledRulesForClusters(
+		clusterList []string,
+		userID types.UserID,
+	) ([]ctypes.DisabledRule, error)
 	ListOfDisabledClusters(
 		userID types.UserID,
 		ruleID types.RuleID,

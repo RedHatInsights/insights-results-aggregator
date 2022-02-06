@@ -834,6 +834,24 @@ func TestHTTPServer_ListOfReasons(t *testing.T) {
 	})
 }
 
+func TestHTTPServer_ListDisabledRulesForClusters(t *testing.T) {
+	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterList := []types.ClusterName{testdata.ClusterName}
+	reqBody, _ := json.Marshal(clusterList)
+
+	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.ListOfDisabledRulesForClusters,
+		EndpointArgs: []interface{}{testdata.UserID},
+		Body:         reqBody,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusOK,
+		Body:       `{"rules":[],"status":"ok"}`,
+	})
+}
+
 func TestHTTPServer_EnableRuleSystemWide(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
