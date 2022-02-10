@@ -1045,10 +1045,10 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 	orgID types.OrgID,
 ) (ctypes.RecommendationImpactedClusters, error) {
 
-	recommendationsMap := make(ctypes.RecommendationImpactedClusters, 0)
+	impactedClusters := make(ctypes.RecommendationImpactedClusters, 0)
 
 	if len(clusterList) < 1 {
-		return recommendationsMap, nil
+		return impactedClusters, nil
 	}
 
 	// #nosec G201
@@ -1058,38 +1058,36 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 	// #nosec G202
 	query := `
 	SELECT
-		rule_id, count(*) as impacted_clusters_c
+		rule_id, cluster_id
 	FROM
 		recommendation
-	` + whereClause + `
-	GROUP BY
-		rule_id
-	`
+	` + whereClause
+
 	rows, err := storage.connection.Query(query, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("query to get recommendations")
-		return recommendationsMap, err
+		return impactedClusters, err
 	}
 
 	for rows.Next() {
 		var (
-			ruleID      types.RuleID
-			impactedCnt ctypes.ImpactedClustersCnt
+			ruleID    types.RuleID
+			clusterID types.ClusterName
 		)
 
 		err := rows.Scan(
 			&ruleID,
-			&impactedCnt,
+			&clusterID,
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("read one recommendation")
-			return recommendationsMap, err
+			return impactedClusters, err
 		}
 
-		recommendationsMap[ruleID] = impactedCnt
+		impactedClusters[ruleID] = append(impactedClusters[ruleID], clusterID)
 	}
 
-	return recommendationsMap, nil
+	return impactedClusters, nil
 }
 
 // ReadClusterListRecommendations retrieves cluster IDs and a list of hitting rules for each one

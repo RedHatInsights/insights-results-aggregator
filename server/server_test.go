@@ -1180,11 +1180,11 @@ func TestHTTPServer_RecommendationsListEndpoint_3Recs1Cluster(t *testing.T) {
 	clusterList := []types.ClusterName{testdata.ClusterName}
 	reqBody, _ := json.Marshal(clusterList)
 
-	respBody := `{"recommendations":{"%v":%v,"%v":%v,"%v":%v},"status":"ok"}`
+	respBody := `{"recommendations":{"%v":["%v"],"%v":["%v"],"%v":["%v"]},"status":"ok"}`
 	respBody = fmt.Sprintf(respBody,
-		testdata.Rule1CompositeID, 1,
-		testdata.Rule2CompositeID, 1,
-		testdata.Rule3CompositeID, 1,
+		testdata.Rule1CompositeID, testdata.ClusterName,
+		testdata.Rule2CompositeID, testdata.ClusterName,
+		testdata.Rule3CompositeID, testdata.ClusterName,
 	)
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1219,11 +1219,18 @@ func TestHTTPServer_RecommendationsListEndpoint_3Recs2Clusters(t *testing.T) {
 
 	reqBody, _ := json.Marshal(clusterList)
 
-	respBody := `{"recommendations":{"%v":%v,"%v":%v,"%v":%v},"status":"ok"}`
+	respBody := `{
+		"recommendations":{
+			"%v":["%v", "%v"],
+			"%v":["%v", "%v"],
+			"%v":["%v"]
+		},
+		"status":"ok"
+	}`
 	respBody = fmt.Sprintf(respBody,
-		testdata.Rule1CompositeID, 2,
-		testdata.Rule2CompositeID, 2,
-		testdata.Rule3CompositeID, 1,
+		testdata.Rule1CompositeID, clusterList[0], clusterList[1],
+		testdata.Rule2CompositeID, clusterList[0], clusterList[1],
+		testdata.Rule3CompositeID, clusterList[1],
 	)
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1490,11 +1497,11 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_2Recs1Cluster(t *testing
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"recommendations":{"%v":%v,"%v":%v},"status":"ok"}`
+	respBody := `{"recommendations":{"%v":["%v"],"%v":["%v"]},"status":"ok"}`
 
 	expected := fmt.Sprintf(respBody,
-		testdata.Rule1CompositeID, 1,
-		testdata.Rule2CompositeID, 1,
+		testdata.Rule1CompositeID, testdata.ClusterName,
+		testdata.Rule2CompositeID, testdata.ClusterName,
 	)
 
 	err := mockStorage.WriteRecommendationsForCluster(

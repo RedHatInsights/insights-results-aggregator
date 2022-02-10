@@ -1385,7 +1385,7 @@
     },
     "/recommendations/organizations/{org_id}/users/{user_id}/list": {
       "post": {
-        "summary": "Returns a list of recommendations and a number of clusters each one is hitting.",
+        "summary": "Returns a list of recommendations and a list of clusters each one is hitting.",
         "operationId": "getRecommendationsPost",
         "description": "Recommendations will be retrieved based on the list of cluster IDs that is part of request body.",
         "parameters": [
@@ -1438,10 +1438,15 @@
                             "description": "The rule ID in the | format.",
                             "example": "rule.module|ERROR_KEY"
                           },
-                          "impacted_clusters_cnt": {
-                            "type": "int",
-                            "description": "The number of clusters impacted by this rule.",
-                            "example": 42
+                          "cluster_id": {
+                            "type": "array",
+                            "items": {
+                              "description": "Cluster ID",
+                              "type": "string",
+                              "minLength": 36,
+                              "maxLength": 36,
+                              "format": "uuid"
+                            }
                           }
                         }
                       }
