@@ -1186,11 +1186,11 @@ func TestDBStorageReadRecommendationsForClusters(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	expectingImpactedC := ctypes.ImpactedClustersCnt(1)
+	expected := []types.ClusterName{testdata.ClusterName}
 	expect := ctypes.RecommendationImpactedClusters{
-		testdata.Rule1CompositeID: expectingImpactedC,
-		testdata.Rule2CompositeID: expectingImpactedC,
-		testdata.Rule3CompositeID: expectingImpactedC,
+		testdata.Rule1CompositeID: expected,
+		testdata.Rule2CompositeID: expected,
+		testdata.Rule3CompositeID: expected,
 	}
 
 	res, err := mockStorage.ReadRecommendationsForClusters([]string{string(testdata.ClusterName)}, testdata.OrgID)
@@ -1228,11 +1228,11 @@ func TestDBStorageReadRecommendationsForClustersMoreClusters(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	expect2Impacted := ctypes.ImpactedClustersCnt(2)
+	expect2 := []types.ClusterName{types.ClusterName(clusterList[1]), types.ClusterName(clusterList[2])}
 	expect := ctypes.RecommendationImpactedClusters{
-		testdata.Rule1CompositeID: expect2Impacted,
-		testdata.Rule2CompositeID: expect2Impacted,
-		testdata.Rule3CompositeID: ctypes.ImpactedClustersCnt(1),
+		testdata.Rule1CompositeID: expect2,
+		testdata.Rule2CompositeID: expect2,
+		testdata.Rule3CompositeID: []types.ClusterName{types.ClusterName(clusterList[2])},
 	}
 
 	res, err := mockStorage.ReadRecommendationsForClusters(clusterList, testdata.OrgID)
@@ -1300,14 +1300,14 @@ func TestDBStorageReadRecommendationsGetSelectedClusters(t *testing.T) {
 	res, err := mockStorage.ReadRecommendationsForClusters([]string{string(clusterList[0])}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
-	expect1Impacted := ctypes.ImpactedClustersCnt(1)
-	expect := ctypes.RecommendationImpactedClusters{
-		testdata.Rule1CompositeID: expect1Impacted,
-		testdata.Rule2CompositeID: expect1Impacted,
-		testdata.Rule3CompositeID: expect1Impacted,
+	expect := []types.ClusterName{types.ClusterName(clusterList[0])}
+	expectResp := ctypes.RecommendationImpactedClusters{
+		testdata.Rule1CompositeID: expect,
+		testdata.Rule2CompositeID: expect,
+		testdata.Rule3CompositeID: expect,
 	}
 
-	assert.Equal(t, expect, res)
+	assert.Equal(t, expectResp, res)
 }
 
 // TestDBStorageReadRecommendationsForNonexistingClusters simulates getting a list of clusters where

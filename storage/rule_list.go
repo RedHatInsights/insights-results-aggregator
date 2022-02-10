@@ -16,6 +16,7 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/rs/zerolog/log"
 
@@ -123,7 +124,69 @@ func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]ctypes.Disa
 			&disabledRule.Disabled)
 
 		if err != nil {
-			log.Error().Err(err).Msg("ReadListOfDisabledRules")
+			log.Error().Err(err).Msg("ReadListOfDisabledRules database error")
+			// return partially filled slice + error
+			return disabledRules, err
+		}
+
+		// append disabled rule read from database to a slice
+		disabledRules = append(disabledRules, disabledRule)
+	}
+
+	// everything seems ok -> return slice with all the data
+	return disabledRules, nil
+}
+
+// ListOfDisabledRulesForClusters function returns list of all rules disabled from a
+// specified account for given list of clusters.
+func (storage DBStorage) ListOfDisabledRulesForClusters(
+	clusterList []string,
+	userID types.UserID,
+) ([]ctypes.DisabledRule, error) {
+	disabledRules := make([]ctypes.DisabledRule, 0)
+
+	if len(clusterList) < 1 {
+		return disabledRules, nil
+	}
+
+	// #nosec G201
+	whereClause := fmt.Sprintf(`WHERE user_id = $1 AND disabled = $2 AND cluster_id IN (%v)`, inClauseFromSlice(clusterList))
+
+	// disable "G202 (CWE-89): SQL string concatenation"
+	// #nosec G202
+	query := `
+	SELECT
+		cluster_id,
+		rule_id,
+		error_key,
+		disabled_at,
+		updated_at,
+		disabled
+	FROM
+		cluster_rule_toggle
+	` + whereClause
+
+	// run the query against database
+	rows, err := storage.connection.Query(query, userID, RuleToggleDisable)
+
+	// return empty list in case of any error
+	if err != nil {
+		return disabledRules, err
+	}
+	defer closeRows(rows)
+
+	for rows.Next() {
+		var disabledRule ctypes.DisabledRule
+
+		err = rows.Scan(&disabledRule.ClusterID,
+			&disabledRule.RuleID,
+			&disabledRule.ErrorKey,
+			&disabledRule.DisabledAt,
+			&disabledRule.UpdatedAt,
+			&disabledRule.Disabled)
+
+		if err != nil {
+			log.Error().Err(err).Msg("ReadListOfDisabledRulesForClusters database error")
 			// return partially filled slice + error
 			return disabledRules, err
 		}

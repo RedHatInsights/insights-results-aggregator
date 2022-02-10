@@ -1385,7 +1385,7 @@
     },
     "/recommendations/organizations/{org_id}/users/{user_id}/list": {
       "post": {
-        "summary": "Returns a list of recommendations and a number of clusters each one is hitting.",
+        "summary": "Returns a list of recommendations and a list of clusters each one is hitting.",
         "operationId": "getRecommendationsPost",
         "description": "Recommendations will be retrieved based on the list of cluster IDs that is part of request body.",
         "parameters": [
@@ -1438,10 +1438,15 @@
                             "description": "The rule ID in the | format.",
                             "example": "rule.module|ERROR_KEY"
                           },
-                          "impacted_clusters_cnt": {
-                            "type": "int",
-                            "description": "The number of clusters impacted by this rule.",
-                            "example": 42
+                          "cluster_id": {
+                            "type": "array",
+                            "items": {
+                              "description": "Cluster ID",
+                              "type": "string",
+                              "minLength": 36,
+                              "maxLength": 36,
+                              "format": "uuid"
+                            }
                           }
                         }
                       }
@@ -1607,6 +1612,46 @@
                     }
                   }
                 }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/rules/users/{userId}/disabled_for_clusters": {
+      "post": {
+        "summary": "Returns a list of rules disabled from current account for given list of clusters",
+        "operationId": "ListOfDisabledRulesForClusters",
+        "description": "Returns a list of rules disabled from current account for given list of clusters",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of disabled rules",
+            "content": {
+              "application/json": {
               }
             }
           }

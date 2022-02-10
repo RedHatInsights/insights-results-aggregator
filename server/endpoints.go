@@ -63,6 +63,8 @@ const (
 	DisableRuleFeedbackEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/disable_feedback"
 	// ListOfDisabledRules returns a list of rules disabled from current account
 	ListOfDisabledRules = "rules/users/{user_id}/disabled"
+	// ListOfDisabledRulesForClusters returns a list of rules disabled from current account for given list of clusters in POST body
+	ListOfDisabledRulesForClusters = "rules/users/{user_id}/disabled_for_clusters"
 	// ListOfDisabledRulesFeedback returns a list of reasons why rule has been disabled
 	ListOfDisabledRulesFeedback = "rules/users/{user_id}/disabled/feedback"
 	// ListOfDisabledClusters returns a list of clusters which the user disabled for a rule with latest justification
@@ -131,12 +133,10 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 	router.HandleFunc(apiPrefix+DislikeRuleEndpoint, server.dislikeRule).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ResetVoteOnRuleEndpoint, server.resetVoteOnRule).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ClustersForOrganizationEndpoint, server.listOfClustersForOrganization).Methods(http.MethodGet)
-	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
-	router.HandleFunc(apiPrefix+DisableRuleFeedbackEndpoint, server.saveDisableFeedback).Methods(http.MethodPost)
 	router.HandleFunc(apiPrefix+ReportForListOfClustersEndpoint, server.reportForListOfClusters).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ReportForListOfClustersPayloadEndpoint, server.reportForListOfClustersPayload).Methods(http.MethodPost)
 	router.HandleFunc(apiPrefix+ListOfDisabledRules, server.listOfDisabledRules).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+ListOfDisabledRulesForClusters, server.listOfDisabledRulesForClusters).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ListOfDisabledRulesFeedback, server.listOfReasons).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+ListOfDisabledClusters, server.listOfDisabledClusters).Methods(http.MethodGet)
 	router.HandleFunc(apiPrefix+Rating, server.setRuleRating).Methods(http.MethodPost)
@@ -163,6 +163,12 @@ func (server *HTTPServer) addEndpointsToRouter(router *mux.Router) {
 // addRuleEnableDisableEndpointsToRouter method registers handlers for endpoints that
 // allow for rules to be enabled, disabled, updated, and queried system-wide
 func (server *HTTPServer) addRuleEnableDisableEndpointsToRouter(router *mux.Router, apiPrefix string) {
+	// single cluster disable functionality
+	router.HandleFunc(apiPrefix+DisableRuleForClusterEndpoint, server.disableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+EnableRuleForClusterEndpoint, server.enableRuleForCluster).Methods(http.MethodPut, http.MethodOptions)
+	router.HandleFunc(apiPrefix+DisableRuleFeedbackEndpoint, server.saveDisableFeedback).Methods(http.MethodPost)
+
+	// system-wide (acknowledge) disable functionality
 	router.HandleFunc(apiPrefix+EnableRuleSystemWide, server.enableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+DisableRuleSystemWide, server.disableRuleSystemWide).Methods(http.MethodPut, http.MethodOptions)
 	router.HandleFunc(apiPrefix+UpdateRuleSystemWide, server.updateRuleSystemWide).Methods(http.MethodPost, http.MethodOptions)

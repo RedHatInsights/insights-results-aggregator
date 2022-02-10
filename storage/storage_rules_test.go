@@ -1100,3 +1100,151 @@ func TestDBStorageListOfDisabledClustersFeedbackUpdate(t *testing.T) {
 	assert.Equal(t, clusters[0], disabledCluster.ClusterID)
 	assert.Equal(t, newFeedback, disabledCluster.Justification)
 }
+
+// TestDBStorageListOfDisabledRulesForClustersDBError checks for DB error.
+func TestDBStorageListOfDisabledRulesForClustersDBError(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	closer()
+
+	clusters := make([]string, 3)
+	for i := range clusters {
+		clusters[i] = string(testdata.GetRandomClusterID())
+	}
+
+	// try to read list of disabled rules
+	_, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.UserID)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+// TestDBStorageListOfDisabledRulesForClustersEmptyDB checks that no rules are returned
+// for empty DB.
+func TestDBStorageListOfDisabledRulesForClustersEmptyDB(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]string, 3)
+	for i := range clusters {
+		clusters[i] = string(testdata.GetRandomClusterID())
+	}
+
+	// try to read list of disabled rules
+	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect no rules to be returned
+	assert.Len(t, disabledRules, 0)
+}
+
+// TestDBStorageListOfDisabledRulesForClustersOneRule checks that one rule is returned
+// for non empty DB and selected cluster
+func TestDBStorageListOfDisabledRulesForClustersOneRule(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]string, 3)
+	for i := range clusters {
+		clusterID := testdata.GetRandomClusterID()
+		clusters[i] = string(clusterID)
+		mustWriteReport3RulesForCluster(t, mockStorage, clusterID)
+	}
+
+	// write some rules into database
+	mustWriteReport3Rules(t, mockStorage)
+
+	// disable one rule
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		ctypes.ClusterName(clusters[0]), testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// try to read list of disabled rules
+	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 rule to be returned
+	assert.Len(t, disabledRules, 1)
+
+	// check the content of returned data
+	disabledRule := disabledRules[0]
+	assert.Equal(t, ctypes.ClusterName(clusters[0]), disabledRule.ClusterID)
+	assert.Equal(t, testdata.Rule1ID, disabledRule.RuleID)
+	assert.Equal(t, testdata.ErrorKey1, string(disabledRule.ErrorKey))
+	assert.Equal(t, int(storage.RuleToggleDisable), int(disabledRule.Disabled))
+}
+
+// TestDBStorageListOfDisabledRulesForClustersTwoRules checks that two rules are returned
+// for non empty DB.
+func TestDBStorageListOfDisabledRulesForClustersTwoRules(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]string, 3)
+	for i := range clusters {
+		clusterID := testdata.GetRandomClusterID()
+		clusters[i] = string(clusterID)
+		mustWriteReport3RulesForCluster(t, mockStorage, clusterID)
+	}
+
+	// write some rules into database
+	mustWriteReport3Rules(t, mockStorage)
+
+	// disable same rule, different clusters
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		ctypes.ClusterName(clusters[0]), testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		ctypes.ClusterName(clusters[1]), testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// try to read list of disabled rules
+	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect 2 rules to be returned
+	assert.Len(t, disabledRules, 2)
+}
+
+// TestDBStorageListOfDisabledRulesForClustersNoRule checks that no rule is returned
+// for cluster that wasnt requested
+func TestDBStorageListOfDisabledRulesForClustersNoRule(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusters := make([]string, 3)
+	for i := range clusters {
+		clusterID := testdata.GetRandomClusterID()
+		clusters[i] = string(clusterID)
+		mustWriteReport3RulesForCluster(t, mockStorage, clusterID)
+	}
+
+	// write some rules into database
+	mustWriteReport3Rules(t, mockStorage)
+
+	// disable one rule for one cluster
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		ctypes.ClusterName(clusters[0]), testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// try to read list of disabled rules, we're requesting a list for a different list of clusters
+	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters([]string{clusters[1], clusters[2]}, testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect no rules to be returned
+	assert.Len(t, disabledRules, 0)
+
+	// disable one rule for one of the clusters we want
+	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
+		ctypes.ClusterName(clusters[1]), testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.UserID, storage.RuleToggleDisable,
+	))
+
+	// try to read list of disabled rules, this time there should be one rule among them
+	disabledRules, err = mockStorage.ListOfDisabledRulesForClusters([]string{clusters[1], clusters[2]}, testdata.UserID)
+	helpers.FailOnError(t, err)
+
+	// we expect 1 rule
+	assert.Len(t, disabledRules, 1)
+}
