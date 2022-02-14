@@ -16,6 +16,9 @@ language: go
 go:
 - "1.16"
 
+services:
+  - postgresql
+
 jobs:
   include:
     - name: "Build 1.16"
@@ -27,7 +30,7 @@ jobs:
         - make style
     - stage: unit tests
       script:
-        - make test
+        - make test-postgres
         - ./check_coverage.sh
       after_success:
         - env
