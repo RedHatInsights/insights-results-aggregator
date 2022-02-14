@@ -37,4 +37,5 @@ var migrations = []Migration{
 	mig0018AddRatingsTable,
 	mig0019ModifyRecommendationTable,
 	mig0020ModifyAdvisorRatingsTable,
+	mig0021AddGatheredAtToReport,
 }

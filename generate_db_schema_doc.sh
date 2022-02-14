@@ -34,7 +34,7 @@ DB_POD_NAME=postgres_aggregator
 DB_KEEP_RUNNING=1
 
 # Generate the documentation
-OUTPUT_DIR=docs/db-description-3
+OUTPUT_DIR=docs/db-description
 
 # Launch local postgres from scratch
 if ! podman run --name=$DB_POD_NAME --rm --network=host -e POSTGRES_PASSWORD=$DB_PASSWORD -e POSTGRES_USER=$DB_LOGIN -e POSTGRES_DB=$DB_NAME -d postgres:10; then
