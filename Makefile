@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test test-postgres cover integration_tests rest_api_tests sqlite_db license before_commit help godoc install_docgo install_addlicense
+.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test cover integration_tests rest_api_tests sqlite_db license before_commit help godoc install_docgo install_addlicense
 
 SOURCES:=$(shell find . -name '*.go')
 BINARY:=insights-results-aggregator
@@ -72,9 +72,6 @@ automigrate: ${BINARY}
 
 test: ${BINARY} ## Run the unit tests
 	./unit-tests.sh
-
-test-postgres: ${BINARY}
-	./unit-tests.sh postgres
 
 cover: test
 	@go tool cover -html=coverage.out

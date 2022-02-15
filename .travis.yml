@@ -30,7 +30,7 @@ jobs:
         - make style
     - stage: unit tests
       script:
-        - make test-postgres
+        - make test
         - ./check_coverage.sh
       after_success:
         - env
