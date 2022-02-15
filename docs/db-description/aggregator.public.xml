@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<database name="aggregator" schema="public" type="PostgreSQL - 10.17 (Debian 10.17-1.pgdg90+1)">
+<database name="aggregator" schema="public" type="PostgreSQL - 10.19 (Debian 10.19-1.pgdg90+1)">
    <tables>
       <table name="advisor_ratings" numRows="0" remarks="" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="user_id" nullable="false" remarks="" size="2147483647" type="varchar" typeCode="12"/>
@@ -129,6 +129,7 @@
          <column autoUpdated="false" defaultValue="null" digits="6" id="3" name="reported_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="last_checked_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
          <column autoUpdated="false" defaultValue="0" digits="0" id="5" name="kafka_offset" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="gathered_at" nullable="true" remarks="" size="29" type="timestamp" typeCode="93"/>
          <primaryKey column="org_id" sequenceNumberInPK="1"/>
          <primaryKey column="cluster" sequenceNumberInPK="2"/>
          <index name="report_pkey" unique="true">
