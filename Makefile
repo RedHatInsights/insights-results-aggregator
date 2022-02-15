@@ -91,7 +91,7 @@ sqlite_db:
 license: install_addlicense
 	addlicense -c "Red Hat, Inc" -l "apache" -v ./
 
-before_commit: style test test-postgres integration_tests openapi-check license ## Checks done before commit
+before_commit: style test integration_tests openapi-check license ## Checks done before commit
 	./check_coverage.sh
 
 help: ## Show this help screen
