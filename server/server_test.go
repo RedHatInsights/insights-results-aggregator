@@ -455,7 +455,7 @@ func checkBadRuleFeedbackRequest(t *testing.T, message string, expectedStatus st
 // TestRuleFeedbackErrorLongMessage checks if message longer than 250 bytes is
 // rejected properly.
 func TestRuleFeedbackErrorLongMessage(t *testing.T) {
-	os.Clearenv()
+	// os.Clearenv()
 	mustLoadConfiguration("tests/config1")
 
 	checkBadRuleFeedbackRequest(t,
@@ -468,7 +468,6 @@ func TestRuleFeedbackErrorLongMessage(t *testing.T) {
 // message containing less than 250 Unicode characters, but longer than 250
 // bytes, is rejected
 func TestRuleFeedbackErrorLongMessageWithUnicodeCharacters(t *testing.T) {
-	os.Clearenv()
 	mustLoadConfiguration("tests/config1")
 
 	checkBadRuleFeedbackRequest(t,
@@ -1150,7 +1149,7 @@ func TestHTTPServer_RecommendationsListEndpoint_DifferentClusters(t *testing.T) 
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, "",
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, time.RFC3339,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1173,7 +1172,7 @@ func TestHTTPServer_RecommendationsListEndpoint_3Recs1Cluster(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, "",
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, time.RFC3339,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1208,12 +1207,12 @@ func TestHTTPServer_RecommendationsListEndpoint_3Recs2Clusters(t *testing.T) {
 	}
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, clusterList[0], testdata.Report2Rules, "",
+		testdata.OrgID, clusterList[0], testdata.Report2Rules, time.RFC3339,
 	)
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, clusterList[1], testdata.Report3Rules, "",
+		testdata.OrgID, clusterList[1], testdata.Report3Rules, time.RFC3339,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1268,7 +1267,7 @@ func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenSelectorDBError(t *testing
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, "")
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, time.RFC3339)
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1286,7 +1285,7 @@ func TestRuleClusterDetailEndpoint_BadBodyInRequest(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, "")
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, time.RFC3339)
 
 	// A request body omitting the closing '"'
 	getRequestBody := fmt.Sprintf(`{"clusters":["%v]}`, testdata.ClusterName)
@@ -1429,8 +1428,8 @@ func TestRuleClusterDetailEndpoint_InvalidParametersActiveClusters(t *testing.T)
 
 	errStr := `Error during parsing param 'org_id' with value 'x'. Error: 'unsigned integer expected'`
 
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, "")
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules, "")
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, time.RFC3339)
+	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules, time.RFC3339)
 
 	getRequestBody := fmt.Sprintf(`{"clusters":["%v"]}`, testdata.ClusterName)
 
@@ -1475,7 +1474,7 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_NoRecommendations(t *tes
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, "",
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, time.RFC3339,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1505,7 +1504,7 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_2Recs1Cluster(t *testing
 	)
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, "",
+		testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, time.RFC3339,
 	)
 	helpers.FailOnError(t, err)
 

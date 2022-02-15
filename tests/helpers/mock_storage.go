@@ -39,11 +39,7 @@ const postgres = "postgres"
 // INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS is set to db admin's password
 // produces t.Fatal(err) on error
 func MustGetMockStorage(tb testing.TB, init bool) (storage.Storage, func()) {
-	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == postgres {
-		return MustGetPostgresStorage(tb, init)
-	}
-
-	return MustGetSQLiteMemoryStorage(tb, init)
+	return MustGetPostgresStorage(tb, init)
 }
 
 // MustGetMockStorageWithExpects returns mock db storage

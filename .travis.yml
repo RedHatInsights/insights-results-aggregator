@@ -16,6 +16,9 @@ language: go
 go:
 - "1.16"
 
+services:
+  - postgresql
+
 jobs:
   include:
     - name: "Build 1.16"
