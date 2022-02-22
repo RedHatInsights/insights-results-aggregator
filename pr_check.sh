@@ -43,8 +43,6 @@ function deploy_ephemeral() {
 }
 
 function run_smoke_tests() {
-    # component name needs to be re-export to match ClowdApp name (as bonfire requires for this)
-    export COMPONENT_NAME="ccx-insights-results-aggregator"
     source $CICD_ROOT/cji_smoke_test.sh
 }
 
