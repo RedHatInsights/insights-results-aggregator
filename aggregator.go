@@ -183,6 +183,9 @@ func prepareDB() int {
 		return ExitStatusPrepareDbError
 	}
 
+	// temporarily print some information from DB because of limited access to DB
+	dbStorage.PrintRuleDisableDebugInfo()
+
 	return ExitStatusOK
 }
 
