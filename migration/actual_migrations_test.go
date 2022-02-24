@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -562,4 +563,189 @@ func TestMigration18(t *testing.T) {
 		types.UserVoteLike,
 	)
 	helpers.FailOnError(t, err)
+}
+
+/*
+	_, err = db.Exec(`
+		INSERT INTO advisor_ratings
+		(user_id, org_id, rule_fqdn, error_key, rated_at, last_updated_at, rating, rule_id)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7, $8)
+	`,
+		testdata.UserID,
+		testdata.OrgID,
+		testdata.Rule1Name,
+		testdata.ErrorKey1,
+		time.Now(),
+		time.Now(),
+		types.UserVoteLike,
+		testdata.Rule1CompositeID,
+	)
+*/
+
+func TestMigration20(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// nothing worth testing for sqlite
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 19)
+	helpers.FailOnError(t, err)
+
+	err = db.QueryRow(`SELECT rule_fqdn FROM advisor_ratings`).Err()
+	assert.Error(t, err, "rule_fqdn column should not exist")
+
+	_, err = db.Exec(`
+		INSERT INTO advisor_ratings
+		(user_id, org_id, rule_id, error_key, rated_at, last_updated_at, rating)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7)
+	`,
+		testdata.UserID,
+		testdata.OrgID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		time.Now(),
+		time.Now(),
+		types.UserVoteLike,
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, dbDriver, 20)
+	helpers.FailOnError(t, err)
+
+	var (
+		ruleFQDN string
+		ruleID   string
+	)
+
+	err = db.QueryRow(`
+			SELECT
+				rule_fqdn, rule_id
+			FROM
+				advisor_ratings
+			WHERE
+				user_id = $1 AND org_id = $2`,
+		testdata.UserID, testdata.OrgID,
+	).Scan(
+		&ruleFQDN, &ruleID,
+	)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, testdata.Rule1ID, types.RuleID(ruleFQDN))
+	assert.Equal(t, testdata.Rule1CompositeID, types.RuleID(ruleID))
+
+	// Step down should rename rule_fqdn column to rule_id and it contains only plugin name
+	err = migration.SetDBVersion(db, dbDriver, 19)
+	helpers.FailOnError(t, err)
+
+	err = db.QueryRow(`SELECT rule_fqdn FROM advisor_ratings`).Err()
+	assert.Error(t, err, "rule_fqdn column should not exist")
+	err = db.QueryRow(`
+			SELECT
+				rule_id
+			FROM
+				advisor_ratings
+			WHERE
+				user_id = $1 AND org_id = $2`,
+		testdata.UserID, testdata.OrgID,
+	).Scan(
+		&ruleID,
+	)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, testdata.Rule1ID, types.RuleID(ruleID))
+}
+
+func TestMigration22(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// sqlite is no longer supported
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 21)
+	helpers.FailOnError(t, err)
+
+	var expectedCorrectCount int
+
+	// insert toggles and feedbacks
+	for i := 0; i < 10; i++ {
+		ruleID := testdata.Rule1ID
+		clusterID := testdata.GetRandomClusterID()
+
+		// we expect 4 with the suffix (correct) and 6 without the suffix (to be deleted)
+		if i%2 == 0 {
+			ruleID = ruleID + ".report"
+			expectedCorrectCount++
+		}
+
+		// insert toggles
+		_, err = db.Exec(`
+				INSERT INTO cluster_rule_toggle
+				(cluster_id, rule_id, error_key, user_id, disabled, updated_at)
+				VALUES
+				($1, $2, $3, $4, $5, $6)
+			`,
+			clusterID,
+			ruleID,
+			testdata.ErrorKey1, // we don't care about error key or any other column
+			testdata.UserID,
+			storage.RuleToggleDisable,
+			time.Now(),
+		)
+		helpers.FailOnError(t, err)
+
+		// insert disable feedbacks
+		_, err = db.Exec(`
+				INSERT INTO cluster_user_rule_disable_feedback
+				(cluster_id, rule_id, error_key, user_id, message, added_at, updated_at)
+				VALUES
+				($1, $2, $3, $4, $5, $6, $6)
+			`,
+			clusterID,
+			ruleID,
+			testdata.ErrorKey1, // we don't care about error key or any other column
+			testdata.UserID,
+			"",
+			time.Now(),
+		)
+		helpers.FailOnError(t, err)
+	}
+
+	// migrate to 22
+	err = migration.SetDBVersion(db, dbDriver, 22)
+	helpers.FailOnError(t, err)
+
+	// retrieve numbers of rows
+	var togglesAfterMigrationCount, feedbacksAfterMigrationCount int
+
+	err = db.QueryRow(`
+	SELECT
+		count(*)
+	FROM
+		cluster_rule_toggle
+	`).Scan(
+		&togglesAfterMigrationCount,
+	)
+	helpers.FailOnError(t, err)
+	// must match with expected count
+	assert.Equal(t, expectedCorrectCount, togglesAfterMigrationCount)
+
+	err = db.QueryRow(`
+	SELECT
+		count(*)
+	FROM
+		cluster_user_rule_disable_feedback
+	`).Scan(
+		&feedbacksAfterMigrationCount,
+	)
+	helpers.FailOnError(t, err)
+	// must match with expected count
+	assert.Equal(t, expectedCorrectCount, feedbacksAfterMigrationCount)
+
+	// there is no need to test StepDown because it's a NOOP
 }
