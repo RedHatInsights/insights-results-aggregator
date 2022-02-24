@@ -81,7 +81,14 @@ func TestReadExistingEmptyReportMetainfo(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.KafkaOffset,
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.Report0Rules,
+		testdata.ReportEmptyRulesParsed,
+		testdata.LastCheckedAt,
+		time.Now(),
+		testdata.LastCheckedAt,
+		testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
 
@@ -126,6 +133,7 @@ func TestReadReportMetainfo(t *testing.T) {
 		testdata.Report3Rules,
 		testdata.Report3RulesParsed,
 		testdata.LastCheckedAt,
+		time.Now(),
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
 	)

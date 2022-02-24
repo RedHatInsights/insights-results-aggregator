@@ -17,6 +17,8 @@
 package types
 
 import (
+	"time"
+
 	types "github.com/RedHatInsights/insights-results-types"
 )
 
@@ -117,3 +119,8 @@ type SchemaVersion = types.SchemaVersion
 
 // RuleRating represents a rule rating element sent by the user
 type RuleRating = types.RuleRating
+
+// Metadata represents the metadata field in the Kafka topic messages
+type Metadata struct {
+	GatheredAt time.Time `json:"gathering_time"`
+}

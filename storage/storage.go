@@ -78,6 +78,7 @@ type Storage interface {
 		report types.ClusterReport,
 		rules []types.ReportItem,
 		collectedAtTime time.Time,
+		gatheredAtTime time.Time,
 		storedAtTime time.Time,
 		kafkaOffset types.KafkaOffset,
 	) error
@@ -752,16 +753,16 @@ func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 func (storage DBStorage) getReportUpsertQuery() string {
 	if storage.dbDriverType == types.DBDriverSQLite3 {
 		return `
-			INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset)
-			VALUES ($1, $2, $3, $4, $5, $6)
+			INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
 		`
 	}
 
 	return `
-		INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (cluster)
-		DO UPDATE SET org_id = $1, report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6
+		DO UPDATE SET org_id = $1, report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6, gathered_at = $7
 	`
 }
 
@@ -788,6 +789,7 @@ func (storage DBStorage) updateReport(
 	report types.ClusterReport,
 	rules []types.ReportItem,
 	lastCheckedTime time.Time,
+	gatheredAt time.Time,
 	reportedAtTime time.Time,
 	kafkaOffset types.KafkaOffset,
 ) error {
@@ -816,7 +818,12 @@ func (storage DBStorage) updateReport(
 		}
 	}
 
-	_, err = tx.Exec(reportUpsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, kafkaOffset)
+	if gatheredAt.IsZero() {
+		_, err = tx.Exec(reportUpsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, kafkaOffset, sql.NullTime{Valid: false})
+	} else {
+		_, err = tx.Exec(reportUpsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, kafkaOffset, gatheredAt)
+	}
+
 	if err != nil {
 		log.Err(err).Msgf("Unable to upsert the cluster report (org: %v, cluster: %v)", orgID, clusterName)
 		return err
@@ -904,6 +911,7 @@ func (storage DBStorage) WriteReportForCluster(
 	report types.ClusterReport,
 	rules []types.ReportItem,
 	lastCheckedTime time.Time,
+	gatheredAt time.Time,
 	storedAtTime time.Time,
 	kafkaOffset types.KafkaOffset,
 ) error {
@@ -944,7 +952,7 @@ func (storage DBStorage) WriteReportForCluster(
 			return nil
 		}
 
-		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, storedAtTime, kafkaOffset)
+		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, gatheredAt, storedAtTime, kafkaOffset)
 		if err != nil {
 			return err
 		}
