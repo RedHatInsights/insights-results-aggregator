@@ -208,11 +208,11 @@ objects:
                       optional: true
               resources:
                 requests:
-                  cpu: 100m
-                  memory: 150Mi
-                limits:
                   cpu: 200m
-                  memory: 300Mi
+                  memory: 800Mi
+                limits:
+                  cpu: 400m
+                  memory: 1700Mi
               command:
                 - ./insights-results-aggregator
                 - migration
