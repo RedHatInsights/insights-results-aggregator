@@ -147,7 +147,14 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 		userID := types.UserID(testdata.GetRandomUserID())
 
 		err := mockStorage.WriteReportForCluster(
-			testdata.OrgID, clusterID, "{}", testdata.ReportEmptyRulesParsed, time.Now(), time.Now(), testdata.KafkaOffset,
+			testdata.OrgID,
+			clusterID,
+			"{}",
+			testdata.ReportEmptyRulesParsed,
+			time.Now(),
+			time.Now(),
+			time.Now(),
+			testdata.KafkaOffset,
 		)
 		helpers.FailOnError(tb, err)
 

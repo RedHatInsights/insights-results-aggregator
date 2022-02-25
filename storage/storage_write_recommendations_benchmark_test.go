@@ -17,13 +17,14 @@ package storage_test
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
-	"testing"
-	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -512,7 +513,7 @@ func BenchmarkWriteReportAndRecommendationsNoConflict(b *testing.B) {
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for id := range clusterIDSet.content {
-			err := storage.WriteReportForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report2Rules, testdata.Report2RulesParsed, time.Now(), time.Now(), types.KafkaOffset(0))
+			err := storage.WriteReportForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report2Rules, testdata.Report2RulesParsed, time.Now(), time.Now(), time.Now(), types.KafkaOffset(0))
 			helpers.FailOnError(b, err)
 			err = storage.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), Report20Rules, RecommendationCreatedAtTimestamp)
 			helpers.FailOnError(b, err)

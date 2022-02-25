@@ -40,6 +40,7 @@ type incomingMessage struct {
 	LastChecked string              `json:"LastChecked"`
 	Version     types.SchemaVersion `json:"Version"`
 	RequestID   types.RequestID     `json:"RequestId"`
+	Metadata    types.Metadata      `json:"Metadata"`
 	ParsedHits  []types.ReportItem
 }
 
@@ -216,6 +217,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 		types.ClusterReport(reportAsBytes),
 		message.ParsedHits,
 		lastCheckedTime,
+		message.Metadata.GatheredAt,
 		storedAtTime,
 		types.KafkaOffset(msg.Offset),
 	)
