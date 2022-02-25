@@ -61,7 +61,7 @@ func TestNoopStorage_Methods_Cont(t *testing.T) {
 	_ = noopStorage.ToggleRuleForCluster("", "", "", "", 0)
 	_ = noopStorage.DeleteFromRuleClusterToggle("", "")
 	_, _ = noopStorage.GetFromClusterRuleToggle("", "")
-	_, _ = noopStorage.GetTogglesForRules("", nil)
+	_, _ = noopStorage.GetTogglesForRules("", nil, types.UserID("99"))
 	_, _ = noopStorage.GetUserFeedbackOnRules("", nil, "")
 	_, _ = noopStorage.GetRuleWithContent("", "")
 	_, _ = noopStorage.ReadOrgIDsForClusters([]types.ClusterName{})

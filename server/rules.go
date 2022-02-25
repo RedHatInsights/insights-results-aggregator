@@ -210,7 +210,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 	userID types.UserID,
 	rules []types.RuleOnReport,
 ) ([]types.RuleOnReport, error) {
-	togglesRules, err := server.Storage.GetTogglesForRules(clusterName, rules)
+	togglesRules, err := server.Storage.GetTogglesForRules(clusterName, rules, userID)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to retrieve disabled status from database")
 		return nil, err

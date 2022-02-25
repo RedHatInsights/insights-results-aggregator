@@ -148,7 +148,7 @@ func (storage DBStorage) GetFromClusterRuleToggle(
 
 // GetTogglesForRules gets enable/disable toggle for rules
 func (storage DBStorage) GetTogglesForRules(
-	clusterID types.ClusterName, rulesReport []types.RuleOnReport,
+	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
 ) (map[types.RuleID]bool, error) {
 	ruleIDs := make([]string, 0)
 	for _, rule := range rulesReport {
