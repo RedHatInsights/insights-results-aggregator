@@ -165,12 +165,13 @@ func (storage DBStorage) GetTogglesForRules(
 		cluster_rule_toggle
 	WHERE
 		cluster_id = $1 AND
-		rule_id in (%v)
+		rule_id in (%v) AND
+		user_id = $2
 	`
 	whereInStatement := inClauseFromSlice(ruleIDs)
 	query = fmt.Sprintf(query, whereInStatement)
 
-	rows, err := storage.connection.Query(query, clusterID)
+	rows, err := storage.connection.Query(query, clusterID, userID)
 	if err != nil {
 		return toggles, err
 	}
