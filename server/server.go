@@ -343,18 +343,6 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 	}
 }
 
-// handleOptionsMethod - middleware for handling OPTIONS method
-func (server *HTTPServer) handleOptionsMethod(nextHandler http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == "OPTIONS" {
-				w.WriteHeader(http.StatusOK)
-			} else {
-				nextHandler.ServeHTTP(w, r)
-			}
-		})
-}
-
 // Initialize perform the server initialization
 func (server *HTTPServer) Initialize() http.Handler {
 	log.Info().Msgf("Initializing HTTP server at '%s'", server.Config.Address)

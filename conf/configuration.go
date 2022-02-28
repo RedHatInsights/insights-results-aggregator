@@ -57,7 +57,6 @@ import (
 const (
 	configFileEnvVariableName   = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
 	defaultOrgAllowlistFileName = "org_allowlist.csv"
-	defaultContentPath          = "/rules-content"
 )
 
 // MetricsConfiguration holds metrics related configuration

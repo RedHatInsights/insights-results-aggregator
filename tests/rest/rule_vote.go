@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,11 +30,9 @@ import (
 
 const (
 	improperClusterID = "000000000000000000000000000000000000"
-	knownCluster      = "00000000-0000-0000-0000-000000000000"
 
 	anyRule     = "0" // we don't care
 	anyErrorKey = "0" // we don't care
-	knownRule   = "foo"
 
 	unexpectedErrorStatusMessage = "Expected error status, but got '%s' instead"
 )

@@ -279,10 +279,6 @@ func (s *set) add(value string) {
 	s.content[value] = exists
 }
 
-func (s *set) remove(value string) {
-	delete(s.content, value)
-}
-
 func (s *set) contains(value string) bool {
 	_, c := s.content[value]
 	return c

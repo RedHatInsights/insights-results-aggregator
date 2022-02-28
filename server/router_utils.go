@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,9 +34,6 @@ var (
 	readRuleSelector          = httputils.ReadRuleSelector
 	getRouterParam            = httputils.GetRouterParam
 	getRouterPositiveIntParam = httputils.GetRouterPositiveIntParam
-	validateClusterName       = httputils.ValidateClusterName
-	splitRequestParamArray    = httputils.SplitRequestParamArray
-	handleOrgIDError          = httputils.HandleOrgIDError
 	readClusterName           = httputils.ReadClusterName
 	readOrganizationID        = httputils.ReadOrganizationID
 	checkPermissions          = httputils.CheckPermissions
@@ -140,39 +137,6 @@ func readRuleRatingFromBody(writer http.ResponseWriter, request *http.Request) (
 	// everything is ok
 	return rating, true
 
-}
-
-// readClusterRuleUserParams gets cluster_name, rule_id and user_id from current request
-func (server *HTTPServer) readClusterRuleUserParams(
-	writer http.ResponseWriter, request *http.Request,
-) (types.ClusterName, types.RuleID, types.UserID, bool) {
-	clusterID, successful := readClusterName(writer, request)
-	if !successful {
-		return "", "", "", false
-	}
-
-	ruleID, successful := readRuleID(writer, request)
-	if !successful {
-		return "", "", "", false
-	}
-
-	userID, successful := readUserID(writer, request)
-	if !successful {
-		// everything has been handled already
-		return "", "", "", false
-	}
-
-	clusterExists, err := server.Storage.DoesClusterExist(clusterID)
-	if err != nil {
-		handleServerError(writer, err)
-		return "", "", "", false
-	}
-	if !clusterExists {
-		handleServerError(writer, &types.ItemNotFoundError{ItemID: clusterID})
-		return "", "", "", false
-	}
-
-	return clusterID, ruleID, userID, true
 }
 
 // readClusterRuleParams gets cluster_name, rule_id and error_key from current request
