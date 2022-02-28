@@ -139,6 +139,7 @@ type Storage interface {
 	GetTogglesForRules(
 		types.ClusterName,
 		[]types.RuleOnReport,
+		types.UserID,
 	) (map[types.RuleID]bool, error)
 	DeleteFromRuleClusterToggle(
 		clusterID types.ClusterName,

@@ -96,7 +96,7 @@ func TestDBStorageGetTogglesForRules_NoRules(t *testing.T) {
 	defer closer()
 
 	_, err := mockStorage.GetTogglesForRules(
-		testdata.ClusterName, nil,
+		testdata.ClusterName, nil, testdata.UserID,
 	)
 	helpers.FailOnError(t, err)
 }
@@ -106,7 +106,7 @@ func TestDBStorageGetTogglesForRules_AllRulesEnabled(t *testing.T) {
 	defer closer()
 
 	_, err := mockStorage.GetTogglesForRules(
-		testdata.ClusterName, testdata.RuleOnReportResponses,
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
 	)
 	helpers.FailOnError(t, err)
 }
@@ -120,7 +120,7 @@ func TestDBStorageGetTogglesForRules_OneRuleDisabled(t *testing.T) {
 	))
 
 	result, err := mockStorage.GetTogglesForRules(
-		testdata.ClusterName, testdata.RuleOnReportResponses,
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
 	)
 
 	helpers.FailOnError(t, err)

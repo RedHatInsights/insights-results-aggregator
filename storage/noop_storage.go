@@ -197,6 +197,7 @@ func (*NoopStorage) GetFromClusterRuleToggle(
 func (*NoopStorage) GetTogglesForRules(
 	types.ClusterName,
 	[]types.RuleOnReport,
+	types.UserID,
 ) (map[types.RuleID]bool, error) {
 	return nil, nil
 }
