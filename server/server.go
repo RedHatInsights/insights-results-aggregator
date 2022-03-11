@@ -155,7 +155,10 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	reports, lastChecked, _, err := server.Storage.ReadReportForCluster(orgID, clusterName)
+	reports, lastChecked, _, gatheredAt, err := server.Storage.ReadReportForCluster(
+		orgID,
+		clusterName,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read report for cluster")
 		handleServerError(writer, err)
@@ -175,6 +178,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		Meta: types.ReportResponseMeta{
 			Count:         hitRulesCount,
 			LastCheckedAt: lastChecked,
+			GatheredAt:    gatheredAt,
 		},
 		Report: reports,
 	}
@@ -200,7 +204,10 @@ func (server *HTTPServer) readReportMetainfoForCluster(writer http.ResponseWrite
 		return
 	}
 
-	reports, lastChecked, storedAt, err := server.Storage.ReadReportForCluster(orgID, clusterName)
+	reports, lastChecked, storedAt, _, err := server.Storage.ReadReportForCluster(
+		orgID,
+		clusterName,
+	)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read report for cluster")
 		handleServerError(writer, err)

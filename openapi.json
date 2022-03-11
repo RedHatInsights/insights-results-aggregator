@@ -247,6 +247,11 @@
                               "type": "string",
                               "format": "date",
                               "example": "2020-01-23T16:15:59.478901889Z"
+                            },
+                            "gathered_at": {
+                              "type": "string",
+                              "format": "date",
+                              "example": "2022-03-10T16:15:30.973901889Z"
                             }
                           }
                         },
