@@ -107,7 +107,8 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 				"meta": {
 					"cluster_name":"",
 					"count": -1,
-					"last_checked_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `"
+					"last_checked_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+					"gathered_at": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `"
 				},
 				"reports":[]
 			}

@@ -49,8 +49,8 @@ func (*NoopStorage) ListOfClustersForOrg(types.OrgID, time.Time) ([]types.Cluste
 }
 
 // ReadReportForCluster noop
-func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) ([]types.RuleOnReport, types.Timestamp, types.Timestamp, error) {
-	return []types.RuleOnReport{}, "", "", nil
+func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) ([]types.RuleOnReport, types.Timestamp, types.Timestamp, types.Timestamp, error) {
+	return []types.RuleOnReport{}, "", "", "", nil
 }
 
 // ReadSingleRuleTemplateData noop

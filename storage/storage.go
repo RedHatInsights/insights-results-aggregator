@@ -61,7 +61,7 @@ type Storage interface {
 	) ([]ctypes.HittingClustersData, error)
 	ReadReportForCluster(
 		orgID types.OrgID, clusterName types.ClusterName) (
-		[]types.RuleOnReport, types.Timestamp, types.Timestamp, error,
+		[]types.RuleOnReport, types.Timestamp, types.Timestamp, types.Timestamp, error,
 	)
 	ReadReportsForClusters(
 		clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error)
@@ -658,23 +658,32 @@ func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName
 // ReadReportForCluster reads result (health status) for selected cluster
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
-) ([]types.RuleOnReport, types.Timestamp, types.Timestamp, error) {
+) ([]types.RuleOnReport, types.Timestamp, types.Timestamp, types.Timestamp, error) {
 	var lastChecked time.Time
 	var reportedAt time.Time
+	var gatheredAtInDB sql.NullTime // to avoid problems
 
 	report := make([]types.RuleOnReport, 0)
 
 	err := storage.connection.QueryRow(
-		"SELECT last_checked_at, reported_at FROM report WHERE org_id = $1 AND cluster = $2;", orgID, clusterName,
-	).Scan(&lastChecked, &reportedAt)
+		"SELECT last_checked_at, reported_at, gathered_at FROM report WHERE org_id = $1 AND cluster = $2;",
+		orgID, clusterName,
+	).Scan(&lastChecked, &reportedAt, &gatheredAtInDB)
 
 	// convert timestamps to string
 	var lastCheckedStr = types.Timestamp(lastChecked.UTC().Format(time.RFC3339))
 	var reportedAtStr = types.Timestamp(reportedAt.UTC().Format(time.RFC3339))
+	var gatheredAtStr types.Timestamp
+
+	if gatheredAtInDB.Valid {
+		gatheredAtStr = types.Timestamp(gatheredAtInDB.Time.UTC().Format(time.RFC3339))
+	} else {
+		gatheredAtStr = ""
+	}
 
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
-		return report, lastCheckedStr, reportedAtStr, err
+		return report, lastCheckedStr, reportedAtStr, gatheredAtStr, err
 	}
 
 	rows, err := storage.connection.Query(
@@ -683,12 +692,12 @@ func (storage DBStorage) ReadReportForCluster(
 
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
-		return report, lastCheckedStr, reportedAtStr, err
+		return report, lastCheckedStr, reportedAtStr, gatheredAtStr, err
 	}
 
 	report, err = parseRuleRows(rows)
 
-	return report, lastCheckedStr, reportedAtStr, err
+	return report, lastCheckedStr, reportedAtStr, gatheredAtStr, err
 }
 
 // ReadSingleRuleTemplateData reads template data for a single rule
