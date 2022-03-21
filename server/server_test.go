@@ -395,7 +395,7 @@ func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
 }
 
 // TODO: make working with the new arch
-//func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
+// func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
 //	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 //	defer closer()
 //
