@@ -233,7 +233,7 @@ func TestServerStart(t *testing.T) {
 			}
 
 			// doing some request to be sure server started successfully
-			req, err := http.NewRequest(http.MethodGet, helpers.DefaultServerConfig.APIPrefix, nil)
+			req, err := http.NewRequest(http.MethodGet, helpers.DefaultServerConfig.APIPrefix, http.NoNody)
 			helpers.FailOnError(t, err)
 
 			response := helpers.ExecuteRequest(s, req).Result()

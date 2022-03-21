@@ -112,7 +112,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 						clusterID, ruleID,
 					)
 
-					req, err := http.NewRequest(http.MethodPut, url, nil)
+					req, err := http.NewRequest(http.MethodPut, url, http.NoBody)
 					helpers.FailOnError(b, err)
 
 					// authorize user
