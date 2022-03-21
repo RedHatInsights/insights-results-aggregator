@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -184,7 +184,7 @@ func TestReadClusterListFromPathEmptyClusterList(t *testing.T) {
 // cluster ID is processed correctly by function ReadClusterListFromPath.
 func TestReadClusterListFromPathOneCluster(t *testing.T) {
 	request := mustGetRequestWithMuxVars(t, http.MethodGet, "", nil, map[string]string{
-		"cluster_list": fmt.Sprintf("%v", cluster1ID),
+		"cluster_list": cluster1ID,
 	})
 
 	// try to read list of clusters from path
