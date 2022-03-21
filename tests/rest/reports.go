@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 
 // constructURLForReportForOrgCluster function constructs an URL to access the
 // endpoint to retrieve results for given cluster from selected organization
-func constructURLForReportForOrgCluster(organizationID string, clusterID string, userID types.UserID) string {
+func constructURLForReportForOrgCluster(organizationID, clusterID string, userID types.UserID) string {
 	return httputils.MakeURLToEndpoint(apiURL, server.ReportEndpoint, organizationID, clusterID, userID)
 }
 

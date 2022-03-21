@@ -1,5 +1,5 @@
 /*
-Copyright © 2020, 2021  Red Hat, Inc.
+Copyright © 2020, 2021, 2022  Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -452,7 +452,7 @@ func TestRuleFeedbackErrorBadRuleID(t *testing.T) {
 
 // checkBadRuleFeedbackRequest tries to send rule feedback with bad content and
 // then check if that content is rejected properly.
-func checkBadRuleFeedbackRequest(t *testing.T, message string, expectedStatus string) {
+func checkBadRuleFeedbackRequest(t *testing.T, message, expectedStatus string) {
 	requestBody := `{
 			"message": "` + message + `"
 	}`

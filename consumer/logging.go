@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ func logMessageWarning(consumer *KafkaConsumer, originalMessage *sarama.Consumer
 		Msg(event)
 }
 
-func logDuration(tStart time.Time, tEnd time.Time, offset int64, key string) {
+func logDuration(tStart, tEnd time.Time, offset int64, key string) {
 	duration := tEnd.Sub(tStart)
 	log.Info().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, offset).Msg(key)
 }

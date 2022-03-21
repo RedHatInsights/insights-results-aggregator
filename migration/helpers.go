@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ func downgradeTable(tx *sql.Tx, tableName, oldTableDefinition string, columns []
 }
 
 //
-func updateTableData(tx *sql.Tx, table string, query string, args ...interface{}) error {
+func updateTableData(tx *sql.Tx, table, query string, args ...interface{}) error {
 	log.Debug().Str(tableTag, table).Msg("Updating rows...")
 	result, err := tx.Exec(query, args...)
 
