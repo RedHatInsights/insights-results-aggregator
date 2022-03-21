@@ -661,7 +661,7 @@ func TestMigration22(t *testing.T) {
 
 		// we expect 4 with the suffix (correct) and 6 without the suffix (to be deleted)
 		if i%2 == 0 {
-			ruleID = ruleID + ".report"
+			ruleID += ".report"
 			expectedCorrectCount++
 		}
 
