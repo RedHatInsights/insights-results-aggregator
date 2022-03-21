@@ -200,8 +200,8 @@ func getRuleAndErrorKeyFromRuleID(ruleIDWithErrorKey string) (
 
 	IDValidator := regexp.MustCompile(`^[a-zA-Z_0-9.]+$`)
 
-	isRuleIDValid := IDValidator.Match([]byte(splitedRuleID[0]))
-	isErrorKeyValid := IDValidator.Match([]byte(splitedRuleID[1]))
+	isRuleIDValid := IDValidator.MatchString(splitedRuleID[0])
+	isErrorKeyValid := IDValidator.MatchString(splitedRuleID[1])
 
 	if !isRuleIDValid || !isErrorKeyValid {
 		err = fmt.Errorf("invalid rule ID, each part of ID must contain only from latin characters, number, underscores or dots")
