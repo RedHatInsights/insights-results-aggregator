@@ -70,7 +70,7 @@ const accountNumber = "42"
 
 // setAuthHeaderForOrganization set authorization header to request
 func setAuthHeaderForOrganization(f *frisby.Frisby, orgID int) {
-	plainHeader := fmt.Sprintf("{\"identity\": {\"internal\": {\"org_id\": \"%d\"}, \"account_number\":\"%s\"}}", orgID, accountNumber)
+	plainHeader := fmt.Sprintf("{\"identity\": {\"internal\": {\"org_id\": \"%d\"}, \"account_number\":%q}}", orgID, accountNumber)
 	encodedHeader := base64.StdEncoding.EncodeToString([]byte(plainHeader))
 	f.SetHeader(authHeaderName, encodedHeader)
 }

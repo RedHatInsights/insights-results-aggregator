@@ -1,5 +1,5 @@
 /*
-Copyright © 2020, 2021  Red Hat, Inc.
+Copyright © 2020, 2021, 2022  Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -233,7 +233,7 @@ func TestServerStart(t *testing.T) {
 			}
 
 			// doing some request to be sure server started successfully
-			req, err := http.NewRequest(http.MethodGet, helpers.DefaultServerConfig.APIPrefix, nil)
+			req, err := http.NewRequest(http.MethodGet, helpers.DefaultServerConfig.APIPrefix, http.NoBody)
 			helpers.FailOnError(t, err)
 
 			response := helpers.ExecuteRequest(s, req).Result()
@@ -395,7 +395,7 @@ func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
 }
 
 // TODO: make working with the new arch
-//func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
+// func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
 //	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 //	defer closer()
 //
@@ -452,7 +452,7 @@ func TestRuleFeedbackErrorBadRuleID(t *testing.T) {
 
 // checkBadRuleFeedbackRequest tries to send rule feedback with bad content and
 // then check if that content is rejected properly.
-func checkBadRuleFeedbackRequest(t *testing.T, message string, expectedStatus string) {
+func checkBadRuleFeedbackRequest(t *testing.T, message, expectedStatus string) {
 	requestBody := `{
 			"message": "` + message + `"
 	}`

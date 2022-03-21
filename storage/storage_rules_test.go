@@ -340,7 +340,7 @@ func TestDBStorageListOfDisabledRulesNoRule(t *testing.T) {
 }
 
 // TODO: make it work with the new arch
-//func TestDBStorageToggleRulesAndList(t *testing.T) {
+// func TestDBStorageToggleRulesAndList(t *testing.T) {
 //	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 //	defer closer()
 //
@@ -361,7 +361,7 @@ func TestDBStorageListOfDisabledRulesNoRule(t *testing.T) {
 //}
 
 // TODO: make it work with the new arch
-//func TestDBStorageDeleteDisabledRule(t *testing.T) {
+// func TestDBStorageDeleteDisabledRule(t *testing.T) {
 //	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 //	defer closer()
 //
@@ -436,7 +436,7 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 }
 
 // TODO: fix according to the new architecture
-//func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
+// func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
 //	for _, vote := range []types.UserVote{
 //		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
 //	} {

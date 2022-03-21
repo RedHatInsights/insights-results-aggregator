@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ const (
 )
 
 func TestGetRouterIntParamMissing(t *testing.T) {
-	request, err := http.NewRequest(http.MethodGet, "organizations//clusters", nil)
+	request, err := http.NewRequest(http.MethodGet, "organizations//clusters", http.NoBody)
 	helpers.FailOnError(t, err)
 
 	_, err = server.GetRouterPositiveIntParam(request, "test")
@@ -44,7 +44,7 @@ func TestGetRouterIntParamMissing(t *testing.T) {
 }
 
 func TestReadClusterNameMissing(t *testing.T) {
-	request, err := http.NewRequest(http.MethodGet, "", nil)
+	request, err := http.NewRequest(http.MethodGet, "", http.NoBody)
 	helpers.FailOnError(t, err)
 
 	recorder := httptest.NewRecorder()
@@ -62,7 +62,7 @@ func TestReadClusterNameMissing(t *testing.T) {
 }
 
 func TestReadOrganizationIDMissing(t *testing.T) {
-	request, err := http.NewRequest(http.MethodGet, "", nil)
+	request, err := http.NewRequest(http.MethodGet, "", http.NoBody)
 	helpers.FailOnError(t, err)
 
 	_, successful := server.ReadOrganizationID(httptest.NewRecorder(), request, false)
@@ -118,7 +118,7 @@ func TestGetRouterPositiveIntParamZeroError(t *testing.T) {
 }
 
 func TestReadClusterNamesMissing(t *testing.T) {
-	request, err := http.NewRequest(http.MethodGet, "", nil)
+	request, err := http.NewRequest(http.MethodGet, "", http.NoBody)
 	helpers.FailOnError(t, err)
 
 	_, successful := server.ReadClusterNames(httptest.NewRecorder(), request)
@@ -126,7 +126,7 @@ func TestReadClusterNamesMissing(t *testing.T) {
 }
 
 func TestReadOrganizationIDsMissing(t *testing.T) {
-	request, err := http.NewRequest(http.MethodGet, "", nil)
+	request, err := http.NewRequest(http.MethodGet, "", http.NoBody)
 	helpers.FailOnError(t, err)
 
 	_, successful := server.ReadOrganizationIDs(httptest.NewRecorder(), request)
@@ -134,7 +134,7 @@ func TestReadOrganizationIDsMissing(t *testing.T) {
 }
 
 func TestReadRuleIDMissing(t *testing.T) {
-	request, err := http.NewRequest(http.MethodGet, "", nil)
+	request, err := http.NewRequest(http.MethodGet, "", http.NoBody)
 	helpers.FailOnError(t, err)
 
 	recorder := httptest.NewRecorder()
@@ -155,7 +155,7 @@ func TestReadRuleIDMissing(t *testing.T) {
 // cluster list in path is detected and processed correctly by function
 // ReadClusterListFromPath.
 func TestReadClusterListFromPathMissingClusterList(t *testing.T) {
-	request, err := http.NewRequest(http.MethodGet, "", nil)
+	request, err := http.NewRequest(http.MethodGet, "", http.NoBody)
 	helpers.FailOnError(t, err)
 
 	// try to read list of clusters from path
@@ -184,7 +184,7 @@ func TestReadClusterListFromPathEmptyClusterList(t *testing.T) {
 // cluster ID is processed correctly by function ReadClusterListFromPath.
 func TestReadClusterListFromPathOneCluster(t *testing.T) {
 	request := mustGetRequestWithMuxVars(t, http.MethodGet, "", nil, map[string]string{
-		"cluster_list": fmt.Sprintf("%v", cluster1ID),
+		"cluster_list": cluster1ID,
 	})
 
 	// try to read list of clusters from path

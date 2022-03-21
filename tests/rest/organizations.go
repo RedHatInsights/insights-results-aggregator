@@ -61,7 +61,7 @@ func contentSizeForOrganizationResponse(orgIDs ...int) int {
 	}
 
 	// don't forget there is '\n' at the end of JSON
-	return len(string(m)) + 1
+	return len(m) + 1
 }
 
 // checkOrganizationsEndpointWithPostfix checks if the end point to return list of organizations responds correctly to HTTP GET command

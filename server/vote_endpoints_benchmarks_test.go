@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -112,7 +112,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 						clusterID, ruleID,
 					)
 
-					req, err := http.NewRequest(http.MethodPut, url, nil)
+					req, err := http.NewRequest(http.MethodPut, url, http.NoBody)
 					helpers.FailOnError(b, err)
 
 					// authorize user

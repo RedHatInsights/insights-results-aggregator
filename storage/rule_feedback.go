@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	return nil
 }
 
-func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote bool, updateMessage bool) (string, error) {
+func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote, updateMessage bool) (string, error) {
 	var query string
 
 	switch storage.dbDriverType {

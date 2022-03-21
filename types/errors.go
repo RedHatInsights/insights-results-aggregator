@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ func ConvertDBError(err error, itemID interface{}) error {
 
 	return err
 }
-func regexGetFirstMatchOrLogError(regexStr string, str string) string {
+func regexGetFirstMatchOrLogError(regexStr, str string) string {
 	return regexGetNthMatchOrLogError(regexStr, 1, str)
 }
 
@@ -118,7 +118,7 @@ func regexGetNthMatchOrLogError(regexStr string, nMatch uint, str string) string
 
 	return match
 }
-func regexGetFirstMatch(regexStr string, str string) (string, error) {
+func regexGetFirstMatch(regexStr, str string) (string, error) {
 	return regexGetNthMatch(regexStr, 1, str)
 }
 
