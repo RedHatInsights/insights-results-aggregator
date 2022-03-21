@@ -52,7 +52,7 @@ func readUserID(writer http.ResponseWriter, request *http.Request) (types.UserID
 	}
 
 	userID = strings.TrimSpace(userID)
-	if len(userID) == 0 {
+	if userID == "" {
 		handleServerError(writer, &RouterMissingParamError{ParamName: "user_id"})
 		return "", false
 	}

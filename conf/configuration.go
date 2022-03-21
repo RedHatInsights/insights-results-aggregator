@@ -157,7 +157,7 @@ func getOrganizationAllowlist() mapset.Set {
 		return nil
 	}
 
-	if len(Config.Processing.OrgAllowlistFile) == 0 {
+	if Config.Processing.OrgAllowlistFile == "" {
 		Config.Processing.OrgAllowlistFile = defaultOrgAllowlistFileName
 	}
 
