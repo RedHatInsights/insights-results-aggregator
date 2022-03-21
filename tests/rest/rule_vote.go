@@ -101,12 +101,12 @@ func checkOkStatus(f *frisby.Frisby) {
 	}
 }
 
-func checkOkStatusUserVote(url string, message string) {
+func checkOkStatusUserVote(url, message string) {
 	f := frisby.Create(message).Put(url)
 	checkOkStatus(f)
 }
 
-func checkOkStatusGetVote(url string, message string) {
+func checkOkStatusGetVote(url, message string) {
 	f := frisby.Create(message).Get(url)
 	checkOkStatus(f)
 }
@@ -128,12 +128,12 @@ func checkInvalidUUIDFormat(f *frisby.Frisby) {
 	f.PrintReport()
 }
 
-func checkInvalidUUIDFormatGet(url string, message string) {
+func checkInvalidUUIDFormatGet(url, message string) {
 	f := frisby.Create(message).Get(url)
 	checkInvalidUUIDFormat(f)
 }
 
-func checkInvalidUUIDFormatPut(url string, message string) {
+func checkInvalidUUIDFormatPut(url, message string) {
 	f := frisby.Create(message).Put(url)
 	checkInvalidUUIDFormat(f)
 }
@@ -155,12 +155,12 @@ func checkItemNotFound(f *frisby.Frisby) {
 	f.PrintReport()
 }
 
-func checkItemNotFoundGet(url string, message string) {
+func checkItemNotFoundGet(url, message string) {
 	f := frisby.Create(message).Get(url)
 	checkItemNotFound(f)
 }
 
-func checkItemNotFoundPut(url string, message string) {
+func checkItemNotFoundPut(url, message string) {
 	f := frisby.Create(message).Put(url)
 	checkItemNotFound(f)
 }
@@ -183,7 +183,7 @@ func reproducerForIssue385() {
 }
 
 // test the specified rule like/dislike/reset_vote REST API endpoint by using selected checker function
-func testRuleVoteAPIendpoint(clusters []string, rules []string, errorKeys []string, message string, urlConstructor func(string, string, string, string) string, checker func(string, string)) {
+func testRuleVoteAPIendpoint(clusters, rules, errorKeys []string, message string, urlConstructor func(string, string, string, string) string, checker func(string, string)) {
 	for _, cluster := range clusters {
 		for _, rule := range rules {
 			for _, errorKey := range errorKeys {
@@ -300,7 +300,7 @@ func resetVoteForRule(cluster, rule, errorKey string) {
 	checkOkStatusUserVote(url, "Let's reset voting")
 }
 
-func checkVoteForClusterAndRule(cluster string, rule string, errorKey string, expectedVote int) {
+func checkVoteForClusterAndRule(cluster, rule, errorKey string, expectedVote int) {
 	url := constructURLGetVoteForRule(cluster, rule, errorKey, string(testdata.UserID))
 
 	f := frisby.Create("Read vote for rule").Get(url)
