@@ -117,6 +117,10 @@ host    all             all             127.0.0.1/32            password
 host    all             all             ::1/128                 password
 ```
 
+
+
+### Start DB service
+
 Start the service:
 
 ```
@@ -152,4 +156,71 @@ Mar 22 05:51:59 hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com postmaster[3
 Mar 22 05:51:59 hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com systemd[1]: Started PostgreSQL database server.
 ```
 
+
+## Kafka installation and setup
+
+Install local Kafka in case you need to run benchmarks and performance
+tests against local message broker.
+
+### Package installation
+
+Install Java package:
+
+```
+# dnf install java
+```
+
+Check installation:
+
+```
+$ java -version
+openjdk version "11.0.14.1" 2022-02-08
+OpenJDK Runtime Environment 18.9 (build 11.0.14.1+1)
+OpenJDK 64-Bit Server VM 18.9 (build 11.0.14.1+1, mixed mode, sharing)
+```
+
+Get Kafka package:
+
+```
+$ wget https://dlcdn.apache.org/kafka/3.1.0/kafka_2.12-3.1.0.tgz
+
+--2022-03-22 10:13:01--  https://dlcdn.apache.org/kafka/3.1.0/kafka_2.12-3.1.0.tgz
+Resolving dlcdn.apache.org (dlcdn.apache.org)... 2a04:4e42::644, 151.101.2.132
+Connecting to dlcdn.apache.org (dlcdn.apache.org)|2a04:4e42::644|:443... failed: Network is unreachable.
+Connecting to dlcdn.apache.org (dlcdn.apache.org)|151.101.2.132|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 88217241 (84M) [application/x-gzip]
+Saving to: ‘kafka_2.12-3.1.0.tgz’
+
+kafka_2.12-3.1.0.tg 100%[===================>]  84.13M  93.7MB/s    in 0.9s
+
+2022-03-22 10:13:02 (93.7 MB/s) - ‘kafka_2.12-3.1.0.tgz’ saved [88217241/88217241]
+```
+
+### Start Zookeeper and Kafka
+
+Start the Zookeeper first:
+
+```
+$ cd kafka_2.12-3.1.0
+
+$ bin/zookeeper-server-start.sh config/zookeeper.properties
+
+[2022-03-22 10:34:33,179] INFO Reading configuration from: config/zookeeper.properties (org.apache.zookeeper.server.quorum.QuorumPeerConfig)
+[2022-03-22 10:34:33,179] INFO Reading configuration from: config/zookeeper.properties (org.apache.zookeeper.server.quorum.QuorumPeerConfig)
+[2022-03-22 10:34:33,190] INFO clientPortAddress is 0.0.0.0:2181 (org.apache.zookeeper.server.quorum.QuorumPeerConfig)
+```
+
+Then start Kafka itself:
+
+```
+$ cd kafka_2.12-3.1.0
+
+$ bin/kafka-server-start.sh config/server.properties
+
+[2022-03-22 10:36:47,534] INFO Registered kafka:type=kafka.Log4jController MBean (kafka.utils.Log4jControllerRegistration$)
+[2022-03-22 10:36:48,109] INFO Setting -D jdk.tls.rejectClientInitiatedRenegotiation=true to disable client-initiated TLS renegotiation (org.apache.zookeeper.common.X509Util)
+[2022-03-22 10:36:50,467] INFO [BrokerToControllerChannelManager broker=0 name=alterIsr]: Recorded new controller, from now on will use broker hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092 (id: 0 rack: null) (kafka.server.BrokerToControllerRequestThread)
+[2022-03-22 10:36:50,511] INFO [BrokerToControllerChannelManager broker=0 name=forwarding]: Recorded new controller, from now on will use broker hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092 (id: 0 rack: null) (kafka.server.BrokerToControllerRequestThread)
+```
 
