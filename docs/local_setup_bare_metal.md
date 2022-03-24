@@ -264,9 +264,9 @@ $ ./bootstrap.sh
 
 Please note that sometimes it is needed to fix some "side" errors like
 rebuilding `libyajl` by hands (it is located in `tmp-bootstrap/libyajl`
-subdirectory.
+subdirectory).
 
-Last check if binary has been produced can be made:
+Finally, check if binary has been produced can be made:
 
 ```
 $ ./kcat -V
@@ -389,7 +389,7 @@ CREATE DATABASE
 postgres=# \q
 ```
 
-Check if migration have not happed (yet):
+Check if migration have not happened (yet):
 
 ```
 $ ./insights-results-aggregator migration
