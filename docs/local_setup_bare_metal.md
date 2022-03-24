@@ -162,6 +162,8 @@ Mar 22 05:51:59 hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com systemd[1]: 
 Install local Kafka in case you need to run benchmarks and performance
 tests against local message broker.
 
+
+
 ### Package installation
 
 Install Java package:
@@ -197,6 +199,8 @@ kafka_2.12-3.1.0.tg 100%[===================>]  84.13M  93.7MB/s    in 0.9s
 2022-03-22 10:13:02 (93.7 MB/s) - ‘kafka_2.12-3.1.0.tgz’ saved [88217241/88217241]
 ```
 
+
+
 ### Start Zookeeper and Kafka
 
 Start the Zookeeper first:
@@ -211,7 +215,7 @@ $ bin/zookeeper-server-start.sh config/zookeeper.properties
 [2022-03-22 10:34:33,190] INFO clientPortAddress is 0.0.0.0:2181 (org.apache.zookeeper.server.quorum.QuorumPeerConfig)
 ```
 
-Then start Kafka itself:
+Then start Kafka broker itself:
 
 ```
 $ cd kafka_2.12-3.1.0
@@ -230,6 +234,8 @@ $ bin/kafka-server-start.sh config/server.properties
 
 Install Kafkacat (now named Kcat) in order to be able to publish messages during benchmarking and testing.
 
+
+
 ### Installation
 
 Install all required packages first:
@@ -246,6 +252,8 @@ $ git clone https://github.com/edenhill/kafkacat.git
 $ cd kafkacat
 ```
 
+
+
 ### Build
 
 Try to build Kafkacat/Kcat:
@@ -258,7 +266,7 @@ Please note that sometimes it is needed to fix some "side" errors like
 rebuilding `libyajl` by hands (it is located in `tmp-bootstrap/libyajl`
 subdirectory.
 
-Last check if binary has been produced:
+Last check if binary has been produced can be made:
 
 ```
 $ ./kcat -V
@@ -268,6 +276,8 @@ https://github.com/edenhill/kcat
 Copyright (c) 2014-2021, Magnus Edenhill
 Version 1.7.1-2-g338ae3 (JSON, Avro, Transactions, IncrementalAssign, JSONVerbatim, librdkafka 1.8.2 builtin.features=gzip,snappy,ssl,sasl,regex,lz4,sasl_gssapi,sasl_plain,sasl_scram,plugins,zstd,sasl_oauthbearer)
 ```
+
+
 
 ### Check connection to Kafka
 
@@ -280,5 +290,82 @@ Metadata for all topics (from broker -1: localhost:9092/bootstrap):
  1 brokers:
   broker 0 at hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092 (controller)
  0 topics:
+```
+
+
+## Insights Results Aggregator installation and setup
+
+Now Insights Results Aggregator can be installed and setup.
+
+
+
+### Dependend packages installation
+
+Install Go:
+
+```
+# dnf install go
+```
+
+Check if Go was installed correctly:
+
+```
+$ go version
+
+go version go1.16.15 linux/amd64
+```
+
+
+
+### Insights Results Aggregator setup
+
+Clone the repository:
+
+```
+$ git clone https://github.com/RedHatInsights/insights-results-aggregator.git
+
+Cloning into 'insights-results-aggregator'...
+remote: Enumerating objects: 10761, done.
+remote: Counting objects: 100% (786/786), done.
+remote: Compressing objects: 100% (451/451), done.
+remote: Total 10761 (delta 469), reused 527 (delta 326), pack-reused 9975
+Receiving objects: 100% (10761/10761), 11.32 MiB | 21.07 MiB/s, done.
+Resolving deltas: 100% (7198/7198), done.
+```
+
+Build the service:
+
+```
+$ cd insights-results-aggregator
+$ make
+```
+
+Check if the service has been built correctly:
+
+```
+$ ./insights-results-aggregator --help
+
+Clowder is not enabled, skipping init...
+Clowder is disabled
+
+Command '--help' not found
+
+Aggregator service for insights results
+
+Usage:
+
+    ./insights-results-aggregator [command]
+
+The commands are:
+
+    <EMPTY>             starts aggregator
+    start-service       starts aggregator
+    help                prints help
+    print-help          prints help
+    print-config        prints current configuration set by files & env variables
+    print-env           prints env variables
+    print-version-info  prints version info
+    migration           prints information about migrations (current, latest)
+    migration <version> migrates database to the specified version
 ```
 
