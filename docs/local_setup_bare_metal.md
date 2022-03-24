@@ -369,3 +369,193 @@ The commands are:
     migration <version> migrates database to the specified version
 ```
 
+
+
+### Aggregator database setup
+
+First, empty database needs to be prepared in PostgreSQL:
+
+```
+# psql -U postgres
+
+Password for user postgres:
+psql (13.4)
+Type "help" for help.
+
+
+
+postgres=# create database aggregator;
+CREATE DATABASE
+postgres=# \q
+```
+
+Check if migration have not happed (yet):
+
+```
+$ ./insights-results-aggregator migration
+
+Clowder is not enabled, skipping init...
+Clowder is disabled
+{"level":"info","time":"2022-03-22T07:21:57-04:00","message":"Making connection to data storage, driver=postgresWithHooks datasource=postgresql://postgres:postgres@localhost:5432/aggregator?sslmode=disable"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `CREATE TABLE IF NOT EXISTS migration_info (version INTEGER NOT NULL);` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `CREATE TABLE IF NOT EXISTS migration_info (version INTEGER NOT NULL);` with params `[]` took 2.017535ms\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `INSERT INTO migration_info (version) SELECT 0 WHERE NOT EXISTS (SELECT version FROM migration_info);` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `INSERT INTO migration_info (version) SELECT 0 WHERE NOT EXISTS (SELECT version FROM migration_info);` with params `[]` took 696.923µs\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]` took 528.857µs\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]` took 342.38µs\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `SELECT version FROM migration_info;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:21:57-04:00","message":"query `SELECT version FROM migration_info;` with params `[]` took 133.918µs\n"}
+{"level":"info","time":"2022-03-22T07:21:57-04:00","message":"Current DB version: 0"}
+{"level":"info","time":"2022-03-22T07:21:57-04:00","message":"Maximum available version: 22"}
+{"level":"info","time":"2022-03-22T07:21:57-04:00","message":"Closing connection to data storage"}
+```
+
+Migrate to latest schema:
+
+```
+$ ./insights-results-aggregator migration latest
+
+...
+...
+...
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:18-04:00","message":"query `UPDATE migration_info SET version=$1;` with params `[22]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:18-04:00","message":"query `UPDATE migration_info SET version=$1;` with params `[22]` took 362.156µs\n"}
+{"level":"info","time":"2022-03-22T07:22:18-04:00","message":"Database version is now 22"}
+{"level":"info","time":"2022-03-22T07:22:18-04:00","message":"Closing connection to data storage"}
+```
+
+Check the migration again:
+
+```
+$ ./insights-results-aggregator migration
+
+Clowder is not enabled, skipping init...
+Clowder is disabled
+{"level":"info","time":"2022-03-22T07:22:32-04:00","message":"Making connection to data storage, driver=postgresWithHooks datasource=postgresql://postgres:postgres@localhost:5432/aggregator?sslmode=disable"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `CREATE TABLE IF NOT EXISTS migration_info (version INTEGER NOT NULL);` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `CREATE TABLE IF NOT EXISTS migration_info (version INTEGER NOT NULL);` with params `[]` took 337.499µs\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `INSERT INTO migration_info (version) SELECT 0 WHERE NOT EXISTS (SELECT version FROM migration_info);` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `INSERT INTO migration_info (version) SELECT 0 WHERE NOT EXISTS (SELECT version FROM migration_info);` with params `[]` took 478.954µs\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]` took 276.456µs\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]` took 148.287µs\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `SELECT version FROM migration_info;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-22T07:22:32-04:00","message":"query `SELECT version FROM migration_info;` with params `[]` took 135.369µs\n"}
+{"level":"info","time":"2022-03-22T07:22:32-04:00","message":"Current DB version: 22"}
+{"level":"info","time":"2022-03-22T07:22:32-04:00","message":"Maximum available version: 22"}
+{"level":"info","time":"2022-03-22T07:22:32-04:00","message":"Closing connection to data storage"}
+```
+
+Check the DB content (just for sure):
+
+```
+$ psql -U postgres -h localhost
+
+Password for user postgres:
+psql (13.4)
+Type "help" for help.
+
+
+
+postgres=# \c aggregator
+You are now connected to database "aggregator" as user "postgres".
+aggregator=# \dt
+                       List of relations
+ Schema |                Name                | Type  |  Owner
+--------+------------------------------------+-------+----------
+ public | advisor_ratings                    | table | postgres
+ public | cluster_rule_toggle                | table | postgres
+ public | cluster_rule_user_feedback         | table | postgres
+ public | cluster_user_rule_disable_feedback | table | postgres
+ public | consumer_error                     | table | postgres
+ public | migration_info                     | table | postgres
+ public | recommendation                     | table | postgres
+ public | report                             | table | postgres
+ public | rule_disable                       | table | postgres
+ public | rule_hit                           | table | postgres
+(10 rows)
+```
+
+
+### Run DB writer
+
+Last step is to run the DB writer:
+
+```
+$ ./insights-results-aggregator 
+
+Clowder is not enabled, skipping init...
+Clowder is disabled
+{"level":"info","type":"init","time":"2022-03-24T07:59:27-04:00","message":"Version: 0.5"}
+{"level":"info","type":"init","time":"2022-03-24T07:59:27-04:00","message":"Build time: Tue Mar 22 05:29:03 AM EDT 2022"}
+{"level":"info","type":"init","time":"2022-03-24T07:59:27-04:00","message":"Branch: master"}
+{"level":"info","type":"init","time":"2022-03-24T07:59:27-04:00","message":"Commit: 35270ba93d9a9b91bfbe74b5e74764e8d57b5294"}
+{"level":"info","type":"init","time":"2022-03-24T07:59:27-04:00","message":"Utils version:v1.23.3"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"Making connection to data storage, driver=postgresWithHooks datasource=postgresql://postgres:postgres@localhost:5432/aggregator?sslmode=disable"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]` took 1.484884ms\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT version FROM migration_info;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT version FROM migration_info;` with params `[]` took 215.947µs\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT cluster, last_checked_at FROM report;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT cluster, last_checked_at FROM report;` with params `[]` took 789.466µs\n"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"PrintRuleToggles start"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `\n\tSELECT\n\t\trule_id,\n\t\tcount(*)\n\tFROM\n\t\tcluster_rule_toggle\n\tGROUP BY\n\t\trule_id\n\t` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `\n\tSELECT\n\t\trule_id,\n\t\tcount(*)\n\tFROM\n\t\tcluster_rule_toggle\n\tGROUP BY\n\t\trule_id\n\t` with params `[]` took 1.13213ms\n"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"PrintRuleDisableFeedbacks start"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `\n\tSELECT\n\t\trule_id,\n\t\tcount(*)\n\tFROM\n\t\tcluster_user_rule_disable_feedback\n\tGROUP BY\n\t\trule_id\n\t` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `\n\tSELECT\n\t\trule_id,\n\t\tcount(*)\n\tFROM\n\t\tcluster_user_rule_disable_feedback\n\tGROUP BY\n\t\trule_id\n\t` with params `[]` took 557.768µs\n"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"Closing connection to data storage"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"Making connection to data storage, driver=postgresWithHooks datasource=postgresql://postgres:postgres@localhost:5432/aggregator?sslmode=disable"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"Making connection to data storage, driver=postgresWithHooks datasource=postgresql://postgres:postgres@localhost:5432/aggregator?sslmode=disable"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Initializing new client"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"ClientID is the default of 'sarama', you should consider setting it to something application-specific."}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"ClientID is the default of 'sarama', you should consider setting it to something application-specific."}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/metadata fetching metadata for all topics from broker localhost:9092\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]`\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Connected to broker at localhost:9092 (unregistered)\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT COUNT(*) FROM migration_info;` with params `[]` took 3.053161ms\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT version FROM migration_info;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT version FROM migration_info;` with params `[]` took 177.899µs\n"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"Starting HTTP server at ':8080'"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"Initializing HTTP server at ':8080'"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/brokers registered new broker #0 at hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Successfully initialized new client"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Initializing new client"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"ClientID is the default of 'sarama', you should consider setting it to something application-specific."}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"ClientID is the default of 'sarama', you should consider setting it to something application-specific."}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/metadata fetching metadata for all topics from broker localhost:9092\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Connected to broker at localhost:9092 (unregistered)\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/brokers registered new broker #0 at hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Successfully initialized new client"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Initializing new client"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"ClientID is the default of 'sarama', you should consider setting it to something application-specific."}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"ClientID is the default of 'sarama', you should consider setting it to something application-specific."}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/metadata fetching metadata for all topics from broker localhost:9092\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Connected to broker at localhost:9092 (unregistered)\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/brokers registered new broker #0 at hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Successfully initialized new client"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"waiting for consumer to become ready"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/metadata fetching metadata for [ccx.ocp.results] from broker localhost:9092\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/coordinator requesting coordinator for consumergroup aggregator from localhost:9092\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/coordinator coordinator for consumergroup aggregator is #0 (hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092)\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"ClientID is the default of 'sarama', you should consider setting it to something application-specific."}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"Connected to broker at hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092 (registered as #0)\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/coordinator requesting coordinator for consumergroup aggregator from localhost:9092\n"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"client/coordinator coordinator for consumergroup aggregator is #0 (hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092)\n"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"new session has been setup"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"finished waiting for consumer to become ready"}
+{"level":"info","time":"2022-03-24T07:59:27-04:00","message":"started serving consumer"}
+{"level":"info","package":"sarama","time":"2022-03-24T07:59:27-04:00","message":"consumer/broker/0 added subscription to ccx.ocp.results/0\n"}
+{"level":"info","offset":18,"time":"2022-03-24T07:59:27-04:00","message":"starting messages loop"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT COALESCE(MAX(kafka_offset), 0) FROM report;` with params `[]`\n"}
+{"level":"debug","type":"SQL","time":"2022-03-24T07:59:27-04:00","message":"query `SELECT COALESCE(MAX(kafka_offset), 0) FROM report;` with params `[]` took 1.635786ms\n"}
+```
+
+
+
+## Conclusion
+
+Now
