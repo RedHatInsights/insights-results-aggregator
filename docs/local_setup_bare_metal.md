@@ -558,4 +558,6 @@ Clowder is disabled
 
 ## Conclusion
 
-Now
+Now all services should be configured correctly and it is possible to run
+benchmarks and performance tests against any of such service (especially by
+producing data to Kafka topic consumed by Insights Aggregator DB Writer).
