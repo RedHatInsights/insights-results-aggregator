@@ -224,3 +224,61 @@ $ bin/kafka-server-start.sh config/server.properties
 [2022-03-22 10:36:50,511] INFO [BrokerToControllerChannelManager broker=0 name=forwarding]: Recorded new controller, from now on will use broker hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092 (id: 0 rack: null) (kafka.server.BrokerToControllerRequestThread)
 ```
 
+
+
+## Kafkacat installation and setup
+
+Install Kafkacat (now named Kcat) in order to be able to publish messages during benchmarking and testing.
+
+### Installation
+
+Install all required packages first:
+
+```
+# dnf install gcc-g++ cmake
+# dnf install cyrus-sasl-devel zlib-devel libcurl-devel krb5-devel
+```
+
+Retrieve Kafkacat/Kcat sources:
+
+```
+$ git clone https://github.com/edenhill/kafkacat.git
+$ cd kafkacat
+```
+
+### Build
+
+Try to build Kafkacat/Kcat:
+
+```
+$ ./bootstrap.sh
+```
+
+Please note that sometimes it is needed to fix some "side" errors like
+rebuilding `libyajl` by hands (it is located in `tmp-bootstrap/libyajl`
+subdirectory.
+
+Last check if binary has been produced:
+
+```
+$ ./kcat -V
+
+kcat - Apache Kafka producer and consumer tool
+https://github.com/edenhill/kcat
+Copyright (c) 2014-2021, Magnus Edenhill
+Version 1.7.1-2-g338ae3 (JSON, Avro, Transactions, IncrementalAssign, JSONVerbatim, librdkafka 1.8.2 builtin.features=gzip,snappy,ssl,sasl,regex,lz4,sasl_gssapi,sasl_plain,sasl_scram,plugins,zstd,sasl_oauthbearer)
+```
+
+### Check connection to Kafka
+
+Now check if Kafkacat/kcat works as expected. We can use local broker that's been started already:
+
+```
+$ ./kcat -L -b localhost:9092
+
+Metadata for all topics (from broker -1: localhost:9092/bootstrap):
+ 1 brokers:
+  broker 0 at hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com:9092 (controller)
+ 0 topics:
+```
+
