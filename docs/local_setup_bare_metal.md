@@ -266,7 +266,7 @@ Please note that sometimes it is needed to fix some "side" errors like
 rebuilding `libyajl` by hands (it is located in `tmp-bootstrap/libyajl`
 subdirectory).
 
-Finally, check if binary has been produced can be made:
+Finally, check if binary has been produced:
 
 ```
 $ ./kcat -V
