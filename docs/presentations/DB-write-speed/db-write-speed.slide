@@ -9,21 +9,44 @@ Red Hat, Inc.
 
 
 
-## Introduction
+## Problem description
 
-TBD
-
-
-
-## Architecture
-
-.image architecture1.png
+- Alerts: Insights databases have depleted RDS burst balances: ccx-notification-prod, ...
+- Consuming & writting results into DB **slow** after service outage
 
 
 
-## Critical path
+## Kafka lag on production after service outage
+
+- example from real outage that lasted just 30 minutes
+- 5 hours(!) to fully recover
+
+.image kafka1.png _ 1020
+
+
+
+## Burst mode versus "economy" mode
+
+- burst mode supported by AWS
+- but it is not enough
+
+.image kafka2.png _ 1020
+
+
+
+## External data pipeline architecture
+
+.image architecture1.png _ 800
+
+
+
+## Critical bottleneck
 
 .image architecture2.png
+
+
+
+## Investigation
 
 
 
@@ -31,9 +54,9 @@ TBD
 
 - only relevant tables are discussed
 
-- `report`
-- `recommendation`
-- `rule_hit`
+- table `report`
+- table `recommendation`
+- table `rule_hit`
 
 
 
@@ -119,6 +142,7 @@ template_data  JSON taken from report
 - New 'real' machine with Fedora 36 Server installed
 - PostgreSQL, Go, Kafka, Kafkacat (Kcat) + relevant tools installed
 - New database `aggregator` created in PostgreSQL
+- Insights Results Aggregator built (and tested by UT)
 - Schema version migrated to `latest` version
 
 
