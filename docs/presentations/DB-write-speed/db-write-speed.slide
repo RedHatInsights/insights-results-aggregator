@@ -163,22 +163,81 @@ template_data  JSON taken from report
 
 ## Low level stuff
 
+- Database cleanup
+
+```
+delete from report;
+delete from recommendation;
+delete from rule_hit;
+```
+
+- Check DB cleanup + check #reports after test
+
+```
+select count(*) from report;
+select count(*) from recommendation;
+select count(*) from rule_hit;
+```
+
+
+
+## Low level stuff (cont.)
+
+- Kafka lag check
+   - has to be 10000 or 100000 before benchmark
+   - has to be 0 after benchmark
+
+```
+
+$ bin/kafka-run-class.sh kafka.admin.ConsumerGroupCommand --group aggregator --bootstrap-server localhost:9092 --describe
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                 HOST                             CLIENT-ID
+aggregator      ccx.ocp.results 0          100000          100000          0               -               -               -
+
+
+$ bin/kafka-run-class.sh kafka.admin.ConsumerGroupCommand --group aggregator --bootstrap-server localhost:9092 --describe
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+aggregator      ccx.ocp.results 0          100000          200000          100000          -               -               -
+
+
+$ bin/kafka-run-class.sh kafka.admin.ConsumerGroupCommand --group aggregator --bootstrap-server localhost:9092 --describe
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+aggregator      ccx.ocp.results 0          200000          200000          0               -               -               -
+```
+
+
 
 ## First measures and comparation
 
+- first 5000 messages written with speed 27 messages per second
+- then DB is cleaned
+- first 100000 messages written with speed just 14 messages per second
+    - 7 rule hits per cluster on average
+    - varies from 0 hits to 12 hits
+
 .image first_report.png
 
+- &rarr; filled-in DB slows down the write process
+    - expected
+    - but is there any space for improvement?
 
 
 ## Benchmark results
 
-- measured results
+- not the benchmark is run in steps
+    - 10000 messages in each step
+    - without DB cleanup between steps
+    - so DB is (slowly) being filled-in
 
 .image benchmarks.png
 
 
 
-## Write duration for 10000 new unique reports
+## Write duration for 100000 new unique reports
+
+- in steps with 10000 blocks
 
 .image write_duration.png
 
@@ -186,7 +245,7 @@ template_data  JSON taken from report
 
 ## Write speed
 
-- measured for 10000 new unique reports
+- measured for 100000 new unique reports
 
 .image write_speed_1.png
 
@@ -194,9 +253,9 @@ template_data  JSON taken from report
 
 ## Write speed
 
-- measured for 10000 new unique reports
+- measured for 100000 new unique reports
 
-- approximation
+- approximation added
 
 .image write_speed_2.png
 
