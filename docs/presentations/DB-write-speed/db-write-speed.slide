@@ -14,6 +14,19 @@ Red Hat, Inc.
 TBD
 
 
+
+## Architecture
+
+.image architecture1.png
+
+
+
+## Critical path
+
+.image architecture2.png
+
+
+
 ## Database schema
 
 - only relevant tables are discussed
@@ -100,6 +113,31 @@ error_key      NODES_MINIMUM_REQUIREMENTS_NOT_MET
 template_data  JSON taken from report
 ```
 
+
+## Benchmarks setup
+
+- New 'real' machine with Fedora 36 Server installed
+- PostgreSQL, Go, Kafka, Kafkacat (Kcat) + relevant tools installed
+- New database `aggregator` created in PostgreSQL
+- Schema version migrated to `latest` version
+
+
+
+## Benchmarks steps
+
+- clean up DB completely
+- stop Aggregator
+- fill-in input Kafka topic with X records (10000 for example)
+- start timer
+- start Aggregator
+- wait for all messages to be finished
+- stop Aggregator
+- check if all messages from Kafka topic has been consumed
+- stop timer + measure time
+
+
+
+## Low level stuff
 
 
 ## First measures and comparation
