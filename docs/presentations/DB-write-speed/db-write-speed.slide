@@ -18,6 +18,89 @@ TBD
 
 - only relevant tables are discussed
 
+- `report`
+- `recommendation`
+- `rule_hit`
+
+
+
+## Table report
+
+- contains just one record (latest report) for given `org_id` + `cluster name`
+
+```
+                  Table "public.report"
+     Column      |            Type             |Nullable | Default 
+-----------------+-----------------------------+---------+---------
+ org_id          | integer                     |not null | 
+ cluster         | character varying           |not null | 
+ report          | character varying           |not null | 
+ reported_at     | timestamp without time zone |         | 
+ last_checked_at | timestamp without time zone |         | 
+ kafka_offset    | bigint                      |not null | 0
+ gathered_at     | timestamp without time zone |         | 
+Indexes:
+    "report_pkey" PRIMARY KEY, btree (org_id, cluster)
+    "report_cluster_key" UNIQUE CONSTRAINT, btree (cluster)
+    "report_kafka_offset_btree_idx" btree (kafka_offset)
+Referenced by:
+    TABLE "cluster_rule_user_feedback"
+          CONSTRAINT "cluster_rule_user_feedback_cluster_id_fkey"
+          FOREIGN KEY (cluster_id)
+          REFERENCES report(cluster) ON DELETE CASCADE
+```
+
+
+
+## Table recommendation
+
+- contains more records for given `org_id` + `cluster_id`
+- depends on number of rule_hits for a cluster
+
+```
+             Table "public.recommendation"
+   Column   |            Type             | Nullable |
+------------+-----------------------------+----------+
+ org_id     | integer                     | not null |
+ cluster_id | character varying           | not null |
+ rule_fqdn  | text                        | not null |
+ error_key  | character varying           | not null |
+ rule_id    | character varying           | not null |
+ created_at | timestamp without time zone |          |
+Indexes:
+    "recommendation_pk" PRIMARY KEY, btree (org_id, cluster_id, rule_fqdn, error_key)
+
+rule_fqdn      ccx_rules_ocp.external.rules.nodes_requirements_check
+error_key      NODES_MINIMUM_REQUIREMENTS_NOT_MET
+rule_id        ccx_rules_ocp.external.rules.nodes_requirements_check|NODES_MINIMUM_REQUIREMENTS_NOT_MET
+```
+
+
+
+## Table rule_hit
+
+- contains more records for given `org_id` + `cluster_id`
+- depends on number of rule_hits for a cluster
+
+```
+                Table "public.rule_hit"
+    Column     |       Type        |Nullable |
+---------------+-------------------+---------+
+ org_id        | integer           |not null |
+ cluster_id    | character varying |not null |
+ rule_fqdn     | character varying |not null |
+ error_key     | character varying |not null |
+ template_data | character varying |not null |
+Indexes:
+    "rule_hit_pkey" PRIMARY KEY, btree (cluster_id, org_id, rule_fqdn, error_key)
+
+
+rule_fqdn      ccx_rules_ocp.external.rules.nodes_requirements_check.report
+error_key      NODES_MINIMUM_REQUIREMENTS_NOT_MET
+template_data  JSON taken from report
+```
+
+
 
 ## First measures and comparation
 
@@ -54,6 +137,14 @@ TBD
 - approximation
 
 .image write_speed_2.png
+
+
+
+## Possible improvements
+
+- vacuuming
+- cleanup old records
+- (minor) get rid of `.report` postfix in all tables
 
 
 
