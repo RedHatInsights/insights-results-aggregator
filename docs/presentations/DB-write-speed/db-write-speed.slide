@@ -1,0 +1,54 @@
+# "RDS burst balances are depleted"
+DB write speed in External data pipeline database
+28 Mar 2022
+Tags: golang, go, rds, database, burst balance
+
+Pavel Tišnovský
+Red Hat, Inc.
+<ptisnovs@redhat.com>
+
+
+
+## Introduction
+
+TBD
+
+
+## Database schema
+
+- only relevant tables are discussed
+
+
+## Benchmark results
+
+- measured results
+
+
+
+## Write duration for 10000 new unique reports
+
+.image write_duration.png
+
+
+
+## Write speed
+
+- measured for 10000 new unique reports
+
+.image write_speed_1.png
+
+
+
+## Write speed
+
+- measured for 10000 new unique reports
+
+- approximation
+
+.image write_speed_2.png
+
+
+
+## Conclusion
+
+TBD
