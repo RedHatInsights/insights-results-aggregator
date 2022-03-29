@@ -68,7 +68,7 @@ Red Hat, Inc.
 
 
 
-## Some numbers
+## Processing throughput
 
 - 3633 events per hour
 - 250 kB per event (rule result)
@@ -79,11 +79,13 @@ Red Hat, Inc.
 
 ## Investigation
 
+So what's wrong?
+
 
 
 ## Database schema
 
-- only relevant tables are discussed
+- (only relevant tables are discussed)
 
 - table `report`
 - table `recommendation`
@@ -122,7 +124,7 @@ Referenced by:
 ## Table recommendation
 
 - contains more records for given `org_id` + `cluster_id`
-- depends on number of rule_hits for a cluster
+- depends on number of actual rule hits for a cluster
 
 ```
              Table "public.recommendation"
@@ -147,7 +149,7 @@ rule_id        ccx_rules_ocp.external.rules.nodes_requirements_check|NODES_MINIM
 ## Table rule_hit
 
 - contains more records for given `org_id` + `cluster_id`
-- depends on number of rule_hits for a cluster
+- depends on number of actual rule hits for a cluster
 
 ```
                 Table "public.rule_hit"
@@ -192,6 +194,12 @@ template_data  JSON taken from report
 
 
 
+## Breaking things apart
+
+.image architecture2.gif _ 800
+
+
+
 ## Low level stuff
 
 - Database cleanup
@@ -215,7 +223,7 @@ select count(*) from rule_hit;
 ## Low level stuff (cont.)
 
 - Kafka lag check
-   - has to be 10000 or 100000 before benchmark
+   - has to be 10,000 or 100,000 before benchmark
    - has to be 0 after benchmark
 
 ```
@@ -242,9 +250,9 @@ aggregator      ccx.ocp.results 0          200000          200000          0    
 
 ## First measures and comparison
 
-- first 5000 messages written with speed 27 messages per second
+- first 5,000 messages written with speed 27 messages per second
 - then DB is cleaned
-- first 100000 messages written with speed just 14 messages per second
+- first 100,000 messages written with speed just 14 messages per second
     - 7 rule hits per cluster on average
     - varies from 0 hits to 12 hits
 
@@ -258,7 +266,7 @@ aggregator      ccx.ocp.results 0          200000          200000          0    
 ## Benchmark results
 
 - not the benchmark is run in steps
-    - 10000 messages in each step
+    - 10,000 messages in each step
     - without DB cleanup between steps
     - so DB is (slowly) being filled-in
 
@@ -266,9 +274,9 @@ aggregator      ccx.ocp.results 0          200000          200000          0    
 
 
 
-## Write duration for 100000 new unique reports
+## Write duration for 110,000 new unique reports
 
-- in steps with 10000 blocks
+- in steps with 10,000 blocks
 
 .image write_duration.png
 
@@ -276,7 +284,7 @@ aggregator      ccx.ocp.results 0          200000          200000          0    
 
 ## Write speed
 
-- measured for 100000 new unique reports
+- measured for 100,000 new unique reports
 
 .image write_speed_1.png
 
@@ -284,7 +292,7 @@ aggregator      ccx.ocp.results 0          200000          200000          0    
 
 ## Write speed
 
-- measured for 100000 new unique reports
+- measured for 100,000 new unique reports
 
 - approximation added
 
@@ -429,7 +437,7 @@ INSERT INTO recommendation table:  0 ms
 DELETE FROM rule_hit table:        0 ms
 INSERT INTO rule_hit table:        0 ms
 ---------------------------------------
-                                  45 ms (22 wr/second)
+                                  46 ms (21 wr/second)
 ```
 
 
@@ -473,7 +481,7 @@ INSERT INTO rule_hit table:       93 ms (10*9.363 ms)
 - proper index for `recommendation` table
 - (minor) get rid of `.report` postfix in all tables
 - make sure we use Amazon EBS SSD-based storage type
-- make sure that Notification DB don't affects Aggregator DB
+- make sure that Notification DB does not affect Aggregator DB
 - `INSERT OR REPLACE INTO` (upsert) not needed, simple `INSERT` is enough
 - multiple INSERT statements into one statement (?)
 - horizontally or verticaly scaled database (needs some investigation)
