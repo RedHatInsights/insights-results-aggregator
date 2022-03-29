@@ -12,7 +12,7 @@ Red Hat, Inc.
 ## Problem description
 
 - Alerts: Insights databases have depleted RDS burst balances: ccx-notification-prod, ...
-- Consuming & writting results into DB **slow** after service outage
+- Consuming & writting results into DB is **slow** after service outage
 
 
 
@@ -58,13 +58,13 @@ Red Hat, Inc.
 
 ## External data pipeline architecture
 
-.image architecture1.png _ 800
+.image architecture1.gif _ 800
 
 
 
 ## Critical bottleneck
 
-.image architecture2.png
+.image architecture2.gif _ 800
 
 
 
