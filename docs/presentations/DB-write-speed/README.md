@@ -3,7 +3,6 @@
 This assumes that you have go compiler and git installed and on $PATH of your system.
 
 ```
-go get golang.org/x/tools/cmd/present
 go run golang.org/x/tools/cmd/present
 ```
 
