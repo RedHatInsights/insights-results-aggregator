@@ -45,7 +45,7 @@ Red Hat, Inc.
 - Burst/baseline performances
     - burst performance is constant
     - baseline performance increases linearly with volume size
-    - for volumes higher that 1TB, burst performance is irrelevant
+    - for volumes higher than 1TB, burst performance is irrelevant
 
 
 
