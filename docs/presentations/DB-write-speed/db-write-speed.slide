@@ -27,10 +27,32 @@ Red Hat, Inc.
 
 ## Burst mode versus "economy" mode
 
-- burst mode supported by AWS
+- burst mode supported by AWS (so called gp2 volumes)
 - but it is not enough
 
 .image kafka2.png _ 1020
+
+
+
+## Burst mode
+
+- gp2 volumes
+- 5.4 million I/O credits at 3000 IOPS
+- 3000 IOPS for 30 minutes
+- once the burst is exhausted, it delivers only 100 IOPS
+- replenished at the rate 3 IOPS per GiB per second
+- during downtime, burst credit can be replenished
+- Burst/baseline performances
+    - burst performance is constant
+    - baseline performance increases linearly with volume size
+    - for volumes higher that 1TB, burst performance is irrelevant
+
+
+
+## Burst mode and external data pipeline
+
+- nice and important to have!
+- OTOH we are kicked by overall DB performance too
 
 
 
@@ -43,6 +65,15 @@ Red Hat, Inc.
 ## Critical bottleneck
 
 .image architecture2.png
+
+
+
+## Some numbers
+
+- 3633 events per hour
+- 250 kB per event (rule result)
+- 768 MB per hour
+- 6.4 TB per year
 
 
 
@@ -209,7 +240,7 @@ aggregator      ccx.ocp.results 0          200000          200000          0    
 
 
 
-## First measures and comparation
+## First measures and comparison
 
 - first 5000 messages written with speed 27 messages per second
 - then DB is cleaned
@@ -261,14 +292,202 @@ aggregator      ccx.ocp.results 0          200000          200000          0    
 
 
 
+## DB operations during writing new reports
+
+```
+INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7);
+```
+
+- performed once per message (report)
+
+```
+DELETE FROM recommendation WHERE cluster_id = $1;
+INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at) VALUES ...
+```
+
+- `INSERT` performed several times, once per rule hit
+
+```
+DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;
+INSERT OR REPLACE INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
+                       VALUES ($1, $2, $3, $4, $5);
+```
+
+- `INSERT` performed several times, once per rule hit
+
+
+
+## Usage of EXPLAIN and EXPLAIN ANALYSE statements
+
+- (for semi-full database)
+
+
+
+## UPSERT into report table
+
+```
+EXPLAIN ANALYZE INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
+VALUES (1, 123456, '', '2020-01-01', '2020-01-01', 0, '2020-01-01');
+
+                                            QUERY PLAN                                            
+
+--------------------------------------------------------------------------------------------------
+ Insert on report  (cost=0.00..0.01 rows=1 width=100) (actual time=25.302..25.303 rows=0 loops=1)
+   ->  Result  (cost=0.00..0.01 rows=1 width=100) (actual time=0.003..0.004 rows=1 loops=1)
+ Planning Time: 0.105 ms
+ Execution Time: 35.888 ms
+(4 rows)
+```
+
+
+
+## UPSERT into recommendation table
+
+```
+EXPLAIN ANALYZE DELETE FROM recommendation WHERE cluster_id = '94288c61-b7db-4d23-9f81-ee88d376970d';
+
+                                                   QUERY PLAN                                                    
+-----------------------------------------------------------------------------------------------------------------
+ Delete on recommendation  (cost=0.00..2794.57 rows=9 width=6) (actual time=9.539..9.542 rows=0 loops=1)
+   ->  Seq Scan on recommendation  (cost=0.00..2794.57 rows=9 width=6) (actual time=0.015..9.401 rows=5 loops=1)
+         Filter: ((cluster_id)::text = '94288c61-b7db-4d23-9f81-ee88d376970d'::text)
+         Rows Removed by Filter: 69995
+ Planning Time: 0.143 ms
+ Execution Time: 9.603 ms
+(6 rows)
+```
+
+- seq scan?!?!?!
+
+
+
+## UPSERT into recommendation table (cont.)
+
+```
+EXPLAIN ANALYZE INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at) VALUES ();
+
+                                               QUERY PLAN                                               
+--------------------------------------------------------------------------------------------------------
+ Insert on recommendation  (cost=0.00..0.01 rows=1 width=140) (actual time=9.934..9.937 rows=0 loops=1)
+   ->  Result  (cost=0.00..0.01 rows=1 width=140) (actual time=0.003..0.008 rows=1 loops=1)
+ Planning Time: 0.038 ms
+ Execution Time: 9.983 ms
+(4 rows)
+```
+
+- performed several times (once per rule hit)!
+
+
+
+## UPSERT into rule_hit table
+
+```
+EXPLAIN ANALYZE DELETE FROM rule_hit WHERE org_id = 4403030 AND cluster_id = '94288c61-b7db-4d23-9f81-ee88d376970d';
+
+                                                          QUERY PLAN                                               
+           
+-------------------------------------------------------------------------------------------------------------------
+-----------
+ Delete on rule_hit  (cost=0.42..8.44 rows=1 width=6) (actual time=0.035..0.037 rows=0 loops=1)
+   ->  Index Scan using rule_hit_pkey on rule_hit  (cost=0.42..8.44 rows=1 width=6) (actual time=0.033..0.034 rows=
+0 loops=1)
+         Index Cond: (((cluster_id)::text = '94288c61-b7db-4d23-9f81-ee88d376970d'::text) AND (org_id = 4403030))
+ Planning Time: 0.132 ms
+ Execution Time: 0.079 ms
+(5 rows)
+```
+
+
+
+## UPSERT into rule_hit table (cont.)
+
+```
+EXPLAIN ANALYZE INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
+                       VALUES (...);
+                                            QUERY PLAN                                            
+--------------------------------------------------------------------------------------------------
+ Insert on rule_hit  (cost=0.00..0.01 rows=1 width=132) (actual time=9.333..9.335 rows=0 loops=1)
+   ->  Result  (cost=0.00..0.01 rows=1 width=132) (actual time=0.003..0.004 rows=1 loops=1)
+ Planning Time: 0.064 ms
+ Execution Time: 9.363 ms
+(4 rows)
+```
+
+- performed several times (once per rule hit)!
+
+
+
+## Some scenarios
+
+- report with 0 rule hits (pretty common)
+
+```
+UPSERT INTO report table:         36 ms
+DELETE FROM recommendation table: 10 ms
+INSERT INTO recommendation table:  0 ms
+DELETE FROM rule_hit table:        0 ms
+INSERT INTO rule_hit table:        0 ms
+---------------------------------------
+                                  45 ms (22 wr/second)
+```
+
+
+
+## Some scenarios (cont.)
+
+- report with 3 rule hits (middle ground)
+
+```
+UPSERT INTO report table:         36 ms
+DELETE FROM recommendation table: 10 ms
+INSERT INTO recommendation table: 30 ms (3*9.983 ms)
+DELETE FROM rule_hit table:        0 ms
+INSERT INTO rule_hit table:       28 ms (3*9.363 ms)
+---------------------------------------
+                                 104 ms (9.6 wr/second)
+```
+
+
+
+## Some scenarios (cont.)
+
+- report with 10 rule hits (upper 'practical' limit)
+
+```
+UPSERT INTO report table:         36 ms
+DELETE FROM recommendation table: 10 ms
+INSERT INTO recommendation table: 99 ms (10*9.983 ms)
+DELETE FROM rule_hit table:        0 ms
+INSERT INTO rule_hit table:       93 ms (10*9.363 ms)
+---------------------------------------
+                                 238 ms (4.2 wr/second)
+```
+
+
+
 ## Possible improvements
 
 - vacuuming
 - cleanup old records
+- proper index for `recommendation` table
 - (minor) get rid of `.report` postfix in all tables
+- make sure we use Amazon EBS SSD-based storage type
+- make sure that Notification DB don't affects Aggregator DB
+- `INSERT OR REPLACE INTO` (upsert) not needed, simple `INSERT` is enough
+- multiple INSERT statements into one statement (?)
+- horizontally or verticaly scaled database (needs some investigation)
 
 
 
 ## Conclusion
 
-TBD
+.image magic.jpg
+
+
+
+## Links
+
+- https://aws.amazon.com/blogs/database/understanding-burst-vs-baseline-performance-with-amazon-rds-and-gp2/
+- https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html#EBSVolumeTypes_piops
+- https://redhatinsights.github.io/ccx-notification-service/demos/db-indexes/db-indexes.html
