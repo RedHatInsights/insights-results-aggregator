@@ -1,0 +1,16 @@
+Input messages  Reports   Recommendation  Rule hit   Time to write  Write speed
+Kafka           DB        DB              DB
+
+ 10000          10000         70000         70000      4m 27s      37 wr/sec
+ 20000          20000        140000        140000      5m 32s      30 wr/sec
+ 30000          30000        210000        210000      6m 35s      25 wr/sec
+ 40000          40000        280000        280000      7m 58s      20 wr/sec
+ 50000          50000        350000        350000      9m 22s      17 wr/sec
+ 60000          60000        420000        420000     10m 57s      15 wr/sec
+ 70000          70000        490000        490000     12m 46s      13 wr/sec
+ 80000          80000        560000        560000     14m 42s      11 wr/sec
+ 90000          90000        630000        630000     15m 26s      10 wr/sec
+100000         100000        700000        700000     17m 28s       9 wr/sec
+110000         100000        770000        770000     19m 20s       8 wr/sec
+after delete all records from DB
+ 10000          10000         70000         70000      3m 45s      44 wr/sec
