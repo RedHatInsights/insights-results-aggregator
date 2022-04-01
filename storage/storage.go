@@ -776,10 +776,12 @@ func (storage DBStorage) getReportUpsertQuery() string {
 	`
 }
 
-func (storage DBStorage) getRuleHitUpsertQuery() string {
+// getRuleHitInsertStatement method prepares DB statement to be used to write
+// rule FQDN + rule error key into rule_hit table for given cluster_id
+func (storage DBStorage) getRuleHitInsertStatement() string {
 	if storage.dbDriverType == types.DBDriverSQLite3 {
 		return `
-			INSERT OR REPLACE INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
+			INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
 			VALUES ($1, $2, $3, $4, $5)
 		`
 	}
@@ -787,8 +789,6 @@ func (storage DBStorage) getRuleHitUpsertQuery() string {
 	return `
 		INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
 		VALUES ($1, $2, $3, $4, $5)
-		ON CONFLICT (org_id, cluster_id, rule_fqdn, error_key)
-		DO UPDATE SET template_data = $4
 	`
 }
 
@@ -806,8 +806,8 @@ func (storage DBStorage) updateReport(
 	// Get the UPSERT query for writing a report into the database.
 	reportUpsertQuery := storage.getReportUpsertQuery()
 
-	// Get the UPSERT query for writing a rule into the database.
-	ruleUpsertQuery := storage.getRuleHitUpsertQuery()
+	// Get the INSERT statement for writing a rule into the database.
+	ruleInsertStatement := storage.getRuleHitInsertStatement()
 
 	deleteQuery := "DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
 	_, err := tx.Exec(deleteQuery, orgID, clusterName)
@@ -816,12 +816,15 @@ func (storage DBStorage) updateReport(
 		return err
 	}
 
-	// Perform the report upsert.
+	// Perform the report insert.
 
 	for _, rule := range rules {
-		_, err = tx.Exec(ruleUpsertQuery, orgID, clusterName, rule.Module, rule.ErrorKey, string(rule.TemplateData))
+		// all older rule hits has been deleted for given cluster so it is
+		// possible to just insert new hits w/o the need to update on
+		// conflict
+		_, err = tx.Exec(ruleInsertStatement, orgID, clusterName, rule.Module, rule.ErrorKey, string(rule.TemplateData))
 		if err != nil {
-			log.Err(err).Msgf("Unable to upsert the cluster report rules (org: %v, cluster: %v, rule: %v|%v)",
+			log.Err(err).Msgf("Unable to insert the cluster report rules (org: %v, cluster: %v, rule: %v|%v)",
 				orgID, clusterName, rule.Module, rule.ErrorKey,
 			)
 			return err
