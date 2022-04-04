@@ -1000,8 +1000,11 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 		var deleted int64 = 0
 		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
+			// it is needed to use `org_id = $1` condition there
+			// because it allows DB to use proper btree indexing
+			// and not slow sequential scan
 			result, err := tx.Exec(
-				"DELETE FROM recommendation WHERE cluster_id = $1;", clusterName)
+				"DELETE FROM recommendation WHERE org_id = $1 AND cluster_id = $2;", orgID, clusterName)
 			err = types.ConvertDBError(err, []interface{}{clusterName})
 			if err != nil {
 				log.Error().Err(err).Msgf("Unable to delete the existing recommendations for %s", clusterName)
