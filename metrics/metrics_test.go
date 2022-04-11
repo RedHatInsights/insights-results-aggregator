@@ -60,15 +60,6 @@ func getCounterValue(counter prometheus.Counter) float64 {
 	return pb.GetCounter().GetValue()
 }
 
-func getCounterVecValue(counterVec *prometheus.CounterVec, labels map[string]string) float64 {
-	counter, err := counterVec.GetMetricWith(labels)
-	if err != nil {
-		panic(fmt.Sprintf("Unable to get counter from counterVec %v", err))
-	}
-
-	return getCounterValue(counter)
-}
-
 // TestConsumedMessagesMetric tests that consumed messages metric works
 func TestConsumedMessagesMetric(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
