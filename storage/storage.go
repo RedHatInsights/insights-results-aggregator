@@ -1126,14 +1126,24 @@ func (storage DBStorage) ReadClusterListRecommendations(
 		return clusterMap, nil
 	}
 
+	// we have to select from report table primarily because we need to show last_checked_at even if there
+	// are no rule hits (which means there are no rows in recommendation table for that cluster)
+
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
 	query := `
 	SELECT
-		cluster_id, rule_id, created_at
+		rep.cluster, rep.last_checked_at, COALESCE(rec.rule_id, '')
 	FROM
-		recommendation
-	WHERE org_id = $1 AND cluster_id IN (%v)`
+		report rep
+	LEFT JOIN
+		recommendation rec
+	ON
+		rep.org_id = rec.org_id AND
+		rep.cluster = rec.cluster_id
+	WHERE
+		rep.org_id = $1 AND rep.cluster IN (%v)
+	`
 	// #nosec G201
 	query = fmt.Sprintf(query, inClauseFromSlice(clusterList))
 
@@ -1155,8 +1165,8 @@ func (storage DBStorage) ReadClusterListRecommendations(
 			// postgres is able to auto scan created_at into time.Time
 			err := rows.Scan(
 				&clusterID,
-				&ruleID,
 				&timestamp,
+				&ruleID,
 			)
 			if err != nil {
 				log.Error().Err(err).Msg("problem reading one recommendation")
@@ -1166,8 +1176,8 @@ func (storage DBStorage) ReadClusterListRecommendations(
 			// sqlite cannot auto scan into time.Time, needs manual parse
 			err := rows.Scan(
 				&clusterID,
-				&ruleID,
 				&timestampStr,
+				&ruleID,
 			)
 			if err != nil {
 				log.Error().Err(err).Msg("problem reading one recommendation")

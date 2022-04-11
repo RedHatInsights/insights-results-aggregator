@@ -1343,17 +1343,21 @@ func TestDBStorageReadClusterListRecommendationsNoRecommendations(t *testing.T) 
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	err := mockStorage.WriteRecommendationsForCluster(
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, []ctypes.ReportItem{},
+		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, 0,
+	)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteRecommendationsForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty, RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
-	expect := make(ctypes.ClusterRecommendationMap)
-
 	res, err := mockStorage.ReadClusterListRecommendations([]string{string(testdata.ClusterName)}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, expect, res)
+	assert.True(t, res[testdata.ClusterName].CreatedAt.Equal(testdata.LastCheckedAt))
 }
 
 // TestDBStorageReadClusterListRecommendationsDifferentCluster checks that when no recommendations
@@ -1391,7 +1395,13 @@ func TestDBStorageReadClusterListRecommendationsGet1Cluster(t *testing.T) {
 
 		clusterList[i] = string(randomClusterID)
 
-		err := mockStorage.WriteRecommendationsForCluster(
+		err := mockStorage.WriteReportForCluster(
+			testdata.OrgID, randomClusterID, testdata.Report3Rules, testdata.Report3RulesParsed,
+			testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, 0,
+		)
+		helpers.FailOnError(t, err)
+
+		err = mockStorage.WriteRecommendationsForCluster(
 			testdata.OrgID, randomClusterID, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 		)
 		helpers.FailOnError(t, err)
@@ -1426,7 +1436,13 @@ func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
 
 		clusterList[i] = string(randomClusterID)
 
-		err := mockStorage.WriteRecommendationsForCluster(
+		err := mockStorage.WriteReportForCluster(
+			testdata.OrgID, randomClusterID, testdata.Report3Rules, testdata.Report3RulesParsed,
+			testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, 0,
+		)
+		helpers.FailOnError(t, err)
+
+		err = mockStorage.WriteRecommendationsForCluster(
 			testdata.OrgID, randomClusterID, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 		)
 		helpers.FailOnError(t, err)
