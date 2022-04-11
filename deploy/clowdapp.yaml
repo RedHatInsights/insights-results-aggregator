@@ -209,10 +209,10 @@ objects:
               resources:
                 requests:
                   cpu: 200m
-                  memory: 800Mi
+                  memory: 1000Mi
                 limits:
                   cpu: 400m
-                  memory: 1700Mi
+                  memory: 3000Mi
               command:
                 - ./insights-results-aggregator
                 - migration
