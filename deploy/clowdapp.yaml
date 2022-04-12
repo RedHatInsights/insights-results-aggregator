@@ -207,12 +207,12 @@ objects:
                       key: aws_secret_access_key
                       optional: true
               resources:
-                requests:
-                  cpu: 200m
-                  memory: 1000Mi
                 limits:
-                  cpu: 400m
-                  memory: 3000Mi
+                  cpu: ${DB_WRITER_CPU_LIMIT}
+                  memory: ${DB_WRITER_MEMORY_LIMIT}
+                requests:
+                  cpu: ${DB_WRITER_CPU_REQUEST}
+                  memory: ${DB_WRITER_MEMORY_REQUEST}
               command:
                 - ./insights-results-aggregator
                 - migration
@@ -322,12 +322,12 @@ objects:
             successThreshold: 1
             timeoutSeconds: 60
           resources:
-            requests:
-              cpu: 100m
-              memory: 600Mi
             limits:
-              cpu: 500m
-              memory: 1200Mi
+              cpu: ${DB_WRITER_CPU_LIMIT}
+              memory: ${DB_WRITER_MEMORY_LIMIT}
+            requests:
+              cpu: ${DB_WRITER_CPU_REQUEST}
+              memory: ${DB_WRITER_MEMORY_REQUEST}
     database:
       # the DB name should match to app-interface DB name without specifying environment
       # https://gitlab.cee.redhat.com/service/app-interface/-/blob/ddd85c2ad79b40047391405b2d909eb38667bc43/data/services/insights/ccx-data-pipeline/namespaces/stage-ccx-data-pipeline-stage.yml#L60
@@ -460,6 +460,14 @@ parameters:
 - name: DB_WRITER_REPLICAS
   description: The number of replicas to use for the insights-results-db-writer deployment
   value: "1"
+- name: DB_WRITER_CPU_LIMIT
+  value: 500m
+- name: DB_WRITER_MEMORY_LIMIT
+  value: 3000Mi
+- name: DB_WRITER_CPU_REQUEST
+  value: 100m
+- name: DB_WRITER_MEMORY_REQUEST
+  value: 1000Mi
 - name: DBWRITER_HABERDASHER_LABELS
   description: Haberdasher labels for unstructured logs
   value: '{"app": "ccx-insights-results-db-writer"}'
