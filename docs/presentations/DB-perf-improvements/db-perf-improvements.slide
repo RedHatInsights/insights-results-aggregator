@@ -1,0 +1,88 @@
+# DB performance improvements
+
+12 Apr 2022
+Tags: golang, go, rds, database, burst balance
+
+Pavel Tišnovský
+Red Hat, Inc.
+<ptisnovs@redhat.com>
+
+
+
+## Kafka lag on production after service outage
+
+- example from real outage that lasted just 30 minutes
+- 5 hours(!) to fully recover
+
+.image kafka1.png _ 1020
+
+
+## And it gets even worse
+
+- a bit longer outage, had to recover from 7k lag
+- almost 12 hours to fully recover
+
+.image kafka2.png _ 1020
+
+
+## 1st improvement
+
+- DB statement optimization
+- no `ON UPDATE` clause
+
+- [https://github.com/RedHatInsights/insights-results-aggregator/pull/1579/files](https://github.com/RedHatInsights/insights-results-aggregator/pull/1579/files)
+
+```
+reports  rule_hits  overall time   time in seconds
+50000    350000     50m 08s        3008s
+50000    350000     44m 58s        2648s
+```
+
+## Write duration
+
+still O(n)
+
+.image improvement1_1.png
+
+## Write speed
+
+.image improvement1_2.png
+
+
+## 2nd improvement
+
+- usage of existing index
+- avoid sequential scan
+- **oneliner** literally
+
+- [https://github.com/RedHatInsights/insights-results-aggregator/pull/1580/files](https://github.com/RedHatInsights/insights-results-aggregator/pull/1580/files)
+
+## Write duration
+
+O(1)
+
+.image improvement2_1.png
+
+## Write speed
+
+.image improvement2_2.png
+
+## Deployment to production
+
+- before
+
+.image kafka2.png _ 1020
+
+##
+.image kafka3.png _ 700
+
+## Write speed (longer time period)
+
+.image kafka4.png _ 1020
+
+##
+.image kafka5.png _ 1020
+
+## Conclusion
+
+.image magic.jpg
