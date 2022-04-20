@@ -1,0 +1,64 @@
+# External data pipeline database improvements
+
+XX Apr 2022
+Tags: golang, go, rds, database, burst balance
+
+Pavel Tišnovský
+Red Hat, Inc.
+<ptisnovs@redhat.com>
+
+
+
+## Finished improvements
+
+## Possible future improvements
+
+* vertical partitioning
+
+
+
+### Partitioning
+
+* division of table into distinct independent tables
+* horizontal
+    - by row
+* vertical
+    - by column
+* enables scaling
+
+
+
+### Partitioning in Postgres
+* method
+* partition key
+    - column(s) or expression(s)
+* partition boundaries
+* subpartitioning
+
+
+
+### Vertical partitioning
+* creating tables with fewer columns
+    - additional tables to store the remaining columns
+    - not normalization
+    - no specific syntax in PostgreSQL
+    - query usually consists of several `JOIN`s
+* when
+    - slow-moving data vs. dynamic data
+    - like "disable rule" (if stored in same table as rules!)
+
+
+
+### Possible use cases for vertical partitioning
+* Does some sense for following tables
+    - `report`
+    - `recommendation`
+    - `rule_hit`
+* Pros
+    - N/A in our case
+    - we don't have slow-moving & dynamic data in the same table
+* Cons
+    - a bit slower DB writes (`INSERT`)
+    - a bit slower DB queries (`SELECT`)
+* Conclusion
+    - not planned
