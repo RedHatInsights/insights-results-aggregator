@@ -14,6 +14,7 @@ Red Hat, Inc.
 ## Possible future improvements
 
 * vertical partitioning
+* horizontal partitioning
 
 
 
@@ -29,6 +30,7 @@ Red Hat, Inc.
 
 
 ### Partitioning in Postgres
+
 * method
 * partition key
     - column(s) or expression(s)
@@ -38,6 +40,7 @@ Red Hat, Inc.
 
 
 ### Vertical partitioning
+
 * creating tables with fewer columns
     - additional tables to store the remaining columns
     - not normalization
@@ -50,6 +53,7 @@ Red Hat, Inc.
 
 
 ### Possible use cases for vertical partitioning
+
 * Does some sense for following tables
     - `report`
     - `recommendation`
@@ -62,3 +66,107 @@ Red Hat, Inc.
     - a bit slower DB queries (`SELECT`)
 * Conclusion
     - not planned
+
+
+
+### Horizontal partitioning
+
+* creating tables with fewer rows
+    - additional tables to store the remaining rows
+    - specific syntax in PostgreSQL 10.x
+* when
+    - old data (not used much) vs new data
+    - partitioned by country, date range etc.
+
+### Horizontal partition types
+
+#### List Partition
+
+* partitioned by (small amount) of values
+* example: disabled column
+     - creates two partitions
+* not applicable in our case
+
+#### Range Partition
+
+* partitioned by defined range of values
+    - date_from .. date_to etc.
+* theoretically applicable in our case
+
+#### Hash Partition
+
+* partitioned by supplying a modulus and a remainder
+* each partition contains the rows for which the modulus/hash_of_key=remainder
+* theoretically applicable in our case
+
+
+### Possible use cases for horizontal partitioning
+
+* Does some sense for following tables
+    - `report`
+    - `recommendation`
+    - `rule_hit`
+* How to partition
+    - by org_id (range)
+    - by org_id (hash)
+    - (basically no "old" and "new" data to partition by date)
+* Pros
+    - possible speedup when we reach approximately 1M clusters or 10M rule hits
+    - when partitioned by org_id (hash), everything's for free
+* Cons
+    - absolute monstrose syntax + semantic in PostgreSQL < 10.x
+    - + indexes must be added to each partition with separate commands
+    - partitioning by org_id (range) seems logical, but we are not sure about org_id distribution
+* Conclusion
+    - not planned yet
+    - good solution when we reach approximately 1M clusters or 10M rule hits
+
+```
+aggregator=# select count(*), min(org_id), max(org_id) from recommendation;
+ count |  min  |   max    
+-------+-------+----------
+ 35000 | 11804 | 99985512
+(1 row)
+```
+
+## Partitioning usage for PostgreSQL before v.10
+
+### Create master table
+.image 1_create_master_table.png _ 1020
+
+### Create partitions for defined ranges by hand
+.image 2_create_partitions.png _ 1020
+
+### It is also needed to create indexes
+.image 3_create_indexes.png _ 1020
+
+### A monstrosity - trigger for insering into the right table
+.image 4_create_trigger.png _ 1020
+
+
+
+## Partitioning usage for PostgreSQL v.10 - partition by range
+
+### Create master table
+.image 5_create_master_table.png _ 1020
+
+### Create partitions for defined ranges
+.image 6_create_partitions.png _ 1020
+
+### Now `INSERT`, `SELECT` etc. are used naturally
+.image 7_insert_select.png _ 1020
+
+
+
+## Partitioning usage for PostgreSQL v.10 - partition by hash
+
+* partition by org_id hash
+* basically hash is divided by modulus
+* then partition is selected by remainder of hash%modulus
+    - partitions size should be similar in this case
+
+### Create master table
+.image 8_create_master_table.png _ 1020
+
+### Create partitions for all three remainders
+.image 9_create_partitions.png _ 1020
