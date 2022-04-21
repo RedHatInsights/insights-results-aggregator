@@ -1,0 +1,11 @@
+CREATE TABLE recommendation_0
+PARTITION OF recommendation_master
+FOR VALUES WITH (MODULUS 3,REMAINDER 0);
+
+CREATE TABLE recommendation_1
+PARTITION OF recommendation_master
+FOR VALUES WITH (MODULUS 3,REMAINDER 1);
+
+CREATE TABLE recommendation_2
+PARTITION OF recommendation_master
+FOR VALUES WITH (MODULUS 3,REMAINDER 2);
