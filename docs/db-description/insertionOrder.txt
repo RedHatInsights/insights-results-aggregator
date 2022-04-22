@@ -6,5 +6,6 @@ cluster_user_rule_disable_feedback
 consumer_error
 migration_info
 recommendation
+report_info
 rule_disable
 rule_hit
