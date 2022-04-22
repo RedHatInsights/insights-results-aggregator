@@ -11,6 +11,46 @@ Red Hat, Inc.
 
 ## Finished improvements
 
+## Finished findings
+
+### Filter by reported_at during retrieving results
+
+* Usually filtering by "less then" etc. is not as effective as using relations
+* But it is not blocker there
+* Let's see results for a table with 100 organizations and 1000 clusters per organization
+    - (which is a lot, usually there are just several cluster per organization)
+
+```
+aggregator=# explain analyze SELECT cluster
+FROM report
+WHERE org_id = 1
+AND reported_at >= '2000-01-01'
+ORDER BY cluster;
+                                                        QUERY PLAN                                                         
+---------------------------------------------------------------------------------------------------------------------------
+ Index Scan using report_pkey on report  (cost=0.42..193.63 rows=98 width=37) (actual time=0.035..1.278 rows=1000 loops=1)
+   Index Cond: (org_id = 1)
+   Filter: (reported_at >= '2000-01-01 00:00:00'::timestamp without time zone)
+ Planning time: 0.202 ms
+ Execution time: 1.435 ms
+(5 rows)
+```
+
+```
+aggregator=# explain analyze SELECT cluster
+FROM report
+WHERE org_id = 1
+ORDER BY cluster;              
+                                                           QUERY PLAN                                                           
+--------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using report_pkey on report  (cost=0.42..193.38 rows=98 width=37) (actual time=0.038..1.019 rows=1000 loops=1)
+   Index Cond: (org_id = 1)
+   Heap Fetches: 1000
+ Planning time: 0.163 ms
+ Execution time: 1.195 ms
+(5 rows)
+```
+
 ## Possible future improvements
 
 * vertical partitioning
