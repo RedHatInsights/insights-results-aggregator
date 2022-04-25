@@ -1,5 +1,5 @@
-date=2022-02-15 15:53:33+0100
-os=Linux 5.15.16-100.fc34.x86_64
+date=2022-04-25 10:16:07+0200
+os=Linux 5.17.3-300.fc36.x86_64
 schemaspy-version=6.1.0
 schemaspy-build=6.1.0.41 2019-09-17 21:52:57
-diagramImplementation=Graphviz dot 2.44
+diagramImplementation=Graphviz dot 2.50
