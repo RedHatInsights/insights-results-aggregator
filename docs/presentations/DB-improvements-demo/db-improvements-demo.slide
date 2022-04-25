@@ -1,6 +1,6 @@
-# External data pipeline database improvements
+# [Design] Scalable storage for external data pipeline
 
-XX Apr 2022
+27 Apr 2022
 Tags: golang, go, rds, database, burst balance
 
 Pavel Tišnovský
@@ -9,16 +9,78 @@ Red Hat, Inc.
 
 
 
+## Summary (TL;DR;)
+
+* Finished improvements
+    - No `ON UPDATE` clause for `rule_hits` table
+    - Usage of existing index for `recommendation` table
+
+* Finished spikes/findings
+    - `org_id` is numeric, but set as `varchar` in some tables
+    - Filter by `reported_at` during retrieving results
+
+* Planned improvements
+    - Use one `INSERT` statement to insert multiple rule hits into `rule_hits` table
+    - Horizontal partitioning when we reach DB limits (1M of clusters, 10M rule hits)
+
+* Not planned improvements
+    - Vertical partitioning
+
+
+
 ## Finished improvements
+
+## No `ON UPDATE` clause for `rule_hits` table
+
+* write duration is still O(n)
+* but write speed is faster
+    - in range of 1-10%
+
+## Write duration
+
+.image improvement1_1.png
+
+## Write speed
+
+.image improvement1_2.png
+
+
+
+## Usage of existing index for `recommendation` table
+
+* avoid sequential scan
+* write duration is O(1)
+    - huge improvement
+
+## Write duration
+
+.image improvement2_1.png
+
+## Write speed
+
+.image improvement2_2.png
+
+
 
 ## Finished findings
 
-### Filter by reported_at during retrieving results
+## `org_id` is numeric, but set as varchar in some tables
+
+* `org_id` needs to be set to numeric type in all tables
+* it will shrinken indexes a bit
+    - cache improvements
+* and it is required schema restriction, of course
+
+
+
+## Filter by reported_at during retrieving results
 
 * Usually filtering by "less then" etc. is not as effective as using relations
 * But it is not blocker there
 * Let's see results for a table with 100 organizations and 1000 clusters per organization
     - (which is a lot, usually there are just several cluster per organization)
+
+## Measurement
 
 ```
 aggregator=# explain analyze SELECT cluster
@@ -51,14 +113,16 @@ ORDER BY cluster;
 (5 rows)
 ```
 
-## Possible future improvements
+
+
+## Spikes: Possible future improvements
 
 * vertical partitioning
 * horizontal partitioning
 
 
 
-### Partitioning
+## Partitioning
 
 * division of table into distinct independent tables
 * horizontal
@@ -69,7 +133,7 @@ ORDER BY cluster;
 
 
 
-### Partitioning in Postgres
+## Partitioning in Postgres
 
 * method
 * partition key
@@ -79,7 +143,7 @@ ORDER BY cluster;
 
 
 
-### Vertical partitioning
+## Vertical partitioning
 
 * creating tables with fewer columns
     - additional tables to store the remaining columns
@@ -89,77 +153,75 @@ ORDER BY cluster;
 * when
     - slow-moving data vs. dynamic data
     - like "disable rule" (if stored in same table as rules!)
+    - aggregate functions called frequently over small number of columns
 
 
 
-### Possible use cases for vertical partitioning
+## Possible use cases for vertical partitioning
 
 * Does some sense for following tables
     - `report`
     - `recommendation`
     - `rule_hit`
+
+
+## Vertical partitioning pros and cons
+
 * Pros
     - N/A in our case
     - we don't have slow-moving & dynamic data in the same table
+    - (in future - when aggregate functions are to be called over rule FQDNs or error_keys)
 * Cons
     - a bit slower DB writes (`INSERT`)
     - a bit slower DB queries (`SELECT`)
 * Conclusion
-    - not planned
+    - not planned to be added in near future
 
 
 
-### Horizontal partitioning
+## Horizontal partitioning
 
 * creating tables with fewer rows
     - additional tables to store the remaining rows
     - specific syntax in PostgreSQL 10.x
 * when
     - old data (not used much) vs new data
-    - partitioned by country, date range etc.
+    - partitioned "naturally" by country, date range etc.
 
-### Horizontal partition types
 
-#### List Partition
+
+## Horizontal partition types
+
+## List Partition
 
 * partitioned by (small amount) of values
 * example: disabled column
      - creates two partitions
 * not applicable in our case
 
-#### Range Partition
+## Range Partition
 
 * partitioned by defined range of values
     - date_from .. date_to etc.
 * theoretically applicable in our case
 
-#### Hash Partition
+## Hash Partition
 
 * partitioned by supplying a modulus and a remainder
 * each partition contains the rows for which the modulus/hash_of_key=remainder
 * theoretically applicable in our case
 
 
-### Possible use cases for horizontal partitioning
+## Possible use cases for horizontal partitioning
 
 * Does some sense for following tables
     - `report`
     - `recommendation`
     - `rule_hit`
 * How to partition
-    - by org_id (range)
-    - by org_id (hash)
+    - by `org_id` (range)
+    - by `org_id` (hash)
     - (basically no "old" and "new" data to partition by date)
-* Pros
-    - possible speedup when we reach approximately 1M clusters or 10M rule hits
-    - when partitioned by org_id (hash), everything's for free
-* Cons
-    - absolute monstrose syntax + semantic in PostgreSQL < 10.x
-    - + indexes must be added to each partition with separate commands
-    - partitioning by org_id (range) seems logical, but we are not sure about org_id distribution
-* Conclusion
-    - not planned yet
-    - good solution when we reach approximately 1M clusters or 10M rule hits
 
 ```
 aggregator=# select count(*), min(org_id), max(org_id) from recommendation;
@@ -169,31 +231,57 @@ aggregator=# select count(*), min(org_id), max(org_id) from recommendation;
 (1 row)
 ```
 
+## Horizontal partitioning pros and cons
+
+* Pros
+    - possible speedup when we reach approximately 1M clusters or 10M rule hits
+    - when partitioned by org_id (hash), everything's for free
+* Cons
+    - absolute monstrose syntax + semantic in PostgreSQL < 10.x
+    - + indexes must be added to each partition with separate commands
+    - partitioning by org_id (range) seems logical, but we are not sure about org_id distribution
+* Conclusion
+    - not planned yet (for near future)
+    - good solution when we reach approximately 1M clusters or 10M rule hits
+
+
+
+## Practical part
+
+
+
 ## Partitioning usage for PostgreSQL before v.10
 
-### Create master table
+## Create master table
+
 .image 1_create_master_table.png _ 1020
 
-### Create partitions for defined ranges by hand
-.image 2_create_partitions.png _ 1020
+## Create partitions for defined ranges by hand
 
-### It is also needed to create indexes
+.image 2_create_partitions.png _ 800
+
+## It is also needed to create indexes
+
 .image 3_create_indexes.png _ 1020
 
-### A monstrosity - trigger for insering into the right table
+## A monstrosity - trigger for insering into the right table
+
 .image 4_create_trigger.png _ 1020
 
 
 
 ## Partitioning usage for PostgreSQL v.10 - partition by range
 
-### Create master table
+## Create master table
+
 .image 5_create_master_table.png _ 1020
 
-### Create partitions for defined ranges
+## Create partitions for defined ranges
+
 .image 6_create_partitions.png _ 1020
 
-### Now `INSERT`, `SELECT` etc. are used naturally
+## Now `INSERT`, `SELECT` etc. are used naturally
+
 .image 7_insert_select.png _ 1020
 
 
@@ -205,8 +293,10 @@ aggregator=# select count(*), min(org_id), max(org_id) from recommendation;
 * then partition is selected by remainder of hash%modulus
     - partitions size should be similar in this case
 
-### Create master table
+## Create master table
+
 .image 8_create_master_table.png _ 1020
 
-### Create partitions for all three remainders
+## Create partitions for all three remainders
+
 .image 9_create_partitions.png _ 1020
