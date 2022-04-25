@@ -15,6 +15,7 @@ exposed via REST API endpoints.
 ## Database description
 
 * Database description is available [here](./db-description/index.html)
+* [Data retention policy](./db_retention_policy.md)
 
 ## Documentation for utilities from this repository
 * [utils/json_check.py](json_check.html)
