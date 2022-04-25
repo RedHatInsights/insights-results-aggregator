@@ -10,8 +10,8 @@ var mig0023AddReportInfoTable = Migration{
 	StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`
 		CREATE TABLE report_info (
-			org_id VARCHAR NOT NULL,
-			cluster_id VARCHAR NOT NULL,
+			org_id INTEGER NOT NULL,
+			cluster_id VARCHAR NOT NULL UNIQUE,
 			version_info VARCHAR NOT NULL,
 			PRIMARY KEY(org_id, cluster_id)
 		)`)
