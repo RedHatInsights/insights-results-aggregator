@@ -256,19 +256,19 @@ aggregator=# select count(*), min(org_id), max(org_id) from recommendation;
 
 #### Create master table
 
-![1_create_master_table.png _ 1020](1_create_master_table.png _ 1020)
+![1_create_master_table.png](1_create_master_table.png)
 
 #### Create partitions for defined ranges by hand
 
-![2_create_partitions.png _ 800](2_create_partitions.png _ 800)
+![2_create_partitions.png](2_create_partitions.png)
 
 #### It is also needed to create indexes
 
-![3_create_indexes.png _ 1020](3_create_indexes.png _ 1020)
+![3_create_indexes.png](3_create_indexes.png)
 
 #### A monstrosity - trigger for insering into the right table
 
-![4_create_trigger.png _ 1020](4_create_trigger.png _ 1020)
+![4_create_trigger.png](4_create_trigger.png)
 
 
 
@@ -276,15 +276,15 @@ aggregator=# select count(*), min(org_id), max(org_id) from recommendation;
 
 #### Create master table
 
-![5_create_master_table.png _ 1020](5_create_master_table.png _ 1020)
+![5_create_master_table.png](5_create_master_table.png)
 
 #### Create partitions for defined ranges
 
-![6_create_partitions.png _ 1020](6_create_partitions.png _ 1020)
+![6_create_partitions.png](6_create_partitions.png)
 
 #### Now `INSERT`, `SELECT` etc. are used naturally
 
-![7_insert_select.png _ 1020](7_insert_select.png _ 1020)
+![7_insert_select.png](7_insert_select.png)
 
 
 
@@ -297,8 +297,8 @@ aggregator=# select count(*), min(org_id), max(org_id) from recommendation;
 
 #### Create master table
 
-![8_create_master_table.png _ 1020](8_create_master_table.png _ 1020)
+![8_create_master_table.png](8_create_master_table.png)
 
 #### Create partitions for all three remainders
 
-![9_create_partitions.png _ 1020](9_create_partitions.png _ 1020)
+![9_create_partitions.png](9_create_partitions.png)
