@@ -19,3 +19,6 @@ exposed via REST API endpoints.
 
 ## Documentation for utilities from this repository
 * [utils/json_check.py](json_check.html)
+
+## Presentations
+* [Scalable storage for external data pipeline](presentations/DB-improvements-demo/db-improvements-demo.md)
