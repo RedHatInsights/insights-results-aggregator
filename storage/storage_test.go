@@ -392,10 +392,9 @@ func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 	expects.ExpectExec("DELETE FROM rule_hit").
 		WillReturnResult(driver.ResultNoRows)
 
-	for i := 0; i < len(testdata.Report3RulesParsed); i++ {
-		expects.ExpectExec("INSERT INTO rule_hit").
-			WillReturnResult(driver.ResultNoRows)
-	}
+	// one INSERT with multiple rows is expected
+	expects.ExpectExec("INSERT INTO rule_hit").
+		WillReturnResult(driver.ResultNoRows)
 
 	expects.ExpectExec("INSERT INTO report").
 		WillReturnResult(driver.ResultNoRows)
