@@ -778,18 +778,46 @@ func (storage DBStorage) getReportUpsertQuery() string {
 
 // getRuleHitInsertStatement method prepares DB statement to be used to write
 // rule FQDN + rule error key into rule_hit table for given cluster_id
-func (storage DBStorage) getRuleHitInsertStatement() string {
-	if storage.dbDriverType == types.DBDriverSQLite3 {
-		return `
-			INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
-			VALUES ($1, $2, $3, $4, $5)
-		`
+func (storage DBStorage) getRuleHitInsertStatement(rules []types.ReportItem) string {
+	const ruleInsertStatement = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data) VALUES %s"
+
+	var placeholders []string
+
+	// fill-in placeholders for INSERT statement
+	for index, _ := range rules {
+		placeholders = append(
+			placeholders, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)",
+				index*5+1,
+				index*5+2,
+				index*5+3,
+				index*5+4,
+				index*5+5,
+			))
 	}
 
-	return `
-		INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
-		VALUES ($1, $2, $3, $4, $5)
-	`
+	// construct INSERT statement for multiple values
+	return fmt.Sprintf(ruleInsertStatement, strings.Join(placeholders, ","))
+}
+
+// valuesForRuleHitsInsert function prepares values to insert rules into
+// rule_hit table.
+func valuesForRuleHitsInsert(
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+	rules []types.ReportItem,
+) []interface{} {
+	// fill-in values for INSERT statement
+	var values []interface{}
+
+	for _, rule := range rules {
+		values = append(values,
+			orgID,
+			clusterName,
+			rule.Module,
+			rule.ErrorKey,
+			string(rule.TemplateData))
+	}
+	return values
 }
 
 func (storage DBStorage) updateReport(
@@ -806,9 +834,6 @@ func (storage DBStorage) updateReport(
 	// Get the UPSERT query for writing a report into the database.
 	reportUpsertQuery := storage.getReportUpsertQuery()
 
-	// Get the INSERT statement for writing a rule into the database.
-	ruleInsertStatement := storage.getRuleHitInsertStatement()
-
 	deleteQuery := "DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
 	_, err := tx.Exec(deleteQuery, orgID, clusterName)
 	if err != nil {
@@ -817,15 +842,19 @@ func (storage DBStorage) updateReport(
 	}
 
 	// Perform the report insert.
+	// All older rule hits has been deleted for given cluster so it is
+	// possible to just insert new hits w/o the need to update on conflict
+	if len(rules) > 0 {
+		// Get the INSERT statement for writing a rule into the database.
+		ruleInsertStatement := storage.getRuleHitInsertStatement(rules)
 
-	for _, rule := range rules {
-		// all older rule hits has been deleted for given cluster so it is
-		// possible to just insert new hits w/o the need to update on
-		// conflict
-		_, err = tx.Exec(ruleInsertStatement, orgID, clusterName, rule.Module, rule.ErrorKey, string(rule.TemplateData))
+		// Get values to be stored in rule_hits table
+		values := valuesForRuleHitsInsert(orgID, clusterName, rules)
+
+		_, err = tx.Exec(ruleInsertStatement, values...)
 		if err != nil {
-			log.Err(err).Msgf("Unable to insert the cluster report rules (org: %v, cluster: %v, rule: %v|%v)",
-				orgID, clusterName, rule.Module, rule.ErrorKey,
+			log.Err(err).Msgf("Unable to insert the cluster report rules (org: %v, cluster: %v)",
+				orgID, clusterName,
 			)
 			return err
 		}
