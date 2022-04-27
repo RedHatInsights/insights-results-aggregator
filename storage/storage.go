@@ -784,7 +784,7 @@ func (storage DBStorage) GetRuleHitInsertStatement(rules []types.ReportItem) str
 	var placeholders []string
 
 	// fill-in placeholders for INSERT statement
-	for index, _ := range rules {
+	for index := range rules {
 		placeholders = append(
 			placeholders, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)",
 				index*5+1,
