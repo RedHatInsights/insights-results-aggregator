@@ -776,9 +776,9 @@ func (storage DBStorage) getReportUpsertQuery() string {
 	`
 }
 
-// getRuleHitInsertStatement method prepares DB statement to be used to write
+// GetRuleHitInsertStatement method prepares DB statement to be used to write
 // rule FQDN + rule error key into rule_hit table for given cluster_id
-func (storage DBStorage) getRuleHitInsertStatement(rules []types.ReportItem) string {
+func (storage DBStorage) GetRuleHitInsertStatement(rules []types.ReportItem) string {
 	const ruleInsertStatement = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data) VALUES %s"
 
 	var placeholders []string
@@ -846,7 +846,7 @@ func (storage DBStorage) updateReport(
 	// possible to just insert new hits w/o the need to update on conflict
 	if len(rules) > 0 {
 		// Get the INSERT statement for writing a rule into the database.
-		ruleInsertStatement := storage.getRuleHitInsertStatement(rules)
+		ruleInsertStatement := storage.GetRuleHitInsertStatement(rules)
 
 		// Get values to be stored in rule_hits table
 		values := valuesForRuleHitsInsert(orgID, clusterName, rules)
