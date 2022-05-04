@@ -63,6 +63,10 @@ type Storage interface {
 		orgID types.OrgID, clusterName types.ClusterName) (
 		[]types.RuleOnReport, types.Timestamp, types.Timestamp, types.Timestamp, error,
 	)
+	ReadReportInfoForCluster(
+		types.OrgID, types.ClusterName) (
+		types.Version, error,
+	)
 	ReadReportsForClusters(
 		clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error)
 	ReadOrgIDsForClusters(
@@ -81,6 +85,12 @@ type Storage interface {
 		gatheredAtTime time.Time,
 		storedAtTime time.Time,
 		kafkaOffset types.KafkaOffset,
+	) error
+	WriteReportInfoForCluster(
+		types.OrgID,
+		types.ClusterName,
+		[]types.InfoItem,
+		time.Time,
 	) error
 	WriteRecommendationsForCluster(
 		orgID types.OrgID,
@@ -758,22 +768,6 @@ func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 	var offset types.KafkaOffset
 	err := storage.connection.QueryRow("SELECT COALESCE(MAX(kafka_offset), 0) FROM report;").Scan(&offset)
 	return offset, err
-}
-
-func (storage DBStorage) getReportUpsertQuery() string {
-	if storage.dbDriverType == types.DBDriverSQLite3 {
-		return `
-			INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
-		`
-	}
-
-	return `
-		INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		ON CONFLICT (cluster)
-		DO UPDATE SET org_id = $1, report = $3, reported_at = $4, last_checked_at = $5, kafka_offset = $6, gathered_at = $7
-	`
 }
 
 // GetRuleHitInsertStatement method prepares DB statement to be used to write

@@ -42,6 +42,7 @@ type incomingMessage struct {
 	RequestID   types.RequestID     `json:"RequestId"`
 	Metadata    types.Metadata      `json:"Metadata"`
 	ParsedHits  []types.ReportItem
+	ParsedInfo  []types.InfoItem
 }
 
 // HandleMessage handles the message and does all logging, metrics, etc
@@ -315,6 +316,11 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 	}
 
 	err = json.Unmarshal(*((*deserialized.Report)["reports"]), &deserialized.ParsedHits)
+	if err != nil {
+		return deserialized, err
+	}
+
+	err = json.Unmarshal(*((*deserialized.Report)["info"]), &deserialized.ParsedInfo)
 	if err != nil {
 		return deserialized, err
 	}

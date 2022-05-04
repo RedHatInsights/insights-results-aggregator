@@ -53,6 +53,11 @@ func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) ([]type
 	return []types.RuleOnReport{}, "", "", "", nil
 }
 
+// ReadReportInfoForCluster noop
+func (*NoopStorage) ReadReportInfoForCluster(types.OrgID, types.ClusterName) (types.Version, error) {
+	return "", nil
+}
+
 // ReadSingleRuleTemplateData noop
 func (*NoopStorage) ReadSingleRuleTemplateData(types.OrgID, types.ClusterName, types.RuleID, types.ErrorKey) (interface{}, error) {
 	return "", nil
@@ -73,6 +78,16 @@ func (*NoopStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 // WriteReportForCluster noop
 func (*NoopStorage) WriteReportForCluster(
 	types.OrgID, types.ClusterName, types.ClusterReport, []types.ReportItem, time.Time, time.Time, time.Time, types.KafkaOffset,
+) error {
+	return nil
+}
+
+// WriteReportInfoForCluster noop
+func (*NoopStorage) WriteReportInfoForCluster(
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+	info []types.InfoItem,
+	lastCheckedTime time.Time,
 ) error {
 	return nil
 }
