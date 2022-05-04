@@ -32,22 +32,6 @@ func (storage DBStorage) getReportUpsertQuery() string {
 	`
 }
 
-// getRuleHitInsertStatement method prepares DB statement to be used to write
-// rule FQDN + rule error key into rule_hit table for given cluster_id
-func (storage DBStorage) getRuleHitInsertStatement() string {
-	if storage.dbDriverType == types.DBDriverSQLite3 {
-		return `
-			INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
-			VALUES ($1, $2, $3, $4, $5)
-		`
-	}
-
-	return `
-		INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
-		VALUES ($1, $2, $3, $4, $5)
-	`
-}
-
 func (storage DBStorage) getReportInfoUpsertQuery() string {
 	if storage.dbDriverType == types.DBDriverSQLite3 {
 		return `
