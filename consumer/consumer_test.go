@@ -21,11 +21,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"log"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-operator-utils/tests/saramahelpers"
@@ -83,6 +84,35 @@ func consumerProcessMessage(mockConsumer consumer.Consumer, message string) erro
 
 func mustConsumerProcessMessage(t testing.TB, mockConsumer consumer.Consumer, message string) {
 	helpers.FailOnError(t, consumerProcessMessage(mockConsumer, message))
+}
+
+func dummyConsumer(s storage.Storage, allowlist bool) consumer.Consumer {
+	brokerCfg := broker.Configuration{
+		Address: "localhost:1234",
+		Topic:   "topic",
+		Group:   "group",
+	}
+	if allowlist {
+		brokerCfg.OrgAllowlist = mapset.NewSetWith(types.OrgID(1))
+		brokerCfg.OrgAllowlistEnabled = true
+	} else {
+		brokerCfg.OrgAllowlistEnabled = false
+	}
+	return &consumer.KafkaConsumer{
+		Configuration: brokerCfg,
+		Storage:       s,
+	}
+}
+
+func createConsumerMessage(report string) string {
+	consumerMessage := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + fmt.Sprint(testdata.ClusterName) + `",
+		"LastChecked": "` + fmt.Sprint(testdata.LastCheckedAt.UTC().Format(time.RFC3339)) + `",
+		"Report": ` + report + `
+	}
+	`
+	return consumerMessage
 }
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
@@ -163,6 +193,57 @@ func TestParseProperMessage(t *testing.T) {
 	assert.EqualValues(t, []types.ReportItem{}, message.ParsedHits)
 }
 
+func TestParseProperMessageWithInfoReport(t *testing.T) {
+	consumerReport := `{
+		"fingerprints": [],
+		"reports": [],
+		"skips": [],
+		"system": {},
+		"info": [
+			{
+				"info_id": "version_info|CLUSTER_VERSION_INFO",
+				"component": "ccx_rules_processing.version_info.report",
+				"type": "info",
+				"key": "CLUSTER_VERSION_INFO",
+				"details": {
+				  "version": "4.9",
+				  "type": "info",
+				  "info_key": "CLUSTER_VERSION_INFO"
+				},
+				"tags": [],
+				"links": {}
+			  }
+		]
+
+	}`
+	consumerMessage := createConsumerMessage(consumerReport)
+	message, err := consumer.ParseMessage([]byte(consumerMessage))
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, types.OrgID(1), *message.Organization)
+	assert.Equal(t, testdata.ClusterName, *message.ClusterName)
+
+	var expectedReport consumer.Report
+	err = json.Unmarshal([]byte(consumerReport), &expectedReport)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, expectedReport, *message.Report)
+	assert.EqualValues(t, []types.ReportItem{}, message.ParsedHits)
+
+	expectedInfoReport := []types.InfoItem{
+		types.InfoItem{
+			InfoID:  "version_info|CLUSTER_VERSION_INFO",
+			InfoKey: "CLUSTER_VERSION_INFO",
+			Details: map[string]string{
+				"version":  "4.9",
+				"type":     "info",
+				"info_key": "CLUSTER_VERSION_INFO",
+			},
+		},
+	}
+	assert.EqualValues(t, expectedInfoReport, message.ParsedInfo)
+}
+
 func TestParseProperMessageWrongClusterName(t *testing.T) {
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
@@ -220,24 +301,6 @@ func TestParseMessageNullReport(t *testing.T) {
 
 	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'Report'")
-}
-
-func dummyConsumer(s storage.Storage, allowlist bool) consumer.Consumer {
-	brokerCfg := broker.Configuration{
-		Address: "localhost:1234",
-		Topic:   "topic",
-		Group:   "group",
-	}
-	if allowlist {
-		brokerCfg.OrgAllowlist = mapset.NewSetWith(types.OrgID(1))
-		brokerCfg.OrgAllowlistEnabled = true
-	} else {
-		brokerCfg.OrgAllowlistEnabled = false
-	}
-	return &consumer.KafkaConsumer{
-		Configuration: brokerCfg,
-		Storage:       s,
-	}
 }
 
 func TestProcessEmptyMessage(t *testing.T) {

@@ -41,6 +41,9 @@ type Timestamp = types.Timestamp
 // UserVote is a type for user's vote
 type UserVote = types.UserVote
 
+// InfoKey represents type for info key
+type InfoKey string
+
 const (
 	// UserVoteDislike shows user's dislike
 	UserVoteDislike = types.UserVoteDislike
@@ -76,6 +79,8 @@ type (
 	RuleErrorKey = types.RuleErrorKey
 	// RuleWithContent represents a rule with content, basically the mix of rule and rule_error_key tables' content
 	RuleWithContent = types.RuleWithContent
+	// Version represents the version of the cluster
+	Version = types.Version
 	// KafkaOffset type for kafka offset
 	KafkaOffset = types.KafkaOffset
 	// DBDriver type for db driver enum
@@ -109,6 +114,13 @@ type FeedbackRequest struct {
 
 // ReportItem represents a single (hit) rule of the string encoded report
 type ReportItem = types.ReportItem
+
+// InfoItem represents a single (hit) info rule of the string encoded report
+type InfoItem struct {
+	InfoID  RuleID            `json:"info_id"`
+	InfoKey InfoKey           `json:"key"`
+	Details map[string]string `json:"details"`
+}
 
 // ClusterReports is a data structure containing list of clusters, list of
 // errors and dictionary with results per cluster.
