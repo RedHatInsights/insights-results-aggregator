@@ -63,6 +63,17 @@ func checkResponseCode(t testing.TB, expected, actual int) {
 	}
 }
 
+func buildInfoWithVersion(version types.Version) []types.InfoItem {
+	return []types.InfoItem{
+		{
+			InfoID: "version_info|CLUSTER_VERSION_INFO",
+			Details: map[string]string{
+				"version": string(version),
+			},
+		},
+	}
+}
+
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1410,18 +1421,21 @@ func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 	})
 }
 
+// TODO: Add version_info
 func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "last_checked_at":"%v"}],"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "cluster_version":"%v", "last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
+		testdata.ClusterVersion,
 		RecommendationCreatedAtTimestamp,
 	)
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	_ = mockStorage.WriteReportInfoForCluster(testdata.Org2ID, testdata.ClusterName, buildInfoWithVersion(testdata.ClusterVersion), testdata.LastCheckedAt)
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1458,18 +1472,21 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	})
 }
 
+// TODO: Add version_info
 func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "last_checked_at":"%v"}],"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "cluster_version":"%v", "last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
+		testdata.ClusterVersion,
 		RecommendationCreatedAtTimestamp,
 	)
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	_ = mockStorage.WriteReportInfoForCluster(testdata.Org2ID, testdata.ClusterName, buildInfoWithVersion(testdata.ClusterVersion), testdata.LastCheckedAt)
 
 	getRequestBody := fmt.Sprintf(`{"clusters":["%v"]}`, testdata.ClusterName)
 
