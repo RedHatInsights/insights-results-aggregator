@@ -1421,7 +1421,6 @@ func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 	})
 }
 
-// TODO: Add version_info
 func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
@@ -1436,6 +1435,7 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
 	_ = mockStorage.WriteReportInfoForCluster(testdata.OrgID, testdata.ClusterName, buildInfoWithVersion(testdata.ClusterVersion), testdata.LastCheckedAt)
+	_ = mockStorage.WriteReportInfoForCluster(testdata.Org2ID, testdata.ClusterName, buildInfoWithVersion(testdata.ClusterVersion), testdata.LastCheckedAt)
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1472,7 +1472,6 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	})
 }
 
-// TODO: Add version_info
 func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
