@@ -66,7 +66,7 @@
                     "info": {
                       "type": "object",
                       "additionalProperties": {
-                         "type": "string"
+                        "type": "string"
                       }
                     },
                     "status": {
@@ -537,8 +537,7 @@
           "required": true,
           "content": {
             "text/plain": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1420,8 +1419,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1500,8 +1498,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1647,8 +1644,7 @@
           "required": true,
           "content": {
             "text/plain": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1656,8 +1652,7 @@
           "200": {
             "description": "List of disabled rules",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         },
@@ -1780,8 +1775,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -1835,8 +1829,7 @@
           "required": true,
           "content": {
             "text/plain": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1844,8 +1837,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -1899,8 +1891,7 @@
           "required": true,
           "content": {
             "text/plain": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1908,8 +1899,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -1962,8 +1952,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -1998,8 +1987,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -2132,6 +2120,16 @@
                               "cluster_name": {
                                 "type": "string",
                                 "description": "The display name of a cluster. Filled later in smart-proxy with info from AMS API."
+                              },
+                              "cluster_version": {
+                                "type": "string",
+                                "description": "The version of the cluster.",
+                                "example": "1.0"
+                              },
+                              "last_checked_at": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "2020-01-23T16:15:59.478901889Z"
                               }
                             }
                           }
