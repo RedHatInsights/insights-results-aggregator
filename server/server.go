@@ -350,6 +350,28 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 	}
 }
 
+func (server *HTTPServer) addVersionToClusters(orgID types.OrgID, clusters []ctypes.HittingClustersData) ([]types.HittingClustersDataWithVersion, error) {
+	clustersWithVersion := []types.HittingClustersDataWithVersion{}
+
+	for _, cluster := range clusters {
+		version, err := server.Storage.ReadReportInfoForCluster(orgID, cluster.Cluster)
+
+		if err != nil {
+			return nil, fmt.Errorf("unable to gather version for %s: %w", cluster.Cluster, err)
+		}
+
+		clustersWithVersion = append(
+			clustersWithVersion,
+			types.HittingClustersDataWithVersion{
+				HittingClustersData: cluster,
+				Version:             version,
+			},
+		)
+	}
+
+	return clustersWithVersion, nil
+}
+
 // Initialize perform the server initialization
 func (server *HTTPServer) Initialize() http.Handler {
 	log.Info().Msgf("Initializing HTTP server at '%s'", server.Config.Address)
@@ -521,7 +543,14 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 		return
 	}
 
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData(clustersStr, clusters))
+	clustersWithVersion, err := server.addVersionToClusters(orgID, clusters)
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to gather versions for the clusters")
+		handleServerError(writer, err)
+		return
+	}
+
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(clustersStr, clustersWithVersion))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}

@@ -136,3 +136,9 @@ type RuleRating = types.RuleRating
 type Metadata struct {
 	GatheredAt time.Time `json:"gathering_time"`
 }
+
+// HittingClustersDataWithVersion used to store data of clusters hit by a concrete rule including the cluster version
+type HittingClustersDataWithVersion struct {
+	types.HittingClustersData
+	Version types.Version `json:"cluster_version"`
+}
