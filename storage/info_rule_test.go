@@ -15,7 +15,6 @@
 package storage_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,8 +29,6 @@ func TestWriteReportInfoForCluster(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	itemNotFoundError := &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d/%s", testdata.OrgID, testdata.ClusterName)}
-
 	expectations := []struct {
 		input   []types.InfoItem
 		version types.Version
@@ -40,16 +37,16 @@ func TestWriteReportInfoForCluster(t *testing.T) {
 		{
 			input:   nil,
 			version: "",
-			err:     itemNotFoundError,
+			err:     nil,
 		},
 		{
 			input:   []types.InfoItem{},
 			version: "",
-			err:     itemNotFoundError,
+			err:     nil,
 		},
 		{
 			input: []types.InfoItem{
-				types.InfoItem{
+				{
 					InfoID: "An info ID",
 					Details: map[string]string{
 						"version": "1.0",
@@ -57,11 +54,11 @@ func TestWriteReportInfoForCluster(t *testing.T) {
 				},
 			},
 			version: "",
-			err:     itemNotFoundError,
+			err:     nil,
 		},
 		{
 			input: []types.InfoItem{
-				types.InfoItem{
+				{
 					InfoID: "version_info|CLUSTER_VERSION_INFO",
 					Details: map[string]string{
 						"version": "1.0",
