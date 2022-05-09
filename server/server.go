@@ -350,7 +350,7 @@ func (server *HTTPServer) deleteClusters(writer http.ResponseWriter, request *ht
 	}
 }
 
-func (server *HTTPServer) addVersionToClusters(orgID types.OrgID, clusters []ctypes.HittingClustersData) ([]types.HittingClustersDataWithVersion, error) {
+func (server *HTTPServer) addVersionToClusters(orgID types.OrgID, clusters []ctypes.HittingClustersData) []types.HittingClustersDataWithVersion {
 	clustersWithVersion := []types.HittingClustersDataWithVersion{}
 
 	for _, cluster := range clusters {
@@ -369,7 +369,7 @@ func (server *HTTPServer) addVersionToClusters(orgID types.OrgID, clusters []cty
 		)
 	}
 
-	return clustersWithVersion, nil
+	return clustersWithVersion
 }
 
 // Initialize perform the server initialization
@@ -543,12 +543,7 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 		return
 	}
 
-	clustersWithVersion, err := server.addVersionToClusters(orgID, clusters)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to gather versions for the clusters")
-		handleServerError(writer, err)
-		return
-	}
+	clustersWithVersion := server.addVersionToClusters(orgID, clusters)
 
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData(clustersStr, clustersWithVersion))
 	if err != nil {
