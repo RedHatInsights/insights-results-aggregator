@@ -357,7 +357,7 @@ func (server *HTTPServer) addVersionToClusters(orgID types.OrgID, clusters []cty
 		version, err := server.Storage.ReadReportInfoForCluster(orgID, cluster.Cluster)
 
 		if err != nil {
-			return nil, fmt.Errorf("unable to gather version for %s: %w", cluster.Cluster, err)
+			version = ""
 		}
 
 		clustersWithVersion = append(
