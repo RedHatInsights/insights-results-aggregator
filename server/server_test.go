@@ -63,6 +63,17 @@ func checkResponseCode(t testing.TB, expected, actual int) {
 	}
 }
 
+func buildInfoWithVersion(version types.Version) []types.InfoItem {
+	return []types.InfoItem{
+		{
+			InfoID: "version_info|CLUSTER_VERSION_INFO",
+			Details: map[string]string{
+				"version": string(version),
+			},
+		},
+	}
+}
+
 func TestListOfClustersForNonExistingOrganization(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1414,14 +1425,20 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "last_checked_at":"%v"}],"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "cluster_version":"%v", "last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
+		testdata.ClusterVersion,
 		RecommendationCreatedAtTimestamp,
 	)
 
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	err := mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	assert.NoError(t, err, fmt.Sprintf("error inserting report for cluster %s cluster and org %d", testdata.ClusterName, testdata.OrgID))
+	err = mockStorage.WriteRecommendationsForCluster(testdata.Org2ID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	assert.NoError(t, err, fmt.Sprintf("error inserting report for cluster %s cluster and org %d", testdata.ClusterName, testdata.Org2ID))
+
+	err = mockStorage.WriteReportInfoForCluster(testdata.OrgID, testdata.ClusterName, buildInfoWithVersion(testdata.ClusterVersion), testdata.LastCheckedAt)
+	assert.NoError(t, err, fmt.Sprintf("error inserting info for cluster %s cluster and org %d", testdata.ClusterName, testdata.OrgID))
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1431,6 +1448,10 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 		StatusCode: http.StatusOK,
 		Body:       expected,
 	})
+
+	err = mockStorage.WriteReportInfoForCluster(testdata.Org2ID, testdata.ClusterName, buildInfoWithVersion(testdata.ClusterVersion), testdata.LastCheckedAt)
+	assert.NoError(t, err, fmt.Sprintf("error inserting info for cluster %s cluster and org %d", testdata.ClusterName, testdata.Org2ID))
+
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1440,6 +1461,9 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 		Body:       expected,
 	})
 
+	err = mockStorage.WriteReportInfoForCluster(testdata.OrgID, testdata.ClusterName, buildInfoWithVersion(testdata.ClusterVersion), testdata.LastCheckedAt)
+	assert.NoError(t, err, fmt.Sprintf("error inserting info for cluster %s cluster and org %d", testdata.ClusterName, testdata.OrgID))
+
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1448,6 +1472,10 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 		StatusCode: http.StatusOK,
 		Body:       expected,
 	})
+
+	err = mockStorage.WriteReportInfoForCluster(testdata.Org2ID, testdata.ClusterName, buildInfoWithVersion(testdata.ClusterVersion), testdata.LastCheckedAt)
+	assert.NoError(t, err, fmt.Sprintf("error inserting info for cluster %s cluster and org %d", testdata.ClusterName, testdata.Org2ID))
+
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1462,14 +1490,19 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "last_checked_at":"%v"}],"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "cluster_version":"%v", "last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
+		testdata.ClusterVersion,
 		RecommendationCreatedAtTimestamp,
 	)
 
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
-	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	err := mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	assert.NoError(t, err, fmt.Sprintf("error inserting recommendation for cluster %s and org %d", testdata.ClusterName, testdata.OrgID))
+	err = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.GetRandomClusterID(), testdata.Report2Rules, RecommendationCreatedAtTimestamp)
+	assert.NoError(t, err, fmt.Sprintf("error inserting recommendation for random cluster and org %d", testdata.OrgID))
+	err = mockStorage.WriteReportInfoForCluster(testdata.OrgID, testdata.ClusterName, buildInfoWithVersion(testdata.ClusterVersion), testdata.LastCheckedAt)
+	assert.NoError(t, err, fmt.Sprintf("error inserting info for cluster %s cluster and org %d", testdata.ClusterName, testdata.OrgID))
 
 	getRequestBody := fmt.Sprintf(`{"clusters":["%v"]}`, testdata.ClusterName)
 
