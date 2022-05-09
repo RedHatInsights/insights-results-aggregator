@@ -85,7 +85,16 @@ func (storage *DBStorage) ReadReportInfoForCluster(
 	var version types.Version
 
 	err := storage.connection.QueryRow(
-		"SELECT COALESCE (version_info, '') FROM report_info WHERE org_id = $1 AND cluster_id = $2;",
+		`
+SELECT 
+	COALESCE ( 
+		( 
+			SELECT version_info 
+			FROM report_info 
+			WHERE org_id = $1 AND cluster_id = $2 
+		), '') 
+		AS version_info;
+		`,
 		orgID, clusterName,
 	).Scan(&version)
 
