@@ -89,6 +89,10 @@ func (storage *DBStorage) ReadReportInfoForCluster(
 		orgID, clusterName,
 	).Scan(&version)
 
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	return version, err
 }
