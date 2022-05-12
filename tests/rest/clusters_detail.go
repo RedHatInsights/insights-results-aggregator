@@ -38,12 +38,17 @@ type ClusterInfoResponse struct {
 	Status   string        `json:"status"`
 }
 
+// ClusterInfoMeta represents the cluster metadata information
+type ClusterInfoMeta struct {
+	Version string `json:"cluster_version"`
+}
+
 // ClusterInfo represents the cluster information
 type ClusterInfo struct {
 	Cluster string `json:"cluster"`
 	// Name     string `json:"cluster_name"`
 	// LastSeen string `json:"last_checked_at"`
-	Version string `json:"cluster_version"`
+	Meta ClusterInfoMeta `json:"meta"`
 }
 
 // constructURLForClustersDetail function constructs an URL to access
@@ -105,7 +110,7 @@ func checkClustersEndpointDetailGet() {
 				Clusters: []ClusterInfo{
 					{
 						Cluster: "11111111-1111-1111-1111-111111111111",
-						Version: "1.0",
+						Meta:    ClusterInfoMeta{Version: "1.0"},
 					},
 				},
 			},
@@ -129,7 +134,6 @@ func checkClustersEndpointDetailGet() {
 				Clusters: []ClusterInfo{
 					{
 						Cluster: "22222222-2222-2222-2222-222222222222",
-						Version: "",
 					},
 				},
 			},
@@ -144,7 +148,6 @@ func checkClustersEndpointDetailGet() {
 				Clusters: []ClusterInfo{
 					{
 						Cluster: "33333333-3333-3333-3333-333333333333",
-						Version: "",
 					},
 				},
 			},
