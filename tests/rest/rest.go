@@ -36,6 +36,7 @@ func ServerTests() {
 	BasicTests()
 	OrganizationsTests()
 	ClustersTests()
+	ClustersDetailTests()
 	ReportsTests()
 	ReportsMetadataTests()
 	MultipleReportsTests()
@@ -79,6 +80,14 @@ func ClustersTests() {
 	checkClustersEndpointForImproperOrganizations()
 	checkClustersEndpointWrongMethods()
 	checkClustersEndpointSpecialOrganizationIds()
+}
+
+// ClustersDetailTests implements tests for REST API endpoints apiPrefix+"rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail"
+func ClustersDetailTests() {
+	// implementation of these tests is stored in clusters_detail.go
+	checkClustersEndpointDetailGet()
+	checkClustersDetailsEndpointWrongMethods()
+	checkClustersDetailsEndpointForKnownOrganizationNoAuthHeaderCase()
 }
 
 // ReportsTests implements tests for REST API endpoints apiPrefix+"report/{organization}/{cluster}"
@@ -188,7 +197,7 @@ func VoteTests() {
 	checkGetUserVoteAfterDoubleUnvote()
 }
 
-// DisableRuleTests impements tests for REST API endpoinds for disabling etc.
+// DisableRuleTests implements tests for REST API endpoints for disabling etc.
 // rules
 func DisableRuleTests() {
 	checkListOfDisabledRules()
