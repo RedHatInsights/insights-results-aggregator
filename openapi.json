@@ -2103,33 +2103,33 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "report": {
-                      "type": "object",
-                      "properties": {
-                        "clusters": {
-                          "type": "array",
-                          "items": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cluster": {
+                            "type": "string",
+                            "minLength": 36,
+                            "maxLength": 36,
+                            "format": "uuid"
+                          },
+                          "cluster_name": {
+                            "type": "string",
+                            "description": "The display name of a cluster. Filled later in smart-proxy with info from AMS API."
+                          },
+                          "last_checked_at": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2020-01-23T16:15:59.478901889Z"
+                          },
+                          "meta": {
                             "type": "object",
                             "properties": {
-                              "cluster": {
-                                "type": "string",
-                                "minLength": 36,
-                                "maxLength": 36,
-                                "format": "uuid"
-                              },
-                              "cluster_name": {
-                                "type": "string",
-                                "description": "The display name of a cluster. Filled later in smart-proxy with info from AMS API."
-                              },
                               "cluster_version": {
                                 "type": "string",
                                 "description": "The version of the cluster.",
                                 "example": "1.0"
-                              },
-                              "last_checked_at": {
-                                "type": "string",
-                                "format": "date",
-                                "example": "2020-01-23T16:15:59.478901889Z"
                               }
                             }
                           }

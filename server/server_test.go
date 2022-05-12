@@ -1425,7 +1425,7 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "cluster_version":"%v", "last_checked_at":"%v"}],"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "meta":{"cluster_version":"%v"},"last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
 		testdata.ClusterVersion,
@@ -1490,7 +1490,7 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "cluster_version":"%v", "last_checked_at":"%v"}],"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "meta":{"cluster_version":"%v"}, "last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
 		testdata.ClusterVersion,
