@@ -170,16 +170,14 @@ func (consumer *KafkaConsumer) writeInfoReport(
 		message.ParsedInfo,
 		infoStoredAtTime,
 	)
-	if err != nil {
-		if err == types.ErrOldReport {
-			logMessageInfo(consumer, msg, message, "Skipping because a more recent info report already exists for this cluster")
-			return nil
-		}
-
+	if err == types.ErrOldReport {
+		logMessageInfo(consumer, msg, message, "Skipping because a more recent info report already exists for this cluster")
+		return nil
+	} else if err != nil {
 		logMessageError(consumer, msg, message, "Error writing info report to database", err)
+		return err
 	}
 	logMessageInfo(consumer, msg, message, "Stored info report")
-
 	return nil
 }
 
@@ -244,12 +242,10 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 		storedAtTime,
 		types.KafkaOffset(msg.Offset),
 	)
-	if err != nil {
-		if err == types.ErrOldReport {
-			logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
-			return message.RequestID, nil
-		}
-
+	if err == types.ErrOldReport {
+		logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
+		return message.RequestID, nil
+	} else if err != nil {
 		logMessageError(consumer, msg, message, "Error writing report to database", err)
 		return message.RequestID, err
 	}
