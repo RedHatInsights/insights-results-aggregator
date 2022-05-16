@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	ctypes "github.com/RedHatInsights/insights-results-types"
 )
 
 const (
@@ -100,4 +101,16 @@ SELECT
 
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	return version, err
+}
+
+func (storage DBStorage) fillInMetadata(orgID types.OrgID, clusterMap ctypes.ClusterRecommendationMap) {
+	for cluster, recommendationList := range clusterMap {
+		version, err := storage.ReadReportInfoForCluster(orgID, cluster)
+		if err != nil {
+			continue
+		}
+
+		recommendationList.Meta = ctypes.ClusterMetadata{Version: version}
+		clusterMap[cluster] = recommendationList
+	}
 }

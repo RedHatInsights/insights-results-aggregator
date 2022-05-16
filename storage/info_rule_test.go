@@ -23,6 +23,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	ctypes "github.com/RedHatInsights/insights-results-types"
 )
 
 func TestWriteReportInfoForCluster(t *testing.T) {
@@ -85,4 +86,31 @@ func TestWriteReportInfoForCluster(t *testing.T) {
 		assert.Equal(t, test.version, version)
 		assert.Equal(t, test.err, err)
 	}
+}
+
+// TestDBStorageReadClusterListRecommendationsNoRecommendations checks that when no recommendations
+// are stored, it is an OK state
+func TestDBStorageReadClusterListRecommendationsNoRecommendationsWithVersion(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, []ctypes.ReportItem{},
+		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, 0,
+	)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty, RecommendationCreatedAtTimestamp,
+	)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteReportInfoForCluster(
+		testdata.OrgID, testdata.ClusterName, []types.InfoItem{}, testdata.LastCheckedAt,
+	)
+
+	res, err := mockStorage.ReadClusterListRecommendations([]string{string(testdata.ClusterName)}, testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	assert.True(t, res[testdata.ClusterName].CreatedAt.Equal(testdata.LastCheckedAt))
 }
