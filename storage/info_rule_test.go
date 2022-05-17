@@ -108,6 +108,7 @@ func TestDBStorageReadClusterListRecommendationsNoRecommendationsWithVersion(t *
 	err = mockStorage.WriteReportInfoForCluster(
 		testdata.OrgID, testdata.ClusterName, []types.InfoItem{}, testdata.LastCheckedAt,
 	)
+	helpers.FailOnError(t, err)
 
 	res, err := mockStorage.ReadClusterListRecommendations([]string{string(testdata.ClusterName)}, testdata.OrgID)
 	helpers.FailOnError(t, err)
