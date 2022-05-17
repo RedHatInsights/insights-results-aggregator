@@ -34,12 +34,9 @@ func (storage DBStorage) WriteReportInfoForCluster(
 	info []types.InfoItem,
 	lastCheckedTime time.Time,
 ) error {
-	// Skip writing the report if it isn't newer than a report
-	// that is already in the database for the same cluster.
-	if oldLastChecked, exists := storage.clustersLastChecked[clusterName]; exists && !lastCheckedTime.After(oldLastChecked) {
-		return types.ErrOldReport
-	}
-
+	// Not checking if there is a previous report because this method will
+	// only be called after succesfully writing the main report. If that
+	// fails, this method won't be called
 	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
