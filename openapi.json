@@ -1498,7 +1498,15 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {}
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
             }
           }
         },
@@ -1518,6 +1526,16 @@
                           "created_at": {
                             "type": "string",
                             "description": "The time of last analysis for this cluster."
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "cluster_version": {
+                                "type": "string",
+                                "description": "The version of the cluster.",
+                                "example": "1.0"
+                              }
+                            }
                           },
                           "recommendations": {
                             "type": "array",

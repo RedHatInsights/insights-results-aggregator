@@ -1225,8 +1225,10 @@ func (storage DBStorage) ReadClusterListRecommendations(
 				Recommendations: []ctypes.RuleID{ruleID},
 			}
 		}
-
 	}
+
+	log.Info().Msgf("Filling metadata for clustermap %v", clusterMap)
+	storage.fillInMetadata(orgID, clusterMap)
 	return clusterMap, nil
 }
 
