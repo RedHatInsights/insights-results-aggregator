@@ -157,6 +157,26 @@ Mar 22 05:51:59 hpe-dl380pgen8-02-vm-15.hpe2.lab.eng.bos.redhat.com systemd[1]: 
 ```
 
 
+### Create PostgreSQL account
+
+Change password for user `postgres`
+
+```
+# passwd postgres
+Changing password for user postgres.
+New password:
+Retype new password:
+passwd: all authentication tokens updated successfully.
+```
+
+Change password in DB
+
+```
+psql -u postgres
+postgres=# ALTER USER postgres PASSWORD 'postgres';
+ALTER ROLE
+```
+
 ## Kafka installation and setup
 
 Install local Kafka in case you need to run benchmarks and performance
@@ -199,7 +219,11 @@ kafka_2.12-3.1.0.tg 100%[===================>]  84.13M  93.7MB/s    in 0.9s
 2022-03-22 10:13:02 (93.7 MB/s) - ‘kafka_2.12-3.1.0.tgz’ saved [88217241/88217241]
 ```
 
+Decompress tarball:
 
+```
+tar xvfz kafka_2.12-3.1.0.tgz
+```
 
 ### Start Zookeeper and Kafka
 
