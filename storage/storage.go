@@ -523,10 +523,10 @@ func parseRuleRows(rows *sql.Rows) ([]types.RuleOnReport, error) {
 	return report, nil
 }
 
-// constructInClausule is a helper function to construct `in` clausule for SQL
+// constructInClausule is a helper function to construct `in` clause for SQL
 // statement.
 func constructInClausule(howMany int) (string, error) {
-	// construct the `in` clausule in SQL query statement
+	// construct the `in` clause in SQL query statement
 	if howMany < 1 {
 		return "", fmt.Errorf("at least one value needed")
 	}
@@ -579,7 +579,7 @@ func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName)
 	// prepare arguments
 	args := argsWithClusterNames(clusterNames)
 
-	// construct the `in` clausule in SQL query statement
+	// construct the `in` clause in SQL query statement
 	inClausule, err := constructInClausule(len(clusterNames))
 	if err != nil {
 		log.Error().Err(err).Msg(inClauseError)
@@ -627,7 +627,7 @@ func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName
 	// prepare arguments
 	args := argsWithClusterNames(clusterNames)
 
-	// construct the `in` clausule in SQL query statement
+	// construct the `in` clause in SQL query statement
 	inClausule, err := constructInClausule(len(clusterNames))
 	if err != nil {
 		log.Error().Err(err).Msg(inClauseError)
