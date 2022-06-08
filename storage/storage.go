@@ -781,14 +781,14 @@ func (storage DBStorage) getReportUpsertQuery() string {
 func (storage DBStorage) getRuleHitInsertStatement() string {
 	if storage.dbDriverType == types.DBDriverSQLite3 {
 		return `
-			INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
-			VALUES ($1, $2, $3, $4, $5)
+			INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6)
 		`
 	}
 
 	return `
-		INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 }
 
@@ -822,7 +822,7 @@ func (storage DBStorage) updateReport(
 		// all older rule hits has been deleted for given cluster so it is
 		// possible to just insert new hits w/o the need to update on
 		// conflict
-		_, err = tx.Exec(ruleInsertStatement, orgID, clusterName, rule.Module, rule.ErrorKey, string(rule.TemplateData))
+		_, err = tx.Exec(ruleInsertStatement, orgID, clusterName, rule.Module, rule.ErrorKey, string(rule.TemplateData), lastCheckedTime)
 		if err != nil {
 			log.Err(err).Msgf("Unable to insert the cluster report rules (org: %v, cluster: %v, rule: %v|%v)",
 				orgID, clusterName, rule.Module, rule.ErrorKey,

@@ -731,3 +731,30 @@ func TestMigration22(t *testing.T) {
 
 	// there is no need to test StepDown because it's a NOOP
 }
+
+func TestMigration24(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// sqlite is no longer supported
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 23)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(
+		`SELECT created_at FROM rule_hit`,
+	)
+	assert.NotNil(t, err)
+
+	// migrate to 24
+	err = migration.SetDBVersion(db, dbDriver, 24)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(
+		`SELECT created_at FROM rule_hit`,
+	)
+	helpers.FailOnError(t, err)
+}
