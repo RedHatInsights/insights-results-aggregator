@@ -194,6 +194,18 @@ if nextOverflow != nil {
 .image storage_init.png _ 950
 
 
+## Memory locality
+
+- True structures
+- True value types
+- No object headers
+- Good from cache/RAM perspective
+    - RAM is not "random access" at all
+- Java: no value types, no structures, object headers, references
+- Go's approach has drawback
+    - lot of copying to structures (esp.strings)
+
+
 ## Asssembly for x86-64
 
 .image asm_overall.png _ 340
@@ -214,6 +226,13 @@ if nextOverflow != nil {
 .image asm_mapassign.png
 
 - probably ok, we can live with 1 min startup
+
+
+## Conclusion
+
+- 1st problem can be solved by not using loop-local variables
+    - + ask Go compiler devels what's going on
+- 2nd problem not solvable, it's Go's way how to do things
 
 
 ## Links
