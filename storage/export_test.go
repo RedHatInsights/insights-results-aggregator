@@ -40,8 +40,9 @@ const (
 )
 
 var (
-	ConstructInClausule  = constructInClausule
-	ArgsWithClusterNames = argsWithClusterNames
+	ConstructInClausule     = constructInClausule
+	ArgsWithClusterNames    = argsWithClusterNames
+	ValuesForRuleHitsInsert = valuesForRuleHitsInsert
 )
 
 func GetConnection(storage *DBStorage) *sql.DB {

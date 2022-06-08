@@ -114,7 +114,7 @@ func fillInInfoParams(params map[string]string) {
 func createStorage() (*storage.DBStorage, error) {
 	storageCfg := conf.GetStorageConfiguration()
 
-	// try to initiazice connection to storage
+	// try to initialize connection to storage
 	dbStorage, err := storage.New(storageCfg)
 	if err != nil {
 		log.Error().Err(err).Msg("storage.New")

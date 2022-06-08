@@ -66,7 +66,7 @@
                     "info": {
                       "type": "object",
                       "additionalProperties": {
-                         "type": "string"
+                        "type": "string"
                       }
                     },
                     "status": {
@@ -537,8 +537,7 @@
           "required": true,
           "content": {
             "text/plain": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1420,8 +1419,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1501,6 +1499,13 @@
           "content": {
             "application/json": {
               "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
               }
             }
           }
@@ -1521,6 +1526,16 @@
                           "created_at": {
                             "type": "string",
                             "description": "The time of last analysis for this cluster."
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "cluster_version": {
+                                "type": "string",
+                                "description": "The version of the cluster.",
+                                "example": "1.0"
+                              }
+                            }
                           },
                           "recommendations": {
                             "type": "array",
@@ -1647,8 +1662,7 @@
           "required": true,
           "content": {
             "text/plain": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1656,8 +1670,7 @@
           "200": {
             "description": "List of disabled rules",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         },
@@ -1780,8 +1793,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -1835,8 +1847,7 @@
           "required": true,
           "content": {
             "text/plain": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1844,8 +1855,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -1899,8 +1909,7 @@
           "required": true,
           "content": {
             "text/plain": {
-              "schema": {
-              }
+              "schema": {}
             }
           }
         },
@@ -1908,8 +1917,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -1962,8 +1970,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -1998,8 +2005,7 @@
           "200": {
             "description": "A JSON containing report for this operation.",
             "content": {
-              "application/json": {
-              }
+              "application/json": {}
             }
           }
         }
@@ -2115,23 +2121,33 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "report": {
-                      "type": "object",
-                      "properties": {
-                        "clusters": {
-                          "type": "array",
-                          "items": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cluster": {
+                            "type": "string",
+                            "minLength": 36,
+                            "maxLength": 36,
+                            "format": "uuid"
+                          },
+                          "cluster_name": {
+                            "type": "string",
+                            "description": "The display name of a cluster. Filled later in smart-proxy with info from AMS API."
+                          },
+                          "last_checked_at": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2020-01-23T16:15:59.478901889Z"
+                          },
+                          "meta": {
                             "type": "object",
                             "properties": {
-                              "cluster": {
+                              "cluster_version": {
                                 "type": "string",
-                                "minLength": 36,
-                                "maxLength": 36,
-                                "format": "uuid"
-                              },
-                              "cluster_name": {
-                                "type": "string",
-                                "description": "The display name of a cluster. Filled later in smart-proxy with info from AMS API."
+                                "description": "The version of the cluster.",
+                                "example": "1.0"
                               }
                             }
                           }

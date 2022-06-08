@@ -42,6 +42,7 @@ type incomingMessage struct {
 	RequestID   types.RequestID     `json:"RequestId"`
 	Metadata    types.Metadata      `json:"Metadata"`
 	ParsedHits  []types.ReportItem
+	ParsedInfo  []types.InfoItem
 }
 
 // HandleMessage handles the message and does all logging, metrics, etc
@@ -141,9 +142,9 @@ func checkMessageOrgInAllowList(consumer *KafkaConsumer, message *incomingMessag
 	return true, ""
 }
 
-func writeRecommendations(
-	consumer *KafkaConsumer, msg *sarama.ConsumerMessage, message incomingMessage, reportAsBytes []byte) (
-	time.Time, error) {
+func (consumer *KafkaConsumer) writeRecommendations(
+	msg *sarama.ConsumerMessage, message incomingMessage, reportAsBytes []byte,
+) (time.Time, error) {
 	err := consumer.Storage.WriteRecommendationsForCluster(
 		*message.Organization,
 		*message.ClusterName,
@@ -158,6 +159,26 @@ func writeRecommendations(
 	logMessageInfo(consumer, msg, message, "Stored recommendations")
 	logClusterInfo(&message)
 	return tStored, nil
+}
+
+func (consumer *KafkaConsumer) writeInfoReport(
+	msg *sarama.ConsumerMessage, message incomingMessage, infoStoredAtTime time.Time,
+) error {
+	err := consumer.Storage.WriteReportInfoForCluster(
+		*message.Organization,
+		*message.ClusterName,
+		message.ParsedInfo,
+		infoStoredAtTime,
+	)
+	if err == types.ErrOldReport {
+		logMessageInfo(consumer, msg, message, "Skipping because a more recent info report already exists for this cluster")
+		return nil
+	} else if err != nil {
+		logMessageError(consumer, msg, message, "Error writing info report to database", err)
+		return err
+	}
+	logMessageInfo(consumer, msg, message, "Stored info report")
+	return nil
 }
 
 // ProcessMessage processes an incoming message
@@ -221,24 +242,28 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 		storedAtTime,
 		types.KafkaOffset(msg.Offset),
 	)
-	if err != nil {
-		if err == types.ErrOldReport {
-			logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
-			return message.RequestID, nil
-		}
-
+	if err == types.ErrOldReport {
+		logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
+		return message.RequestID, nil
+	} else if err != nil {
 		logMessageError(consumer, msg, message, "Error writing report to database", err)
 		return message.RequestID, err
 	}
 	logMessageInfo(consumer, msg, message, "Stored report")
 	tStored := time.Now()
 
-	tRecommendationsStored, err := writeRecommendations(consumer, msg, message, reportAsBytes)
+	tRecommendationsStored, err := consumer.writeRecommendations(msg, message, reportAsBytes)
 	if err != nil {
 		return message.RequestID, err
 	}
 
 	logClusterInfo(&message)
+
+	infoStoredAtTime := time.Now()
+	if err = consumer.writeInfoReport(msg, message, infoStoredAtTime); err != nil {
+		return message.RequestID, err
+	}
+	infoStored := time.Now()
 
 	// log durations for every message consumption steps
 	logDuration(tStart, tRead, msg.Offset, "read")
@@ -247,6 +272,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	logDuration(tMarshalled, tTimeCheck, msg.Offset, "time_check")
 	logDuration(tTimeCheck, tStored, msg.Offset, "db_store_report")
 	logDuration(tStored, tRecommendationsStored, msg.Offset, "db_store_recommendations")
+	logDuration(infoStoredAtTime, infoStored, msg.Offset, "db_store_info_report")
 
 	// message has been parsed and stored into storage
 	return message.RequestID, nil
@@ -315,6 +341,11 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 	}
 
 	err = json.Unmarshal(*((*deserialized.Report)["reports"]), &deserialized.ParsedHits)
+	if err != nil {
+		return deserialized, err
+	}
+
+	err = json.Unmarshal(*((*deserialized.Report)["info"]), &deserialized.ParsedInfo)
 	if err != nil {
 		return deserialized, err
 	}

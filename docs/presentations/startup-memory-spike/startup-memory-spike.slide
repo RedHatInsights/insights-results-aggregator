@@ -1,0 +1,241 @@
+# DB-writer startup memory consumption + OOM kills
+31 Mar 2022
+Tags: golang, map, memory consumption, OOM
+
+Pavel Tišnovský
+Red Hat, Inc.
+<ptisnovs@redhat.com>
+
+
+
+## Problem description
+
+- Memory consumption spikes detected during DB-writer startup
+- It caused OOM kills on production!
+- "Fixed" by chaning upper memory limits
+- But it remain mystery what causes these issues
+
+
+
+## How it looks in Grafana
+
+.image grafana.png
+
+
+
+## Temporary memory peak
+
+- From Grafana it looks like the memory peak remains for ~2 minutes
+- It allow us to gauge possible causes of this problem
+
+
+
+## Possible causes
+
+- Logger starup
+- Kafka consumer startup (for reports)
+- Kafka producer startup (payload tracker)
+- DB connection initialization
+- First connection to Content Service
+- Some init code on our side
+
+
+
+## Measurement on real HW
+
+- (Not production one, to limit OS-related issues)
+- DB-writer with default configuration + empty DB
+- DB-writer with default configuration + full DB
+- DB-writer with disabled broker + full DB
+
+
+
+## DB-writer with default configuration + empty DB
+
+* Measurement
+
+```
+process_resident_memory_bytes
+2.64e+07
+(5 minutes)
+2.59e+07
+```
+
+- 25.1 MB -> 24.7 MB
+- not a problem at all
+
+
+## DB-writer with default configuration + full DB
+
+- What is "full DB"?
+
+```
+select count(*) from report;
+ 2000000
+
+select count(*) from recommendation;
+ 17464659
+
+select count(*) from rule_hit;
+ 17464665
+```
+
+* Measurement
+
+```
+process_resident_memory_bytes
+5.64e+08
+(5 minutes)
+5.06e+07
+```
+
+- 547 MB -> 48.25 MB
+- this is a problem
+
+
+
+## DB-writer with disabled broker + full DB
+
+* Measurement
+
+```
+process_resident_memory_bytes
+5.64e+08
+(5 minutes)
+4.85e+07
+```
+
+- 547 MB -> 46.25 MB
+- still a problem
+
+
+## Cause of the problem?
+
+- ❌ Logger starup
+- ❌ Kafka consumer startup (for reports)
+- ❌ Kafka producer startup (payload tracker)
+- ❌ DB connection initialization
+- ❌ First connection to Content Service
+- ✓ Some init code on our side
+
+
+## Storage type
+
+.image db_storage_type.png _ 1000
+
+
+## Storage.Init()
+
+.image storage_init.png _ 950
+
+
+## Map constructor
+
+.image db_storage1.png _ 1000
+
+- source of problem
+- data in the map is stored in an array
+- element of the array is bucket
+- each bucket contains at most 8 key value pairs
+- no capacity specified? -> makemap_small for 8 items
+
+
+## HashGrow - called when map needs to be resized
+
+```
+oldbuckets := h.buckets
+newbuckets, nextOverflow := makeBucketArray(t, h.B+bigger, nil)
+
+// commit the grow (atomic wrt gc)
+h.B += bigger
+h.flags = flags
+h.oldbuckets = oldbuckets
+h.buckets = newbuckets
+h.nevacuate = 0
+h.noverflow = 0
+
+if h.extra != nil && h.extra.overflow != nil {
+	// Promote current overflow buckets to the old generation.
+	if h.extra.oldoverflow != nil {
+		throw("oldoverflow is not nil")
+	}
+	h.extra.oldoverflow = h.extra.overflow
+	h.extra.overflow = nil
+}
+if nextOverflow != nil {
+	if h.extra == nil {
+		h.extra = new(mapextra)
+	}
+	h.extra.nextOverflow = nextOverflow
+}
+```
+
+## Map pre-allocation
+
+.image db_storage2.png _ 1000
+
+
+## DB-writer with map pre-allocator
+
+* Measurement
+
+```
+2.68e+08
+(5 minutes)
+8.8e+07
+```
+
+- 197 MB -> 83 MB
+- not optimal, but more stable consumption
+
+
+## But - is the Init code optimal?
+
+.image storage_init.png _ 950
+
+
+## Memory locality
+
+- True structures
+- True value types
+- No object headers
+- Good from cache/RAM perspective
+    - RAM is not "random access" at all
+- Java: no value types, no structures, object headers, references
+- Go's approach has drawback
+    - lot of copying to structures (esp.strings)
+
+
+## Asssembly for x86-64
+
+.image asm_overall.png _ 340
+
+
+## Object allocation in a loop!
+
+.image asm_newobject.png
+
+- blame unoptimizing Go compiler there
+
+
+## Writing into map in a loop
+
+- string copy inside
+- value copy inside
+
+.image asm_mapassign.png
+
+- probably ok, we can live with 1 min startup
+
+
+## Conclusion
+
+- 1st problem can be solved by not using loop-local variables
+    - + ask Go compiler devels what's going on
+- 2nd problem not solvable, it's Go's way how to do things
+
+
+## Links
+
+- [A comprehensive analysis of Golang's map design](https://www.fatalerrors.org/a/a-comprehensive-analysis-of-golang-s-map-design.html)
+- [Allocation efficiency in high-performance Go services](https://segment.com/blog/allocation-efficiency-in-high-performance-go-services/)
