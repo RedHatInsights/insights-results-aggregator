@@ -12,7 +12,7 @@ Red Hat, Inc.
 
 - Memory consumption spikes detected during DB-writer startup
 - It caused OOM kills on production!
-- "Fixed" by chaning upper memory limits
+- "Fixed" by changing upper memory limits
 - But it remain mystery what causes these issues
 
 
@@ -32,12 +32,12 @@ Red Hat, Inc.
 
 ## Possible causes
 
-- Logger starup
+- Logger startup
 - Kafka consumer startup (for reports)
 - Kafka producer startup (payload tracker)
 - DB connection initialization
 - First connection to Content Service
-- Some init code on our side
+- Some initialization code on our side
 
 
 
@@ -111,12 +111,12 @@ process_resident_memory_bytes
 
 ## Cause of the problem?
 
-- ❌ Logger starup
+- ❌ Logger startup
 - ❌ Kafka consumer startup (for reports)
 - ❌ Kafka producer startup (payload tracker)
 - ❌ DB connection initialization
 - ❌ First connection to Content Service
-- ✓ Some init code on our side
+- ✓ Some initialization code on our side
 
 
 ## Storage type
@@ -231,8 +231,12 @@ if nextOverflow != nil {
 ## Conclusion
 
 - 1st problem can be solved by not using loop-local variables
-    - + ask Go compiler devels what's going on
+    - + ask Go compiler developers what's going on
 - 2nd problem not solvable, it's Go's way how to do things
+- There ain't no such thing as a free lunch (in IT)
+    - hash map is internally very complicated data structure
+    - several problems might be hidden there
+    - (IMHO linear structures are not good/scalable in overall...)
 
 
 ## Links
