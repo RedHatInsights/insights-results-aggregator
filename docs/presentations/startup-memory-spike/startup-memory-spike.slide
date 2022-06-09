@@ -206,7 +206,7 @@ if nextOverflow != nil {
     - lot of copying to structures (esp.strings)
 
 
-## Asssembly for x86-64
+## Assembly for x86-64
 
 .image asm_overall.png _ 340
 
