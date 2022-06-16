@@ -940,6 +940,43 @@ func (storage DBStorage) insertRecommendations(
 
 }
 
+// getRecommendationsTime return the created_at value of recommendations
+// with given orgID and clusterName. If the value is not available or in
+// case of failure it returns an error
+func (storage DBStorage) getRecommendationsCreatedAt(
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+) (
+	*types.Timestamp,
+	error) {
+
+	creationTimeRows, err := storage.connection.Query(
+		"SELECT created_at FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;", orgID, clusterName)
+	if err != nil {
+		log.Error().Err(err).Msg("error retrieving recommendation timestamp")
+		return nil, err
+	}
+
+	if exists := creationTimeRows.Next(); exists {
+		var oldTime time.Time
+		if err := creationTimeRows.Scan(&oldTime); err != nil {
+			log.Error().Err(err).Msg("error scanning old time from recommendation")
+			return nil, err
+		}
+		newTime := types.Timestamp(oldTime.UTC().Format(time.RFC3339))
+
+		if err = creationTimeRows.Close(); err != nil {
+			log.Error().Err(err).Msg("error closing recommendation rows")
+			return nil, err
+		}
+		log.Info().
+			Str("creation time", string(newTime)).
+			Msg("creation time found for recommendation")
+		return &newTime, nil
+	}
+	return nil, fmt.Errorf("recommendations timestamp not found")
+}
+
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
 func (storage DBStorage) WriteReportForCluster(
 	orgID types.OrgID,
@@ -1026,6 +1063,15 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 		var deleted int64 = 0
 		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
+
+			// Get timestamp if present
+			creationTimeRow, err := storage.getRecommendationsCreatedAt(
+				orgID, clusterName)
+			if err != nil {
+				log.Error().Err(err).Msgf("Unable to get recommendation created_at")
+			} else {
+				creationTime = *creationTimeRow
+			}
 			// it is needed to use `org_id = $1` condition there
 			// because it allows DB to use proper btree indexing
 			// and not slow sequential scan

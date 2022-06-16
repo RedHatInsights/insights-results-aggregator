@@ -1149,17 +1149,22 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	storage.SetClustersLastChecked(dbStorage, testdata.ClusterName, time.Now())
 
 	expects.ExpectBegin()
+	expects.ExpectQuery(`SELECT created_at FROM recommendation`).
+		WillReturnRows(expects.NewRows([]string{"created_at"}).AddRow(time.Time{})).
+		RowsWillBeClosed()
 	expects.ExpectExec("DELETE FROM recommendation").
 		WillReturnResult(driver.RowsAffected(3))
 	expects.ExpectExec("INSERT INTO recommendation").
 		WillReturnResult(driver.ResultNoRows)
 	expects.ExpectCommit()
+	expects.ExpectClose()
+	expects.ExpectClose()
 
 	err = mockStorage.WriteRecommendationsForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
 	)
-
 	helpers.FailOnError(t, err)
+	helpers.FailOnError(t, mockStorage.Close())
 }
 
 // TestDBStorageInsertRecommendationsNoRuleHit checks that no
