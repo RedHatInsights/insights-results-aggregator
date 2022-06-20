@@ -40,4 +40,5 @@ var migrations = []Migration{
 	mig0021AddGatheredAtToReport,
 	mig0022CleanupEnableDisableTables,
 	mig0023AddReportInfoTable,
+	mig0024AddTimestampToRuleHit,
 }
