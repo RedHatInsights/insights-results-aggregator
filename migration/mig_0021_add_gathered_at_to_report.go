@@ -35,6 +35,6 @@ var mig0021AddGatheredAtToReport = Migration{
 			return err
 		}
 
-		return fmt.Errorf("%v driver is not supported", driver)
+		return fmt.Errorf(driverUnsupportedErr, driver)
 	},
 }

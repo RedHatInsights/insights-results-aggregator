@@ -758,3 +758,30 @@ func TestMigration24(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 }
+
+func TestMigration25(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// sqlite is no longer supported
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 24)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(
+		`SELECT impacted_since FROM recommendation`,
+	)
+	assert.Error(t, err)
+
+	// migrate to 25
+	err = migration.SetDBVersion(db, dbDriver, 25)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(
+		`SELECT impacted_since FROM recommendation`,
+	)
+	helpers.FailOnError(t, err)
+}
