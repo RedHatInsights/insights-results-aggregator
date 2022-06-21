@@ -61,12 +61,16 @@ func InsertRecommendations(
 	storage *DBStorage, orgID types.OrgID,
 	clusterName types.ClusterName, report types.ReportRules,
 	createdAt types.Timestamp,
+	impactedSince types.Timestamp,
 ) (inserted int, err error) {
 	tx, err := storage.connection.Begin()
 	if err != nil {
 		return 0, err
 	}
-	inserted, err = storage.insertRecommendations(tx, orgID, clusterName, report, createdAt)
+
+	inserted, err = storage.insertRecommendations(
+		tx, orgID, clusterName,
+		report, createdAt, impactedSince)
 
 	if err != nil {
 		_ = tx.Rollback()
