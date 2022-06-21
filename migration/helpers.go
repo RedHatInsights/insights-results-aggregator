@@ -22,7 +22,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const tableTag string = "table"
+const (
+	driverUnsupportedErr = "%v driver is not supported"
+	tableTag             = "table"
+)
 
 // NewUpdateTableMigration generates a migration which changes tables schema and copies data
 // (should work in most of cases like adding a field, altering it and so on)

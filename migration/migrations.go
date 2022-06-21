@@ -41,4 +41,5 @@ var migrations = []Migration{
 	mig0022CleanupEnableDisableTables,
 	mig0023AddReportInfoTable,
 	mig0024AddTimestampToRuleHit,
+	mig0025AddImpactedToRecommendation,
 }
