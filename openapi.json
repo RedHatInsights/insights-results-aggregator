@@ -2141,6 +2141,11 @@
                             "format": "date",
                             "example": "2020-01-23T16:15:59.478901889Z"
                           },
+                          "impacted": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2020-01-23T16:15:59.478901889Z"
+                          },
                           "meta": {
                             "type": "object",
                             "properties": {

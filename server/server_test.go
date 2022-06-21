@@ -1332,7 +1332,7 @@ func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenOrgDBError(t *testing.T) {
 	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
 	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
-	expects.ExpectQuery("SELECT cluster_id, created_at FROM recommendation").WillReturnError(sql.ErrNoRows)
+	expects.ExpectQuery("SELECT cluster_id, created_at, impacted_since FROM recommendation").WillReturnError(sql.ErrNoRows)
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
@@ -1390,7 +1390,7 @@ func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 	mockStorage, expects := helpers.MustGetMockStorageWithExpects(t)
 	defer helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
-	expects.ExpectQuery("SELECT cluster_id, created_at FROM recommendation").WillReturnError(sql.ErrConnDone)
+	expects.ExpectQuery("SELECT cluster_id, created_at, impacted_since FROM recommendation").WillReturnError(sql.ErrConnDone)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1400,7 +1400,7 @@ func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 		Body:       `{"status": "` + errStr + `"}`,
 	})
 
-	expects.ExpectQuery("SELECT cluster_id, created_at FROM recommendation").WillReturnError(sql.ErrTxDone)
+	expects.ExpectQuery("SELECT cluster_id, created_at, impacted_since FROM recommendation").WillReturnError(sql.ErrTxDone)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1410,7 +1410,7 @@ func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 		Body:       `{"status": "` + errStr + `"}`,
 	})
 
-	expects.ExpectQuery("SELECT cluster_id, created_at FROM recommendation").WillReturnError(fmt.Errorf("any error"))
+	expects.ExpectQuery("SELECT cluster_id, created_at, impacted_since FROM recommendation").WillReturnError(fmt.Errorf("any error"))
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.RuleClusterDetailEndpoint,
@@ -1425,9 +1425,10 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "meta":{"cluster_version":"%v"},"last_checked_at":"%v"}],"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "impacted":"%v", "meta":{"cluster_version":"%v"},"last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
+		RecommendationCreatedAtTimestamp,
 		testdata.ClusterVersion,
 		RecommendationCreatedAtTimestamp,
 	)
@@ -1490,9 +1491,10 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "meta":{"cluster_version":"%v"}, "last_checked_at":"%v"}],"status":"ok"}`
+	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "impacted":"%v", "meta":{"cluster_version":"%v"}, "last_checked_at":"%v"}],"status":"ok"}`
 	expected := fmt.Sprintf(respBody,
 		testdata.ClusterName,
+		RecommendationCreatedAtTimestamp,
 		testdata.ClusterVersion,
 		RecommendationCreatedAtTimestamp,
 	)

@@ -1076,10 +1076,10 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 
 	expects.ExpectBegin()
 
-	expects.ExpectExec("INSERT INTO recommendation \\(org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at\\) " +
-		"VALUES \\(\\$1, \\$2, \\$3\\, \\$4\\, \\$5\\, \\$6\\)," +
-		"\\(\\$7, \\$8, \\$9\\, \\$10\\, \\$11\\, \\$12\\)," +
-		"\\(\\$13, \\$14, \\$15\\, \\$16\\, \\$17\\, \\$18\\)").
+	expects.ExpectExec("INSERT INTO recommendation \\(org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at, impacted_since\\) " +
+		"VALUES \\(\\$1, \\$2, \\$3, \\$4, \\$5, \\$6, \\$7\\)," +
+		"\\(\\$8, \\$9, \\$10, \\$11, \\$12, \\$13, \\$14\\)," +
+		"\\(\\$15, \\$16, \\$17, \\$18, \\$19, \\$20, \\$21\\)").
 		WillReturnResult(driver.ResultNoRows)
 
 	expects.ExpectCommit()
@@ -1090,8 +1090,13 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 		PassedRules:  testdata.RuleOnReportResponses,
 		TotalCount:   3 * len(testdata.RuleOnReportResponses),
 	}
+	// impactedSince first time a recommendation is inserted impacted
+	// and created_at match
+	impactedSince := RecommendationCreatedAtTimestamp
 	inserted, err := storage.InsertRecommendations(
-		mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report, RecommendationCreatedAtTimestamp)
+		mockStorage.(*storage.DBStorage),
+		testdata.OrgID, testdata.ClusterName, report,
+		RecommendationCreatedAtTimestamp, impactedSince)
 	assert.Equal(t, 3, inserted)
 	helpers.FailOnError(t, err)
 }
@@ -1109,7 +1114,9 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStored(t *testing.T) {
 	expects.ExpectCommit()
 
 	err := mockStorage.WriteRecommendationsForCluster(
-		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
+		testdata.OrgID, testdata.ClusterName,
+		testdata.Report3Rules,
+		RecommendationCreatedAtTimestamp,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1149,7 +1156,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	storage.SetClustersLastChecked(dbStorage, testdata.ClusterName, time.Now())
 
 	expects.ExpectBegin()
-	expects.ExpectQuery(`SELECT created_at FROM recommendation`).
+	expects.ExpectQuery(`SELECT impacted_since FROM recommendation`).
 		WillReturnRows(expects.NewRows([]string{"created_at"}).AddRow(time.Time{})).
 		RowsWillBeClosed()
 	expects.ExpectExec("DELETE FROM recommendation").
@@ -1178,8 +1185,11 @@ func TestDBStorageInsertRecommendationsNoRuleHit(t *testing.T) {
 		PassedRules:  testdata.RuleOnReportResponses,
 		TotalCount:   2 * len(testdata.RuleOnReportResponses),
 	}
+	// impactedSincefirst time a recommendation is inserted impacted and created_at match
+	impactedSince := RecommendationCreatedAtTimestamp
 	inserted, err := storage.InsertRecommendations(
-		mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName, report, RecommendationCreatedAtTimestamp)
+		mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName,
+		report, RecommendationCreatedAtTimestamp, impactedSince)
 
 	assert.Equal(t, 0, inserted)
 	helpers.FailOnError(t, err)
