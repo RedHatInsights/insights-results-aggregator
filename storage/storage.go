@@ -961,6 +961,7 @@ func (storage DBStorage) getImpactedSince(
 		log.Error().Err(err).Msg("error retrieving recommendation timestamp")
 		return nil, err
 	}
+	defer closeRows(impactedSinceRows)
 
 	if exists := impactedSinceRows.Next(); exists {
 		var oldTime time.Time
@@ -970,10 +971,6 @@ func (storage DBStorage) getImpactedSince(
 		}
 		newTime := types.Timestamp(oldTime.UTC().Format(time.RFC3339))
 
-		if err = impactedSinceRows.Close(); err != nil {
-			log.Error().Err(err).Msg("error closing recommendation rows")
-			return nil, err
-		}
 		log.Info().
 			Str("impacted_since", string(newTime)).
 			Msg("impacted_since found for recommendation")
