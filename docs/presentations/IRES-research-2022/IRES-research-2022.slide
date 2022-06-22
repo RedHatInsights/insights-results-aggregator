@@ -1,0 +1,94 @@
+# IRES Research 2022
+
+22 Jun 2022
+Tags: golang, architecture, microservices
+
+Pavel Tišnovský
+Red Hat, Inc.
+<ptisnovs@redhat.com>
+
+
+
+## Summary (TL;DR;)
+
+* Research topics for this year
+- Microservice architecture analysis
+
+## Topics
+
+* Structural Coupling
+* Absolute Importance of the Service (AIS)
+* Absolute Dependence of the Service (ADS)
+* Cyclic dependency
+* Services Interdependence in the System (SIY)
+* Unbalanced API
+* Bottleneck Service
+* Absolute Criticality of the Service (ACS)
+* Shared Persistence
+* Inappropriate Intimacy
+
+## Four sub-teams
+
+* SW Architecture languages
+* Visualizing architecture
+* Visualize architecture - dynamic perspective
+* Tools for gather “code smells”
+
+## Research questions 
+
+* How can we use provenance tracking to map changes/history and different versions of visual software architecture/graphs?
+* Are there any established tools for this?
+* What are high-priority functionalities/requirements for a visual architecture graph project to have?
+* Are current established tools addressing these priorities?
+* Are visual architecture/graph external dependencies relevant to the graph to include in provenance tracking outside of direct microservice/segment relationships?
+* What can be defined as relevant to the graph?
+
+## Practical parts
+
+## Language to be used to describe SW architecture
+
+.image languages1.png _ 1000
+
+## Language to be used to describe SW architecture
+
+.image languages2.png _ 640
+
+## Language to be used to describe SW architecture
+
+.image tool1.png
+
+## Architecture visualisation (2D)
+
+.image 2dvisualization.png _ 1000
+
+## Architecture visualisation (2D)
+
+.image 2dselectednode.png _ 1000
+
+## Architecture visualisation (3D)
+
+.image 3dvisualization.png _ 1000
+
+## Architecture visualisation (3D)
+
+.image 3dhighlightingnode.png _ 1000
+
+## Architecture visualisation (2D/3D)
+
+.image tool2.png
+
+## Diff visualisation
+
+.image tool3.png
+
+## Code smell detection tool(s)
+
+.image static_checker.png _ 680
+
+## Code smell detection tool(s)
+
+.image tool4.png
+
+## Putting it all together
+
+.image tool5.png
