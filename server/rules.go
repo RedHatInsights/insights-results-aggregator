@@ -52,8 +52,8 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	userID, succesful := readUserID(writer, request)
-	if !succesful {
+	userID, successful := readUserID(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
@@ -76,8 +76,8 @@ func (server HTTPServer) listOfDisabledRules(writer http.ResponseWriter, request
 	log.Info().Msg("Lisf of disabled rules")
 
 	// retrieve account (user) ID
-	userID, succesful := readUserID(writer, request)
-	if !succesful {
+	userID, successful := readUserID(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
@@ -106,8 +106,8 @@ func (server HTTPServer) listOfReasons(writer http.ResponseWriter, request *http
 	log.Info().Msg("Lisf of reasons")
 
 	// retrieve account (user) ID
-	userID, succesful := readUserID(writer, request)
-	if !succesful {
+	userID, successful := readUserID(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
@@ -169,8 +169,8 @@ func (server HTTPServer) listOfDisabledRulesForClusters(writer http.ResponseWrit
 func (server HTTPServer) listOfDisabledClusters(writer http.ResponseWriter, request *http.Request) {
 	log.Info().Msg("Lisf of disabled clusters")
 
-	userID, succesful := readUserID(writer, request)
-	if !succesful {
+	userID, successful := readUserID(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
@@ -258,8 +258,8 @@ func (server HTTPServer) saveDisableFeedback(writer http.ResponseWriter, request
 		return
 	}
 
-	userID, succesful := readUserID(writer, request)
-	if !succesful {
+	userID, successful := readUserID(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
