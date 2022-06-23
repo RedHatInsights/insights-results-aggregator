@@ -45,8 +45,8 @@ func (server *HTTPServer) voteOnRule(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	userID, succesful := readUserID(writer, request)
-	if !succesful {
+	userID, successful := readUserID(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}
@@ -82,8 +82,8 @@ func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	userID, succesful := readUserID(writer, request)
-	if !succesful {
+	userID, successful := readUserID(writer, request)
+	if !successful {
 		// everything has been handled already
 		return
 	}

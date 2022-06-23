@@ -77,7 +77,7 @@ func TestDBStorageDisableRuleSystemWideDoubleDisable(t *testing.T) {
 // Check the method DisableRuleSystemWide in case of DB error.
 func TestDBStorageDisableRuleSystemWideOnDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	// close storage immediatelly
+	// close storage immediately
 	closer()
 
 	// try to call the method
@@ -109,7 +109,7 @@ func TestDBStorageEnableRuleSystemWide(t *testing.T) {
 // Check the method EnableRuleSystemWide in case of DB error.
 func TestDBStorageEnableRuleSystemWideOnDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	// close storage immediatelly
+	// close storage immediately
 	closer()
 
 	// try to call the method
@@ -141,7 +141,7 @@ func TestDBStorageUpdateDisabledRuleJustifiction(t *testing.T) {
 // Check the method UpdateDisabledRuleJustification in case of DB error.
 func TestDBStorageUpdateDisabledRuleJustification(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	// close storage immediatelly
+	// close storage immediately
 	closer()
 
 	// try to call the method
@@ -207,7 +207,7 @@ func TestDBStorageReadDisabledRuleOneRule(t *testing.T) {
 // Check the method ReadDisabledRule in case of DB error.
 func TestDBStorageReadDisabledRuleOnRBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	// close storage immediatelly
+	// close storage immediately
 	closer()
 
 	// try to call the method
@@ -314,7 +314,7 @@ func TestDBStorageListOfSystemWideDisabledRulesTwoRules(t *testing.T) {
 // Check the method ListOfSystemWideDisabledRules in case of DB error.
 func TestDBStorageListOfSystemWideDisabledRulesDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	// close storage immediatelly
+	// close storage immediately
 	closer()
 
 	// try to call the method

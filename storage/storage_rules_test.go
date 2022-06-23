@@ -169,7 +169,7 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 // returned for DB error.
 func TestDBStorageListRulesReasonsOnDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	// close storage immediatelly
+	// close storage immediately
 	closer()
 
 	// try to read list of reasons
@@ -228,7 +228,7 @@ func TestDBStorageListOfRulesReasonsOneRule(t *testing.T) {
 // for DB error.
 func TestDBStorageListOfDisabledRulesDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-	// close storage immediatelly
+	// close storage immediately
 	closer()
 
 	// try to read list of disabled rules
