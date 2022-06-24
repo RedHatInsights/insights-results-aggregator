@@ -389,6 +389,9 @@ func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 		WillReturnRows(expects.NewRows([]string{"last_checked_at"})).
 		RowsWillBeClosed()
 
+	expects.ExpectQuery("SELECT created_at FROM rule_hit").
+		WillReturnRows(expects.NewRows([]string{"last_checked_at"})).
+		RowsWillBeClosed()
 	expects.ExpectExec("DELETE FROM rule_hit").
 		WillReturnResult(driver.ResultNoRows)
 
@@ -400,10 +403,13 @@ func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 		WillReturnResult(driver.ResultNoRows)
 
 	expects.ExpectCommit()
+	expects.ExpectClose()
+	expects.ExpectClose()
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed, testdata.LastCheckedAt, time.Now(), time.Now(), testdata.KafkaOffset,
 	)
+	helpers.FailOnError(t, mockStorage.Close())
 	helpers.FailOnError(t, err)
 }
 

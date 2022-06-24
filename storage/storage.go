@@ -775,19 +775,20 @@ func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 // GetRuleHitInsertStatement method prepares DB statement to be used to write
 // rule FQDN + rule error key into rule_hit table for given cluster_id
 func (storage DBStorage) GetRuleHitInsertStatement(rules []types.ReportItem) string {
-	const ruleInsertStatement = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data) VALUES %s"
+	const ruleInsertStatement = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data, created_at) VALUES %s"
 
 	var placeholders []string
 
 	// fill-in placeholders for INSERT statement
 	for index := range rules {
 		placeholders = append(
-			placeholders, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)",
-				index*5+1,
-				index*5+2,
-				index*5+3,
-				index*5+4,
-				index*5+5,
+			placeholders, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d,$%d)",
+				index*6+1,
+				index*6+2,
+				index*6+3,
+				index*6+4,
+				index*6+5,
+				index*6+6,
 			))
 	}
 
@@ -801,6 +802,7 @@ func valuesForRuleHitsInsert(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	rules []types.ReportItem,
+	impactedSince ctypes.Timestamp,
 ) []interface{} {
 	// fill-in values for INSERT statement
 	var values []interface{}
@@ -811,7 +813,9 @@ func valuesForRuleHitsInsert(
 			clusterName,
 			rule.Module,
 			rule.ErrorKey,
-			string(rule.TemplateData))
+			string(rule.TemplateData),
+			impactedSince,
+		)
 	}
 	return values
 }
@@ -830,8 +834,18 @@ func (storage DBStorage) updateReport(
 	// Get the UPSERT query for writing a report into the database.
 	reportUpsertQuery := storage.getReportUpsertQuery()
 
+	// Get created_at if present before deletion
+	impactedSince := types.Timestamp(time.Now().UTC().Format(time.RFC3339))
+	impactedSinceRow, err := storage.getImpactedSince(
+		orgID, clusterName, "created_at", "rule_hit")
+	if err != nil {
+		log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
+	} else {
+		impactedSince = *impactedSinceRow
+	}
+
 	deleteQuery := "DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
-	_, err := tx.Exec(deleteQuery, orgID, clusterName)
+	_, err = tx.Exec(deleteQuery, orgID, clusterName)
 	if err != nil {
 		log.Err(err).Msgf("Unable to remove previous cluster reports (org: %v, cluster: %v)", orgID, clusterName)
 		return err
@@ -845,7 +859,7 @@ func (storage DBStorage) updateReport(
 		ruleInsertStatement := storage.GetRuleHitInsertStatement(rules)
 
 		// Get values to be stored in rule_hits table
-		values := valuesForRuleHitsInsert(orgID, clusterName, rules)
+		values := valuesForRuleHitsInsert(orgID, clusterName, rules, impactedSince)
 
 		_, err = tx.Exec(ruleInsertStatement, values...)
 		if err != nil {
@@ -945,18 +959,23 @@ func (storage DBStorage) insertRecommendations(
 
 }
 
-// getRecommendationsTime return the created_at value of recommendations
+// getRecommendationsTime return the `column` value of `table` table
 // with given orgID and clusterName. If the value is not available or in
-// case of failure it returns an error
+// case of failure it returns an error.
+// `column` MUST be of type TIMESTAMP and MUST be and actual
+// column of `table`
 func (storage DBStorage) getImpactedSince(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
+	column, table string,
 ) (
 	*types.Timestamp,
 	error) {
 
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;",
+		column, table)
 	impactedSinceRows, err := storage.connection.Query(
-		"SELECT impacted_since FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;", orgID, clusterName)
+		query, orgID, clusterName)
 	if err != nil {
 		log.Error().Err(err).Msg("error retrieving recommendation timestamp")
 		return nil, err
@@ -1068,7 +1087,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 
 			// Get impacted_since if present
 			impactedSinceRow, err := storage.getImpactedSince(
-				orgID, clusterName)
+				orgID, clusterName, "impacted_since", "recommendation")
 			if err != nil {
 				log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
 			} else {
