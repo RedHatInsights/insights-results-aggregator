@@ -16,7 +16,6 @@ package storage_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -35,12 +34,11 @@ func TestDBStorage_getRuleHitInsertStatement(t *testing.T) {
 }
 
 func TestDBStorage_valuesForRuleHitsInsert(t *testing.T) {
-	impactedSince := types.Timestamp(time.Now().UTC().Format(time.RFC3339))
 	v := storage.ValuesForRuleHitsInsert(
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.Report3RulesParsed,
-		impactedSince,
+		make(map[string]types.Timestamp),
 	)
 
 	// 6 values for 3 rule hits expected

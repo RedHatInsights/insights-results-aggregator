@@ -802,12 +802,19 @@ func valuesForRuleHitsInsert(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	rules []types.ReportItem,
-	impactedSince ctypes.Timestamp,
+	ruleKeyCreatedAt map[string]types.Timestamp,
 ) []interface{} {
 	// fill-in values for INSERT statement
 	var values []interface{}
 
 	for _, rule := range rules {
+		ruleKey := string(rule.Module) + string(rule.ErrorKey)
+		var impactedSince types.Timestamp
+		if val, ok := ruleKeyCreatedAt[ruleKey]; ok {
+			impactedSince = val
+		} else {
+			impactedSince = types.Timestamp(time.Now().UTC().Format(time.RFC3339))
+		}
 		values = append(values,
 			orgID,
 			clusterName,
@@ -835,13 +842,12 @@ func (storage DBStorage) updateReport(
 	reportUpsertQuery := storage.getReportUpsertQuery()
 
 	// Get created_at if present before deletion
-	impactedSince := types.Timestamp(time.Now().UTC().Format(time.RFC3339))
-	impactedSinceRow, err := storage.getImpactedSince(
-		orgID, clusterName, "created_at", "rule_hit")
+	RuleKeyCreatedAt, err := storage.getRuleKeyCreatedAtMap(
+		orgID, clusterName,
+	)
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
-	} else {
-		impactedSince = *impactedSinceRow
+		RuleKeyCreatedAt = make(map[string]types.Timestamp) //create empty map
 	}
 
 	deleteQuery := "DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
@@ -859,7 +865,7 @@ func (storage DBStorage) updateReport(
 		ruleInsertStatement := storage.GetRuleHitInsertStatement(rules)
 
 		// Get values to be stored in rule_hits table
-		values := valuesForRuleHitsInsert(orgID, clusterName, rules, impactedSince)
+		values := valuesForRuleHitsInsert(orgID, clusterName, rules, RuleKeyCreatedAt)
 
 		_, err = tx.Exec(ruleInsertStatement, values...)
 		if err != nil {
@@ -967,13 +973,11 @@ func (storage DBStorage) insertRecommendations(
 func (storage DBStorage) getImpactedSince(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
-	column, table string,
 ) (
 	*types.Timestamp,
 	error) {
 
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;",
-		column, table)
+	query := "SELECT impacted_since FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;"
 	impactedSinceRows, err := storage.connection.Query(
 		query, orgID, clusterName)
 	if err != nil {
@@ -996,6 +1000,46 @@ func (storage DBStorage) getImpactedSince(
 		return &newTime, nil
 	}
 	return nil, fmt.Errorf("recommendations impacted_since not found")
+}
+
+// getRuleKeyCreatedAtMap returns a map between
+// (rule_fqdn, error_key) -> created_at
+// for each rule_hit rows matching given
+// orgId and clusterName
+func (storage DBStorage) getRuleKeyCreatedAtMap(
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+) (
+	map[string]types.Timestamp,
+	error) {
+
+	query := "SELECT rule_fqdn, error_key, created_at FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
+	impactedSinceRows, err := storage.connection.Query(
+		query, orgID, clusterName)
+	if err != nil {
+		log.Error().Err(err).Msg("error retrieving recommendation timestamp")
+		return nil, err
+	}
+	defer closeRows(impactedSinceRows)
+
+	RuleKeyCreatedAt := make(map[string]types.Timestamp)
+	for impactedSinceRows.Next() {
+		var ruleFqdn string
+		var errorKey string
+		var oldTime time.Time
+		err := impactedSinceRows.Scan(
+			&ruleFqdn,
+			&errorKey,
+			&oldTime,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("error scanning for rule id -> created_at map")
+			continue
+		}
+		newTime := types.Timestamp(oldTime.UTC().Format(time.RFC3339))
+		RuleKeyCreatedAt[ruleFqdn+errorKey] = newTime
+	}
+	return RuleKeyCreatedAt, err
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
@@ -1087,7 +1131,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 
 			// Get impacted_since if present
 			impactedSinceRow, err := storage.getImpactedSince(
-				orgID, clusterName, "impacted_since", "recommendation")
+				orgID, clusterName)
 			if err != nil {
 				log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
 			} else {

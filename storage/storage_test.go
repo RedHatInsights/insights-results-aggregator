@@ -389,7 +389,7 @@ func TestDBStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 		WillReturnRows(expects.NewRows([]string{"last_checked_at"})).
 		RowsWillBeClosed()
 
-	expects.ExpectQuery("SELECT created_at FROM rule_hit").
+	expects.ExpectQuery("SELECT rule_fqdn, error_key, created_at FROM rule_hit").
 		WillReturnRows(expects.NewRows([]string{"last_checked_at"})).
 		RowsWillBeClosed()
 	expects.ExpectExec("DELETE FROM rule_hit").
