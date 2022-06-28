@@ -15,12 +15,13 @@
 package storage_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 
-	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
+	"github.com/stretchr/testify/assert"
 
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 func TestDBStorage_getRuleHitInsertStatement(t *testing.T) {
@@ -28,18 +29,23 @@ func TestDBStorage_getRuleHitInsertStatement(t *testing.T) {
 	r := fakeStorage.GetRuleHitInsertStatement(testdata.Report3RulesParsed)
 
 	// 5*3 placeholders expected
-	const expected = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data) VALUES ($1,$2,$3,$4,$5),($6,$7,$8,$9,$10),($11,$12,$13,$14,$15)"
+	const expected = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data, created_at) VALUES ($1,$2,$3,$4,$5,$6),($7,$8,$9,$10,$11,$12),($13,$14,$15,$16,$17,$18)"
 	assert.Equal(t, r, expected)
 }
 
 func TestDBStorage_valuesForRuleHitsInsert(t *testing.T) {
-	v := storage.ValuesForRuleHitsInsert(testdata.OrgID, testdata.ClusterName, testdata.Report3RulesParsed)
+	v := storage.ValuesForRuleHitsInsert(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.Report3RulesParsed,
+		make(map[string]types.Timestamp),
+	)
 
-	// 5*3 values expected
-	assert.Len(t, v, 15)
+	// 6 values for 3 rule hits expected
+	assert.Len(t, v, 6*3)
 
 	// just elementary tests
-	for i := 0; i < 15; i += 5 {
+	for i := 0; i < 6*3; i += 6 {
 		assert.Equal(t, v[i], testdata.OrgID)
 		assert.Equal(t, v[i+1], testdata.ClusterName)
 	}
