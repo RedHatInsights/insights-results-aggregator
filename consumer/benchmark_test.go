@@ -77,9 +77,7 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 			defer ira_helpers.MustCloseStorage(b, benchStorage)
 
 			if testCase.RandomMessages {
-				benchmarkProcessingMessage(b, benchStorage, func() string {
-					return testdata.GetRandomConsumerMessage()
-				})
+				benchmarkProcessingMessage(b, benchStorage, testdata.GetRandomConsumerMessage)
 			} else {
 				benchmarkProcessingMessage(b, benchStorage, func() string {
 					return testdata.ConsumerMessage
