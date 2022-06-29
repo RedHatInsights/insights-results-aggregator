@@ -260,7 +260,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	logClusterInfo(&message)
 
 	infoStoredAtTime := time.Now()
-	if err = consumer.writeInfoReport(msg, message, infoStoredAtTime); err != nil {
+	if err := consumer.writeInfoReport(msg, message, infoStoredAtTime); err != nil {
 		return message.RequestID, err
 	}
 	infoStored := time.Now()
