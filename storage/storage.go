@@ -35,10 +35,8 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/lib/pq"
-	_ "github.com/lib/pq" // PostgreSQL database driver
-	"github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3" // SQLite database driver
+	"github.com/lib/pq"           // PostgreSQL database driver
+	"github.com/mattn/go-sqlite3" // SQLite database driver
 	"github.com/rs/zerolog/log"
 
 	ctypes "github.com/RedHatInsights/insights-results-types"
