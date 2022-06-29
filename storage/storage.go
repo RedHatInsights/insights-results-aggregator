@@ -845,7 +845,7 @@ func (storage DBStorage) updateReport(
 	)
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
-		RuleKeyCreatedAt = make(map[string]types.Timestamp) //create empty map
+		RuleKeyCreatedAt = make(map[string]types.Timestamp) // create empty map
 	}
 
 	deleteQuery := "DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
