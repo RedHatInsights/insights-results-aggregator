@@ -277,7 +277,7 @@ func TestServeAPISpecFileOK(t *testing.T) {
 	err := os.Chdir("../")
 	helpers.FailOnError(t, err)
 
-	fileData, err := ioutil.ReadFile(helpers.DefaultServerConfig.APISpecFile)
+	fileData, err := os.ReadFile(helpers.DefaultServerConfig.APISpecFile)
 	helpers.FailOnError(t, err)
 
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{

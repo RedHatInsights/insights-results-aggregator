@@ -35,7 +35,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -161,7 +160,7 @@ func getOrganizationAllowlist() mapset.Set {
 		Config.Processing.OrgAllowlistFile = defaultOrgAllowlistFileName
 	}
 
-	orgAllowlistFileData, err := ioutil.ReadFile(Config.Processing.OrgAllowlistFile)
+	orgAllowlistFileData, err := os.ReadFile(Config.Processing.OrgAllowlistFile)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Organization allowlist file could not be opened")
 	}

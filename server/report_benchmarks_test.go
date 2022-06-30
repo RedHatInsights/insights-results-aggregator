@@ -17,7 +17,7 @@ package server_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"testing"
@@ -104,7 +104,7 @@ func benchmarkHTTPServerReadReportForCluster(
 			helpers.FailOnError(b, err)
 
 			response := helpers.ExecuteRequest(testServer, req).Result()
-			respBody, err := ioutil.ReadAll(response.Body)
+			respBody, err := io.ReadAll(response.Body)
 			helpers.FailOnError(b, err)
 
 			var resp struct {
