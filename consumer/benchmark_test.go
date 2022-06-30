@@ -15,6 +15,7 @@
 package consumer_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -88,7 +89,7 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 }
 
 func getMessagesFromDir(b *testing.B, dataDir string) []string {
-	files, err := os.ReadDir(dataDir)
+	files, err := ioutil.ReadDir(dataDir)
 	helpers.FailOnError(b, err)
 
 	var messages []string
