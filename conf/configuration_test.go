@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -282,7 +282,7 @@ func GetTmpConfigFile(configData string) (string, error) {
 		return "", err
 	}
 
-	if _, err := tmpFile.Write([]byte(configData)); err != nil {
+	if _, err := tmpFile.WriteString(configData); err != nil {
 		return "", err
 	}
 
