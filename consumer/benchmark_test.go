@@ -15,7 +15,6 @@
 package consumer_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
