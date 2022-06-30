@@ -17,7 +17,6 @@ package server_test
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -55,7 +54,7 @@ func TestReadClusterNameMissing(t *testing.T) {
 	resp := recorder.Result()
 	assert.NotNil(t, resp)
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, `{"status":"Missing required param from request: cluster"}`, strings.TrimSpace(string(body)))
@@ -145,7 +144,7 @@ func TestReadRuleIDMissing(t *testing.T) {
 	resp := recorder.Result()
 	assert.NotNil(t, resp)
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, `{"status":"Missing required param from request: rule_id"}`, strings.TrimSpace(string(body)))
