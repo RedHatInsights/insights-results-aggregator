@@ -675,6 +675,7 @@ func TestDBStorageDeleteReports(t *testing.T) {
 }
 
 func TestDBStorage_ReadReportForClusterByClusterName_OK(t *testing.T) {
+
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
@@ -683,7 +684,9 @@ func TestDBStorage_ReadReportForClusterByClusterName_OK(t *testing.T) {
 	report, lastCheckedAt, err := mockStorage.ReadReportForClusterByClusterName(testdata.ClusterName)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, testdata.RuleOnReportResponses, report)
+	for i, v := range testdata.RuleOnReportResponses {
+		helpers.CompareReportResponses(t, v, report[i], time.Now())
+	}
 	assert.Equal(t, types.Timestamp(testdata.LastCheckedAt.UTC().Format(time.RFC3339)), lastCheckedAt)
 }
 
