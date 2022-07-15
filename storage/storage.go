@@ -502,9 +502,10 @@ func parseRuleRows(rows *sql.Rows) ([]types.RuleOnReport, error) {
 			templateDataBytes []byte
 			ruleFQDN          types.RuleID
 			errorKey          types.ErrorKey
+			createdAt         time.Time
 		)
 
-		err := rows.Scan(&templateDataBytes, &ruleFQDN, &errorKey)
+		err := rows.Scan(&templateDataBytes, &ruleFQDN, &errorKey, &createdAt)
 		if err != nil {
 			log.Error().Err(err).Msg("ReportListForCluster")
 			return report, err
@@ -515,6 +516,7 @@ func parseRuleRows(rows *sql.Rows) ([]types.RuleOnReport, error) {
 			Module:       ruleFQDN,
 			ErrorKey:     errorKey,
 			TemplateData: templateData,
+			CreatedAt:    types.Timestamp(createdAt.UTC().Format(time.RFC3339)),
 		}
 
 		report = append(report, rule)
@@ -697,7 +699,7 @@ func (storage DBStorage) ReadReportForCluster(
 	}
 
 	rows, err := storage.connection.Query(
-		"SELECT template_data, rule_fqdn, error_key FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;", orgID, clusterName,
+		"SELECT template_data, rule_fqdn, error_key, created_at FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;", orgID, clusterName,
 	)
 
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
@@ -751,7 +753,7 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 	}
 
 	rows, err := storage.connection.Query(
-		"SELECT template_data, rule_fqdn, error_key FROM rule_hit WHERE cluster_id = $1;", clusterName,
+		"SELECT template_data, rule_fqdn, error_key, created_at FROM rule_hit WHERE cluster_id = $1;", clusterName,
 	)
 
 	if err != nil {

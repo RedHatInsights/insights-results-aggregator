@@ -282,6 +282,24 @@
                               "disabled": {
                                 "type": "boolean",
                                 "description": "If this rule result disabled or not. This field can be used in the UI to show only specific set of rules results."
+                              },
+                              "disable_feedback": {
+                                "type": "string",
+                                "description": "feedback on disabled rule"
+                              },
+                              "disabled_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "timestamp when the rule was disabled"
+                              },
+                              "details": {
+                                "type": "string",
+                                "description": "details on rule"
+                              },
+                              "impacted": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "timestamp when the rule first appeared"
                               }
                             }
                           }
