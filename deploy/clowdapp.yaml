@@ -78,16 +78,6 @@ objects:
               value: "168"
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
               value: postgres
-            - name: HABERDASHER_EMITTER
-              value: ${HABERDASHER_EMITTER}
-            - name: HABERDASHER_KAFKA_BOOTSTRAP
-              value: ${HABERDASHER_KAFKA_BOOTSTRAP}
-            - name: HABERDASHER_KAFKA_TOPIC
-              value: ${HABERDASHER_KAFKA_TOPIC}
-            - name: HABERDASHER_LABELS
-              value: ${AGGREGATOR_HABERDASHER_LABELS}
-            - name: HABERDASHER_TAGS
-              value: ${HABERDASHER_TAGS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
               value: sslmode=disable
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
@@ -256,16 +246,6 @@ objects:
               value: "true"
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
               value: postgres
-            - name: HABERDASHER_EMITTER
-              value: ${HABERDASHER_EMITTER}
-            - name: HABERDASHER_KAFKA_BOOTSTRAP
-              value: ${HABERDASHER_KAFKA_BOOTSTRAP}
-            - name: HABERDASHER_KAFKA_TOPIC
-              value: ${HABERDASHER_KAFKA_TOPIC}
-            - name: HABERDASHER_LABELS
-              value: ${DBWRITER_HABERDASHER_LABELS}
-            - name: HABERDASHER_TAGS
-              value: ${HABERDASHER_TAGS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
               value: sslmode=disable
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
@@ -405,21 +385,6 @@ parameters:
 - name: PAYLOAD_TRACKER_TOPIC
   description: Kafka topic for publishing updated for the Payload Tracker service
   value: platform.payload-status
-- name: HABERDASHER_EMITTER
-  description: Emitter for haberdasher logs [stderr|kafka]
-  value: stderr
-- name: HABERDASHER_KAFKA_BOOTSTRAP
-  description: Bootstrap server for haberdasher kafka emitter
-  value: "mq-kafka:29092"
-- name: HABERDASHER_KAFKA_TOPIC
-  description: Kafka topic for haberdasher kafka emitter
-  value: "platform.logging.logs"
-- name: HABERDASHER_TAGS
-  description: Haberdasher tags for unstructured logs
-  value: '["ccx"]'
-- name: AGGREGATOR_HABERDASHER_LABELS
-  description: Haberdasher labels for unstructured logs
-  value: '{"app": "ccx-insights-results-aggregator"}'
 - name: DEBUG
   value: "true"
 - name: AUTH
@@ -468,9 +433,6 @@ parameters:
   value: 100m
 - name: DB_WRITER_MEMORY_REQUEST
   value: 1000Mi
-- name: DBWRITER_HABERDASHER_LABELS
-  description: Haberdasher labels for unstructured logs
-  value: '{"app": "ccx-insights-results-db-writer"}'
 - name: CLOUDWATCH_DEBUG
   value: "false"
   required: true
