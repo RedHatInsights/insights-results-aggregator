@@ -502,7 +502,7 @@ func parseRuleRows(rows *sql.Rows) ([]types.RuleOnReport, error) {
 			templateDataBytes []byte
 			ruleFQDN          types.RuleID
 			errorKey          types.ErrorKey
-			createdAt         time.Time
+			createdAt         sql.NullTime
 		)
 
 		err := rows.Scan(&templateDataBytes, &ruleFQDN, &errorKey, &createdAt)
@@ -512,11 +512,15 @@ func parseRuleRows(rows *sql.Rows) ([]types.RuleOnReport, error) {
 		}
 
 		templateData := parseTemplateData(templateDataBytes)
+		var createdAtConverted time.Time
+		if createdAt.Valid {
+			createdAtConverted = createdAt.Time
+		}
 		rule := types.RuleOnReport{
 			Module:       ruleFQDN,
 			ErrorKey:     errorKey,
 			TemplateData: templateData,
-			CreatedAt:    types.Timestamp(createdAt.UTC().Format(time.RFC3339)),
+			CreatedAt:    types.Timestamp(createdAtConverted.UTC().Format(time.RFC3339)),
 		}
 
 		report = append(report, rule)
