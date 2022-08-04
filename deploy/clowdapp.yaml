@@ -135,11 +135,11 @@ objects:
             timeoutSeconds: 1
           resources:
             requests:
-              cpu: 100m
-              memory: 500Mi
+              cpu: ${IRA_CPU_REQUEST}
+              memory: ${IRA_MEMORY_REQUEST}
             limits:
-              cpu: 250m
-              memory: 1000Mi
+              cpu: ${IRA_CPU_LIMIT}
+              memory: ${IRA_MEMORY_LIMIT}
       - name: db-writer
         minReplicas: ${{DB_WRITER_REPLICAS}}
         webServices:
@@ -382,6 +382,14 @@ parameters:
 - description: Maximum number of pods to use when autoscaling is enabled
   name: MAX_REPLICAS
   value: '6'
+- name: IRA_CPU_LIMIT
+  value: 500m
+- name: IRA_MEMORY_LIMIT
+  value: 1000Mi
+- name: IRA_CPU_REQUEST
+  value: 100m
+- name: IRA_MEMORY_REQUEST
+  value: 500Mi
 - name: PAYLOAD_TRACKER_TOPIC
   description: Kafka topic for publishing updated for the Payload Tracker service
   value: platform.payload-status
