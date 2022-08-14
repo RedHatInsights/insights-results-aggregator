@@ -101,6 +101,7 @@ type Storage interface {
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
+		orgID types.OrgID,
 		userID types.UserID,
 		userVote types.UserVote,
 		voteMessage string,
@@ -109,6 +110,7 @@ type Storage interface {
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
+		orgID types.OrgID,
 		userID types.UserID,
 		message string,
 	) error
@@ -116,6 +118,7 @@ type Storage interface {
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
+		orgID types.OrgID,
 		userID types.UserID,
 		message string,
 	) error
@@ -137,6 +140,7 @@ type Storage interface {
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
+		orgID types.OrgID,
 		userID types.UserID,
 		ruleToggle RuleToggle,
 	) error
