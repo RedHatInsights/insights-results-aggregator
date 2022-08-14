@@ -785,3 +785,108 @@ func TestMigration25(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 }
+
+func TestMigration26(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// sqlite is no longer supported
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 25)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(
+		`SELECT org_id FROM cluster_rule_toggle`,
+	)
+	assert.Error(t, err)
+
+	_, err = db.Exec(
+		`SELECT org_id FROM cluster_rule_user_feedback`,
+	)
+	assert.Error(t, err)
+
+	_, err = db.Exec(
+		`SELECT org_id FROM cluster_user_rule_disable_feedback`,
+	)
+	assert.Error(t, err)
+
+	// insert into report table
+	_, err = db.Exec(`
+		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
+		VALUES ($1, $2, $3, $4, $5)
+		`,
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.ClusterReport3Rules,
+		testdata.LastCheckedAt,
+		testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	// insert into cluster_rule_toggle
+	_, err = db.Exec(
+		`INSERT INTO cluster_rule_toggle (cluster_id, rule_id, error_key, user_id, disabled, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)`,
+		testdata.ClusterName,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.UserID,
+		1,
+		testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	unknownClusterID := testdata.GetRandomClusterID()
+	// insert into cluster_rule_toggle
+	_, err = db.Exec(
+		`INSERT INTO cluster_rule_toggle (cluster_id, rule_id, error_key, user_id, disabled, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)`,
+		unknownClusterID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.UserID,
+		1,
+		testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	// migrate to 26, popoulating org_id column based on report table
+	err = migration.SetDBVersion(db, dbDriver, 26)
+	helpers.FailOnError(t, err)
+
+	var orgID types.OrgID
+	err = db.QueryRow(`
+	SELECT
+		org_id
+	FROM
+		cluster_rule_toggle
+	WHERE
+		cluster_id = $1
+	`, testdata.ClusterName,
+	).Scan(
+		&orgID,
+	)
+	helpers.FailOnError(t, err)
+
+	// org_id must match that in report table
+	assert.Equal(t, orgID, testdata.OrgID)
+
+	err = db.QueryRow(`
+	SELECT
+		org_id
+	FROM
+		cluster_rule_toggle
+	WHERE
+		cluster_id = $1
+	`, unknownClusterID,
+	).Scan(
+		&orgID,
+	)
+	helpers.FailOnError(t, err)
+
+	// cluster wasn't found in report table, org_id will be default value 0
+	assert.Equal(t, orgID, types.OrgID(0))
+}
