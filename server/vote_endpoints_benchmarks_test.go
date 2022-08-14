@@ -105,6 +105,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					clusterID := endpointArg.ClusterID
 					ruleID := endpointArg.RuleID
 					userID := endpointArg.UserID
+					orgID := endpointArg.OrgID
 
 					url := httputils.MakeURLToEndpoint(
 						helpers.DefaultServerConfig.APIPrefix,
@@ -118,6 +119,9 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					// authorize user
 					identity := types.Identity{
 						AccountNumber: userID,
+						Internal: types.Internal{
+							OrgID: orgID,
+						},
 					}
 					req = req.WithContext(context.WithValue(req.Context(), types.ContextKeyUser, identity))
 
@@ -133,6 +137,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 type voteEndpointArg struct {
 	ClusterID types.ClusterName
 	RuleID    types.RuleID
+	OrgID     types.OrgID
 	UserID    types.UserID
 	ErrorKey  types.ErrorKey
 }
@@ -145,6 +150,7 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 		ruleID := types.RuleID(testdata.GetRandomRuleID(32))
 		errorKey := types.ErrorKey("ek")
 		userID := types.UserID(testdata.GetRandomUserID())
+		orgID := types.OrgID(testdata.GetRandomOrgID())
 
 		err := mockStorage.WriteReportForCluster(
 			testdata.OrgID,
@@ -161,6 +167,7 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 		endpointArgs = append(endpointArgs, voteEndpointArg{
 			ClusterID: clusterID,
 			RuleID:    ruleID,
+			OrgID:     orgID,
 			UserID:    userID,
 			ErrorKey:  errorKey,
 		})
