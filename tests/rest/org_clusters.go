@@ -111,12 +111,7 @@ func checkClustersEndpointForImproperOrganizations() {
 		f := frisby.Create("Check the end point to return list of clusters by HTTP GET method").Get(url)
 		setAuthHeaderForOrganization(f, improperOrganization)
 		f.Send()
-		if improperOrganization == 0 {
-			f.ExpectStatus(http.StatusBadRequest)
-		} else {
-			// negative values are not unmarshalled properly
-			f.ExpectStatus(http.StatusUnauthorized)
-		}
+		f.ExpectStatus(http.StatusUnauthorized)
 		f.PrintReport()
 	}
 }

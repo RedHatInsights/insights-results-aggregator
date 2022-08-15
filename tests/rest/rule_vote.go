@@ -86,8 +86,8 @@ func constructURLResetVoteForRule(clusterID, ruleID, errorKey, orgID, userID str
 	return httputils.MakeURLToEndpoint(apiURL, server.ResetVoteOnRuleEndpoint, clusterID, ruleID, errorKey, orgID, userID)
 }
 
-func constructURLGetVoteForRule(clusterID, ruleID, errorKey, orgID, userID string) string {
-	return httputils.MakeURLToEndpoint(apiURL, server.GetVoteOnRuleEndpoint, clusterID, ruleID, errorKey, orgID, userID)
+func constructURLGetVoteForRule(clusterID, ruleID, errorKey, userID string) string {
+	return httputils.MakeURLToEndpoint(apiURL, server.GetVoteOnRuleEndpoint, clusterID, ruleID, errorKey, userID)
 }
 
 func checkOkStatus(f *frisby.Frisby) {
@@ -195,6 +195,19 @@ func testRuleVoteAPIendpoint(clusters, rules, errorKeys []string, message string
 	}
 }
 
+// test the specified GET rule like/dislike/reset_vote REST API endpoint by using selected checker function
+func testGetRuleVoteAPIendpoint(clusters, rules, errorKeys []string, message string, urlConstructor func(string, string, string, string) string, checker func(string, string)) {
+	for _, cluster := range clusters {
+		for _, rule := range rules {
+			for _, errorKey := range errorKeys {
+				url := urlConstructor(cluster, rule, errorKey, string(testdata.UserID))
+				checker(url, message)
+			}
+
+		}
+	}
+}
+
 // checkLikeKnownRuleForKnownCluster tests whether 'like' REST API endpoint works correctly for known rule and known cluster
 func checkLikeKnownRuleForKnownCluster() {
 	testRuleVoteAPIendpoint(knownClustersForOrganization1, knownRules, knownErrorKeys,
@@ -260,21 +273,21 @@ func checkResetKnownRuleForImproperCluster() {
 
 // checkGetUserVoteForKnownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and known cluster
 func checkGetUserVoteForKnownCluster() {
-	testRuleVoteAPIendpoint(knownClustersForOrganization1, knownRules, knownErrorKeys,
+	testGetRuleVoteAPIendpoint(knownClustersForOrganization1, knownRules, knownErrorKeys,
 		"Test whether 'get_vote' REST API endpoint works correctly for known rule and known cluster",
 		constructURLGetVoteForRule, checkOkStatusGetVote)
 }
 
 // checkGetUserVoteForUnknownCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and unknown cluster
 func checkGetUserVoteForUnknownCluster() {
-	testRuleVoteAPIendpoint(unknownClusters, knownRules, knownErrorKeys,
+	testGetRuleVoteAPIendpoint(unknownClusters, knownRules, knownErrorKeys,
 		"Test whether 'get_vote' REST API endpoint works correctly for known rule and unknown cluster",
 		constructURLGetVoteForRule, checkItemNotFoundGet)
 }
 
 // checkGetUserVoteForImproperCluster tests whether 'get_vote' REST API endpoint works correctly for known rule and improper cluster
 func checkGetUserVoteForImproperCluster() {
-	testRuleVoteAPIendpoint(improperClusterIDs, knownRules, knownErrorKeys,
+	testGetRuleVoteAPIendpoint(improperClusterIDs, knownRules, knownErrorKeys,
 		"Test whether 'get_vote' REST API endpoint works correctly for known rule and improper cluster",
 		constructURLGetVoteForRule, checkInvalidUUIDFormatGet)
 }
@@ -301,7 +314,7 @@ func resetVoteForRule(cluster, rule, errorKey string) {
 }
 
 func checkVoteForClusterAndRule(cluster, rule, errorKey string, expectedVote int) {
-	url := constructURLGetVoteForRule(cluster, rule, errorKey, fmt.Sprintf("%v", testdata.OrgID), string(testdata.UserID))
+	url := constructURLGetVoteForRule(cluster, rule, errorKey, string(testdata.UserID))
 
 	f := frisby.Create("Read vote for rule").Get(url)
 	r := RuleVoteResponse{}
