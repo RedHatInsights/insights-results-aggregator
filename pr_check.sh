@@ -56,5 +56,5 @@ build_image
 echo "deploying to ephemeral"
 deploy_ephemeral
 
-echo "running PR smoke tests"
-run_smoke_tests
+echo "PR smoke tests disabled"
+# run_smoke_tests
