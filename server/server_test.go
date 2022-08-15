@@ -22,7 +22,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -290,7 +289,7 @@ func TestServeAPISpecFileOK(t *testing.T) {
 }
 
 func TestServeAPISpecFileError(t *testing.T) {
-	dirName, err := ioutil.TempDir("/tmp/", "")
+	dirName, err := os.MkdirTemp("/tmp/", "")
 	helpers.FailOnError(t, err)
 
 	err = os.Chdir(dirName)
