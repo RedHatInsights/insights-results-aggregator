@@ -743,7 +743,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/like": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/like": {
       "put": {
         "summary": "Puts like for the rule with cluster for user",
         "operationId": "addLikeToRule",
@@ -781,6 +781,16 @@
             "example": "ERROR_COOL_NAME"
           },
           {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
             "name": "userId",
             "in": "path",
             "required": true,
@@ -814,7 +824,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/dislike": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}organizations/{orgId}//users/{userId}/dislike": {
       "put": {
         "summary": "Puts dislike for the rule with cluster for user",
         "operationId": "addDislikeToRule",
@@ -852,6 +862,16 @@
             "example": "ERROR_COOL_NAME"
           },
           {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
             "name": "userId",
             "in": "path",
             "required": true,
@@ -885,7 +905,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/reset_vote": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/reset_vote": {
       "put": {
         "summary": "Resets vote for the rule with cluster for current user",
         "operationId": "resetVoteForRule",
@@ -921,6 +941,16 @@
               "type": "string"
             },
             "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
           },
           {
             "name": "userId",
@@ -1094,7 +1124,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/enable": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/enable": {
       "put": {
         "summary": "Re-enables a rule/health check recommendation for specified cluster",
         "operationId": "enableRule",
@@ -1134,6 +1164,16 @@
             "example": "ERROR_COOL_KEY"
           },
           {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
             "name": "userId",
             "in": "path",
             "required": true,
@@ -1168,7 +1208,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/disable": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/disable": {
       "put": {
         "summary": "Disables a rule/health check recommendation for specified cluster",
         "operationId": "disableRule",
@@ -1208,6 +1248,16 @@
             "example": "ERROR_COOL_NAME"
           },
           {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
             "name": "userId",
             "in": "path",
             "required": true,
@@ -1242,7 +1292,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/disable_feedback": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/disable_feedback": {
       "post": {
         "summary": "Accepts a feedback from user when (s)he disables a rule",
         "operationId": "disableRuleFeedback",
@@ -1280,6 +1330,16 @@
               "type": "string"
             },
             "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
           },
           {
             "name": "userId",

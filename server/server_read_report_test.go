@@ -258,7 +258,7 @@ func TestReadReportDisableRule(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -293,7 +293,7 @@ func TestReadReportDisableRule(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.EnableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -368,7 +368,7 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -377,7 +377,7 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.DisableRuleFeedbackEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID},
 		Body:         `{"message": "test"}`,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,

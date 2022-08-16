@@ -15,7 +15,6 @@
 package consumer_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -89,13 +88,13 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 }
 
 func getMessagesFromDir(b *testing.B, dataDir string) []string {
-	files, err := ioutil.ReadDir(dataDir)
+	files, err := os.ReadDir(dataDir)
 	helpers.FailOnError(b, err)
 
 	var messages []string
 
 	for _, file := range files {
-		if file.Mode().IsRegular() {
+		if file.Type().IsRegular() {
 			if strings.HasSuffix(file.Name(), ".json") && !strings.Contains(file.Name(), "broken") {
 				filePath := path.Join(dataDir, file.Name())
 

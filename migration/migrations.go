@@ -42,4 +42,5 @@ var migrations = []Migration{
 	mig0023AddReportInfoTable,
 	mig0024AddTimestampToRuleHit,
 	mig0025AddImpactedToRecommendation,
+	mig0026AddAndPopulateOrgIDColumns,
 }

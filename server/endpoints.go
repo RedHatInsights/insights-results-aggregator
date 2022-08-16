@@ -46,21 +46,21 @@ const (
 	// Reports that are going to be returned are specified by list of cluster IDs that is part of request body
 	ReportForListOfClustersPayloadEndpoint = "organizations/{org_id}/clusters/reports"
 	// LikeRuleEndpoint likes rule with {rule_id} for {cluster} using current user(from auth header)
-	LikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/like"
+	LikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/like"
 	// DislikeRuleEndpoint dislikes rule with {rule_id} for {cluster} using current user(from auth header)
-	DislikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/dislike"
+	DislikeRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/dislike"
 	// ResetVoteOnRuleEndpoint resets vote on rule with {rule_id} for {cluster} using current user(from auth header)
-	ResetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/reset_vote"
+	ResetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/reset_vote"
 	// GetVoteOnRuleEndpoint is an endpoint to get vote on rule. DEBUG only
 	GetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/get_vote"
 	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
 	// DisableRuleForClusterEndpoint disables a rule for specified cluster
-	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/disable"
+	DisableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/disable"
 	// EnableRuleForClusterEndpoint re-enables a rule for specified cluster
-	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/enable"
+	EnableRuleForClusterEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/enable"
 	// DisableRuleFeedbackEndpoint accepts a feedback from user when (s)he disables a rule
-	DisableRuleFeedbackEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/disable_feedback"
+	DisableRuleFeedbackEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/disable_feedback"
 	// ListOfDisabledRules returns a list of rules disabled from current account
 	ListOfDisabledRules = "rules/users/{user_id}/disabled"
 	// ListOfDisabledRulesForClusters returns a list of rules disabled from current account for given list of clusters in POST body

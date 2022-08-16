@@ -49,6 +49,7 @@ func (storage DBStorage) ToggleRuleForCluster(
 	clusterID types.ClusterName,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
+	orgID types.OrgID,
 	userID types.UserID,
 	ruleToggle RuleToggle,
 ) error {
@@ -70,15 +71,16 @@ func (storage DBStorage) ToggleRuleForCluster(
 
 	query = `
 		INSERT INTO cluster_rule_toggle(
-			cluster_id, rule_id, error_key, user_id, disabled, disabled_at, enabled_at, updated_at
+			cluster_id, rule_id, error_key, org_id, user_id, disabled, disabled_at, enabled_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		ON CONFLICT (cluster_id, rule_id, error_key) DO UPDATE SET
-			user_id = $4,
-		    disabled = $5,
-			disabled_at = $6,
-			enabled_at = $7,
-			updated_at = $8
+			org_id = $4,
+			user_id = $5,
+		    disabled = $6,
+			disabled_at = $7,
+			enabled_at = $8,
+			updated_at = $9
 	`
 
 	_, err := storage.connection.Exec(
@@ -86,6 +88,7 @@ func (storage DBStorage) ToggleRuleForCluster(
 		clusterID,
 		ruleID,
 		errorKey,
+		orgID,
 		userID,
 		ruleToggle,
 		disabledAt,

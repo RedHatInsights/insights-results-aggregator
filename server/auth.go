@@ -20,6 +20,7 @@ package server
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -27,7 +28,6 @@ import (
 
 	"github.com/RedHatInsights/insights-operator-utils/collections"
 	types "github.com/RedHatInsights/insights-results-types"
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/rs/zerolog/log"
 )
 
@@ -53,6 +53,7 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// for specific URLs it is ok to not use auth. mechanisms at all
+		// this is specific to OpenAPI JSON response and for all OPTION HTTP methods
 		if collections.StringInSlice(r.RequestURI, noAuthURLs) || r.Method == "OPTIONS" {
 			next.ServeHTTP(w, r)
 			return
@@ -65,37 +66,80 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 			return
 		}
 
-		decoded, err := jwt.DecodeSegment(token) // Decode token to JSON string
-		if err != nil {                          // Malformed token, returns with http code 403 as usual
+		// decode auth. token to JSON string
+		decoded, err := base64.StdEncoding.DecodeString(token)
+
+		// if token is malformed return HTTP code 403 to client
+		if err != nil {
+			// malformed token, returns with HTTP code 403 as usual
 			log.Error().Err(err).Msg(malformedTokenMessage)
 			handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
 			return
 		}
 
-		tk := &Token{}
+		tk := &types.Token{}
+		tkV2 := &types.TokenV2{}
 
-		// If we took JWT token, it has different structure then x-rh-identity
+		// if we took JWT token, it has different structure than x-rh-identity
 		if server.Config.AuthType == "jwt" {
-			jwtPayload := &JWTPayload{}
-			err = json.Unmarshal([]byte(decoded), jwtPayload)
-			if err != nil { // Malformed token, returns with http code 403 as usual
+			jwtPayload := &types.JWTPayload{}
+			err = json.Unmarshal(decoded, jwtPayload)
+			if err != nil {
+				// malformed token, returns with HTTP code 403 as usual
 				log.Error().Err(err).Msg(malformedTokenMessage)
 				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
 				return
 			}
 			// Map JWT token to inner token
-			tk.Identity = Identity{AccountNumber: jwtPayload.AccountNumber, Internal: Internal{OrgID: jwtPayload.OrgID}}
+			tk.Identity = types.Identity{
+				AccountNumber: jwtPayload.AccountNumber,
+				Internal: types.Internal{
+					OrgID: jwtPayload.OrgID,
+				},
+			}
 		} else {
-			err = json.Unmarshal([]byte(decoded), tk)
+			// auth type is xrh (x-rh-identity header)
 
-			if err != nil { // Malformed token, returns with http code 403 as usual
+			// unmarshal new token structure (org_id on top level)
+			err = json.Unmarshal(decoded, tkV2)
+			if err != nil {
+				// malformed token, returns with HTTP code 403 as usual
+				log.Error().Err(err).Msg(malformedTokenMessage)
+				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
+				return
+			}
+
+			// unmarshal old token structure (org_id nested) too
+			err = json.Unmarshal(decoded, tk)
+			if err != nil {
+				// malformed token, returns with HTTP code 403 as usual
 				log.Error().Err(err).Msg(malformedTokenMessage)
 				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
 				return
 			}
 		}
 
-		// Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
+		if tkV2.IdentityV2.OrgID != 0 {
+			log.Info().Msg("org_id found on top level in token structure (new format)")
+			// fill in old types.Token because many places in smart-proxy and aggregator rely on it.
+			tk.Identity.Internal.OrgID = tkV2.IdentityV2.OrgID
+		} else {
+			log.Error().Msg("org_id not found on top level in token structure (old format)")
+		}
+
+		if tk.Identity.AccountNumber == "" || tk.Identity.Internal.OrgID == 0 {
+			msg := fmt.Sprintf("error retrieving requester data from token. org_id [%v], account_number [%v], user data [%+v]",
+				tk.Identity.Internal.OrgID,
+				tk.Identity.AccountNumber,
+				tkV2.IdentityV2.User,
+			)
+			log.Error().Msg(msg)
+			handleServerError(w, &UnauthorizedError{ErrString: msg})
+			return
+		}
+
+		// Everything went well, proceed with the request and set the
+		// caller to the user retrieved from the parsed token
 		ctx := context.WithValue(r.Context(), types.ContextKeyUser, tk.Identity)
 		r = r.WithContext(ctx)
 

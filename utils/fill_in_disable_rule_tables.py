@@ -169,8 +169,8 @@ def insert_into_db_for_clusters(
         # try to perform insert statement
         insertStatement = """INSERT INTO cluster_rule_toggle
                              (cluster_id, rule_id, error_key, user_id, disabled, disabled_at,
-                             updated_at)
-                             VALUES(%s, %s, %s, %s, 1, %s, %s);"""
+                             updated_at, org_id)
+                             VALUES(%s, %s, %s, %s, 1, %s, %s, 1);"""
 
         # generate timestamp to be stored in database
         timestamp = datetime.now().strftime("%Y-%m-%d")
@@ -192,12 +192,12 @@ def insert_into_db_for_clusters(
             # perform insert into cluster_user_rule_disable_feedback
             insertStatement = """INSERT INTO cluster_user_rule_disable_feedback
                                  (cluster_id, user_id, rule_id, error_key, message, added_at,
-                                 updated_at)
-                                 VALUES(%s, %s, %s, %s, %s, %s, %s);"""
+                                 updated_at, org_id)
+                                 VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"""
 
             # some nice feedback from user
             message = "Rule {}|{} for cluster {} disabled by {}".format(
-                rule_selector[0], rule_selector[1], cluster_id, account_id
+                rule_selector[0], rule_selector[1], cluster_id, account_id, 1
             )
 
             # insert in transaction
