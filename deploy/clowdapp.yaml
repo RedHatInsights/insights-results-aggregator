@@ -383,13 +383,13 @@ parameters:
   name: MAX_REPLICAS
   value: '6'
 - name: IRA_CPU_LIMIT
-  value: 500m
+  value: 200m
 - name: IRA_MEMORY_LIMIT
-  value: 1000Mi
+  value: 300Mi
 - name: IRA_CPU_REQUEST
   value: 100m
 - name: IRA_MEMORY_REQUEST
-  value: 500Mi
+  value: 150Mi
 - name: PAYLOAD_TRACKER_TOPIC
   description: Kafka topic for publishing updated for the Payload Tracker service
   value: platform.payload-status
@@ -434,13 +434,13 @@ parameters:
   description: The number of replicas to use for the insights-results-db-writer deployment
   value: "1"
 - name: DB_WRITER_CPU_LIMIT
-  value: 500m
+  value: 200m
 - name: DB_WRITER_MEMORY_LIMIT
-  value: 3000Mi
+  value: 400Mi
 - name: DB_WRITER_CPU_REQUEST
   value: 100m
 - name: DB_WRITER_MEMORY_REQUEST
-  value: 1000Mi
+  value: 200Mi
 - name: CLOUDWATCH_DEBUG
   value: "false"
   required: true
