@@ -1,5 +1,9 @@
 [broker]
 address = "localhost:29092"
+security_protocol = ""
+sasl_mechanism = "PLAIN"
+sasl_username = "username"
+sasl_password = "password"
 topic = "ccx.ocp.results"
 payload_tracker_topic = "platform.payload-status"
 dead_letter_queue_topic = "dead.letter.queue"

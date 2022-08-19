@@ -36,10 +36,11 @@ import (
 
 var (
 	brokerCfg = broker.Configuration{
-		Address:             "localhost:1234",
-		Topic:               "consumer-topic",
-		PayloadTrackerTopic: "payload-tracker-topic",
-		Group:               "test-group",
+		Address:              "localhost:1234",
+		Topic:                "consumer-topic",
+		PayloadTrackerTopic:  "payload-tracker-topic",
+		DeadLetterQueueTopic: "dlq-topic",
+		Group:                "test-group",
 	}
 	// Base UNIX time plus approximately 50 years (not long before year 2020).
 	testTimestamp = time.Unix(50*365*24*60*60, 0)
@@ -151,10 +152,11 @@ func TestDeadLetterProducerNew(t *testing.T) {
 
 	prod, err := producer.NewDeadLetterProducer(
 		broker.Configuration{
-			Address:             mockBroker.Addr(),
-			Topic:               brokerCfg.Topic,
-			PayloadTrackerTopic: brokerCfg.PayloadTrackerTopic,
-			Enabled:             brokerCfg.Enabled,
+			Address:              mockBroker.Addr(),
+			Topic:                brokerCfg.Topic,
+			PayloadTrackerTopic:  brokerCfg.PayloadTrackerTopic,
+			Enabled:              brokerCfg.Enabled,
+			DeadLetterQueueTopic: brokerCfg.DeadLetterQueueTopic,
 		})
 	helpers.FailOnError(t, err)
 

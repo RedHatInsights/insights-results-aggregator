@@ -262,31 +262,43 @@ func loadAllowlistFromCSV(r io.Reader) (mapset.Set, error) {
 
 // updateConfigFromClowder updates the current config with the values defined in clowder
 func updateConfigFromClowder(c *ConfigStruct) error {
-	if clowder.IsClowderEnabled() {
-		// can not use Zerolog at this moment!
-		fmt.Println("Clowder is enabled")
-		if clowder.LoadedConfig.Kafka == nil {
-			fmt.Println("No Kafka configuration available in Clowder, using default one")
+	if !clowder.IsClowderEnabled() {
+		fmt.Println("Clowder is disabled")
+		return nil
+	}
+
+	// can not use Zerolog at this moment!
+	fmt.Println("Clowder is enabled")
+	if clowder.LoadedConfig.Kafka == nil {
+		fmt.Println("No Kafka configuration available in Clowder, using default one")
+	} else {
+		broker := clowder.LoadedConfig.Kafka.Brokers[0]
+		// port can be empty in clowder, so taking it into account
+		if broker.Port != nil {
+			c.Broker.Address = fmt.Sprintf("%s:%d", broker.Hostname, *broker.Port)
 		} else {
-			broker := clowder.LoadedConfig.Kafka.Brokers[0]
-			// port can be empty in clowder, so taking it into account
-			if broker.Port != nil {
-				c.Broker.Address = fmt.Sprintf("%s:%d", broker.Hostname, *broker.Port)
-			} else {
-				c.Broker.Address = broker.Hostname
+			c.Broker.Address = broker.Hostname
+		}
+
+		// SSL config
+		if broker.Authtype != nil {
+			c.Broker.SaslUsername = *broker.Sasl.Username
+			c.Broker.SaslPassword = *broker.Sasl.Password
+			c.Broker.SaslMechanism = *broker.Sasl.SaslMechanism
+			c.Broker.SecurityProtocol = *broker.Sasl.SecurityProtocol
+			if caPath, err := clowder.LoadedConfig.KafkaCa(broker); err == nil {
+				c.Broker.CertPath = caPath
 			}
 		}
 
-		// get DB configuration from clowder
-		c.Storage.PGDBName = clowder.LoadedConfig.Database.Name
-		c.Storage.PGHost = clowder.LoadedConfig.Database.Hostname
-		c.Storage.PGPort = clowder.LoadedConfig.Database.Port
-		c.Storage.PGUsername = clowder.LoadedConfig.Database.Username
-		c.Storage.PGPassword = clowder.LoadedConfig.Database.Password
-
-	} else {
-		fmt.Println("Clowder is disabled")
 	}
+
+	// get DB configuration from clowder
+	c.Storage.PGDBName = clowder.LoadedConfig.Database.Name
+	c.Storage.PGHost = clowder.LoadedConfig.Database.Hostname
+	c.Storage.PGPort = clowder.LoadedConfig.Database.Port
+	c.Storage.PGUsername = clowder.LoadedConfig.Database.Username
+	c.Storage.PGPassword = clowder.LoadedConfig.Database.Password
 
 	return nil
 }
