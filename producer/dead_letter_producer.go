@@ -33,6 +33,9 @@ type DeadLetterProducer struct {
 // NewDeadLetterProducer constructs producer for payload tracker topic.
 // It is implemented as variable in order to allow monkey patching in unit tests.
 var NewDeadLetterProducer = func(brokerCfg broker.Configuration) (*DeadLetterProducer, error) {
+	if brokerCfg.DeadLetterQueueTopic == "" {
+		return nil, nil
+	}
 	p, err := New(brokerCfg)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to create a new dead letter producer")

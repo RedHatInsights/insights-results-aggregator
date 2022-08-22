@@ -37,6 +37,10 @@ type PayloadTrackerProducer struct {
 // NewPayloadTrackerProducer constructs producer for payload tracker topic.
 // It is implemented as variable in order to allow monkey patching in unit tests.
 var NewPayloadTrackerProducer = func(brokerCfg broker.Configuration) (*PayloadTrackerProducer, error) {
+	if brokerCfg.PayloadTrackerTopic == "" {
+		return nil, nil
+	}
+
 	p, err := New(brokerCfg)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to create a new payload tracker producer")

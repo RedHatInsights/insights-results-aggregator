@@ -79,14 +79,13 @@ func NewWithSaramaConfig(
 	storage storage.Storage,
 	saramaConfig *sarama.Config,
 ) (*KafkaConsumer, error) {
-	if saramaConfig == nil {
-		saramaConfig = sarama.NewConfig()
-		saramaConfig.Version = sarama.V0_10_2_0
+	var err error
 
-		if brokerCfg.Timeout > 0 {
-			saramaConfig.Net.DialTimeout = brokerCfg.Timeout
-			saramaConfig.Net.ReadTimeout = brokerCfg.Timeout
-			saramaConfig.Net.WriteTimeout = brokerCfg.Timeout
+	if saramaConfig == nil {
+		saramaConfig, err = broker.SaramaConfigFromBrokerConfig(brokerCfg)
+		if err != nil {
+			log.Error().Err(err).Msg("unable to create sarama configuration from current broker configuration")
+			return nil, err
 		}
 	}
 
@@ -100,11 +99,17 @@ func NewWithSaramaConfig(
 		log.Error().Err(err).Msg("unable to construct payload tracker producer")
 		return nil, err
 	}
+	if payloadTrackerProducer == nil {
+		log.Info().Msg("payload tracker producer not configured")
+	}
 
 	deadLetterProducer, err := producer.NewDeadLetterProducer(brokerCfg)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to construct dead letter producer")
 		return nil, err
+	}
+	if deadLetterProducer == nil {
+		log.Info().Msg("dead letter producer not configured")
 	}
 
 	consumer := &KafkaConsumer{

@@ -45,7 +45,7 @@ outside of main config file(like passwords).
 In Clowder environment, some configuration options are injected automatically.
 Currently Kafka broker configuration is injected this side. To test this
 behavior, it is possible to specify path to Clowder-related configuration file
-via `AGG_CONFIG` environment variable:
+via `ACG_CONFIG` environment variable:
 
 ```
 export ACG_CONFIG="clowder_config.json"
@@ -58,36 +58,58 @@ Broker configuration is in section `[broker]` in config file
 ```toml
 [broker]
 address = "localhost:9092"
-timeout = "30s"
+security_protocol = ""
+cert_path = ""
+sasl_mechanism = ""
+sasl_username = ""
+sasl_password = ""
 topic = "topic"
+timeout = "30s"
 payload_tracker_topic = "payload-tracker-topic"
+dead_letter_queue_topic = ""
 service_name = "insights-results-aggregator"
 group = "aggregator"
 enabled = true
-save_offset = true
+org_allowlist_file = ""
+enable_org_allowlist = false
 ```
 
 * `address` is an address of kafka broker (DEFAULT: "")
-* `timeout` is the time used as timeout for the Kafka client networking side. See notes above
+* `security_protocol` is a value for the `security.protocol` Kafka configuration. Defaults to ""
+* `cert_path` is a path to a file containing an SSL certificate, only used if `secutiy_protocol` is properly set to `SSL`
+* `sasl_mechanism` is the SASL authentication mechanism to use when `SASL_SSL` is set as `security_protocol`
+* `sasl_username` is the SASL username to be used when `SASL_SSL` is set as `security_protocol`
+* `sasl_password` is the SASL password to be used when `SASL_SSL` is set as `security_protocol`
 * `topic` is a topic to consume messages from (DEFAULT: "")
+* `timeout` is the time used as timeout for the Kafka client networking side. See notes above
 * `payload_tracker_topic` is a topic to which messages for the Payload Tracker are published (see `producer` package) (DEFAULT: "")
+* `dead_letter_queue_topic` is a topic where the non-processed messages will be sent in order to process them later.
 * `service_name` is the name of this service as reported to the Payload Tracker (DEFAULT: "")
 * `group` is a kafka group (DEFAULT: "")
 * `enabled` is an option to turn broker on (DEFAULT: false)
-* `save_offset` is an option to turn on saving offset of successfully consumed messages.
+* `org_allowlist_file`
+* `enable_org_allowlist`
+
 The offset is stored in the same kafka broker. If it turned off,
 consuming will be started from the most recent message (DEFAULT: false)
 
 Option names in env configuration:
 
 * `address` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
-* `timeout` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__TIMEOUT
+* `security_protocol` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SECURITY_PROTOCOL
+* `cert_path` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__CERT_PATH
+* `sasl_mechanism` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SASL_MECHANISM
+* `sasl_username` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SASL_USERNAME
+* `sasl_password` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SASL_PASSWORD
 * `topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC
+* `timeout` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__TIMEOUT
 * `payload_tracker_topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__PAYLOAD_TRACKER_TOPIC
+* `dead_letter_queue_topic` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__DEAD_LETTER_QUEUE_TOPIC
 * `service_name` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SERVICE_NAME
 * `group` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP
 * `enabled` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
-* `save_offset` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SAVE_OFFSET
+* `org_allowlist_file` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ORG_ALLOWLIST_FILE
+* `enable_org_allowlist` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLE_ORG_ALLOWLIST
 
 ### About `timeout` definition
 
