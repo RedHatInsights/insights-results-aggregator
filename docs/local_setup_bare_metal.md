@@ -172,10 +172,41 @@ passwd: all authentication tokens updated successfully.
 Change password in DB
 
 ```
-psql -u postgres
+psql -U postgres
 postgres=# ALTER USER postgres PASSWORD 'postgres';
 ALTER ROLE
 ```
+
+### Alternative setup on recent Fedoras
+
+* Edit `pg_hba.conf`
+    - set the auth mode to `trust` instead of the default `md5`
+    - it will enable "password-less" login
+
+* Restart DB
+
+```
+# systemctl start postgresql
+```
+
+* Connect to DB with `psql` without password
+
+* Change password for `postgres` user
+
+```
+ALTER USER postgres PASSWORD 'postgres';
+```
+
+* Edit `pg_hba.conf` again
+    - set the auth mode back to `md5` or to `password`
+
+* Restart DB
+
+```
+# systemctl start postgresql
+```
+
+
 
 ## Kafka installation and setup
 
