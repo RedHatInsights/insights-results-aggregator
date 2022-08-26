@@ -32,6 +32,7 @@ jobs:
       script:
         - make test
         - ./check_coverage.sh
+        - make coverage
       after_success:
         - env
         - bash <(curl -s https://codecov.io/bash)
