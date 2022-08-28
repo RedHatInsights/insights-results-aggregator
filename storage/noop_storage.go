@@ -337,15 +337,16 @@ func (*NoopStorage) UpdateDisabledRuleJustification(
 
 // ReadDisabledRule function returns disabled rule (if disabled) from database
 func (*NoopStorage) ReadDisabledRule(
-	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey) (ctypes.SystemWideRuleDisable, bool, error) {
+	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
+) (ctypes.SystemWideRuleDisable, bool, error) {
 	return ctypes.SystemWideRuleDisable{}, true, nil
 }
 
 // ListOfSystemWideDisabledRules function returns list of all rules that have been
 // disabled for all clusters by given user
 func (*NoopStorage) ListOfSystemWideDisabledRules(
-	orgID types.OrgID, userID types.UserID) ([]ctypes.SystemWideRuleDisable, error) {
+	orgID types.OrgID,
+) ([]ctypes.SystemWideRuleDisable, error) {
 	return nil, nil
 }
 

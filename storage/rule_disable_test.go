@@ -160,8 +160,8 @@ func TestDBStorageReadDisabledRuleNoRule(t *testing.T) {
 
 	// try to call the method
 	_, found, err := mockStorage.ReadDisabledRule(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1)
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -190,8 +190,8 @@ func TestDBStorageReadDisabledRuleOneRule(t *testing.T) {
 
 	// try to call the method
 	r, found, err := mockStorage.ReadDisabledRule(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1)
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -212,8 +212,8 @@ func TestDBStorageReadDisabledRuleOnRBError(t *testing.T) {
 
 	// try to call the method
 	_, _, err := mockStorage.ReadDisabledRule(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1)
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 
 	// we expect the error to happen
 	assert.EqualError(t, err, "sql: database is closed")
@@ -224,8 +224,7 @@ func TestDBStorageListOfSystemWideDisabledRulesNoRules(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 
 	// try to call the method
-	list, err := mockStorage.ListOfSystemWideDisabledRules(
-		testdata.OrgID, testdata.UserID)
+	list, err := mockStorage.ListOfSystemWideDisabledRules(testdata.OrgID)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -253,8 +252,7 @@ func TestDBStorageListOfSystemWideDisabledRulesOneRule(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// try to call the method
-	list, err := mockStorage.ListOfSystemWideDisabledRules(
-		testdata.OrgID, testdata.UserID)
+	list, err := mockStorage.ListOfSystemWideDisabledRules(testdata.OrgID)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -294,8 +292,7 @@ func TestDBStorageListOfSystemWideDisabledRulesTwoRules(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// try to call the method
-	list, err := mockStorage.ListOfSystemWideDisabledRules(
-		testdata.OrgID, testdata.UserID)
+	list, err := mockStorage.ListOfSystemWideDisabledRules(testdata.OrgID)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -318,8 +315,7 @@ func TestDBStorageListOfSystemWideDisabledRulesDBError(t *testing.T) {
 	closer()
 
 	// try to call the method
-	_, err := mockStorage.ListOfSystemWideDisabledRules(
-		testdata.OrgID, testdata.UserID)
+	_, err := mockStorage.ListOfSystemWideDisabledRules(testdata.OrgID)
 
 	// we expect the error to happen
 	assert.EqualError(t, err, "sql: database is closed")

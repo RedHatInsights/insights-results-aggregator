@@ -206,10 +206,11 @@ type Storage interface {
 		ruleID types.RuleID, errorKey types.ErrorKey,
 		justification string) error
 	ReadDisabledRule(
-		orgID types.OrgID, userID types.UserID,
-		ruleID types.RuleID, errorKey types.ErrorKey) (ctypes.SystemWideRuleDisable, bool, error)
+		orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
+	) (ctypes.SystemWideRuleDisable, bool, error)
 	ListOfSystemWideDisabledRules(
-		orgID types.OrgID, userID types.UserID) ([]ctypes.SystemWideRuleDisable, error)
+		orgID types.OrgID,
+	) ([]ctypes.SystemWideRuleDisable, error)
 	ReadRecommendationsForClusters([]string, types.OrgID) (ctypes.RecommendationImpactedClusters, error)
 	ReadClusterListRecommendations(clusterList []string, orgID types.OrgID) (
 		ctypes.ClusterRecommendationMap, error,

@@ -465,8 +465,8 @@ func (server HTTPServer) readRuleSystemWide(writer http.ResponseWriter, request 
 
 	// try to retrieve disabled rule from storage
 	disabledRule, found, err := server.Storage.ReadDisabledRule(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey)
+		selector.OrgID, selector.RuleID, selector.ErrorKey,
+	)
 
 	// handle any storage error
 	if err != nil {
@@ -504,14 +504,8 @@ func (server HTTPServer) listOfDisabledRulesSystemWide(writer http.ResponseWrite
 		return
 	}
 
-	userID, successful := readUserID(writer, request)
-	if !successful {
-		return
-	}
-
 	// try to retrieve list of disabled rules from storage
-	disabledRules, err := server.Storage.ListOfSystemWideDisabledRules(
-		orgID, userID)
+	disabledRules, err := server.Storage.ListOfSystemWideDisabledRules(orgID)
 
 	// handle any storage error
 	if err != nil {
