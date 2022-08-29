@@ -62,7 +62,7 @@ const (
 	// DisableRuleFeedbackEndpoint accepts a feedback from user when (s)he disables a rule
 	DisableRuleFeedbackEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/disable_feedback"
 	// ListOfDisabledRules returns a list of rules disabled from current account
-	ListOfDisabledRules = "rules/users/{user_id}/disabled"
+	ListOfDisabledRules = "rules/organizations/{org_id}/disabled"
 	// ListOfDisabledRulesForClusters returns a list of rules disabled from current account for given list of clusters in POST body
 	ListOfDisabledRulesForClusters = "rules/users/{user_id}/disabled_for_clusters"
 	// ListOfDisabledRulesFeedback returns a list of reasons why rule has been disabled

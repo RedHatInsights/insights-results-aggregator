@@ -232,7 +232,7 @@ func TestDBStorageListOfDisabledRulesDBError(t *testing.T) {
 	closer()
 
 	// try to read list of disabled rules
-	_, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	_, err := mockStorage.ListOfDisabledRules(testdata.OrgID)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -243,7 +243,7 @@ func TestDBStorageListOfDisabledRulesEmptyDB(t *testing.T) {
 	defer closer()
 
 	// try to read list of disabled rules
-	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect no rules to be returned
@@ -266,7 +266,7 @@ func TestDBStorageListOfDisabledRulesOneRule(t *testing.T) {
 	))
 
 	// try to read list of disabled rules
-	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect 1 rule to be returned
@@ -300,7 +300,7 @@ func TestDBStorageListOfDisabledRulesTwoRules(t *testing.T) {
 	))
 
 	// try to read list of disabled rules
-	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect 2 rules to be returned
@@ -332,7 +332,7 @@ func TestDBStorageListOfDisabledRulesNoRule(t *testing.T) {
 	))
 
 	// try to read list of disabled rules
-	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.UserID)
+	disabledRules, err := mockStorage.ListOfDisabledRules(testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect no rules to be returned

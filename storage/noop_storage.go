@@ -258,7 +258,7 @@ func (*NoopStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (ma
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account (noop).
-func (*NoopStorage) ListOfDisabledRules(userID types.UserID) ([]ctypes.DisabledRule, error) {
+func (*NoopStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
 

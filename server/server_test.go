@@ -894,7 +894,7 @@ func TestHTTPServer_ListDisabledRules(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ListOfDisabledRules,
-		EndpointArgs: []interface{}{testdata.UserID},
+		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"rules":[],"status":"ok"}`,

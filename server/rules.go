@@ -77,20 +77,20 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 	}
 }
 
-// listOfDisabledRules returns list of rules disabled from an account
+// listOfDisabledRules returns list of rules disabled for given organization
 func (server HTTPServer) listOfDisabledRules(writer http.ResponseWriter, request *http.Request) {
 	log.Info().Msg("Lisf of disabled rules")
 
-	// retrieve account (user) ID
-	userID, successful := readUserID(writer, request)
+	// retrieve org ID
+	orgID, successful := readOrgID(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
 	}
-	log.Info().Str(accountStr, string(userID)).Msg("disabled rules for account")
+	log.Info().Int(orgIDStr, int(orgID)).Msg("disabled rules for org_id")
 
-	// try to read list of disabled rules by an account/user from database
-	disabledRules, err := server.Storage.ListOfDisabledRules(userID)
+	// try to read list of disabled rules by an organization from database
+	disabledRules, err := server.Storage.ListOfDisabledRules(orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read list of disabled rules")
 		handleServerError(writer, err)

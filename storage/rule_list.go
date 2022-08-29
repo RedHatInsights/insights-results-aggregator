@@ -88,24 +88,24 @@ func (storage DBStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReaso
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account.
-func (storage DBStorage) ListOfDisabledRules(userID types.UserID) ([]ctypes.DisabledRule, error) {
+func (storage DBStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.DisabledRule, error) {
 	disabledRules := make([]ctypes.DisabledRule, 0)
 	query := `SELECT
-                         cluster_id,
-			 rule_id,
-			 error_key,
-			 disabled_at,
-			 updated_at,
-			 disabled
+		cluster_id,
+		rule_id,
+		error_key,
+		disabled_at,
+		updated_at,
+		disabled
 	FROM
 		cluster_rule_toggle
 	WHERE
-		user_id = $1 and
+		org_id = $1 and
 		disabled = $2
 	`
 
 	// run the query against database
-	rows, err := storage.connection.Query(query, userID, RuleToggleDisable)
+	rows, err := storage.connection.Query(query, orgID, RuleToggleDisable)
 
 	// return empty list in case of any error
 	if err != nil {

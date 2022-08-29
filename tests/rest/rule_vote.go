@@ -390,7 +390,7 @@ func checkGetUserVoteAfterDoubleUnvote() {
 }
 
 func checkListOfDisabledRules() {
-	url := httputils.MakeURLToEndpoint(apiURL, server.ListOfDisabledRules, testdata.UserID)
+	url := httputils.MakeURLToEndpoint(apiURL, server.ListOfDisabledRules, testdata.OrgID)
 
 	f := frisby.Create("Read list of disabled rules").Get(url)
 	r := RuleVoteResponse{}
