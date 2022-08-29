@@ -44,36 +44,6 @@ func TestDBStorageDisableRuleSystemWide(t *testing.T) {
 	closer()
 }
 
-// Check the method DisableRuleSystemWide called twice for the same input.
-func TestDBStorageDisableRuleSystemWideDoubleDisable(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-
-	// try to call the method
-	err := mockStorage.DisableRuleSystemWide(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1,
-		"x")
-
-	// we expect no error
-	helpers.FailOnError(t, err)
-
-	// try to call the method
-	err = mockStorage.DisableRuleSystemWide(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1,
-		"x")
-
-	// we expect the error to happen
-	const sqliteErrMessage = "UNIQUE constraint failed: rule_disable.user_id, rule_disable.org_id, rule_disable.rule_id, rule_disable.error_key"
-	const postgresErrMessage = "pq: duplicate key value violates unique constraint \"rule_disable_pkey\""
-	if err.Error() != sqliteErrMessage && err.Error() != postgresErrMessage {
-		t.Fatalf("expected one of: \n%v\n%v\ngot:\n%v", sqliteErrMessage, postgresErrMessage, err.Error())
-	}
-
-	// close storage
-	closer()
-}
-
 // Check the method DisableRuleSystemWide in case of DB error.
 func TestDBStorageDisableRuleSystemWideOnDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
