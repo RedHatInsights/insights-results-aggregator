@@ -1380,7 +1380,7 @@
         ]
       }
     },
-    "/clusters/rules/{ruleId}/error_key/{errorKey}/users/{userId}/disabled": {
+    "/clusters/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/disabled": {
       "get": {
         "summary": "Returns a list of clusters disabled for given rule from current account",
         "operationId": "ListOfDisabledClusters",
@@ -1407,13 +1407,14 @@
             "example": "ERROR_COOL_NAME"
           },
           {
-            "name": "userId",
+            "name": "orgId",
             "in": "path",
             "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
+            "description": "Numeric ID of the organization",
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "42"
           }
         ],
         "responses": {
@@ -1657,20 +1658,21 @@
         }
       }
     },
-    "/rules/users/{userId}/disabled": {
+    "/rules/organizations/{orgId}/disabled": {
       "get": {
-        "summary": "Returns a list of rules disabled from current account",
+        "summary": "Returns a list of rules disabled for given organization",
         "operationId": "ListOfDisabledRules",
-        "description": "Returns a list of rules disabled from current account",
+        "description": "Returns a list of rules disabled for given organization",
         "parameters": [
           {
-            "name": "userId",
+            "name": "orgId",
             "in": "path",
             "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
+            "description": "Numeric ID of the organization",
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "42"
           }
         ],
         "responses": {
@@ -1719,20 +1721,21 @@
         ]
       }
     },
-    "/rules/users/{userId}/disabled_for_clusters": {
+    "/rules/organizations/{orgId}/disabled_for_clusters": {
       "post": {
-        "summary": "Returns a list of rules disabled from current account for given list of clusters",
+        "summary": "Returns a list of rules disabled for current organization for given list of clusters",
         "operationId": "ListOfDisabledRulesForClusters",
-        "description": "Returns a list of rules disabled from current account for given list of clusters",
+        "description": "Returns a list of rules disabled for current organization for given list of clusters",
         "parameters": [
           {
-            "name": "userId",
+            "name": "orgId",
             "in": "path",
             "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
+            "description": "Numeric ID of the organization",
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "42"
           }
         ],
         "requestBody": {
