@@ -45,5 +45,4 @@ var migrations = []Migration{
 	mig0026AddAndPopulateOrgIDColumns,
 	mig0027CleanupInvalidRowsMissingOrgID,
 	mig0028AlterRuleDisablePKAndIndex,
-	mig0029NullifyUserIDColumns,
 }
