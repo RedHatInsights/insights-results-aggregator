@@ -1029,7 +1029,32 @@ func TestMigration28(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	// insert into rule_disable same user_id
+	// insert into rule_disable different user_id, same org_id
+	_, err = db.Exec(
+		`INSERT INTO rule_disable
+				(org_id, user_id, rule_id, error_key, created_at)
+			VALUES
+				($1, $2, $3, $4, $5)`,
+		testdata.OrgID,
+		testdata.User2ID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.LastCheckedAt,
+	)
+	// possible to insert more than 1 row per org
+	helpers.FailOnError(t, err)
+
+	// delete from table
+	_, err = db.Exec(
+		`DELETE FROM rule_disable`,
+	)
+	helpers.FailOnError(t, err)
+
+	// migrate to different constraint
+	err = migration.SetDBVersion(db, dbDriver, 28)
+	helpers.FailOnError(t, err)
+
+	// insert into rule_disable
 	_, err = db.Exec(
 		`INSERT INTO rule_disable
 				(org_id, user_id, rule_id, error_key, created_at)
@@ -1041,24 +1066,22 @@ func TestMigration28(t *testing.T) {
 		testdata.ErrorKey1,
 		testdata.LastCheckedAt,
 	)
-	assert.Error(t, err)
-
-	err = migration.SetDBVersion(db, dbDriver, 28)
 	helpers.FailOnError(t, err)
 
-	// insert into rule_disable same user_id, now should work
+	// insert into rule_disable different user_id, same org_id
 	_, err = db.Exec(
 		`INSERT INTO rule_disable
-					(org_id, user_id, rule_id, error_key, created_at)
-				VALUES
-					($1, $2, $3, $4, $5)`,
+				(org_id, user_id, rule_id, error_key, created_at)
+			VALUES
+				($1, $2, $3, $4, $5)`,
 		testdata.OrgID,
-		testdata.UserID,
+		testdata.User2ID,
 		testdata.Rule1ID,
 		testdata.ErrorKey1,
 		testdata.LastCheckedAt,
 	)
-	helpers.FailOnError(t, err)
+	// not possible to insert more than 1 row per org
+	assert.Error(t, err)
 }
 
 func TestMigration29(t *testing.T) {

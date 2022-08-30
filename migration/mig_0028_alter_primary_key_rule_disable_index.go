@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	indexName = "rule_disable_org_id_rule_id_error_key_idx"
 	tableName = "rule_disable"
 	pkName    = "rule_disable_pkey"
 )
@@ -35,13 +34,13 @@ var mig0028AlterRuleDisablePKAndIndex = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 
 		if driver == types.DBDriverPostgres {
-			alterQuery := fmt.Sprintf("ALTER TABLE %v DROP CONSTRAINT %v", tableName, pkName)
+			alterQuery := fmt.Sprintf("ALTER TABLE %v DROP CONSTRAINT IF EXISTS %v", tableName, pkName)
 			_, err := tx.Exec(alterQuery)
 			if err != nil {
 				return err
 			}
 
-			query := fmt.Sprintf("CREATE INDEX %v ON %v (org_id, rule_id, error_key)", indexName, tableName)
+			query := fmt.Sprintf("ALTER TABLE %v ADD CONSTRAINT %v PRIMARY KEY (org_id, rule_id, error_key)", tableName, pkName)
 			_, err = tx.Exec(query)
 			if err != nil {
 				return err
@@ -52,7 +51,7 @@ var mig0028AlterRuleDisablePKAndIndex = Migration{
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverPostgres {
-			dropIndexQuery := fmt.Sprintf("DROP INDEX IF EXISTS %v", indexName)
+			dropIndexQuery := fmt.Sprintf("ALTER TABLE %v DROP CONSTRAINT IF EXISTS %v", tableName, pkName)
 			_, err := tx.Exec(dropIndexQuery)
 			if err != nil {
 				return err
