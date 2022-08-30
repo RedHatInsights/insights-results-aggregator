@@ -824,6 +824,9 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 				Internal: ctypes.Internal{
 					OrgID: testdata.Org2ID,
 				},
+				User: ctypes.User{
+					UserID: testdata.UserID,
+				},
 			},
 		}),
 	}, &helpers.APIResponse{

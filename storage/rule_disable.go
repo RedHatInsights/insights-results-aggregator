@@ -33,11 +33,17 @@ func (storage DBStorage) DisableRuleSystemWide(
 
 	now := time.Now()
 
-	const query = `INSERT INTO rule_disable(
-	                   org_id, user_id, rule_id, error_key, justification, created_at
-	               )
-	               VALUES ($1, $2, $3, $4, $5, $6)
-	              `
+	const query = `
+	INSERT INTO rule_disable(
+		org_id, user_id, rule_id, error_key, justification, created_at
+	)
+	VALUES
+		($1, $2, $3, $4, $5, $6)
+	ON CONFLICT
+		(org_id, rule_id, error_key)
+	DO UPDATE SET
+		user_id = $2, justification = $5, created_at = $6
+`
 
 	// try to execute the query and check for (any) error
 	_, err := storage.connection.Exec(
@@ -47,7 +53,8 @@ func (storage DBStorage) DisableRuleSystemWide(
 		ruleID,
 		errorKey,
 		justification,
-		now)
+		now,
+	)
 
 	if err != nil {
 		const msg = "Error during execution SQL exec for system wide rule disable"
@@ -61,21 +68,20 @@ func (storage DBStorage) DisableRuleSystemWide(
 // EnableRuleSystemWide enables the selected rule for all clusters visible to
 // given user
 func (storage DBStorage) EnableRuleSystemWide(
-	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey) error {
+	orgID types.OrgID, userID types.UserID, ruleID types.RuleID, errorKey types.ErrorKey,
+) error {
+	log.Info().Int("org_id", int(orgID)).Str("user_id", string(userID)).Msgf("re-enabling rule %v|%v", ruleID, errorKey)
 
 	const query = `DELETE FROM rule_disable
 	                WHERE org_id = $1
-	                  AND user_id = $2
-	                  AND rule_id = $3
-	                  AND error_key = $4
+	                  AND rule_id = $2
+	                  AND error_key = $3
 	              `
 
 	// try to execute the query and check for (any) error
 	_, err := storage.connection.Exec(
 		query,
 		orgID,
-		userID,
 		ruleID,
 		errorKey)
 
@@ -97,9 +103,8 @@ func (storage DBStorage) UpdateDisabledRuleJustification(
 	now := time.Now()
 
 	const query = `UPDATE rule_disable
-	                  SET justification = $5, updated_at = $6
+	                  SET user_id = $2, justification = $5, updated_at = $6
 	                WHERE org_id = $1
-	                  AND user_id = $2
 	                  AND rule_id = $3
 	                  AND error_key = $4
 	              `

@@ -76,6 +76,54 @@ func TestDBStorageEnableRuleSystemWide(t *testing.T) {
 	closer()
 }
 
+// Check the method DisableRuleSystemWide to check ON CONFLICT
+// This shouldn't happen in real enviornment because
+// Re-enabling/Updating justification/Getting from the rule_disable table is used
+func TestDBStorageEnableRuleSystemWideDifferentUser(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	user1Justification := "first user reason"
+	user2Justification := "second user reason"
+
+	// try to call the method
+	err := mockStorage.DisableRuleSystemWide(
+		testdata.OrgID, testdata.UserID,
+		testdata.Rule1ID, testdata.ErrorKey1, user1Justification,
+	)
+	// we expect no error
+	helpers.FailOnError(t, err)
+
+	// read the rule
+	r, found, err := mockStorage.ReadDisabledRule(
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
+	helpers.FailOnError(t, err)
+
+	// check returned values
+	assert.True(t, found, "Rule should be found")
+	assert.Equal(t, user1Justification, r.Justification, "Justification must be correct")
+
+	// try to call the method with same org, but different user
+	err = mockStorage.DisableRuleSystemWide(
+		testdata.OrgID, testdata.User2ID,
+		testdata.Rule1ID, testdata.ErrorKey1, user2Justification,
+	)
+	// we expect no error
+	helpers.FailOnError(t, err)
+
+	// read the rule
+	r, found, err = mockStorage.ReadDisabledRule(
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
+	helpers.FailOnError(t, err)
+
+	// check returned values
+	assert.True(t, found, "Rule should be found")
+	assert.Equal(t, user2Justification, r.Justification, "Justification must be correct")
+
+	// close storage
+	closer()
+}
+
 // Check the method EnableRuleSystemWide in case of DB error.
 func TestDBStorageEnableRuleSystemWideOnDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)

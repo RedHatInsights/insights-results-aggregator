@@ -122,6 +122,9 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 						Internal: types.Internal{
 							OrgID: orgID,
 						},
+						User: types.User{
+							UserID: userID,
+						},
 					}
 					req = req.WithContext(context.WithValue(req.Context(), types.ContextKeyUser, identity))
 
