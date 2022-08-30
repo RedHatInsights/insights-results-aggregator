@@ -62,7 +62,7 @@ func TestNoopStorage_Methods_Cont(t *testing.T) {
 	_ = noopStorage.ToggleRuleForCluster("", "", "", 0, "", 0)
 	_ = noopStorage.DeleteFromRuleClusterToggle("", "")
 	_, _ = noopStorage.GetFromClusterRuleToggle("", "")
-	_, _ = noopStorage.GetTogglesForRules("", nil, types.UserID("99"))
+	_, _ = noopStorage.GetTogglesForRules("", nil, types.OrgID(1))
 	_, _ = noopStorage.GetUserFeedbackOnRules("", nil, "")
 	_, _ = noopStorage.GetRuleWithContent("", "")
 	_, _ = noopStorage.ReadOrgIDsForClusters([]types.ClusterName{})
@@ -73,7 +73,7 @@ func TestNoopStorage_Methods_Cont(t *testing.T) {
 	_, _ = noopStorage.DoesClusterExist("")
 	_, _ = noopStorage.ListOfDisabledRules(types.OrgID(1))
 	_, _ = noopStorage.ListOfReasons("")
-	_, _ = noopStorage.ListOfDisabledRulesForClusters([]string{}, types.UserID("99"))
+	_, _ = noopStorage.ListOfDisabledRulesForClusters([]string{}, types.OrgID(1))
 	_ = noopStorage.WriteRecommendationsForCluster(0, "", "", "")
 	_ = noopStorage.RateOnRule(types.UserID("99"), types.OrgID(1), "", "",
 		types.UserVote(1))
@@ -94,5 +94,5 @@ func TestNoopStorage_Methods_Cont2(t *testing.T) {
 	_, _ = noopStorage.ListOfClustersForOrgSpecificRule(0, "", []string{"a"})
 	_, _ = noopStorage.ReadRecommendationsForClusters([]string{}, types.OrgID(1))
 	_, _ = noopStorage.ReadClusterListRecommendations([]string{}, types.OrgID(1))
-	_, _ = noopStorage.ListOfDisabledClusters(userID, "", "")
+	_, _ = noopStorage.ListOfDisabledClusters(orgID, "", "")
 }

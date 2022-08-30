@@ -96,7 +96,7 @@ func TestDBStorageGetTogglesForRules_NoRules(t *testing.T) {
 	defer closer()
 
 	_, err := mockStorage.GetTogglesForRules(
-		testdata.ClusterName, nil, testdata.UserID,
+		testdata.ClusterName, nil, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 }
@@ -106,7 +106,7 @@ func TestDBStorageGetTogglesForRules_AllRulesEnabled(t *testing.T) {
 	defer closer()
 
 	_, err := mockStorage.GetTogglesForRules(
-		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 }
@@ -120,7 +120,7 @@ func TestDBStorageGetTogglesForRules_OneRuleDisabled(t *testing.T) {
 	))
 
 	result, err := mockStorage.GetTogglesForRules(
-		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.OrgID,
 	)
 
 	helpers.FailOnError(t, err)
@@ -941,7 +941,9 @@ func TestDBStorageListOfDisabledClustersOneRule(t *testing.T) {
 	))
 
 	// try to read list of disabled clusters
-	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 	helpers.FailOnError(t, err)
 
 	// we expect 1 cluster to be returned
@@ -974,7 +976,9 @@ func TestDBStorageListOfDisabledClustersTwoClusters(t *testing.T) {
 	))
 
 	// try to read list of disabled clusters
-	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 	helpers.FailOnError(t, err)
 
 	// we expect 2 clusters to be returned
@@ -1005,7 +1009,9 @@ func TestDBStorageListOfDisabledClustersDifferentRule(t *testing.T) {
 	))
 
 	// try to read list of disabled clusters, but requesting different rule than disabled
-	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule4ID, testdata.ErrorKey4)
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(
+		testdata.OrgID, testdata.Rule2ID, testdata.ErrorKey2,
+	)
 	helpers.FailOnError(t, err)
 
 	// we expect no cluster, we disabled different rule
@@ -1036,7 +1042,9 @@ func TestDBStorageListOfDisabledClustersFeedback(t *testing.T) {
 	))
 
 	// try to read list of disabled clusters
-	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 	helpers.FailOnError(t, err)
 
 	// we expect 1 cluster
@@ -1078,7 +1086,9 @@ func TestDBStorageListOfDisabledClustersFeedbackUpdate(t *testing.T) {
 	))
 
 	// try to read list of disabled clusters
-	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 	helpers.FailOnError(t, err)
 
 	// we expect 1 cluster
@@ -1099,7 +1109,7 @@ func TestDBStorageListOfDisabledRulesForClustersDBError(t *testing.T) {
 	}
 
 	// try to read list of disabled rules
-	_, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.UserID)
+	_, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.OrgID)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -1115,7 +1125,7 @@ func TestDBStorageListOfDisabledRulesForClustersEmptyDB(t *testing.T) {
 	}
 
 	// try to read list of disabled rules
-	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.UserID)
+	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect no rules to be returned
@@ -1145,7 +1155,7 @@ func TestDBStorageListOfDisabledRulesForClustersOneRule(t *testing.T) {
 	))
 
 	// try to read list of disabled rules
-	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.UserID)
+	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect 1 rule to be returned
@@ -1186,7 +1196,7 @@ func TestDBStorageListOfDisabledRulesForClustersTwoRules(t *testing.T) {
 	))
 
 	// try to read list of disabled rules
-	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.UserID)
+	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters(clusters, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect 2 rules to be returned
@@ -1216,7 +1226,7 @@ func TestDBStorageListOfDisabledRulesForClustersNoRule(t *testing.T) {
 	))
 
 	// try to read list of disabled rules, we're requesting a list for a different list of clusters
-	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters([]string{clusters[1], clusters[2]}, testdata.UserID)
+	disabledRules, err := mockStorage.ListOfDisabledRulesForClusters([]string{clusters[1], clusters[2]}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect no rules to be returned
@@ -1229,7 +1239,7 @@ func TestDBStorageListOfDisabledRulesForClustersNoRule(t *testing.T) {
 	))
 
 	// try to read list of disabled rules, this time there should be one rule among them
-	disabledRules, err = mockStorage.ListOfDisabledRulesForClusters([]string{clusters[1], clusters[2]}, testdata.UserID)
+	disabledRules, err = mockStorage.ListOfDisabledRulesForClusters([]string{clusters[1], clusters[2]}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect 1 rule

@@ -141,7 +141,7 @@ func (storage DBStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.Disabl
 // specified account for given list of clusters.
 func (storage DBStorage) ListOfDisabledRulesForClusters(
 	clusterList []string,
-	userID types.UserID,
+	orgID types.OrgID,
 ) ([]ctypes.DisabledRule, error) {
 	disabledRules := make([]ctypes.DisabledRule, 0)
 
@@ -150,7 +150,7 @@ func (storage DBStorage) ListOfDisabledRulesForClusters(
 	}
 
 	// #nosec G201
-	whereClause := fmt.Sprintf(`WHERE user_id = $1 AND disabled = $2 AND cluster_id IN (%v)`, inClauseFromSlice(clusterList))
+	whereClause := fmt.Sprintf(`WHERE org_id = $1 AND disabled = $2 AND cluster_id IN (%v)`, inClauseFromSlice(clusterList))
 
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
@@ -167,7 +167,7 @@ func (storage DBStorage) ListOfDisabledRulesForClusters(
 	` + whereClause
 
 	// run the query against database
-	rows, err := storage.connection.Query(query, userID, RuleToggleDisable)
+	rows, err := storage.connection.Query(query, orgID, RuleToggleDisable)
 
 	// return empty list in case of any error
 	if err != nil {

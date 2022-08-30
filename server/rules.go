@@ -136,15 +136,15 @@ func (server HTTPServer) listOfReasons(writer http.ResponseWriter, request *http
 	}
 }
 
-// listOfDisabledRulesForClusters returns list of rules disabled from an account for given clusters
+// listOfDisabledRulesForClusters returns list of rules disabled from an organization for given clusters
 func (server HTTPServer) listOfDisabledRulesForClusters(writer http.ResponseWriter, request *http.Request) {
-	// Extract user_id from URL
-	userID, ok := readUserID(writer, request)
+	// Extract org_id from URL
+	orgID, ok := readOrgID(writer, request)
 	if !ok {
 		// everything has been handled
 		return
 	}
-	log.Info().Str(userIDstr, string(userID)).Msg("listOfDisabledRulesForClusters")
+	log.Info().Int(orgIDStr, int(orgID)).Msg("listOfDisabledRulesForClusters")
 
 	var listOfClusters []string
 	err := json.NewDecoder(request.Body).Decode(&listOfClusters)
@@ -152,16 +152,16 @@ func (server HTTPServer) listOfDisabledRulesForClusters(writer http.ResponseWrit
 		handleServerError(writer, err)
 		return
 	}
-	log.Info().Str(userIDstr, string(userID)).Msgf("listOfDisabledRulesForClusters number of clusters: %d", len(listOfClusters))
+	log.Info().Int(orgIDStr, int(orgID)).Msgf("listOfDisabledRulesForClusters number of clusters: %d", len(listOfClusters))
 
-	// try to read list of disabled rules by an account/user from database for given list of clusters
-	disabledRules, err := server.Storage.ListOfDisabledRulesForClusters(listOfClusters, userID)
+	// try to read list of disabled rules by an organization from database for given list of clusters
+	disabledRules, err := server.Storage.ListOfDisabledRulesForClusters(listOfClusters, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read list of disabled rules")
 		handleServerError(writer, err)
 		return
 	}
-	log.Info().Str(userIDstr, string(userID)).Int("#disabled rules", len(disabledRules)).Msg("listOfDisabledRulesForClusters")
+	log.Info().Int(orgIDStr, int(orgID)).Int("#disabled rules", len(disabledRules)).Msg("listOfDisabledRulesForClusters")
 
 	// try to send JSON payload to the client in a HTTP response
 	err = responses.SendOK(writer,
@@ -175,12 +175,12 @@ func (server HTTPServer) listOfDisabledRulesForClusters(writer http.ResponseWrit
 func (server HTTPServer) listOfDisabledClusters(writer http.ResponseWriter, request *http.Request) {
 	log.Info().Msg("Lisf of disabled clusters")
 
-	userID, successful := readUserID(writer, request)
+	orgID, successful := readOrgID(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
 	}
-	log.Info().Str(accountStr, string(userID)).Msg("disabled clusters for account")
+	log.Info().Int(orgIDStr, int(orgID)).Msg("disabled clusters for organization")
 
 	ruleID, successful := readRuleID(writer, request)
 	if !successful {
@@ -193,16 +193,16 @@ func (server HTTPServer) listOfDisabledClusters(writer http.ResponseWriter, requ
 		// everything has been handled already
 		return
 	}
-	log.Info().Str(accountStr, string(userID)).Msgf("disabled clusters for rule ID %v|%v", ruleID, errorKey)
+	log.Info().Int(orgIDStr, int(orgID)).Msgf("disabled clusters for rule ID %v|%v", ruleID, errorKey)
 
 	// get disabled rules from DB
-	disabledClusters, err := server.Storage.ListOfDisabledClusters(userID, ruleID, errorKey)
+	disabledClusters, err := server.Storage.ListOfDisabledClusters(orgID, ruleID, errorKey)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read list of disabled clusters")
 		handleServerError(writer, err)
 		return
 	}
-	log.Info().Str(accountStr, string(userID)).Int("number of disabled clusters", len(disabledClusters)).Msg("list of disabled clusters")
+	log.Info().Int(orgIDStr, int(orgID)).Int("number of disabled clusters", len(disabledClusters)).Msg("list of disabled clusters")
 
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData("clusters", disabledClusters))
 	if err != nil {
@@ -214,9 +214,10 @@ func (server HTTPServer) listOfDisabledClusters(writer http.ResponseWriter, requ
 func (server HTTPServer) getFeedbackAndTogglesOnRules(
 	clusterName types.ClusterName,
 	userID types.UserID,
+	orgID types.OrgID,
 	rules []types.RuleOnReport,
 ) ([]types.RuleOnReport, error) {
-	togglesRules, err := server.Storage.GetTogglesForRules(clusterName, rules, userID)
+	togglesRules, err := server.Storage.GetTogglesForRules(clusterName, rules, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to retrieve disabled status from database")
 		return nil, err

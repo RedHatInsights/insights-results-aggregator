@@ -149,9 +149,9 @@ type Storage interface {
 		types.RuleID,
 	) (*ClusterRuleToggle, error)
 	GetTogglesForRules(
-		types.ClusterName,
-		[]types.RuleOnReport,
-		types.UserID,
+		clusterID types.ClusterName,
+		rulesReport []types.RuleOnReport,
+		orgID types.OrgID,
 	) (map[types.RuleID]bool, error)
 	DeleteFromRuleClusterToggle(
 		clusterID types.ClusterName,
@@ -174,10 +174,10 @@ type Storage interface {
 	ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error)
 	ListOfDisabledRulesForClusters(
 		clusterList []string,
-		userID types.UserID,
+		orgID types.OrgID,
 	) ([]ctypes.DisabledRule, error)
 	ListOfDisabledClusters(
-		userID types.UserID,
+		orgID types.OrgID,
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
 	) ([]ctypes.DisabledClusterInfo, error)
@@ -1410,7 +1410,7 @@ func (storage DBStorage) DoesClusterExist(clusterID types.ClusterName) (bool, er
 // ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
 // specified account.
 func (storage DBStorage) ListOfDisabledClusters(
-	userID types.UserID,
+	orgID types.OrgID,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
 ) (
@@ -1433,14 +1433,14 @@ func (storage DBStorage) ListOfDisabledClusters(
 		SELECT updated_at
 		FROM cluster_user_rule_disable_feedback
 		WHERE cluster_id = toggle.cluster_id
-		AND user_id = $1
+		AND org_id = $1
 		AND rule_id = $2
 		AND error_key = $3
 		ORDER BY updated_at DESC
 		LIMIT 1
 	)
 	WHERE
-		toggle.user_id = $1
+		toggle.org_id = $1
 		AND toggle.rule_id = $2
 		AND toggle.error_key = $3
 		AND toggle.disabled = $4
@@ -1449,7 +1449,7 @@ func (storage DBStorage) ListOfDisabledClusters(
 	`
 
 	// run the query against database
-	rows, err := storage.connection.Query(query, userID, ruleID, errorKey, RuleToggleDisable)
+	rows, err := storage.connection.Query(query, orgID, ruleID, errorKey, RuleToggleDisable)
 
 	// return empty list in case of any error
 	if err != nil {

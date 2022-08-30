@@ -212,7 +212,7 @@ func (*NoopStorage) GetFromClusterRuleToggle(
 func (*NoopStorage) GetTogglesForRules(
 	types.ClusterName,
 	[]types.RuleOnReport,
-	types.UserID,
+	types.OrgID,
 ) (map[types.RuleID]bool, error) {
 	return nil, nil
 }
@@ -271,7 +271,7 @@ func (*NoopStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, er
 // ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
 // specified account (noop).
 func (*NoopStorage) ListOfDisabledClusters(
-	userID types.UserID,
+	orgID types.OrgID,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
 ) ([]ctypes.DisabledClusterInfo, error) {
@@ -282,7 +282,7 @@ func (*NoopStorage) ListOfDisabledClusters(
 // specified account (noop).
 func (*NoopStorage) ListOfDisabledRulesForClusters(
 	clusterList []string,
-	userID types.UserID,
+	orgID types.OrgID,
 ) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
