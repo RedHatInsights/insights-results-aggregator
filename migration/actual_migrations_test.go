@@ -1084,6 +1084,8 @@ func TestMigration28(t *testing.T) {
 	assert.Error(t, err)
 }
 
+// to be enabled after smart-proxy is merged
+/*
 func TestMigration29(t *testing.T) {
 	const selectUserIDQuery = "SELECT user_id FROM %v"
 	var tablesAffected = []string{
@@ -1207,3 +1209,4 @@ func TestMigration29(t *testing.T) {
 		assert.Equal(t, userID, "0")
 	}
 }
+*/
