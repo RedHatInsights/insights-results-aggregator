@@ -890,3 +890,323 @@ func TestMigration26(t *testing.T) {
 	// cluster wasn't found in report table, org_id will be default value 0
 	assert.Equal(t, orgID, types.OrgID(0))
 }
+
+func TestMigration27(t *testing.T) {
+	const countQuery = "SELECT count(*) FROM %v"
+	// contains 2 valid and 1 invalid orgID
+	var orgIDList = []string{"0", "1", "2"}
+	var tableList = []string{
+		"cluster_rule_toggle",
+		"cluster_rule_user_feedback",
+		"cluster_user_rule_disable_feedback",
+	}
+
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// sqlite is no longer supported
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 26)
+	helpers.FailOnError(t, err)
+
+	// insert into report table because of DB constraints
+	_, err = db.Exec(`
+		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
+		VALUES ($1, $2, $3, $4, $5)
+		`,
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.ClusterReport3Rules,
+		testdata.LastCheckedAt,
+		testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	// insert 3 rows into table, one of them invalid
+	for i, orgID := range orgIDList {
+		// insert into cluster_rule_toggle
+		userID := fmt.Sprintf("%v", i)
+		_, err = db.Exec(
+			`INSERT INTO cluster_rule_toggle (cluster_id, rule_id, error_key, user_id, disabled, updated_at, org_id)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+			testdata.ClusterName,
+			testdata.Rule1ID,
+			userID, // random stuff because of DB constraints
+			testdata.UserID,
+			1,
+			testdata.LastCheckedAt,
+			orgID,
+		)
+		helpers.FailOnError(t, err)
+
+		// insert into cluster_user_rule_disable_feedback
+		_, err = db.Exec(
+			`INSERT INTO cluster_user_rule_disable_feedback
+				(cluster_id, rule_id, error_key, user_id, message, added_at, updated_at, org_id)
+			VALUES
+				($1, $2, $3, $4, $5, $6, $7, $8)`,
+			testdata.ClusterName,
+			testdata.Rule1ID,
+			testdata.ErrorKey1,
+			userID,
+			"reason",
+			testdata.LastCheckedAt,
+			testdata.LastCheckedAt,
+			orgID,
+		)
+		helpers.FailOnError(t, err)
+
+		// insert into cluster_rule_user_feedback
+		_, err = db.Exec(
+			`INSERT INTO cluster_rule_user_feedback
+				(cluster_id, rule_id, error_key, user_id, message, added_at, updated_at, user_vote, org_id)
+			VALUES
+				($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			testdata.ClusterName,
+			testdata.Rule1ID,
+			testdata.ErrorKey1,
+			userID,
+			"reason",
+			testdata.LastCheckedAt,
+			testdata.LastCheckedAt,
+			1,
+			orgID,
+		)
+		helpers.FailOnError(t, err)
+	}
+
+	// check correct number of rows inserted (3)
+	for _, table := range tableList {
+		var cnt int
+		query := fmt.Sprintf(countQuery, table)
+		err = db.QueryRow(query).Scan(&cnt)
+		helpers.FailOnError(t, err)
+		// expect 3 rows
+		assert.Equal(t, cnt, 3)
+	}
+
+	// migrate to 27, deleting rows where org_id = 0
+	err = migration.SetDBVersion(db, dbDriver, 27)
+	helpers.FailOnError(t, err)
+
+	// check correct number of rows remaining (2)
+	for _, table := range tableList {
+		var cnt int
+		query := fmt.Sprintf(countQuery, table)
+		err = db.QueryRow(query).Scan(&cnt)
+		helpers.FailOnError(t, err)
+		// expect 2 rows, one was supposed to be deleted in all tables
+		assert.Equal(t, cnt, 2)
+	}
+}
+
+func TestMigration28(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// sqlite is no longer supported
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 27)
+	helpers.FailOnError(t, err)
+
+	// insert into rule_disable
+	_, err = db.Exec(
+		`INSERT INTO rule_disable
+				(org_id, user_id, rule_id, error_key, created_at)
+			VALUES
+				($1, $2, $3, $4, $5)`,
+		testdata.OrgID,
+		testdata.UserID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	// insert into rule_disable different user_id, same org_id
+	_, err = db.Exec(
+		`INSERT INTO rule_disable
+				(org_id, user_id, rule_id, error_key, created_at)
+			VALUES
+				($1, $2, $3, $4, $5)`,
+		testdata.OrgID,
+		testdata.User2ID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.LastCheckedAt,
+	)
+	// possible to insert more than 1 row per org
+	helpers.FailOnError(t, err)
+
+	// delete from table
+	_, err = db.Exec(
+		`DELETE FROM rule_disable`,
+	)
+	helpers.FailOnError(t, err)
+
+	// migrate to different constraint
+	err = migration.SetDBVersion(db, dbDriver, 28)
+	helpers.FailOnError(t, err)
+
+	// insert into rule_disable
+	_, err = db.Exec(
+		`INSERT INTO rule_disable
+				(org_id, user_id, rule_id, error_key, created_at)
+			VALUES
+				($1, $2, $3, $4, $5)`,
+		testdata.OrgID,
+		testdata.UserID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	// insert into rule_disable different user_id, same org_id
+	_, err = db.Exec(
+		`INSERT INTO rule_disable
+				(org_id, user_id, rule_id, error_key, created_at)
+			VALUES
+				($1, $2, $3, $4, $5)`,
+		testdata.OrgID,
+		testdata.User2ID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.LastCheckedAt,
+	)
+	// not possible to insert more than 1 row per org
+	assert.Error(t, err)
+}
+
+// to be enabled after smart-proxy is merged
+/*
+func TestMigration29(t *testing.T) {
+	const selectUserIDQuery = "SELECT user_id FROM %v"
+	var tablesAffected = []string{
+		"advisor_ratings",
+		"cluster_rule_toggle",
+		"cluster_rule_user_feedback",
+		"cluster_user_rule_disable_feedback",
+		"rule_disable",
+	}
+
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// sqlite is no longer supported
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 28)
+	helpers.FailOnError(t, err)
+
+	// insert into report table because of DB constraints
+	_, err = db.Exec(`
+		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
+		VALUES ($1, $2, $3, $4, $5)
+		`,
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.ClusterReport3Rules,
+		testdata.LastCheckedAt,
+		testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	// insert into advisor_ratings
+	_, err = db.Exec(
+		`INSERT INTO advisor_ratings
+			(org_id, user_id, rule_fqdn, error_key, rule_id)
+		VALUES
+			($1, $2, $3, $4, $5)`,
+		testdata.OrgID,
+		testdata.UserID,
+		testdata.Rule1CompositeID,
+		testdata.ErrorKey1,
+		testdata.Rule1ID,
+	)
+	helpers.FailOnError(t, err)
+
+	// insert into cluster_rule_toggle
+	_, err = db.Exec(
+		`INSERT INTO cluster_rule_toggle (cluster_id, rule_id, error_key, user_id, disabled, updated_at, org_id)
+				VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		testdata.ClusterName,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.UserID,
+		1,
+		testdata.LastCheckedAt,
+		testdata.OrgID,
+	)
+	helpers.FailOnError(t, err)
+
+	// insert into cluster_user_rule_disable_feedback
+	_, err = db.Exec(
+		`INSERT INTO cluster_user_rule_disable_feedback
+			(cluster_id, rule_id, error_key, user_id, message, added_at, updated_at, org_id)
+		VALUES
+			($1, $2, $3, $4, $5, $6, $7, $8)`,
+		testdata.ClusterName,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.UserID,
+		"",
+		testdata.LastCheckedAt,
+		testdata.LastCheckedAt,
+		testdata.OrgID,
+	)
+	helpers.FailOnError(t, err)
+
+	// insert into cluster_rule_user_feedback
+	_, err = db.Exec(
+		`INSERT INTO cluster_rule_user_feedback
+			(cluster_id, rule_id, error_key, user_id, message, added_at, updated_at, user_vote, org_id)
+		VALUES
+			($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		testdata.ClusterName,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.UserID,
+		"",
+		testdata.LastCheckedAt,
+		testdata.LastCheckedAt,
+		1,
+		testdata.OrgID,
+	)
+	helpers.FailOnError(t, err)
+
+	// insert into rule_disable
+	_, err = db.Exec(
+		`INSERT INTO rule_disable
+			(org_id, user_id, rule_id, error_key, created_at)
+		VALUES
+			($1, $2, $3, $4, $5)`,
+		testdata.OrgID,
+		testdata.UserID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		testdata.LastCheckedAt,
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, dbDriver, 29)
+	helpers.FailOnError(t, err)
+
+	for _, table := range tablesAffected {
+		var userID string
+		userIDQuery := fmt.Sprintf(selectUserIDQuery, table)
+		err = db.QueryRow(userIDQuery).Scan(&userID)
+		helpers.FailOnError(t, err)
+		// expect user_ids to be "0"
+		assert.Equal(t, userID, "0")
+	}
+}
+*/

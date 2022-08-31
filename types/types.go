@@ -91,6 +91,8 @@ type (
 	Identity = types.Identity
 	// Token is x-rh-identity struct
 	Token = types.Token
+	// User is single-user identifying struct
+	User = types.User
 )
 
 const (

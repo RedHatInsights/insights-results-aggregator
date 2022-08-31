@@ -43,4 +43,6 @@ var migrations = []Migration{
 	mig0024AddTimestampToRuleHit,
 	mig0025AddImpactedToRecommendation,
 	mig0026AddAndPopulateOrgIDColumns,
+	mig0027CleanupInvalidRowsMissingOrgID,
+	mig0028AlterRuleDisablePKAndIndex,
 }

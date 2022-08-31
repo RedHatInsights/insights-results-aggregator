@@ -212,7 +212,7 @@ func (*NoopStorage) GetFromClusterRuleToggle(
 func (*NoopStorage) GetTogglesForRules(
 	types.ClusterName,
 	[]types.RuleOnReport,
-	types.UserID,
+	types.OrgID,
 ) (map[types.RuleID]bool, error) {
 	return nil, nil
 }
@@ -258,7 +258,7 @@ func (*NoopStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (ma
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account (noop).
-func (*NoopStorage) ListOfDisabledRules(userID types.UserID) ([]ctypes.DisabledRule, error) {
+func (*NoopStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
 
@@ -271,7 +271,7 @@ func (*NoopStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, er
 // ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
 // specified account (noop).
 func (*NoopStorage) ListOfDisabledClusters(
-	userID types.UserID,
+	orgID types.OrgID,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
 ) ([]ctypes.DisabledClusterInfo, error) {
@@ -282,7 +282,7 @@ func (*NoopStorage) ListOfDisabledClusters(
 // specified account (noop).
 func (*NoopStorage) ListOfDisabledRulesForClusters(
 	clusterList []string,
-	userID types.UserID,
+	orgID types.OrgID,
 ) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
@@ -337,15 +337,16 @@ func (*NoopStorage) UpdateDisabledRuleJustification(
 
 // ReadDisabledRule function returns disabled rule (if disabled) from database
 func (*NoopStorage) ReadDisabledRule(
-	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey) (ctypes.SystemWideRuleDisable, bool, error) {
+	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
+) (ctypes.SystemWideRuleDisable, bool, error) {
 	return ctypes.SystemWideRuleDisable{}, true, nil
 }
 
 // ListOfSystemWideDisabledRules function returns list of all rules that have been
 // disabled for all clusters by given user
 func (*NoopStorage) ListOfSystemWideDisabledRules(
-	orgID types.OrgID, userID types.UserID) ([]ctypes.SystemWideRuleDisable, error) {
+	orgID types.OrgID,
+) ([]ctypes.SystemWideRuleDisable, error) {
 	return nil, nil
 }
 

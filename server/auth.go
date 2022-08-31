@@ -161,7 +161,7 @@ func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID,
 		return "", fmt.Errorf("contextKeyUser has wrong type")
 	}
 
-	return identity.AccountNumber, nil
+	return identity.User.UserID, nil
 }
 
 func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Request) (string, error) {

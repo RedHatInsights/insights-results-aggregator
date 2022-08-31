@@ -62,13 +62,13 @@ const (
 	// DisableRuleFeedbackEndpoint accepts a feedback from user when (s)he disables a rule
 	DisableRuleFeedbackEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/disable_feedback"
 	// ListOfDisabledRules returns a list of rules disabled from current account
-	ListOfDisabledRules = "rules/users/{user_id}/disabled"
-	// ListOfDisabledRulesForClusters returns a list of rules disabled from current account for given list of clusters in POST body
-	ListOfDisabledRulesForClusters = "rules/users/{user_id}/disabled_for_clusters"
+	ListOfDisabledRules = "rules/organizations/{org_id}/disabled"
+	// ListOfDisabledRulesForClusters returns a list of rules disabled from current organization for given list of clusters in POST body
+	ListOfDisabledRulesForClusters = "rules/organizations/{org_id}/disabled_for_clusters"
 	// ListOfDisabledRulesFeedback returns a list of reasons why rule has been disabled
 	ListOfDisabledRulesFeedback = "rules/users/{user_id}/disabled/feedback"
 	// ListOfDisabledClusters returns a list of clusters which the user disabled for a rule with latest justification
-	ListOfDisabledClusters = "clusters/rules/{rule_id}/error_key/{error_key}/users/{user_id}/disabled"
+	ListOfDisabledClusters = "clusters/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/disabled"
 	// RuleClusterDetailEndpoint returns a list of clusters affected by a given rule for current account
 	RuleClusterDetailEndpoint = "rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail"
 

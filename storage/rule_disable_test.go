@@ -44,36 +44,6 @@ func TestDBStorageDisableRuleSystemWide(t *testing.T) {
 	closer()
 }
 
-// Check the method DisableRuleSystemWide called twice for the same input.
-func TestDBStorageDisableRuleSystemWideDoubleDisable(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-
-	// try to call the method
-	err := mockStorage.DisableRuleSystemWide(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1,
-		"x")
-
-	// we expect no error
-	helpers.FailOnError(t, err)
-
-	// try to call the method
-	err = mockStorage.DisableRuleSystemWide(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1,
-		"x")
-
-	// we expect the error to happen
-	const sqliteErrMessage = "UNIQUE constraint failed: rule_disable.user_id, rule_disable.org_id, rule_disable.rule_id, rule_disable.error_key"
-	const postgresErrMessage = "pq: duplicate key value violates unique constraint \"rule_disable_pkey\""
-	if err.Error() != sqliteErrMessage && err.Error() != postgresErrMessage {
-		t.Fatalf("expected one of: \n%v\n%v\ngot:\n%v", sqliteErrMessage, postgresErrMessage, err.Error())
-	}
-
-	// close storage
-	closer()
-}
-
 // Check the method DisableRuleSystemWide in case of DB error.
 func TestDBStorageDisableRuleSystemWideOnDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
@@ -101,6 +71,54 @@ func TestDBStorageEnableRuleSystemWide(t *testing.T) {
 
 	// we expect no error
 	helpers.FailOnError(t, err)
+
+	// close storage
+	closer()
+}
+
+// Check the method DisableRuleSystemWide to check ON CONFLICT
+// This shouldn't happen in real enviornment because
+// Re-enabling/Updating justification/Getting from the rule_disable table is used
+func TestDBStorageEnableRuleSystemWideDifferentUser(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	user1Justification := "first user reason"
+	user2Justification := "second user reason"
+
+	// try to call the method
+	err := mockStorage.DisableRuleSystemWide(
+		testdata.OrgID, testdata.UserID,
+		testdata.Rule1ID, testdata.ErrorKey1, user1Justification,
+	)
+	// we expect no error
+	helpers.FailOnError(t, err)
+
+	// read the rule
+	r, found, err := mockStorage.ReadDisabledRule(
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
+	helpers.FailOnError(t, err)
+
+	// check returned values
+	assert.True(t, found, "Rule should be found")
+	assert.Equal(t, user1Justification, r.Justification, "Justification must be correct")
+
+	// try to call the method with same org, but different user
+	err = mockStorage.DisableRuleSystemWide(
+		testdata.OrgID, testdata.User2ID,
+		testdata.Rule1ID, testdata.ErrorKey1, user2Justification,
+	)
+	// we expect no error
+	helpers.FailOnError(t, err)
+
+	// read the rule
+	r, found, err = mockStorage.ReadDisabledRule(
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
+	helpers.FailOnError(t, err)
+
+	// check returned values
+	assert.True(t, found, "Rule should be found")
+	assert.Equal(t, user2Justification, r.Justification, "Justification must be correct")
 
 	// close storage
 	closer()
@@ -160,8 +178,8 @@ func TestDBStorageReadDisabledRuleNoRule(t *testing.T) {
 
 	// try to call the method
 	_, found, err := mockStorage.ReadDisabledRule(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1)
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -190,8 +208,8 @@ func TestDBStorageReadDisabledRuleOneRule(t *testing.T) {
 
 	// try to call the method
 	r, found, err := mockStorage.ReadDisabledRule(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1)
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -212,8 +230,8 @@ func TestDBStorageReadDisabledRuleOnRBError(t *testing.T) {
 
 	// try to call the method
 	_, _, err := mockStorage.ReadDisabledRule(
-		testdata.OrgID, testdata.UserID,
-		testdata.Rule1ID, testdata.ErrorKey1)
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 
 	// we expect the error to happen
 	assert.EqualError(t, err, "sql: database is closed")
@@ -224,8 +242,7 @@ func TestDBStorageListOfSystemWideDisabledRulesNoRules(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 
 	// try to call the method
-	list, err := mockStorage.ListOfSystemWideDisabledRules(
-		testdata.OrgID, testdata.UserID)
+	list, err := mockStorage.ListOfSystemWideDisabledRules(testdata.OrgID)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -253,8 +270,7 @@ func TestDBStorageListOfSystemWideDisabledRulesOneRule(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// try to call the method
-	list, err := mockStorage.ListOfSystemWideDisabledRules(
-		testdata.OrgID, testdata.UserID)
+	list, err := mockStorage.ListOfSystemWideDisabledRules(testdata.OrgID)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -294,8 +310,7 @@ func TestDBStorageListOfSystemWideDisabledRulesTwoRules(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// try to call the method
-	list, err := mockStorage.ListOfSystemWideDisabledRules(
-		testdata.OrgID, testdata.UserID)
+	list, err := mockStorage.ListOfSystemWideDisabledRules(testdata.OrgID)
 
 	// we expect no error
 	helpers.FailOnError(t, err)
@@ -318,8 +333,7 @@ func TestDBStorageListOfSystemWideDisabledRulesDBError(t *testing.T) {
 	closer()
 
 	// try to call the method
-	_, err := mockStorage.ListOfSystemWideDisabledRules(
-		testdata.OrgID, testdata.UserID)
+	_, err := mockStorage.ListOfSystemWideDisabledRules(testdata.OrgID)
 
 	// we expect the error to happen
 	assert.EqualError(t, err, "sql: database is closed")

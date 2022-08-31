@@ -824,6 +824,9 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 				Internal: ctypes.Internal{
 					OrgID: testdata.Org2ID,
 				},
+				User: ctypes.User{
+					UserID: testdata.UserID,
+				},
 			},
 		}),
 	}, &helpers.APIResponse{
@@ -894,7 +897,7 @@ func TestHTTPServer_ListDisabledRules(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ListOfDisabledRules,
-		EndpointArgs: []interface{}{testdata.UserID},
+		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"rules":[],"status":"ok"}`,
@@ -925,7 +928,7 @@ func TestHTTPServer_ListDisabledRulesForClusters(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.ListOfDisabledRulesForClusters,
-		EndpointArgs: []interface{}{testdata.UserID},
+		EndpointArgs: []interface{}{testdata.OrgID},
 		Body:         reqBody,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
@@ -1669,13 +1672,15 @@ func TestHTTPServer_ListOfDisabledClusters_NoneDisabled(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ListOfDisabledClusters,
-		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 	})
 
 	// check from storage
-	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1,
+	)
 	helpers.FailOnError(t, err)
 
 	// we expect no clusters
@@ -1715,7 +1720,7 @@ func TestHTTPServer_ListOfDisabledClusters_OneDisabled(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ListOfDisabledClusters,
-		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 	})
@@ -1766,13 +1771,13 @@ func TestHTTPServer_ListOfDisabledClusters_JustificationTests(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ListOfDisabledClusters,
-		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 	})
 
 	// check justification from storage
-	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	disabledClusters, err := mockStorage.ListOfDisabledClusters(testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1)
 	helpers.FailOnError(t, err)
 
 	// we expect 1 cluster with expected justification
@@ -1795,7 +1800,7 @@ func TestHTTPServer_ListOfDisabledClusters_JustificationTests(t *testing.T) {
 	})
 
 	// check justification from storage
-	disabledClusters, err = mockStorage.ListOfDisabledClusters(testdata.UserID, testdata.Rule1ID, testdata.ErrorKey1)
+	disabledClusters, err = mockStorage.ListOfDisabledClusters(testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1)
 	helpers.FailOnError(t, err)
 
 	// we expect 1 cluster with updated justification
