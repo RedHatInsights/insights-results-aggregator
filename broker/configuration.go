@@ -61,7 +61,7 @@ func SaramaConfigFromBrokerConfig(cfg Configuration) (*sarama.Config, error) {
 	if strings.Contains(cfg.SecurityProtocol, "SSL") {
 		saramaConfig.Net.TLS.Enable = true
 	}
-	if cfg.CertPath != "" {
+	if cfg.CertPath != "" || cfg.CertPath != nil {
 		tlsConfig, err := tlsutils.NewTLSConfig(cfg.CertPath)
 		if err != nil {
 			log.Error().Msgf("Unable to load TLS config for %s cert", cfg.CertPath)
