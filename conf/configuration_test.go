@@ -17,6 +17,7 @@ limitations under the License.
 package conf_test
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -25,6 +26,7 @@ import (
 	"github.com/RedHatInsights/insights-operator-utils/logger"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	mapset "github.com/deckarep/golang-set"
+	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
@@ -48,6 +50,56 @@ func mustLoadConfiguration(path string) {
 func removeFile(t *testing.T, filename string) {
 	err := os.Remove(filename)
 	helpers.FailOnError(t, err)
+}
+
+func setEnvVariables(t *testing.T) {
+	os.Clearenv()
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS", "localhost:9093")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC", "platform.results.ccx")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP", "aggregator")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED", "true")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS", ":8080")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX", "/api/v1/")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE", "openapi.json")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG", "true")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_ALLOWLIST", "org_allowlist.csv")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "sqlite3")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE", ":memory:")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_USERNAME", "user")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "password")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_HOST", "localhost")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PORT", "5432")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_DB_NAME", "aggregator")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
+}
+
+func mustSetEnv(t *testing.T, key, val string) {
+	err := os.Setenv(key, val)
+	helpers.FailOnError(t, err)
+}
+
+func GetTmpConfigFile(configData string) (string, error) {
+	tmpFile, err := os.CreateTemp("/tmp", "tmp_config_*.toml")
+	if err != nil {
+		return "", err
+	}
+
+	if _, err := tmpFile.WriteString(configData); err != nil {
+		return "", err
+	}
+
+	if err := tmpFile.Close(); err != nil {
+		return "", err
+	}
+
+	return tmpFile.Name(), nil
 }
 
 // TestLoadConfiguration loads a configuration file for testing
@@ -275,28 +327,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 	}, conf.GetStorageConfiguration())
 }
 
-func GetTmpConfigFile(configData string) (string, error) {
-	tmpFile, err := os.CreateTemp("/tmp", "tmp_config_*.toml")
-	if err != nil {
-		return "", err
-	}
-
-	if _, err := tmpFile.WriteString(configData); err != nil {
-		return "", err
-	}
-
-	if err := tmpFile.Close(); err != nil {
-		return "", err
-	}
-
-	return tmpFile.Name(), nil
-}
-
-func mustSetEnv(t *testing.T, key, val string) {
-	err := os.Setenv(key, val)
-	helpers.FailOnError(t, err)
-}
-
 func TestLoadConfigurationFromEnv(t *testing.T) {
 	setEnvVariables(t)
 
@@ -399,30 +429,77 @@ func TestGetMetricsConfiguration(t *testing.T) {
 	assert.Equal(t, "aggregator", metricsCfg.Namespace)
 }
 
-func setEnvVariables(t *testing.T) {
+// TestLoadConfigurationFromEnvVariableClowderEnabled tests loading the config
+// file for testing from an environment variable. Clowder config is enabled in
+// this case.
+func TestLoadConfigurationFromEnvVariableClowderEnabled(t *testing.T) {
+	var testDB = "test_db"
 	os.Clearenv()
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS", "localhost:9093")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC", "platform.results.ccx")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP", "aggregator")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED", "true")
+	// explicit database and broker config
+	clowder.LoadedConfig = &clowder.AppConfig{
+		Database: &clowder.DatabaseConfig{
+			Name: testDB,
+		},
+	}
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS", ":8080")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX", "/api/v1/")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE", "openapi.json")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG", "true")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "../tests/config1")
+	mustSetEnv(t, "ACG_CONFIG", "tests/clowder_config.json")
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_ALLOWLIST", "org_allowlist.csv")
+	err := conf.LoadConfiguration("config")
+	assert.NoError(t, err, "Failed loading configuration file")
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "sqlite3")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE", ":memory:")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_USERNAME", "user")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "password")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_HOST", "localhost")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PORT", "5432")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_DB_NAME", "aggregator")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
+	// Set the org allow list to avoid loading a non-existing file
+	conf.Config.Broker.OrgAllowlistEnabled = false
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
+	// retrieve broker config
+	brokerCfg := conf.GetBrokerConfiguration()
+	storageCfg := conf.GetStorageConfiguration()
+
+	// check
+	assert.Equal(t, "localhost:29092", brokerCfg.Address, "Broker doesn't match")
+	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic, "Topic doesn't match")
+	assert.Equal(t, testDB, storageCfg.PGDBName)
+}
+
+// TestClowderConfigForKafka tests loading the config file for testing from an
+// environment variable. Clowder config is enabled in this case, checking the Kafka
+// configuration.
+func TestClowderConfigForKafka(t *testing.T) {
+	os.Clearenv()
+
+	var hostname = "kafka"
+	var port = 9092
+	var topicName = "platform.results.ccx"
+	var newTopicName = "new-topic-name"
+
+	// explicit database and broker config
+	clowder.LoadedConfig = &clowder.AppConfig{
+		Kafka: &clowder.KafkaConfig{
+			Brokers: []clowder.BrokerConfig{
+				clowder.BrokerConfig{
+					Hostname: hostname,
+					Port:     &port,
+				},
+			},
+		},
+	}
+
+	clowder.KafkaTopics = make(map[string]clowder.TopicConfig)
+	clowder.KafkaTopics[topicName] = clowder.TopicConfig{
+		Name:          newTopicName,
+		RequestedName: topicName,
+	}
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "../tests/config1")
+	mustSetEnv(t, "ACG_CONFIG", "tests/clowder_config.json")
+
+	err := conf.LoadConfiguration("config")
+	assert.NoError(t, err, "Failed loading configuration file")
+
+	conf.Config.Broker.OrgAllowlistEnabled = false
+
+	brokerCfg := conf.GetBrokerConfiguration()
+	assert.Equal(t, fmt.Sprintf("%s:%d", hostname, port), brokerCfg.Address)
+	assert.Equal(t, newTopicName, conf.Config.Broker.Topic)
 }

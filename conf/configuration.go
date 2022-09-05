@@ -56,6 +56,11 @@ import (
 const (
 	configFileEnvVariableName   = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
 	defaultOrgAllowlistFileName = "org_allowlist.csv"
+
+	noBrokerConfig = "warning: no broker configurations found in clowder config"
+	noSaslConfig   = "warning: SASL configuration is missing"
+	noTopicMapping = "warning: no kafka mapping found for topic %s"
+	noStorage      = "warning: no storage section in Clowder config"
 )
 
 // MetricsConfiguration holds metrics related configuration
@@ -272,33 +277,71 @@ func updateConfigFromClowder(c *ConfigStruct) error {
 	if clowder.LoadedConfig.Kafka == nil {
 		fmt.Println("No Kafka configuration available in Clowder, using default one")
 	} else {
-		broker := clowder.LoadedConfig.Kafka.Brokers[0]
-		// port can be empty in clowder, so taking it into account
-		if broker.Port != nil {
-			c.Broker.Address = fmt.Sprintf("%s:%d", broker.Hostname, *broker.Port)
-		} else {
-			c.Broker.Address = broker.Hostname
-		}
-
-		// SSL config
-		if broker.Authtype != nil {
-			c.Broker.SaslUsername = *broker.Sasl.Username
-			c.Broker.SaslPassword = *broker.Sasl.Password
-			c.Broker.SaslMechanism = *broker.Sasl.SaslMechanism
-			c.Broker.SecurityProtocol = *broker.Sasl.SecurityProtocol
-			if caPath, err := clowder.LoadedConfig.KafkaCa(broker); err == nil {
-				c.Broker.CertPath = caPath
+		if len(clowder.LoadedConfig.Kafka.Brokers) > 0 {
+			broker := clowder.LoadedConfig.Kafka.Brokers[0]
+			// port can be empty in clowder, so taking it into account
+			if broker.Port != nil {
+				c.Broker.Address = fmt.Sprintf("%s:%d", broker.Hostname, *broker.Port)
+			} else {
+				c.Broker.Address = broker.Hostname
 			}
+
+			// SSL config
+			if broker.Authtype != nil {
+				if broker.Sasl != nil {
+					c.Broker.SaslUsername = *broker.Sasl.Username
+					c.Broker.SaslPassword = *broker.Sasl.Password
+					c.Broker.SaslMechanism = *broker.Sasl.SaslMechanism
+					c.Broker.SecurityProtocol = *broker.Sasl.SecurityProtocol
+					if caPath, err := clowder.LoadedConfig.KafkaCa(broker); err == nil {
+						c.Broker.CertPath = caPath
+					}
+				} else {
+					fmt.Println(noSaslConfig)
+				}
+			}
+		} else {
+			fmt.Println(noBrokerConfig)
 		}
 
+		if err := updateTopicsMapping(c); err != nil {
+			fmt.Println("warning: an error occurred when applying new topics")
+		}
 	}
 
-	// get DB configuration from clowder
-	c.Storage.PGDBName = clowder.LoadedConfig.Database.Name
-	c.Storage.PGHost = clowder.LoadedConfig.Database.Hostname
-	c.Storage.PGPort = clowder.LoadedConfig.Database.Port
-	c.Storage.PGUsername = clowder.LoadedConfig.Database.Username
-	c.Storage.PGPassword = clowder.LoadedConfig.Database.Password
+	if clowder.LoadedConfig.Database != nil {
+		// get DB configuration from clowder
+		c.Storage.PGDBName = clowder.LoadedConfig.Database.Name
+		c.Storage.PGHost = clowder.LoadedConfig.Database.Hostname
+		c.Storage.PGPort = clowder.LoadedConfig.Database.Port
+		c.Storage.PGUsername = clowder.LoadedConfig.Database.Username
+		c.Storage.PGPassword = clowder.LoadedConfig.Database.Password
+	} else {
+		fmt.Println(noStorage)
+	}
+
+	return nil
+}
+
+func updateTopicsMapping(c *ConfigStruct) error {
+	// Updating topics from clowder mapping if available
+	if topicCfg, ok := clowder.KafkaTopics[c.Broker.Topic]; ok {
+		c.Broker.Topic = topicCfg.Name
+	} else {
+		fmt.Printf("warning: no kafka mapping found for topic %s", c.Broker.Topic)
+	}
+
+	if topicCfg, ok := clowder.KafkaTopics[c.Broker.DeadLetterQueueTopic]; ok {
+		c.Broker.DeadLetterQueueTopic = topicCfg.Name
+	} else {
+		fmt.Printf(noTopicMapping, c.Broker.DeadLetterQueueTopic)
+	}
+
+	if topicCfg, ok := clowder.KafkaTopics[c.Broker.PayloadTrackerTopic]; ok {
+		c.Broker.PayloadTrackerTopic = topicCfg.Name
+	} else {
+		fmt.Printf(noTopicMapping, c.Broker.PayloadTrackerTopic)
+	}
 
 	return nil
 }
