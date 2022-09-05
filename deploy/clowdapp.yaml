@@ -319,7 +319,10 @@ objects:
         topicName: ${INCOMING_TOPIC}
       - replicas: 3
         partitions: 1
-        topicName: platform.payload-status
+        topicName: ${PAYLOAD_TRACKER_TOPIC}
+      - replicas: 3
+        partitions: 1
+        topicName: ${DEAD_LETTER_QUEUE_TOPIC}
 
 - kind: Service
   apiVersion: v1
