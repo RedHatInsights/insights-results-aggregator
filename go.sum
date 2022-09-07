@@ -59,8 +59,8 @@ github.com/RedHatInsights/insights-results-aggregator-data v1.3.6/go.mod h1:tOwm
 github.com/RedHatInsights/insights-results-types v1.2.0/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
 github.com/RedHatInsights/insights-results-types v1.3.7/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
 github.com/RedHatInsights/insights-results-types v1.3.12/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
-github.com/RedHatInsights/insights-results-types v1.3.16 h1:9ttbrYrWYcMkcmZx2MRcKacB4a5p4ZnqiMEHkcMw3Hk=
-github.com/RedHatInsights/insights-results-types v1.3.16/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
+github.com/RedHatInsights/insights-results-types v1.3.18 h1:V8wngjEc1j8r99P7e0EsCbh2FcsLXQkvDoWN3LJdfIY=
+github.com/RedHatInsights/insights-results-types v1.3.18/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
 github.com/RedHatInsights/kafka-zerolog v0.0.0-20210304172207-928f026dc7ec/go.mod h1:HJul5oCsCRNiRlh/ayJDGdW3PzGlid/5aaQwJBn7was=
 github.com/RedHatInsights/kafka-zerolog v1.0.0 h1:4zPrLcwnfFl07qv9/ximlm1E/rWs93TkYnHrgNiU73A=
 github.com/RedHatInsights/kafka-zerolog v1.0.0/go.mod h1:HJul5oCsCRNiRlh/ayJDGdW3PzGlid/5aaQwJBn7was=
