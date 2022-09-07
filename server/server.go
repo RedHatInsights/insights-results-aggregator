@@ -168,6 +168,9 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 	hitRulesCount := getHitRulesCount(reports)
 
 	reports, err = server.getFeedbackAndTogglesOnRules(clusterName, userID, orgID, reports)
+	log.Info().Str("cluster_id", string(clusterName)).Int(orgIDStr, int(orgID)).Msgf(
+		"hit rules count %v, rules on report [%+v]", hitRulesCount, reports,
+	)
 
 	if err != nil {
 		log.Error().Err(err).Msg("An error has occurred when getting feedback or toggles")

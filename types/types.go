@@ -93,6 +93,8 @@ type (
 	Token = types.Token
 	// User is single-user identifying struct
 	User = types.User
+	// RuleFQDN is rule module, older notation
+	RuleFQDN = types.RuleFQDN
 )
 
 const (

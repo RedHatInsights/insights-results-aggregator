@@ -21,6 +21,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-operator-utils/generators"
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -210,14 +211,47 @@ func (server HTTPServer) listOfDisabledClusters(writer http.ResponseWriter, requ
 	}
 }
 
-// getFeedbackAndTogglesOnRules
+// getRuleToggleMapForCluster retrieves list of disabled rules and returns a map of rule_ids
+// with disabled status.
+func (server HTTPServer) getRuleToggleMapForCluster(
+	clusterName types.ClusterName,
+	orgID types.OrgID,
+) (map[types.RuleID]bool, error) {
+	toggleMap := make(map[types.RuleID]bool)
+
+	disabledRules, err := server.Storage.ListOfDisabledRules(orgID)
+	if err != nil {
+		return toggleMap, err
+	}
+	log.Info().Msgf("disabled rules for orgID [%+v]", disabledRules)
+
+	for _, rule := range disabledRules {
+		if rule.ClusterID != clusterName {
+			continue
+		}
+
+		compositeRuleID, err := generators.GenerateCompositeRuleID(types.RuleFQDN(rule.RuleID), rule.ErrorKey)
+		if err != nil {
+			log.Error().Err(err).Msgf("error generating composite rule ID for rule [%+v]", rule)
+			continue
+		}
+
+		toggleMap[compositeRuleID] = true
+	}
+
+	log.Info().Msgf("disabled rules for cluster_id %v [%+v]", clusterName, toggleMap)
+
+	return toggleMap, nil
+}
+
+// getFeedbackAndTogglesOnRules fills in rule toggles and user feedbacks on the rule reports
 func (server HTTPServer) getFeedbackAndTogglesOnRules(
 	clusterName types.ClusterName,
 	userID types.UserID,
 	orgID types.OrgID,
 	rules []types.RuleOnReport,
 ) ([]types.RuleOnReport, error) {
-	togglesRules, err := server.Storage.GetTogglesForRules(clusterName, rules, orgID)
+	togglesRules, err := server.getRuleToggleMapForCluster(clusterName, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to retrieve disabled status from database")
 		return nil, err
@@ -237,13 +271,20 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 
 	for i := range rules {
 		ruleID := rules[i].Module
+		compositeRuleID, err := generators.GenerateCompositeRuleID(types.RuleFQDN(ruleID), rules[i].ErrorKey)
+		if err != nil {
+			log.Error().Err(err).Msgf("error generating composite rule ID for rule [%+v]", rules[i])
+			return nil, err
+		}
+
 		if vote, found := feedbacks[ruleID]; found {
 			rules[i].UserVote = vote
 		} else {
 			rules[i].UserVote = types.UserVoteNone
 		}
 
-		if disabled, found := togglesRules[ruleID]; found {
+		if disabled, found := togglesRules[compositeRuleID]; found {
+			log.Info().Msgf("rule %v disabled on cluster %v", compositeRuleID, clusterName)
 			rules[i].Disabled = disabled
 		} else {
 			rules[i].Disabled = false
