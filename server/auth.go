@@ -96,6 +96,9 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 				Internal: types.Internal{
 					OrgID: jwtPayload.OrgID,
 				},
+				User: types.User{
+					UserID: jwtPayload.UserID,
+				},
 			}
 		} else {
 			// auth type is xrh (x-rh-identity header)
