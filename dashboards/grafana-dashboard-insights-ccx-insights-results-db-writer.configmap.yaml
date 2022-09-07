@@ -562,7 +562,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "increase(consumed_messages{service=\"ccx-insights-results-db-writer-prometheus-exporter\",namespace=\"$namespace\"}[1m])",
+              "expr": "sum(increase(consumed_messages{service=\"ccx-insights-results-db-writer-prometheus-exporter\",namespace=\"$namespace\"}[1m]))",
               "format": "time_series",
               "groupBy": [
                 {
@@ -603,7 +603,7 @@ data:
               "tags": []
             },
             {
-              "expr": "increase(written_reports{service=\"ccx-insights-results-db-writer-prometheus-exporter\",namespace=\"$namespace\"}[1m])",
+              "expr": "sum(increase(written_reports{service=\"ccx-insights-results-db-writer-prometheus-exporter\",namespace=\"$namespace\"}[1m]))",
               "format": "time_series",
               "groupBy": [
                 {
