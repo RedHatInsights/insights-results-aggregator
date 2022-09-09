@@ -448,7 +448,7 @@ parameters:
   value: "false"
   required: true
 - name: CLOUDWATCH_ENABLED
-  value: "true"
+  value: "false"
   required: true
 - name: CREATE_STREAM_IF_NOT_EXISTS
   value: "true"
