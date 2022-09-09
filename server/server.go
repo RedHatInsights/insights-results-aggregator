@@ -144,6 +144,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		// everything has been handled already
 		return
 	}
+	log.Info().Msgf("readReportForCluster start for cluster %v", clusterName)
 
 	userID, successful := readUserID(writer, request)
 	if !successful {
@@ -160,7 +161,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		clusterName,
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to read report for cluster")
+		log.Error().Err(err).Msgf("Unable to read report for cluster %v", clusterName)
 		handleServerError(writer, err)
 		return
 	}
