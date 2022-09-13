@@ -1,6 +1,6 @@
 ---
 layout: page
-nav_order: 14
+nav_order: 15
 ---
 # Local setup on bare metal
 {: .no_toc }
