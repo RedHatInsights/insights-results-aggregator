@@ -27,7 +27,7 @@ COMPONENTS_W_RESOURCES=""  # component to keep
 CACHE_FROM_LATEST_IMAGE="true"
 
 export IQE_PLUGINS="ccx"
-export IQE_MARKER_EXPRESSION="smoke" # ccx_data_pipeline_smoke does not exits (at least yet) as marker in the plugin
+export IQE_MARKER_EXPRESSION="pipeline" # ccx_data_pipeline_smoke does not exits (at least yet) as marker in the plugin
 export IQE_FILTER_EXPRESSION=""
 export IQE_REQUIREMENTS_PRIORITY=""
 export IQE_TEST_IMPORTANCE=""
