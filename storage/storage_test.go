@@ -43,6 +43,7 @@ import (
 
 var (
 	RecommendationCreatedAtTimestamp = types.Timestamp(testdata.LastCheckedAt.Format(time.RFC3339))
+	RecommendationImpactedSinceMap   = make(map[string]types.Timestamp)
 )
 
 func init() {
@@ -1101,7 +1102,7 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 	}
 	// impactedSince first time a recommendation is inserted impacted
 	// and created_at match
-	impactedSince := RecommendationCreatedAtTimestamp
+	impactedSince := RecommendationImpactedSinceMap
 	inserted, err := storage.InsertRecommendations(
 		mockStorage.(*storage.DBStorage),
 		testdata.OrgID, testdata.ClusterName, report,
@@ -1165,7 +1166,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	storage.SetClustersLastChecked(dbStorage, testdata.ClusterName, time.Now())
 
 	expects.ExpectBegin()
-	expects.ExpectQuery(`SELECT impacted_since FROM recommendation`).
+	expects.ExpectQuery(`SELECT rule_fqdn, error_key, impacted_since FROM recommendation`).
 		WillReturnRows(expects.NewRows([]string{"created_at"}).AddRow(time.Time{})).
 		RowsWillBeClosed()
 	expects.ExpectExec("DELETE FROM recommendation").
@@ -1195,7 +1196,7 @@ func TestDBStorageInsertRecommendationsNoRuleHit(t *testing.T) {
 		TotalCount:   2 * len(testdata.RuleOnReportResponses),
 	}
 	// impactedSincefirst time a recommendation is inserted impacted and created_at match
-	impactedSince := RecommendationCreatedAtTimestamp
+	impactedSince := RecommendationImpactedSinceMap
 	inserted, err := storage.InsertRecommendations(
 		mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName,
 		report, RecommendationCreatedAtTimestamp, impactedSince)
