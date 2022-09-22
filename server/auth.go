@@ -36,9 +36,6 @@ const (
 	malformedTokenMessage = "Malformed authentication token"
 )
 
-// Internal contains information about organization ID
-type Internal = types.Internal
-
 // Identity contains internal user info
 type Identity = types.Identity
 
@@ -78,8 +75,6 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 		}
 
 		tk := &types.Token{}
-		tkV2 := &types.TokenV2{}
-
 		// if we took JWT token, it has different structure than x-rh-identity
 		if server.Config.AuthType == "jwt" {
 			jwtPayload := &types.JWTPayload{}
@@ -93,26 +88,13 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 			// Map JWT token to inner token
 			tk.Identity = types.Identity{
 				AccountNumber: jwtPayload.AccountNumber,
-				Internal: types.Internal{
-					OrgID: jwtPayload.OrgID,
-				},
+				OrgID:         jwtPayload.OrgID,
 				User: types.User{
 					UserID: jwtPayload.UserID,
 				},
 			}
 		} else {
 			// auth type is xrh (x-rh-identity header)
-
-			// unmarshal new token structure (org_id on top level)
-			err = json.Unmarshal(decoded, tkV2)
-			if err != nil {
-				// malformed token, returns with HTTP code 403 as usual
-				log.Error().Err(err).Msg(malformedTokenMessage)
-				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
-				return
-			}
-
-			// unmarshal old token structure (org_id nested) too
 			err = json.Unmarshal(decoded, tk)
 			if err != nil {
 				// malformed token, returns with HTTP code 403 as usual
@@ -122,23 +104,18 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 			}
 		}
 
-		if tkV2.IdentityV2.OrgID != 0 {
-			log.Info().Msg("org_id found on top level in token structure (new format)")
-			// fill in old types.Token because many places in smart-proxy and aggregator rely on it.
-			tk.Identity.Internal.OrgID = tkV2.IdentityV2.OrgID
-		} else {
-			log.Error().Msg("org_id not found on top level in token structure (old format)")
-		}
-
-		if tk.Identity.AccountNumber == "" || tk.Identity.Internal.OrgID == 0 {
-			msg := fmt.Sprintf("error retrieving requester data from token. org_id [%v], account_number [%v], user data [%+v]",
-				tk.Identity.Internal.OrgID,
+		if tk.Identity.OrgID == 0 {
+			msg := fmt.Sprintf("error retrieving requester org_id from token. account_number [%v], user data [%+v]",
 				tk.Identity.AccountNumber,
-				tkV2.IdentityV2.User,
+				tk.Identity.User,
 			)
 			log.Error().Msg(msg)
 			handleServerError(w, &UnauthorizedError{ErrString: msg})
 			return
+		}
+
+		if tk.Identity.User.UserID == "" {
+			tk.Identity.User.UserID = "0"
 		}
 
 		// Everything went well, proceed with the request and set the

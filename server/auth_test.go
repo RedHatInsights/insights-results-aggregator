@@ -21,8 +21,11 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	ctypes "github.com/RedHatInsights/insights-results-types"
+	types "github.com/RedHatInsights/insights-results-types"
 )
 
 var configAuth = server.Configuration{
@@ -89,13 +92,21 @@ func TestInvalidJsonAuthToken(t *testing.T) {
 // TestBadOrganizationID checks if organization ID is checked properly
 func TestBadOrganizationID(t *testing.T) {
 	providedOrgID := 12345
-	orgIDInXRH := 1
+	orgIDInXRH := 2
 	body := fmt.Sprintf(`{"status":"you have no permissions to get or change info about the organization with ID %v; you can access info about organization with ID %v"}`, providedOrgID, orgIDInXRH)
 	helpers.AssertAPIRequest(t, nil, &configAuth, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ClustersForOrganizationEndpoint,
 		EndpointArgs: []interface{}{providedOrgID},
-		XRHIdentity:  "eyJpZGVudGl0eSI6IHsiYWNjb3VudF9udW1iZXIiOiAiMDAwMDAwMSIsICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjEifX19Cg==",
+		XRHIdentity: helpers.MakeXRHTokenString(t, &types.Token{
+			Identity: ctypes.Identity{
+				AccountNumber: testdata.UserID,
+				OrgID:         ctypes.OrgID(orgIDInXRH),
+				User: ctypes.User{
+					UserID: testdata.UserID,
+				},
+			},
+		}),
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
 		Body:       body,
