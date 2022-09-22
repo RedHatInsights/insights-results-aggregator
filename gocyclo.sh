@@ -20,4 +20,4 @@ then
     go get github.com/fzipp/gocyclo/cmd/gocyclo
 fi
 
-gocyclo -over 12 -avg .
+gocyclo -over 10 -avg .
