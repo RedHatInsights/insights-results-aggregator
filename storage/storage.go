@@ -348,9 +348,10 @@ func (storage DBStorage) Close() error {
 }
 
 // Report represents one (latest) cluster report.
-//     Org: organization ID
-//     Name: cluster GUID in the following format:
-//         c8590f31-e97e-4b85-b506-c45ce1911a12
+//
+//	Org: organization ID
+//	Name: cluster GUID in the following format:
+//	    c8590f31-e97e-4b85-b506-c45ce1911a12
 type Report struct {
 	Org        types.OrgID         `json:"org"`
 	Name       types.ClusterName   `json:"cluster"`
@@ -859,8 +860,9 @@ func (storage DBStorage) updateReport(
 	reportUpsertQuery := storage.getReportUpsertQuery()
 
 	// Get created_at if present before deletion
+	query := "SELECT rule_fqdn, error_key, created_at FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
 	RuleKeyCreatedAt, err := storage.getRuleKeyCreatedAtMap(
-		orgID, clusterName,
+		query, orgID, clusterName,
 	)
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
@@ -912,7 +914,7 @@ func prepareInsertRecommendationsStatement(
 	clusterName types.ClusterName,
 	report types.ReportRules,
 	createdAt types.Timestamp,
-	impactedSince types.Timestamp,
+	impactedSinceMap map[string]types.Timestamp,
 ) (selectors []string, statement string, statementArgs []interface{}) {
 	statement = `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at, impacted_since) VALUES %s`
 
@@ -923,6 +925,10 @@ func prepareInsertRecommendationsStatement(
 	for idx, rule := range report.HitRules {
 		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report")
 		ruleID := ruleFqdn + "|" + string(rule.ErrorKey)
+		impactedSince, ok := impactedSinceMap[ruleFqdn+string(rule.ErrorKey)]
+		if !ok {
+			impactedSince = createdAt
+		}
 		selectors[idx] = ruleID
 		statementArgs = append(statementArgs, orgID, clusterName, ruleFqdn, rule.ErrorKey, ruleID, createdAt, impactedSince)
 		statementIdx = len(statementArgs)
@@ -945,7 +951,7 @@ func (storage DBStorage) insertRecommendations(
 	clusterName types.ClusterName,
 	report types.ReportRules,
 	createdAt types.Timestamp,
-	impactedSince types.Timestamp,
+	impactedSince map[string]types.Timestamp,
 ) (inserted int, err error) {
 	if len(report.HitRules) == 0 {
 		log.Info().
@@ -982,55 +988,18 @@ func (storage DBStorage) insertRecommendations(
 
 }
 
-// getRecommendationsTime return the `column` value of `table` table
-// with given orgID and clusterName. If the value is not available or in
-// case of failure it returns an error.
-// `column` MUST be of type TIMESTAMP and MUST be and actual
-// column of `table`
-func (storage DBStorage) getImpactedSince(
-	orgID types.OrgID,
-	clusterName types.ClusterName,
-) (
-	*types.Timestamp,
-	error) {
-
-	query := "SELECT impacted_since FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;"
-	impactedSinceRows, err := storage.connection.Query(
-		query, orgID, clusterName)
-	if err != nil {
-		log.Error().Err(err).Msg("error retrieving recommendation timestamp")
-		return nil, err
-	}
-	defer closeRows(impactedSinceRows)
-
-	if exists := impactedSinceRows.Next(); exists {
-		var oldTime time.Time
-		if err := impactedSinceRows.Scan(&oldTime); err != nil {
-			log.Error().Err(err).Msg("error scanning old time from recommendation")
-			return nil, err
-		}
-		newTime := types.Timestamp(oldTime.UTC().Format(time.RFC3339))
-
-		log.Info().
-			Str("impacted_since", string(newTime)).
-			Msg("impacted_since found for recommendation")
-		return &newTime, nil
-	}
-	return nil, fmt.Errorf("recommendations impacted_since not found")
-}
-
 // getRuleKeyCreatedAtMap returns a map between
 // (rule_fqdn, error_key) -> created_at
 // for each rule_hit rows matching given
 // orgId and clusterName
 func (storage DBStorage) getRuleKeyCreatedAtMap(
+	query string,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 ) (
 	map[string]types.Timestamp,
 	error) {
 
-	query := "SELECT rule_fqdn, error_key, created_at FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
 	impactedSinceRows, err := storage.connection.Query(
 		query, orgID, clusterName)
 	if err != nil {
@@ -1135,25 +1104,25 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 	if err != nil {
 		return err
 	}
-	impactedSince := creationTime
 	tx, err := storage.connection.Begin()
 	if err != nil {
 		return err
 	}
 
+	impactedSinceMap := make(map[string]ctypes.Timestamp)
 	err = func(tx *sql.Tx) error {
 		var deleted int64 = 0
 		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
 
 			// Get impacted_since if present
-			impactedSinceRow, err := storage.getImpactedSince(
-				orgID, clusterName)
+			query := "SELECT rule_fqdn, error_key, impacted_since FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;"
+			impactedSinceMap, err = storage.getRuleKeyCreatedAtMap(
+				query, orgID, clusterName)
 			if err != nil {
 				log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
-			} else {
-				impactedSince = *impactedSinceRow
 			}
+
 			// it is needed to use `org_id = $1` condition there
 			// because it allows DB to use proper btree indexing
 			// and not slow sequential scan
@@ -1178,7 +1147,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 			}
 		}
 
-		inserted, err := storage.insertRecommendations(tx, orgID, clusterName, report, creationTime, impactedSince)
+		inserted, err := storage.insertRecommendations(tx, orgID, clusterName, report, creationTime, impactedSinceMap)
 		if err != nil {
 			return err
 		}
