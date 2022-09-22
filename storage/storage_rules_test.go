@@ -193,7 +193,6 @@ func TestDBStorageListRulesReasonsEmptyDB(t *testing.T) {
 
 // TestDBStorageListOfRulesReasonsOneRule checks that one rule is returned
 // for non empty DB.
-// TODO: enable when user_id is properly handled (stored) into database!
 func TestDBStorageListOfRulesReasonsOneRule(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
@@ -339,57 +338,6 @@ func TestDBStorageListOfDisabledRulesNoRule(t *testing.T) {
 	assert.Len(t, disabledRules, 0)
 }
 
-// TODO: make it work with the new arch
-// func TestDBStorageToggleRulesAndList(t *testing.T) {
-//	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-//	defer closer()
-//
-//	mustWriteReport3Rules(t, mockStorage)
-//
-//	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-//		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
-//	))
-//
-//	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-//		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
-//	))
-//
-//	toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
-//	helpers.FailOnError(t, err)
-//
-//	assert.Len(t, toggledRules, 2)
-//}
-
-// TODO: make it work with the new arch
-// func TestDBStorageDeleteDisabledRule(t *testing.T) {
-//	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-//	defer closer()
-//
-//	mustWriteReport3Rules(t, mockStorage)
-//
-//	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-//		testdata.ClusterName, testdata.Rule1ID, testdata.UserID, storage.RuleToggleDisable,
-//	))
-//
-//	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-//		testdata.ClusterName, testdata.Rule2ID, testdata.UserID, storage.RuleToggleDisable,
-//	))
-//
-//	toggledRules, err := mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
-//	helpers.FailOnError(t, err)
-//
-//	assert.Len(t, toggledRules, 2)
-//
-//	helpers.FailOnError(t, mockStorage.DeleteFromRuleClusterToggle(
-//		testdata.ClusterName, testdata.Rule2ID, testdata.UserID,
-//	))
-//
-//	toggledRules, err = mockStorage.ListDisabledRulesForCluster(testdata.ClusterName, testdata.UserID)
-//	helpers.FailOnError(t, err)
-//
-//	assert.Len(t, toggledRules, 1)
-//}
-
 func TestDBStorageVoteOnRule(t *testing.T) {
 	for _, vote := range []types.UserVote{
 		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
@@ -434,29 +382,6 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 		}(vote)
 	}
 }
-
-// TODO: fix according to the new architecture
-// func TestDBStorageVoteOnRule_NoRule(t *testing.T) {
-//	for _, vote := range []types.UserVote{
-//		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
-//	} {
-//		func(vote types.UserVote) {
-//			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
-//			defer closer()
-//
-//			err := mockStorage.WriteReportForCluster(
-//				testdata.OrgID, testdata.ClusterName, report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
-//			)
-//			helpers.FailOnError(t, err)
-//
-//			err = mockStorage.VoteOnRule(
-//				testdata.ClusterName, testdata.Rule1ID, testdata.UserID, vote,
-//			)
-//			assert.Error(t, err)
-//			assert.Regexp(t, "operation violates foreign key", err.Error())
-//		}(vote)
-//	}
-//}
 
 func TestDBStorageChangeVote(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)

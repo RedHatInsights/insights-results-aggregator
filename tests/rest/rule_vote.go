@@ -35,6 +35,8 @@ const (
 	anyErrorKey = "0" // we don't care
 
 	unexpectedErrorStatusMessage = "Expected error status, but got '%s' instead"
+
+	orgID = "1"
 )
 
 var knownClustersForOrganization1 []string = []string{
@@ -170,15 +172,15 @@ func reproducerForIssue385() {
 	const message = "Reproducer for issue #385 (https://github.com/RedHatInsights/insights-results-aggregator/issues/385)"
 
 	// like
-	url := constructURLLikeRule(improperClusterID, anyRule, anyErrorKey, fmt.Sprintf("%v", testdata.OrgID), string(testdata.UserID))
+	url := constructURLLikeRule(improperClusterID, anyRule, anyErrorKey, orgID, string(testdata.UserID))
 	checkInvalidUUIDFormatPut(url, message)
 
 	// dislike
-	url = constructURLDislikeRule(improperClusterID, anyRule, anyErrorKey, fmt.Sprintf("%v", testdata.OrgID), string(testdata.UserID))
+	url = constructURLDislikeRule(improperClusterID, anyRule, anyErrorKey, orgID, string(testdata.UserID))
 	checkInvalidUUIDFormatPut(url, message)
 
 	// reset vote
-	url = constructURLResetVoteForRule(improperClusterID, anyRule, anyErrorKey, fmt.Sprintf("%v", testdata.OrgID), string(testdata.UserID))
+	url = constructURLResetVoteForRule(improperClusterID, anyRule, anyErrorKey, orgID, string(testdata.UserID))
 	checkInvalidUUIDFormatPut(url, message)
 }
 
@@ -187,7 +189,7 @@ func testRuleVoteAPIendpoint(clusters, rules, errorKeys []string, message string
 	for _, cluster := range clusters {
 		for _, rule := range rules {
 			for _, errorKey := range errorKeys {
-				url := urlConstructor(cluster, rule, errorKey, fmt.Sprintf("%v", testdata.OrgID), string(testdata.UserID))
+				url := urlConstructor(cluster, rule, errorKey, orgID, string(testdata.UserID))
 				checker(url, message)
 			}
 
@@ -299,17 +301,17 @@ type RuleVoteResponse struct {
 }
 
 func likeRule(cluster, rule, errorKey string) {
-	url := constructURLLikeRule(cluster, rule, errorKey, fmt.Sprintf("%v", testdata.OrgID), string(testdata.UserID))
+	url := constructURLLikeRule(cluster, rule, errorKey, orgID, string(testdata.UserID))
 	checkOkStatusUserVote(url, "Let's vote")
 }
 
 func dislikeRule(cluster, rule, errorKey string) {
-	url := constructURLDislikeRule(cluster, rule, errorKey, fmt.Sprintf("%v", testdata.OrgID), string(testdata.UserID))
+	url := constructURLDislikeRule(cluster, rule, errorKey, orgID, string(testdata.UserID))
 	checkOkStatusUserVote(url, "Let's dislike")
 }
 
 func resetVoteForRule(cluster, rule, errorKey string) {
-	url := constructURLResetVoteForRule(cluster, rule, errorKey, fmt.Sprintf("%v", testdata.OrgID), string(testdata.UserID))
+	url := constructURLResetVoteForRule(cluster, rule, errorKey, orgID, string(testdata.UserID))
 	checkOkStatusUserVote(url, "Let's reset voting")
 }
 
