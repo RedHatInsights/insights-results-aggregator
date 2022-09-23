@@ -76,9 +76,7 @@ func setAuthHeaderForOrganization(f *frisby.Frisby, orgID int) {
 	plainHeader := fmt.Sprintf(`
 	{
 		"identity": {
-			"internal": {
-				"org_id": "%d"
-			},
+			"org_id": "%d",
 			"account_number":"%v",
 			"user": {
 				"user_id":"%v"
