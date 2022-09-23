@@ -223,7 +223,6 @@ func (server HTTPServer) getRuleToggleMapForCluster(
 	if err != nil {
 		return toggleMap, err
 	}
-	log.Info().Msgf("disabled rules for orgID [%+v]", disabledRules)
 
 	for _, rule := range disabledRules {
 		if rule.ClusterID != clusterName {
@@ -238,8 +237,6 @@ func (server HTTPServer) getRuleToggleMapForCluster(
 
 		toggleMap[compositeRuleID] = true
 	}
-
-	log.Info().Msgf("disabled rules for cluster_id %v [%+v]", clusterName, toggleMap)
 
 	return toggleMap, nil
 }
@@ -284,7 +281,6 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 		}
 
 		if disabled, found := togglesRules[compositeRuleID]; found {
-			log.Info().Msgf("rule %v disabled on cluster %v", compositeRuleID, clusterName)
 			rules[i].Disabled = disabled
 		} else {
 			rules[i].Disabled = false

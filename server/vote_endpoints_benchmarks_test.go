@@ -119,9 +119,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 					// authorize user
 					identity := types.Identity{
 						AccountNumber: userID,
-						Internal: types.Internal{
-							OrgID: orgID,
-						},
+						OrgID:         orgID,
 						User: types.User{
 							UserID: userID,
 						},

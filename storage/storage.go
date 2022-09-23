@@ -683,8 +683,6 @@ func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName
 func (storage DBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
 ) ([]types.RuleOnReport, types.Timestamp, types.Timestamp, types.Timestamp, error) {
-	log.Info().Msgf("ReadReportForCluster start for cluster %v", clusterName)
-
 	var lastChecked time.Time
 	var reportedAt time.Time
 	var gatheredAtInDB sql.NullTime // to avoid problems
@@ -695,7 +693,6 @@ func (storage DBStorage) ReadReportForCluster(
 		"SELECT last_checked_at, reported_at, gathered_at FROM report WHERE org_id = $1 AND cluster = $2;",
 		orgID, clusterName,
 	).Scan(&lastChecked, &reportedAt, &gatheredAtInDB)
-	log.Info().Msgf("ReadReportForCluster query from report table raw DB error %v for cluster %v", err, clusterName)
 
 	// convert timestamps to string
 	var lastCheckedStr = types.Timestamp(lastChecked.UTC().Format(time.RFC3339))
@@ -710,18 +707,21 @@ func (storage DBStorage) ReadReportForCluster(
 
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
-		log.Error().Err(err).Msgf("ReadReportForCluster query from report table converted DB error %v for cluster %v", err, clusterName)
+		log.Error().Err(err).Str(clusterKey, string(clusterName)).Msg(
+			"ReadReportForCluster query from report table error",
+		)
 		return report, lastCheckedStr, reportedAtStr, gatheredAtStr, err
 	}
 
 	rows, err := storage.connection.Query(
 		"SELECT template_data, rule_fqdn, error_key, created_at FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;", orgID, clusterName,
 	)
-	log.Info().Msgf("ReadReportForCluster query from rule_hit table raw DB error %v for cluster %v", err, clusterName)
 
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
-		log.Info().Msgf("ReadReportForCluster query from rule_hit table converted DB error %v for cluster %v", err, clusterName)
+		log.Error().Err(err).Str(clusterKey, string(clusterName)).Msg(
+			"ReadReportForCluster query from rule_hit table error",
+		)
 		return report, lastCheckedStr, reportedAtStr, gatheredAtStr, err
 	}
 

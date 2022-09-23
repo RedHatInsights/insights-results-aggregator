@@ -85,8 +85,6 @@ type (
 	KafkaOffset = types.KafkaOffset
 	// DBDriver type for db driver enum
 	DBDriver = types.DBDriver
-	// Internal contains information about organization ID
-	Internal = types.Internal
 	// Identity contains internal user info
 	Identity = types.Identity
 	// Token is x-rh-identity struct

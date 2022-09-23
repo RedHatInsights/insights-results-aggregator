@@ -404,33 +404,6 @@ func TestHTTPServer_UserFeedback_ClusterDoesNotExistError(t *testing.T) {
 	}
 }
 
-// TODO: make working with the new arch
-// func TestHTTPServer_UserFeedback_RuleDoesNotExistError(t *testing.T) {
-//	mockStorage, closer := helpers.MustGetMockStorage(t, true)
-//	defer closer()
-//
-//	err := mockStorage.WriteReportForCluster(
-//		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.LastCheckedAt, testdata.KafkaOffset,
-//	)
-//	helpers.FailOnError(t, err)
-//
-//	for _, endpoint := range []string{
-//		server.LikeRuleEndpoint, server.DislikeRuleEndpoint, server.ResetVoteOnRuleEndpoint,
-//	} {
-//		helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
-//			Method:       http.MethodPut,
-//			Endpoint:     endpoint,
-//			EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.UserID},
-//		}, &helpers.APIResponse{
-//			StatusCode: http.StatusNotFound,
-//			Body: fmt.Sprintf(
-//				`{"status": "Item with ID %v was not found in the storage"}`,
-//				testdata.Rule1ID,
-//			),
-//		})
-//	}
-//}
-
 func TestRuleFeedbackErrorBadClusterName(t *testing.T) {
 	buf := new(bytes.Buffer)
 	log.Logger = zerolog.New(buf)
@@ -821,9 +794,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 		XRHIdentity: helpers.MakeXRHTokenString(t, &types.Token{
 			Identity: ctypes.Identity{
 				AccountNumber: testdata.UserID,
-				Internal: ctypes.Internal{
-					OrgID: testdata.Org2ID,
-				},
+				OrgID:         testdata.Org2ID,
 				User: ctypes.User{
 					UserID: testdata.UserID,
 				},
