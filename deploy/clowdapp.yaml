@@ -287,20 +287,20 @@ objects:
               path: "${IRDW_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 600
             periodSeconds: 60
             successThreshold: 1
-            timeoutSeconds: 60
+            timeoutSeconds: 300
           readinessProbe:
             failureThreshold: 10
             httpGet:
               path: "${IRDW_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 600
             periodSeconds: 60
             successThreshold: 1
-            timeoutSeconds: 60
+            timeoutSeconds: 300
           resources:
             limits:
               cpu: ${DB_WRITER_CPU_LIMIT}
