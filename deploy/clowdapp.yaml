@@ -114,25 +114,25 @@ objects:
                   optional: true
           image: ${IMAGE}:${IMAGE_TAG}
           livenessProbe:
-            failureThreshold: 3
+            failureThreshold: 5
             httpGet:
               path: ${IRA_API_PREFIX}openapi.json
               port: 10000
               scheme: HTTP
-            initialDelaySeconds: 10
+            initialDelaySeconds: 60
             periodSeconds: 10
             successThreshold: 1
-            timeoutSeconds: 2
+            timeoutSeconds: 60
           readinessProbe:
-            failureThreshold: 3
+            failureThreshold: 5
             httpGet:
               path: ${IRA_API_PREFIX}openapi.json
               port: 10000
               scheme: HTTP
-            initialDelaySeconds: 5
+            initialDelaySeconds: 60
             periodSeconds: 10
             successThreshold: 1
-            timeoutSeconds: 1
+            timeoutSeconds: 60
           resources:
             requests:
               cpu: ${IRA_CPU_REQUEST}
@@ -287,20 +287,20 @@ objects:
               path: "${IRDW_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
-            initialDelaySeconds: 600
+            initialDelaySeconds: 60
             periodSeconds: 60
             successThreshold: 1
-            timeoutSeconds: 300
+            timeoutSeconds: 60
           readinessProbe:
             failureThreshold: 10
             httpGet:
               path: "${IRDW_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
-            initialDelaySeconds: 600
+            initialDelaySeconds: 60
             periodSeconds: 60
             successThreshold: 1
-            timeoutSeconds: 300
+            timeoutSeconds: 60
           resources:
             limits:
               cpu: ${DB_WRITER_CPU_LIMIT}
