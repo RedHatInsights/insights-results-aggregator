@@ -47,7 +47,8 @@ objects:
         minReplicas: ${{MIN_REPLICAS}}
         webServices:
           public:
-            enabled: false
+            enabled: true
+            apiPath: insights-results-aggregator
           private:
             enabled: true
           metrics:
