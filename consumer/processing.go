@@ -34,6 +34,7 @@ type Report map[string]*json.RawMessage
 // incomingMessage is representation of message consumed from any broker
 type incomingMessage struct {
 	Organization *types.OrgID       `json:"OrgID"`
+	Account      *types.Account     `json:"AccountNumber"`
 	ClusterName  *types.ClusterName `json:"ClusterName"`
 	Report       *Report            `json:"Report"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
@@ -46,7 +47,7 @@ type incomingMessage struct {
 }
 
 // HandleMessage handles the message and does all logging, metrics, etc
-func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
+func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error {
 	log.Info().
 		Int64(offsetKey, msg.Offset).
 		Int32(partitionKey, msg.Partition).
@@ -57,12 +58,12 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 	metrics.ConsumedMessages.Inc()
 
 	startTime := time.Now()
-	requestID, err := consumer.ProcessMessage(msg)
+	requestID, message, err := consumer.processMessage(msg)
 	timeAfterProcessingMessage := time.Now()
 	messageProcessingDuration := timeAfterProcessingMessage.Sub(startTime).Seconds()
 
-	consumer.updatePayloadTracker(requestID, startTime, producer.StatusReceived)
-	consumer.updatePayloadTracker(requestID, timeAfterProcessingMessage, producer.StatusMessageProcessed)
+	consumer.updatePayloadTracker(requestID, startTime, message.Organization, message.Account, producer.StatusReceived)
+	consumer.updatePayloadTracker(requestID, timeAfterProcessingMessage, message.Organization, message.Account, producer.StatusMessageProcessed)
 
 	log.Info().
 		Int64(offsetKey, msg.Offset).
@@ -84,23 +85,30 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) {
 
 		consumer.sendDeadLetter(msg)
 
-		consumer.updatePayloadTracker(requestID, time.Now(), producer.StatusError)
+		consumer.updatePayloadTracker(requestID, time.Now(), message.Organization, message.Account, producer.StatusError)
 	} else {
 		// The message was processed successfully.
 		metrics.SuccessfulMessagesProcessingTime.Observe(messageProcessingDuration)
 		consumer.numberOfSuccessfullyConsumedMessages++
 
-		consumer.updatePayloadTracker(requestID, time.Now(), producer.StatusSuccess)
+		consumer.updatePayloadTracker(requestID, time.Now(), message.Organization, message.Account, producer.StatusSuccess)
 	}
 
 	totalMessageDuration := time.Since(startTime)
 	log.Info().Int64(durationKey, totalMessageDuration.Milliseconds()).Int64(offsetKey, msg.Offset).Msg("Message consumed")
+	return err
 }
 
 // updatePayloadTracker
-func (consumer KafkaConsumer) updatePayloadTracker(requestID types.RequestID, timestamp time.Time, status string) {
+func (consumer KafkaConsumer) updatePayloadTracker(
+	requestID types.RequestID,
+	timestamp time.Time,
+	orgID *types.OrgID,
+	account *types.Account,
+	status string,
+) {
 	if consumer.payloadTrackerProducer != nil {
-		err := consumer.payloadTrackerProducer.TrackPayload(requestID, timestamp, status)
+		err := consumer.payloadTrackerProducer.TrackPayload(requestID, timestamp, orgID, account, status)
 		if err != nil {
 			log.Warn().Msgf(`Unable to send "%s" update to Payload Tracker service`, status)
 		}
@@ -181,15 +189,15 @@ func (consumer *KafkaConsumer) writeInfoReport(
 	return nil
 }
 
-// ProcessMessage processes an incoming message
-func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error) {
+// processMessage processes an incoming message
+func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 	message, err := parseMessage(msg.Value)
 	if err != nil {
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
-		return message.RequestID, err
+		return message.RequestID, message, err
 	}
 
 	logMessageInfo(consumer, msg, message, "Read")
@@ -199,7 +207,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 
 	if ok, cause := checkMessageOrgInAllowList(consumer, &message, msg); !ok {
 		logMessageError(consumer, msg, message, cause, err)
-		return message.RequestID, errors.New(cause)
+		return message.RequestID, message, errors.New(cause)
 	}
 
 	tAllowlisted := time.Now()
@@ -207,7 +215,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	reportAsBytes, err := json.Marshal(*message.Report)
 	if err != nil {
 		logMessageError(consumer, msg, message, "Error marshalling report", err)
-		return message.RequestID, err
+		return message.RequestID, message, err
 	}
 
 	logMessageInfo(consumer, msg, message, "Marshalled")
@@ -216,7 +224,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
 	if err != nil {
 		logMessageError(consumer, msg, message, "Error parsing date from message", err)
-		return message.RequestID, err
+		return message.RequestID, message, err
 	}
 
 	lastCheckedTimestampLagMinutes := time.Since(lastCheckedTime).Minutes()
@@ -244,24 +252,24 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	)
 	if err == types.ErrOldReport {
 		logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
-		return message.RequestID, nil
+		return message.RequestID, message, nil
 	} else if err != nil {
 		logMessageError(consumer, msg, message, "Error writing report to database", err)
-		return message.RequestID, err
+		return message.RequestID, message, err
 	}
 	logMessageInfo(consumer, msg, message, "Stored report")
 	tStored := time.Now()
 
 	tRecommendationsStored, err := consumer.writeRecommendations(msg, message, reportAsBytes)
 	if err != nil {
-		return message.RequestID, err
+		return message.RequestID, message, err
 	}
 
 	logClusterInfo(&message)
 
 	infoStoredAtTime := time.Now()
 	if err := consumer.writeInfoReport(msg, message, infoStoredAtTime); err != nil {
-		return message.RequestID, err
+		return message.RequestID, message, err
 	}
 	infoStored := time.Now()
 
@@ -275,7 +283,7 @@ func (consumer *KafkaConsumer) ProcessMessage(msg *sarama.ConsumerMessage) (type
 	logDuration(infoStoredAtTime, infoStored, msg.Offset, "db_store_info_report")
 
 	// message has been parsed and stored into storage
-	return message.RequestID, nil
+	return message.RequestID, message, nil
 }
 
 // organizationAllowed checks whether the given organization is on allow list or not

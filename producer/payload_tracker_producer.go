@@ -20,6 +20,7 @@ package producer
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -59,6 +60,8 @@ type PayloadTrackerMessage struct {
 	RequestID string `json:"request_id"`
 	Status    string `json:"status"`
 	Date      string `json:"date"`
+	OrgID     string `json:"org_id,omitempty"`
+	Account   string `json:"account,omitempty"`
 }
 
 // produceMessage produces message to selected topic. That function returns
@@ -77,18 +80,34 @@ func (producer *PayloadTrackerProducer) produceMessage(trackerMsg PayloadTracker
 // is empty, the payload will not be tracked and no error will be raised because
 // this can happen in some scenarios and it is not considered an error.
 // Instead, only a warning is logged and no error is returned.
-func (producer *PayloadTrackerProducer) TrackPayload(reqID types.RequestID, timestamp time.Time, status string) error {
+func (producer *PayloadTrackerProducer) TrackPayload(
+	reqID types.RequestID,
+	timestamp time.Time,
+	orgID *types.OrgID,
+	account *types.Account,
+	status string,
+) error {
 	if len(reqID) == 0 {
 		log.Warn().Str("Operation", "TrackPayload").Msg("request ID is missing, null or empty")
 		return nil
 	}
 
-	_, _, err := producer.produceMessage(PayloadTrackerMessage{
+	statusUpdate := PayloadTrackerMessage{
 		Service:   producer.Configuration.ServiceName,
 		RequestID: string(reqID),
 		Status:    status,
 		Date:      timestamp.UTC().Format(time.RFC3339Nano),
-	})
+	}
+
+	if orgID != nil {
+		statusUpdate.OrgID = fmt.Sprintf("%d", *orgID)
+	}
+
+	if account != nil {
+		statusUpdate.Account = fmt.Sprintf("%d", *account)
+	}
+
+	_, _, err := producer.produceMessage(statusUpdate)
 	if err != nil {
 		log.Error().Err(err).Msgf(
 			"unable to produce payload tracker message (request ID: '%s', timestamp: %v, status: '%s')",

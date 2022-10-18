@@ -78,8 +78,7 @@ func init() {
 func consumerProcessMessage(mockConsumer consumer.Consumer, message string) error {
 	saramaMessage := sarama.ConsumerMessage{}
 	saramaMessage.Value = []byte(message)
-	_, err := mockConsumer.ProcessMessage(&saramaMessage)
-	return err
+	return mockConsumer.HandleMessage(&saramaMessage)
 }
 
 func mustConsumerProcessMessage(t testing.TB, mockConsumer consumer.Consumer, message string) {
@@ -311,7 +310,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 
 	message := sarama.ConsumerMessage{}
 	// message is empty -> nothing should be written into storage
-	_, err := c.ProcessMessage(&message)
+	err := c.HandleMessage(&message)
 	assert.EqualError(t, err, "unexpected end of JSON input")
 
 	count, err := mockStorage.ReportsCount()
@@ -336,7 +335,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 	message := sarama.ConsumerMessage{}
 	message.Value = []byte(messageReportWithRuleHits)
 	// message is correct -> one record should be written into storage
-	_, err := c.ProcessMessage(&message)
+	err := c.HandleMessage(&message)
 	helpers.FailOnError(t, err)
 
 	count, err := mockStorage.ReportsCount()

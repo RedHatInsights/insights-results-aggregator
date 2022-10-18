@@ -71,7 +71,7 @@ func TestProducerTrackPayload(t *testing.T) {
 		helpers.FailOnError(t, payloadTrackerProducer.Close())
 	}()
 
-	err := payloadTrackerProducer.TrackPayload(testdata.TestRequestID, testTimestamp, producer.StatusReceived)
+	err := payloadTrackerProducer.TrackPayload(testdata.TestRequestID, testTimestamp, nil, nil, producer.StatusReceived)
 	assert.NoError(t, err, "payload tracking failed")
 }
 
@@ -89,7 +89,7 @@ func TestProducerTrackPayloadEmptyRequestID(t *testing.T) {
 		helpers.FailOnError(t, payloadTrackerProducer.Close())
 	}()
 
-	err := payloadTrackerProducer.TrackPayload(types.RequestID(""), testTimestamp, producer.StatusReceived)
+	err := payloadTrackerProducer.TrackPayload(types.RequestID(""), testTimestamp, nil, nil, producer.StatusReceived)
 	assert.NoError(t, err, "payload tracking failed")
 }
 
@@ -109,7 +109,7 @@ func TestProducerTrackPayloadWithError(t *testing.T) {
 		helpers.FailOnError(t, payloadTrackerProducer.Close())
 	}()
 
-	err := payloadTrackerProducer.TrackPayload(testdata.TestRequestID, testTimestamp, producer.StatusReceived)
+	err := payloadTrackerProducer.TrackPayload(testdata.TestRequestID, testTimestamp, nil, nil, producer.StatusReceived)
 	assert.EqualError(t, err, producerErrorMessage)
 }
 
