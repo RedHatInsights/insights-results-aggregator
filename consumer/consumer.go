@@ -34,7 +34,7 @@ import (
 type Consumer interface {
 	Serve()
 	Close() error
-	ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error)
+	HandleMessage(msg *sarama.ConsumerMessage) error
 }
 
 // KafkaConsumer in an implementation of Consumer interface
@@ -197,8 +197,11 @@ func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
 				Msg("this offset was already processed by aggregator")
 		}
 
-		consumer.HandleMessage(message)
-
+		err = consumer.HandleMessage(message)
+		if err != nil {
+			// already hanadled in HandleMessage, just log
+			log.Error().Err(err).Msg("Problem while handling the message")
+		}
 		session.MarkMessage(message, "")
 		if types.KafkaOffset(message.Offset) > latestMessageOffset {
 			latestMessageOffset = types.KafkaOffset(message.Offset)

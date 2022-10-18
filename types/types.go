@@ -25,6 +25,9 @@ import (
 // OrgID represents organization ID
 type OrgID = types.OrgID
 
+// Account represent the account number
+type Account = uint32
+
 // ClusterName represents name of cluster in format c8590f31-e97e-4b85-b506-c45ce1911a12
 type ClusterName = types.ClusterName
 

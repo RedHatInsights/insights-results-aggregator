@@ -36,7 +36,7 @@ type MockKafkaConsumer struct {
 // Serve simulates sending messages
 func (mockKafkaConsumer *MockKafkaConsumer) Serve() {
 	for i, message := range mockKafkaConsumer.messages {
-		mockKafkaConsumer.KafkaConsumer.HandleMessage(&sarama.ConsumerMessage{
+		_ = mockKafkaConsumer.KafkaConsumer.HandleMessage(&sarama.ConsumerMessage{
 			Timestamp:      time.Now(),
 			BlockTimestamp: time.Now(),
 			Value:          []byte(message),

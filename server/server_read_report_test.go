@@ -329,6 +329,7 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
+	now := time.Now()
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
@@ -336,7 +337,7 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 		testdata.Report2RulesParsed,
 		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
-		time.Now(),
+		now,
 		testdata.KafkaOffset,
 	)
 	helpers.FailOnError(t, err)
@@ -358,7 +359,7 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 				) {
 					assert.Equal(t, len(expectedRules), len(gotRules))
 					for i, v := range expectedRules {
-						utils.CompareReportResponses(t, v, gotRules[i], time.Now())
+						utils.CompareReportResponses(t, v, gotRules[i], now)
 					}
 				},
 			)

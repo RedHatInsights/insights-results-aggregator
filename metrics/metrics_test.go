@@ -100,7 +100,15 @@ func TestProducedMessagesMetric(t *testing.T) {
 		helpers.FailOnError(t, payloadTrackerProducer.Close())
 	}()
 
-	err := payloadTrackerProducer.TrackPayload(testdata.TestRequestID, testdata.LastCheckedAt, producer.StatusReceived)
+	orgID := types.OrgID(1)
+	account := types.Account(1)
+	err := payloadTrackerProducer.TrackPayload(
+		testdata.TestRequestID,
+		testdata.LastCheckedAt,
+		&orgID,
+		&account,
+		producer.StatusReceived,
+	)
 	helpers.FailOnError(t, err)
 
 	assertCounterValue(t, 1, metrics.ProducedMessages, initValue)
