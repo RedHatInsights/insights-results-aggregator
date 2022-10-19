@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM registry.redhat.io/rhel8/go-toolset:1.16 AS builder
+FROM registry.redhat.io/rhel8/go-toolset:1.17 AS builder
 
 COPY . .
 
