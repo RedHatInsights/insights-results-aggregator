@@ -14,14 +14,14 @@
 
 language: go
 go:
-- "1.16"
+- "1.17"
 
 services:
   - postgresql
 
 jobs:
   include:
-    - name: "Build 1.16"
+    - name: "Build 1.17"
       stage: build
       script:
         - make
