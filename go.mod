@@ -8,7 +8,7 @@ require (
 	github.com/RedHatInsights/cloudwatch v0.0.0-20210111105023-1df2bdfe3291 // indirect
 	github.com/RedHatInsights/insights-content-service v0.0.0-20221024073309-fabee4bcb06e // indirect
 	github.com/RedHatInsights/insights-operator-utils v1.24.5
-	github.com/RedHatInsights/insights-results-aggregator-data v1.3.3 // indirect
+	github.com/RedHatInsights/insights-results-aggregator-data v1.3.6
 	github.com/RedHatInsights/insights-results-types v1.3.20
 	github.com/RedHatInsights/kafka-zerolog v1.0.0 // indirect
 	github.com/Shopify/sarama v1.27.1
