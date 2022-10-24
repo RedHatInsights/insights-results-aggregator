@@ -986,7 +986,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/get_vote": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/get_vote": {
       "get": {
         "summary": "Returns vote for the rule with cluster for user",
         "operationId": "getVoteForRule",
@@ -1024,13 +1024,14 @@
             "example": "ERROR_COOL_NAME"
           },
           {
-            "name": "userId",
+            "name": "orgId",
             "in": "path",
             "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
+            "description": "Numeric ID of the organization",
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "42"
           }
         ],
         "responses": {
@@ -1760,20 +1761,21 @@
         ]
       }
     },
-    "/rules/users/{userId}/disabled/feedback": {
+    "/rules/organizations/{orgId}/disabled/feedback": {
       "get": {
         "summary": "Returns a list of reasons why rule or rules has been disabled",
         "operationId": "ListOfReasons",
         "description": "Returns a list of reasons why rule or rules has been disabled",
         "parameters": [
           {
-            "name": "userId",
+            "name": "orgId",
             "in": "path",
             "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
+            "description": "Numeric ID of the organization",
             "schema": {
               "type": "string"
-            }
+            },
+            "example": "42"
           }
         ],
         "responses": {
