@@ -29,13 +29,6 @@ func (server *HTTPServer) setRuleRating(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	// Extract user_id from URL
-	userID, ok := readUserID(writer, request)
-	if !ok {
-		// everything is handled
-		return
-	}
-
 	// extract org_id from URL
 	orgID, ok := readOrgID(writer, request)
 	if !ok {
@@ -52,7 +45,7 @@ func (server *HTTPServer) setRuleRating(writer http.ResponseWriter, request *htt
 	}
 
 	// Store to the db
-	err = server.Storage.RateOnRule(userID, orgID, ruleID, errorKey, rating.Rating)
+	err = server.Storage.RateOnRule(orgID, ruleID, errorKey, rating.Rating)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to store rating")
 		handleServerError(writer, err)
@@ -72,11 +65,6 @@ func (server *HTTPServer) setRuleRating(writer http.ResponseWriter, request *htt
 func (server *HTTPServer) getRuleRating(writer http.ResponseWriter, request *http.Request) {
 	log.Info().Msg("getRuleRating")
 
-	userID, ok := readUserID(writer, request)
-	if !ok {
-		return
-	}
-
 	orgID, ok := readOrgID(writer, request)
 	if !ok {
 		return
@@ -87,7 +75,7 @@ func (server *HTTPServer) getRuleRating(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	rating, err := server.Storage.GetRuleRating(userID, orgID, ruleSelector)
+	rating, err := server.Storage.GetRuleRating(orgID, ruleSelector)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get rating")
 		handleServerError(writer, err)

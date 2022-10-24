@@ -281,7 +281,7 @@ func (server *HTTPServer) readSingleRule(writer http.ResponseWriter, request *ht
 		ErrorKey:     errorKey,
 	}
 
-	reportRule = server.getFeedbackAndTogglesOnRule(clusterName, userID, reportRule)
+	reportRule = server.getFeedbackAndTogglesOnRule(clusterName, userID, orgID, reportRule)
 
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData(ReportResponse, reportRule))
 	if err != nil {

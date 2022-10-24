@@ -52,7 +52,7 @@ const (
 	// ResetVoteOnRuleEndpoint resets vote on rule with {rule_id} for {cluster} using current user(from auth header)
 	ResetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/reset_vote"
 	// GetVoteOnRuleEndpoint is an endpoint to get vote on rule. DEBUG only
-	GetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/users/{user_id}/get_vote"
+	GetVoteOnRuleEndpoint = "clusters/{cluster}/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/get_vote"
 	// ClustersForOrganizationEndpoint returns all clusters for {organization}
 	ClustersForOrganizationEndpoint = "organizations/{organization}/clusters"
 	// DisableRuleForClusterEndpoint disables a rule for specified cluster
@@ -66,7 +66,7 @@ const (
 	// ListOfDisabledRulesForClusters returns a list of rules disabled from current organization for given list of clusters in POST body
 	ListOfDisabledRulesForClusters = "rules/organizations/{org_id}/disabled_for_clusters"
 	// ListOfDisabledRulesFeedback returns a list of reasons why rule has been disabled
-	ListOfDisabledRulesFeedback = "rules/users/{user_id}/disabled/feedback"
+	ListOfDisabledRulesFeedback = "rules/organizations/{org_id}/disabled/feedback"
 	// ListOfDisabledClusters returns a list of clusters which the user disabled for a rule with latest justification
 	ListOfDisabledClusters = "clusters/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/disabled"
 	// RuleClusterDetailEndpoint returns a list of clusters affected by a given rule for current account

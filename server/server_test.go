@@ -349,13 +349,12 @@ func TestRuleFeedbackVote(t *testing.T) {
 				Body:       `{"status": "ok"}`,
 			})
 
-			feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
+			feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID)
 			helpers.FailOnError(t, err)
 
 			assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
 			assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
 			assert.Equal(t, types.ErrorKey(testdata.ErrorKey1), feedback.ErrorKey)
-			assert.Equal(t, testdata.UserID, feedback.UserID)
 			assert.Equal(t, "", feedback.Message)
 			assert.Equal(t, expectedVote, feedback.UserVote)
 		}(endpoint)
@@ -492,7 +491,7 @@ func TestHTTPServer_GetVoteOnRule_BadRuleID(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetVoteOnRuleEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.BadRuleID, testdata.ErrorKey1, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.BadRuleID, testdata.ErrorKey1, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body: `{
@@ -519,7 +518,7 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetVoteOnRuleEndpoint,
-		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       `{"status": "Internal Server Error"}`,
@@ -585,7 +584,7 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 			helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 				Method:       http.MethodGet,
 				Endpoint:     server.GetVoteOnRuleEndpoint,
-				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID},
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID},
 			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       fmt.Sprintf(`{"status": "ok", "vote":%v}`, expectedVote),
@@ -749,7 +748,7 @@ func TestHTTPServer_SaveDisableFeedback(t *testing.T) {
 		Body:       `{"message":"user's feedback", "status":"ok"}`,
 	})
 
-	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
+	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, expectedFeedback, feedback.Message)
@@ -882,7 +881,7 @@ func TestHTTPServer_ListOfReasons(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.ListOfDisabledRulesFeedback,
-		EndpointArgs: []interface{}{testdata.UserID},
+		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"reasons":[],"status":"ok"}`,

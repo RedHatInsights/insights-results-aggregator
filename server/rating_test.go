@@ -82,7 +82,7 @@ func TestHTTPServer_getRuleRating_OK(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.RateOnRule(
-		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
 	)
 	helpers.FailOnError(t, err)
 
@@ -104,7 +104,7 @@ func TestHTTPServer_getRuleRating_MultipleOK(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.RateOnRule(
-		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
 	)
 	helpers.FailOnError(t, err)
 
@@ -121,7 +121,7 @@ func TestHTTPServer_getRuleRating_MultipleOK(t *testing.T) {
 	})
 
 	err = mockStorage.RateOnRule(
-		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteDislike,
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteDislike,
 	)
 	helpers.FailOnError(t, err)
 

@@ -88,7 +88,7 @@ func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	userID, successful := readUserID(writer, request)
+	orgID, successful := readOrgID(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
@@ -100,7 +100,7 @@ func (server *HTTPServer) getVoteOnRule(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	userFeedbackOnRule, err := server.Storage.GetUserFeedbackOnRule(clusterID, ruleID, errorKey, userID)
+	userFeedbackOnRule, err := server.Storage.GetUserFeedbackOnRule(clusterID, ruleID, errorKey, orgID)
 	if err != nil {
 		handleServerError(writer, err)
 		return

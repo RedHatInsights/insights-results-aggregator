@@ -53,19 +53,13 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	userID, successful := readUserID(writer, request)
-	if !successful {
-		// everything has been handled already
-		return
-	}
-
 	orgID, successful := readOrgID(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
 	}
 
-	err := server.Storage.ToggleRuleForCluster(clusterID, ruleID, errorKey, orgID, userID, toggleRule)
+	err := server.Storage.ToggleRuleForCluster(clusterID, ruleID, errorKey, orgID, toggleRule)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to toggle rule for selected cluster")
 		handleServerError(writer, err)
@@ -107,21 +101,21 @@ func (server HTTPServer) listOfDisabledRules(writer http.ResponseWriter, request
 	}
 }
 
-// listOfReasons returns list of reasons why rule(s) have been disabled from an
-// account
+// listOfReasons returns list of reasons why rule(s) have been disabled from
+// a given organization
 func (server HTTPServer) listOfReasons(writer http.ResponseWriter, request *http.Request) {
 	log.Info().Msg("Lisf of reasons")
 
-	// retrieve account (user) ID
-	userID, successful := readUserID(writer, request)
+	// retrieve orgID
+	orgID, successful := readOrgID(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
 	}
-	log.Info().Str(accountStr, string(userID)).Msg("reasons for disabling rules")
+	log.Info().Int(orgIDStr, int(orgID)).Msg("reasons for disabling rules")
 
-	// try to read list of reasons by an account/user from database
-	reasons, err := server.Storage.ListOfReasons(userID)
+	// try to read list of reasons from database
+	reasons, err := server.Storage.ListOfReasons(orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to read list of reasons")
 		handleServerError(writer, err)
@@ -254,13 +248,13 @@ func (server HTTPServer) getFeedbackAndTogglesOnRules(
 		return nil, err
 	}
 
-	feedbacks, err := server.Storage.GetUserFeedbackOnRules(clusterName, rules, userID)
+	feedbacks, err := server.Storage.GetUserFeedbackOnRules(clusterName, rules, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to retrieve feedback results from database")
 		return nil, err
 	}
 
-	disableFeedbacks, err := server.Storage.GetUserDisableFeedbackOnRules(clusterName, rules, userID)
+	disableFeedbacks, err := server.Storage.GetUserDisableFeedbackOnRules(clusterName, rules, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to retrieve disable feedback results from database")
 		return nil, err
@@ -302,12 +296,6 @@ func (server HTTPServer) saveDisableFeedback(writer http.ResponseWriter, request
 		return
 	}
 
-	userID, successful := readUserID(writer, request)
-	if !successful {
-		// everything has been handled already
-		return
-	}
-
 	orgID, successful := readOrgID(writer, request)
 	if !successful {
 		// everything has been handled already
@@ -326,7 +314,7 @@ func (server HTTPServer) saveDisableFeedback(writer http.ResponseWriter, request
 		return
 	}
 
-	err = server.Storage.AddFeedbackOnRuleDisable(clusterID, ruleID, errorKey, orgID, userID, feedback)
+	err = server.Storage.AddFeedbackOnRuleDisable(clusterID, ruleID, errorKey, orgID, feedback)
 	if err != nil {
 		handleServerError(writer, err)
 		return
@@ -344,6 +332,7 @@ func (server HTTPServer) saveDisableFeedback(writer http.ResponseWriter, request
 func (server HTTPServer) getFeedbackAndTogglesOnRule(
 	clusterName types.ClusterName,
 	userID types.UserID,
+	orgID types.OrgID,
 	rule types.RuleOnReport,
 ) types.RuleOnReport {
 	ruleToggle, err := server.Storage.GetFromClusterRuleToggle(clusterName, rule.Module)
@@ -355,7 +344,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 		rule.DisabledAt = types.Timestamp(ruleToggle.DisabledAt.Time.UTC().Format(time.RFC3339))
 	}
 
-	disableFeedback, err := server.Storage.GetUserFeedbackOnRuleDisable(clusterName, rule.Module, rule.ErrorKey, userID)
+	disableFeedback, err := server.Storage.GetUserFeedbackOnRuleDisable(clusterName, rule.Module, rule.ErrorKey, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("Feedback for rule was not found")
 		rule.DisableFeedback = ""
@@ -364,7 +353,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 		rule.DisableFeedback = disableFeedback.Message
 	}
 
-	userVote, err := server.Storage.GetUserFeedbackOnRule(clusterName, rule.Module, rule.ErrorKey, userID)
+	userVote, err := server.Storage.GetUserFeedbackOnRule(clusterName, rule.Module, rule.ErrorKey, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("User vote for rule was not found")
 		rule.UserVote = types.UserVoteNone
@@ -388,8 +377,8 @@ func (server HTTPServer) enableRuleSystemWide(writer http.ResponseWriter, reques
 
 	// try to enable rule
 	err := server.Storage.EnableRuleSystemWide(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey)
+		selector.OrgID, selector.RuleID, selector.ErrorKey,
+	)
 
 	// handle any storage error
 	if err != nil {
@@ -428,9 +417,8 @@ func (server HTTPServer) disableRuleSystemWide(writer http.ResponseWriter, reque
 
 	// try to disable rule
 	err = server.Storage.DisableRuleSystemWide(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey,
-		justification)
+		selector.OrgID, selector.RuleID, selector.ErrorKey, justification,
+	)
 
 	// handle any storage error
 	if err != nil {
@@ -468,9 +456,9 @@ func (server HTTPServer) updateRuleSystemWide(writer http.ResponseWriter, reques
 
 	// try to update rule disable justification
 	err = server.Storage.UpdateDisabledRuleJustification(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey,
-		justification)
+		selector.OrgID, selector.RuleID,
+		selector.ErrorKey, justification,
+	)
 
 	// handle any storage error
 	if err != nil {
