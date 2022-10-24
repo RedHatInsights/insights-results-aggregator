@@ -37,23 +37,23 @@ type DisabledRuleReason struct {
 }
 
 // ListOfReasons function returns list of reasons for all disabled rules
-func (storage DBStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
+func (storage DBStorage) ListOfReasons(orgID types.OrgID) ([]DisabledRuleReason, error) {
 	reasons := make([]DisabledRuleReason, 0)
 	query := `SELECT
-                         cluster_id,
-			 rule_id,
-			 error_key,
-			 message,
-			 added_at,
-			 updated_at
+		cluster_id,
+		rule_id,
+		error_key,
+		message,
+		added_at,
+		updated_at
 	FROM
 		cluster_user_rule_disable_feedback
 	WHERE
-		user_id = $1
+		org_id = $1
 	`
 
 	// run the query against database
-	rows, err := storage.connection.Query(query, userID)
+	rows, err := storage.connection.Query(query, orgID)
 
 	// return empty list in case of any error
 	if err != nil {
@@ -64,12 +64,14 @@ func (storage DBStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReaso
 	for rows.Next() {
 		var reason DisabledRuleReason
 
-		err = rows.Scan(&reason.ClusterID,
+		err = rows.Scan(
+			&reason.ClusterID,
 			&reason.RuleID,
 			&reason.ErrorKey,
 			&reason.Message,
 			&reason.AddedAt,
-			&reason.UpdatedAt)
+			&reason.UpdatedAt,
+		)
 
 		if err != nil {
 			log.Error().Err(err).Msg("ReadListOfReasons")

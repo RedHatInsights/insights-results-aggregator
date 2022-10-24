@@ -118,21 +118,21 @@ func (*NoopStorage) AddOrUpdateFeedbackOnRule(
 
 // AddFeedbackOnRuleDisable noop
 func (*NoopStorage) AddFeedbackOnRuleDisable(
-	types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID, types.UserID, string,
+	types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID, string,
 ) error {
 	return nil
 }
 
 // GetUserFeedbackOnRuleDisable noop
 func (*NoopStorage) GetUserFeedbackOnRuleDisable(
-	types.ClusterName, types.RuleID, types.ErrorKey, types.UserID,
+	types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID,
 ) (*UserFeedbackOnRule, error) {
 	return nil, nil
 }
 
 // GetUserFeedbackOnRule noop
 func (*NoopStorage) GetUserFeedbackOnRule(
-	types.ClusterName, types.RuleID, types.ErrorKey, types.UserID,
+	types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID,
 ) (*UserFeedbackOnRule, error) {
 	return nil, nil
 }
@@ -189,7 +189,7 @@ func (*NoopStorage) WriteConsumerError(*sarama.ConsumerMessage, error) error {
 
 // ToggleRuleForCluster noop
 func (*NoopStorage) ToggleRuleForCluster(
-	types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID, types.UserID, RuleToggle,
+	types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID, RuleToggle,
 ) error {
 	return nil
 }
@@ -221,7 +221,7 @@ func (*NoopStorage) GetTogglesForRules(
 func (*NoopStorage) GetUserFeedbackOnRules(
 	types.ClusterName,
 	[]types.RuleOnReport,
-	types.UserID,
+	types.OrgID,
 ) (map[types.RuleID]types.UserVote, error) {
 	return nil, nil
 }
@@ -235,7 +235,7 @@ func (*NoopStorage) GetRuleWithContent(
 
 // GetUserDisableFeedbackOnRules noop
 func (*NoopStorage) GetUserDisableFeedbackOnRules(
-	types.ClusterName, []types.RuleOnReport, types.UserID,
+	types.ClusterName, []types.RuleOnReport, types.OrgID,
 ) (map[types.RuleID]UserFeedbackOnRule, error) {
 	return nil, nil
 }
@@ -264,7 +264,7 @@ func (*NoopStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.DisabledRul
 
 // ListOfReasons function returns list of reasons for all rules disabled from a
 // specified account (noop).
-func (*NoopStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
+func (*NoopStorage) ListOfReasons(orgID types.OrgID) ([]DisabledRuleReason, error) {
 	return nil, nil
 }
 
@@ -289,7 +289,6 @@ func (*NoopStorage) ListOfDisabledRulesForClusters(
 
 // RateOnRule function stores the vote (rating) given by an user to a rule+error key
 func (*NoopStorage) RateOnRule(
-	types.UserID,
 	types.OrgID,
 	types.RuleID,
 	types.ErrorKey,
@@ -300,7 +299,6 @@ func (*NoopStorage) RateOnRule(
 
 // GetRuleRating retrieves rating for given rule and user
 func (*NoopStorage) GetRuleRating(
-	userID types.UserID,
 	orgID types.OrgID,
 	ruleSelector types.RuleSelector,
 ) (
@@ -313,24 +311,22 @@ func (*NoopStorage) GetRuleRating(
 // DisableRuleSystemWide disables the selected rule for all clusters visible to
 // given user
 func (*NoopStorage) DisableRuleSystemWide(
-	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey,
-	justification string) error {
+	orgID types.OrgID, ruleID types.RuleID,
+	errorKey types.ErrorKey, justification string) error {
 	return nil
 }
 
 // EnableRuleSystemWide enables the selected rule for all clusters visible to
 // given user
 func (*NoopStorage) EnableRuleSystemWide(
-	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey) error {
+	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
+) error {
 	return nil
 }
 
 // UpdateDisabledRuleJustification change justification for already disabled rule
 func (*NoopStorage) UpdateDisabledRuleJustification(
-	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey,
+	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
 	justification string) error {
 	return nil
 }

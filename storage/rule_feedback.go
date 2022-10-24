@@ -48,7 +48,7 @@ func (storage DBStorage) VoteOnRule(
 	userVote types.UserVote,
 	voteMessage string,
 ) error {
-	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, errorKey, orgID, userID, &userVote, &voteMessage)
+	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, errorKey, orgID, &userVote, &voteMessage)
 }
 
 // AddOrUpdateFeedbackOnRule adds feedback on rule for cluster by user. If entry exists, it overwrites it
@@ -60,7 +60,7 @@ func (storage DBStorage) AddOrUpdateFeedbackOnRule(
 	userID types.UserID,
 	message string,
 ) error {
-	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, errorKey, orgID, userID, nil, &message)
+	return storage.addOrUpdateUserFeedbackOnRuleForCluster(clusterID, ruleID, errorKey, orgID, nil, &message)
 }
 
 // addOrUpdateUserFeedbackOnRuleForCluster adds or updates feedback
@@ -70,7 +70,6 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
 	orgID types.OrgID,
-	userID types.UserID,
 	userVotePtr *types.UserVote,
 	messagePtr *string,
 ) error {
@@ -109,7 +108,7 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 
 	now := time.Now()
 
-	_, err = statement.Exec(clusterID, ruleID, userID, userVote, now, now, message, errorKey, orgID)
+	_, err = statement.Exec(clusterID, ruleID, userVote, now, now, message, errorKey, orgID)
 	err = types.ConvertDBError(err, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("addOrUpdateUserFeedbackOnRuleForCluster")
@@ -128,23 +127,23 @@ func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote, upda
 	case types.DBDriverSQLite3, types.DBDriverPostgres, types.DBDriverGeneral:
 		query = `
 			INSERT INTO cluster_rule_user_feedback
-			(cluster_id, rule_id, user_id, user_vote, added_at, updated_at, message, error_key, org_id)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			(cluster_id, rule_id, user_vote, added_at, updated_at, message, error_key, org_id)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		`
 
 		var updates []string
 
 		if updateVote {
-			updates = append(updates, "user_vote = $4")
+			updates = append(updates, "user_vote = $3")
 		}
 
 		if updateMessage {
-			updates = append(updates, "message = $7")
+			updates = append(updates, "message = $6")
 		}
 
 		if len(updates) > 0 {
-			updates = append(updates, "updated_at = $6")
-			query += "ON CONFLICT (cluster_id, rule_id, error_key, user_id) DO UPDATE SET "
+			updates = append(updates, "updated_at = $5")
+			query += "ON CONFLICT (cluster_id, org_id, rule_id, error_key) DO UPDATE SET "
 			query += strings.Join(updates, ", ")
 		}
 	default:
@@ -156,20 +155,19 @@ func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote, upda
 
 // GetUserFeedbackOnRule gets user feedback from DB
 func (storage DBStorage) GetUserFeedbackOnRule(
-	clusterID types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey, userID types.UserID,
+	clusterID types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey, orgID types.OrgID,
 ) (*UserFeedbackOnRule, error) {
 	feedback := UserFeedbackOnRule{}
 
 	err := storage.connection.QueryRow(
-		`SELECT cluster_id, rule_id, error_key, user_id, message, user_vote, added_at, updated_at
+		`SELECT cluster_id, rule_id, error_key, message, user_vote, added_at, updated_at
 		FROM cluster_rule_user_feedback
-		WHERE cluster_id = $1 AND rule_id = $2 AND error_key = $3 AND user_id = $4`,
-		clusterID, ruleID, errorKey, userID,
+		WHERE cluster_id = $1 AND rule_id = $2 AND error_key = $3 AND org_id = $4`,
+		clusterID, ruleID, errorKey, orgID,
 	).Scan(
 		&feedback.ClusterID,
 		&feedback.RuleID,
 		&feedback.ErrorKey,
-		&feedback.UserID,
 		&feedback.Message,
 		&feedback.UserVote,
 		&feedback.AddedAt,
@@ -179,7 +177,7 @@ func (storage DBStorage) GetUserFeedbackOnRule(
 	switch {
 	case err == sql.ErrNoRows:
 		return nil, &types.ItemNotFoundError{
-			ItemID: fmt.Sprintf("%v/%v/%v", clusterID, ruleID, userID),
+			ItemID: fmt.Sprintf("%v/%v/%v", orgID, clusterID, ruleID),
 		}
 	case err != nil:
 		return nil, err
@@ -190,20 +188,19 @@ func (storage DBStorage) GetUserFeedbackOnRule(
 
 // GetUserFeedbackOnRuleDisable gets user feedback from DB
 func (storage DBStorage) GetUserFeedbackOnRuleDisable(
-	clusterID types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey, userID types.UserID,
+	clusterID types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey, orgID types.OrgID,
 ) (*UserFeedbackOnRule, error) {
 	feedback := UserFeedbackOnRule{}
 
 	err := storage.connection.QueryRow(
-		`SELECT cluster_id, rule_id, error_key, user_id, message, added_at, updated_at
+		`SELECT cluster_id, rule_id, error_key, message, added_at, updated_at
 		FROM cluster_user_rule_disable_feedback
-		WHERE cluster_id = $1 AND rule_id = $2 AND error_key = $3 AND user_id = $4`,
-		clusterID, ruleID, errorKey, userID,
+		WHERE cluster_id = $1 AND rule_id = $2 AND error_key = $3 AND org_id = $4`,
+		clusterID, ruleID, errorKey, orgID,
 	).Scan(
 		&feedback.ClusterID,
 		&feedback.RuleID,
 		&feedback.ErrorKey,
-		&feedback.UserID,
 		&feedback.Message,
 		&feedback.AddedAt,
 		&feedback.UpdatedAt,
@@ -212,7 +209,7 @@ func (storage DBStorage) GetUserFeedbackOnRuleDisable(
 	switch {
 	case err == sql.ErrNoRows:
 		return nil, &types.ItemNotFoundError{
-			ItemID: fmt.Sprintf("%v/%v/%v", clusterID, userID, ruleID),
+			ItemID: fmt.Sprintf("%v/%v/%v", orgID, clusterID, ruleID),
 		}
 	case err != nil:
 		return nil, err
@@ -223,7 +220,7 @@ func (storage DBStorage) GetUserFeedbackOnRuleDisable(
 
 // GetUserFeedbackOnRules gets user feedbacks for defined array of rule IDs from DB
 func (storage DBStorage) GetUserFeedbackOnRules(
-	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
+	clusterID types.ClusterName, rulesReport []types.RuleOnReport, orgID types.OrgID,
 ) (map[types.RuleID]types.UserVote, error) {
 	ruleIDs := make([]string, 0)
 	for _, v := range rulesReport {
@@ -234,12 +231,12 @@ func (storage DBStorage) GetUserFeedbackOnRules(
 
 	query := `SELECT rule_id, user_vote
 		FROM cluster_rule_user_feedback
-		WHERE cluster_id = $1 AND rule_id in (%v) AND user_id = $2`
+		WHERE cluster_id = $1 AND rule_id in (%v) AND org_id = $2`
 
 	whereInStatement := inClauseFromSlice(ruleIDs)
 	query = fmt.Sprintf(query, whereInStatement)
 
-	rows, err := storage.connection.Query(query, clusterID, userID)
+	rows, err := storage.connection.Query(query, clusterID, orgID)
 	if err != nil {
 		return feedbacks, err
 	}
@@ -267,12 +264,12 @@ func (storage DBStorage) GetUserFeedbackOnRules(
 
 // GetUserDisableFeedbackOnRules gets user disable feedbacks for defined array of rule IDs from DB
 func (storage DBStorage) GetUserDisableFeedbackOnRules(
-	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
+	clusterID types.ClusterName, rulesReport []types.RuleOnReport, orgID types.OrgID,
 ) (map[types.RuleID]UserFeedbackOnRule, error) {
 	feedbacks := make(map[types.RuleID]UserFeedbackOnRule)
 
 	for _, rule := range rulesReport {
-		feedback, err := storage.GetUserFeedbackOnRuleDisable(clusterID, rule.Module, rule.ErrorKey, userID)
+		feedback, err := storage.GetUserFeedbackOnRuleDisable(clusterID, rule.Module, rule.ErrorKey, orgID)
 		if err != nil {
 			if _, itemNotFound := err.(*types.ItemNotFoundError); !itemNotFound {
 				return nil, err
@@ -292,17 +289,16 @@ func (storage DBStorage) AddFeedbackOnRuleDisable(
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
 	orgID types.OrgID,
-	userID types.UserID,
 	message string,
 ) error {
 	statement, err := storage.connection.Prepare(`
 		INSERT INTO cluster_user_rule_disable_feedback
-			(cluster_id, org_id, user_id, rule_id, error_key, message, added_at, updated_at)
+			(cluster_id, org_id, rule_id, error_key, message, added_at, updated_at)
 		VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8)
+			($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT
-			(cluster_id, user_id, rule_id, error_key)
-		DO UPDATE SET updated_at = $8, message = $6;
+			(cluster_id, org_id, rule_id, error_key)
+		DO UPDATE SET updated_at = $7, message = $5;
 	`)
 	if err != nil {
 		return err
@@ -316,7 +312,7 @@ func (storage DBStorage) AddFeedbackOnRuleDisable(
 
 	now := time.Now()
 
-	_, err = statement.Exec(clusterID, orgID, userID, ruleID, errorKey, message, now, now)
+	_, err = statement.Exec(clusterID, orgID, ruleID, errorKey, message, now, now)
 	err = types.ConvertDBError(err, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("addOrUpdateUserFeedbackOnRuleDisableForCluster")

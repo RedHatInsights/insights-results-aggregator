@@ -119,20 +119,19 @@ type Storage interface {
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
 		orgID types.OrgID,
-		userID types.UserID,
 		message string,
 	) error
 	GetUserFeedbackOnRule(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
-		userID types.UserID,
+		orgID types.OrgID,
 	) (*UserFeedbackOnRule, error)
 	GetUserFeedbackOnRuleDisable(
 		clusterID types.ClusterName,
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
-		userID types.UserID,
+		orgID types.OrgID,
 	) (*UserFeedbackOnRule, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
 	DeleteReportsForCluster(clusterName types.ClusterName) error
@@ -141,7 +140,6 @@ type Storage interface {
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
 		orgID types.OrgID,
-		userID types.UserID,
 		ruleToggle RuleToggle,
 	) error
 	GetFromClusterRuleToggle(
@@ -162,16 +160,16 @@ type Storage interface {
 	GetUserFeedbackOnRules(
 		clusterID types.ClusterName,
 		rulesReport []types.RuleOnReport,
-		userID types.UserID,
+		orgID types.OrgID,
 	) (map[types.RuleID]types.UserVote, error)
 	GetUserDisableFeedbackOnRules(
 		clusterID types.ClusterName,
 		rulesReport []types.RuleOnReport,
-		userID types.UserID,
+		orgID types.OrgID,
 	) (map[types.RuleID]UserFeedbackOnRule, error)
 	DoesClusterExist(clusterID types.ClusterName) (bool, error)
 	ListOfDisabledRules(orgID types.OrgID) ([]ctypes.DisabledRule, error)
-	ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error)
+	ListOfReasons(orgID types.OrgID) ([]DisabledRuleReason, error)
 	ListOfDisabledRulesForClusters(
 		clusterList []string,
 		orgID types.OrgID,
@@ -182,28 +180,23 @@ type Storage interface {
 		errorKey types.ErrorKey,
 	) ([]ctypes.DisabledClusterInfo, error)
 	RateOnRule(
-		types.UserID,
 		types.OrgID,
 		types.RuleID,
 		types.ErrorKey,
 		types.UserVote,
 	) error
 	GetRuleRating(
-		types.UserID,
 		types.OrgID,
 		types.RuleSelector,
 	) (types.RuleRating, error)
 	DisableRuleSystemWide(
-		orgID types.OrgID, userID types.UserID,
-		ruleID types.RuleID, errorKey types.ErrorKey,
-		justification string) error
+		orgID types.OrgID, ruleID types.RuleID,
+		errorKey types.ErrorKey, justification string) error
 	EnableRuleSystemWide(
-		orgID types.OrgID, userID types.UserID,
-		ruleID types.RuleID, errorKey types.ErrorKey,
+		orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
 	) error
 	UpdateDisabledRuleJustification(
-		orgID types.OrgID, userID types.UserID,
-		ruleID types.RuleID, errorKey types.ErrorKey,
+		orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
 		justification string) error
 	ReadDisabledRule(
 		orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,

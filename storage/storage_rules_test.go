@@ -62,7 +62,7 @@ func TestDBStorage_ToggleRuleForCluster(t *testing.T) {
 			mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-				testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, state,
+				testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, state,
 			))
 
 			_, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID)
@@ -76,7 +76,7 @@ func TestDBStorage_ToggleRuleForCluster_UnexpectedRuleToggleValue(t *testing.T) 
 	defer closer()
 
 	err := mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, -999,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, -999,
 	)
 	assert.EqualError(t, err, "Unexpected rule toggle value")
 }
@@ -86,7 +86,7 @@ func TestDBStorage_ToggleRuleForCluster_DBError(t *testing.T) {
 	closer()
 
 	err := mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, storage.RuleToggleDisable,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	)
 	assert.EqualError(t, err, "sql: database is closed")
 }
@@ -116,7 +116,7 @@ func TestDBStorageGetTogglesForRules_OneRuleDisabled(t *testing.T) {
 	defer closer()
 
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, storage.RuleToggleDisable,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	result, err := mockStorage.GetTogglesForRules(
@@ -145,7 +145,7 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 			mustWriteReport3Rules(t, mockStorage)
 
 			helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-				testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, state,
+				testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, state,
 			))
 
 			toggledRule, err := mockStorage.GetFromClusterRuleToggle(testdata.ClusterName, testdata.Rule1ID)
@@ -173,7 +173,7 @@ func TestDBStorageListRulesReasonsOnDBError(t *testing.T) {
 	closer()
 
 	// try to read list of reasons
-	_, err := mockStorage.ListOfReasons(testdata.UserID)
+	_, err := mockStorage.ListOfReasons(testdata.OrgID)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -184,7 +184,7 @@ func TestDBStorageListRulesReasonsEmptyDB(t *testing.T) {
 	defer closer()
 
 	// try to read list of reasons
-	reasons, err := mockStorage.ListOfReasons(testdata.UserID)
+	reasons, err := mockStorage.ListOfReasons(testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect no rules reasons to be returned
@@ -205,11 +205,11 @@ func TestDBStorageListOfRulesReasonsOneRule(t *testing.T) {
 	// store one reason
 	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
 		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1,
-		testdata.OrgID, testdata.UserID, feedbackMessage,
+		testdata.OrgID, feedbackMessage,
 	))
 
 	// try to read list of reasons
-	reasons, err := mockStorage.ListOfReasons(testdata.UserID)
+	reasons, err := mockStorage.ListOfReasons(testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	// we expect 1 rule reason to be returned
@@ -260,8 +260,7 @@ func TestDBStorageListOfDisabledRulesOneRule(t *testing.T) {
 
 	// disable one rule
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// try to read list of disabled rules
@@ -290,12 +289,10 @@ func TestDBStorageListOfDisabledRulesTwoRules(t *testing.T) {
 
 	// disable two rules
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule2ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		testdata.ClusterName, testdata.Rule2ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// try to read list of disabled rules
@@ -326,8 +323,7 @@ func TestDBStorageListOfDisabledRulesNoRule(t *testing.T) {
 
 	// enable one rule
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleEnable,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleEnable,
 	))
 
 	// try to read list of disabled rules
@@ -352,12 +348,11 @@ func TestDBStorageVoteOnRule(t *testing.T) {
 				testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, vote, "",
 			))
 
-			feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
+			feedback, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID)
 			helpers.FailOnError(t, err)
 
 			assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
 			assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
-			assert.Equal(t, testdata.UserID, feedback.UserID)
 			assert.Equal(t, "", feedback.Message)
 			assert.Equal(t, vote, feedback.UserVote)
 
@@ -399,13 +394,12 @@ func TestDBStorageChangeVote(t *testing.T) {
 	))
 
 	feedback, err := mockStorage.GetUserFeedbackOnRule(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
 	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
-	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, types.ErrorKey(testdata.ErrorKey1), feedback.ErrorKey)
 	assert.Equal(t, "", feedback.Message)
 	assert.Equal(t, types.UserVoteDislike, feedback.UserVote)
@@ -423,13 +417,12 @@ func TestDBStorageTextFeedback(t *testing.T) {
 	))
 
 	feedback, err := mockStorage.GetUserFeedbackOnRule(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
 	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
-	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "test feedback", feedback.Message)
 	assert.Equal(t, types.UserVoteNone, feedback.UserVote)
 }
@@ -450,13 +443,12 @@ func TestDBStorageFeedbackChangeMessage(t *testing.T) {
 	))
 
 	feedback, err := mockStorage.GetUserFeedbackOnRule(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
 	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
-	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "message2", feedback.Message)
 	assert.Equal(t, types.UserVoteNone, feedback.UserVote)
 	assert.NotEqual(t, feedback.AddedAt, feedback.UpdatedAt)
@@ -466,7 +458,7 @@ func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
+	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID)
 	if _, ok := err.(*types.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
@@ -476,7 +468,7 @@ func TestDBStorageFeedbackErrorDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
+	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -572,7 +564,7 @@ func TestDBStorageGetVotesForNoRules(t *testing.T) {
 	defer closer()
 
 	feedbacks, err := mockStorage.GetUserFeedbackOnRules(
-		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 
@@ -584,7 +576,7 @@ func TestDBStorageGetDisableFeedback(t *testing.T) {
 	defer closer()
 
 	feedbacks, err := mockStorage.GetUserDisableFeedbackOnRules(
-		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 
@@ -605,7 +597,7 @@ func TestDBStorageGetVotes(t *testing.T) {
 	))
 
 	feedbacks, err := mockStorage.GetUserFeedbackOnRules(
-		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.UserID,
+		testdata.ClusterName, testdata.RuleOnReportResponses, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 
@@ -624,17 +616,16 @@ func TestDBStorageTextDisableFeedback(t *testing.T) {
 
 	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
 		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1,
-		testdata.OrgID, testdata.UserID, "test feedback",
+		testdata.OrgID, "test feedback",
 	))
 
 	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
 	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
-	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "test feedback", feedback.Message)
 	assert.Equal(t, types.UserVoteNone, feedback.UserVote)
 }
@@ -646,22 +637,21 @@ func TestDBStorageDisableFeedbackChangeMessage(t *testing.T) {
 	mustWriteReport3Rules(t, mockStorage)
 
 	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, "message1",
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, "message1",
 	))
 	// just to be sure that addedAt != to updatedAt
 	time.Sleep(1 * time.Millisecond)
 	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, "message2",
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, "message2",
 	))
 
 	feedback, err := mockStorage.GetUserFeedbackOnRuleDisable(
-		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID,
+		testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
 	)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, feedback.ClusterID)
 	assert.Equal(t, testdata.Rule1ID, feedback.RuleID)
-	assert.Equal(t, testdata.UserID, feedback.UserID)
 	assert.Equal(t, "message2", feedback.Message)
 	assert.Equal(t, types.UserVoteNone, feedback.UserVote)
 	assert.NotEqual(t, feedback.AddedAt, feedback.UpdatedAt)
@@ -671,7 +661,7 @@ func TestDBStorageDisableFeedbackErrorItemNotFound(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
+	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID)
 	if _, ok := err.(*types.ItemNotFoundError); err == nil || !ok {
 		t.Fatalf("expected ItemNotFoundError, got %T, %+v", err, err)
 	}
@@ -681,7 +671,7 @@ func TestDBStorageDisableFeedbackErrorDBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
-	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
+	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -861,8 +851,7 @@ func TestDBStorageListOfDisabledClustersOneRule(t *testing.T) {
 
 	// disable one cluster
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// try to read list of disabled clusters
@@ -891,13 +880,11 @@ func TestDBStorageListOfDisabledClustersTwoClusters(t *testing.T) {
 
 	// disable two clusters, same rule
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		clusters[2], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		clusters[2], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// try to read list of disabled clusters
@@ -929,8 +916,7 @@ func TestDBStorageListOfDisabledClustersDifferentRule(t *testing.T) {
 
 	// disable one cluster
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// try to read list of disabled clusters, but requesting different rule than disabled
@@ -957,13 +943,12 @@ func TestDBStorageListOfDisabledClustersFeedback(t *testing.T) {
 
 	// disable one cluster
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// add feedback
 	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
-		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, feedback,
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, feedback,
 	))
 
 	// try to read list of disabled clusters
@@ -994,20 +979,19 @@ func TestDBStorageListOfDisabledClustersFeedbackUpdate(t *testing.T) {
 
 	// disable one cluster
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// add feedback
 	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
-		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, oldFeedback,
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, oldFeedback,
 	))
 
 	time.Sleep(5 * time.Millisecond)
 
 	// update feedback with new one
 	helpers.FailOnError(t, mockStorage.AddFeedbackOnRuleDisable(
-		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, newFeedback,
+		clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, newFeedback,
 	))
 
 	// try to read list of disabled clusters
@@ -1075,8 +1059,8 @@ func TestDBStorageListOfDisabledRulesForClustersOneRule(t *testing.T) {
 
 	// disable one rule
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		ctypes.ClusterName(clusters[0]), testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		ctypes.ClusterName(clusters[0]), testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// try to read list of disabled rules
@@ -1112,12 +1096,12 @@ func TestDBStorageListOfDisabledRulesForClustersTwoRules(t *testing.T) {
 
 	// disable same rule, different clusters
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		ctypes.ClusterName(clusters[0]), testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		ctypes.ClusterName(clusters[0]), testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.OrgID, storage.RuleToggleDisable,
 	))
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		ctypes.ClusterName(clusters[1]), testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		ctypes.ClusterName(clusters[1]), testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// try to read list of disabled rules
@@ -1146,8 +1130,8 @@ func TestDBStorageListOfDisabledRulesForClustersNoRule(t *testing.T) {
 
 	// disable one rule for one cluster
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		ctypes.ClusterName(clusters[0]), testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		ctypes.ClusterName(clusters[0]), testdata.Rule1ID, testdata.ErrorKey1,
+		testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// try to read list of disabled rules, we're requesting a list for a different list of clusters
@@ -1159,8 +1143,7 @@ func TestDBStorageListOfDisabledRulesForClustersNoRule(t *testing.T) {
 
 	// disable one rule for one of the clusters we want
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
-		ctypes.ClusterName(clusters[1]), testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID,
-		testdata.UserID, storage.RuleToggleDisable,
+		ctypes.ClusterName(clusters[1]), testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, storage.RuleToggleDisable,
 	))
 
 	// try to read list of disabled rules, this time there should be one rule among them
