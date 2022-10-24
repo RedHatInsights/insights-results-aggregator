@@ -48,6 +48,7 @@ function deploy_ephemeral() {
 
 function run_smoke_tests() {
    source $CICD_ROOT/cji_smoke_test.sh
+   source $CICD_ROOT/post_test_results.sh  # publish results in Ibutsu
 }
 
 
