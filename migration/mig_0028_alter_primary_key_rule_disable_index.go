@@ -26,21 +26,20 @@ import (
 )
 
 const (
-	tableName = "rule_disable"
-	pkName    = "rule_disable_pkey"
+	pkName = "rule_disable_pkey"
 )
 
 var mig0028AlterRuleDisablePKAndIndex = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 
 		if driver == types.DBDriverPostgres {
-			alterQuery := fmt.Sprintf("ALTER TABLE %v DROP CONSTRAINT IF EXISTS %v", tableName, pkName)
+			alterQuery := fmt.Sprintf("ALTER TABLE %v DROP CONSTRAINT IF EXISTS %v", ruleDisableTable, pkName)
 			_, err := tx.Exec(alterQuery)
 			if err != nil {
 				return err
 			}
 
-			query := fmt.Sprintf("ALTER TABLE %v ADD CONSTRAINT %v PRIMARY KEY (org_id, rule_id, error_key)", tableName, pkName)
+			query := fmt.Sprintf("ALTER TABLE %v ADD CONSTRAINT %v PRIMARY KEY (org_id, rule_id, error_key)", ruleDisableTable, pkName)
 			_, err = tx.Exec(query)
 			if err != nil {
 				return err
@@ -51,13 +50,13 @@ var mig0028AlterRuleDisablePKAndIndex = Migration{
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverPostgres {
-			dropIndexQuery := fmt.Sprintf("ALTER TABLE %v DROP CONSTRAINT IF EXISTS %v", tableName, pkName)
+			dropIndexQuery := fmt.Sprintf("ALTER TABLE %v DROP CONSTRAINT IF EXISTS %v", ruleDisableTable, pkName)
 			_, err := tx.Exec(dropIndexQuery)
 			if err != nil {
 				return err
 			}
 
-			addPKQuery := fmt.Sprintf("ALTER TABLE %v ADD CONSTRAINT %v PRIMARY KEY (user_id, org_id, rule_id, error_key)", tableName, pkName)
+			addPKQuery := fmt.Sprintf("ALTER TABLE %v ADD CONSTRAINT %v PRIMARY KEY (user_id, org_id, rule_id, error_key)", ruleDisableTable, pkName)
 			_, err = tx.Exec(addPKQuery)
 			if err != nil {
 				return err

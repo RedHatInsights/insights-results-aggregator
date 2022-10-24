@@ -43,11 +43,13 @@ type Migration struct {
 }
 
 const (
+	advisorRatingsTable                 = "advisor_ratings"
 	ruleErrorKeyTable                   = "rule_error_key"
 	clusterRuleUserFeedbackTable        = "cluster_rule_user_feedback"
 	clusterReportTable                  = "report"
 	clusterRuleToggleTable              = "cluster_rule_toggle"
 	clusterUserRuleDisableFeedbackTable = "cluster_user_rule_disable_feedback"
+	ruleDisableTable                    = "rule_disable"
 )
 
 // GetMaxVersion returns the highest available migration version.
