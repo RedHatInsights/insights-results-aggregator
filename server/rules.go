@@ -27,8 +27,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-const accountStr = "account"
-
 // disableRuleForCluster disables a rule for specified cluster, excluding it from reports
 func (server *HTTPServer) disableRuleForCluster(writer http.ResponseWriter, request *http.Request) {
 	server.toggleRuleForCluster(writer, request, storage.RuleToggleDisable)
