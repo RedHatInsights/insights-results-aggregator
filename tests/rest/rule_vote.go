@@ -88,8 +88,8 @@ func constructURLResetVoteForRule(clusterID, ruleID, errorKey, orgID, userID str
 	return httputils.MakeURLToEndpoint(apiURL, server.ResetVoteOnRuleEndpoint, clusterID, ruleID, errorKey, orgID, userID)
 }
 
-func constructURLGetVoteForRule(clusterID, ruleID, errorKey, userID string) string {
-	return httputils.MakeURLToEndpoint(apiURL, server.GetVoteOnRuleEndpoint, clusterID, ruleID, errorKey, userID)
+func constructURLGetVoteForRule(clusterID, ruleID, errorKey, orgID string) string {
+	return httputils.MakeURLToEndpoint(apiURL, server.GetVoteOnRuleEndpoint, clusterID, ruleID, errorKey, orgID)
 }
 
 func checkOkStatus(f *frisby.Frisby) {
@@ -415,7 +415,7 @@ func checkListOfDisabledRules() {
 }
 
 func checkListOfDisabledRulesFeedback() {
-	url := httputils.MakeURLToEndpoint(apiURL, server.ListOfDisabledRulesFeedback, testdata.UserID)
+	url := httputils.MakeURLToEndpoint(apiURL, server.ListOfDisabledRulesFeedback, testdata.OrgID)
 
 	f := frisby.Create("Read list of disabled rules feedback").Get(url)
 	r := RuleVoteResponse{}
