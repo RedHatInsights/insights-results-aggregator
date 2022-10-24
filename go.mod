@@ -6,7 +6,8 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/RedHatInsights/cloudwatch v0.0.0-20210111105023-1df2bdfe3291 // indirect
-	github.com/RedHatInsights/insights-operator-utils v1.4.3
+	github.com/RedHatInsights/insights-content-service v0.0.0-20221024073309-fabee4bcb06e // indirect
+	github.com/RedHatInsights/insights-operator-utils v1.24.5
 	github.com/RedHatInsights/insights-results-types v1.3.20
 	github.com/RedHatInsights/kafka-zerolog v1.0.0 // indirect
 	github.com/Shopify/sarama v1.27.1
@@ -26,7 +27,7 @@ require (
 	github.com/klauspost/compress v1.11.1 // indirect
 	github.com/lib/pq v1.8.0
 	github.com/magiconair/properties v1.8.4 // indirect
-	github.com/mattn/go-sqlite3 v1.14.15
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/microcosm-cc/bluemonday v1.0.21 // indirect
 	github.com/nash-io/jocko v0.9.0 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
