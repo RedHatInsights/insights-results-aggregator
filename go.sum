@@ -61,6 +61,7 @@ github.com/RedHatInsights/insights-results-aggregator-data v1.0.1-0.202106140729
 github.com/RedHatInsights/insights-results-aggregator-data v1.1.2/go.mod h1:rbiccYJ8whbpLLvNGMiaFzyMPs1A/2/Jh0P2U9DXF+4=
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.1/go.mod h1:Ylo2cWFmraBzkwKLew54kZSsUTgeVvFJdIi/oRkdxtc=
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.2/go.mod h1:E1UaB+IjJ/muxvMstVoqJrB82zVKNykjTtCiM3tMHoM=
+github.com/RedHatInsights/insights-results-aggregator-data v1.3.3 h1:K6j+Sr+S0iUqFEfevl+MI0dEXn5AxFeJn9FTU5razWA=
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.3/go.mod h1:udHNC7lBxYnu9AqMahABqvuclCzWUWSkbacQbUaehfI=
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.6 h1:RcZsn25t+km9/VBAcbks5oLx21HI0aQvLFldgEja5NY=
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.6/go.mod h1:tOwmlIB5irSv1mTLgONuLrsbTp4vokl4ClJFClrrXX0=
