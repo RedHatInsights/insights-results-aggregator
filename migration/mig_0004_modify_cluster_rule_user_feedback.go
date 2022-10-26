@@ -26,11 +26,11 @@ var mig0004ModifyClusterRuleUserFeedback = NewUpdateTableMigration(
 		CREATE TABLE cluster_rule_user_feedback (
 			cluster_id VARCHAR NOT NULL,
 			rule_id VARCHAR NOT NULL,
+			user_id VARCHAR NOT NULL,
 			message VARCHAR NOT NULL,
 			user_vote SMALLINT NOT NULL,
 			added_at TIMESTAMP NOT NULL,
 			updated_at TIMESTAMP NOT NULL,
-			user_id VARCHAR NOT NULL,
 
 			PRIMARY KEY(cluster_id, rule_id, user_id)
 		);
