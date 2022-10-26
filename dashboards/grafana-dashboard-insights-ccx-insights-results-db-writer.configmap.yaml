@@ -463,10 +463,10 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(kafka_consumergroup_group_lag{topic=\"ccx.ocp.results\", group=\"ccx_data_pipeline_app\"}) by (topic)",
+              "expr": "sum(kafka_consumergroup_group_lag{topic=~\".*ccx.ocp.results\", group=\"ccx_data_pipeline_app\"}) by (topic, group)",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "topic: {{topic}}",
+              "legendFormat": "topic: {{topic}} group: {{group}}",
               "refId": "A"
             }
           ],
