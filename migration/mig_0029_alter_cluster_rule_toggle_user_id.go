@@ -27,12 +27,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-type alterConstraintStep struct {
-	tableName     string
-	oldConstraint string
-	newConstraint string
-}
-
 var mig0029DropClusterRuleToggleUserIDColumn = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverPostgres {
