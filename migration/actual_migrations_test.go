@@ -1096,9 +1096,6 @@ func TestMigration29(t *testing.T) {
 	err := migration.SetDBVersion(db, dbDriver, 28)
 	helpers.FailOnError(t, err)
 
-	err = db.QueryRow(`SELECT user_id FROM cluster_rule_toggle`).Err()
-	assert.NoError(t, err, "user_id column should exist")
-
 	_, err = db.Exec(`
 		INSERT INTO cluster_rule_toggle
 		(cluster_id, user_id, org_id, rule_id, error_key, disabled, disabled_at, updated_at)
@@ -1152,9 +1149,6 @@ func TestMigration30(t *testing.T) {
 
 	err := migration.SetDBVersion(db, dbDriver, 29)
 	helpers.FailOnError(t, err)
-
-	err = db.QueryRow(`SELECT user_id FROM rule_disable`).Err()
-	assert.NoError(t, err, "user_id column should exist")
 
 	_, err = db.Exec(`
 		INSERT INTO rule_disable
