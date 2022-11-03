@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// This migration drops the user_id columns from all tables.
-// Some tables have the user_id in the PRIMARY KEY, but we should be OK dropping it
-// anyway because user_id was actually account_number, so the tables shouldn't have
-// duplicate records per rule (or per cluster) per organization.
-// Organization IDs were added and populated in previous migrations.
+// This migration drops the user_id columns from the
+// cluster_rule_toggle table. This table doesn't have the user_id
+// in the constraint(s), so we can remove the column without needing to
+// alter it.
 
 package migration
 
