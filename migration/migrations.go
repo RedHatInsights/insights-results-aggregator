@@ -46,4 +46,5 @@ var migrations = []Migration{
 	mig0027CleanupInvalidRowsMissingOrgID,
 	mig0028AlterRuleDisablePKAndIndex,
 	mig0029DropClusterRuleToggleUserIDColumn,
+	mig0030DropRuleDisableUserIDColumn,
 }
