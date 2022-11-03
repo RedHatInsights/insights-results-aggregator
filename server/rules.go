@@ -557,7 +557,6 @@ func (server HTTPServer) listOfDisabledRulesSystemWide(writer http.ResponseWrite
 // system-wide rule disable
 type SystemWideRuleSelector struct {
 	OrgID    types.OrgID
-	UserID   types.UserID
 	RuleID   types.RuleID
 	ErrorKey types.ErrorKey
 }
@@ -573,11 +572,6 @@ func readSystemWideRuleSelectors(writer http.ResponseWriter, request *http.Reque
 		return selector, false
 	}
 
-	selector.UserID, successful = readUserID(writer, request)
-	if !successful {
-		return selector, false
-	}
-
 	selector.RuleID, successful = readRuleID(writer, request)
 	if !successful {
 		return selector, false
@@ -589,9 +583,9 @@ func readSystemWideRuleSelectors(writer http.ResponseWriter, request *http.Reque
 	}
 
 	log.Info().Msgf(
-		"System-wide disabled rule selector: org: %v  user: %v  rule ID: %v  error key: %v",
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey)
+		"System-wide disabled rule selector: org: %v  rule ID: %v  error key: %v",
+		selector.OrgID, selector.RuleID, selector.ErrorKey,
+	)
 
 	return selector, true
 }
