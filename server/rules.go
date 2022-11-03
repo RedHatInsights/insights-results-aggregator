@@ -382,8 +382,8 @@ func (server HTTPServer) enableRuleSystemWide(writer http.ResponseWriter, reques
 
 	// try to enable rule
 	err := server.Storage.EnableRuleSystemWide(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey)
+		selector.OrgID, selector.RuleID, selector.ErrorKey,
+	)
 
 	// handle any storage error
 	if err != nil {
@@ -422,9 +422,8 @@ func (server HTTPServer) disableRuleSystemWide(writer http.ResponseWriter, reque
 
 	// try to disable rule
 	err = server.Storage.DisableRuleSystemWide(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey,
-		justification)
+		selector.OrgID, selector.RuleID, selector.ErrorKey, justification,
+	)
 
 	// handle any storage error
 	if err != nil {
@@ -462,9 +461,8 @@ func (server HTTPServer) updateRuleSystemWide(writer http.ResponseWriter, reques
 
 	// try to update rule disable justification
 	err = server.Storage.UpdateDisabledRuleJustification(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey,
-		justification)
+		selector.OrgID, selector.RuleID, selector.ErrorKey, justification,
+	)
 
 	// handle any storage error
 	if err != nil {

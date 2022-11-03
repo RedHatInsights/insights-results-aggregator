@@ -83,11 +83,10 @@ func TestNoopStorage_Methods_Cont(t *testing.T) {
 func TestNoopStorage_Methods_Cont2(t *testing.T) {
 	noopStorage := storage.NoopStorage{}
 	orgID := types.OrgID(1)
-	userID := types.UserID("1")
 
-	_ = noopStorage.DisableRuleSystemWide(orgID, userID, "", "", "")
-	_ = noopStorage.EnableRuleSystemWide(orgID, userID, "", "")
-	_ = noopStorage.UpdateDisabledRuleJustification(orgID, userID, "", "", "justification")
+	_ = noopStorage.DisableRuleSystemWide(orgID, "", "", "")
+	_ = noopStorage.EnableRuleSystemWide(orgID, "", "")
+	_ = noopStorage.UpdateDisabledRuleJustification(orgID, "", "", "justification")
 	_, _, _ = noopStorage.ReadDisabledRule(orgID, "", "")
 	_, _ = noopStorage.ListOfSystemWideDisabledRules(orgID)
 	_, _ = noopStorage.ListOfClustersForOrgSpecificRule(0, "", nil)

@@ -75,15 +75,15 @@ const (
 	// Endpoints to handle rules to be enabled, disabled, updated, and queried system-wide
 
 	// EnableRuleSystemWide re-enables a rule for all clusters
-	EnableRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/enable"
+	EnableRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/enable"
 	// DisableRuleSystemWide disables a rule for all clusters
-	DisableRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/disable"
+	DisableRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/disable"
 	// UpdateRuleSystemWide updates disable justification of a rule for all clusters
-	UpdateRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/update"
+	UpdateRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/update"
 	// ReadRuleSystemWide queries rule disabled system-wide
-	ReadRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}"
+	ReadRuleSystemWide = "rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/"
 	// ListOfDisabledRulesSystemWide returns a list of rules disabled from current account
-	ListOfDisabledRulesSystemWide = "rules/organizations/{org_id}/users/{user_id}/disabled_system_wide"
+	ListOfDisabledRulesSystemWide = "rules/organizations/{org_id}/disabled_system_wide"
 
 	// RecommendationsListEndpoint receives a list of clusters in POST body and returns a list of all recommendations hitting for them
 	RecommendationsListEndpoint = "recommendations/organizations/{org_id}/users/{user_id}/list"
