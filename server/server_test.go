@@ -628,7 +628,7 @@ func TestRuleToggle(t *testing.T) {
 			helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 				Method:       http.MethodPut,
 				Endpoint:     endpoint,
-				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID},
+				EndpointArgs: []interface{}{testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID},
 			}, &helpers.APIResponse{
 				StatusCode: http.StatusOK,
 				Body:       `{"status": "ok"}`,
@@ -1682,7 +1682,7 @@ func TestHTTPServer_ListOfDisabledClusters_OneDisabled(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
@@ -1721,7 +1721,7 @@ func TestHTTPServer_ListOfDisabledClusters_JustificationTests(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
 		Endpoint:     server.DisableRuleForClusterEndpoint,
-		EndpointArgs: []interface{}{clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{clusters[0], testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status": "ok"}`,
