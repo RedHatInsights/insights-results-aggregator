@@ -1119,7 +1119,7 @@ func TestMigration29(t *testing.T) {
 	err = migration.SetDBVersion(db, dbDriver, 29)
 	helpers.FailOnError(t, err)
 
-	err = db.QueryRow(`SELECT user_id FROM rule_disable`).Err()
+	err = db.QueryRow(`SELECT user_id FROM cluster_rule_toggle`).Err()
 	assert.Error(t, err, "user_id column should not exist")
 
 	err = migration.SetDBVersion(db, dbDriver, 28)
@@ -1138,7 +1138,7 @@ func TestMigration29(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// default value on stepdown
-	assert.Equal(t, userID, "-1")
+	assert.Equal(t, userID, types.UserID("-1"))
 }
 
 func TestMigration30(t *testing.T) {
@@ -1194,5 +1194,5 @@ func TestMigration30(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// default value on stepdown
-	assert.Equal(t, userID, "-1")
+	assert.Equal(t, userID, types.UserID("-1"))
 }
