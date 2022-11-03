@@ -48,6 +48,9 @@ const (
 	clusterReportTable                  = "report"
 	clusterRuleToggleTable              = "cluster_rule_toggle"
 	clusterUserRuleDisableFeedbackTable = "cluster_user_rule_disable_feedback"
+	alterTableDropColumnQuery           = "ALTER TABLE %v DROP COLUMN IF EXISTS %v"
+	alterTableAddVarcharColumn          = "ALTER TABLE %v ADD COLUMN %v VARCHAR NOT NULL DEFAULT '-1'"
+	userIDColumn                        = "user_id"
 )
 
 // GetMaxVersion returns the highest available migration version.

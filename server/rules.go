@@ -53,19 +53,13 @@ func (server *HTTPServer) toggleRuleForCluster(writer http.ResponseWriter, reque
 		return
 	}
 
-	userID, successful := readUserID(writer, request)
-	if !successful {
-		// everything has been handled already
-		return
-	}
-
 	orgID, successful := readOrgID(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
 	}
 
-	err := server.Storage.ToggleRuleForCluster(clusterID, ruleID, errorKey, orgID, userID, toggleRule)
+	err := server.Storage.ToggleRuleForCluster(clusterID, ruleID, errorKey, orgID, toggleRule)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to toggle rule for selected cluster")
 		handleServerError(writer, err)
