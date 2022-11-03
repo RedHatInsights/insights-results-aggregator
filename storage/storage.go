@@ -141,7 +141,6 @@ type Storage interface {
 		ruleID types.RuleID,
 		errorKey types.ErrorKey,
 		orgID types.OrgID,
-		userID types.UserID,
 		ruleToggle RuleToggle,
 	) error
 	GetFromClusterRuleToggle(

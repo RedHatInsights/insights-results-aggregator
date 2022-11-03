@@ -168,9 +168,9 @@ def insert_into_db_for_clusters(
     try:
         # try to perform insert statement
         insertStatement = """INSERT INTO cluster_rule_toggle
-                             (cluster_id, rule_id, error_key, user_id, disabled, disabled_at,
+                             (cluster_id, rule_id, error_key, disabled, disabled_at,
                              updated_at, org_id)
-                             VALUES(%s, %s, %s, %s, 1, %s, %s, 1);"""
+                             VALUES(%s, %s, %s, 1, %s, %s, 1);"""
 
         # generate timestamp to be stored in database
         timestamp = datetime.now().strftime("%Y-%m-%d")
@@ -182,7 +182,6 @@ def insert_into_db_for_clusters(
                 cluster_id,
                 rule_selector[0],
                 rule_selector[1],
-                account_id,
                 timestamp,
                 timestamp,
             ),

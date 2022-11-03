@@ -116,12 +116,14 @@ func (storage DBStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.Disabl
 	for rows.Next() {
 		var disabledRule ctypes.DisabledRule
 
-		err = rows.Scan(&disabledRule.ClusterID,
+		err = rows.Scan(
+			&disabledRule.ClusterID,
 			&disabledRule.RuleID,
 			&disabledRule.ErrorKey,
 			&disabledRule.DisabledAt,
 			&disabledRule.UpdatedAt,
-			&disabledRule.Disabled)
+			&disabledRule.Disabled,
+		)
 
 		if err != nil {
 			log.Error().Err(err).Msg("ReadListOfDisabledRules database error")
@@ -178,12 +180,14 @@ func (storage DBStorage) ListOfDisabledRulesForClusters(
 	for rows.Next() {
 		var disabledRule ctypes.DisabledRule
 
-		err = rows.Scan(&disabledRule.ClusterID,
+		err = rows.Scan(
+			&disabledRule.ClusterID,
 			&disabledRule.RuleID,
 			&disabledRule.ErrorKey,
 			&disabledRule.DisabledAt,
 			&disabledRule.UpdatedAt,
-			&disabledRule.Disabled)
+			&disabledRule.Disabled,
+		)
 
 		if err != nil {
 			log.Error().Err(err).Msg("ReadListOfDisabledRulesForClusters database error")

@@ -1827,7 +1827,7 @@
         ]
       }
     },
-    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/enable": {
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/enable": {
       "put": {
         "summary": "Re-enables a rule for all clusters",
         "operationId": "EnableRuleSystemWide",
@@ -1859,15 +1859,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -1880,7 +1871,7 @@
         }
       }
     },
-    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/disable": {
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/disable": {
       "put": {
         "summary": "Disables a rule for all clusters",
         "operationId": "DisableRuleSystemWide",
@@ -1909,15 +1900,6 @@
             "in": "path",
             "required": true,
             "description": "Numeric ID of organization",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
             "schema": {
               "type": "string"
             }

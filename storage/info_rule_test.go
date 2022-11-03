@@ -140,7 +140,7 @@ func TestDBStorageReadClusterListRecommendationsWithVersion(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		[]types.InfoItem{
-			types.InfoItem{
+			{
 				InfoID: "version_info|CLUSTER_VERSION_INFO",
 				Details: map[string]string{
 					"version": string(testdata.ClusterVersion),
