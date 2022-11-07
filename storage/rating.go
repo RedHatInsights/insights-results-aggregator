@@ -27,7 +27,6 @@ import (
 
 // RateOnRule function stores the vote (rating) from a given user to a rule+error key
 func (storage *DBStorage) RateOnRule(
-	userID types.UserID,
 	orgID types.OrgID,
 	ruleFqdn types.RuleID,
 	errorKey types.ErrorKey,
@@ -35,11 +34,11 @@ func (storage *DBStorage) RateOnRule(
 ) error {
 	query := `
 		INSERT INTO advisor_ratings
-		(user_id, org_id, rule_fqdn, error_key, rated_at, last_updated_at, rating, rule_id)
+		(org_id, rule_fqdn, error_key, rated_at, last_updated_at, rating, rule_id)
 		VALUES
-		($1, $2, $3, $4, $5, $6, $7, $8)
-		ON CONFLICT (user_id, org_id, rule_fqdn, error_key) DO UPDATE SET
-		last_updated_at = $6, rating = $7
+		($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (org_id, rule_fqdn, error_key) DO UPDATE SET
+		last_updated_at = $5, rating = $6
 	`
 	statement, err := storage.connection.Prepare(query)
 	if err != nil {
@@ -55,7 +54,7 @@ func (storage *DBStorage) RateOnRule(
 
 	now := time.Now()
 	ruleID := string(ruleFqdn) + "|" + string(errorKey)
-	_, err = statement.Exec(userID, orgID, ruleFqdn, errorKey, now, now, rating, ruleID)
+	_, err = statement.Exec(orgID, ruleFqdn, errorKey, now, now, rating, ruleID)
 	err = types.ConvertDBError(err, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("RateOnRule")
@@ -69,7 +68,6 @@ func (storage *DBStorage) RateOnRule(
 
 // GetRuleRating retrieves rating for given rule and user
 func (storage *DBStorage) GetRuleRating(
-	userID types.UserID,
 	orgID types.OrgID,
 	ruleSelector types.RuleSelector,
 ) (
@@ -79,8 +77,8 @@ func (storage *DBStorage) GetRuleRating(
 	err = storage.connection.QueryRow(
 		`SELECT rule_id, rating
 		FROM advisor_ratings
-		WHERE org_id = $1 AND user_id = $2 AND rule_id = $3`,
-		orgID, userID, ruleSelector,
+		WHERE org_id = $1 AND rule_id = $2`,
+		orgID, ruleSelector,
 	).Scan(
 		&ruleRating.Rule,
 		&ruleRating.Rating,
@@ -89,7 +87,7 @@ func (storage *DBStorage) GetRuleRating(
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = &types.ItemNotFoundError{
-				ItemID: fmt.Sprintf("%v/%v/%v/rating", orgID, userID, ruleSelector),
+				ItemID: fmt.Sprintf("%v/%v/rating", orgID, ruleSelector),
 			}
 		}
 	}

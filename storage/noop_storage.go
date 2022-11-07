@@ -289,7 +289,6 @@ func (*NoopStorage) ListOfDisabledRulesForClusters(
 
 // RateOnRule function stores the vote (rating) given by an user to a rule+error key
 func (*NoopStorage) RateOnRule(
-	types.UserID,
 	types.OrgID,
 	types.RuleID,
 	types.ErrorKey,
@@ -300,7 +299,6 @@ func (*NoopStorage) RateOnRule(
 
 // GetRuleRating retrieves rating for given rule and user
 func (*NoopStorage) GetRuleRating(
-	userID types.UserID,
 	orgID types.OrgID,
 	ruleSelector types.RuleSelector,
 ) (

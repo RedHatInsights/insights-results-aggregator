@@ -32,7 +32,7 @@ func TestDBStorage_RateOnRule(t *testing.T) {
 	mustWriteReport3Rules(t, mockStorage)
 
 	err := mockStorage.RateOnRule(
-		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
 	)
 	helpers.FailOnError(t, err)
 }
@@ -44,11 +44,11 @@ func TestDBStorage_GetRuleRating(t *testing.T) {
 	mustWriteReport3Rules(t, mockStorage)
 
 	err := mockStorage.RateOnRule(
-		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
 	)
 	helpers.FailOnError(t, err)
 
-	rating, err := mockStorage.GetRuleRating(testdata.UserID, testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID))
+	rating, err := mockStorage.GetRuleRating(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID))
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, types.UserVoteLike, rating.Rating)
@@ -62,10 +62,10 @@ func TestDBStorage_GetRuleRating_NotFound(t *testing.T) {
 	mustWriteReport3Rules(t, mockStorage)
 
 	err := mockStorage.RateOnRule(
-		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
 	)
 	helpers.FailOnError(t, err)
 
-	_, err = mockStorage.GetRuleRating(testdata.UserID, testdata.OrgID, types.RuleSelector(testdata.Rule2CompositeID))
+	_, err = mockStorage.GetRuleRating(testdata.OrgID, types.RuleSelector(testdata.Rule2CompositeID))
 	assert.NotNil(t, err)
 }

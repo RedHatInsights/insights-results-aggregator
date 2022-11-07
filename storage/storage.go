@@ -181,14 +181,12 @@ type Storage interface {
 		errorKey types.ErrorKey,
 	) ([]ctypes.DisabledClusterInfo, error)
 	RateOnRule(
-		types.UserID,
 		types.OrgID,
 		types.RuleID,
 		types.ErrorKey,
 		types.UserVote,
 	) error
 	GetRuleRating(
-		types.UserID,
 		types.OrgID,
 		types.RuleSelector,
 	) (types.RuleRating, error)
