@@ -2027,7 +2027,7 @@
         }
       }
     },
-    "/rules/organizations/{orgId}/users/{userId}/rating": {
+    "/rules/organizations/{orgId}/rating": {
       "post": {
         "tags": [
           "prod"
@@ -2038,16 +2038,6 @@
             "in": "path",
             "required": true,
             "description": "Numeric ID of the organization",
-            "schema": {
-              "type": "string"
-            },
-            "example": "42"
-          },
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "description": "Numeric ID of the user",
             "schema": {
               "type": "string"
             },
@@ -2200,7 +2190,7 @@
         ]
       }
     },
-    "/rules/{rule_selector}/organizations/{org_id}/users/{user_id}/rating": {
+    "/rules/{rule_selector}/organizations/{org_id}/rating": {
       "get": {
         "summary": "Returns the user rating for given rule ID.",
         "operationId": "getRatingForRecommendation",
@@ -2224,16 +2214,6 @@
               "type": "string"
             },
             "example": "123422"
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "description": "Numeric ID of the user",
-            "schema": {
-              "type": "string"
-            },
-            "example": "42"
           }
         ],
         "responses": {

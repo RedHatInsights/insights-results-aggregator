@@ -91,9 +91,9 @@ const (
 	ClustersRecommendationsListEndpoint = "clusters/organizations/{org_id}/users/{user_id}/recommendations"
 
 	// Rating accepts a list of ratings in the request body and store them in the database for the given user
-	Rating = "rules/organizations/{org_id}/users/{user_id}/rating"
+	Rating = "rules/organizations/{org_id}/rating"
 	// GetRating retrieves the rating for a specific rule and user
-	GetRating = "rules/{rule_selector}/organizations/{org_id}/users/{user_id}/rating"
+	GetRating = "rules/{rule_selector}/organizations/{org_id}/rating"
 
 	// InfoEndpoint returns basic information about Insights Aggregator
 	// version, utils repository version, commit hash etc.

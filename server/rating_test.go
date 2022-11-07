@@ -32,7 +32,7 @@ func TestHTTPServer_RateOnRule(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.Rating,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.OrgID},
 		Body:         ratingBody,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
@@ -46,7 +46,7 @@ func TestHTTPServer_RateOnRuleNoContent(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.Rating,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
 		Body:       expectedError,
@@ -59,7 +59,7 @@ func TestHTTPServer_RateOnRuleBadContent(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodPost,
 		Endpoint:     server.Rating,
-		EndpointArgs: []interface{}{testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.OrgID},
 		Body:         ratingBody,
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusBadRequest,
@@ -70,7 +70,7 @@ func TestHTTPServer_getRuleRating_NoRating(t *testing.T) {
 	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetRating,
-		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusNotFound,
 	})
@@ -82,7 +82,7 @@ func TestHTTPServer_getRuleRating_OK(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.RateOnRule(
-		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
 	)
 	helpers.FailOnError(t, err)
 
@@ -92,7 +92,7 @@ func TestHTTPServer_getRuleRating_OK(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetRating,
-		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       expectedResponseBody,
@@ -104,7 +104,7 @@ func TestHTTPServer_getRuleRating_MultipleOK(t *testing.T) {
 	defer closer()
 
 	err := mockStorage.RateOnRule(
-		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteLike,
 	)
 	helpers.FailOnError(t, err)
 
@@ -114,14 +114,14 @@ func TestHTTPServer_getRuleRating_MultipleOK(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetRating,
-		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       expectedResponseBody,
 	})
 
 	err = mockStorage.RateOnRule(
-		testdata.UserID, testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteDislike,
+		testdata.OrgID, testdata.Rule1ID, testdata.ErrorKey1, types.UserVoteDislike,
 	)
 	helpers.FailOnError(t, err)
 
@@ -131,7 +131,7 @@ func TestHTTPServer_getRuleRating_MultipleOK(t *testing.T) {
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.GetRating,
-		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID, testdata.UserID},
+		EndpointArgs: []interface{}{testdata.Rule1CompositeID, testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       expectedResponseBody,
