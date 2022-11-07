@@ -27,29 +27,30 @@ import (
 // DisableRuleSystemWide disables the selected rule for all clusters visible to
 // given user
 func (storage DBStorage) DisableRuleSystemWide(
-	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey,
-	justification string) error {
+	orgID types.OrgID,
+	ruleID types.RuleID,
+	errorKey types.ErrorKey,
+	justification string,
+) error {
 
 	now := time.Now()
 
 	const query = `
 	INSERT INTO rule_disable(
-		org_id, user_id, rule_id, error_key, justification, created_at
+		org_id, rule_id, error_key, justification, created_at
 	)
 	VALUES
-		($1, $2, $3, $4, $5, $6)
+		($1, $2, $3, $4, $5)
 	ON CONFLICT
 		(org_id, rule_id, error_key)
 	DO UPDATE SET
-		user_id = $2, justification = $5, created_at = $6
+		justification = $4, created_at = $5
 `
 
 	// try to execute the query and check for (any) error
 	_, err := storage.connection.Exec(
 		query,
 		orgID,
-		userID,
 		ruleID,
 		errorKey,
 		justification,
@@ -68,9 +69,11 @@ func (storage DBStorage) DisableRuleSystemWide(
 // EnableRuleSystemWide enables the selected rule for all clusters visible to
 // given user
 func (storage DBStorage) EnableRuleSystemWide(
-	orgID types.OrgID, userID types.UserID, ruleID types.RuleID, errorKey types.ErrorKey,
+	orgID types.OrgID,
+	ruleID types.RuleID,
+	errorKey types.ErrorKey,
 ) error {
-	log.Info().Int("org_id", int(orgID)).Str("user_id", string(userID)).Msgf("re-enabling rule %v|%v", ruleID, errorKey)
+	log.Info().Int("org_id", int(orgID)).Msgf("re-enabling rule %v|%v", ruleID, errorKey)
 
 	const query = `DELETE FROM rule_disable
 	                WHERE org_id = $1
@@ -83,7 +86,8 @@ func (storage DBStorage) EnableRuleSystemWide(
 		query,
 		orgID,
 		ruleID,
-		errorKey)
+		errorKey,
+	)
 
 	if err != nil {
 		const msg = "Error during execution SQL exec for system wide rule enable"
@@ -96,28 +100,30 @@ func (storage DBStorage) EnableRuleSystemWide(
 
 // UpdateDisabledRuleJustification change justification for already disabled rule
 func (storage DBStorage) UpdateDisabledRuleJustification(
-	orgID types.OrgID, userID types.UserID,
-	ruleID types.RuleID, errorKey types.ErrorKey,
-	justification string) error {
+	orgID types.OrgID,
+	ruleID types.RuleID,
+	errorKey types.ErrorKey,
+	justification string,
+) error {
 
 	now := time.Now()
 
 	const query = `UPDATE rule_disable
-	                  SET user_id = $2, justification = $5, updated_at = $6
+	                  SET justification = $4, updated_at = $5
 	                WHERE org_id = $1
-	                  AND rule_id = $3
-	                  AND error_key = $4
+	                  AND rule_id = $2
+	                  AND error_key = $3
 	              `
 
 	// try to execute the query and check for (any) error
 	_, err := storage.connection.Exec(
 		query,
 		orgID,
-		userID,
 		ruleID,
 		errorKey,
 		justification,
-		now)
+		now,
+	)
 
 	if err != nil {
 		const msg = "Error during execution SQL exec for system wide rule justification change"
@@ -136,7 +142,6 @@ func (storage DBStorage) ReadDisabledRule(
 
 	query := `SELECT
 			 org_id,
-			 user_id,
 			 rule_id,
 			 error_key,
 			 justification,
@@ -158,13 +163,14 @@ func (storage DBStorage) ReadDisabledRule(
 	defer closeRows(rows)
 
 	if rows.Next() {
-		err = rows.Scan(&disabledRule.OrgID,
-			&disabledRule.UserID,
+		err = rows.Scan(
+			&disabledRule.OrgID,
 			&disabledRule.RuleID,
 			&disabledRule.ErrorKey,
 			&disabledRule.Justification,
 			&disabledRule.CreatedAt,
-			&disabledRule.UpdatedAT)
+			&disabledRule.UpdatedAT,
+		)
 
 		if err != nil {
 			log.Error().Err(err).Msg("Storage.ReadDisabledRule")
@@ -187,7 +193,6 @@ func (storage DBStorage) ListOfSystemWideDisabledRules(
 	disabledRules := make([]ctypes.SystemWideRuleDisable, 0)
 	query := `SELECT
 			 org_id,
-			 user_id,
 			 rule_id,
 			 error_key,
 			 justification,
@@ -208,13 +213,14 @@ func (storage DBStorage) ListOfSystemWideDisabledRules(
 	for rows.Next() {
 		var disabledRule ctypes.SystemWideRuleDisable
 
-		err = rows.Scan(&disabledRule.OrgID,
-			&disabledRule.UserID,
+		err = rows.Scan(
+			&disabledRule.OrgID,
 			&disabledRule.RuleID,
 			&disabledRule.ErrorKey,
 			&disabledRule.Justification,
 			&disabledRule.CreatedAt,
-			&disabledRule.UpdatedAT)
+			&disabledRule.UpdatedAT,
+		)
 
 		if err != nil {
 			log.Error().Err(err).Msg("ReadListOfDisabledRules storage error")

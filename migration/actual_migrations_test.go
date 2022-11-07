@@ -1083,3 +1083,110 @@ func TestMigration28(t *testing.T) {
 	// not possible to insert more than 1 row per org
 	assert.Error(t, err)
 }
+
+func TestMigration29(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// nothing worth testing for sqlite
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 28)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO cluster_rule_toggle
+		(cluster_id, user_id, org_id, rule_id, error_key, disabled, disabled_at, updated_at)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7, $8)
+	`,
+		testdata.ClusterName,
+		testdata.UserID,
+		testdata.OrgID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		1,
+		time.Now(),
+		time.Now(),
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, dbDriver, 29)
+	helpers.FailOnError(t, err)
+
+	err = db.QueryRow(`SELECT user_id FROM cluster_rule_toggle`).Err()
+	assert.Error(t, err, "user_id column should not exist")
+
+	err = migration.SetDBVersion(db, dbDriver, 28)
+	helpers.FailOnError(t, err)
+
+	var userID types.UserID
+	err = db.QueryRow(`
+	SELECT
+		user_id
+	FROM
+		cluster_rule_toggle
+	`,
+	).Scan(
+		&userID,
+	)
+	helpers.FailOnError(t, err)
+
+	// default value on stepdown
+	assert.Equal(t, userID, types.UserID("-1"))
+}
+
+func TestMigration30(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// nothing worth testing for sqlite
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 29)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO rule_disable
+		(user_id, org_id, rule_id, error_key, justification, created_at, updated_at)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7)
+	`,
+		testdata.UserID,
+		testdata.OrgID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		"",
+		time.Now(),
+		time.Now(),
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, dbDriver, 30)
+	helpers.FailOnError(t, err)
+
+	err = db.QueryRow(`SELECT user_id FROM rule_disable`).Err()
+	assert.Error(t, err, "user_id column should not exist")
+
+	err = migration.SetDBVersion(db, dbDriver, 29)
+	helpers.FailOnError(t, err)
+
+	var userID types.UserID
+	err = db.QueryRow(`
+	SELECT
+		user_id
+	FROM
+		rule_disable
+	`,
+	).Scan(
+		&userID,
+	)
+	helpers.FailOnError(t, err)
+
+	// default value on stepdown
+	assert.Equal(t, userID, types.UserID("-1"))
+}

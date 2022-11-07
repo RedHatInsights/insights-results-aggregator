@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // This migration drops the user_id columns from the
-// cluster_rule_toggle table. This table doesn't have the user_id
+// rule_disable table. This table doesn't have the user_id
 // in the constraint(s), so we can remove the column without needing to
 // alter it.
 
@@ -26,10 +26,14 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-var mig0029DropClusterRuleToggleUserIDColumn = Migration{
+const (
+	ruleDisableTable = "rule_disable"
+)
+
+var mig0030DropRuleDisableUserIDColumn = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverPostgres {
-			dropColumnQuery := fmt.Sprintf(alterTableDropColumnQuery, clusterRuleToggleTable, userIDColumn)
+			dropColumnQuery := fmt.Sprintf(alterTableDropColumnQuery, ruleDisableTable, userIDColumn)
 			_, err := tx.Exec(dropColumnQuery)
 			if err != nil {
 				return err
@@ -40,7 +44,7 @@ var mig0029DropClusterRuleToggleUserIDColumn = Migration{
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverPostgres {
-			addColumnQuery := fmt.Sprintf(alterTableAddVarcharColumn, clusterRuleToggleTable, userIDColumn)
+			addColumnQuery := fmt.Sprintf(alterTableAddVarcharColumn, ruleDisableTable, userIDColumn)
 			_, err := tx.Exec(addColumnQuery)
 			if err != nil {
 				return err

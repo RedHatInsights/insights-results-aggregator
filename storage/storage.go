@@ -193,17 +193,20 @@ type Storage interface {
 		types.RuleSelector,
 	) (types.RuleRating, error)
 	DisableRuleSystemWide(
-		orgID types.OrgID, userID types.UserID,
-		ruleID types.RuleID, errorKey types.ErrorKey,
-		justification string) error
+		orgID types.OrgID, ruleID types.RuleID,
+		errorKey types.ErrorKey, justification string,
+	) error
 	EnableRuleSystemWide(
-		orgID types.OrgID, userID types.UserID,
-		ruleID types.RuleID, errorKey types.ErrorKey,
+		orgID types.OrgID,
+		ruleID types.RuleID,
+		errorKey types.ErrorKey,
 	) error
 	UpdateDisabledRuleJustification(
-		orgID types.OrgID, userID types.UserID,
-		ruleID types.RuleID, errorKey types.ErrorKey,
-		justification string) error
+		orgID types.OrgID,
+		ruleID types.RuleID,
+		errorKey types.ErrorKey,
+		justification string,
+	) error
 	ReadDisabledRule(
 		orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
 	) (ctypes.SystemWideRuleDisable, bool, error)

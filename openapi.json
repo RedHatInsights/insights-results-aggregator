@@ -1124,7 +1124,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/enable": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/enable": {
       "put": {
         "summary": "Re-enables a rule/health check recommendation for specified cluster",
         "operationId": "enableRule",
@@ -1172,16 +1172,6 @@
               "type": "string"
             },
             "example": "42"
-          },
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "description": "ID of the user",
-            "schema": {
-              "type": "string"
-            },
-            "example": "1234"
           }
         ],
         "responses": {
@@ -1208,7 +1198,7 @@
         ]
       }
     },
-    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/disable": {
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/disable": {
       "put": {
         "summary": "Disables a rule/health check recommendation for specified cluster",
         "operationId": "disableRule",
@@ -1256,16 +1246,6 @@
               "type": "string"
             },
             "example": "42"
-          },
-          {
-            "name": "userId",
-            "in": "path",
-            "required": true,
-            "description": "ID of the user",
-            "schema": {
-              "type": "string"
-            },
-            "example": "1234"
           }
         ],
         "responses": {
@@ -1924,7 +1904,7 @@
         }
       }
     },
-    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}/update": {
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/update": {
       "post": {
         "summary": "Updates disable justification of a rule disabled for all clusters",
         "operationId": "UpdateRuleSystemWide",
@@ -1956,15 +1936,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "requestBody": {
@@ -1986,7 +1957,7 @@
         }
       }
     },
-    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/users/{user_id}": {
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}": {
       "get": {
         "summary": "Returns info about rule disabled system-wide",
         "operationId": "ReadRuleSystemWide",
@@ -2018,15 +1989,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -2039,7 +2001,7 @@
         }
       }
     },
-    "/rules/organizations/{org_id}/users/{user_id}/disabled_system_wide": {
+    "/rules/organizations/{org_id}/disabled_system_wide": {
       "get": {
         "summary": "Returns a list of all rules disabled system-wide",
         "operationId": "ListOfDisabledRulesSystemWide",
@@ -2050,15 +2012,6 @@
             "in": "path",
             "required": true,
             "description": "Numeric ID of organization",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "description": "Numeric ID of the user. An example: `42`",
             "schema": {
               "type": "string"
             }

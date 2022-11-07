@@ -382,8 +382,8 @@ func (server HTTPServer) enableRuleSystemWide(writer http.ResponseWriter, reques
 
 	// try to enable rule
 	err := server.Storage.EnableRuleSystemWide(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey)
+		selector.OrgID, selector.RuleID, selector.ErrorKey,
+	)
 
 	// handle any storage error
 	if err != nil {
@@ -422,9 +422,8 @@ func (server HTTPServer) disableRuleSystemWide(writer http.ResponseWriter, reque
 
 	// try to disable rule
 	err = server.Storage.DisableRuleSystemWide(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey,
-		justification)
+		selector.OrgID, selector.RuleID, selector.ErrorKey, justification,
+	)
 
 	// handle any storage error
 	if err != nil {
@@ -462,9 +461,8 @@ func (server HTTPServer) updateRuleSystemWide(writer http.ResponseWriter, reques
 
 	// try to update rule disable justification
 	err = server.Storage.UpdateDisabledRuleJustification(
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey,
-		justification)
+		selector.OrgID, selector.RuleID, selector.ErrorKey, justification,
+	)
 
 	// handle any storage error
 	if err != nil {
@@ -559,7 +557,6 @@ func (server HTTPServer) listOfDisabledRulesSystemWide(writer http.ResponseWrite
 // system-wide rule disable
 type SystemWideRuleSelector struct {
 	OrgID    types.OrgID
-	UserID   types.UserID
 	RuleID   types.RuleID
 	ErrorKey types.ErrorKey
 }
@@ -575,11 +572,6 @@ func readSystemWideRuleSelectors(writer http.ResponseWriter, request *http.Reque
 		return selector, false
 	}
 
-	selector.UserID, successful = readUserID(writer, request)
-	if !successful {
-		return selector, false
-	}
-
 	selector.RuleID, successful = readRuleID(writer, request)
 	if !successful {
 		return selector, false
@@ -591,9 +583,9 @@ func readSystemWideRuleSelectors(writer http.ResponseWriter, request *http.Reque
 	}
 
 	log.Info().Msgf(
-		"System-wide disabled rule selector: org: %v  user: %v  rule ID: %v  error key: %v",
-		selector.OrgID, selector.UserID,
-		selector.RuleID, selector.ErrorKey)
+		"System-wide disabled rule selector: org: %v  rule ID: %v  error key: %v",
+		selector.OrgID, selector.RuleID, selector.ErrorKey,
+	)
 
 	return selector, true
 }
