@@ -1190,3 +1190,57 @@ func TestMigration30(t *testing.T) {
 	// default value on stepdown
 	assert.Equal(t, userID, types.UserID("-1"))
 }
+
+func TestMigration31(t *testing.T) {
+	db, dbDriver, closer := prepareDBAndInfo(t)
+	defer closer()
+
+	if dbDriver == types.DBDriverSQLite3 {
+		// nothing worth testing for sqlite
+		return
+	}
+
+	err := migration.SetDBVersion(db, dbDriver, 30)
+	helpers.FailOnError(t, err)
+
+	_, err = db.Exec(`
+		INSERT INTO advisor_ratings
+		(user_id, org_id, rule_fqdn, error_key, rated_at, last_updated_at, rating, rule_id)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7, $8)
+	`,
+		testdata.UserID,
+		testdata.OrgID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		time.Now(),
+		time.Now(),
+		1,
+		testdata.Rule1CompositeID,
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(db, dbDriver, 31)
+	helpers.FailOnError(t, err)
+
+	err = db.QueryRow(`SELECT user_id FROM advisor_ratings`).Err()
+	assert.Error(t, err, "user_id column should not exist")
+
+	err = migration.SetDBVersion(db, dbDriver, 29)
+	helpers.FailOnError(t, err)
+
+	var userID types.UserID
+	err = db.QueryRow(`
+	SELECT
+		user_id
+	FROM
+		advisor_ratings
+	`,
+	).Scan(
+		&userID,
+	)
+	helpers.FailOnError(t, err)
+
+	// default value on stepdown
+	assert.Equal(t, userID, types.UserID("-1"))
+}

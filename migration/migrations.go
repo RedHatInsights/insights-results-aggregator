@@ -47,4 +47,5 @@ var migrations = []Migration{
 	mig0028AlterRuleDisablePKAndIndex,
 	mig0029DropClusterRuleToggleUserIDColumn,
 	mig0030DropRuleDisableUserIDColumn,
+	mig0031AlterConstraintDropUserAdvisorRatings,
 }

@@ -50,6 +50,8 @@ const (
 	clusterUserRuleDisableFeedbackTable = "cluster_user_rule_disable_feedback"
 	alterTableDropColumnQuery           = "ALTER TABLE %v DROP COLUMN IF EXISTS %v"
 	alterTableAddVarcharColumn          = "ALTER TABLE %v ADD COLUMN %v VARCHAR NOT NULL DEFAULT '-1'"
+	alterTableDropPK                    = "ALTER TABLE %v DROP CONSTRAINT IF EXISTS %v_pkey"
+	alterTableAddPK                     = "ALTER TABLE %v ADD CONSTRAINT %v_pkey PRIMARY KEY %v"
 	userIDColumn                        = "user_id"
 )
 
