@@ -42,10 +42,15 @@ var migrationStep = alterConstraintStep{
 var mig0031AlterConstraintDropUserAdvisorRatings = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverPostgres {
+			deleteInvalidRowsQuery := "DELETE FROM advisor_ratings WHERE user_id = '0'"
+			_, err := tx.Exec(deleteInvalidRowsQuery)
+			if err != nil {
+				return err
+			}
 
 			// user_id is in the primary key, we need to create a new one
 			dropPKQuery := fmt.Sprintf(alterTableDropPK, migrationStep.tableName, migrationStep.tableName)
-			_, err := tx.Exec(dropPKQuery)
+			_, err = tx.Exec(dropPKQuery)
 			if err != nil {
 				return err
 			}
