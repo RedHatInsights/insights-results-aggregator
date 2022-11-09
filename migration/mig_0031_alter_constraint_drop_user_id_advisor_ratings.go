@@ -42,7 +42,9 @@ var migrationStep = alterConstraintStep{
 var mig0031AlterConstraintDropUserAdvisorRatings = Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
 		if driver == types.DBDriverPostgres {
-			deleteInvalidRowsQuery := "DELETE FROM advisor_ratings WHERE user_id = '0'"
+			// there are 27 rows in the prod table, all made by our QE org. it's not worth coming
+			// up with a query to flatten the table just because these testing rows.
+			deleteInvalidRowsQuery := "DELETE FROM advisor_ratings"
 			_, err := tx.Exec(deleteInvalidRowsQuery)
 			if err != nil {
 				return err
