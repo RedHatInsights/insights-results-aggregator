@@ -1223,10 +1223,26 @@ func TestMigration31(t *testing.T) {
 	err = migration.SetDBVersion(db, dbDriver, 31)
 	helpers.FailOnError(t, err)
 
+	_, err = db.Exec(`
+		INSERT INTO advisor_ratings
+		(org_id, rule_fqdn, error_key, rated_at, last_updated_at, rating, rule_id)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7)
+	`,
+		testdata.OrgID,
+		testdata.Rule1ID,
+		testdata.ErrorKey1,
+		time.Now(),
+		time.Now(),
+		1,
+		testdata.Rule1CompositeID,
+	)
+	helpers.FailOnError(t, err)
+
 	err = db.QueryRow(`SELECT user_id FROM advisor_ratings`).Err()
 	assert.Error(t, err, "user_id column should not exist")
 
-	err = migration.SetDBVersion(db, dbDriver, 29)
+	err = migration.SetDBVersion(db, dbDriver, 30)
 	helpers.FailOnError(t, err)
 
 	var userID types.UserID
