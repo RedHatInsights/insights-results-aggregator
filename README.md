@@ -15,6 +15,7 @@ Aggregator service for insights results
 
 * [Description](#description)
 * [Documentation](#documentation)
+* [Makefile targets](#makefile-targets)
 * [Package manifest](#package-manifest)
 
 <!-- vim-markdown-toc -->
@@ -34,6 +35,34 @@ exposed via REST API endpoints.
 
 Documentation is hosted on Github Pages <https://redhatinsights.github.io/insights-results-aggregator/>.
 Sources are located in [docs](https://github.com/RedHatInsights/insights-results-aggregator/tree/master/docs).
+
+## Makefile targets
+
+```
+clean                Run go clean
+build                Build binary containing service executable
+fmt                  Run go fmt -w for all sources
+lint                 Run golint
+vet                  Run go vet. Report likely mistakes in source code
+cyclo                Run gocyclo
+ineffassign          Run ineffassign checker
+shellcheck           Run shellcheck
+errcheck             Run errcheck
+goconst              Run goconst checker
+gosec                Run gosec checker
+abcgo                Run ABC metrics checker
+json-check           Check all JSONs for basic syntax
+style                Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
+run                  Build the project and executes the binary
+test                 Run the unit tests
+cover                Generate HTML pages with code coverage
+coverage             Display code coverage on terminal
+integration_tests    Run all integration tests
+rest_api_tests       Run REST API tests
+before_commit        Checks done before commit
+help                 Show this help screen
+function_list        List all functions in generated binary file
+```
 
 ## Package manifest
 
