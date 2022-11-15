@@ -20,6 +20,7 @@ Please delete options that are not relevant.
 - Bump-up dependent library (no changes in the code)
 - Benchmarks (no changes in the code)
 - Documentation update
+- Configuration update
 
 ## Testing steps
 
