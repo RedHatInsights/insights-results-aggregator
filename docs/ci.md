@@ -24,6 +24,7 @@ cyclomatic complexity > 9
 * `shellcheck` to perform static analysis for all shell scripts used in this repository
 * `abcgo` to measure ABC metrics for Go source code and check if the metrics does not exceed
   specified threshold
+* `golangci-lint` as Go linters aggregator with lot of linters enabled: https://golangci-lint.run/usage/linters/
 
 Please note that all checks mentioned above have to pass for the change to be merged into master
 branch.
