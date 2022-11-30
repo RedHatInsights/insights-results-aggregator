@@ -37,20 +37,22 @@ type Consumer interface {
 	HandleMessage(msg *sarama.ConsumerMessage) error
 }
 
-// KafkaConsumer in an implementation of Consumer interface
+// KafkaConsumer is an implementation of Consumer interface
 // Example:
 //
-// kafkaConsumer, err := consumer.New(brokerCfg, storage)
-// if err != nil {
-//     panic(err)
-// }
+//	kafkaConsumer, err := consumer.New(brokerCfg, storage)
 //
-// kafkaConsumer.Serve()
+//	if err != nil {
+//	    panic(err)
+//	}
 //
-// err := kafkaConsumer.Stop()
-// if err != nil {
-//     panic(err)
-// }
+//	kafkaConsumer.Serve()
+//
+//	err := kafkaConsumer.Stop()
+//
+//	if err != nil {
+//	    panic(err)
+//	}
 type KafkaConsumer struct {
 	Configuration                        broker.Configuration
 	ConsumerGroup                        sarama.ConsumerGroup
@@ -195,6 +197,7 @@ func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
 			log.Warn().
 				Int64(offsetKey, message.Offset).
 				Msg("this offset was already processed by aggregator")
+			continue
 		}
 
 		err = consumer.HandleMessage(message)
