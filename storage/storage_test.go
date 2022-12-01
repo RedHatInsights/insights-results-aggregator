@@ -1513,3 +1513,46 @@ func TestDBStorageWriteReportForClusterWithZeroGatheredTime(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 }
+
+func TestDoesClusterExist(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	exist, err := mockStorage.DoesClusterExist(testdata.GetRandomClusterID())
+	helpers.FailOnError(t, err)
+	assert.False(t, exist, "cluster should not exist")
+
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.ClusterReportEmpty,
+		testdata.ReportEmptyRulesParsed,
+		time.Now(),
+		time.Time{},
+		time.Now(),
+		testdata.KafkaOffset,
+	)
+	helpers.FailOnError(t, err)
+	exist, err = mockStorage.DoesClusterExist(testdata.ClusterName)
+	helpers.FailOnError(t, err)
+	assert.True(t, exist, "cluster should exist")
+
+}
+
+func TestReadSingleRuleTemplateData(t *testing.T) {
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpectsForDriver(t, types.DBDriverPostgres)
+	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
+
+	expects.ExpectQuery(`SELECT template_data FROM rule_hit`).
+		WillReturnRows(expects.NewRows([]string{"template_data"}).AddRow("{json}")).
+		RowsWillBeClosed()
+
+	value, err := mockStorage.ReadSingleRuleTemplateData(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.Rule1ID,
+		testdata.RuleErrorKey1.ErrorKey,
+	)
+	assert.NoError(t, err)
+	assert.NotNil(t, value)
+}
