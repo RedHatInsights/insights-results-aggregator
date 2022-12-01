@@ -37,20 +37,22 @@ type Consumer interface {
 	HandleMessage(msg *sarama.ConsumerMessage) error
 }
 
-// KafkaConsumer in an implementation of Consumer interface
+// KafkaConsumer is an implementation of Consumer interface
 // Example:
 //
 // kafkaConsumer, err := consumer.New(brokerCfg, storage)
-// if err != nil {
-//     panic(err)
-// }
+//
+//	if err != nil {
+//	    panic(err)
+//	}
 //
 // kafkaConsumer.Serve()
 //
 // err := kafkaConsumer.Stop()
-// if err != nil {
-//     panic(err)
-// }
+//
+//	if err != nil {
+//	    panic(err)
+//	}
 type KafkaConsumer struct {
 	Configuration                        broker.Configuration
 	ConsumerGroup                        sarama.ConsumerGroup
