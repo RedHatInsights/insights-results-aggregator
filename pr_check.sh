@@ -20,7 +20,7 @@ set -exv
 # Options that must be configured by app owner
 # --------------------------------------------
 APP_NAME="ccx-data-pipeline"  # name of app-sre "application" folder this component lives in
-REF_ENV="insights-stage"
+REF_ENV="insights-production"
 COMPONENT_NAME="ccx-insights-results"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/insights-results-aggregator"
 COMPONENTS="ccx-data-pipeline ccx-insights-results insights-content-service insights-results-smart-proxy"  # space-separated list of components to laod
@@ -28,8 +28,10 @@ COMPONENTS_W_RESOURCES=""  # component to keep
 CACHE_FROM_LATEST_IMAGE="true"
 
 export IQE_PLUGINS="ccx"
-export IQE_MARKER_EXPRESSION="smoke" # ccx_data_pipeline_smoke does not exits (at least yet) as marker in the plugin
-export IQE_FILTER_EXPRESSION=""
+# Run all pipeline tests
+export IQE_MARKER_EXPRESSION="pipeline"
+# Skip fuzz_api_v1/fuzz_api_v2 tests. The take long and not much useful for PR.
+export IQE_FILTER_EXPRESSION="not test_fuzz"
 export IQE_REQUIREMENTS_PRIORITY=""
 export IQE_TEST_IMPORTANCE=""
 export IQE_CJI_TIMEOUT="30m"
