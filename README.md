@@ -16,9 +16,11 @@ Aggregator service for insights results
 * [Description](#description)
 * [Documentation](#documentation)
 * [Makefile targets](#makefile-targets)
+* [BDD tests](#bdd-tests)
 * [Package manifest](#package-manifest)
 
 <!-- vim-markdown-toc -->
+
 
 ## Description
 
@@ -63,6 +65,19 @@ before_commit        Checks done before commit
 help                 Show this help screen
 function_list        List all functions in generated binary file
 ```
+
+## BDD tests
+
+Behaviour tests for this service are included in [Insights Behavioral
+Spec](https://github.com/RedHatInsights/insights-behavioral-spec) repository.
+In order to run these tests, the following steps need to be made:
+
+1. clone the [Insights Behavioral Spec](https://github.com/RedHatInsights/insights-behavioral-spec) repository
+1. go into the cloned subdirectory `insights-behavioral-spec`
+1. run the `aggregator_tests.sh` from this subdirectory
+
+List of all test scenarios prepared for this service is available at
+<https://github.com/RedHatInsights/insights-behavioral-spec#insights-results-aggregator>
 
 ## Package manifest
 
