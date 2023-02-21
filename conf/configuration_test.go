@@ -477,7 +477,7 @@ func TestClowderConfigForKafka(t *testing.T) {
 	clowder.LoadedConfig = &clowder.AppConfig{
 		Kafka: &clowder.KafkaConfig{
 			Brokers: []clowder.BrokerConfig{
-				clowder.BrokerConfig{
+				{
 					Hostname: hostname,
 					Port:     &port,
 				},
