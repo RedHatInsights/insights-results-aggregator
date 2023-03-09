@@ -193,6 +193,8 @@ func TestParseProperMessage(t *testing.T) {
 }
 
 func TestParseProperMessageWithInfoReport(t *testing.T) {
+	// this report contains just one rule hit: from special INFO rule used
+	// just in external data pipeline
 	consumerReport := `{
 		"fingerprints": [],
 		"reports": [],
