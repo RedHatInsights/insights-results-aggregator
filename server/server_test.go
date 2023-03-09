@@ -62,6 +62,9 @@ func checkResponseCode(t testing.TB, expected, actual int) {
 	}
 }
 
+// buildInfoWithVersion function constructs slice containing one item of type
+// types.InfoItem. In real code this item contains cluster version that is
+// retrieved from special INFO rule used just by external data pipeline.
 func buildInfoWithVersion(version types.Version) []types.InfoItem {
 	return []types.InfoItem{
 		{

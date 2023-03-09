@@ -1,4 +1,4 @@
-// Copyright 2022 Red Hat, Inc
+// Copyright 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,11 @@
 
 package storage
 
+// Methods for reading and storing cluster version from/to database. Please
+// note that cluster version is read from special INFO rule used just in
+// external data pipeline. This is required rule, so we assume that it is
+// always part of consumed report.
+
 import (
 	"database/sql"
 	"fmt"
@@ -24,6 +29,7 @@ import (
 )
 
 const (
+	// Rule name and error key for special INFO rule that contains cluster version
 	versionInfoKey = "version_info|CLUSTER_VERSION_INFO"
 )
 
