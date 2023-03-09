@@ -1,4 +1,4 @@
-// Copyright 2020, 2021, 2022 Red Hat, Inc
+// Copyright 2020, 2021, 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -172,6 +172,9 @@ func (consumer *KafkaConsumer) writeRecommendations(
 func (consumer *KafkaConsumer) writeInfoReport(
 	msg *sarama.ConsumerMessage, message incomingMessage, infoStoredAtTime time.Time,
 ) error {
+	// it is expected that message.ParsedInfo contains at least one item:
+	// result from special INFO rule containing cluster version that is
+	// used just in external data pipeline
 	err := consumer.Storage.WriteReportInfoForCluster(
 		*message.Organization,
 		*message.ClusterName,
@@ -353,6 +356,9 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 		return deserialized, err
 	}
 
+	// it is expected that message.ParsedInfo contains at least one item:
+	// result from special INFO rule containing cluster version that is
+	// used just in external data pipeline
 	err = json.Unmarshal(*((*deserialized.Report)["info"]), &deserialized.ParsedInfo)
 	if err != nil {
 		return deserialized, err
