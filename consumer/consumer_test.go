@@ -232,7 +232,7 @@ func TestParseProperMessageWithInfoReport(t *testing.T) {
 	assert.EqualValues(t, []types.ReportItem{}, message.ParsedHits)
 
 	expectedInfoReport := []types.InfoItem{
-		types.InfoItem{
+		{
 			InfoID:  "version_info|CLUSTER_VERSION_INFO",
 			InfoKey: "CLUSTER_VERSION_INFO",
 			Details: map[string]string{
