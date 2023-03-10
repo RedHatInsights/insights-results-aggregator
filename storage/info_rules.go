@@ -41,7 +41,7 @@ func (storage DBStorage) WriteReportInfoForCluster(
 	lastCheckedTime time.Time,
 ) error {
 	// Not checking if there is a previous report because this method will
-	// only be called after succesfully writing the main report. If that
+	// only be called after successfully writing the main report. If that
 	// fails, this method won't be called
 	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
