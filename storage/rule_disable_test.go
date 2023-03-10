@@ -75,7 +75,7 @@ func TestDBStorageEnableRuleSystemWide(t *testing.T) {
 }
 
 // Check the method DisableRuleSystemWide to check ON CONFLICT
-// This shouldn't happen in real enviornment because
+// This shouldn't happen in real environment because
 // Re-enabling/Updating justification/Getting from the rule_disable table is used
 func TestDBStorageEnableRuleSystemWideDifferentUser(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
