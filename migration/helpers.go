@@ -104,7 +104,6 @@ func downgradeTable(tx *sql.Tx, tableName, oldTableDefinition string, columns []
 	return nil
 }
 
-//
 func updateTableData(tx *sql.Tx, table, query string, args ...interface{}) error {
 	log.Debug().Str(tableTag, table).Msg("Updating rows...")
 	result, err := tx.Exec(query, args...)
