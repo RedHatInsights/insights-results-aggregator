@@ -44,6 +44,19 @@ jobs:
       script:
         - npm install -g @openapitools/openapi-generator-cli
         - openapi-generator-cli validate -i openapi.json
+    - stage: bdd tests
+      services:
+        - docker
+      before_script:
+        - go build
+        - wget -O docker-compose.yml https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/docker-compose.yml
+        - POSTGRES_DB_NAME=test docker-compose --profile test-aggregator up -d
+        - cid=$(docker ps | grep 'insights-behavioral-spec:ci' | cut -d ' ' -f 1)
+        - docker cp insights-results-aggregator $cid:`docker exec $cid bash -c 'echo "$VIRTUAL_ENV_BIN"'`
+        - docker cp openapi.json $cid:.
+        - docker exec -u root $cid /bin/bash -c 'chmod +x $VIRTUAL_ENV_BIN/insights-results-aggregator'
+      script:
+        - docker exec -it $cid /bin/bash -c 'env && make aggregator-tests'
     - stage: integration tests
       script:
         - make integration_tests
@@ -53,4 +66,5 @@ stages:
   - style
   - unit tests
   - openapi-checks
+  - bdd tests
   - integration tests
