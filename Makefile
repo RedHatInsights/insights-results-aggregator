@@ -13,6 +13,9 @@ clean: ## Run go clean
 
 build: ${BINARY} ## Build binary containing service executable
 
+build-cover:	${SOURCES}  ## Build binary with code coverage detection support
+	./build.sh -cover
+
 ${BINARY}: ${SOURCES}
 	./build.sh
 
