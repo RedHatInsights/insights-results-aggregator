@@ -43,6 +43,7 @@ Sources are located in [docs](https://github.com/RedHatInsights/insights-results
 ```
 clean                Run go clean
 build                Build binary containing service executable
+build-cover          Build binary with code coverage detection support
 fmt                  Run go fmt -w for all sources
 lint                 Run golint
 vet                  Run go vet. Report likely mistakes in source code
