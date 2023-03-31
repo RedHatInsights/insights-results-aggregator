@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # this is improper - we need to start using tags in GitHub properly
-version=0.5
+version=$(git tag --sort=committerdate | tail -1)
 
 buildtime=$(date)
 branch=$(git rev-parse --abbrev-ref HEAD)
