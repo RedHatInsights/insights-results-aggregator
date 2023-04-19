@@ -52,7 +52,7 @@ type Consumer interface {
 	HandleMessage(msg *sarama.ConsumerMessage) error
 }
 
-// KafkaConsumer in an implementation of Consumer interface
+// KafkaConsumer is an implementation of Consumer interface
 // Example:
 //
 // kafkaConsumer, err := consumer.New(brokerCfg, storage)
