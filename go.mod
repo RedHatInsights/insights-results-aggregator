@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/BurntSushi/toml v0.3.1
-	github.com/DATA-DOG/go-sqlmock v1.4.1
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/RedHatInsights/insights-content-service v0.0.0-20221024073309-fabee4bcb06e
 	github.com/RedHatInsights/insights-operator-utils v1.24.5
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.6
