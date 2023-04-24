@@ -14,7 +14,7 @@ require (
 	github.com/gchaincl/sqlhooks v1.3.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/lib/pq v1.8.0
+	github.com/lib/pq v1.10.8
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/client_model v0.3.0
