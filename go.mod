@@ -21,7 +21,7 @@ require (
 	github.com/redhatinsights/app-common-go v1.6.3
 	github.com/rs/zerolog v1.20.0
 	github.com/spf13/viper v1.7.2-0.20210415161207-7fdb267c730d
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.2
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
