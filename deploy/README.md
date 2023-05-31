@@ -41,6 +41,11 @@ redis-cli -h cache-writer-redis -p 6379 SET mykey "Hello\nWorld";
 redis-cli -h cache-writer-redis -p 6379 GET mykey;
 ```
 
+You can also check that the metrics are exposed:
+```
+curl cache-writer-redis-metrics:9121/metrics
+```
+
 Don't worry if you can't see the command prompt. Just write and execute commands.
 Then exit with CTRL+D.
 
