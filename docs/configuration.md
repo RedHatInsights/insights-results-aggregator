@@ -173,6 +173,21 @@ debug = false
 you can add `$HOSTNAME` to the stream name so that they aren't writing to the same stream at once
 * `debug` is an option to enable debug output of cloudwatch logging
 
+## Redis configuration
+
+Redis configuration is in section `[redis]` in config file
+
+```toml
+[redis]
+database = 0
+endpoint = "localhost:6379"
+password = ""
+timeout_seconds = 30
+```
+
+* Please note that Redis databases are numbered from 0 to 15 and that default value is 0
+
+
 ## Metrics configuration
 
 Metrics configuration is in section `[metrics]` in config file
