@@ -1,5 +1,5 @@
 /*
-Copyright © 2020, 2021, 2022 Red Hat, Inc.
+Copyright © 2020, 2021, 2022, 2023 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -78,6 +78,7 @@ type ConfigStruct struct {
 	Storage           storage.Configuration             `mapstructure:"storage" toml:"storage"`
 	Logging           logger.LoggingConfiguration       `mapstructure:"logging" toml:"logging"`
 	CloudWatch        logger.CloudWatchConfiguration    `mapstructure:"cloudwatch" toml:"cloudwatch"`
+	Redis             storage.RedisConfiguration        `mapstructure:"redis" toml:"redis"`
 	Metrics           MetricsConfiguration              `mapstructure:"metrics" toml:"metrics"`
 	SentryLoggingConf logger.SentryLoggingConfiguration `mapstructure:"sentry" toml:"sentry"`
 	KafkaZerologConf  logger.KafkaZerologConfiguration  `mapstructure:"kafka_zerolog" toml:"kafka_zerolog"`
@@ -181,6 +182,11 @@ func getOrganizationAllowlist() mapset.Set {
 // GetStorageConfiguration returns storage configuration
 func GetStorageConfiguration() storage.Configuration {
 	return Config.Storage
+}
+
+// GetRedisConfiguration returns Redis storage configuration
+func GetRedisConfiguration() storage.RedisConfiguration {
+	return Config.Redis
 }
 
 // GetLoggingConfiguration returns logging configuration
