@@ -22,6 +22,12 @@ org_allowlist_file = "org_allowlist.csv"
 db_driver = "sqlite3"
 sqlite_datasource = "./test.db"
 
+[redis]
+database = 0
+endpoint = "localhost:6379"
+password = ""
+timeout_seconds = 30
+
 [content]
 path = "./tests/content/ok/"
 
