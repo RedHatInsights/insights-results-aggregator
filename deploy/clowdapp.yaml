@@ -91,7 +91,6 @@ objects:
                 secretKeyRef:
                   name: cache-writer-redis-credentials
                   key: password
-                  optional: true
             - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS
               value: ${INSIGHTS_REDIS_TIMEOUT_SECONDS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
