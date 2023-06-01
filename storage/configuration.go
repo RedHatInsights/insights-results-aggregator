@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Red Hat, Inc.
+Copyright © 2020, 2021, 2022, 2023 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,4 +27,12 @@ type Configuration struct {
 	PGPort           int    `mapstructure:"pg_port" toml:"pg_port"`
 	PGDBName         string `mapstructure:"pg_db_name" toml:"pg_db_name"`
 	PGParams         string `mapstructure:"pg_params" toml:"pg_params"`
+}
+
+// RedisConfiguration represents configuration of Redis client
+type RedisConfiguration struct {
+	RedisEndpoint       string `mapstructure:"endpoint" toml:"endpoint"`
+	RedisDatabase       int    `mapstructure:"database" toml:"database"`
+	RedisTimeoutSeconds int    `mapstructure:"timeout_seconds" toml:"timeout_seconds"`
+	RedisPassword       string `mapstructure:"password" toml:"password"`
 }
