@@ -27,6 +27,7 @@ type Configuration struct {
 	PGPort           int    `mapstructure:"pg_port" toml:"pg_port"`
 	PGDBName         string `mapstructure:"pg_db_name" toml:"pg_db_name"`
 	PGParams         string `mapstructure:"pg_params" toml:"pg_params"`
+	Type             string `mapstructure:"type" toml:"type"`
 }
 
 // RedisConfiguration represents configuration of Redis client
