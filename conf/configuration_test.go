@@ -1,5 +1,5 @@
 /*
-Copyright © 2020, 2021, 2022 Red Hat, Inc.
+Copyright © 2020, 2021, 2022, 2023 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -78,6 +78,11 @@ func setEnvVariables(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__ENDPOINT", "default-redis-endpoint")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE", "42")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS", "0")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__PASSWORD", "top secret")
 }
 
 func mustSetEnv(t *testing.T, key, val string) {
@@ -160,6 +165,18 @@ func TestLoadStorageConfiguration(t *testing.T) {
 
 	assert.Equal(t, "sqlite3", storageCfg.Driver)
 	assert.Equal(t, ":memory:", storageCfg.SQLiteDataSource)
+}
+
+// TestLoadRedisConfiguration tests loading the Redis configuration sub-tree
+func TestLoadRedisConfiguration(t *testing.T) {
+	TestLoadConfiguration(t)
+
+	redisCfg := conf.GetRedisConfiguration()
+
+	assert.Equal(t, "localhost:6379", redisCfg.RedisEndpoint)
+	assert.Equal(t, 0, redisCfg.RedisDatabase)
+	assert.Equal(t, 30, redisCfg.RedisTimeoutSeconds)
+	assert.Equal(t, "", redisCfg.RedisPassword)
 }
 
 // TestLoadConfigurationOverrideFromEnv tests overriding configuration by env variables
@@ -271,6 +288,12 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		pg_db_name = "aggregator"
 		pg_params = "params"
 		log_sql_queries = true
+
+		[redis]
+		database = 0
+		endpoint = "localhost:6379"
+		password = ""
+		timeout_seconds = 30
 	`
 
 	tmpFilename, err := GetTmpConfigFile(config)
@@ -325,6 +348,13 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		PGDBName:         "aggregator",
 		PGParams:         "params",
 	}, conf.GetStorageConfiguration())
+
+	assert.Equal(t, storage.RedisConfiguration{
+		RedisEndpoint:       "localhost:6379",
+		RedisDatabase:       0,
+		RedisTimeoutSeconds: 30,
+		RedisPassword:       "",
+	}, conf.GetRedisConfiguration())
 }
 
 func TestLoadConfigurationFromEnv(t *testing.T) {
@@ -375,6 +405,13 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		PGDBName:         "aggregator",
 		PGParams:         "params",
 	}, conf.GetStorageConfiguration())
+
+	assert.Equal(t, storage.RedisConfiguration{
+		RedisEndpoint:       "default-redis-endpoint",
+		RedisDatabase:       42,
+		RedisTimeoutSeconds: 0,
+		RedisPassword:       "top secret",
+	}, conf.GetRedisConfiguration())
 }
 
 func TestGetLoggingConfigurationDefault(t *testing.T) {
