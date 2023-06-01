@@ -1,4 +1,4 @@
-# Copyright 2021 Red Hat, Inc
+# Copyright 2021, 2022, 2023 Red Hat, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -82,6 +82,17 @@ objects:
               value: sslmode=disable
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: ${CLOUDWATCH_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__ENDPOINT
+              value: ${INSIGHTS_REDIS_URL}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE
+              value: ${INSIGHTS_REDIS_DATABASE}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cache-writer-redis-credentials
+                  key: password
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS
+              value: ${INSIGHTS_REDIS_TIMEOUT_SECONDS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
               value: ${CLOUDWATCH_DEBUG}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
@@ -166,6 +177,12 @@ objects:
                   value: "true"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
                   value: ${CLOUDWATCH_ENABLED}
+                - name: INSIGHTS_REDIS_URL
+                  value: "ccx-redis:6379"
+                - name: INSIGHTS_REDIS_DATABASE
+                  value: "0"
+                - name: INSIGHTS_REDIS_TIMEOUT_SECONDS
+                  value: "30"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
                   value: ${CLOUDWATCH_DEBUG}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME

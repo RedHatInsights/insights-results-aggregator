@@ -30,6 +30,12 @@ db_driver = "sqlite3"
 sqlite_datasource = "./aggregator.db"
 log_sql_queries = true
 
+[redis]
+database = 0
+endpoint = "localhost:6379"
+password = ""
+timeout_seconds = 30
+
 [content]
 path = "/rules-content"
 
