@@ -6,7 +6,7 @@ nav_order: 4
 
 Aggregator is configured to use SQLite3 DB by default, but it also supports PostgreSQL.
 In CI and QA environments, the configuration is overridden by environment variables to use
-PostgreSQL.
+PostgreSQL. Alternatively Redis can be used, but only in "db-write" service instances.
 
 To establish connection to the PostgreSQL instance provided by the minimal stack in
 `docker-compose.yml` for local setup, the following configuration options need to be changed in

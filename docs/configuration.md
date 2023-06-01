@@ -26,6 +26,7 @@ pg_host = "localhost"
 pg_port = 5432
 pg_db_name = "aggregator"
 pg_params = ""
+type = "sql"
 ```
 
 and environment variables
@@ -186,6 +187,7 @@ timeout_seconds = 30
 ```
 
 * Please note that Redis databases are numbered from 0 to 15 and that default value is 0
+* Also please note that Redis database will be used only if `type=redis`
 
 
 ## Metrics configuration
