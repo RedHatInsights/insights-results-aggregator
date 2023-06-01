@@ -17,7 +17,7 @@
 if ! [ -x "$(command -v gocyclo)" ]
 then
     echo -e "${BLUE}Installing gocyclo${NC}"
-    go get github.com/fzipp/gocyclo/cmd/gocyclo
+    GO111MODULE=off go get github.com/fzipp/gocyclo/cmd/gocyclo
 fi
 
 gocyclo -over 10 -avg .
