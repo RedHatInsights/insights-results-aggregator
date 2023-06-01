@@ -80,6 +80,8 @@ objects:
               value: postgres
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
               value: sslmode=disable
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
+              value: "sql"
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: ${CLOUDWATCH_ENABLED}
             - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__ENDPOINT
@@ -175,6 +177,8 @@ objects:
                   value: sslmode=disable
                 - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES
                   value: "true"
+                - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
+                  value: "sql"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
                   value: ${CLOUDWATCH_ENABLED}
                 - name: INSIGHTS_REDIS_URL
@@ -265,6 +269,8 @@ objects:
               value: postgres
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
               value: sslmode=disable
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
+              value: "sql"
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: ${CLOUDWATCH_ENABLED}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG

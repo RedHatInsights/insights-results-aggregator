@@ -34,6 +34,7 @@ pg_port = 5432
 pg_db_name = "aggregator"
 pg_params = "sslmode=disable"
 log_sql_queries = true
+type = "sql"
 
 [redis]
 database = 0
