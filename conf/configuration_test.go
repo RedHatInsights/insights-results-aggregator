@@ -166,7 +166,7 @@ func TestLoadStorageConfiguration(t *testing.T) {
 
 	assert.Equal(t, "sqlite3", storageCfg.Driver)
 	assert.Equal(t, ":memory:", storageCfg.SQLiteDataSource)
-	assert.Equal(t, "sql:", storageCfg.Type)
+	assert.Equal(t, "sql", storageCfg.Type)
 }
 
 // TestLoadRedisConfiguration tests loading the Redis configuration sub-tree
