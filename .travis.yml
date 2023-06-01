@@ -1,4 +1,4 @@
-# Copyright 2021 Red Hat, Inc
+# Copyright 2021, 2022, 2023 Red Hat, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
 
 language: go
 go:
-- "1.17"
+- "1.18"
 
 services:
   - postgresql
 
 jobs:
   include:
-    - name: "Build 1.17"
+    - name: "Build 1.18"
       stage: build
       script:
         - make

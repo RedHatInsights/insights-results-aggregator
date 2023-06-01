@@ -1,5 +1,5 @@
 /*
-Copyright © 2020, 2021, 2022 Red Hat, Inc.
+Copyright © 2020, 2021, 2022, 2023 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -401,7 +401,13 @@ func (server *HTTPServer) Start(serverInstanceReady context.CancelFunc) error {
 	address := server.Config.Address
 	log.Info().Msgf("Starting HTTP server at '%s'", address)
 	router := server.Initialize()
-	server.Serv = &http.Server{Addr: address, Handler: router}
+	server.Serv = &http.Server{
+		Addr:              address,
+		Handler:           router,
+		ReadTimeout:       1 * time.Minute,
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      30 * time.Second,
+	}
 
 	if serverInstanceReady != nil {
 		serverInstanceReady()
