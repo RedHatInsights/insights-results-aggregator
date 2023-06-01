@@ -76,6 +76,7 @@ func setEnvVariables(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_DB_NAME", "aggregator")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE", "sql")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
 
@@ -165,6 +166,7 @@ func TestLoadStorageConfiguration(t *testing.T) {
 
 	assert.Equal(t, "sqlite3", storageCfg.Driver)
 	assert.Equal(t, ":memory:", storageCfg.SQLiteDataSource)
+	assert.Equal(t, "sql:", storageCfg.Type)
 }
 
 // TestLoadRedisConfiguration tests loading the Redis configuration sub-tree
@@ -197,6 +199,7 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 		PGPort:           5432,
 		PGDBName:         "aggregator",
 		PGParams:         "",
+		Type:             "sql",
 	}, storageCfg)
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
@@ -214,6 +217,7 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 		PGPort:           5432,
 		PGDBName:         "aggregator",
 		PGParams:         "",
+		Type:             "sql",
 	}, storageCfg)
 }
 
@@ -288,6 +292,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		pg_db_name = "aggregator"
 		pg_params = "params"
 		log_sql_queries = true
+		type = "sql"
 
 		[redis]
 		database = 0
@@ -347,6 +352,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		PGPort:           5432,
 		PGDBName:         "aggregator",
 		PGParams:         "params",
+		Type:             "sql",
 	}, conf.GetStorageConfiguration())
 
 	assert.Equal(t, storage.RedisConfiguration{
@@ -404,6 +410,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		PGPort:           5432,
 		PGDBName:         "aggregator",
 		PGParams:         "params",
+		Type:             "sql",
 	}, conf.GetStorageConfiguration())
 
 	assert.Equal(t, storage.RedisConfiguration{
