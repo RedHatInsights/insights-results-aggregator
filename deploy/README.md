@@ -36,14 +36,14 @@ oc --namespace $NAMESPACE run test -i --rm \
 And run:
 ```
 export REDISCLI_AUTH="rNOp(B^!Y1tRpGL50w_6rAv~"
-redis-cli -h cache-writer-redis -p 6379 ping; echo $?
-redis-cli -h cache-writer-redis -p 6379 SET mykey "Hello\nWorld";
-redis-cli -h cache-writer-redis -p 6379 GET mykey;
+redis-cli -h ccx-redis -p 6379 ping; echo $?
+redis-cli -h ccx-redis -p 6379 SET mykey "Hello\nWorld";
+redis-cli -h ccx-redis -p 6379 GET mykey;
 ```
 
 You can also check that the metrics are exposed:
 ```
-curl cache-writer-redis-metrics:9121/metrics
+curl ccx-redis-metrics:9121/metrics
 ```
 
 Don't worry if you can't see the command prompt. Just write and execute commands.

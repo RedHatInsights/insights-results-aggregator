@@ -28,7 +28,7 @@ objects:
       app: ccx-data-pipeline
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
-    name: cache-writer-redis
+    name: ccx-redis
   spec:
     replicas: 1
     selector:
@@ -36,7 +36,7 @@ objects:
         app: ccx-data-pipeline
         app.kubernetes.io/instance: cache-writer
         app.kubernetes.io/name: redis
-    serviceName: cache-writer-redis-headless
+    serviceName: ccx-redis-headless
     template:
       metadata:
         labels:
@@ -114,7 +114,7 @@ objects:
           - mountPath: /health
             name: health
           - mountPath: /data
-            name: cache-writer-redis-data
+            name: ccx-redis-data
             subPath: null
           - mountPath: /opt/bitnami/redis/mounted-etc
             name: config
@@ -132,7 +132,7 @@ objects:
             redis_exporter
           env:
           - name: REDIS_ALIAS
-            value: cache-writer-redis
+            value: ccx-redis
           - name: REDIS_USER
             value: default
           - name: REDIS_PASSWORD
@@ -156,14 +156,14 @@ objects:
         volumes:
         - configMap:
             defaultMode: 493
-            name: cache-writer-redis-scripts
+            name: ccx-redis-scripts
           name: start-scripts
         - configMap:
             defaultMode: 493
-            name: cache-writer-redis-health
+            name: ccx-redis-health
           name: health
         - configMap:
-            name: cache-writer-redis-configuration
+            name: ccx-redis-configuration
           name: config
         - emptyDir: {}
           name: redis-tmp-conf
@@ -178,7 +178,7 @@ objects:
           app: ccx-data-pipeline
           app.kubernetes.io/instance: cache-writer
           app.kubernetes.io/name: redis
-        name: cache-writer-redis-data
+        name: ccx-redis-data
       spec:
         accessModes:
         - ReadWriteOnce
@@ -192,7 +192,7 @@ objects:
       app: ccx-data-pipeline
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
-    name: cache-writer-redis-metrics
+    name: ccx-redis-metrics
   spec:
     ports:
     - name: http-metrics
@@ -211,7 +211,7 @@ objects:
       app: ccx-data-pipeline
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
-    name: cache-writer-redis
+    name: ccx-redis
   spec:
     internalTrafficPolicy: Cluster
     ports:
@@ -232,7 +232,7 @@ objects:
       app: ccx-data-pipeline
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
-    name: cache-writer-redis-headless
+    name: ccx-redis-headless
   spec:
     clusterIP: None
     ports:
@@ -268,7 +268,7 @@ objects:
       app: ccx-data-pipeline
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
-    name: cache-writer-redis-scripts
+    name: ccx-redis-scripts
 - apiVersion: v1
   data:
     ping_liveness_local.sh: |-
@@ -371,7 +371,7 @@ objects:
       app: ccx-data-pipeline
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
-    name: cache-writer-redis-health
+    name: ccx-redis-health
 - apiVersion: v1
   data:
     master.conf: |-
@@ -400,7 +400,7 @@ objects:
       app: ccx-data-pipeline
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
-    name: cache-writer-redis-configuration
+    name: ccx-redis-configuration
 
 parameters:
 # cache-writer
