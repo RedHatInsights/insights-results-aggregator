@@ -21,6 +21,7 @@ org_allowlist_file = "org_allowlist.csv"
 [storage]
 db_driver = "sqlite3"
 sqlite_datasource = "./test.db"
+type = "sql"
 
 [redis]
 database = 0

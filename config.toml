@@ -29,6 +29,7 @@ org_allowlist_file = "org_allowlist.csv"
 db_driver = "sqlite3"
 sqlite_datasource = "./aggregator.db"
 log_sql_queries = true
+type = "sql"
 
 [redis]
 database = 0
