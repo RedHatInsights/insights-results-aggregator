@@ -234,6 +234,33 @@ type DBStorage struct {
 
 // New function creates and initializes a new instance of Storage interface
 func New(configuration Configuration) (Storage, error) {
+	switch configuration.Type {
+	case "sql":
+		return newSqlStorage(configuration)
+	case "redis":
+		return newRedisStorage(configuration)
+	case "noop":
+		return newNoopStorage(configuration)
+	default:
+		// error to be thrown
+		err := fmt.Errorf("Unknown storage type '%s'", configuration.Type)
+		log.Error().Err(err).Msg("Init failure")
+		return nil, err
+	}
+}
+
+// newNoopStorage function creates and initializes a new instance of Noop storage
+func newNoopStorage(configuration Configuration) (Storage, error) {
+	return &NoopStorage{}, nil
+}
+
+// newRedisStorage function creates and initializes a new instance of Redis storage
+func newRedisStorage(configuration Configuration) (Storage, error) {
+	return &RedisStorage{}, nil
+}
+
+// newSqlStorage function creates and initializes a new instance of DB storage
+func newSqlStorage(configuration Configuration) (Storage, error) {
 	driverType, driverName, dataSource, err := initAndGetDriver(configuration)
 	if err != nil {
 		return nil, err
