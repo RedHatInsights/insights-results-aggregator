@@ -236,7 +236,7 @@ type DBStorage struct {
 func New(configuration Configuration) (Storage, error) {
 	switch configuration.Type {
 	case "sql":
-		return newSqlStorage(configuration)
+		return newSQLStorage(configuration)
 	case "redis":
 		return newRedisStorage(configuration)
 	case "noop":
@@ -259,8 +259,8 @@ func newRedisStorage(configuration Configuration) (Storage, error) {
 	return &RedisStorage{}, nil
 }
 
-// newSqlStorage function creates and initializes a new instance of DB storage
-func newSqlStorage(configuration Configuration) (Storage, error) {
+// newSQLStorage function creates and initializes a new instance of DB storage
+func newSQLStorage(configuration Configuration) (Storage, error) {
 	driverType, driverName, dataSource, err := initAndGetDriver(configuration)
 	if err != nil {
 		return nil, err
