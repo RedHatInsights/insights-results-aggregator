@@ -1,0 +1,420 @@
+# Copyright 2023 Red Hat, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: ccx-cache-writer
+objects:
+# TODO: Add the cache-writer deployment + services
+
+# Redis instance (https://github.com/openshift-assisted/assisted-events-stream/blob/master/openshift/template.yaml)
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    labels:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    name: ccx-redis
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: ccx-data-pipeline
+        app.kubernetes.io/instance: cache-writer
+        app.kubernetes.io/name: redis
+    serviceName: ccx-redis-headless
+    template:
+      metadata:
+        labels:
+          app: ccx-data-pipeline
+          app.kubernetes.io/instance: cache-writer
+          app.kubernetes.io/name: redis
+      spec:
+        affinity:
+          podAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ccx-data-pipeline
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        containers:
+        - args:
+          - -c
+          - /opt/bitnami/scripts/start-scripts/start-master.sh
+          command:
+          - /bin/bash
+          env:
+          - name: BITNAMI_DEBUG
+            value: "false"
+          - name: REDIS_REPLICATION_MODE
+            value: master
+          - name: ALLOW_EMPTY_PASSWORD
+            value: "no"
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: ${REDIS_CREDENTIALS_SECRETNAME}
+          - name: REDIS_TLS_ENABLED
+            value: "no"
+          - name: REDIS_PORT
+            value: "6379"
+          image: ${REDIS_IMAGE_NAME}:${REDIS_IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - /health/ping_liveness_local.sh 5
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 6
+          name: redis
+          ports:
+          - containerPort: 6379
+            name: redis
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - /health/ping_readiness_local.sh 1
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            limits: {}
+            requests: {}
+          securityContext:
+            runAsNonRoot: true
+          volumeMounts:
+          - mountPath: /opt/bitnami/scripts/start-scripts
+            name: start-scripts
+          - mountPath: /health
+            name: health
+          - mountPath: /data
+            name: ccx-redis-data
+            subPath: null
+          - mountPath: /opt/bitnami/redis/mounted-etc
+            name: config
+          - mountPath: /opt/bitnami/redis/etc/
+            name: redis-tmp-conf
+          - mountPath: /tmp
+            name: tmp
+        - command:
+          - /bin/bash
+          - -c
+          - |
+            if [[ -f '/secrets/redis-password' ]]; then
+            export REDIS_PASSWORD=$(cat /secrets/redis-password)
+            fi
+            redis_exporter
+          env:
+          - name: REDIS_ALIAS
+            value: ccx-redis
+          - name: REDIS_USER
+            value: default
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: ${REDIS_CREDENTIALS_SECRETNAME}
+          image: ${REDIS_EXPORTER_IMAGE_NAME}:${REDIS_EXPORTER_IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          name: metrics
+          ports:
+          - containerPort: 9121
+            name: metrics
+          resources:
+            limits: {}
+            requests: {}
+          securityContext:
+            runAsNonRoot: true
+          volumeMounts: null
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 493
+            name: ccx-redis-scripts
+          name: start-scripts
+        - configMap:
+            defaultMode: 493
+            name: ccx-redis-health
+          name: health
+        - configMap:
+            name: ccx-redis-configuration
+          name: config
+        - emptyDir: {}
+          name: redis-tmp-conf
+        - emptyDir: {}
+          name: tmp
+    updateStrategy:
+      rollingUpdate: {}
+      type: RollingUpdate
+    volumeClaimTemplates:
+    - metadata:
+        labels:
+          app: ccx-data-pipeline
+          app.kubernetes.io/instance: cache-writer
+          app.kubernetes.io/name: redis
+        name: ccx-redis-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: ${REDIS_STORAGE}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    name: ccx-redis-metrics
+  spec:
+    ports:
+    - name: http-metrics
+      port: 9121
+      protocol: TCP
+      targetPort: metrics
+    selector:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    name: ccx-redis
+  spec:
+    internalTrafficPolicy: Cluster
+    ports:
+    - name: tcp-redis
+      nodePort: null
+      port: 6379
+      targetPort: redis
+    selector:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    name: ccx-redis-headless
+  spec:
+    clusterIP: None
+    ports:
+    - name: tcp-redis
+      port: 6379
+      targetPort: redis
+    selector:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    type: ClusterIP
+- apiVersion: v1
+  data:
+    start-master.sh: |
+      #!/bin/bash
+
+      [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
+      if [[ ! -f /opt/bitnami/redis/etc/master.conf ]];then
+          cp /opt/bitnami/redis/mounted-etc/master.conf /opt/bitnami/redis/etc/master.conf
+      fi
+      if [[ ! -f /opt/bitnami/redis/etc/redis.conf ]];then
+          cp /opt/bitnami/redis/mounted-etc/redis.conf /opt/bitnami/redis/etc/redis.conf
+      fi
+      ARGS=("--port" "${REDIS_PORT}")
+      ARGS+=("--requirepass" "${REDIS_PASSWORD}")
+      ARGS+=("--masterauth" "${REDIS_PASSWORD}")
+      ARGS+=("--include" "/opt/bitnami/redis/etc/redis.conf")
+      ARGS+=("--include" "/opt/bitnami/redis/etc/master.conf")
+      exec redis-server "${ARGS[@]}"
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    name: ccx-redis-scripts
+- apiVersion: v1
+  data:
+    ping_liveness_local.sh: |-
+      #!/bin/bash
+
+      [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
+      [[ -n "$REDIS_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_PASSWORD"
+      response=$(
+        timeout -s 3 $1 \
+        redis-cli \
+          -h localhost \
+          -p $REDIS_PORT \
+          ping
+      )
+      if [ "$?" -eq "124" ]; then
+        echo "Timed out"
+        exit 1
+      fi
+      responseFirstWord=$(echo $response | head -n1 | awk '{print $1;}')
+      if [ "$response" != "PONG" ] && [ "$responseFirstWord" != "LOADING" ] && [ "$responseFirstWord" != "MASTERDOWN" ]; then
+        echo "$response"
+        exit 1
+      fi
+    ping_liveness_local_and_master.sh: |-
+      script_dir="$(dirname "$0")"
+      exit_status=0
+      "$script_dir/ping_liveness_local.sh" $1 || exit_status=$?
+      "$script_dir/ping_liveness_master.sh" $1 || exit_status=$?
+      exit $exit_status
+    ping_liveness_master.sh: |-
+      #!/bin/bash
+
+      [[ -f $REDIS_MASTER_PASSWORD_FILE ]] && export REDIS_MASTER_PASSWORD="$(< "${REDIS_MASTER_PASSWORD_FILE}")"
+      [[ -n "$REDIS_MASTER_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_MASTER_PASSWORD"
+      response=$(
+        timeout -s 3 $1 \
+        redis-cli \
+          -h $REDIS_MASTER_HOST \
+          -p $REDIS_MASTER_PORT_NUMBER \
+          ping
+      )
+      if [ "$?" -eq "124" ]; then
+        echo "Timed out"
+        exit 1
+      fi
+      responseFirstWord=$(echo $response | head -n1 | awk '{print $1;}')
+      if [ "$response" != "PONG" ] && [ "$responseFirstWord" != "LOADING" ]; then
+        echo "$response"
+        exit 1
+      fi
+    ping_readiness_local.sh: |-
+      #!/bin/bash
+
+      [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
+      [[ -n "$REDIS_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_PASSWORD"
+      response=$(
+        timeout -s 3 $1 \
+        redis-cli \
+          -h localhost \
+          -p $REDIS_PORT \
+          ping
+      )
+      if [ "$?" -eq "124" ]; then
+        echo "Timed out"
+        exit 1
+      fi
+      if [ "$response" != "PONG" ]; then
+        echo "$response"
+        exit 1
+      fi
+    ping_readiness_local_and_master.sh: |-
+      script_dir="$(dirname "$0")"
+      exit_status=0
+      "$script_dir/ping_readiness_local.sh" $1 || exit_status=$?
+      "$script_dir/ping_readiness_master.sh" $1 || exit_status=$?
+      exit $exit_status
+    ping_readiness_master.sh: |-
+      #!/bin/bash
+
+      [[ -f $REDIS_MASTER_PASSWORD_FILE ]] && export REDIS_MASTER_PASSWORD="$(< "${REDIS_MASTER_PASSWORD_FILE}")"
+      [[ -n "$REDIS_MASTER_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_MASTER_PASSWORD"
+      response=$(
+        timeout -s 3 $1 \
+        redis-cli \
+          -h $REDIS_MASTER_HOST \
+          -p $REDIS_MASTER_PORT_NUMBER \
+          ping
+      )
+      if [ "$?" -eq "124" ]; then
+        echo "Timed out"
+        exit 1
+      fi
+      if [ "$response" != "PONG" ]; then
+        echo "$response"
+        exit 1
+      fi
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    name: ccx-redis-health
+- apiVersion: v1
+  data:
+    master.conf: |-
+      dir /data
+      # User-supplied master configuration:
+      rename-command FLUSHDB ""
+      rename-command FLUSHALL ""
+      # End of master configuration
+    redis.conf: |-
+      # User-supplied common configuration:
+      # Enable AOF https://redis.io/topics/persistence#append-only-file
+      appendonly yes
+      # Disable RDB persistence, AOF persistence already enabled.
+      save ""
+      # End of common configuration
+    replica.conf: |-
+      dir /data
+      slave-read-only yes
+      # User-supplied replica configuration:
+      rename-command FLUSHDB ""
+      rename-command FLUSHALL ""
+      # End of replica configuration
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: ccx-data-pipeline
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: redis
+    name: ccx-redis-configuration
+
+parameters:
+# cache-writer
+
+# redis
+- name: REDIS_EXPORTER_IMAGE_TAG
+  value: 1.37.0-debian-10-r63
+- name: REDIS_EXPORTER_IMAGE_NAME
+  value: quay.io/edge-infrastructure/redis-exporter
+- name: REDIS_IMAGE_TAG
+  value: 6.2.7-debian-10-r23
+- name: REDIS_IMAGE_NAME
+  value: quay.io/edge-infrastructure/redis
+- name: REDIS_STORAGE
+  value: 100Gi
+- name: REDIS_CREDENTIALS_SECRETNAME
+  value: cache-writer-redis-credentials
