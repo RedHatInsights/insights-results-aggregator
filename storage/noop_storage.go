@@ -15,6 +15,7 @@
 package storage
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/RedHatInsights/insights-content-service/content"
@@ -371,4 +372,20 @@ func (*NoopStorage) ReadClusterListRecommendations(
 	clusterList []string, orgID types.OrgID,
 ) (ctypes.ClusterRecommendationMap, error) {
 	return nil, nil
+}
+
+func (*NoopStorage) MigrateToLatest() error {
+	return nil
+}
+
+func (*NoopStorage) GetConnection() *sql.DB {
+	return nil
+}
+
+func (*NoopStorage) PrintRuleDisableDebugInfo() {
+	return
+}
+
+func (*NoopStorage) GetDBDriverType() types.DBDriver {
+	return types.DBDriverGeneral
 }
