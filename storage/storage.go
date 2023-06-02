@@ -215,6 +215,10 @@ type Storage interface {
 	ReadClusterListRecommendations(clusterList []string, orgID types.OrgID) (
 		ctypes.ClusterRecommendationMap, error,
 	)
+	MigrateToLatest() error
+	GetConnection() *sql.DB
+	PrintRuleDisableDebugInfo()
+	GetDBDriverType() types.DBDriver
 }
 
 // DBStorage is an implementation of Storage interface that use selected SQL like database

@@ -15,6 +15,7 @@
 package storage
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/RedHatInsights/insights-content-service/content"
@@ -371,4 +372,25 @@ func (*NoopStorage) ReadClusterListRecommendations(
 	clusterList []string, orgID types.OrgID,
 ) (ctypes.ClusterRecommendationMap, error) {
 	return nil, nil
+}
+
+// MigrateToLatest migrates the database to the latest available
+// migration version. This must be done before an Init() call.
+func (*NoopStorage) MigrateToLatest() error {
+	return nil
+}
+
+// GetConnection returns db connection(useful for testing)
+func (*NoopStorage) GetConnection() *sql.DB {
+	return nil
+}
+
+// PrintRuleDisableDebugInfo is a temporary helper function used to print form
+// cluster rule toggle related tables
+func (*NoopStorage) PrintRuleDisableDebugInfo() {
+}
+
+// GetDBDriverType returns db driver type
+func (*NoopStorage) GetDBDriverType() types.DBDriver {
+	return types.DBDriverGeneral
 }
