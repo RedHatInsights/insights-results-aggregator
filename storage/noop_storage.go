@@ -388,7 +388,6 @@ func (*NoopStorage) GetConnection() *sql.DB {
 // PrintRuleDisableDebugInfo is a temporary helper function used to print form
 // cluster rule toggle related tables
 func (*NoopStorage) PrintRuleDisableDebugInfo() {
-	return
 }
 
 // GetDBDriverType returns db driver type
