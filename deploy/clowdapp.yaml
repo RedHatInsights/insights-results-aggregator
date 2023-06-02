@@ -181,12 +181,6 @@ objects:
                   value: "sql"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
                   value: ${CLOUDWATCH_ENABLED}
-                - name: INSIGHTS_REDIS_URL
-                  value: "ccx-redis:6379"
-                - name: INSIGHTS_REDIS_DATABASE
-                  value: "0"
-                - name: INSIGHTS_REDIS_TIMEOUT_SECONDS
-                  value: "30"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
                   value: ${CLOUDWATCH_DEBUG}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
@@ -475,3 +469,9 @@ parameters:
   required: true
 - name: CREATE_STREAM_IF_NOT_EXISTS
   value: "true"
+- name: INSIGHTS_REDIS_URL
+  value: "ccx-redis:6379"
+- name: INSIGHTS_REDIS_DATABASE
+  value: "0"
+- name: INSIGHTS_REDIS_TIMEOUT_SECONDS
+  value: "30"
