@@ -1,5 +1,5 @@
 /*
-Copyright © 2021 Red Hat, Inc.
+Copyright © 2021, 2022, 2023 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -111,8 +111,10 @@ func fillInInfoParams(params map[string]string) {
 
 // createStorage function initializes connection to preconfigured storage,
 // usually SQLite, PostgreSQL, or AWS RDS.
-func createStorage() (*storage.DBStorage, error) {
+func createStorage() (storage.Storage, error) {
 	storageCfg := conf.GetStorageConfiguration()
+
+	log.Info().Str("type", storageCfg.Type).Msg("Storage type")
 
 	// try to initialize connection to storage
 	dbStorage, err := storage.New(storageCfg)
@@ -126,7 +128,7 @@ func createStorage() (*storage.DBStorage, error) {
 
 // closeStorage function closes specified DBStorage with proper error checking
 // whether the close operation was successful or not.
-func closeStorage(storage *storage.DBStorage) {
+func closeStorage(storage storage.Storage) {
 	err := storage.Close()
 	if err != nil {
 		// TODO: error state might be returned from this function
@@ -137,7 +139,7 @@ func closeStorage(storage *storage.DBStorage) {
 // prepareDBMigrations function checks the actual database version and when
 // autoMigrate is set performs migration to the latest schema version
 // available.
-func prepareDBMigrations(dbStorage *storage.DBStorage) int {
+func prepareDBMigrations(dbStorage storage.Storage) int {
 	// This is only used by some unit tests.
 	if autoMigrate {
 		if err := dbStorage.MigrateToLatest(); err != nil {
@@ -346,7 +348,7 @@ func printEnv() int {
 // getDBForMigrations function opens a DB connection and prepares the DB for
 // migrations. Non-OK exit code is returned as the last return value in case
 // of an error. Otherwise, database and connection pointers are returned.
-func getDBForMigrations() (*storage.DBStorage, *sql.DB, int) {
+func getDBForMigrations() (storage.Storage, *sql.DB, int) {
 	db, err := createStorage()
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to prepare DB for migrations")
