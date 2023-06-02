@@ -98,6 +98,7 @@ func TestNewStorageWithLoggingError(t *testing.T) {
 		PGPort:        1234,
 		PGUsername:    "user",
 		LogSQLQueries: true,
+		Type:          "sql",
 	})
 
 	err := s.Init()
@@ -556,6 +557,7 @@ func TestDBStorageNewPostgresqlError(t *testing.T) {
 		PGHost:     "non-existing-host",
 		PGPort:     12345,
 		PGUsername: "user",
+		Type:       "sql",
 	})
 
 	err := s.Init()
@@ -715,6 +717,7 @@ func TestDBStorage_NewSQLite(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
 		Driver:           "sqlite3",
 		SQLiteDataSource: ":memory:",
+		Type:             "sql",
 	})
 	helpers.FailOnError(t, err)
 }
