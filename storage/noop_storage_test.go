@@ -95,6 +95,6 @@ func TestNoopStorage_Methods_Cont2(t *testing.T) {
 	_, _ = noopStorage.ListOfDisabledClusters(orgID, "", "")
 	_ = noopStorage.MigrateToLatest()
 	_ = noopStorage.GetConnection()
-	_ = noopStorage.PrintRuleDisableDebugInfo()
+	noopStorage.PrintRuleDisableDebugInfo()
 	_ = noopStorage.GetDBDriverType
 }
