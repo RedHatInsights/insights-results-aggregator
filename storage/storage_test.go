@@ -83,12 +83,30 @@ func writeReportForCluster(
 	helpers.FailOnError(t, err)
 }
 
-// TestNewStorage checks whether constructor for new storage returns error for improper storage configuration
+// TestNewStorageError checks whether constructor for new storage returns error for improper storage configuration
 func TestNewStorageError(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
 		Driver: "non existing driver",
+		Type:   "sql",
 	})
 	assert.EqualError(t, err, "driver non existing driver is not supported")
+}
+
+// TestNewStorageNoType checks whether constructor for new storage returns error for improper storage configuration
+func TestNewStorageNoType(t *testing.T) {
+	_, err := storage.New(storage.Configuration{
+		Driver: "non existing driver",
+	})
+	assert.EqualError(t, err, "Unknown storage type ''")
+}
+
+// TestNewStorageWrongType checks whether constructor for new storage returns error for improper storage configuration
+func TestNewStorageWrongType(t *testing.T) {
+	_, err := storage.New(storage.Configuration{
+		Driver: "non existing driver",
+		Type:   "foobar",
+	})
+	assert.EqualError(t, err, "Unknown storage type 'foobar'")
 }
 
 // TestNewStorageWithLogging tests creating new storage with logs
@@ -103,6 +121,36 @@ func TestNewStorageWithLoggingError(t *testing.T) {
 
 	err := s.Init()
 	assert.Contains(t, err.Error(), "connect: connection refused")
+}
+
+// TestNewStorageReturnedImplementation check what implementation of storage is returnd
+func TestNewStorageReturnedImplementation(t *testing.T) {
+	s, _ := storage.New(storage.Configuration{
+		Driver:        "postgres",
+		PGPort:        1234,
+		PGUsername:    "user",
+		LogSQLQueries: true,
+		Type:          "sql",
+	})
+	assert.IsType(t, &storage.DBStorage{}, s)
+
+	s, _ = storage.New(storage.Configuration{
+		Driver:        "postgres",
+		PGPort:        1234,
+		PGUsername:    "user",
+		LogSQLQueries: true,
+		Type:          "redis",
+	})
+	assert.IsType(t, &storage.RedisStorage{}, s)
+
+	s, _ = storage.New(storage.Configuration{
+		Driver:        "postgres",
+		PGPort:        1234,
+		PGUsername:    "user",
+		LogSQLQueries: true,
+		Type:          "noop",
+	})
+	assert.IsType(t, &storage.NoopStorage{}, s)
 }
 
 // TestDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
