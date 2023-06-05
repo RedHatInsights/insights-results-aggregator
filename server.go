@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var (
@@ -49,13 +50,20 @@ func startServer() error {
 
 	// try to retrieve the actual DB migration version
 	// and add it into the `params` map
-	currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection())
-	if err != nil {
-		const msg = "Unable to retrieve DB migration version"
-		log.Error().Err(err).Msg(msg)
-		serverInstance.InfoParams["DB_version"] = msg
+	log.Info().Msg("Setting DB version for /info endpoint")
+	if conf.GetStorageConfiguration().Type == types.SQLStorage {
+		// migration and DB versioning is now supported for SQL
+		// databases only
+		currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection())
+		if err != nil {
+			const msg = "Unable to retrieve DB migration version"
+			log.Error().Err(err).Msg(msg)
+			serverInstance.InfoParams["DB_version"] = msg
+		} else {
+			serverInstance.InfoParams["DB_version"] = strconv.Itoa(int(currentVersion))
+		}
 	} else {
-		serverInstance.InfoParams["DB_version"] = strconv.Itoa(int(currentVersion))
+		serverInstance.InfoParams["DB_version"] = "not supported"
 	}
 
 	err = serverInstance.Start(finishServerInstanceInitialization)
