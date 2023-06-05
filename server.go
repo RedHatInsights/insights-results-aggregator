@@ -49,13 +49,20 @@ func startServer() error {
 
 	// try to retrieve the actual DB migration version
 	// and add it into the `params` map
-	currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection())
-	if err != nil {
-		const msg = "Unable to retrieve DB migration version"
-		log.Error().Err(err).Msg(msg)
-		serverInstance.InfoParams["DB_version"] = msg
+	log.Info().Msg("Setting DB version for /info endpoint")
+	if conf.GetStorageConfiguration().Type == "sql" {
+		// migration and DB versioning is now supported for SQL
+		// databases only
+		currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection())
+		if err != nil {
+			const msg = "Unable to retrieve DB migration version"
+			log.Error().Err(err).Msg(msg)
+			serverInstance.InfoParams["DB_version"] = msg
+		} else {
+			serverInstance.InfoParams["DB_version"] = strconv.Itoa(int(currentVersion))
+		}
 	} else {
-		serverInstance.InfoParams["DB_version"] = strconv.Itoa(int(currentVersion))
+		serverInstance.InfoParams["DB_version"] = "not supported"
 	}
 
 	err = serverInstance.Start(finishServerInstanceInitialization)
