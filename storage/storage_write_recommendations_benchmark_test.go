@@ -378,7 +378,7 @@ func mustCleanupAfterReportAndRecommendationsBenchmark(b *testing.B, conn *sql.D
 // BenchmarkNewRecommendationsWithoutConflict inserts many non-conflicting
 // rows into the benchmark table using storage.WriteRecommendationsForCluster.
 func BenchmarkNewRecommendationsWithoutConflict(b *testing.B) {
-	storage, conn, closer := mustPrepareRecommendationsBenchmark(b)
+	storageImpl, conn, closer := mustPrepareRecommendationsBenchmark(b)
 
 	clusterIDSet := newSet()
 	for i := 0; i < 1; i++ {
@@ -392,7 +392,7 @@ func BenchmarkNewRecommendationsWithoutConflict(b *testing.B) {
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for id := range clusterIDSet.content {
-			err := storage.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report3Rules, RecommendationCreatedAtTimestamp)
+			err := storageImpl.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report3Rules, RecommendationCreatedAtTimestamp)
 			helpers.FailOnError(b, err)
 		}
 	}
@@ -472,7 +472,7 @@ func BenchmarkNewRecommendations2000initialEntries(b *testing.B) {
 // BenchmarkWriteReportAndRecommendationsNoConflict inserts reports and the
 // corresponding recommendation so we can compare insertion times
 func BenchmarkWriteReportAndRecommendationsNoConflict(b *testing.B) {
-	storage, conn, closer := mustPrepareReportAndRecommendationsBenchmark(b)
+	storageImpl, conn, closer := mustPrepareReportAndRecommendationsBenchmark(b)
 
 	clusterIDSet := newSet()
 	for i := 0; i < 1; i++ {
@@ -509,9 +509,9 @@ func BenchmarkWriteReportAndRecommendationsNoConflict(b *testing.B) {
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
 		for id := range clusterIDSet.content {
-			err := storage.WriteReportForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report2Rules, testdata.Report2RulesParsed, time.Now(), time.Now(), time.Now(), types.KafkaOffset(0))
+			err := storageImpl.WriteReportForCluster(types.OrgID(1), types.ClusterName(id), testdata.Report2Rules, testdata.Report2RulesParsed, time.Now(), time.Now(), time.Now(), types.KafkaOffset(0))
 			helpers.FailOnError(b, err)
-			err = storage.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), Report20Rules, RecommendationCreatedAtTimestamp)
+			err = storageImpl.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), Report20Rules, RecommendationCreatedAtTimestamp)
 			helpers.FailOnError(b, err)
 		}
 	}

@@ -73,13 +73,13 @@ func checkReportForCluster(
 
 func writeReportForCluster(
 	t *testing.T,
-	storage storage.Storage,
+	storageImpl storage.Storage,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	clusterReport types.ClusterReport,
 	rules []types.ReportItem,
 ) {
-	err := storage.WriteReportForCluster(orgID, clusterName, clusterReport, rules, time.Now(), time.Now(), time.Now(), testdata.KafkaOffset)
+	err := storageImpl.WriteReportForCluster(orgID, clusterName, clusterReport, rules, time.Now(), time.Now(), time.Now(), testdata.KafkaOffset)
 	helpers.FailOnError(t, err)
 }
 
