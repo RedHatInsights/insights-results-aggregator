@@ -88,7 +88,8 @@ func TestNewStorageError(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
 		Driver: "non existing driver",
 		Type:   "sql",
-	})
+	},
+		storage.RedisConfiguration{})
 	assert.EqualError(t, err, "driver non existing driver is not supported")
 }
 
@@ -96,7 +97,8 @@ func TestNewStorageError(t *testing.T) {
 func TestNewStorageNoType(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
 		Driver: "non existing driver",
-	})
+	},
+		storage.RedisConfiguration{})
 	assert.EqualError(t, err, "Unknown storage type ''")
 }
 
@@ -105,7 +107,8 @@ func TestNewStorageWrongType(t *testing.T) {
 	_, err := storage.New(storage.Configuration{
 		Driver: "non existing driver",
 		Type:   "foobar",
-	})
+	},
+		storage.RedisConfiguration{})
 	assert.EqualError(t, err, "Unknown storage type 'foobar'")
 }
 
@@ -117,7 +120,8 @@ func TestNewStorageWithLoggingError(t *testing.T) {
 		PGUsername:    "user",
 		LogSQLQueries: true,
 		Type:          "sql",
-	})
+	},
+		storage.RedisConfiguration{})
 
 	err := s.Init()
 	assert.Contains(t, err.Error(), "connect: connection refused")
@@ -131,7 +135,8 @@ func TestNewStorageReturnedImplementation(t *testing.T) {
 		PGUsername:    "user",
 		LogSQLQueries: true,
 		Type:          "sql",
-	})
+	},
+		storage.RedisConfiguration{})
 	assert.IsType(t, &storage.DBStorage{}, s)
 
 	s, _ = storage.New(storage.Configuration{
@@ -140,7 +145,8 @@ func TestNewStorageReturnedImplementation(t *testing.T) {
 		PGUsername:    "user",
 		LogSQLQueries: true,
 		Type:          "redis",
-	})
+	},
+		storage.RedisConfiguration{})
 	assert.IsType(t, &storage.RedisStorage{}, s)
 
 	s, _ = storage.New(storage.Configuration{
@@ -149,7 +155,8 @@ func TestNewStorageReturnedImplementation(t *testing.T) {
 		PGUsername:    "user",
 		LogSQLQueries: true,
 		Type:          "noop",
-	})
+	},
+		storage.RedisConfiguration{})
 	assert.IsType(t, &storage.NoopStorage{}, s)
 }
 
@@ -606,7 +613,8 @@ func TestDBStorageNewPostgresqlError(t *testing.T) {
 		PGPort:     12345,
 		PGUsername: "user",
 		Type:       "sql",
-	})
+	},
+		storage.RedisConfiguration{})
 
 	err := s.Init()
 	assert.Contains(t, err.Error(), "no such host")
@@ -766,7 +774,8 @@ func TestDBStorage_NewSQLite(t *testing.T) {
 		Driver:           "sqlite3",
 		SQLiteDataSource: ":memory:",
 		Type:             "sql",
-	})
+	},
+		storage.RedisConfiguration{})
 	helpers.FailOnError(t, err)
 }
 
