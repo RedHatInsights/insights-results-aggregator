@@ -113,11 +113,12 @@ func fillInInfoParams(params map[string]string) {
 // usually SQLite, PostgreSQL, or AWS RDS.
 func createStorage() (storage.Storage, error) {
 	storageCfg := conf.GetStorageConfiguration()
+	redisCfg := conf.GetRedisConfiguration()
 
 	log.Info().Str("type", storageCfg.Type).Msg("Storage type")
 
 	// try to initialize connection to storage
-	dbStorage, err := storage.New(storageCfg)
+	dbStorage, err := storage.New(storageCfg, redisCfg)
 	if err != nil {
 		log.Error().Err(err).Msg("storage.New")
 		return nil, err
