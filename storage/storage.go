@@ -235,11 +235,11 @@ type DBStorage struct {
 // New function creates and initializes a new instance of Storage interface
 func New(configuration Configuration) (Storage, error) {
 	switch configuration.Type {
-	case "sql":
+	case types.SQLStorage:
 		return newSQLStorage(configuration)
-	case "redis":
+	case types.RedisStorage:
 		return newRedisStorage(configuration)
-	case "noop":
+	case types.NoopStorage:
 		return newNoopStorage(configuration)
 	default:
 		// error to be thrown

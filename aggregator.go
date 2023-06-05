@@ -144,7 +144,7 @@ func closeStorage(storage storage.Storage) {
 // autoMigrate is set performs migration to the latest schema version
 // available.
 func prepareDBMigrations(dbStorage storage.Storage) int {
-	if conf.GetStorageConfiguration().Type != "sql" {
+	if conf.GetStorageConfiguration().Type != types.SQLStorage {
 		log.Info().Msg("Skipping migration for non-SQL database type")
 		return ExitStatusOK
 	}
