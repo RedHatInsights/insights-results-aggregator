@@ -113,6 +113,10 @@ func fillInInfoParams(params map[string]string) {
 // usually SQLite, PostgreSQL, or AWS RDS.
 func createStorage() (storage.Storage, error) {
 	storageCfg := conf.GetStorageConfiguration()
+	redisCfg := conf.GetRedisConfiguration()
+	// fill-in the missing sub-structure to have the whole Storage
+	// configuration represented as one data structure
+	storageCfg.RedisConfiguration = redisCfg
 
 	log.Info().Str("type", storageCfg.Type).Msg("Storage type")
 
