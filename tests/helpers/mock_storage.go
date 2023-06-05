@@ -162,7 +162,7 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) 
 	_, err = adminConn.Exec(query)
 	helpers.FailOnError(tb, err)
 
-	postgresStorage, err := storage.New(*storageConf)
+	postgresStorage, err := storage.New(*storageConf, storage.RedisConfiguration{})
 
 	helpers.FailOnError(tb, err)
 	helpers.FailOnError(tb, postgresStorage.GetConnection().Ping())
