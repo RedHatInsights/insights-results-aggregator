@@ -256,6 +256,11 @@ func newNoopStorage(configuration Configuration) (Storage, error) {
 
 // newRedisStorage function creates and initializes a new instance of Redis storage
 func newRedisStorage(configuration Configuration) (Storage, error) {
+	redisCfg := configuration.RedisConfiguration
+	log.Info().
+		Str("Endpoint", redisCfg.RedisEndpoint).
+		Int("Database index", redisCfg.RedisDatabase).
+		Msg("Making connection to Redis storage")
 	return &RedisStorage{}, nil
 }
 
