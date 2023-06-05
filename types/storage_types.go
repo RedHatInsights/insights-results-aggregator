@@ -15,7 +15,10 @@
 package types
 
 const (
-	SQLStorage   = "sql"
+	// SQLStorage constant is used to specify storage based on any SQL database
+	SQLStorage = "sql"
+	// RedisStorage constant is used to specify storage based on Redis database
 	RedisStorage = "redis"
-	NoopStorage  = "noop"
+	// NoopStorage constant is used to specify storage based on No-op database
+	NoopStorage = "noop"
 )
