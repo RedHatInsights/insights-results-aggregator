@@ -21,6 +21,8 @@ import (
 	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/Shopify/sarama"
 
+	"github.com/rs/zerolog/log"
+
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -31,6 +33,7 @@ type RedisStorage struct{}
 
 // Init noop
 func (*RedisStorage) Init() error {
+	log.Info().Msg("Redis database Init()")
 	return nil
 }
 
@@ -388,6 +391,7 @@ func (*RedisStorage) GetConnection() *sql.DB {
 // PrintRuleDisableDebugInfo is a temporary helper function used to print form
 // cluster rule toggle related tables
 func (*RedisStorage) PrintRuleDisableDebugInfo() {
+	log.Info().Msg("PrintRuleDisableDebugInfo() skipped for Redis storage")
 }
 
 // GetDBDriverType returns db driver type
