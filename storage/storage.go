@@ -39,6 +39,7 @@ import (
 	"github.com/mattn/go-sqlite3" // SQLite database driver
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-operator-utils/redis"
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -261,7 +262,29 @@ func newRedisStorage(configuration Configuration) (Storage, error) {
 		Str("Endpoint", redisCfg.RedisEndpoint).
 		Int("Database index", redisCfg.RedisDatabase).
 		Msg("Making connection to Redis storage")
-	return &RedisStorage{}, nil
+
+	// pass for unit tests
+	if redisCfg.RedisEndpoint == "" {
+		return &RedisStorage{}, nil
+	}
+
+	client, err := redis.CreateRedisClient(
+		redisCfg.RedisEndpoint,
+		redisCfg.RedisDatabase,
+		redisCfg.RedisPassword,
+		redisCfg.RedisTimeoutSeconds,
+	)
+	// check for init error
+	if err != nil {
+		log.Error().Err(err).Msg("Error initializing Redis client")
+		return nil, err
+	}
+
+	log.Info().Msg("Redis client has been initialized")
+
+	return &RedisStorage{
+		redis.Client{Connection: client},
+	}, nil
 }
 
 // newSQLStorage function creates and initializes a new instance of DB storage
