@@ -22,6 +22,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func printableRequestID(message *incomingMessage) string {
+	var requestID = message.RequestID
+	if requestID == "" {
+		return "missing"
+	}
+	return string(requestID)
+}
+
 func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
 	log.Info().
 		Int(offsetKey, int(originalMessage.Offset)).
@@ -30,6 +38,7 @@ func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMes
 		Int(organizationKey, int(*parsedMessage.Organization)).
 		Str(clusterKey, string(*parsedMessage.ClusterName)).
 		Int(versionKey, int(parsedMessage.Version)).
+		Str(requestIDKey, printableRequestID(&parsedMessage)).
 		Msg(event)
 }
 
@@ -39,7 +48,10 @@ func logClusterInfo(message *incomingMessage) {
 		return
 	}
 
-	logMessage := fmt.Sprintf("rule hits for %d.%s:", *message.Organization, *message.ClusterName)
+	logMessage := fmt.Sprintf("rule hits for %d.%s (request ID %s):",
+		*message.Organization,
+		*message.ClusterName,
+		printableRequestID(message))
 	if message.ParsedHits != nil && len(message.ParsedHits) > 0 {
 		for _, ph := range message.ParsedHits {
 			newLine := fmt.Sprintf("\n\trule: %s; error key: %s", ph.Module, ph.ErrorKey)
