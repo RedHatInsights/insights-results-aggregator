@@ -23,13 +23,16 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-operator-utils/redis"
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // RedisStorage represents a storage which does nothing (for benchmarking without a storage)
-type RedisStorage struct{}
+type RedisStorage struct {
+	Client redis.Client
+}
 
 // Init noop
 func (*RedisStorage) Init() error {
