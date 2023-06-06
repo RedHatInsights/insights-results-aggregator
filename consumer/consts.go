@@ -35,6 +35,8 @@ const (
 	durationKey = "duration"
 	// key for data schema version message type used in structured log messages
 	versionKey = "version"
+	// key for request ID
+	requestIDKey = "request ID"
 	// CurrentSchemaVersion represents the currently supported data schema version
 	CurrentSchemaVersion = types.SchemaVersion(1)
 )
