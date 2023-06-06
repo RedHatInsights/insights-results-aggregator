@@ -54,9 +54,12 @@ github.com/RedHatInsights/cloudwatch v0.0.0-20210111105023-1df2bdfe3291/go.mod h
 github.com/RedHatInsights/insights-content-service v0.0.0-20200619153839-23a428468a08/go.mod h1:CSzDwoJXMIPnRNOZfYn68YbXejRqSr0i4uqtB6oLYt4=
 github.com/RedHatInsights/insights-content-service v0.0.0-20221024073309-fabee4bcb06e h1:vyw0nkzMTnBB4rP7z5HpdH1bWI4CywSvxHd+ECs8uTU=
 github.com/RedHatInsights/insights-content-service v0.0.0-20221024073309-fabee4bcb06e/go.mod h1:9bnb8zbE7ocCmrvVpmIRgCOcb2ew7ovEcReMB953Pbo=
+github.com/RedHatInsights/insights-content-service v0.0.0-20230529094240-4216523486cc h1:bi0AoZ7gQfSQcT/roa0cPIMA8kDMYGbxLgH9641ZtJQ=
+github.com/RedHatInsights/insights-content-service v0.0.0-20230529094240-4216523486cc/go.mod h1:6nihzwhfwTZHM8ClPwISTntuYPf6W2UzcI+yPeUPMRk=
 github.com/RedHatInsights/insights-operator-utils v1.0.1/go.mod h1:gRzYBMY4csuOXgrxUuC10WUkz6STOm3mqVsQCb+AGOQ=
 github.com/RedHatInsights/insights-operator-utils v1.0.2-0.20200610143236-c868b2f93d2a/go.mod h1:0rhk13kn0BB+yKdfZjpMoQy0lXdXY3i4NJ1xGwGMcII=
 github.com/RedHatInsights/insights-operator-utils v1.4.1-0.20200729093922-bca68530a5ef/go.mod h1:F7KKAdWFR70H+3fa89ciXqimNycHdqO9HjLWRdZwOug=
+github.com/RedHatInsights/insights-operator-utils v1.4.3/go.mod h1:F7KKAdWFR70H+3fa89ciXqimNycHdqO9HjLWRdZwOug=
 github.com/RedHatInsights/insights-operator-utils v1.6.2/go.mod h1:RW9Jq4LgqIkV3WY6AS2EkopYyZDIr5BNGiU5I75HryM=
 github.com/RedHatInsights/insights-operator-utils v1.6.7/go.mod h1:ott1/rkxcyQtK6XdYj1Ur3XGSYRAHTplJiV5RKkij2o=
 github.com/RedHatInsights/insights-operator-utils v1.8.3/go.mod h1:L6alrkNSM+uBzlQdIihhGnwTpdw+bD8i8Fdh/OE9rdo=
@@ -84,10 +87,13 @@ github.com/RedHatInsights/insights-results-aggregator-data v1.3.6 h1:RcZsn25t+km
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.6/go.mod h1:tOwmlIB5irSv1mTLgONuLrsbTp4vokl4ClJFClrrXX0=
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.8 h1:dYWiAdeNRb7iutWxNQBuuVrWH/QBqWx1g7RhOk+SjEw=
 github.com/RedHatInsights/insights-results-aggregator-data v1.3.8/go.mod h1:YOtil8P/1Zy/XewZejn4hjXKrcvmaxIqhU7mjwCGo/o=
+github.com/RedHatInsights/insights-results-aggregator-data v1.3.9 h1:D6JtouoQs606xOIQaQVmAFi+tgw/UEv/POarE46VdEY=
+github.com/RedHatInsights/insights-results-aggregator-data v1.3.9/go.mod h1:sL0aXaqEq/EzjMEj8QHv13RjfnSXvv2f2q/7OHSOVCQ=
 github.com/RedHatInsights/insights-results-types v1.2.0/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
 github.com/RedHatInsights/insights-results-types v1.3.7/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
 github.com/RedHatInsights/insights-results-types v1.3.20 h1:02zlYmyZWkUCryHYgShrfYYO0ZJK3oYV5DaxeP5IZ2g=
 github.com/RedHatInsights/insights-results-types v1.3.20/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
+github.com/RedHatInsights/insights-results-types v1.3.21/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
 github.com/RedHatInsights/insights-results-types v1.3.22 h1:bQgFSG3RbcusnUjVti6l9C0IN4NzG1Q0IRQut9FdD8o=
 github.com/RedHatInsights/insights-results-types v1.3.22/go.mod h1:6VVdMTGU/BAS2cW0KrHAUiDyocpyKqpPpEyp6AJ1tk8=
 github.com/RedHatInsights/kafka-zerolog v0.0.0-20210304172207-928f026dc7ec/go.mod h1:HJul5oCsCRNiRlh/ayJDGdW3PzGlid/5aaQwJBn7was=
@@ -321,6 +327,7 @@ github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.4/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
+github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/go-querystring v1.0.0/go.mod h1:odCYkC5MyYFN7vkCjXpyrEuKhc/BUO6wN/zVPAxq5ck=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
@@ -493,6 +500,8 @@ github.com/mattn/go-isatty v0.0.14/go.mod h1:7GGIvUiUoEMVVmxf/4nioHXj79iQHKdU27k
 github.com/mattn/go-runewidth v0.0.2/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/mattn/go-sqlite3 v1.10.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mattn/go-sqlite3 v1.14.0/go.mod h1:JIl7NbARA7phWnGvh0LKTyg7S9BA+6gx71ShQilpsus=
+github.com/mattn/go-sqlite3 v1.14.17 h1:mCRHCLDUBXgpKAqIKsaAaAsrAlbkeomtRFKXh2L6YIM=
+github.com/mattn/go-sqlite3 v1.14.17/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
 github.com/mattn/go-sqlite3 v2.0.3+incompatible h1:gXHsfypPkaMZrKbD5209QV9jbUTJKjyR5WD3HYQSd+U=
 github.com/mattn/go-sqlite3 v2.0.3+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mattn/goveralls v0.0.2/go.mod h1:8d1ZMHsd7fW6IRPKQh46F2WRpyib5/X4FOpevwGNQEw=
@@ -900,6 +909,7 @@ golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20201207232520-09787c993a3a/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 h1:uVc8UZUe6tr40fFVnUP5Oj+veunVezqYl9z7DYw9xzw=
 golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.1.0 h1:wsuoTGHzEhffawBOhz5CYhcrV4IdKZbEyZjBMuTp12o=
