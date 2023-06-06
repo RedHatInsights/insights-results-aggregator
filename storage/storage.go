@@ -84,6 +84,7 @@ type Storage interface {
 		gatheredAtTime time.Time,
 		storedAtTime time.Time,
 		kafkaOffset types.KafkaOffset,
+		requestID types.RequestID,
 	) error
 	WriteReportInfoForCluster(
 		types.OrgID,
@@ -1097,6 +1098,7 @@ func (storage DBStorage) WriteReportForCluster(
 	gatheredAt time.Time,
 	storedAtTime time.Time,
 	kafkaOffset types.KafkaOffset,
+	requestID types.RequestID,
 ) error {
 	// Skip writing the report if it isn't newer than a report
 	// that is already in the database for the same cluster.

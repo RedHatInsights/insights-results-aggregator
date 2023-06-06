@@ -85,6 +85,7 @@ func (*RedisStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 // WriteReportForCluster noop
 func (*RedisStorage) WriteReportForCluster(
 	types.OrgID, types.ClusterName, types.ClusterReport, []types.ReportItem, time.Time, time.Time, time.Time, types.KafkaOffset,
+	types.RequestID,
 ) error {
 	return nil
 }
