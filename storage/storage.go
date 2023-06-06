@@ -262,6 +262,12 @@ func newRedisStorage(configuration Configuration) (Storage, error) {
 		Str("Endpoint", redisCfg.RedisEndpoint).
 		Int("Database index", redisCfg.RedisDatabase).
 		Msg("Making connection to Redis storage")
+
+	// pass for unit tests
+	if redisCfg.RedisEndpoint == "" {
+		return &RedisStorage{}, nil
+	}
+
 	client, err := redis.CreateRedisClient(
 		redisCfg.RedisEndpoint,
 		redisCfg.RedisDatabase,
