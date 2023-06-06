@@ -1,4 +1,4 @@
-// Copyright 2020, 2021, 2022 Red Hat, Inc
+// Copyright 2020, 2021, 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -145,6 +145,7 @@ func initTestReports(b *testing.B, n uint, mockStorage storage.Storage, reportPr
 			time.Now(),
 			time.Now(),
 			testdata.KafkaOffset,
+			testdata.RequestID1,
 		)
 		helpers.FailOnError(b, err)
 

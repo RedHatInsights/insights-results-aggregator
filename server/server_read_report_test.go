@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,6 +93,7 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 		testdata.LastCheckedAt,
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -145,6 +146,7 @@ func TestReadReport(t *testing.T) {
 		testdata.LastCheckedAt,
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -188,6 +190,7 @@ func TestReadRuleReport(t *testing.T) {
 		testdata.LastCheckedAt,
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -228,6 +231,7 @@ func TestReadReportDisableRule(t *testing.T) {
 		testdata.LastCheckedAt,
 		now,
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -339,6 +343,7 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 		testdata.LastCheckedAt,
 		now,
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 

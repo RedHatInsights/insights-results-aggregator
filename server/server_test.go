@@ -1,5 +1,5 @@
 /*
-Copyright © 2020, 2021, 2022  Red Hat, Inc.
+Copyright © 2020, 2021, 2022, 2023  Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -100,6 +100,7 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -188,6 +189,7 @@ func TestListOfOrganizationsOK(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -200,6 +202,7 @@ func TestListOfOrganizationsOK(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -340,6 +343,7 @@ func TestRuleFeedbackVote(t *testing.T) {
 				testdata.LastCheckedAt,
 				time.Now(),
 				testdata.KafkaOffset,
+				testdata.RequestID1,
 			)
 			helpers.FailOnError(t, err)
 
@@ -454,6 +458,7 @@ func checkBadRuleFeedbackRequest(t *testing.T, message, expectedStatus string) {
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
 		testdata.Report3RulesParsed, testdata.LastCheckedAt, testdata.LastCheckedAt,
 		time.Now(), testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -511,6 +516,7 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed,
 		testdata.LastCheckedAt, testdata.LastCheckedAt, time.Now(), testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -573,6 +579,7 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 				testdata.LastCheckedAt,
 				time.Now(),
 				testdata.KafkaOffset,
+				testdata.RequestID1,
 			)
 			helpers.FailOnError(t, err)
 
@@ -625,6 +632,7 @@ func TestRuleToggle(t *testing.T) {
 				testdata.LastCheckedAt,
 				time.Now(),
 				testdata.KafkaOffset,
+				testdata.RequestID1,
 			)
 			helpers.FailOnError(t, err)
 
@@ -737,6 +745,7 @@ func TestHTTPServer_SaveDisableFeedback(t *testing.T) {
 		testdata.LastCheckedAt,
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -785,6 +794,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 		testdata.LastCheckedAt,
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -822,6 +832,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_BadBody(t *testing.T) {
 		testdata.LastCheckedAt,
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -848,6 +859,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_DBError(t *testing.T) {
 		testdata.LastCheckedAt,
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1638,6 +1650,7 @@ func TestHTTPServer_ListOfDisabledClusters_OneDisabled(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -1677,6 +1690,7 @@ func TestHTTPServer_ListOfDisabledClusters_JustificationTests(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
