@@ -5,9 +5,8 @@ go 1.18
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/RedHatInsights/insights-content-service v0.0.0-20221024073309-fabee4bcb06e
 	github.com/RedHatInsights/insights-operator-utils v1.24.9
-	github.com/RedHatInsights/insights-results-aggregator-data v1.3.8
+	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
 	github.com/RedHatInsights/insights-results-types v1.3.22
 	github.com/Shopify/sarama v1.27.1
 	github.com/deckarep/golang-set v1.7.1
@@ -28,6 +27,7 @@ require (
 
 require (
 	github.com/RedHatInsights/cloudwatch v0.0.0-20210111105023-1df2bdfe3291 // indirect
+	github.com/RedHatInsights/insights-content-service v0.0.0-20230529094240-4216523486cc // indirect
 	github.com/RedHatInsights/kafka-zerolog v1.0.0 // indirect
 	github.com/archdx/zerolog-sentry v0.0.1 // indirect
 	github.com/aws/aws-sdk-go v1.35.7 // indirect
