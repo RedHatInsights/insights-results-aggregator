@@ -252,6 +252,7 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 		message.Metadata.GatheredAt,
 		storedAtTime,
 		types.KafkaOffset(msg.Offset),
+		message.RequestID,
 	)
 	if err == types.ErrOldReport {
 		logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
