@@ -274,9 +274,13 @@ func newRedisStorage(configuration Configuration) (Storage, error) {
 		redisCfg.RedisPassword,
 		redisCfg.RedisTimeoutSeconds,
 	)
+	// check for init error
 	if err != nil {
+		log.Error().Err(err).Msg("Error initializing Redis client")
 		return nil, err
 	}
+
+	log.Info().Msg("Redis client has been initialized")
 
 	return &RedisStorage{
 		redis.Client{Connection: client},
