@@ -473,9 +473,12 @@ func (*RedisStorage) GetDBDriverType() types.DBDriver {
 }
 
 func getRuleHitsCSV(reportItems []types.ReportItem) string {
+	// usage of strings.Builder is more efficient than consecutive string
+	// concatenation
 	var output strings.Builder
 
 	for i, reportItem := range reportItems {
+		// rule separator
 		if i > 0 {
 			output.WriteRune(',')
 		}
@@ -483,5 +486,7 @@ func getRuleHitsCSV(reportItems []types.ReportItem) string {
 		output.WriteRune('|')
 		output.WriteString(string(reportItem.ErrorKey))
 	}
+
+	// convert back to string
 	return output.String()
 }
