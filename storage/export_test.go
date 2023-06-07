@@ -43,6 +43,7 @@ var (
 	ConstructInClausule     = constructInClausule
 	ArgsWithClusterNames    = argsWithClusterNames
 	ValuesForRuleHitsInsert = valuesForRuleHitsInsert
+	NewRedisStorage         = newRedisStorage
 )
 
 func GetConnection(storage *DBStorage) *sql.DB {
