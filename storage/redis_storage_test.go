@@ -138,7 +138,10 @@ func TestNewRedisClientDBIndexOutOfRange(t *testing.T) {
 // TestRedisWriteReportForCluster checks the method WriteReportForCluster
 func TestRedisWriteReportForCluster(t *testing.T) {
 	client, server := getMockRedis(t)
-	client.Init()
+	err := client.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// it is expected that key will be set with given expiration period
 	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
@@ -172,7 +175,10 @@ func TestRedisWriteReportForCluster(t *testing.T) {
 // TestWriteEmptyReport checks the method WriteReportForCluster for empty rule hits
 func TestWriteEmptyReport(t *testing.T) {
 	client, server := getMockRedis(t)
-	client.Init()
+	err := client.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// it is expected that key will be set with given expiration period
 	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
