@@ -138,6 +138,8 @@ func TestNewRedisClientDBIndexOutOfRange(t *testing.T) {
 // TestRedisWriteReportForCluster checks the method WriteReportForCluster
 func TestRedisWriteReportForCluster(t *testing.T) {
 	client, server := getMockRedis(t)
+
+	// Redis client needs to be initialized
 	err := client.Init()
 	if err != nil {
 		t.Fatal(err)
@@ -162,7 +164,7 @@ func TestRedisWriteReportForCluster(t *testing.T) {
 	server.ExpectHSet(expectedReportKey, expectedData).SetVal(1)
 	server.ExpectExpire(expectedReportKey, client.Expiration).SetVal(true)
 
-	err := client.WriteReportForCluster(
+	err = client.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName,
 		testdata.Report3Rules, testdata.Report3RulesParsed,
 		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
@@ -175,6 +177,8 @@ func TestRedisWriteReportForCluster(t *testing.T) {
 // TestWriteEmptyReport checks the method WriteReportForCluster for empty rule hits
 func TestWriteEmptyReport(t *testing.T) {
 	client, server := getMockRedis(t)
+
+	// Redis client needs to be initialized
 	err := client.Init()
 	if err != nil {
 		t.Fatal(err)
@@ -199,7 +203,7 @@ func TestWriteEmptyReport(t *testing.T) {
 	server.ExpectHSet(expectedReportKey, expectedData).SetVal(1)
 	server.ExpectExpire(expectedReportKey, client.Expiration).SetVal(true)
 
-	err := client.WriteReportForCluster(
+	err = client.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName,
 		testdata.Report3Rules, []types.ReportItem{},
 		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
