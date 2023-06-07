@@ -277,15 +277,22 @@ func newRedisStorage(configuration Configuration) (Storage, error) {
 	)
 	// check for init error
 	if err != nil {
-		log.Error().Err(err).Msg("Error initializing Redis client")
+		log.Error().Err(err).Msg("Error constructing Redis client")
 		return nil, err
 	}
 
 	log.Info().Msg("Redis client has been initialized")
 
-	return &RedisStorage{
+	storage := &RedisStorage{
 		Client: redis.Client{Connection: client},
-	}, nil
+	}
+
+	err = storage.Init()
+	if err != nil {
+		log.Error().Err(err).Msg("Error initializing Redis client")
+		return nil, err
+	}
+	return storage, nil
 }
 
 // newSQLStorage function creates and initializes a new instance of DB storage
