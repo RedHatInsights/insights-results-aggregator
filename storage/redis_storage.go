@@ -15,7 +15,9 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/RedHatInsights/insights-content-service/content"
@@ -29,14 +31,31 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+// ExpirationDuration set to keys stored into Redis
+const ExpirationDuration = "24h"
+
+// DefaultValue represents value that is stored under some key. We don't care
+// about the value right now so it can be empty.
+const DefaultValue = ""
+
 // RedisStorage represents a storage which does nothing (for benchmarking without a storage)
 type RedisStorage struct {
-	Client redis.Client
+	Client     redis.Client
+	Expiration time.Duration
 }
 
-// Init noop
-func (*RedisStorage) Init() error {
+// Init method initializes Redis storage
+func (storage *RedisStorage) Init() error {
 	log.Info().Msg("Redis database Init()")
+
+	// try to parse expiration duration in runtime
+	expiration, err := time.ParseDuration(ExpirationDuration)
+	if err != nil {
+		log.Error().Err(err).Str("time", ExpirationDuration).Msg("Error parsing time")
+		return err
+	}
+
+	storage.Expiration = expiration
 	return nil
 }
 
@@ -82,11 +101,33 @@ func (*RedisStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 	return 0, nil
 }
 
-// WriteReportForCluster noop
-func (*RedisStorage) WriteReportForCluster(
-	types.OrgID, types.ClusterName, types.ClusterReport, []types.ReportItem, time.Time, time.Time, time.Time, types.KafkaOffset,
-	types.RequestID,
+// WriteReportForCluster method writes rule hits and other information about
+// new report into Redis storage
+func (storage *RedisStorage) WriteReportForCluster(
+	orgID types.OrgID, clusterName types.ClusterName, clusterReport types.ClusterReport,
+	reportItems []types.ReportItem,
+	collectedAtTime time.Time, gatheredAtTime time.Time, storedAtTime time.Time,
+	kafkaOffset types.KafkaOffset, requestID types.RequestID,
 ) error {
+
+	// retrieve context
+	ctx := context.Background()
+
+	// construct key to be stored in Redis
+	key := fmt.Sprintf("organization:%d:cluster:%s:request:%s",
+		int(orgID),
+		string(clusterName),
+		string(requestID))
+	log.Info().Str("key", key).Msg("Storing key into Redis")
+
+	// try to store key
+	err := storage.Client.Connection.Set(ctx, key, DefaultValue, storage.Expiration).Err()
+	if err != nil {
+		log.Error().Err(err).Str("key", key).Msg("Error storing key into Redis")
+		return err
+	}
+
+	// everything seems to be ok
 	return nil
 }
 
