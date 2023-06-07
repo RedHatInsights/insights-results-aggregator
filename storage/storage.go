@@ -284,7 +284,7 @@ func newRedisStorage(configuration Configuration) (Storage, error) {
 	log.Info().Msg("Redis client has been initialized")
 
 	return &RedisStorage{
-		redis.Client{Connection: client},
+		Client: redis.Client{Connection: client},
 	}, nil
 }
 

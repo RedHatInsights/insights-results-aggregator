@@ -56,9 +56,12 @@ github.com/RedHatInsights/insights-content-service v0.0.0-20221024073309-fabee4b
 github.com/RedHatInsights/insights-content-service v0.0.0-20221024073309-fabee4bcb06e/go.mod h1:9bnb8zbE7ocCmrvVpmIRgCOcb2ew7ovEcReMB953Pbo=
 github.com/RedHatInsights/insights-content-service v0.0.0-20230529094240-4216523486cc h1:bi0AoZ7gQfSQcT/roa0cPIMA8kDMYGbxLgH9641ZtJQ=
 github.com/RedHatInsights/insights-content-service v0.0.0-20230529094240-4216523486cc/go.mod h1:6nihzwhfwTZHM8ClPwISTntuYPf6W2UzcI+yPeUPMRk=
+github.com/RedHatInsights/insights-content-service v0.0.0-20230607085809-59604fce8997 h1:gMdRIId8AbNqTtNyrL8vyKzuSLdmNfI6BgB85mioMYg=
+github.com/RedHatInsights/insights-content-service v0.0.0-20230607085809-59604fce8997/go.mod h1:6nihzwhfwTZHM8ClPwISTntuYPf6W2UzcI+yPeUPMRk=
 github.com/RedHatInsights/insights-operator-utils v1.0.1/go.mod h1:gRzYBMY4csuOXgrxUuC10WUkz6STOm3mqVsQCb+AGOQ=
 github.com/RedHatInsights/insights-operator-utils v1.0.2-0.20200610143236-c868b2f93d2a/go.mod h1:0rhk13kn0BB+yKdfZjpMoQy0lXdXY3i4NJ1xGwGMcII=
 github.com/RedHatInsights/insights-operator-utils v1.4.1-0.20200729093922-bca68530a5ef/go.mod h1:F7KKAdWFR70H+3fa89ciXqimNycHdqO9HjLWRdZwOug=
+github.com/RedHatInsights/insights-operator-utils v1.4.3 h1:QSMNFHvkluvVH6EJjuPe45r5U6PmaUcsDmiAgQ8gvMA=
 github.com/RedHatInsights/insights-operator-utils v1.4.3/go.mod h1:F7KKAdWFR70H+3fa89ciXqimNycHdqO9HjLWRdZwOug=
 github.com/RedHatInsights/insights-operator-utils v1.6.2/go.mod h1:RW9Jq4LgqIkV3WY6AS2EkopYyZDIr5BNGiU5I75HryM=
 github.com/RedHatInsights/insights-operator-utils v1.6.7/go.mod h1:ott1/rkxcyQtK6XdYj1Ur3XGSYRAHTplJiV5RKkij2o=
@@ -258,6 +261,8 @@ github.com/go-logfmt/logfmt v0.4.0/go.mod h1:3RMwSq7FuexP4Kalkev3ejPJsZTpXXBr9+V
 github.com/go-logfmt/logfmt v0.5.0/go.mod h1:wCYkCAKZfumFQihp8CzCvQ3paCTfi41vtzG1KdI/P7A=
 github.com/go-logfmt/logfmt v0.5.1/go.mod h1:WYhtIu8zTZfxdn5+rREduYbwxfcBr/Vr6KEVveWlfTs=
 github.com/go-martini/martini v0.0.0-20170121215854-22fa46961aab/go.mod h1:/P9AEU963A2AYjv4d1V5eVL1CQbEJq6aCNHDDjibzu8=
+github.com/go-redis/redismock/v9 v9.0.3 h1:mtHQi2l51lCmXIbTRTqb1EiHYe9tL5Yk5oorlSJJqR0=
+github.com/go-redis/redismock/v9 v9.0.3/go.mod h1:F6tJRfnU8R/NZ0E+Gjvoluk14MqMC5ueSZX6vVQypc0=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
