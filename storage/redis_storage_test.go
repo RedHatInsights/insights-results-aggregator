@@ -41,14 +41,17 @@ var configuration = storage.Configuration{
 
 // getMockRedis is used to get a mocked Redis client to expect and
 // respond to queries
-func getMockRedis() (
+func getMockRedis(t *testing.T) (
 	mockClient storage.RedisStorage, mockServer redismock.ClientMock,
 ) {
 	client, mockServer := redismock.NewClientMock()
 	mockClient = storage.RedisStorage{
 		Client: redis.Client{Connection: client},
 	}
-	mockClient.Init()
+	err := mockClient.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
 	return
 }
 
@@ -125,7 +128,7 @@ func TestNewRedisClientDBIndexOutOfRange(t *testing.T) {
 
 // TestWrittenReportsMetric checks the method WriteReportForCluster
 func TestRediWriteReportForCluster(t *testing.T) {
-	client, server := getMockRedis()
+	client, server := getMockRedis(t)
 	expectedKey := fmt.Sprintf("organization:%d:cluster:%s:request:%s",
 		int(testdata.OrgID),
 		string(testdata.ClusterName),
