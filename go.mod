@@ -8,7 +8,7 @@ require (
 	github.com/RedHatInsights/insights-content-service v0.0.0-20230607085809-59604fce8997
 	github.com/RedHatInsights/insights-operator-utils v1.24.9
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
-	github.com/RedHatInsights/insights-results-types v1.3.22
+	github.com/RedHatInsights/insights-results-types v1.3.23
 	github.com/Shopify/sarama v1.27.1
 	github.com/deckarep/golang-set v1.7.1
 	github.com/gchaincl/sqlhooks v1.3.0
