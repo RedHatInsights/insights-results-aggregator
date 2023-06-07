@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,6 +79,7 @@ func (*NoopStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 // WriteReportForCluster noop
 func (*NoopStorage) WriteReportForCluster(
 	types.OrgID, types.ClusterName, types.ClusterReport, []types.ReportItem, time.Time, time.Time, time.Time, types.KafkaOffset,
+	types.RequestID,
 ) error {
 	return nil
 }

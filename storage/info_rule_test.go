@@ -1,4 +1,4 @@
-// Copyright 2022 Red Hat, Inc
+// Copyright 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,6 +97,7 @@ func TestDBStorageReadClusterListRecommendationsNoRecommendationsWithVersion(t *
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, []ctypes.ReportItem{},
 		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, 0,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -128,6 +129,7 @@ func TestDBStorageReadClusterListRecommendationsWithVersion(t *testing.T) {
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, []ctypes.ReportItem{},
 		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, 0,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 

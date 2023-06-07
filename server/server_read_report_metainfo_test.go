@@ -1,4 +1,4 @@
-// Copyright 2021 Red Hat, Inc
+// Copyright 2021, 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -89,6 +89,7 @@ func TestReadExistingEmptyReportMetainfo(t *testing.T) {
 		time.Now(),
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -136,6 +137,7 @@ func TestReadReportMetainfo(t *testing.T) {
 		time.Now(),
 		testdata.LastCheckedAt,
 		testdata.KafkaOffset,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 

@@ -1,4 +1,4 @@
-// Copyright 2020 Red Hat, Inc
+// Copyright 2020, 2021, 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ func TestNoopStorage_Methods(t *testing.T) {
 	_, _ = noopStorage.ReadReportInfoForCluster(0, "")
 	_, _, _ = noopStorage.ReadReportForClusterByClusterName("")
 	_, _ = noopStorage.GetLatestKafkaOffset()
-	_ = noopStorage.WriteReportForCluster(0, "", "", []types.ReportItem{}, time.Now(), time.Now(), time.Now(), 0)
+	_ = noopStorage.WriteReportForCluster(0, "", "", []types.ReportItem{}, time.Now(), time.Now(), time.Now(), 0, "")
 	_, _ = noopStorage.ReportsCount()
 	_ = noopStorage.VoteOnRule("", "", "", 0, "", 0, "")
 	_ = noopStorage.AddOrUpdateFeedbackOnRule("", "", "", 0, "", "")

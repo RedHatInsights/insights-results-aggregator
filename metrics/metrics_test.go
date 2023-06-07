@@ -1,4 +1,4 @@
-// Copyright 2020, 2021, 2022 Red Hat, Inc
+// Copyright 2020, 2021, 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -130,6 +130,7 @@ func TestWrittenReportsMetric(t *testing.T) {
 		time.Now(),
 		time.Now(),
 		0,
+		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -145,6 +146,7 @@ func TestWrittenReportsMetric(t *testing.T) {
 			time.Now(),
 			time.Now(),
 			types.KafkaOffset(i+1),
+			testdata.RequestID1,
 		)
 		helpers.FailOnError(t, err)
 	}
