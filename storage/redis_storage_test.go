@@ -279,3 +279,43 @@ func TestRedisWriteReportForClusterErrorHandling2(t *testing.T) {
 	assert.Error(t, err)
 	assertRedisExpectationsMet(t, server)
 }
+
+// TestRedisWriteReportForClusterErrorHandling3 checks how the method
+// WriteReportForCluster handles errors
+func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
+	client, server := getMockRedis(t)
+
+	// Redis client needs to be initialized
+	err := client.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// it is expected that key will be set with given expiration period
+	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
+	server.ExpectSet(expectedKey, "", client.Expiration).SetVal("OK")
+
+	timestamp := time.Now()
+
+	expectedData := ctypes.SimplifiedReport{
+		OrgID:              int(testdata.OrgID),
+		RequestID:          string(testdata.RequestID1),
+		ClusterID:          string(testdata.ClusterName),
+		ReceivedTimestamp:  testdata.LastCheckedAt,
+		ProcessedTimestamp: timestamp,
+		RuleHitsCSV:        "",
+	}
+
+	expectedReportKey := expectedKey + ":reports"
+	server.ExpectHSet(expectedReportKey, expectedData).SetVal(1)
+	server.ExpectExpire(expectedReportKey, client.Expiration).SetErr(errors.New("expiration set error!"))
+
+	err = client.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName,
+		testdata.Report3Rules, []types.ReportItem{},
+		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
+		testdata.KafkaOffset, testdata.RequestID1)
+
+	assert.Error(t, err)
+	assertRedisExpectationsMet(t, server)
+}
