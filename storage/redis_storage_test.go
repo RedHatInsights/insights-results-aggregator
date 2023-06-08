@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"time"
 
+	"errors"
 	"testing"
 
 	"github.com/go-redis/redismock/v9"
@@ -210,5 +211,32 @@ func TestWriteEmptyReport(t *testing.T) {
 		testdata.KafkaOffset, testdata.RequestID1)
 
 	assert.NoError(t, err)
+	assertRedisExpectationsMet(t, server)
+}
+
+// TestRedisWriteReportForClusterErrorHandling1 checks how the method
+// WriteReportForCluster handles errors
+func TestRedisWriteReportForClusterErrorHandling1(t *testing.T) {
+	client, server := getMockRedis(t)
+
+	// Redis client needs to be initialized
+	err := client.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// it is expected that key will be set with given expiration period
+	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
+	server.ExpectSet(expectedKey, "", client.Expiration).SetErr(errors.New("key set error!"))
+
+	timestamp := time.Now()
+
+	err = client.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName,
+		testdata.Report3Rules, []types.ReportItem{},
+		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
+		testdata.KafkaOffset, testdata.RequestID1)
+
+	assert.Error(t, err)
 	assertRedisExpectationsMet(t, server)
 }
