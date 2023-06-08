@@ -217,6 +217,8 @@ func TestWriteEmptyReport(t *testing.T) {
 // TestRedisWriteReportForClusterErrorHandling1 checks how the method
 // WriteReportForCluster handles errors
 func TestRedisWriteReportForClusterErrorHandling1(t *testing.T) {
+	errorMessage := "key set error!"
+
 	client, server := getMockRedis(t)
 
 	// Redis client needs to be initialized
@@ -227,7 +229,7 @@ func TestRedisWriteReportForClusterErrorHandling1(t *testing.T) {
 
 	// it is expected that key will be set with given expiration period
 	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
-	server.ExpectSet(expectedKey, "", client.Expiration).SetErr(errors.New("key set error!"))
+	server.ExpectSet(expectedKey, "", client.Expiration).SetErr(errors.New(errorMessage))
 
 	timestamp := time.Now()
 
@@ -238,12 +240,15 @@ func TestRedisWriteReportForClusterErrorHandling1(t *testing.T) {
 		testdata.KafkaOffset, testdata.RequestID1)
 
 	assert.Error(t, err)
+	assert.EqualError(t, err, errorMessage)
 	assertRedisExpectationsMet(t, server)
 }
 
 // TestRedisWriteReportForClusterErrorHandling2 checks how the method
 // WriteReportForCluster handles errors
 func TestRedisWriteReportForClusterErrorHandling2(t *testing.T) {
+	errorMessage := "hash set error!"
+
 	client, server := getMockRedis(t)
 
 	// Redis client needs to be initialized
@@ -268,7 +273,7 @@ func TestRedisWriteReportForClusterErrorHandling2(t *testing.T) {
 	}
 
 	expectedReportKey := expectedKey + ":reports"
-	server.ExpectHSet(expectedReportKey, expectedData).SetErr(errors.New("hash set error!"))
+	server.ExpectHSet(expectedReportKey, expectedData).SetErr(errors.New(errorMessage))
 
 	err = client.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName,
@@ -277,12 +282,15 @@ func TestRedisWriteReportForClusterErrorHandling2(t *testing.T) {
 		testdata.KafkaOffset, testdata.RequestID1)
 
 	assert.Error(t, err)
+	assert.EqualError(t, err, errorMessage)
 	assertRedisExpectationsMet(t, server)
 }
 
 // TestRedisWriteReportForClusterErrorHandling3 checks how the method
 // WriteReportForCluster handles errors
 func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
+	errorMessage := "expiration set error!"
+
 	client, server := getMockRedis(t)
 
 	// Redis client needs to be initialized
@@ -308,7 +316,7 @@ func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
 
 	expectedReportKey := expectedKey + ":reports"
 	server.ExpectHSet(expectedReportKey, expectedData).SetVal(1)
-	server.ExpectExpire(expectedReportKey, client.Expiration).SetErr(errors.New("expiration set error!"))
+	server.ExpectExpire(expectedReportKey, client.Expiration).SetErr(errors.New(errorMessage))
 
 	err = client.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName,
@@ -317,5 +325,6 @@ func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
 		testdata.KafkaOffset, testdata.RequestID1)
 
 	assert.Error(t, err)
+	assert.EqualError(t, err, errorMessage)
 	assertRedisExpectationsMet(t, server)
 }
