@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/RedHatInsights/insights-content-service/content"
@@ -127,7 +128,34 @@ func (storage *RedisStorage) WriteReportForCluster(
 		return err
 	}
 
+	data := ctypes.SimplifiedReport{
+		OrgID:              int(orgID),
+		RequestID:          string(requestID),
+		ClusterID:          string(clusterName),
+		ReceivedTimestamp:  gatheredAtTime,
+		ProcessedTimestamp: storedAtTime,
+		RuleHitsCSV:        getRuleHitsCSV(reportItems),
+	}
+
+	// update hash with reports
+	reportsKey := key + ":reports"
+	log.Info().Str("reportsKey", reportsKey).Msg("Storing hash into Redis")
+
+	err = storage.Client.Connection.HSet(ctx, reportsKey, data).Err()
+	if err != nil {
+		log.Error().Err(err).Str("reportsKey", reportsKey).Msg("Error storing hash into Redis")
+		return err
+	}
+
+	// set EXPIRE on new key
+	err = storage.Client.Connection.Expire(ctx, reportsKey, storage.Expiration).Err()
+	if err != nil {
+		log.Error().Err(err).Msg("Error updating expiration (TLL)")
+		return err
+	}
+
 	// everything seems to be ok
+	log.Info().Msgf("Added data for request %v", requestID)
 	return nil
 }
 
@@ -442,4 +470,23 @@ func (*RedisStorage) PrintRuleDisableDebugInfo() {
 // GetDBDriverType returns db driver type
 func (*RedisStorage) GetDBDriverType() types.DBDriver {
 	return types.DBDriverGeneral
+}
+
+func getRuleHitsCSV(reportItems []types.ReportItem) string {
+	// usage of strings.Builder is more efficient than consecutive string
+	// concatenation
+	var output strings.Builder
+
+	for i, reportItem := range reportItems {
+		// rule separator
+		if i > 0 {
+			output.WriteRune(',')
+		}
+		output.WriteString(string(reportItem.Module))
+		output.WriteRune('|')
+		output.WriteString(string(reportItem.ErrorKey))
+	}
+
+	// convert back to string
+	return output.String()
 }
