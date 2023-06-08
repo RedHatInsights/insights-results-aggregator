@@ -54,6 +54,17 @@ Then exit with CTRL+D.
 Visit [$NAMESPACE/deployments/ccx-cache-writer-db-writer/pods](https://console-openshift-console.apps.c-rh-c-eph.8p0c.p1.openshiftapps.com/k8s/ns/$NAMESPACE/deployments/ccx-cache-writer-db-writer/pods)
 and check the logs.
 
+You can also check the metrics are exported from inside the debug pod from the
+previous step:
+
+```
+oc --namespace $NAMESPACE run test -i --rm \
+    --image=quay.io/edge-infrastructure/redis:6.2.7-debian-10-r23 \
+    sh
+
+curl ccx-cache-writer-prometheus-exporter:9000/metrics
+```
+
 7. Delete the namespace
 ```
 bonfire namespace release $NAMESPACE 
