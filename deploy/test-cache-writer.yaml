@@ -25,7 +25,7 @@ appsFile:
 apps:
 - name: ccx-data-pipeline
   components:
-    - name:  ccx-insights-results-aggregator
+    - name:  ccx-cache-writer
       host: local
       repo: .
       path: deploy/cache-writer.yaml

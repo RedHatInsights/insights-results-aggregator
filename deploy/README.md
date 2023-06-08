@@ -49,7 +49,10 @@ curl ccx-redis-metrics:9121/metrics
 Don't worry if you can't see the command prompt. Just write and execute commands.
 Then exit with CTRL+D.
 
-6. TODO: Test the cache-writer
+6. Test the cache-writer
+
+Visit [$NAMESPACE/deployments/ccx-cache-writer-db-writer/pods](https://console-openshift-console.apps.c-rh-c-eph.8p0c.p1.openshiftapps.com/k8s/ns/$NAMESPACE/deployments/ccx-cache-writer-db-writer/pods)
+and check the logs.
 
 7. Delete the namespace
 ```
