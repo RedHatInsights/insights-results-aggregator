@@ -61,7 +61,12 @@ func (storage *RedisStorage) Init() error {
 }
 
 // Close noop
-func (*RedisStorage) Close() error {
+func (storage *RedisStorage) Close() error {
+	log.Info().Msg("Redis database Close()")
+
+	if storage.Client.Connection != nil {
+		return storage.Client.Connection.Close()
+	}
 	return nil
 }
 
