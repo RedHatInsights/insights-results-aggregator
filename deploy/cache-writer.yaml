@@ -88,6 +88,10 @@ objects:
                   key: password
             - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS
               value: "${REDIS_TIMEOUT_SECONDS}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
+              value: ${LOG_LEVEL}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG
+              value: ${DEBUG}
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: ${CLOUDWATCH_ENABLED}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
@@ -587,6 +591,8 @@ parameters:
 - name: CW_API_PREFIX
   required: true
   value: /
+- name: LOG_LEVEL
+  value: "DEBUG"
 - name: DEBUG
   value: "true"
 - name: AUTH
