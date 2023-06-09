@@ -387,3 +387,38 @@ func TestRedisStorageEmptyMethods2(t *testing.T) {
 	_, _ = RedisStorage.ListOfDisabledClusters(orgID, ruleID, errorKey)
 	_, _ = RedisStorage.ReadSingleRuleTemplateData(orgID, clusterName, ruleID, errorKey)
 }
+
+// TestRedisStorageEmptyMethods3 calls empty methods that just needs to be
+// defined in order for RedisStorage to satisfy Storage interface.
+func TestRedisStorageEmptyMethods3(t *testing.T) {
+	RedisStorage := storage.RedisStorage{}
+	orgID := types.OrgID(1)
+	clusterName := types.ClusterName("")
+	rule := types.Rule{}
+	ruleID := types.RuleID("")
+	ruleErrorKey := types.RuleErrorKey{}
+	errorKey := types.ErrorKey("")
+	userID := types.UserID("")
+
+	_ = RedisStorage.DisableRuleSystemWide(orgID, ruleID, errorKey, "justification#1")
+	_ = RedisStorage.EnableRuleSystemWide(orgID, ruleID, errorKey)
+	_ = RedisStorage.UpdateDisabledRuleJustification(orgID, ruleID, errorKey, "justification#2")
+	_ = RedisStorage.WriteReportInfoForCluster(orgID, clusterName, nil, time.Time{})
+	_ = RedisStorage.WriteRecommendationsForCluster(orgID, clusterName, "", types.Timestamp(""))
+	_ = RedisStorage.CreateRule(rule)
+	_ = RedisStorage.DeleteRule(ruleID)
+	_ = RedisStorage.CreateRuleErrorKey(ruleErrorKey)
+	_ = RedisStorage.DeleteRuleErrorKey(ruleID, errorKey)
+	_ = RedisStorage.ToggleRuleForCluster(clusterName, ruleID, errorKey, orgID, storage.RuleToggle(0))
+	_ = RedisStorage.DeleteFromRuleClusterToggle(clusterName, ruleID)
+	_ = RedisStorage.RateOnRule(orgID, ruleID, errorKey, types.UserVote(1))
+	_, _ = RedisStorage.GetFromClusterRuleToggle(clusterName, ruleID)
+	_, _ = RedisStorage.GetTogglesForRules(clusterName, nil, orgID)
+	_, _ = RedisStorage.GetUserFeedbackOnRules(clusterName, nil, userID)
+	_, _ = RedisStorage.GetUserDisableFeedbackOnRules(clusterName, nil, userID)
+	_, _ = RedisStorage.GetRuleWithContent(ruleID, errorKey)
+	_, _ = RedisStorage.ListOfDisabledRules(orgID)
+	_, _ = RedisStorage.GetRuleRating(orgID, types.RuleSelector(""))
+	_, _ = RedisStorage.ListOfReasons(userID)
+	_, _ = RedisStorage.ListOfDisabledRulesForClusters([]string{""}, orgID)
+}
