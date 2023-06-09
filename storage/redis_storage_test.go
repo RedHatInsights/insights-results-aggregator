@@ -24,6 +24,7 @@ import (
 	"github.com/go-redis/redismock/v9"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/RedHatInsights/insights-operator-utils/redis"
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
@@ -327,4 +328,97 @@ func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
 	assert.Error(t, err)
 	assert.EqualError(t, err, errorMessage)
 	assertRedisExpectationsMet(t, server)
+}
+
+// Don't decrease code coverage by non-functional and not covered code.
+
+// TestRedisStorageEmptyMethods1 calls empty methods that just needs to be
+// defined in order for RedisStorage to satisfy Storage interface.
+func TestRedisStorageEmptyMethods1(t *testing.T) {
+	RedisStorage := storage.RedisStorage{}
+	orgID := types.OrgID(1)
+	clusterName := types.ClusterName("")
+
+	_, _ = RedisStorage.ListOfOrgs()
+	_, _ = RedisStorage.ListOfClustersForOrg(orgID, time.Now())
+	_, _ = RedisStorage.ReadOrgIDsForClusters([]types.ClusterName{clusterName})
+	_, _ = RedisStorage.ReportsCount()
+	_, _ = RedisStorage.ReadReportsForClusters([]types.ClusterName{clusterName})
+	_, _ = RedisStorage.DoesClusterExist(clusterName)
+
+	_, _, _, _, _ = RedisStorage.ReadReportForCluster(orgID, clusterName)
+	_, _ = RedisStorage.ReadReportInfoForCluster(orgID, clusterName)
+	_, _, _ = RedisStorage.ReadReportForClusterByClusterName(clusterName)
+	_ = RedisStorage.DeleteReportsForOrg(orgID)
+	_ = RedisStorage.DeleteReportsForCluster(clusterName)
+
+	_, _ = RedisStorage.GetLatestKafkaOffset()
+	_ = RedisStorage.MigrateToLatest()
+	_ = RedisStorage.GetConnection()
+	RedisStorage.PrintRuleDisableDebugInfo()
+	_ = RedisStorage.GetDBDriverType()
+}
+
+// TestRedisStorageEmptyMethods2 calls empty methods that just needs to be
+// defined in order for RedisStorage to satisfy Storage interface.
+func TestRedisStorageEmptyMethods2(t *testing.T) {
+	RedisStorage := storage.RedisStorage{}
+	orgID := types.OrgID(1)
+	clusterName := types.ClusterName("")
+	ruleID := types.RuleID("")
+	errorKey := types.ErrorKey("")
+	userID := types.UserID("")
+	ruleSelector := types.RuleSelector("")
+
+	_, _, _ = RedisStorage.ReadDisabledRule(orgID, ruleID, errorKey)
+	_ = RedisStorage.VoteOnRule(clusterName, ruleID, errorKey, orgID, userID, 0, "some message")
+	_ = RedisStorage.AddOrUpdateFeedbackOnRule(clusterName, ruleID, errorKey, orgID, userID, "")
+	_ = RedisStorage.AddFeedbackOnRuleDisable(clusterName, ruleID, errorKey, orgID, userID, "")
+	_, _ = RedisStorage.GetUserFeedbackOnRuleDisable(clusterName, ruleID, errorKey, userID)
+	_, _ = RedisStorage.GetUserFeedbackOnRule(clusterName, ruleID, errorKey, userID)
+	_ = RedisStorage.LoadRuleContent(content.RuleContentDirectory{})
+	_, _ = RedisStorage.GetRuleByID(ruleID)
+	_, _ = RedisStorage.GetOrgIDByClusterID(clusterName)
+	_, _ = RedisStorage.ListOfSystemWideDisabledRules(orgID)
+	_, _ = RedisStorage.ListOfClustersForOrgSpecificRule(orgID, ruleSelector, nil)
+	_, _ = RedisStorage.ListOfClustersForOrgSpecificRule(orgID, ruleSelector, []string{"a"})
+	_, _ = RedisStorage.ReadRecommendationsForClusters([]string{}, types.OrgID(1))
+	_, _ = RedisStorage.ReadClusterListRecommendations([]string{}, types.OrgID(1))
+	_, _ = RedisStorage.ListOfDisabledClusters(orgID, ruleID, errorKey)
+	_, _ = RedisStorage.ReadSingleRuleTemplateData(orgID, clusterName, ruleID, errorKey)
+}
+
+// TestRedisStorageEmptyMethods3 calls empty methods that just needs to be
+// defined in order for RedisStorage to satisfy Storage interface.
+func TestRedisStorageEmptyMethods3(t *testing.T) {
+	RedisStorage := storage.RedisStorage{}
+	orgID := types.OrgID(1)
+	clusterName := types.ClusterName("")
+	rule := types.Rule{}
+	ruleID := types.RuleID("")
+	ruleErrorKey := types.RuleErrorKey{}
+	errorKey := types.ErrorKey("")
+	userID := types.UserID("")
+
+	_ = RedisStorage.DisableRuleSystemWide(orgID, ruleID, errorKey, "justification#1")
+	_ = RedisStorage.EnableRuleSystemWide(orgID, ruleID, errorKey)
+	_ = RedisStorage.UpdateDisabledRuleJustification(orgID, ruleID, errorKey, "justification#2")
+	_ = RedisStorage.WriteReportInfoForCluster(orgID, clusterName, nil, time.Time{})
+	_ = RedisStorage.WriteRecommendationsForCluster(orgID, clusterName, "", types.Timestamp(""))
+	_ = RedisStorage.CreateRule(rule)
+	_ = RedisStorage.DeleteRule(ruleID)
+	_ = RedisStorage.CreateRuleErrorKey(ruleErrorKey)
+	_ = RedisStorage.DeleteRuleErrorKey(ruleID, errorKey)
+	_ = RedisStorage.ToggleRuleForCluster(clusterName, ruleID, errorKey, orgID, storage.RuleToggle(0))
+	_ = RedisStorage.DeleteFromRuleClusterToggle(clusterName, ruleID)
+	_ = RedisStorage.RateOnRule(orgID, ruleID, errorKey, types.UserVote(1))
+	_, _ = RedisStorage.GetFromClusterRuleToggle(clusterName, ruleID)
+	_, _ = RedisStorage.GetTogglesForRules(clusterName, nil, orgID)
+	_, _ = RedisStorage.GetUserFeedbackOnRules(clusterName, nil, userID)
+	_, _ = RedisStorage.GetUserDisableFeedbackOnRules(clusterName, nil, userID)
+	_, _ = RedisStorage.GetRuleWithContent(ruleID, errorKey)
+	_, _ = RedisStorage.ListOfDisabledRules(orgID)
+	_, _ = RedisStorage.GetRuleRating(orgID, types.RuleSelector(""))
+	_, _ = RedisStorage.ListOfReasons(userID)
+	_, _ = RedisStorage.ListOfDisabledRulesForClusters([]string{""}, orgID)
 }
