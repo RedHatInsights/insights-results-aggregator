@@ -26,75 +26,99 @@ import (
 
 // Don't decrease code coverage by non-functional and not covered code.
 
-func TestNoopStorage_Methods(t *testing.T) {
+// TestNoopStorageEmptyMethods1 calls empty methods that just needs to be
+// defined in order for NoopStorage to satisfy Storage interface.
+func TestNoopStorageEmptyMethods1(t *testing.T) {
 	noopStorage := storage.NoopStorage{}
+	orgID := types.OrgID(1)
+	clusterName := types.ClusterName("")
 
 	_ = noopStorage.Init()
 	_ = noopStorage.Close()
+
 	_, _ = noopStorage.ListOfOrgs()
-	_, _ = noopStorage.ListOfClustersForOrg(0, time.Now())
-	_, _, _, _, _ = noopStorage.ReadReportForCluster(0, "")
-	_, _ = noopStorage.ReadReportInfoForCluster(0, "")
-	_, _, _ = noopStorage.ReadReportForClusterByClusterName("")
-	_, _ = noopStorage.GetLatestKafkaOffset()
-	_ = noopStorage.WriteReportForCluster(0, "", "", []types.ReportItem{}, time.Now(), time.Now(), time.Now(), 0, "")
+	_, _ = noopStorage.ListOfClustersForOrg(orgID, time.Now())
+	_, _ = noopStorage.ReadOrgIDsForClusters([]types.ClusterName{clusterName})
 	_, _ = noopStorage.ReportsCount()
-	_ = noopStorage.VoteOnRule("", "", "", 0, "", 0, "")
-	_ = noopStorage.AddOrUpdateFeedbackOnRule("", "", "", 0, "", "")
-	_ = noopStorage.AddFeedbackOnRuleDisable("", "", "", 0, "", "")
-	_, _ = noopStorage.GetUserFeedbackOnRuleDisable("", "", "", "")
-	_, _ = noopStorage.GetUserFeedbackOnRule("", "", "", "")
-	_ = noopStorage.DeleteReportsForOrg(0)
-	_ = noopStorage.DeleteReportsForCluster("")
-	_ = noopStorage.LoadRuleContent(content.RuleContentDirectory{})
-	_, _ = noopStorage.GetRuleByID("")
-	_, _ = noopStorage.GetOrgIDByClusterID("")
-}
+	_, _ = noopStorage.ReadReportsForClusters([]types.ClusterName{clusterName})
+	_, _ = noopStorage.DoesClusterExist(clusterName)
 
-func TestNoopStorage_Methods_Cont(t *testing.T) {
-	noopStorage := storage.NoopStorage{}
+	_, _, _, _, _ = noopStorage.ReadReportForCluster(orgID, clusterName)
+	_, _ = noopStorage.ReadReportInfoForCluster(orgID, clusterName)
+	_, _, _ = noopStorage.ReadReportForClusterByClusterName(clusterName)
+	_ = noopStorage.DeleteReportsForOrg(orgID)
+	_ = noopStorage.DeleteReportsForCluster(clusterName)
 
-	_ = noopStorage.CreateRule(types.Rule{})
-	_ = noopStorage.DeleteRule("")
-	_ = noopStorage.CreateRuleErrorKey(types.RuleErrorKey{})
-	_ = noopStorage.DeleteRuleErrorKey("", "")
-	_ = noopStorage.WriteConsumerError(nil, nil)
-	_ = noopStorage.ToggleRuleForCluster("", "", "", 0, 0)
-	_ = noopStorage.DeleteFromRuleClusterToggle("", "")
-	_, _ = noopStorage.GetFromClusterRuleToggle("", "")
-	_, _ = noopStorage.GetTogglesForRules("", nil, types.OrgID(1))
-	_, _ = noopStorage.GetUserFeedbackOnRules("", nil, "")
-	_, _ = noopStorage.GetRuleWithContent("", "")
-	_, _ = noopStorage.ReadOrgIDsForClusters([]types.ClusterName{})
-	_, _ = noopStorage.ReadReportsForClusters([]types.ClusterName{})
-	_, _ = noopStorage.ReadSingleRuleTemplateData(0, "", "", "")
-	_, _ = noopStorage.GetUserDisableFeedbackOnRules("",
-		[]types.RuleOnReport{}, "")
-	_, _ = noopStorage.DoesClusterExist("")
-	_, _ = noopStorage.ListOfDisabledRules(types.OrgID(1))
-	_, _ = noopStorage.ListOfReasons("")
-	_, _ = noopStorage.ListOfDisabledRulesForClusters([]string{}, types.OrgID(1))
-	_ = noopStorage.WriteRecommendationsForCluster(0, "", "", "")
-	_ = noopStorage.RateOnRule(types.OrgID(1), "", "", types.UserVote(1))
-	_, _ = noopStorage.GetRuleRating(types.OrgID(1), "id")
-}
-
-func TestNoopStorage_Methods_Cont2(t *testing.T) {
-	noopStorage := storage.NoopStorage{}
-	orgID := types.OrgID(1)
-
-	_ = noopStorage.DisableRuleSystemWide(orgID, "", "", "")
-	_ = noopStorage.EnableRuleSystemWide(orgID, "", "")
-	_ = noopStorage.UpdateDisabledRuleJustification(orgID, "", "", "justification")
-	_, _, _ = noopStorage.ReadDisabledRule(orgID, "", "")
-	_, _ = noopStorage.ListOfSystemWideDisabledRules(orgID)
-	_, _ = noopStorage.ListOfClustersForOrgSpecificRule(0, "", nil)
-	_, _ = noopStorage.ListOfClustersForOrgSpecificRule(0, "", []string{"a"})
-	_, _ = noopStorage.ReadRecommendationsForClusters([]string{}, types.OrgID(1))
-	_, _ = noopStorage.ReadClusterListRecommendations([]string{}, types.OrgID(1))
-	_, _ = noopStorage.ListOfDisabledClusters(orgID, "", "")
+	_, _ = noopStorage.GetLatestKafkaOffset()
 	_ = noopStorage.MigrateToLatest()
 	_ = noopStorage.GetConnection()
 	noopStorage.PrintRuleDisableDebugInfo()
-	_ = noopStorage.GetDBDriverType
+	_ = noopStorage.GetDBDriverType()
+}
+
+// TestNoopStorageEmptyMethods2 calls empty methods that just needs to be
+// defined in order for NoopStorage to satisfy Storage interface.
+func TestNoopStorageEmptyMethods2(t *testing.T) {
+	noopStorage := storage.NoopStorage{}
+	orgID := types.OrgID(1)
+	clusterName := types.ClusterName("")
+	ruleID := types.RuleID("")
+	errorKey := types.ErrorKey("")
+	userID := types.UserID("")
+	ruleSelector := types.RuleSelector("")
+
+	_, _, _ = noopStorage.ReadDisabledRule(orgID, ruleID, errorKey)
+	_ = noopStorage.VoteOnRule(clusterName, ruleID, errorKey, orgID, userID, 0, "some message")
+	_ = noopStorage.AddOrUpdateFeedbackOnRule(clusterName, ruleID, errorKey, orgID, userID, "")
+	_ = noopStorage.AddFeedbackOnRuleDisable(clusterName, ruleID, errorKey, orgID, userID, "")
+	_, _ = noopStorage.GetUserFeedbackOnRuleDisable(clusterName, ruleID, errorKey, userID)
+	_, _ = noopStorage.GetUserFeedbackOnRule(clusterName, ruleID, errorKey, userID)
+	_ = noopStorage.LoadRuleContent(content.RuleContentDirectory{})
+	_, _ = noopStorage.GetRuleByID(ruleID)
+	_, _ = noopStorage.GetOrgIDByClusterID(clusterName)
+	_, _ = noopStorage.ListOfSystemWideDisabledRules(orgID)
+	_, _ = noopStorage.ListOfClustersForOrgSpecificRule(orgID, ruleSelector, nil)
+	_, _ = noopStorage.ListOfClustersForOrgSpecificRule(orgID, ruleSelector, []string{"a"})
+	_, _ = noopStorage.ReadRecommendationsForClusters([]string{}, types.OrgID(1))
+	_, _ = noopStorage.ReadClusterListRecommendations([]string{}, types.OrgID(1))
+	_, _ = noopStorage.ListOfDisabledClusters(orgID, ruleID, errorKey)
+	_, _ = noopStorage.ReadSingleRuleTemplateData(orgID, clusterName, ruleID, errorKey)
+}
+
+// TestNoopStorageEmptyMethods3 calls empty methods that just needs to be
+// defined in order for NoopStorage to satisfy Storage interface.
+func TestNoopStorageEmptyMethods3(t *testing.T) {
+	noopStorage := storage.NoopStorage{}
+	orgID := types.OrgID(1)
+	clusterName := types.ClusterName("")
+	rule := types.Rule{}
+	ruleID := types.RuleID("")
+	ruleErrorKey := types.RuleErrorKey{}
+	errorKey := types.ErrorKey("")
+	userID := types.UserID("")
+
+	_ = noopStorage.DisableRuleSystemWide(orgID, ruleID, errorKey, "justification#1")
+	_ = noopStorage.EnableRuleSystemWide(orgID, ruleID, errorKey)
+	_ = noopStorage.UpdateDisabledRuleJustification(orgID, ruleID, errorKey, "justification#2")
+	_ = noopStorage.WriteReportInfoForCluster(orgID, clusterName, nil, time.Time{})
+	_ = noopStorage.WriteRecommendationsForCluster(orgID, clusterName, "", types.Timestamp(""))
+	_ = noopStorage.CreateRule(rule)
+	_ = noopStorage.DeleteRule(ruleID)
+	_ = noopStorage.CreateRuleErrorKey(ruleErrorKey)
+	_ = noopStorage.DeleteRuleErrorKey(ruleID, errorKey)
+	_ = noopStorage.ToggleRuleForCluster(clusterName, ruleID, errorKey, orgID, storage.RuleToggle(0))
+	_ = noopStorage.DeleteFromRuleClusterToggle(clusterName, ruleID)
+	_ = noopStorage.RateOnRule(orgID, ruleID, errorKey, types.UserVote(1))
+	_, _ = noopStorage.GetFromClusterRuleToggle(clusterName, ruleID)
+	_, _ = noopStorage.GetTogglesForRules(clusterName, nil, orgID)
+	_, _ = noopStorage.GetUserFeedbackOnRules(clusterName, nil, userID)
+	_, _ = noopStorage.GetUserDisableFeedbackOnRules(clusterName, nil, userID)
+	_, _ = noopStorage.GetRuleWithContent(ruleID, errorKey)
+	_, _ = noopStorage.ListOfDisabledRules(orgID)
+	_, _ = noopStorage.GetRuleRating(orgID, types.RuleSelector(""))
+	_, _ = noopStorage.ListOfReasons(userID)
+	_, _ = noopStorage.ListOfDisabledRulesForClusters([]string{""}, orgID)
+	_ = noopStorage.WriteConsumerError(nil, nil)
+	_ = noopStorage.WriteReportForCluster(0, "", "", []types.ReportItem{}, time.Now(), time.Now(), time.Now(), 0, "")
+	_, _ = noopStorage.ReadReportsForClusters([]types.ClusterName{})
 }
