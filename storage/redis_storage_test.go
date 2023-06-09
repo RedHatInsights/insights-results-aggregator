@@ -328,3 +328,32 @@ func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
 	assert.EqualError(t, err, errorMessage)
 	assertRedisExpectationsMet(t, server)
 }
+
+// Don't decrease code coverage by non-functional and not covered code.
+
+// TestRedisStorageEmptyMethods1 calls empty methods that just needs to be
+// defined in order for RedisStorage to satisfy Storage interface.
+func TestRedisStorageEmptyMethods1(t *testing.T) {
+	RedisStorage := storage.RedisStorage{}
+	orgID := types.OrgID(1)
+	clusterName := types.ClusterName("")
+
+	_, _ = RedisStorage.ListOfOrgs()
+	_, _ = RedisStorage.ListOfClustersForOrg(orgID, time.Now())
+	_, _ = RedisStorage.ReadOrgIDsForClusters([]types.ClusterName{clusterName})
+	_, _ = RedisStorage.ReportsCount()
+	_, _ = RedisStorage.ReadReportsForClusters([]types.ClusterName{clusterName})
+	_, _ = RedisStorage.DoesClusterExist(clusterName)
+
+	_, _, _, _, _ = RedisStorage.ReadReportForCluster(orgID, clusterName)
+	_, _ = RedisStorage.ReadReportInfoForCluster(orgID, clusterName)
+	_, _, _ = RedisStorage.ReadReportForClusterByClusterName(clusterName)
+	_ = RedisStorage.DeleteReportsForOrg(orgID)
+	_ = RedisStorage.DeleteReportsForCluster(clusterName)
+
+	_, _ = RedisStorage.GetLatestKafkaOffset()
+	_ = RedisStorage.MigrateToLatest()
+	_ = RedisStorage.GetConnection()
+	RedisStorage.PrintRuleDisableDebugInfo()
+	_ = RedisStorage.GetDBDriverType()
+}
