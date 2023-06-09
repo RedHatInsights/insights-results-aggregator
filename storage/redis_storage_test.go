@@ -83,6 +83,32 @@ func TestNewRedisClient(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// TestCloseRedis1 checks if it is possible to close initialized Redis client
+func TestCloseRedis1(t *testing.T) {
+	// try to instantiate Redis storage
+	client, err := storage.NewRedisStorage(configuration)
+
+	// check results
+	assert.NotNil(t, client)
+	assert.NoError(t, err)
+
+	// try to close the client
+	err = client.Close()
+	assert.NoError(t, err)
+}
+
+// TestCloseRedis2 checks if it is possible to close unitialized Redis client
+func TestCloseRedis2(t *testing.T) {
+	client := storage.RedisStorage{}
+
+	// check results
+	assert.NotNil(t, client)
+
+	// try to close the client
+	err := client.Close()
+	assert.NoError(t, err)
+}
+
 // TestNewDummyRedisClient checks if it is possible to construct Redis
 // client structure useful for testing
 func TestNewDummyRedisClient(t *testing.T) {
@@ -357,6 +383,7 @@ func TestRedisStorageEmptyMethods1(t *testing.T) {
 	_ = RedisStorage.GetConnection()
 	RedisStorage.PrintRuleDisableDebugInfo()
 	_ = RedisStorage.GetDBDriverType()
+	_ = RedisStorage.WriteConsumerError(nil, nil)
 }
 
 // TestRedisStorageEmptyMethods2 calls empty methods that just needs to be
