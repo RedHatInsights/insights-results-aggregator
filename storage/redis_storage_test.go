@@ -24,6 +24,7 @@ import (
 	"github.com/go-redis/redismock/v9"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/RedHatInsights/insights-operator-utils/redis"
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
@@ -356,4 +357,33 @@ func TestRedisStorageEmptyMethods1(t *testing.T) {
 	_ = RedisStorage.GetConnection()
 	RedisStorage.PrintRuleDisableDebugInfo()
 	_ = RedisStorage.GetDBDriverType()
+}
+
+// TestRedisStorageEmptyMethods2 calls empty methods that just needs to be
+// defined in order for RedisStorage to satisfy Storage interface.
+func TestRedisStorageEmptyMethods2(t *testing.T) {
+	RedisStorage := storage.RedisStorage{}
+	orgID := types.OrgID(1)
+	clusterName := types.ClusterName("")
+	ruleID := types.RuleID("")
+	errorKey := types.ErrorKey("")
+	userID := types.UserID("")
+	ruleSelector := types.RuleSelector("")
+
+	_, _, _ = RedisStorage.ReadDisabledRule(orgID, ruleID, errorKey)
+	_ = RedisStorage.VoteOnRule(clusterName, ruleID, errorKey, orgID, userID, 0, "some message")
+	_ = RedisStorage.AddOrUpdateFeedbackOnRule(clusterName, ruleID, errorKey, orgID, userID, "")
+	_ = RedisStorage.AddFeedbackOnRuleDisable(clusterName, ruleID, errorKey, orgID, userID, "")
+	_, _ = RedisStorage.GetUserFeedbackOnRuleDisable(clusterName, ruleID, errorKey, userID)
+	_, _ = RedisStorage.GetUserFeedbackOnRule(clusterName, ruleID, errorKey, userID)
+	_ = RedisStorage.LoadRuleContent(content.RuleContentDirectory{})
+	_, _ = RedisStorage.GetRuleByID(ruleID)
+	_, _ = RedisStorage.GetOrgIDByClusterID(clusterName)
+	_, _ = RedisStorage.ListOfSystemWideDisabledRules(orgID)
+	_, _ = RedisStorage.ListOfClustersForOrgSpecificRule(orgID, ruleSelector, nil)
+	_, _ = RedisStorage.ListOfClustersForOrgSpecificRule(orgID, ruleSelector, []string{"a"})
+	_, _ = RedisStorage.ReadRecommendationsForClusters([]string{}, types.OrgID(1))
+	_, _ = RedisStorage.ReadClusterListRecommendations([]string{}, types.OrgID(1))
+	_, _ = RedisStorage.ListOfDisabledClusters(orgID, ruleID, errorKey)
+	_, _ = RedisStorage.ReadSingleRuleTemplateData(orgID, clusterName, ruleID, errorKey)
 }
