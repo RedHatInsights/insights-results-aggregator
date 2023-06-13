@@ -18,7 +18,6 @@ kind: Template
 metadata:
   name: ccx-cache-writer
 objects:
-# TODO: Add the cache-writer deployment + services
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
