@@ -163,9 +163,11 @@ objects:
     name: ccx-cache-writer-prometheus-exporter
     labels:
       app: ccx-cache-writer
+      app.kubernetes.io/instance: cache-writer
+      app.kubernetes.io/name: db-writer
   spec:
     ports:
-      - name: web
+      - name: ccx-cache-writer-port-metrics
         port: 9000
         protocol: TCP
         targetPort: 9000
@@ -347,7 +349,7 @@ objects:
     name: ccx-redis-metrics
   spec:
     ports:
-    - name: http-metrics
+    - name: ccx-redis-port-metrics
       port: 9121
       protocol: TCP
       targetPort: metrics
