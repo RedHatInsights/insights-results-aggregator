@@ -106,27 +106,40 @@ func NewWithSaramaConfig(
 		}
 	}
 
+	log.Info().
+		Str("addr", brokerCfg.Address).
+		Str("group", brokerCfg.Group).
+		Msg("New consumer group")
+
 	consumerGroup, err := sarama.NewConsumerGroup([]string{brokerCfg.Address}, brokerCfg.Group, saramaConfig)
 	if err != nil {
+		log.Error().Err(err).Msg("Unable to create consumer group")
 		return nil, err
 	}
+	log.Info().Msg("Consumer group has been created")
 
+	log.Info().Msg("Constructing payload tracker producer")
 	payloadTrackerProducer, err := producer.NewPayloadTrackerProducer(brokerCfg)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to construct payload tracker producer")
+		log.Error().Err(err).Msg("Unable to construct payload tracker producer")
 		return nil, err
 	}
 	if payloadTrackerProducer == nil {
-		log.Info().Msg("payload tracker producer not configured")
+		log.Info().Msg("Payload tracker producer not configured")
+	} else {
+		log.Info().Msg("Payload tracker producer has been configured")
 	}
 
+	log.Info().Msg("Constructing DLQ producer")
 	deadLetterProducer, err := producer.NewDeadLetterProducer(brokerCfg)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to construct dead letter producer")
+		log.Error().Err(err).Msg("Unable to construct dead letter producer")
 		return nil, err
 	}
 	if deadLetterProducer == nil {
-		log.Info().Msg("dead letter producer not configured")
+		log.Info().Msg("Dead letter producer not configured")
+	} else {
+		log.Info().Msg("Dead letter producer has been configured")
 	}
 
 	consumer := &KafkaConsumer{
