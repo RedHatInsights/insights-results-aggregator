@@ -45,7 +45,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC
               value: "${INCOMING_TOPIC}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__DEAD_LETTER_QUEUE_TOPIC
-              value: ""
+              value: "ccx.aggregator.dead.letter.queue"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__PAYLOAD_TRACKER_TOPIC
               value: "${PAYLOAD_TRACKER_TOPIC}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__SERVICE_NAME
@@ -584,10 +584,10 @@ parameters:
   value: platform.payload-status
   required: true
 - name: CACHE_WRITER_SERVICE_NAME
-  value: ccx-cache-writer
+  value: insights-results-db-writer
   required: true
 - name: GROUP_ID
-  value: ccx_cache_writer_app
+  value: ccx_data_pipeline_app
   required: true
 - name: CW_API_PREFIX
   required: true
