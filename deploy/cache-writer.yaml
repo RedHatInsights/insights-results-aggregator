@@ -601,7 +601,7 @@ parameters:
   value: "0"
   required: true
 - name: REDIS_ENDPOINT
-  value: "localhost:6379"
+  value: "ccx-redis:6379"
   required: true
 - name: REDIS_TIMEOUT_SECONDS
   value: "30"
