@@ -11,6 +11,7 @@ service_name = "insights-results-aggregator"
 group = "aggregator"
 enabled = true
 enable_org_allowlist = false
+client_id = "db-writer"
 
 [server]
 address = ":8080"

@@ -4,6 +4,7 @@ topic = "ccx.ocp.results"
 group = "aggregator"
 enabled = false
 enable_org_allowlist = true
+client_id = "db-writer"
 
 [server]
 address = ":8080"

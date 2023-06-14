@@ -5,6 +5,7 @@ group = "aggregator"
 enabled = false
 enable_org_allowlist = true
 timeout = "30s"
+client_id = "db-writer"
 
 [server]
 address = ":8080"
