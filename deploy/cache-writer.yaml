@@ -152,6 +152,13 @@ objects:
             requests:
               cpu: ${CACHE_WRITER_CPU_REQUEST}
               memory: ${CACHE_WRITER_MEMORY_REQUEST}
+    kafkaTopics:
+      - replicas: 3
+        partitions: 1
+        topicName: ${INCOMING_TOPIC}
+      - replicas: 3
+        partitions: 1
+        topicName: ${PAYLOAD_TRACKER_TOPIC}
 - kind: Service
   apiVersion: v1
   metadata:
