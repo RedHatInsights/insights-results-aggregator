@@ -29,6 +29,7 @@ import (
 	"github.com/RedHatInsights/insights-operator-utils/redis"
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -160,6 +161,7 @@ func (storage *RedisStorage) WriteReportForCluster(
 	}
 
 	// everything seems to be ok
+	metrics.WrittenReports.Inc()
 	log.Info().Msgf("Added data for request %v", requestID)
 	return nil
 }
