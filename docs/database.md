@@ -4,9 +4,14 @@ nav_order: 4
 ---
 # Database
 
-Aggregator is configured to use SQLite3 DB by default, but it also supports PostgreSQL.
-In CI and QA environments, the configuration is overridden by environment variables to use
-PostgreSQL. Alternatively Redis can be used, but only in "cache-writer" service instances.
+Aggregator is configured to use SQLite3 DB by default, but it also supports
+PostgreSQL.  In CI and QA environments, the configuration is overridden by
+environment variables to use PostgreSQL. Alternatively Redis can be used, but
+only in "cache-writer" service instances.  It is also possible to set database
+as "no-op" which means, that any DB-related operations is performed using
+no-ops (empty operations). In this mode, no DB-related operation will fail.
+
+## PostgreSQL configuration
 
 To establish connection to the PostgreSQL instance provided by the minimal stack in
 `docker-compose.yml` for local setup, the following configuration options need to be changed in
@@ -23,7 +28,23 @@ pg_db_name = "aggregator"
 pg_params = "sslmode=disable"
 ```
 
+## Redis configuration
+
+To establish connection to the Redis, Redis database needs to run on some
+visible host on configured port. Also any Redis instance can serve 16 databases
+identified by index 0 to 15. It's possible to setup password used to connect to
+Redis (it also depends on Redis DB configuration):
+
+```toml
+database = 0
+endpoint = "localhost:6379"
+password = ""
+timeout_seconds = 30
+```
+
 ## Migration mechanism
+
+Note: available only when SQL-compatible database, like PostgreSQL, is configured.
 
 This service contains an implementation of a simple database migration mechanism that allows
 semi-automatic transitions between various database versions as well as building the latest version
