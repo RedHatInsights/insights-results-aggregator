@@ -1,4 +1,4 @@
-// Copyright 2022 Red Hat, Inc
+// Copyright 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ func TestSaramaConfigFromBrokerConfig(t *testing.T) {
 	assert.Equal(t, time.Second, saramaConfig.Net.DialTimeout)
 	assert.Equal(t, time.Second, saramaConfig.Net.ReadTimeout)
 	assert.Equal(t, time.Second, saramaConfig.Net.WriteTimeout)
+	assert.Equal(t, "sarama", saramaConfig.ClientID) // default value
 
 	cfg = broker.Configuration{
 		SecurityProtocol: "SSL",
@@ -55,6 +56,7 @@ func TestSaramaConfigFromBrokerConfig(t *testing.T) {
 		SaslMechanism:    "PLAIN",
 		SaslUsername:     "username",
 		SaslPassword:     "password",
+		ClientID:         "foobarbaz",
 	}
 	saramaConfig, err = broker.SaramaConfigFromBrokerConfig(cfg)
 	helpers.FailOnError(t, err)
@@ -64,6 +66,7 @@ func TestSaramaConfigFromBrokerConfig(t *testing.T) {
 	assert.Equal(t, sarama.SASLMechanism("PLAIN"), saramaConfig.Net.SASL.Mechanism)
 	assert.Equal(t, "username", saramaConfig.Net.SASL.User)
 	assert.Equal(t, "password", saramaConfig.Net.SASL.Password)
+	assert.Equal(t, "foobarbaz", saramaConfig.ClientID)
 }
 
 func TestBadConfiguration(t *testing.T) {
