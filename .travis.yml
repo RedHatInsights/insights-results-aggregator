@@ -48,7 +48,7 @@ jobs:
       services:
         - docker
       before_script:
-        - go build
+        - make build
         - wget -O docker-compose.yml https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/docker-compose.yml
         - POSTGRES_DB_NAME=test docker-compose --profile test-aggregator up -d
         - cid=$(docker ps | grep 'insights-behavioral-spec:latest' | cut -d ' ' -f 1)
