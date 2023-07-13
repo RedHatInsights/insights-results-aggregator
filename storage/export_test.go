@@ -44,6 +44,7 @@ var (
 	ArgsWithClusterNames    = argsWithClusterNames
 	ValuesForRuleHitsInsert = valuesForRuleHitsInsert
 	NewRedisStorage         = newRedisStorage
+	GetRuleHitsCSV          = getRuleHitsCSV
 )
 
 func GetConnection(storage *DBStorage) *sql.DB {
