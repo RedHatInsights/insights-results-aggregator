@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# this is improper - we need to start using tags in GitHub properly
-version=$(git tag --sort=committerdate | tail -1)
+# retrieve the latest tag set in repository
+version=$(git describe --tags --abbrev=0)
 
 buildtime=$(date)
 branch=$(git rev-parse --abbrev-ref HEAD)
