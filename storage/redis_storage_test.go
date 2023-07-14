@@ -16,6 +16,7 @@ package storage_test
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"errors"
@@ -448,4 +449,27 @@ func TestRedisStorageEmptyMethods3(t *testing.T) {
 	_, _ = RedisStorage.GetRuleRating(orgID, types.RuleSelector(""))
 	_, _ = RedisStorage.ListOfReasons(userID)
 	_, _ = RedisStorage.ListOfDisabledRulesForClusters([]string{""}, orgID)
+}
+
+func Test_GetRuleHitsCSV_CCXDEV_11329_Reproducer(t *testing.T) {
+	var reportItems []types.ReportItem
+	_ = copy(reportItems, testdata.Report3RulesParsed)
+
+	// add .report suffix to rule modules
+	for i := range reportItems {
+		ruleModule := reportItems[i].Module
+		ruleModule = ruleModule + storage.ReportSuffix
+		reportItems[i].Module = ruleModule
+	}
+
+	ruleHitsParsed := storage.GetRuleHitsCSV(reportItems)
+	// split the CSV and iterate over the rule hits
+	ruleHitsSplit := strings.Split(ruleHitsParsed, ",")
+	for _, ruleHit := range ruleHitsSplit {
+		ruleModule := strings.Split(ruleHit, "|")[0]
+		ruleModuleSplit := strings.Split(ruleModule, ".")
+		ruleModuleSuffix := ruleModuleSplit[len(ruleModuleSplit)-1]
+		// rule module must not include the .report suffix after parsing
+		assert.NotEqual(t, ruleModuleSuffix, "report")
+	}
 }

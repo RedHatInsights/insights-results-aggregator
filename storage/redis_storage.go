@@ -489,7 +489,8 @@ func getRuleHitsCSV(reportItems []types.ReportItem) string {
 		if i > 0 {
 			output.WriteRune(',')
 		}
-		output.WriteString(string(reportItem.Module))
+		// strip .report suffix from rule module added automatically by running insights evaluation
+		output.WriteString(strings.TrimSuffix(string(reportItem.Module), ReportSuffix))
 		output.WriteRune('|')
 		output.WriteString(string(reportItem.ErrorKey))
 	}

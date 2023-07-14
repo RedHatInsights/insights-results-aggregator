@@ -223,6 +223,9 @@ type Storage interface {
 	GetDBDriverType() types.DBDriver
 }
 
+// ReportSuffix is used to strip away .report suffix from rule module names
+const ReportSuffix = ".report"
+
 // DBStorage is an implementation of Storage interface that use selected SQL like database
 // like SQLite, PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
 // sql package. It is possible to configure connection via Configuration structure.
@@ -990,7 +993,7 @@ func prepareInsertRecommendationsStatement(
 	selectors = make([]string, len(report.HitRules))
 
 	for idx, rule := range report.HitRules {
-		ruleFqdn := strings.TrimSuffix(string(rule.Module), ".report")
+		ruleFqdn := strings.TrimSuffix(string(rule.Module), ReportSuffix)
 		ruleID := ruleFqdn + "|" + string(rule.ErrorKey)
 		impactedSince, ok := impactedSinceMap[ruleFqdn+string(rule.ErrorKey)]
 		if !ok {
