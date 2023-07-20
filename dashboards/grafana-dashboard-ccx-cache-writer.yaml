@@ -373,7 +373,7 @@ data:
               "datasource": {
                 "uid": "$datasource"
               },
-              "expr": "sum (rate (container_cpu_usage_seconds_total{namespace=\"$namespace\",container=\"ccx-cache-writer\"}[1m])) by (pod)",
+              "expr": "sum (rate (container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"ccx-cache-writer-.*\"}[1m])) by (pod)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
