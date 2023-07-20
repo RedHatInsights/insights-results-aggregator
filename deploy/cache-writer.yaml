@@ -23,6 +23,8 @@ objects:
   kind: ClowdApp
   metadata:
     name: ccx-cache-writer
+    annotations:
+      ignore-check.kube-linter.io/minimum-three-replicas: "This app doesn't have that much traffic"
   spec:
     envName: ${ENV_NAME}
     testing:
@@ -190,6 +192,8 @@ objects:
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     name: ccx-redis
+    annotations:
+      ignore-check.kube-linter.io/minimum-three-replicas: "It can be problematic if we add more replicas and it's enough as it is now"
   spec:
     replicas: 1
     selector:
