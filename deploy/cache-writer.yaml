@@ -269,8 +269,12 @@ objects:
             successThreshold: 1
             timeoutSeconds: 2
           resources:
-            limits: {}
-            requests: {}
+            limits:
+              cpu: ${REDIS_CPU_LIMIT}
+              memory: ${REDIS_MEMORY_LIMIT}
+            requests:
+              cpu: ${REDIS_CPU_REQUEST}
+              memory: ${REDIS_MEMORY_REQUEST}
           securityContext:
             runAsNonRoot: true
           volumeMounts:
@@ -650,3 +654,11 @@ parameters:
   value: 100Gi
 - name: REDIS_CREDENTIALS_SECRETNAME
   value: cache-writer-redis-credentials
+- name: REDIS_CPU_LIMIT
+  value: 200m
+- name: REDIS_MEMORY_LIMIT
+  value: 1500Mi
+- name: REDIS_CPU_REQUEST
+  value: 100m
+- name: REDIS_MEMORY_REQUEST
+  value: 1000Mi
