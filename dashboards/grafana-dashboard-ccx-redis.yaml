@@ -123,8 +123,8 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum (rate (container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"ccx-redis.*\"}[1m])) by (pod)",
-              "legendFormat": "__auto",
+              "expr": "sum (rate (container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"ccx-redis.*\", container!=\"\"}[1m])) by (pod, container)",
+              "legendFormat": "{{pod}}: {{container}}",
               "range": true,
               "refId": "A"
             }
@@ -216,8 +216,8 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum (container_memory_working_set_bytes{namespace=\"$namespace\",pod=~\"ccx-redis.*\"}) by (pod)",
-              "legendFormat": "__auto",
+              "expr": "sum (container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"ccx-redis.*\", container!=\"\"}) by (pod, container)",
+              "legendFormat": "{{pod}}: {{container}}",
               "range": true,
               "refId": "A"
             }
