@@ -667,10 +667,10 @@ parameters:
 - name: REDIS_MEMORY_REQUEST
   value: 1000Mi
 - name: REDIS_METRICS_CPU_LIMIT
-  value: 10m
+  value: 20m
 - name: REDIS_METRICS_MEMORY_LIMIT
   value: 100Mi
 - name: REDIS_METRICS_CPU_REQUEST
-  value: 5m
+  value: 10m
 - name: REDIS_METRICS_MEMORY_REQUEST
   value: 50Mi
