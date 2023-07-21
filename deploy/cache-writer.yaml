@@ -316,8 +316,12 @@ objects:
           - containerPort: 9121
             name: metrics
           resources:
-            limits: {}
-            requests: {}
+            limits:
+              cpu: ${REDIS_METRICS_CPU_LIMIT}
+              memory: ${REDIS_METRICS_MEMORY_LIMIT}
+            requests:
+              cpu: ${REDIS_METRICS_CPU_REQUEST}
+              memory: ${REDIS_METRICS_MEMORY_REQUEST}
           securityContext:
             runAsNonRoot: true
           volumeMounts: null
@@ -662,3 +666,11 @@ parameters:
   value: 100m
 - name: REDIS_MEMORY_REQUEST
   value: 1000Mi
+- name: REDIS_METRICS_CPU_LIMIT
+  value: 5m
+- name: REDIS_METRICS_MEMORY_LIMIT
+  value: 100Mi
+- name: REDIS_METRICS_CPU_REQUEST
+  value: 10m
+- name: REDIS_METRICS_MEMORY_REQUEST
+  value: 50Mi
