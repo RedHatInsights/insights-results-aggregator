@@ -217,7 +217,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum (container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"ccx-redis.*\", container!=\"\"}) by (pod, container)",
-              "legendFormat": "__auto",
+              "legendFormat": "{{pod}}: {{container}}",
               "range": true,
               "refId": "A"
             }
