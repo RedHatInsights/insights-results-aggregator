@@ -37,13 +37,12 @@ jobs:
         - env
         - bash <(curl -s https://codecov.io/bash)
     - stage: openapi-checks
-      language: node_js
-      node_js:
-        - 17
-        - node
+      services:
+        - docker
+      before_install:
+        - docker pull openapitools/openapi-generator-cli
       script:
-        - npm install -g @openapitools/openapi-generator-cli
-        - openapi-generator-cli validate -i openapi.json
+        - docker run -v ${PWD}:/local openapitools/openapi-generator-cli validate -i /local/openapi.json
     - stage: bdd tests
       services:
         - docker
