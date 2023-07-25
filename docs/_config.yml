@@ -1,6 +1,6 @@
 title: Insights Results Aggregator
 description: Aggregator service for Openshist insights results
-baseurl: insights-results-aggregator
+baseurl: /insights-results-aggregator
 url: redhatinsights.github.io
 repository: "RedHatInsights/insights-results-aggregator"
 domain: redhatinsights.github.io
