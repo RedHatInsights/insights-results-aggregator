@@ -613,7 +613,7 @@ parameters:
   required: true
   value: /
 - name: LOG_LEVEL
-  value: "DEBUG"
+  value: "INFO"
 - name: DEBUG
   value: "true"
 - name: AUTH
