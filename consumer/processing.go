@@ -65,7 +65,7 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error 
 	consumer.updatePayloadTracker(requestID, startTime, message.Organization, message.Account, producer.StatusReceived)
 	consumer.updatePayloadTracker(requestID, timeAfterProcessingMessage, message.Organization, message.Account, producer.StatusMessageProcessed)
 
-	log.Info().
+	log.Debug().
 		Int64(offsetKey, msg.Offset).
 		Int32(partitionKey, msg.Partition).
 		Str(topicKey, msg.Topic).
@@ -142,10 +142,10 @@ func checkMessageOrgInAllowList(consumer *KafkaConsumer, message *incomingMessag
 			return false, cause
 		}
 
-		logMessageInfo(consumer, msg, *message, "Organization is in allow list")
+		logMessageDebug(consumer, msg, *message, "Organization is in allow list")
 
 	} else {
-		logMessageInfo(consumer, msg, *message, "Organization allow listing disabled")
+		logMessageDebug(consumer, msg, *message, "Organization allow listing disabled")
 	}
 	return true, ""
 }
@@ -164,7 +164,7 @@ func (consumer *KafkaConsumer) writeRecommendations(
 		return time.Time{}, err
 	}
 	tStored := time.Now()
-	logMessageInfo(consumer, msg, message, "Stored recommendations")
+	logMessageDebug(consumer, msg, message, "Stored recommendations")
 	logClusterInfo(&message)
 	return tStored, nil
 }
@@ -221,7 +221,7 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 		return message.RequestID, message, err
 	}
 
-	logMessageInfo(consumer, msg, message, "Marshalled")
+	logMessageDebug(consumer, msg, message, "Marshalled")
 	tMarshalled := time.Now()
 
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
@@ -237,7 +237,7 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 
 	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
 
-	logMessageInfo(consumer, msg, message, "Time ok")
+	logMessageDebug(consumer, msg, message, "Time ok")
 	tTimeCheck := time.Now()
 
 	// timestamp when the report is about to be written into database
@@ -261,7 +261,7 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 		logMessageError(consumer, msg, message, "Error writing report to database", err)
 		return message.RequestID, message, err
 	}
-	logMessageInfo(consumer, msg, message, "Stored report")
+	logMessageDebug(consumer, msg, message, "Stored report")
 	tStored := time.Now()
 
 	tRecommendationsStored, err := consumer.writeRecommendations(msg, message, reportAsBytes)
