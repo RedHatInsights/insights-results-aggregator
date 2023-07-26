@@ -290,7 +290,7 @@ func TestParseMessageEmptyReport(t *testing.T) {
 	}`
 
 	_, err := consumer.ParseMessage(false, []byte(message))
-	assert.EqualError(t, err, "Improper report structure, missing key fingerprints")
+	assert.EqualError(t, err, "Improper report structure, missing key with name 'fingerprints'")
 }
 
 func TestParseMessageNullReport(t *testing.T) {
