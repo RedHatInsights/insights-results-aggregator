@@ -12,6 +12,7 @@ group = "aggregator"
 enabled = true
 enable_org_allowlist = false
 client_id = "db-writer"
+display_message_with_wrong_structure = true
 
 [server]
 address = ":8080"
