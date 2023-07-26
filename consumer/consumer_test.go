@@ -1,5 +1,5 @@
 /*
-Copyright © 2020, 2021, 2022 Red Hat, Inc.
+Copyright © 2020, 2021, 2022, 2023 Red Hat, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -132,20 +132,20 @@ func TestConsumerConstructorNoKafka(t *testing.T) {
 }
 
 func TestParseEmptyMessage(t *testing.T) {
-	_, err := consumer.ParseMessage([]byte(""))
+	_, err := consumer.ParseMessage(false, []byte(""))
 	assert.EqualError(t, err, "unexpected end of JSON input")
 }
 
 func TestParseMessageWithWrongContent(t *testing.T) {
 	const message = `{"this":"is", "not":"expected content"}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage(false, []byte(message))
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "missing required attribute")
 }
 
 func TestParseMessageWithImproperJSON(t *testing.T) {
 	const message = `"this_is_not_json_dude"`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage(false, []byte(message))
 	assert.EqualError(
 		t,
 		err,
@@ -169,7 +169,7 @@ func TestParseMessageWithImproperReport(t *testing.T) {
 			"info": []
 	}
 }`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage(false, []byte(message))
 	assert.EqualError(
 		t,
 		err,
@@ -178,7 +178,7 @@ func TestParseMessageWithImproperReport(t *testing.T) {
 }
 
 func TestParseProperMessage(t *testing.T) {
-	message, err := consumer.ParseMessage([]byte(testdata.ConsumerMessage))
+	message, err := consumer.ParseMessage(false, []byte(testdata.ConsumerMessage))
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, types.OrgID(1), *message.Organization)
@@ -218,7 +218,7 @@ func TestParseProperMessageWithInfoReport(t *testing.T) {
 
 	}`
 	consumerMessage := createConsumerMessage(consumerReport)
-	message, err := consumer.ParseMessage([]byte(consumerMessage))
+	message, err := consumer.ParseMessage(false, []byte(consumerMessage))
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, types.OrgID(1), *message.Organization)
@@ -251,7 +251,7 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
 		"ClusterName": "this is not a UUID",
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage(false, []byte(message))
 	assert.EqualError(t, err, "cluster name is not a UUID")
 }
 
@@ -260,7 +260,7 @@ func TestParseMessageWithoutOrgID(t *testing.T) {
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage(false, []byte(message))
 	assert.EqualError(t, err, "missing required attribute 'OrgID'")
 }
 
@@ -269,7 +269,7 @@ func TestParseMessageWithoutClusterName(t *testing.T) {
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage(false, []byte(message))
 	assert.EqualError(t, err, "missing required attribute 'ClusterName'")
 }
 
@@ -278,7 +278,7 @@ func TestParseMessageWithoutReport(t *testing.T) {
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `"
 	}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage(false, []byte(message))
 	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 
@@ -289,7 +289,7 @@ func TestParseMessageEmptyReport(t *testing.T) {
 		"Report": {}
 	}`
 
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage(false, []byte(message))
 	assert.EqualError(t, err, "Improper report structure, missing key fingerprints")
 }
 
@@ -300,7 +300,7 @@ func TestParseMessageNullReport(t *testing.T) {
 		"Report": null
 	}`
 
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.ParseMessage(false, []byte(message))
 	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 
