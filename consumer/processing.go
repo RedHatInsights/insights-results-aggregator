@@ -254,7 +254,7 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
-	message, err := parseMessage(msg.Value)
+	message, err := parseMessage(consumer.Configuration.DisplayMessageWithWrongStructure, msg.Value)
 	if err != nil {
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
 		return message.RequestID, message, err
@@ -372,14 +372,14 @@ func checkReportStructure(r Report) error {
 	for _, expectedKey := range expectedKeys {
 		_, found := r[expectedKey]
 		if !found {
-			return errors.New("Improper report structure, missing key " + expectedKey)
+			return errors.New("Improper report structure, missing key with name '" + expectedKey + "'")
 		}
 	}
 	return nil
 }
 
 // parseMessage tries to parse incoming message and read all required attributes from it
-func parseMessage(messageValue []byte) (incomingMessage, error) {
+func parseMessage(displayMessageWithWrongStructure bool, messageValue []byte) (incomingMessage, error) {
 	var deserialized incomingMessage
 
 	err := json.Unmarshal(messageValue, &deserialized)
@@ -405,7 +405,12 @@ func parseMessage(messageValue []byte) (incomingMessage, error) {
 
 	err = checkReportStructure(*deserialized.Report)
 	if err != nil {
-		log.Err(err).Msgf("Deserialized report read from message with improper structure: %v", *deserialized.Report)
+		const errorMessage = "Deserialized report read from message with improper structure"
+		if displayMessageWithWrongStructure {
+			log.Err(err).Msgf(errorMessage+"%v", string(messageValue))
+		} else {
+			log.Err(err).Msg(errorMessage)
+		}
 		return deserialized, err
 	}
 
