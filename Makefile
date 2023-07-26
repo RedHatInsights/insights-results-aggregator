@@ -118,7 +118,10 @@ docs/packages/%.html: %.go
 	addlicense -c "Red Hat, Inc" -l "apache" -v $@
 
 godoc: export GO111MODULE=off
-godoc: install_docgo install_addlicense ${DOCFILES}
+godoc: install_docgo install_addlicense ${DOCFILES} docs/sources.md
+
+docs/sources.md: docs/sources.tmpl.md ${DOCFILES}
+	./gen_sources_md.sh
 
 install_docgo: export GO111MODULE=off
 install_docgo:
