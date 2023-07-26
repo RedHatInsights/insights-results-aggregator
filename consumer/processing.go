@@ -46,7 +46,64 @@ type incomingMessage struct {
 	ParsedInfo  []types.InfoItem
 }
 
-// HandleMessage handles the message and does all logging, metrics, etc
+// HandleMessage handles the message and does all logging, metrics, etc.
+//
+// Log message is written for every step made during processing, but in order to
+// reduce amount of messages sent to ElasticSearch, most messages are produced
+// only when log level is set to DEBUG.
+//
+// A typical example which log messages are produced w/o DEBUG log level during
+// processing:
+//
+// 1:26PM INF started processing message message_timestamp=2023-07-26T13:26:54+02:00 offset=7 partition=0 topic=ccx.ocp.results
+// 1:26PM INF Consumed group=aggregator offset=7 topic=ccx.ocp.results
+// 1:26PM INF Read cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=7 organization=11789772 partition=0 request ID=missing topic=ccx.ocp.results version=2
+// 1:26PM WRN Received data with unexpected version. cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=7 organization=11789772 partition=0 topic=ccx.ocp.results version=2
+// 1:26PM INF Stored info report cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=7 organization=11789772 partition=0 request ID=missing topic=ccx.ocp.results version=2
+// 1:26PM WRN request ID is missing, null or empty Operation=TrackPayload
+// 1:26PM INF Message consumed duration=3 offset=7
+//
+// When log level is set to DEBUG, many log messages useful for debugging are
+// generated as well:
+//
+// 2:53PM INF started processing message message_timestamp=2023-07-26T14:53:32+02:00 offset=8 partition=0 topic=ccx.ocp.results
+// 2:53PM INF Consumed group=aggregator offset=8 topic=ccx.ocp.results
+// 2:53PM INF Read cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=8 organization=11789772 partition=0 request ID=missing topic=ccx.ocp.results version=2
+// 2:53PM WRN Received data with unexpected version. cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=8 organization=11789772 partition=0 topic=ccx.ocp.results version=2
+// 2:53PM DBG Organization allow listing disabled cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=8 organization=11789772 partition=0 request ID=missing topic=ccx.ocp.results version=2
+// 2:53PM DBG Marshalled cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=8 organization=11789772 partition=0 request ID=missing topic=ccx.ocp.results version=2
+// 2:53PM DBG Time ok cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=8 organization=11789772 partition=0 request ID=missing topic=ccx.ocp.results version=2
+// 2:53PM DBG Stored report cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=8 organization=11789772 partition=0 request ID=missing topic=ccx.ocp.results version=2
+// 2:53PM DBG Stored recommendations cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=8 organization=11789772 partition=0 request ID=missing topic=ccx.ocp.results version=2
+// 2:53PM DBG rule hits for 11789772.5d5892d3-1f74-4ccf-91af-548dfc9767aa (request ID missing):
+//
+//	rule: ccx_rules_ocp.external.rules.nodes_requirements_check.report; error key: NODES_MINIMUM_REQUIREMENTS_NOT_MET
+//	rule: ccx_rules_ocp.external.bug_rules.bug_1766907.report; error key: BUGZILLA_BUG_1766907
+//	rule: ccx_rules_ocp.external.rules.nodes_kubelet_version_check.report; error key: NODE_KUBELET_VERSION
+//	rule: ccx_rules_ocp.external.rules.samples_op_failed_image_import_check.report; error key: SAMPLES_FAILED_IMAGE_IMPORT_ERR
+//	rule: ccx_rules_ocp.external.rules.cluster_wide_proxy_auth_check.report; error key: AUTH_OPERATOR_PROXY_ERROR
+//
+// 2:53PM DBG rule hits for 11789772.5d5892d3-1f74-4ccf-91af-548dfc9767aa (request ID missing):
+//
+//	rule: ccx_rules_ocp.external.rules.nodes_requirements_check.report; error key: NODES_MINIMUM_REQUIREMENTS_NOT_MET
+//	rule: ccx_rules_ocp.external.bug_rules.bug_1766907.report; error key: BUGZILLA_BUG_1766907
+//	rule: ccx_rules_ocp.external.rules.nodes_kubelet_version_check.report; error key: NODE_KUBELET_VERSION
+//	rule: ccx_rules_ocp.external.rules.samples_op_failed_image_import_check.report; error key: SAMPLES_FAILED_IMAGE_IMPORT_ERR
+//	rule: ccx_rules_ocp.external.rules.cluster_wide_proxy_auth_check.report; error key: AUTH_OPERATOR_PROXY_ERROR
+//
+// 2:53PM INF Stored info report cluster=5d5892d3-1f74-4ccf-91af-548dfc9767aa offset=8 organization=11789772 partition=0 request ID=missing topic=ccx.ocp.results version=2
+// 2:53PM DBG read duration=2287 offset=8
+// 2:53PM DBG org_filtering duration=440 offset=8
+// 2:53PM DBG marshalling duration=2023 offset=8
+// 2:53PM DBG time_check duration=120 offset=8
+// 2:53PM DBG db_store_report duration=119 offset=8
+// 2:53PM DBG db_store_recommendations duration=11 offset=8
+// 2:53PM DBG db_store_info_report duration=102 offset=8
+// 2:53PM WRN request ID is missing, null or empty Operation=TrackPayload
+// 2:53PM WRN request ID is missing, null or empty Operation=TrackPayload
+// 2:53PM DBG processing of message took '0.005895183' seconds offset=8 partition=0 topic=ccx.ocp.results
+// 2:53PM WRN request ID is missing, null or empty Operation=TrackPayload
+// 2:53PM INF Message consumed duration=6 offset=8
 func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error {
 	log.Info().
 		Int64(offsetKey, msg.Offset).
