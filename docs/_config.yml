@@ -1,6 +1,6 @@
 title: Insights Results Aggregator
 description: Aggregator service for Openshist insights results
-baseurl: "/insights-results-aggregator"
+baseurl: /insights-results-aggregator
 url: "https://redhatinsights.github.io"
 repository: "RedHatInsights/insights-results-aggregator"
 
@@ -14,9 +14,10 @@ aux_links:
 footer_content: "Copyright &copy; 2020 Red Hat, Inc.</a>"
 
 # Build settings
-markdown: kramdown
-# remote_theme: pmarsceill/just-the-docs
+# markdown: kramdown
+remote_theme: pmarsceill/just-the-docs
 plugins:
+  - jekyll-feed
   - jekyll-remote-theme
 
 exclude:
