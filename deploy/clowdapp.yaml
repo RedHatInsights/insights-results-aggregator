@@ -241,6 +241,8 @@ objects:
               value: "true"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLE_ORG_WHITELIST
               value: "false"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__DISPLAY_MESSAGE_WITH_WRONG_STRUCTURE
+              value: "true"
             - name: INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH
               value: "/rules-content"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS

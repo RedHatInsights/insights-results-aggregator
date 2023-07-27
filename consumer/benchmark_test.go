@@ -1,4 +1,4 @@
-// Copyright 2020, 2021, 2022 Red Hat, Inc
+// Copyright 2020, 2021, 2022, 2023 Red Hat, Inc
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ func getMessagesFromDir(b *testing.B, dataDir string) []string {
 				helpers.FailOnError(b, err)
 
 				zerolog.SetGlobalLevel(zerolog.Disabled)
-				parsedMessage, err := consumer.ParseMessage(fileBytes)
+				parsedMessage, err := consumer.ParseMessage(false, fileBytes)
 				zerolog.SetGlobalLevel(zerolog.WarnLevel)
 				if err != nil {
 					log.Warn().Msgf("skipping file %+v because it has bad structure", file.Name())
