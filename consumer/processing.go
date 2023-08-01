@@ -17,6 +17,7 @@ package consumer
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -184,7 +185,7 @@ func (consumer KafkaConsumer) sendDeadLetter(msg *sarama.ConsumerMessage) {
 // checkMessageVersion - verifies incoming data's version is the expected one
 func checkMessageVersion(consumer *KafkaConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) {
 	if message.Version != CurrentSchemaVersion {
-		const warning = "Received data with unexpected version."
+		warning := fmt.Sprintf("Received data with unexpected version %d (expected %d).", message.Version, CurrentSchemaVersion)
 		logMessageWarning(consumer, msg, *message, warning)
 	}
 }
