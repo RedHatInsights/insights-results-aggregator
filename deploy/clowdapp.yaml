@@ -98,7 +98,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
               value: ${CLOUDWATCH_DEBUG}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
-              value: ${IRDW_LOG_STREAM}
+              value: ${IRA_LOG_STREAM}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
               value: ${CREATE_STREAM_IF_NOT_EXISTS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
@@ -406,6 +406,8 @@ parameters:
   value: '6'
 - name: IRA_CPU_LIMIT
   value: 200m
+- name: IRA_LOG_STREAM
+  value: insights-results-aggregator
 - name: IRA_MEMORY_LIMIT
   value: 300Mi
 - name: IRA_CPU_REQUEST
@@ -451,7 +453,7 @@ parameters:
   required: true
   value: /
 - name: IRDW_LOG_STREAM
-  value: $HOSTNAME
+  value: insights-results-db-writer
 - name: DB_WRITER_REPLICAS
   description: The number of replicas to use for the insights-results-db-writer deployment
   value: "1"
