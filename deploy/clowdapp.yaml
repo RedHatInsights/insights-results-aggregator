@@ -43,116 +43,6 @@ objects:
     testing:
       iqePlugin: ccx
     deployments:
-      - name: aggregator
-        minReplicas: ${{MIN_REPLICAS}}
-        webServices:
-          public:
-            enabled: false
-          private:
-            enabled: true
-          metrics:
-            enabled: true
-        podSpec:
-          env:
-            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
-              value: "false"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH
-              value: "/rules-content"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
-              value: ":10000"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
-              value: "${IRA_API_PREFIX}"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
-              value: "/openapi/openapi.json"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG
-              value: "${DEBUG}"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH
-              value: "${AUTH}"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH_TYPE
-              value: "xrh"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
-              value: "true"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__MAXIMUM_FEEDBACK_MESSAGE_LENGTH
-              value: "255"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ORG_OVERVIEW_LIMIT_HOURS
-              value: "168"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
-              value: postgres
-            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
-              value: sslmode=disable
-            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
-              value: "sql"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
-              value: ${CLOUDWATCH_ENABLED}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__ENDPOINT
-              value: ${INSIGHTS_REDIS_URL}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE
-              value: ${INSIGHTS_REDIS_DATABASE}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cache-writer-redis-credentials
-                  key: password
-            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS
-              value: ${INSIGHTS_REDIS_TIMEOUT_SECONDS}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
-              value: ${CLOUDWATCH_DEBUG}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
-              value: ${IRA_LOG_STREAM}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
-              value: ${CREATE_STREAM_IF_NOT_EXISTS}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
-              valueFrom:
-                secretKeyRef:
-                  name: cloudwatch
-                  key: aws_region
-                  optional: true
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__LOG_GROUP
-              valueFrom:
-                secretKeyRef:
-                  name: cloudwatch
-                  key: log_group_name
-                  optional: true
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_ACCESS_ID
-              valueFrom:
-                secretKeyRef:
-                  name: cloudwatch
-                  key: aws_access_key_id
-                  optional: true
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: cloudwatch
-                  key: aws_secret_access_key
-                  optional: true
-          image: ${IMAGE}:${IMAGE_TAG}
-          livenessProbe:
-            failureThreshold: 5
-            httpGet:
-              path: ${IRA_API_PREFIX}openapi.json
-              port: 10000
-              scheme: HTTP
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 60
-          readinessProbe:
-            failureThreshold: 5
-            httpGet:
-              path: ${IRA_API_PREFIX}openapi.json
-              port: 10000
-              scheme: HTTP
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 60
-          resources:
-            requests:
-              cpu: ${IRA_CPU_REQUEST}
-              memory: ${IRA_MEMORY_REQUEST}
-            limits:
-              cpu: ${IRA_CPU_LIMIT}
-              memory: ${IRA_MEMORY_LIMIT}
       - name: db-writer
         minReplicas: ${{DB_WRITER_REPLICAS}}
         webServices:
@@ -327,6 +217,116 @@ objects:
             requests:
               cpu: ${DB_WRITER_CPU_REQUEST}
               memory: ${DB_WRITER_MEMORY_REQUEST}
+      - name: aggregator
+        minReplicas: ${{MIN_REPLICAS}}
+        webServices:
+          public:
+            enabled: false
+          private:
+            enabled: true
+          metrics:
+            enabled: true
+        podSpec:
+          env:
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
+              value: "false"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH
+              value: "/rules-content"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
+              value: ":10000"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
+              value: "${IRA_API_PREFIX}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
+              value: "/openapi/openapi.json"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG
+              value: "${DEBUG}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH
+              value: "${AUTH}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH_TYPE
+              value: "xrh"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
+              value: "true"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__MAXIMUM_FEEDBACK_MESSAGE_LENGTH
+              value: "255"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ORG_OVERVIEW_LIMIT_HOURS
+              value: "168"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
+              value: postgres
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
+              value: sslmode=disable
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
+              value: "sql"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
+              value: ${CLOUDWATCH_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__ENDPOINT
+              value: ${INSIGHTS_REDIS_URL}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE
+              value: ${INSIGHTS_REDIS_DATABASE}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cache-writer-redis-credentials
+                  key: password
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS
+              value: ${INSIGHTS_REDIS_TIMEOUT_SECONDS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
+              value: ${CLOUDWATCH_DEBUG}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
+              value: ${IRA_LOG_STREAM}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
+              value: ${CREATE_STREAM_IF_NOT_EXISTS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_region
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__LOG_GROUP
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: log_group_name
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_ACCESS_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_access_key_id
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_secret_access_key
+                  optional: true
+          image: ${IMAGE}:${IMAGE_TAG}
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: ${IRA_API_PREFIX}openapi.json
+              port: 10000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 60
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: ${IRA_API_PREFIX}openapi.json
+              port: 10000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 60
+          resources:
+            requests:
+              cpu: ${IRA_CPU_REQUEST}
+              memory: ${IRA_MEMORY_REQUEST}
+            limits:
+              cpu: ${IRA_CPU_LIMIT}
+              memory: ${IRA_MEMORY_LIMIT}
     database:
       # the DB name should match to app-interface DB name without specifying environment
       # https://gitlab.cee.redhat.com/service/app-interface/-/blob/ddd85c2ad79b40047391405b2d909eb38667bc43/data/services/insights/ccx-data-pipeline/namespaces/stage-ccx-data-pipeline-stage.yml#L60
