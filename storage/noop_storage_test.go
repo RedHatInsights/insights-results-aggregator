@@ -45,6 +45,7 @@ func TestNoopStorageEmptyMethods1(t *testing.T) {
 
 	_, _, _, _, _ = noopStorage.ReadReportForCluster(orgID, clusterName)
 	_, _ = noopStorage.ReadReportInfoForCluster(orgID, clusterName)
+	_, _ = noopStorage.ReadClusterVersionsForClusterList(orgID, []string{string(clusterName)})
 	_, _, _ = noopStorage.ReadReportForClusterByClusterName(clusterName)
 	_ = noopStorage.DeleteReportsForOrg(orgID)
 	_ = noopStorage.DeleteReportsForCluster(clusterName)

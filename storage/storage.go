@@ -66,6 +66,9 @@ type Storage interface {
 		types.OrgID, types.ClusterName) (
 		types.Version, error,
 	)
+	ReadClusterVersionsForClusterList(
+		types.OrgID, []string,
+	) (map[types.ClusterName]types.Version, error)
 	ReadReportsForClusters(
 		clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error)
 	ReadOrgIDsForClusters(
