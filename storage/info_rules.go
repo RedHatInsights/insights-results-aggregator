@@ -26,6 +26,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	ctypes "github.com/RedHatInsights/insights-results-types"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -106,14 +107,68 @@ SELECT
 	return version, err
 }
 
-func (storage DBStorage) fillInMetadata(orgID types.OrgID, clusterMap ctypes.ClusterRecommendationMap) {
-	for cluster, recommendationList := range clusterMap {
-		version, err := storage.ReadReportInfoForCluster(orgID, cluster)
+// ReadClusterVersionsForClusterList retrieve the cluster version for a given cluster list and org id
+func (storage *DBStorage) ReadClusterVersionsForClusterList(
+	orgID types.OrgID,
+	clusterList []string,
+) (map[types.ClusterName]types.Version, error) {
+	clusterMap := make(map[types.ClusterName]types.Version, len(clusterList))
+
+	if len(clusterList) == 0 {
+		return clusterMap, nil
+	}
+
+	query := `
+	SELECT cluster_id, COALESCE(version_info, '') as version_info
+	FROM report_info 
+	WHERE org_id = $1 AND cluster_id IN (%v)
+	`
+
+	// #nosec G201
+	query = fmt.Sprintf(query, inClauseFromSlice(clusterList))
+
+	rows, err := storage.connection.Query(query, orgID)
+	if err != nil {
+		log.Error().Err(err).Msg("query to get cluster versions")
+		return clusterMap, err
+	}
+	for rows.Next() {
+		var (
+			clusterID      ctypes.ClusterName
+			clusterVersion types.Version
+		)
+
+		err := rows.Scan(
+			&clusterID,
+			&clusterVersion,
+		)
 		if err != nil {
-			continue
+			log.Error().Err(err).Msg("problem reading cluster versions")
+			return clusterMap, err
 		}
 
-		recommendationList.Meta = ctypes.ClusterMetadata{Version: version}
-		clusterMap[cluster] = recommendationList
+		clusterMap[clusterID] = clusterVersion
+	}
+	return clusterMap, err
+}
+
+func (storage DBStorage) fillInMetadata(orgID types.OrgID, clusterMap ctypes.ClusterRecommendationMap) {
+	clusterList := make([]string, len(clusterMap))
+	var i int
+
+	for clusterID := range clusterMap {
+		clusterList[i] = string(clusterID)
+		i++
+	}
+
+	clusterVersionMap, err := storage.ReadClusterVersionsForClusterList(orgID, clusterList)
+	if err != nil {
+		return
+	}
+
+	for clusterID, clusterVersion := range clusterVersionMap {
+		recommendationList := clusterMap[clusterID]
+		recommendationList.Meta.Version = clusterVersion
+		clusterMap[clusterID] = recommendationList
 	}
 }

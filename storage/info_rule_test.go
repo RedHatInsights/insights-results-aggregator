@@ -88,6 +88,98 @@ func TestWriteReportInfoForCluster(t *testing.T) {
 	}
 }
 
+func TestReadClusterVersionsForClusterList(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	clusterList := make([]string, 4)
+	for i := range clusterList {
+		clusterList[i] = string(testdata.GetRandomClusterID())
+	}
+
+	expectations := []struct {
+		input   []types.InfoItem
+		cluster string
+		version types.Version
+		err     error
+	}{
+		{
+			input:   nil,
+			cluster: clusterList[0],
+			version: "",
+			err:     nil,
+		},
+		{
+			input:   []types.InfoItem{},
+			cluster: clusterList[1],
+			version: "",
+			err:     nil,
+		},
+		{
+			input: []types.InfoItem{
+				{
+					InfoID: "An info ID",
+					Details: map[string]string{
+						"version": "1.0",
+					},
+				},
+			},
+			cluster: clusterList[2],
+			version: "",
+			err:     nil,
+		},
+		{
+			input: []types.InfoItem{
+				{
+					InfoID: "version_info|CLUSTER_VERSION_INFO",
+					Details: map[string]string{
+						"version": "1.0",
+					},
+				},
+			},
+			cluster: clusterList[3],
+			version: "1.0",
+			err:     nil,
+		},
+	}
+
+	for _, test := range expectations {
+		err := mockStorage.WriteReportInfoForCluster(
+			testdata.OrgID,
+			types.ClusterName(test.cluster),
+			test.input,
+			testdata.LastCheckedAt,
+		)
+		helpers.FailOnError(t, err)
+
+		versionMap, err := mockStorage.ReadClusterVersionsForClusterList(
+			testdata.OrgID, clusterList,
+		)
+		assert.Equal(t, test.version, versionMap[ctypes.ClusterName(test.cluster)])
+		assert.Equal(t, test.err, err)
+	}
+}
+
+func TestReadClusterVersionsForClusterListEmpty(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	versionMap, err := mockStorage.ReadClusterVersionsForClusterList(
+		testdata.OrgID, []string{},
+	)
+	assert.Equal(t, 0, len(versionMap))
+	assert.NoError(t, err)
+}
+
+func TestReadClusterVersionsForClusterListDBError(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	closer()
+
+	_, err := mockStorage.ReadClusterVersionsForClusterList(
+		testdata.OrgID, []string{string(testdata.ClusterName)})
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
 // TestDBStorageReadClusterListRecommendationsNoRecommendations checks that when no recommendations
 // are stored, it is an OK state
 func TestDBStorageReadClusterListRecommendationsNoRecommendationsWithVersion(t *testing.T) {
