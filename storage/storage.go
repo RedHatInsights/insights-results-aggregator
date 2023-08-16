@@ -309,8 +309,8 @@ func newSQLStorage(configuration Configuration) (Storage, error) {
 	}
 
 	log.Info().Msgf(
-		"Making connection to data storage, driver=%s datasource=%s",
-		driverName, dataSource,
+		"Making connection to data storage, driver=%s",
+		driverName,
 	)
 
 	connection, err := sql.Open(driverName, dataSource)

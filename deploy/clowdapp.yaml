@@ -64,7 +64,7 @@ objects:
                 - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
                   value: postgres
                 - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
-                  value: sslmode=disable
+                  value: ${PG_PARAMS}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES
                   value: "true"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
@@ -154,7 +154,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
               value: postgres
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
-              value: sslmode=disable
+              value: ${PG_PARAMS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
               value: "sql"
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
@@ -253,7 +253,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
               value: postgres
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
-              value: sslmode=disable
+              value: ${PG_PARAMS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
               value: "sql"
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
@@ -331,7 +331,7 @@ objects:
       # the DB name should match to app-interface DB name without specifying environment
       # https://gitlab.cee.redhat.com/service/app-interface/-/blob/ddd85c2ad79b40047391405b2d909eb38667bc43/data/services/insights/ccx-data-pipeline/namespaces/stage-ccx-data-pipeline-stage.yml#L60
       name: ccx-data-pipeline
-      version: 12
+      version: 15
     kafkaTopics:
       - replicas: 3
         partitions: 1
@@ -385,6 +385,8 @@ objects:
       pod: ccx-insights-results-db-writer
 
 parameters:
+- name: PG_PARAMS
+  value: sslmode=require
 # insights-results-aggregator
 - description: Image name
   name: IMAGE
