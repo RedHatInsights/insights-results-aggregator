@@ -375,6 +375,7 @@ func TestRedisStorageEmptyMethods1(t *testing.T) {
 
 	_, _, _, _, _ = RedisStorage.ReadReportForCluster(orgID, clusterName)
 	_, _ = RedisStorage.ReadReportInfoForCluster(orgID, clusterName)
+	_, _ = RedisStorage.ReadClusterVersionsForClusterList(orgID, []string{string(clusterName)})
 	_, _, _ = RedisStorage.ReadReportForClusterByClusterName(clusterName)
 	_ = RedisStorage.DeleteReportsForOrg(orgID)
 	_ = RedisStorage.DeleteReportsForCluster(clusterName)

@@ -91,6 +91,13 @@ func (*RedisStorage) ReadReportInfoForCluster(types.OrgID, types.ClusterName) (t
 	return "", nil
 }
 
+// ReadClusterVersionsForClusterList noop
+func (*RedisStorage) ReadClusterVersionsForClusterList(
+	types.OrgID, []string,
+) (map[types.ClusterName]types.Version, error) {
+	return nil, nil
+}
+
 // ReadSingleRuleTemplateData noop
 func (*RedisStorage) ReadSingleRuleTemplateData(types.OrgID, types.ClusterName, types.RuleID, types.ErrorKey) (interface{}, error) {
 	return "", nil
