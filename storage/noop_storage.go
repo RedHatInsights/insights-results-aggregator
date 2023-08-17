@@ -273,16 +273,16 @@ func (*NoopStorage) ListOfDisabledRules(_ types.OrgID) ([]ctypes.DisabledRule, e
 
 // ListOfReasons function returns list of reasons for all rules disabled from a
 // specified account (noop).
-func (*NoopStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
+func (*NoopStorage) ListOfReasons(_ types.UserID) ([]DisabledRuleReason, error) {
 	return nil, nil
 }
 
 // ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
 // specified account (noop).
 func (*NoopStorage) ListOfDisabledClusters(
-	orgID types.OrgID,
-	ruleID types.RuleID,
-	errorKey types.ErrorKey,
+	_ types.OrgID,
+	_ types.RuleID,
+	_ types.ErrorKey,
 ) ([]ctypes.DisabledClusterInfo, error) {
 	return nil, nil
 }
@@ -290,8 +290,8 @@ func (*NoopStorage) ListOfDisabledClusters(
 // ListOfDisabledRulesForClusters function returns list of disabled rules for given clusters from a
 // specified account (noop).
 func (*NoopStorage) ListOfDisabledRulesForClusters(
-	clusterList []string,
-	orgID types.OrgID,
+	_ []string,
+	_ types.OrgID,
 ) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
@@ -308,8 +308,8 @@ func (*NoopStorage) RateOnRule(
 
 // GetRuleRating retrieves rating for given rule and user
 func (*NoopStorage) GetRuleRating(
-	orgID types.OrgID,
-	ruleSelector types.RuleSelector,
+	_ types.OrgID,
+	_ types.RuleSelector,
 ) (
 	ruleRating types.RuleRating,
 	err error,
@@ -320,8 +320,8 @@ func (*NoopStorage) GetRuleRating(
 // DisableRuleSystemWide disables the selected rule for all clusters visible to
 // given user
 func (*NoopStorage) DisableRuleSystemWide(
-	orgID types.OrgID, ruleID types.RuleID,
-	errorKey types.ErrorKey, justification string,
+	_ types.OrgID, ruleID types.RuleID,
+	_ types.ErrorKey, justification string,
 ) error {
 	return nil
 }
@@ -329,7 +329,7 @@ func (*NoopStorage) DisableRuleSystemWide(
 // EnableRuleSystemWide enables the selected rule for all clusters visible to
 // given user
 func (*NoopStorage) EnableRuleSystemWide(
-	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
+	_ types.OrgID, _ types.RuleID, _ types.ErrorKey,
 ) error {
 	return nil
 }
