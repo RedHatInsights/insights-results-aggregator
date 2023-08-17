@@ -148,7 +148,7 @@ func BenchmarkStorageUpsertConflict(b *testing.B) {
 	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
-		for rowId := 0; rowId < rowCount; rowId++ {
+		for rowID := 0; rowID < rowCount; rowID++ {
 			_, err := conn.Exec(upsertQuery, 1, "John Doe", "Hello World!")
 			helpers.FailOnError(b, err)
 		}
