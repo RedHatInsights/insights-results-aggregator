@@ -258,7 +258,7 @@ func New(configuration Configuration) (Storage, error) {
 }
 
 // newNoopStorage function creates and initializes a new instance of Noop storage
-func newNoopStorage(configuration Configuration) (Storage, error) {
+func newNoopStorage(_ Configuration) (Storage, error) {
 	return &NoopStorage{}, nil
 }
 
