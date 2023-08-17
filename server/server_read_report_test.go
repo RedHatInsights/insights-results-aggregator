@@ -133,7 +133,6 @@ func TestReadReportDBError(t *testing.T) {
 }
 
 func TestReadReport(t *testing.T) {
-
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 

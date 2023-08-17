@@ -409,7 +409,6 @@ func checkListOfDisabledRules() {
 		f.AddError(err.Error())
 		return
 	}
-
 }
 
 func checkListOfDisabledRulesFeedback() {
