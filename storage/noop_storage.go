@@ -320,8 +320,8 @@ func (*NoopStorage) GetRuleRating(
 // DisableRuleSystemWide disables the selected rule for all clusters visible to
 // given user
 func (*NoopStorage) DisableRuleSystemWide(
-	_ types.OrgID, ruleID types.RuleID,
-	_ types.ErrorKey, justification string,
+	_ types.OrgID, _ types.RuleID,
+	_ types.ErrorKey, _ string,
 ) error {
 	return nil
 }
