@@ -1540,7 +1540,7 @@ func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
 	}
 
 	// we only retrieve one cluster
-	res, err := mockStorage.ReadClusterListRecommendations([]string{clusterList[0], string(clusterList[1])}, testdata.OrgID)
+	res, err := mockStorage.ReadClusterListRecommendations([]string{clusterList[0], clusterList[1]}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	expectRuleList := []ctypes.RuleID{

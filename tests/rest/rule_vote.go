@@ -192,7 +192,6 @@ func testRuleVoteAPIendpoint(clusters, rules, errorKeys []string, message string
 				url := urlConstructor(cluster, rule, errorKey, orgID, string(testdata.UserID))
 				checker(url, message)
 			}
-
 		}
 	}
 }
