@@ -399,7 +399,6 @@ func (server HTTPServer) enableRuleSystemWide(writer http.ResponseWriter, reques
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
-
 }
 
 // disableRuleSystemWide method disables a rule for all clusters

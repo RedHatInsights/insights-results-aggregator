@@ -136,7 +136,6 @@ func readRuleRatingFromBody(writer http.ResponseWriter, request *http.Request) (
 
 	// everything is ok
 	return rating, true
-
 }
 
 // readClusterRuleParams gets cluster_name, rule_id and error_key from current request
