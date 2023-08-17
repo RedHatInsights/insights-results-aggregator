@@ -1261,7 +1261,6 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 	clusterList []string,
 	orgID types.OrgID,
 ) (ctypes.RecommendationImpactedClusters, error) {
-
 	impactedClusters := make(ctypes.RecommendationImpactedClusters, 0)
 
 	if len(clusterList) < 1 {
@@ -1313,7 +1312,6 @@ func (storage DBStorage) ReadClusterListRecommendations(
 	clusterList []string,
 	orgID types.OrgID,
 ) (ctypes.ClusterRecommendationMap, error) {
-
 	clusterMap := make(ctypes.ClusterRecommendationMap, 0)
 
 	if len(clusterList) < 1 {

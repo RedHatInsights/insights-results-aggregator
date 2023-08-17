@@ -204,7 +204,6 @@ func testGetRuleVoteAPIendpoint(clusters, rules, errorKeys []string, message str
 				url := urlConstructor(cluster, rule, errorKey, string(testdata.UserID))
 				checker(url, message)
 			}
-
 		}
 	}
 }
@@ -433,5 +432,4 @@ func checkListOfDisabledRulesFeedback() {
 		f.AddError(err.Error())
 		return
 	}
-
 }

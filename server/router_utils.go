@@ -142,7 +142,6 @@ func readRuleRatingFromBody(writer http.ResponseWriter, request *http.Request) (
 func (server *HTTPServer) readClusterRuleParams(
 	writer http.ResponseWriter, request *http.Request,
 ) (clusterID types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey, successful bool) {
-
 	clusterID, successful = readClusterName(writer, request)
 	if !successful {
 		return
