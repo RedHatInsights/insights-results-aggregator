@@ -408,7 +408,6 @@ func TestMigration16(t *testing.T) {
 }
 
 func TestMigration19(t *testing.T) {
-
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 

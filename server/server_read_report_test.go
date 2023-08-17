@@ -216,7 +216,6 @@ func TestReadRuleReport(t *testing.T) {
 // expecting the rule to be last and disabled, re-enables it and expects regular
 // response with Rule1 first again
 func TestReadReportDisableRule(t *testing.T) {
-
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 
@@ -328,7 +327,6 @@ func TestReadReportDisableRule(t *testing.T) {
 }
 
 func TestReadReport_RuleDisableFeedback(t *testing.T) {
-
 	mockStorage, closer := helpers.MustGetMockStorage(t, true)
 	defer closer()
 

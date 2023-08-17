@@ -1603,7 +1603,6 @@ func TestDoesClusterExist(t *testing.T) {
 	exist, err = mockStorage.DoesClusterExist(testdata.ClusterName)
 	helpers.FailOnError(t, err)
 	assert.True(t, exist, "cluster should exist")
-
 }
 
 func TestReadSingleRuleTemplateData(t *testing.T) {
