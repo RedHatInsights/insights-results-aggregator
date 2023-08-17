@@ -61,7 +61,7 @@ func constructURLForReportForOrgClustersPostMethod(organizationID string) string
 // sendClusterListInPayload function sends the cluster list in request payload
 // to server
 func sendClusterListInPayload(f *frisby.Frisby, clusterList []string, addAuthHeader bool) {
-	var payload ClusterListInRequest = ClusterListInRequest{
+	var payload = ClusterListInRequest{
 		Clusters: clusterList,
 	}
 	// create payload

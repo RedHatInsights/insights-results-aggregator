@@ -28,7 +28,7 @@ import (
 
 // TestNoopStorageEmptyMethods1 calls empty methods that just needs to be
 // defined in order for NoopStorage to satisfy Storage interface.
-func TestNoopStorageEmptyMethods1(t *testing.T) {
+func TestNoopStorageEmptyMethods1(_ *testing.T) {
 	noopStorage := storage.NoopStorage{}
 	orgID := types.OrgID(1)
 	clusterName := types.ClusterName("")
@@ -59,7 +59,7 @@ func TestNoopStorageEmptyMethods1(t *testing.T) {
 
 // TestNoopStorageEmptyMethods2 calls empty methods that just needs to be
 // defined in order for NoopStorage to satisfy Storage interface.
-func TestNoopStorageEmptyMethods2(t *testing.T) {
+func TestNoopStorageEmptyMethods2(_ *testing.T) {
 	noopStorage := storage.NoopStorage{}
 	orgID := types.OrgID(1)
 	clusterName := types.ClusterName("")

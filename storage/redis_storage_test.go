@@ -67,7 +67,7 @@ func assertRedisExpectationsMet(t *testing.T, mock redismock.ClientMock) {
 	}
 }
 
-func constructExpectedKey(orgID types.OrgID, clusterName types.ClusterName, requestID types.RequestID) string {
+func constructExpectedKey(_ types.OrgID, clusterName types.ClusterName, requestID types.RequestID) string {
 	return fmt.Sprintf("organization:%d:cluster:%s:request:%s",
 		int(testdata.OrgID),
 		string(testdata.ClusterName),
