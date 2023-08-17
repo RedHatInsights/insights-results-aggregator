@@ -148,10 +148,10 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 
 	for i := uint(0); i < numberOfEndpointArgs; i++ {
 		clusterID := types.ClusterName(uuid.New().String())
-		ruleID := types.RuleID(testdata.GetRandomRuleID(32))
+		ruleID := testdata.GetRandomRuleID(32)
 		errorKey := types.ErrorKey("ek")
-		userID := types.UserID(testdata.GetRandomUserID())
-		orgID := types.OrgID(testdata.GetRandomOrgID())
+		userID := testdata.GetRandomUserID()
+		orgID := testdata.GetRandomOrgID()
 
 		err := mockStorage.WriteReportForCluster(
 			testdata.OrgID,

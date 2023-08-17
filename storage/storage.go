@@ -1061,7 +1061,6 @@ func (storage DBStorage) insertRecommendations(
 
 	inserted = len(selectors)
 	return
-
 }
 
 // getRuleKeyCreatedAtMap returns a map between
@@ -1075,7 +1074,6 @@ func (storage DBStorage) getRuleKeyCreatedAtMap(
 ) (
 	map[string]types.Timestamp,
 	error) {
-
 	impactedSinceRows, err := storage.connection.Query(
 		query, orgID, clusterName)
 	if err != nil {
@@ -1133,7 +1131,6 @@ func (storage DBStorage) WriteReportForCluster(
 	}
 
 	err = func(tx *sql.Tx) error {
-
 		// Check if there is a more recent report for the cluster already in the database.
 		rows, err := tx.Query(
 			"SELECT last_checked_at FROM report WHERE org_id = $1 AND cluster = $2 AND last_checked_at > $3;",
@@ -1191,7 +1188,6 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 		var deleted int64
 		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
-
 			// Get impacted_since if present
 			query := "SELECT rule_fqdn, error_key, impacted_since FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;"
 			impactedSinceMap, err = storage.getRuleKeyCreatedAtMap(
@@ -1265,7 +1261,6 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 	clusterList []string,
 	orgID types.OrgID,
 ) (ctypes.RecommendationImpactedClusters, error) {
-
 	impactedClusters := make(ctypes.RecommendationImpactedClusters, 0)
 
 	if len(clusterList) < 1 {
@@ -1317,7 +1312,6 @@ func (storage DBStorage) ReadClusterListRecommendations(
 	clusterList []string,
 	orgID types.OrgID,
 ) (ctypes.ClusterRecommendationMap, error) {
-
 	clusterMap := make(ctypes.ClusterRecommendationMap, 0)
 
 	if len(clusterList) < 1 {

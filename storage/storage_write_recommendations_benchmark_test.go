@@ -329,7 +329,6 @@ func mustPrepareRecommendationsBenchmarkWithEntries(b *testing.B, numRows int) (
 	}
 
 	return mockStorage, conn, closer
-
 }
 
 func mustPrepareReportAndRecommendationsBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {

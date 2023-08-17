@@ -201,7 +201,6 @@ func checkMessageOrgInAllowList(consumer *KafkaConsumer, message *incomingMessag
 		}
 
 		logMessageDebug(consumer, msg, *message, "Organization is in allow list")
-
 	} else {
 		logMessageDebug(consumer, msg, *message, "Organization allow listing disabled")
 	}

@@ -45,7 +45,6 @@ func (mockKafkaConsumer *MockKafkaConsumer) Serve() {
 			Offset:         int64(i),
 		})
 	}
-
 }
 
 // Close closes mock consumer

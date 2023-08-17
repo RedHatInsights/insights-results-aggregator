@@ -192,7 +192,6 @@ func TestDBStorageReadReportForCluster(t *testing.T) {
 
 	writeReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, `{"report":{}}`, testdata.ReportEmptyRulesParsed)
 	checkReportForCluster(t, mockStorage, testdata.OrgID, testdata.ClusterName, nil)
-
 }
 
 // TestDBStorageGetOrgIDByClusterID check the behaviour of method GetOrgIDByClusterID
@@ -738,7 +737,6 @@ func TestDBStorageDeleteReports(t *testing.T) {
 }
 
 func TestDBStorage_ReadReportForClusterByClusterName_OK(t *testing.T) {
-
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
@@ -1540,7 +1538,7 @@ func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
 	}
 
 	// we only retrieve one cluster
-	res, err := mockStorage.ReadClusterListRecommendations([]string{clusterList[0], string(clusterList[1])}, testdata.OrgID)
+	res, err := mockStorage.ReadClusterListRecommendations([]string{clusterList[0], clusterList[1]}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	expectRuleList := []ctypes.RuleID{
@@ -1605,7 +1603,6 @@ func TestDoesClusterExist(t *testing.T) {
 	exist, err = mockStorage.DoesClusterExist(testdata.ClusterName)
 	helpers.FailOnError(t, err)
 	assert.True(t, exist, "cluster should exist")
-
 }
 
 func TestReadSingleRuleTemplateData(t *testing.T) {

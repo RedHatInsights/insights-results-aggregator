@@ -188,7 +188,6 @@ func checkClustersEndpointDetailGet() {
 			checkErrorStatusResponse(f, statusResponse)
 		}
 	}
-
 }
 
 // checkReportInfoEndpointWrongMethods check if the endpoint to return results
