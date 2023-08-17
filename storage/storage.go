@@ -258,7 +258,7 @@ func New(configuration Configuration) (Storage, error) {
 }
 
 // newNoopStorage function creates and initializes a new instance of Noop storage
-func newNoopStorage(configuration Configuration) (Storage, error) {
+func newNoopStorage(_ Configuration) (Storage, error) {
 	return &NoopStorage{}, nil
 }
 
@@ -512,6 +512,7 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 	// #nosec G202
 	query := `SELECT cluster_id, created_at, impacted_since FROM recommendation ` + whereClause + ` ORDER BY cluster_id;`
 
+	// #nosec G202
 	rows, err := storage.connection.Query(query, orgID, ruleID)
 
 	err = types.ConvertDBError(err, orgID)
@@ -678,6 +679,7 @@ func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName)
 	query := "SELECT DISTINCT org_id FROM report WHERE cluster in (" + inClausule + ");"
 
 	// select results from the database
+	// #nosec G202
 	rows, err := storage.connection.Query(query, args...)
 	if err != nil {
 		log.Error().Err(err).Msg("query to get org ids")
@@ -726,6 +728,7 @@ func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName
 	query := "SELECT cluster, report FROM report WHERE cluster in (" + inClausule + ");"
 
 	// select results from the database
+	// #nosec G202
 	rows, err := storage.connection.Query(query, args...)
 	if err != nil {
 		return reports, err
@@ -1185,7 +1188,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 
 	impactedSinceMap := make(map[string]ctypes.Timestamp)
 	err = func(tx *sql.Tx) error {
-		var deleted int64 = 0
+		var deleted int64
 		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
 
@@ -1281,6 +1284,7 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 		recommendation
 	` + whereClause
 
+	// #nosec G202
 	rows, err := storage.connection.Query(query, orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("query to get recommendations")

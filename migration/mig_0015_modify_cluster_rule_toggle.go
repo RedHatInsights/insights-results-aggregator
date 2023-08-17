@@ -307,15 +307,11 @@ var mig0015ModifyFeedbackTables = Migration{
 			return err
 		}
 
-		if err := mig0015ClusterUserRuleDisableFeedback.StepDown(tx, driver); err != nil {
-			return err
-		}
-
-		return nil
+		return mig0015ClusterUserRuleDisableFeedback.StepDown(tx, driver)
 	},
 }
 
-var defaultErrorKeysPerRuleID map[string]string = map[string]string{
+var defaultErrorKeysPerRuleID = map[string]string{
 	"ccx_rules_ocp.external.bug_rules.bug_1765280": "BUGZILLA_BUG_1765280",
 	"ccx_rules_ocp.external.bug_rules.bug_1766907": "BUGZILLA_BUG_1766907",
 	"ccx_rules_ocp.external.bug_rules.bug_1798049": "BUGZILLA_BUG_1798049",

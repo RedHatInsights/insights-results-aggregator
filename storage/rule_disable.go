@@ -32,7 +32,6 @@ func (storage DBStorage) DisableRuleSystemWide(
 	errorKey types.ErrorKey,
 	justification string,
 ) error {
-
 	now := time.Now()
 
 	const query = `
@@ -105,7 +104,6 @@ func (storage DBStorage) UpdateDisabledRuleJustification(
 	errorKey types.ErrorKey,
 	justification string,
 ) error {
-
 	now := time.Now()
 
 	const query = `UPDATE rule_disable

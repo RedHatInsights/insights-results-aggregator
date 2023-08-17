@@ -52,7 +52,6 @@ func (storage DBStorage) ToggleRuleForCluster(
 	orgID types.OrgID,
 	ruleToggle RuleToggle,
 ) error {
-
 	var query string
 	var enabledAt, disabledAt, updatedAt sql.NullTime
 

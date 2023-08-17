@@ -18,6 +18,7 @@ package migration
 
 import (
 	"database/sql"
+
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 

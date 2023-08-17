@@ -39,7 +39,7 @@ func (storage DBStorage) WriteReportInfoForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	info []types.InfoItem,
-	lastCheckedTime time.Time,
+	_ time.Time,
 ) error {
 	// Not checking if there is a previous report because this method will
 	// only be called after successfully writing the main report. If that

@@ -169,6 +169,7 @@ func (storage DBStorage) ListOfDisabledRulesForClusters(
 	` + whereClause
 
 	// run the query against database
+	// #nosec G202
 	rows, err := storage.connection.Query(query, orgID, RuleToggleDisable)
 
 	// return empty list in case of any error

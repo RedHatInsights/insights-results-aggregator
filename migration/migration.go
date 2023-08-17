@@ -99,7 +99,7 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 		return 0, err
 	}
 
-	var version Version = 0
+	var version Version // version 0 by default
 	err = db.QueryRow("SELECT version FROM migration_info;").Scan(&version)
 	err = types.ConvertDBError(err, nil)
 
@@ -175,11 +175,7 @@ func execStepsInTx(db *sql.DB, dbDriver types.DBDriver, currentVer, targetVer Ve
 			currentVer--
 		}
 
-		if err := updateVersionInDB(tx, currentVer); err != nil {
-			return err
-		}
-
-		return nil
+		return updateVersionInDB(tx, currentVer)
 	})
 }
 

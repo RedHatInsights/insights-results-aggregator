@@ -93,10 +93,10 @@ func (*NoopStorage) WriteReportForCluster(
 
 // WriteReportInfoForCluster noop
 func (*NoopStorage) WriteReportInfoForCluster(
-	orgID types.OrgID,
-	clusterName types.ClusterName,
-	info []types.InfoItem,
-	lastCheckedTime time.Time,
+	_ types.OrgID,
+	_ types.ClusterName,
+	_ []types.InfoItem,
+	_ time.Time,
 ) error {
 	return nil
 }
