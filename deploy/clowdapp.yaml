@@ -157,6 +157,8 @@ objects:
               value: ${PG_PARAMS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
               value: "sql"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
+              value: ${LOG_LEVEL}
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: ${CLOUDWATCH_ENABLED}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
@@ -256,6 +258,8 @@ objects:
               value: ${PG_PARAMS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
               value: "sql"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
+              value: ${LOG_LEVEL}
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: ${CLOUDWATCH_ENABLED}
             - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__ENDPOINT
@@ -419,6 +423,8 @@ parameters:
 - name: PAYLOAD_TRACKER_TOPIC
   description: Kafka topic for publishing updated for the Payload Tracker service
   value: platform.payload-status
+- name: LOG_LEVEL
+  value: "INFO"
 - name: DEBUG
   value: "true"
 - name: AUTH
