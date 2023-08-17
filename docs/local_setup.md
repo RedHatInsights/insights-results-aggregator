@@ -27,8 +27,9 @@ You can download it here <https://gitlab.cee.redhat.com/insights-qe/iqe-ccx-plug
 1. Start the stack `podman-compose up` or `docker-compose up`
 2. Wait until kafka will be up.
 3. Start `ccx-data-pipeline`: `python3 -m insights_messaging config-devel.yaml`
-4. Build `insights-results-aggregator`: `make build`
-5. Start `insights-results-aggregator`: `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=config-devel.toml ./insights-results-aggregator`
+4. Create necessary topics in Kafka manually, or upload an archive to Ingress service and they should be created automatically
+5. Build `insights-results-aggregator`: `make build`
+6. Start `insights-results-aggregator`: `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./config-devel.toml ./insights-results-aggregator`
 
 Stop Minimal Insights Platform stack `podman-compose down` or `docker-compose down`
 
