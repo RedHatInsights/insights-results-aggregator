@@ -87,7 +87,7 @@ func checkOrganizationsEndpointWithPostfix(postfix string) {
 
 // checkOrganizationsEndpoint checks if the end point to return list of organizations responds correctly to HTTP GET command
 func checkOrganizationsEndpoint() {
-	var postfixes []string = []string{"", "?", "?a=b", "?orgID=1234", "?orgID=1234&cluster=4567"}
+	var postfixes = []string{"", "?", "?a=b", "?orgID=1234", "?orgID=1234&cluster=4567"}
 
 	// postfixes should be ignored
 	for _, postfix := range postfixes {
