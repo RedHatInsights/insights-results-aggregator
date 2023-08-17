@@ -1391,7 +1391,7 @@ func TestDBStorageReadRecommendationsGetSelectedClusters(t *testing.T) {
 	}
 
 	// we only retrieve one cluster
-	res, err := mockStorage.ReadRecommendationsForClusters([]string{string(clusterList[0])}, testdata.OrgID)
+	res, err := mockStorage.ReadRecommendationsForClusters([]string{clusterList[0]}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	expect := []types.ClusterName{types.ClusterName(clusterList[0])}
@@ -1498,7 +1498,7 @@ func TestDBStorageReadClusterListRecommendationsGet1Cluster(t *testing.T) {
 	}
 
 	// we only retrieve one cluster
-	res, err := mockStorage.ReadClusterListRecommendations([]string{string(clusterList[0])}, testdata.OrgID)
+	res, err := mockStorage.ReadClusterListRecommendations([]string{clusterList[0]}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	expectList := []ctypes.RuleID{
@@ -1540,7 +1540,7 @@ func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
 	}
 
 	// we only retrieve one cluster
-	res, err := mockStorage.ReadClusterListRecommendations([]string{string(clusterList[0]), string(clusterList[1])}, testdata.OrgID)
+	res, err := mockStorage.ReadClusterListRecommendations([]string{clusterList[0], string(clusterList[1])}, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
 	expectRuleList := []ctypes.RuleID{

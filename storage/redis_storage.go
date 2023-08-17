@@ -174,10 +174,10 @@ func (storage *RedisStorage) WriteReportForCluster(
 
 // WriteReportInfoForCluster noop
 func (*RedisStorage) WriteReportInfoForCluster(
-	orgID types.OrgID,
-	clusterName types.ClusterName,
-	info []types.InfoItem,
-	lastCheckedTime time.Time,
+	_ types.OrgID,
+	_ types.ClusterName,
+	_ []types.InfoItem,
+	_ time.Time,
 ) error {
 	return nil
 }
@@ -342,28 +342,28 @@ func (*RedisStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]
 
 // ReadReportsForClusters function reads reports for given list of cluster
 // names.
-func (*RedisStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
+func (*RedisStorage) ReadReportsForClusters(_ []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
 	return nil, nil
 }
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account (noop).
-func (*RedisStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.DisabledRule, error) {
+func (*RedisStorage) ListOfDisabledRules(_ types.OrgID) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
 
 // ListOfReasons function returns list of reasons for all rules disabled from a
 // specified account (noop).
-func (*RedisStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
+func (*RedisStorage) ListOfReasons(_ types.UserID) ([]DisabledRuleReason, error) {
 	return nil, nil
 }
 
 // ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
 // specified account (noop).
 func (*RedisStorage) ListOfDisabledClusters(
-	orgID types.OrgID,
-	ruleID types.RuleID,
-	errorKey types.ErrorKey,
+	_ types.OrgID,
+	_ types.RuleID,
+	_ types.ErrorKey,
 ) ([]ctypes.DisabledClusterInfo, error) {
 	return nil, nil
 }
@@ -371,8 +371,8 @@ func (*RedisStorage) ListOfDisabledClusters(
 // ListOfDisabledRulesForClusters function returns list of disabled rules for given clusters from a
 // specified account (noop).
 func (*RedisStorage) ListOfDisabledRulesForClusters(
-	clusterList []string,
-	orgID types.OrgID,
+	_ []string,
+	_ types.OrgID,
 ) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
