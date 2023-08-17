@@ -118,10 +118,10 @@ func (*RedisStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 // WriteReportForCluster method writes rule hits and other information about
 // new report into Redis storage
 func (storage *RedisStorage) WriteReportForCluster(
-	orgID types.OrgID, clusterName types.ClusterName, clusterReport types.ClusterReport,
+	orgID types.OrgID, clusterName types.ClusterName, _ types.ClusterReport,
 	reportItems []types.ReportItem,
-	collectedAtTime time.Time, gatheredAtTime time.Time, storedAtTime time.Time,
-	kafkaOffset types.KafkaOffset, requestID types.RequestID,
+	_ time.Time, gatheredAtTime time.Time, storedAtTime time.Time,
+	_ types.KafkaOffset, requestID types.RequestID,
 ) error {
 
 	// retrieve context

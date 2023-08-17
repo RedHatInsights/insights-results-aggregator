@@ -1185,7 +1185,7 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 
 	impactedSinceMap := make(map[string]ctypes.Timestamp)
 	err = func(tx *sql.Tx) error {
-		var deleted int64 = 0
+		var deleted int64
 		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
 
