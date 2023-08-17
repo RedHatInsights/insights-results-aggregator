@@ -307,11 +307,7 @@ var mig0015ModifyFeedbackTables = Migration{
 			return err
 		}
 
-		if err := mig0015ClusterUserRuleDisableFeedback.StepDown(tx, driver); err != nil {
-			return err
-		}
-
-		return nil
+		return mig0015ClusterUserRuleDisableFeedback.StepDown(tx, driver)
 	},
 }
 
