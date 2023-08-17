@@ -169,7 +169,7 @@ func sendGeneratedResponse(writer http.ResponseWriter, clusterReports types.Clus
 
 // processListOfClusters function retrieves list of cluster IDs and process
 // them accordingly: check, read report from DB, serialize etc.
-func (server *HTTPServer) processListOfClusters(writer http.ResponseWriter, request *http.Request, orgID types.OrgID, clusters []string) {
+func (server *HTTPServer) processListOfClusters(writer http.ResponseWriter, _ *http.Request, orgID types.OrgID, clusters []string) {
 	log.Info().Int("number of clusters", len(clusters)).Strs("list", clusters).Msg("processListOfClusters")
 
 	// avoid accessing to storage and return ASAP

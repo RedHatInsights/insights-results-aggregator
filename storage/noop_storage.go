@@ -255,34 +255,34 @@ func (*NoopStorage) DoesClusterExist(types.ClusterName) (bool, error) {
 }
 
 // ReadOrgIDsForClusters read organization IDs for given list of cluster names.
-func (*NoopStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]types.OrgID, error) {
+func (*NoopStorage) ReadOrgIDsForClusters(_ []types.ClusterName) ([]types.OrgID, error) {
 	return nil, nil
 }
 
 // ReadReportsForClusters function reads reports for given list of cluster
 // names.
-func (*NoopStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
+func (*NoopStorage) ReadReportsForClusters(_ []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
 	return nil, nil
 }
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account (noop).
-func (*NoopStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.DisabledRule, error) {
+func (*NoopStorage) ListOfDisabledRules(_ types.OrgID) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
 
 // ListOfReasons function returns list of reasons for all rules disabled from a
 // specified account (noop).
-func (*NoopStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
+func (*NoopStorage) ListOfReasons(_ types.UserID) ([]DisabledRuleReason, error) {
 	return nil, nil
 }
 
 // ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
 // specified account (noop).
 func (*NoopStorage) ListOfDisabledClusters(
-	orgID types.OrgID,
-	ruleID types.RuleID,
-	errorKey types.ErrorKey,
+	_ types.OrgID,
+	_ types.RuleID,
+	_ types.ErrorKey,
 ) ([]ctypes.DisabledClusterInfo, error) {
 	return nil, nil
 }
@@ -290,8 +290,8 @@ func (*NoopStorage) ListOfDisabledClusters(
 // ListOfDisabledRulesForClusters function returns list of disabled rules for given clusters from a
 // specified account (noop).
 func (*NoopStorage) ListOfDisabledRulesForClusters(
-	clusterList []string,
-	orgID types.OrgID,
+	_ []string,
+	_ types.OrgID,
 ) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
@@ -308,8 +308,8 @@ func (*NoopStorage) RateOnRule(
 
 // GetRuleRating retrieves rating for given rule and user
 func (*NoopStorage) GetRuleRating(
-	orgID types.OrgID,
-	ruleSelector types.RuleSelector,
+	_ types.OrgID,
+	_ types.RuleSelector,
 ) (
 	ruleRating types.RuleRating,
 	err error,
@@ -320,8 +320,8 @@ func (*NoopStorage) GetRuleRating(
 // DisableRuleSystemWide disables the selected rule for all clusters visible to
 // given user
 func (*NoopStorage) DisableRuleSystemWide(
-	orgID types.OrgID, ruleID types.RuleID,
-	errorKey types.ErrorKey, justification string,
+	_ types.OrgID, _ types.RuleID,
+	_ types.ErrorKey, _ string,
 ) error {
 	return nil
 }
@@ -329,24 +329,24 @@ func (*NoopStorage) DisableRuleSystemWide(
 // EnableRuleSystemWide enables the selected rule for all clusters visible to
 // given user
 func (*NoopStorage) EnableRuleSystemWide(
-	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
+	_ types.OrgID, _ types.RuleID, _ types.ErrorKey,
 ) error {
 	return nil
 }
 
 // UpdateDisabledRuleJustification change justification for already disabled rule
 func (*NoopStorage) UpdateDisabledRuleJustification(
-	orgID types.OrgID,
-	ruleID types.RuleID,
-	errorKey types.ErrorKey,
-	justification string,
+	_ types.OrgID,
+	_ types.RuleID,
+	_ types.ErrorKey,
+	_ string,
 ) error {
 	return nil
 }
 
 // ReadDisabledRule function returns disabled rule (if disabled) from database
 func (*NoopStorage) ReadDisabledRule(
-	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
+	_ types.OrgID, _ types.RuleID, _ types.ErrorKey,
 ) (ctypes.SystemWideRuleDisable, bool, error) {
 	return ctypes.SystemWideRuleDisable{}, true, nil
 }
@@ -354,15 +354,15 @@ func (*NoopStorage) ReadDisabledRule(
 // ListOfSystemWideDisabledRules function returns list of all rules that have been
 // disabled for all clusters by given user
 func (*NoopStorage) ListOfSystemWideDisabledRules(
-	orgID types.OrgID,
+	_ types.OrgID,
 ) ([]ctypes.SystemWideRuleDisable, error) {
 	return nil, nil
 }
 
 // ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization
 func (*NoopStorage) ReadRecommendationsForClusters(
-	clusterList []string,
-	orgID types.OrgID,
+	_ []string,
+	_ types.OrgID,
 ) (ctypes.RecommendationImpactedClusters, error) {
 	return nil, nil
 }
@@ -370,14 +370,14 @@ func (*NoopStorage) ReadRecommendationsForClusters(
 // ListOfClustersForOrgSpecificRule returns list of all clusters for
 // given organization that are affected by given rule
 func (*NoopStorage) ListOfClustersForOrgSpecificRule(
-	orgID types.OrgID, ruleID types.RuleSelector, activeClusters []string,
+	_ types.OrgID, _ types.RuleSelector, _ []string,
 ) ([]ctypes.HittingClustersData, error) {
 	return nil, nil
 }
 
 // ReadClusterListRecommendations retrieves cluster IDs and a list of hitting rules for each one
 func (*NoopStorage) ReadClusterListRecommendations(
-	clusterList []string, orgID types.OrgID,
+	_ []string, _ types.OrgID,
 ) (ctypes.ClusterRecommendationMap, error) {
 	return nil, nil
 }

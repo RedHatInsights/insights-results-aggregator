@@ -67,7 +67,7 @@ func assertRedisExpectationsMet(t *testing.T, mock redismock.ClientMock) {
 	}
 }
 
-func constructExpectedKey(orgID types.OrgID, clusterName types.ClusterName, requestID types.RequestID) string {
+func constructExpectedKey(_ types.OrgID, _ types.ClusterName, _ types.RequestID) string {
 	return fmt.Sprintf("organization:%d:cluster:%s:request:%s",
 		int(testdata.OrgID),
 		string(testdata.ClusterName),
@@ -361,7 +361,7 @@ func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
 
 // TestRedisStorageEmptyMethods1 calls empty methods that just needs to be
 // defined in order for RedisStorage to satisfy Storage interface.
-func TestRedisStorageEmptyMethods1(t *testing.T) {
+func TestRedisStorageEmptyMethods1(_ *testing.T) {
 	RedisStorage := storage.RedisStorage{}
 	orgID := types.OrgID(1)
 	clusterName := types.ClusterName("")
@@ -390,7 +390,7 @@ func TestRedisStorageEmptyMethods1(t *testing.T) {
 
 // TestRedisStorageEmptyMethods2 calls empty methods that just needs to be
 // defined in order for RedisStorage to satisfy Storage interface.
-func TestRedisStorageEmptyMethods2(t *testing.T) {
+func TestRedisStorageEmptyMethods2(_ *testing.T) {
 	RedisStorage := storage.RedisStorage{}
 	orgID := types.OrgID(1)
 	clusterName := types.ClusterName("")
@@ -419,7 +419,7 @@ func TestRedisStorageEmptyMethods2(t *testing.T) {
 
 // TestRedisStorageEmptyMethods3 calls empty methods that just needs to be
 // defined in order for RedisStorage to satisfy Storage interface.
-func TestRedisStorageEmptyMethods3(t *testing.T) {
+func TestRedisStorageEmptyMethods3(_ *testing.T) {
 	RedisStorage := storage.RedisStorage{}
 	orgID := types.OrgID(1)
 	clusterName := types.ClusterName("")

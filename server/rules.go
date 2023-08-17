@@ -563,7 +563,7 @@ type SystemWideRuleSelector struct {
 // readSystemWideRuleSelectors helper function read all four parameters that
 // are used to select system-wide rule disable
 func readSystemWideRuleSelectors(writer http.ResponseWriter, request *http.Request) (SystemWideRuleSelector, bool) {
-	var selector SystemWideRuleSelector = SystemWideRuleSelector{}
+	var selector = SystemWideRuleSelector{}
 	var successful bool
 
 	selector.OrgID, successful = readOrgID(writer, request)

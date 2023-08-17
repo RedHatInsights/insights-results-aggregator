@@ -143,7 +143,7 @@ func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID,
 	return identity.User.UserID, nil
 }
 
-func (server *HTTPServer) getAuthTokenHeader(w http.ResponseWriter, r *http.Request) (string, error) {
+func (server *HTTPServer) getAuthTokenHeader(_ http.ResponseWriter, r *http.Request) (string, error) {
 	var tokenHeader string
 	// In case of testing on local machine we don't take x-rh-identity header, but instead Authorization with JWT token in it
 	if server.Config.AuthType == "jwt" {

@@ -109,7 +109,7 @@ func GetTmpConfigFile(configData string) (string, error) {
 }
 
 // TestLoadConfiguration loads a configuration file for testing
-func TestLoadConfiguration(t *testing.T) {
+func TestLoadConfiguration(_ *testing.T) {
 	os.Clearenv()
 
 	mustLoadConfiguration("tests/config1")

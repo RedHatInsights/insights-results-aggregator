@@ -39,19 +39,19 @@ const (
 	orgID = "1"
 )
 
-var knownClustersForOrganization1 []string = []string{
+var knownClustersForOrganization1 = []string{
 	"00000000-0000-0000-0000-000000000000",
 	"00000000-0000-0000-ffff-000000000000",
 	"00000000-0000-0000-0000-ffffffffffff",
 }
 
-var unknownClusters []string = []string{
+var unknownClusters = []string{
 	"abcdef00-0000-0000-0000-000000000000",
 	"abcdef00-0000-0000-1111-000000000000",
 	"abcdef00-0000-0000-ffff-000000000000",
 }
 
-var improperClusterIDs []string = []string{
+var improperClusterIDs = []string{
 	"xyz",                                   // definitely wrong
 	"00000000-0000-0000-0000-00000000000",   // shorter by one character
 	"0000000-0000-0000-0000-000000000000",   // shorter by one character
@@ -65,13 +65,13 @@ var improperClusterIDs []string = []string{
 	"00000000-0000-0000-0000f-ffffffffffff", // longer by one character
 }
 
-var knownRules []string = []string{
+var knownRules = []string{
 	"foo",
 	"bar",
 	"xyzzy",
 }
 
-var knownErrorKeys []string = []string{
+var knownErrorKeys = []string{
 	"errorKey1",
 	"errorKey2",
 }

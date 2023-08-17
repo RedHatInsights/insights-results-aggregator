@@ -336,7 +336,7 @@ func (*RedisStorage) DoesClusterExist(types.ClusterName) (bool, error) {
 }
 
 // ReadOrgIDsForClusters read organization IDs for given list of cluster names.
-func (*RedisStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]types.OrgID, error) {
+func (*RedisStorage) ReadOrgIDsForClusters(_ []types.ClusterName) ([]types.OrgID, error) {
 	return nil, nil
 }
 
@@ -389,8 +389,8 @@ func (*RedisStorage) RateOnRule(
 
 // GetRuleRating retrieves rating for given rule and user
 func (*RedisStorage) GetRuleRating(
-	orgID types.OrgID,
-	ruleSelector types.RuleSelector,
+	_ types.OrgID,
+	_ types.RuleSelector,
 ) (
 	ruleRating types.RuleRating,
 	err error,
@@ -401,8 +401,8 @@ func (*RedisStorage) GetRuleRating(
 // DisableRuleSystemWide disables the selected rule for all clusters visible to
 // given user
 func (*RedisStorage) DisableRuleSystemWide(
-	orgID types.OrgID, ruleID types.RuleID,
-	errorKey types.ErrorKey, justification string,
+	_ types.OrgID, _ types.RuleID,
+	_ types.ErrorKey, _ string,
 ) error {
 	return nil
 }
@@ -410,24 +410,24 @@ func (*RedisStorage) DisableRuleSystemWide(
 // EnableRuleSystemWide enables the selected rule for all clusters visible to
 // given user
 func (*RedisStorage) EnableRuleSystemWide(
-	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
+	_ types.OrgID, _ types.RuleID, _ types.ErrorKey,
 ) error {
 	return nil
 }
 
 // UpdateDisabledRuleJustification change justification for already disabled rule
 func (*RedisStorage) UpdateDisabledRuleJustification(
-	orgID types.OrgID,
-	ruleID types.RuleID,
-	errorKey types.ErrorKey,
-	justification string,
+	_ types.OrgID,
+	_ types.RuleID,
+	_ types.ErrorKey,
+	_ string,
 ) error {
 	return nil
 }
 
 // ReadDisabledRule function returns disabled rule (if disabled) from database
 func (*RedisStorage) ReadDisabledRule(
-	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
+	_ types.OrgID, _ types.RuleID, _ types.ErrorKey,
 ) (ctypes.SystemWideRuleDisable, bool, error) {
 	return ctypes.SystemWideRuleDisable{}, true, nil
 }
@@ -435,15 +435,15 @@ func (*RedisStorage) ReadDisabledRule(
 // ListOfSystemWideDisabledRules function returns list of all rules that have been
 // disabled for all clusters by given user
 func (*RedisStorage) ListOfSystemWideDisabledRules(
-	orgID types.OrgID,
+	_ types.OrgID,
 ) ([]ctypes.SystemWideRuleDisable, error) {
 	return nil, nil
 }
 
 // ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization
 func (*RedisStorage) ReadRecommendationsForClusters(
-	clusterList []string,
-	orgID types.OrgID,
+	_ []string,
+	_ types.OrgID,
 ) (ctypes.RecommendationImpactedClusters, error) {
 	return nil, nil
 }
@@ -451,14 +451,14 @@ func (*RedisStorage) ReadRecommendationsForClusters(
 // ListOfClustersForOrgSpecificRule returns list of all clusters for
 // given organization that are affected by given rule
 func (*RedisStorage) ListOfClustersForOrgSpecificRule(
-	orgID types.OrgID, ruleID types.RuleSelector, activeClusters []string,
+	_ types.OrgID, _ types.RuleSelector, _ []string,
 ) ([]ctypes.HittingClustersData, error) {
 	return nil, nil
 }
 
 // ReadClusterListRecommendations retrieves cluster IDs and a list of hitting rules for each one
 func (*RedisStorage) ReadClusterListRecommendations(
-	clusterList []string, orgID types.OrgID,
+	_ []string, _ types.OrgID,
 ) (ctypes.ClusterRecommendationMap, error) {
 	return nil, nil
 }

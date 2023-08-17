@@ -255,7 +255,7 @@ func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
 }
 
 // TestPrintVersionInfo is dummy ATM - we'll check versions etc. in integration tests
-func TestPrintVersionInfo(t *testing.T) {
+func TestPrintVersionInfo(_ *testing.T) {
 	main.PrintVersionInfo()
 }
 

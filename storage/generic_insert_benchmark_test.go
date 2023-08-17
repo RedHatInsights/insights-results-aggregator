@@ -100,7 +100,7 @@ func BenchmarkStorageGenericInsertExecDirectlyMany(b *testing.B) {
 	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
-		for rowId := 0; rowId < rowCount; rowId++ {
+		for rowID := 0; rowID < rowCount; rowID++ {
 			_, err := conn.Exec(insertQuery, "John Doe", "Hello World!")
 			helpers.FailOnError(b, err)
 		}
@@ -118,7 +118,7 @@ func BenchmarkStorageGenericInsertPrepareExecMany(b *testing.B) {
 		stmt, err := conn.Prepare(insertQuery)
 		helpers.FailOnError(b, err)
 
-		for rowId := 0; rowId < rowCount; rowId++ {
+		for rowID := 0; rowID < rowCount; rowID++ {
 			_, err := stmt.Exec("John Doe", "Hello World!")
 			helpers.FailOnError(b, err)
 		}
@@ -133,8 +133,8 @@ func BenchmarkStorageUpsertWithoutConflict(b *testing.B) {
 	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
-		for rowId := 0; rowId < rowCount; rowId++ {
-			_, err := conn.Exec(upsertQuery, (benchIter*rowCount)+rowId+1, "John Doe", "Hello World!")
+		for rowID := 0; rowID < rowCount; rowID++ {
+			_, err := conn.Exec(upsertQuery, (benchIter*rowCount)+rowID+1, "John Doe", "Hello World!")
 			helpers.FailOnError(b, err)
 		}
 	}
@@ -148,7 +148,7 @@ func BenchmarkStorageUpsertConflict(b *testing.B) {
 	_, conn, closer := mustPrepareBenchmark(b)
 
 	for benchIter := 0; benchIter < b.N; benchIter++ {
-		for rowId := 0; rowId < rowCount; rowId++ {
+		for rowID := 0; rowID < rowCount; rowID++ {
 			_, err := conn.Exec(upsertQuery, 1, "John Doe", "Hello World!")
 			helpers.FailOnError(b, err)
 		}

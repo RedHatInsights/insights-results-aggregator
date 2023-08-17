@@ -30,7 +30,7 @@ type InfoResponse struct {
 
 // checkInfoEndpoint performs elementary checks for /info endpoint
 func checkInfoEndpoint() {
-	var expectedInfoKeys []string = []string{
+	var expectedInfoKeys = []string{
 		"BuildBranch",
 		"BuildCommit",
 		"BuildTime",
