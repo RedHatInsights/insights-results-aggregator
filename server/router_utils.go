@@ -183,7 +183,7 @@ func getRuleAndErrorKeyFromRuleID(ruleIDWithErrorKey string) (
 	errorKey = types.ErrorKey("0")
 	err = nil
 
-	splitedRuleID := strings.Split(string(ruleIDWithErrorKey), "|")
+	splitedRuleID := strings.Split(ruleIDWithErrorKey, "|")
 
 	if len(splitedRuleID) != 2 {
 		err = &types.ValidationError{

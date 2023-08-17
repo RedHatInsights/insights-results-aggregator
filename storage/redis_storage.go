@@ -123,7 +123,6 @@ func (storage *RedisStorage) WriteReportForCluster(
 	_ time.Time, gatheredAtTime time.Time, storedAtTime time.Time,
 	_ types.KafkaOffset, requestID types.RequestID,
 ) error {
-
 	// retrieve context
 	ctx := context.Background()
 
