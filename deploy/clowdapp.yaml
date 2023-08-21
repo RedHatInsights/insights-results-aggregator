@@ -251,7 +251,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__MAXIMUM_FEEDBACK_MESSAGE_LENGTH
               value: "255"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ORG_OVERVIEW_LIMIT_HOURS
-              value: "24"
+              value: "3"
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
               value: postgres
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
