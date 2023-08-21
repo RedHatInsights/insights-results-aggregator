@@ -606,7 +606,7 @@ func parseRuleRows(rows *sql.Rows) ([]types.RuleOnReport, error) {
 		report = append(report, rule)
 	}
 
-	log.Info().Msgf("parseRuleRows final report %v", report)
+	log.Debug().Msgf("parseRuleRows final report %v", report)
 
 	return report, nil
 }
@@ -1396,7 +1396,7 @@ func (storage DBStorage) ReadClusterListRecommendations(
 		}
 	}
 
-	log.Info().Msgf("Filling metadata for clustermap %v", clusterMap)
+	log.Debug().Msgf("Filling metadata for clustermap %v", clusterMap)
 	storage.fillInMetadata(orgID, clusterMap)
 	return clusterMap, nil
 }
