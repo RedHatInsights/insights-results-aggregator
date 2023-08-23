@@ -131,8 +131,11 @@ type InfoItem struct {
 // errors and dictionary with results per cluster.
 type ClusterReports = types.ClusterReports
 
-// SchemaVersion represents the current version of data schema
+// SchemaVersion represents the received message's version of data schema
 type SchemaVersion = types.SchemaVersion
+
+// AllowedVersions represents the currently allowed versions of data schema
+type AllowedVersions = map[SchemaVersion]struct{}
 
 // RuleRating represents a rule rating element sent by the user
 type RuleRating = types.RuleRating
