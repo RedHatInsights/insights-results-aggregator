@@ -574,7 +574,7 @@ func TestKafkaConsumer_ProcessMessage_MoreRecentReportAlreadyExists(t *testing.T
 	assert.Contains(t, buf.String(), "Skipping because a more recent report already exists for this cluster")
 }
 
-func TestKafkaConsumer_ProcessMessage_MessageWithUnexpectedSchemaVersion(t *testing.T) {
+func TestKafkaConsumer_ProcessMessage_MessageWithNoSchemaVersion(t *testing.T) {
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
@@ -587,6 +587,32 @@ func TestKafkaConsumer_ProcessMessage_MessageWithUnexpectedSchemaVersion(t *test
 	}
 
 	err := consumerProcessMessage(mockConsumer, messageReportWithRuleHits)
+	helpers.FailOnError(t, err)
+	assert.Contains(t, buf.String(), "\"level\":\"warn\"")
+	assert.Contains(t, buf.String(), "Received data with unexpected version")
+}
+
+func TestKafkaConsumer_ProcessMessage_MessageWithUnexpectedSchemaVersion(t *testing.T) {
+	buf := new(bytes.Buffer)
+	zerolog_log.Logger = zerolog.New(buf)
+
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mockConsumer := &consumer.KafkaConsumer{
+		Configuration: wrongBrokerCfg,
+		Storage:       mockStorage,
+	}
+
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report":` + testReport + `,
+		"LastChecked": "` + time.Now().Add(-24*time.Hour).Format(time.RFC3339) + `",
+		"Version": ` + fmt.Sprintf("%d", types.SchemaVersion(3)) + `
+	}`
+
+	err := consumerProcessMessage(mockConsumer, message)
 	helpers.FailOnError(t, err)
 	assert.Contains(t, buf.String(), "\"level\":\"warn\"")
 	assert.Contains(t, buf.String(), "Received data with unexpected version")
@@ -609,11 +635,23 @@ func TestKafkaConsumer_ProcessMessage_MessageWithExpectedSchemaVersion(t *testin
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report":` + testReport + `,
 		"LastChecked": "` + time.Now().Add(-24*time.Hour).Format(time.RFC3339) + `",
-		"Version": ` + fmt.Sprintf("%d", consumer.CurrentSchemaVersion) + `
+		"Version": ` + fmt.Sprintf("%d", types.SchemaVersion(1)) + `
 	}`
 
 	err := consumerProcessMessage(mockConsumer, message)
 	helpers.FailOnError(t, err)
+
+	message = `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report":` + testReport + `,
+		"LastChecked": "` + time.Now().Add(-24*time.Hour).Format(time.RFC3339) + `",
+		"Version": ` + fmt.Sprintf("%d", types.SchemaVersion(2)) + `
+	}`
+
+	err = consumerProcessMessage(mockConsumer, message)
+	helpers.FailOnError(t, err)
+
 	assert.NotContains(t, buf.String(), "\"level\":\"warn\"")
 	assert.NotContains(t, buf.String(), "Received data with unexpected version")
 }

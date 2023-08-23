@@ -14,10 +14,6 @@
 
 package consumer
 
-import (
-	"github.com/RedHatInsights/insights-results-aggregator/types"
-)
-
 const (
 	// key for topic name used in structured log messages
 	topicKey = "topic"
@@ -37,6 +33,4 @@ const (
 	versionKey = "version"
 	// key for request ID
 	requestIDKey = "request ID"
-	// CurrentSchemaVersion represents the currently supported data schema version
-	CurrentSchemaVersion = types.SchemaVersion(1)
 )

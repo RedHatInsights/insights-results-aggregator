@@ -47,6 +47,11 @@ type incomingMessage struct {
 	ParsedInfo  []types.InfoItem
 }
 
+var currentSchemaVersion = types.AllowedVersions{
+	types.SchemaVersion(1): struct{}{},
+	types.SchemaVersion(2): struct{}{},
+}
+
 // HandleMessage handles the message and does all logging, metrics, etc.
 //
 // Log message is written for every step made during processing, but in order to
@@ -182,10 +187,10 @@ func (consumer KafkaConsumer) sendDeadLetter(msg *sarama.ConsumerMessage) {
 	}
 }
 
-// checkMessageVersion - verifies incoming data's version is the expected one
+// checkMessageVersion - verifies incoming data's version is expected
 func checkMessageVersion(consumer *KafkaConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) {
-	if message.Version != CurrentSchemaVersion {
-		warning := fmt.Sprintf("Received data with unexpected version %d (expected %d).", message.Version, CurrentSchemaVersion)
+	if _, ok := currentSchemaVersion[message.Version]; !ok {
+		warning := fmt.Sprintf("Received data with unexpected version %d.", message.Version)
 		logMessageWarning(consumer, msg, *message, warning)
 	}
 }
