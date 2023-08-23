@@ -832,7 +832,7 @@ func TestDBStorage_GetLatestKafkaOffset(t *testing.T) {
 	offset, err := mockStorage.GetLatestKafkaOffset()
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, types.KafkaOffset(0), offset)
+	assert.Equal(t, types.KafkaOffset(-1), offset)
 
 	mustWriteReport3Rules(t, mockStorage)
 
@@ -849,7 +849,7 @@ func TestDBStorage_GetLatestKafkaOffset_ZeroOffset(t *testing.T) {
 	offset, err := mockStorage.GetLatestKafkaOffset()
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, types.KafkaOffset(0), offset)
+	assert.Equal(t, types.KafkaOffset(-1), offset)
 
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID,

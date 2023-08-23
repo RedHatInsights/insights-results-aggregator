@@ -860,7 +860,7 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 // GetLatestKafkaOffset returns latest kafka offset from report table
 func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 	var offset types.KafkaOffset
-	err := storage.connection.QueryRow("SELECT COALESCE(MAX(kafka_offset), 0) FROM report;").Scan(&offset)
+	err := storage.connection.QueryRow("SELECT COALESCE(MAX(kafka_offset), -1) FROM report;").Scan(&offset)
 	return offset, err
 }
 
