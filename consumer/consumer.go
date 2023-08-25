@@ -225,8 +225,6 @@ func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
 			log.Warn().
 				Int64(offsetKey, message.Offset).
 				Msg("this offset was already processed by aggregator")
-
-			continue
 		}
 
 		err = consumer.HandleMessage(message)
