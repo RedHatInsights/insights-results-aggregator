@@ -26,7 +26,7 @@ import (
 	"github.com/verdverm/frisby"
 )
 
-const organizationsEndpoint = apiURL + "organization"
+const organizationsEndpoint = apiURL + "organizations"
 
 // OrganizationsResponse represents response containing list of organizations
 type OrganizationsResponse struct {
