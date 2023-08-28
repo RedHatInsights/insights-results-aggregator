@@ -26,6 +26,8 @@ import (
 	"github.com/verdverm/frisby"
 )
 
+const organizationsEndpoint = apiURL + "organization"
+
 // OrganizationsResponse represents response containing list of organizations
 type OrganizationsResponse struct {
 	Organizations []int  `json:"organizations"`
@@ -66,7 +68,7 @@ func contentSizeForOrganizationResponse(orgIDs ...int) int {
 
 // checkOrganizationsEndpointWithPostfix checks if the end point to return list of organizations responds correctly to HTTP GET command
 func checkOrganizationsEndpointWithPostfix(postfix string) {
-	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(apiURL + "organizations" + postfix)
+	f := frisby.Create("Check the end point to return list of organizations by HTTP GET method").Get(organizationsEndpoint + postfix)
 	setAuthHeader(f)
 	f.Send()
 	f.ExpectStatus(200)
@@ -97,5 +99,5 @@ func checkOrganizationsEndpoint() {
 
 // checkOrganizationsEndpointWrongMethods check if the end point to return list of arganizations responds correctly to other methods than HTTP GET
 func checkOrganizationsEndpointWrongMethods() {
-	checkGetEndpointByOtherMethods(apiURL+"organizations", false)
+	checkGetEndpointByOtherMethods(organizationsEndpoint, false)
 }
