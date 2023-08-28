@@ -1006,13 +1006,14 @@ func prepareInsertRecommendationsStatement(
 		selectors[idx] = ruleID
 		statementArgs = append(statementArgs, orgID, clusterName, ruleFqdn, rule.ErrorKey, ruleID, createdAt, impactedSince)
 		statementIdx = len(statementArgs)
+		const separatorAndParam = ", $"
 		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(statementIdx-6)+
-			", $"+fmt.Sprint(statementIdx-5)+
-			", $"+fmt.Sprint(statementIdx-4)+
-			", $"+fmt.Sprint(statementIdx-3)+
-			", $"+fmt.Sprint(statementIdx-2)+
-			", $"+fmt.Sprint(statementIdx-1)+
-			", $"+fmt.Sprint(statementIdx)+")")
+			separatorAndParam+fmt.Sprint(statementIdx-5)+
+			separatorAndParam+fmt.Sprint(statementIdx-4)+
+			separatorAndParam+fmt.Sprint(statementIdx-3)+
+			separatorAndParam+fmt.Sprint(statementIdx-2)+
+			separatorAndParam+fmt.Sprint(statementIdx-1)+
+			separatorAndParam+fmt.Sprint(statementIdx)+")")
 	}
 
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
