@@ -564,16 +564,18 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 
 // infoMap returns map of additional information about this service
 func (server *HTTPServer) infoMap(writer http.ResponseWriter, _ *http.Request) {
+	const logMessage = "infoMap"
+
 	if server.InfoParams == nil {
 		err := errors.New("InfoParams is empty")
-		log.Error().Err(err)
+		log.Error().Err(err).Msg(logMessage)
 		handleServerError(writer, err)
 		return
 	}
 
 	err := responses.SendOK(writer, responses.BuildOkResponseWithData("info", server.InfoParams))
 	if err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Msg(logMessage)
 		handleServerError(writer, err)
 		return
 	}

@@ -226,7 +226,7 @@ func startService() int {
 
 			err := startConsumer(brokerConf)
 			if err != nil {
-				log.Error().Err(err)
+				log.Error().Err(err).Msg("Consumer start failure")
 				return err
 			}
 
