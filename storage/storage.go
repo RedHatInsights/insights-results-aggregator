@@ -990,7 +990,7 @@ func prepareInsertRecommendationsStatement(
 ) (selectors []string, statement string, statementArgs []interface{}) {
 	statement = `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at, impacted_since) VALUES %s`
 
-	var valuesIdx []string
+	var valuesIdx []string = make([]string, len(report.HitRules))
 	statementIdx := 0
 	selectors = make([]string, len(report.HitRules))
 
@@ -1005,13 +1005,13 @@ func prepareInsertRecommendationsStatement(
 		statementArgs = append(statementArgs, orgID, clusterName, ruleFqdn, rule.ErrorKey, ruleID, createdAt, impactedSince)
 		statementIdx = len(statementArgs)
 		const separatorAndParam = ", $"
-		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(statementIdx-6)+
-			separatorAndParam+fmt.Sprint(statementIdx-5)+
-			separatorAndParam+fmt.Sprint(statementIdx-4)+
-			separatorAndParam+fmt.Sprint(statementIdx-3)+
-			separatorAndParam+fmt.Sprint(statementIdx-2)+
-			separatorAndParam+fmt.Sprint(statementIdx-1)+
-			separatorAndParam+fmt.Sprint(statementIdx)+")")
+		valuesIdx[idx] = "($" + fmt.Sprint(statementIdx-6) +
+			separatorAndParam + fmt.Sprint(statementIdx-5) +
+			separatorAndParam + fmt.Sprint(statementIdx-4) +
+			separatorAndParam + fmt.Sprint(statementIdx-3) +
+			separatorAndParam + fmt.Sprint(statementIdx-2) +
+			separatorAndParam + fmt.Sprint(statementIdx-1) +
+			separatorAndParam + fmt.Sprint(statementIdx) + ")"
 	}
 
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
