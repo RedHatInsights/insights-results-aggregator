@@ -897,9 +897,9 @@ func valuesForRuleHitsInsert(
 	ruleKeyCreatedAt map[string]types.Timestamp,
 ) []interface{} {
 	// fill-in values for INSERT statement
-	var values []interface{}
+	var values []interface{} = make([]interface{}, len(rules)*6)
 
-	for _, rule := range rules {
+	for index, rule := range rules {
 		ruleKey := string(rule.Module) + string(rule.ErrorKey)
 		var impactedSince types.Timestamp
 		if val, ok := ruleKeyCreatedAt[ruleKey]; ok {
@@ -907,14 +907,12 @@ func valuesForRuleHitsInsert(
 		} else {
 			impactedSince = types.Timestamp(time.Now().UTC().Format(time.RFC3339))
 		}
-		values = append(values,
-			orgID,
-			clusterName,
-			rule.Module,
-			rule.ErrorKey,
-			string(rule.TemplateData),
-			impactedSince,
-		)
+		values[6*index] = orgID
+		values[6*index+1] = clusterName
+		values[6*index+2] = rule.Module
+		values[6*index+3] = rule.ErrorKey
+		values[6*index+4] = string(rule.TemplateData)
+		values[6*index+5] = impactedSince
 	}
 	return values
 }
