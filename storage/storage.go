@@ -870,7 +870,7 @@ func (storage DBStorage) GetRuleHitInsertStatement(rules []types.ReportItem) str
 	const ruleInsertStatement = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data, created_at) VALUES %s"
 
 	// pre-allocate array for placeholders
-	var placeholders []string = make([]string, len(rules))
+	placeholders := make([]string, len(rules))
 
 	// fill-in placeholders for INSERT statement
 	for index := range rules {
@@ -897,7 +897,7 @@ func valuesForRuleHitsInsert(
 	ruleKeyCreatedAt map[string]types.Timestamp,
 ) []interface{} {
 	// fill-in values for INSERT statement
-	var values []interface{} = make([]interface{}, len(rules)*6)
+	values := make([]interface{}, len(rules)*6)
 
 	for index, rule := range rules {
 		ruleKey := string(rule.Module) + string(rule.ErrorKey)
@@ -990,7 +990,7 @@ func prepareInsertRecommendationsStatement(
 ) (selectors []string, statement string, statementArgs []interface{}) {
 	statement = `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at, impacted_since) VALUES %s`
 
-	var valuesIdx []string = make([]string, len(report.HitRules))
+	valuesIdx := make([]string, len(report.HitRules))
 	statementIdx := 0
 	selectors = make([]string, len(report.HitRules))
 
