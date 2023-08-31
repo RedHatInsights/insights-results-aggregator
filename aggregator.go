@@ -241,7 +241,7 @@ func startService() int {
 
 		err := startServer()
 		if err != nil {
-			log.Error().Err(err)
+			log.Error().Err(err).Msg("Server start failure")
 			return err
 		}
 
@@ -270,7 +270,7 @@ func stopService() int {
 
 	err := stopServer()
 	if err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Msg("Server stop failure")
 		errCode += ExitStatusServerError
 	}
 
@@ -278,7 +278,7 @@ func stopService() int {
 	if brokerConf.Enabled {
 		err = stopConsumer()
 		if err != nil {
-			log.Error().Err(err)
+			log.Error().Err(err).Msg("Consumer stop failure")
 			errCode += ExitStatusConsumerError
 		}
 	}
