@@ -226,7 +226,7 @@ func startService() int {
 
 			err := startConsumer(brokerConf)
 			if err != nil {
-				log.Error().Err(err)
+				log.Error().Err(err).Msg("Consumer start failure")
 				return err
 			}
 
@@ -241,7 +241,7 @@ func startService() int {
 
 		err := startServer()
 		if err != nil {
-			log.Error().Err(err)
+			log.Error().Err(err).Msg("Server start failure")
 			return err
 		}
 
@@ -270,7 +270,7 @@ func stopService() int {
 
 	err := stopServer()
 	if err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Msg("Server stop failure")
 		errCode += ExitStatusServerError
 	}
 
@@ -278,7 +278,7 @@ func stopService() int {
 	if brokerConf.Enabled {
 		err = stopConsumer()
 		if err != nil {
-			log.Error().Err(err)
+			log.Error().Err(err).Msg("Consumer stop failure")
 			errCode += ExitStatusConsumerError
 		}
 	}
@@ -335,7 +335,7 @@ func printConfig() int {
 	configBytes, err := json.MarshalIndent(conf.Config, "", "    ")
 
 	if err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Msg("printConfig: marshall config failure")
 		return 1
 	}
 
