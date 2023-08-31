@@ -869,19 +869,19 @@ func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 func (storage DBStorage) GetRuleHitInsertStatement(rules []types.ReportItem) string {
 	const ruleInsertStatement = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data, created_at) VALUES %s"
 
-	var placeholders []string
+	// pre-allocate array for placeholders
+	placeholders := make([]string, len(rules))
 
 	// fill-in placeholders for INSERT statement
 	for index := range rules {
-		placeholders = append(
-			placeholders, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d,$%d)",
-				index*6+1,
-				index*6+2,
-				index*6+3,
-				index*6+4,
-				index*6+5,
-				index*6+6,
-			))
+		placeholders[index] = fmt.Sprintf("($%d,$%d,$%d,$%d,$%d,$%d)",
+			index*6+1,
+			index*6+2,
+			index*6+3,
+			index*6+4,
+			index*6+5,
+			index*6+6,
+		)
 	}
 
 	// construct INSERT statement for multiple values
@@ -897,9 +897,9 @@ func valuesForRuleHitsInsert(
 	ruleKeyCreatedAt map[string]types.Timestamp,
 ) []interface{} {
 	// fill-in values for INSERT statement
-	var values []interface{}
+	values := make([]interface{}, len(rules)*6)
 
-	for _, rule := range rules {
+	for index, rule := range rules {
 		ruleKey := string(rule.Module) + string(rule.ErrorKey)
 		var impactedSince types.Timestamp
 		if val, ok := ruleKeyCreatedAt[ruleKey]; ok {
@@ -907,14 +907,12 @@ func valuesForRuleHitsInsert(
 		} else {
 			impactedSince = types.Timestamp(time.Now().UTC().Format(time.RFC3339))
 		}
-		values = append(values,
-			orgID,
-			clusterName,
-			rule.Module,
-			rule.ErrorKey,
-			string(rule.TemplateData),
-			impactedSince,
-		)
+		values[6*index] = orgID
+		values[6*index+1] = clusterName
+		values[6*index+2] = rule.Module
+		values[6*index+3] = rule.ErrorKey
+		values[6*index+4] = string(rule.TemplateData)
+		values[6*index+5] = impactedSince
 	}
 	return values
 }
@@ -992,7 +990,7 @@ func prepareInsertRecommendationsStatement(
 ) (selectors []string, statement string, statementArgs []interface{}) {
 	statement = `INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at, impacted_since) VALUES %s`
 
-	var valuesIdx []string
+	valuesIdx := make([]string, len(report.HitRules))
 	statementIdx := 0
 	selectors = make([]string, len(report.HitRules))
 
@@ -1007,13 +1005,13 @@ func prepareInsertRecommendationsStatement(
 		statementArgs = append(statementArgs, orgID, clusterName, ruleFqdn, rule.ErrorKey, ruleID, createdAt, impactedSince)
 		statementIdx = len(statementArgs)
 		const separatorAndParam = ", $"
-		valuesIdx = append(valuesIdx, "($"+fmt.Sprint(statementIdx-6)+
-			separatorAndParam+fmt.Sprint(statementIdx-5)+
-			separatorAndParam+fmt.Sprint(statementIdx-4)+
-			separatorAndParam+fmt.Sprint(statementIdx-3)+
-			separatorAndParam+fmt.Sprint(statementIdx-2)+
-			separatorAndParam+fmt.Sprint(statementIdx-1)+
-			separatorAndParam+fmt.Sprint(statementIdx)+")")
+		valuesIdx[idx] = "($" + fmt.Sprint(statementIdx-6) +
+			separatorAndParam + fmt.Sprint(statementIdx-5) +
+			separatorAndParam + fmt.Sprint(statementIdx-4) +
+			separatorAndParam + fmt.Sprint(statementIdx-3) +
+			separatorAndParam + fmt.Sprint(statementIdx-2) +
+			separatorAndParam + fmt.Sprint(statementIdx-1) +
+			separatorAndParam + fmt.Sprint(statementIdx) + ")"
 	}
 
 	statement = fmt.Sprintf(statement, strings.Join(valuesIdx, ","))
