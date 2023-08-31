@@ -335,7 +335,7 @@ func printConfig() int {
 	configBytes, err := json.MarshalIndent(conf.Config, "", "    ")
 
 	if err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Msg("printConfig: marshall config failure")
 		return 1
 	}
 
