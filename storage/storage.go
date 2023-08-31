@@ -869,19 +869,19 @@ func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
 func (storage DBStorage) GetRuleHitInsertStatement(rules []types.ReportItem) string {
 	const ruleInsertStatement = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data, created_at) VALUES %s"
 
-	var placeholders []string
+	// pre-allocate array for placeholders
+	var placeholders []string = make([]string, len(rules))
 
 	// fill-in placeholders for INSERT statement
 	for index := range rules {
-		placeholders = append(
-			placeholders, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d,$%d)",
-				index*6+1,
-				index*6+2,
-				index*6+3,
-				index*6+4,
-				index*6+5,
-				index*6+6,
-			))
+		placeholders[index] = fmt.Sprintf("($%d,$%d,$%d,$%d,$%d,$%d)",
+			index*6+1,
+			index*6+2,
+			index*6+3,
+			index*6+4,
+			index*6+5,
+			index*6+6,
+		)
 	}
 
 	// construct INSERT statement for multiple values
