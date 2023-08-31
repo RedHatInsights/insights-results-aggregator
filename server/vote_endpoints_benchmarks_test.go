@@ -78,7 +78,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 		numberOfTestCases = []uint{1, 5}
 	}
 
-	var testCases []TestCase = make([]TestCase, 3*len(numberOfTestCases))
+	testCases := make([]TestCase, 3*len(numberOfTestCases))
 
 	for i, n := range numberOfTestCases {
 		testCases[i*3+0] = TestCase{"like", server.LikeRuleEndpoint, n}
