@@ -197,7 +197,7 @@ func TestRedisWriteReportForCluster(t *testing.T) {
 		testdata.OrgID, testdata.ClusterName,
 		testdata.Report3Rules, testdata.Report3RulesParsed,
 		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
-		testdata.KafkaOffset, testdata.RequestID1)
+		testdata.RequestID1)
 
 	assert.NoError(t, err)
 	assertRedisExpectationsMet(t, server)
@@ -236,7 +236,7 @@ func TestWriteEmptyReport(t *testing.T) {
 		testdata.OrgID, testdata.ClusterName,
 		testdata.Report3Rules, []types.ReportItem{},
 		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
-		testdata.KafkaOffset, testdata.RequestID1)
+		testdata.RequestID1)
 
 	assert.NoError(t, err)
 	assertRedisExpectationsMet(t, server)
@@ -265,7 +265,7 @@ func TestRedisWriteReportForClusterErrorHandling1(t *testing.T) {
 		testdata.OrgID, testdata.ClusterName,
 		testdata.Report3Rules, []types.ReportItem{},
 		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
-		testdata.KafkaOffset, testdata.RequestID1)
+		testdata.RequestID1)
 
 	assert.Error(t, err)
 	assert.EqualError(t, err, errorMessage)
@@ -307,7 +307,7 @@ func TestRedisWriteReportForClusterErrorHandling2(t *testing.T) {
 		testdata.OrgID, testdata.ClusterName,
 		testdata.Report3Rules, []types.ReportItem{},
 		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
-		testdata.KafkaOffset, testdata.RequestID1)
+		testdata.RequestID1)
 
 	assert.Error(t, err)
 	assert.EqualError(t, err, errorMessage)
@@ -350,7 +350,7 @@ func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
 		testdata.OrgID, testdata.ClusterName,
 		testdata.Report3Rules, []types.ReportItem{},
 		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
-		testdata.KafkaOffset, testdata.RequestID1)
+		testdata.RequestID1)
 
 	assert.Error(t, err)
 	assert.EqualError(t, err, errorMessage)
@@ -380,7 +380,6 @@ func TestRedisStorageEmptyMethods1(_ *testing.T) {
 	_ = RedisStorage.DeleteReportsForOrg(orgID)
 	_ = RedisStorage.DeleteReportsForCluster(clusterName)
 
-	_, _ = RedisStorage.GetLatestKafkaOffset()
 	_ = RedisStorage.MigrateToLatest()
 	_ = RedisStorage.GetConnection()
 	RedisStorage.PrintRuleDisableDebugInfo()

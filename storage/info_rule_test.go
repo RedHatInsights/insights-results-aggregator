@@ -188,8 +188,7 @@ func TestDBStorageReadClusterListRecommendationsNoRecommendationsWithVersion(t *
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, []ctypes.ReportItem{},
-		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, 0,
-		testdata.RequestID1,
+		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
@@ -220,8 +219,7 @@ func TestDBStorageReadClusterListRecommendationsWithVersion(t *testing.T) {
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report0Rules, []ctypes.ReportItem{},
-		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, 0,
-		testdata.RequestID1,
+		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 

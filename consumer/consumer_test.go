@@ -688,7 +688,7 @@ func TestKafkaConsumer_ConsumeClaim_DBError(t *testing.T) {
 	err := kafkaConsumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
 	helpers.FailOnError(t, err)
 
-	assert.Contains(t, buf.String(), "unable to get latest offset")
+	assert.Contains(t, buf.String(), "starting messages loop")
 }
 
 func TestKafkaConsumer_ConsumeClaim_OKMessage(t *testing.T) {

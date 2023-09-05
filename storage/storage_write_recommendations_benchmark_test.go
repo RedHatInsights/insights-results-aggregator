@@ -489,7 +489,7 @@ func BenchmarkWriteReportAndRecommendationsNoConflict(b *testing.B) {
 		for id := range clusterIDSet.content {
 			err := storageImpl.WriteReportForCluster(types.OrgID(1), types.ClusterName(id),
 				testdata.Report2Rules, testdata.Report2RulesParsed,
-				time.Now(), time.Now(), time.Now(), types.KafkaOffset(0), testdata.RequestID1)
+				time.Now(), time.Now(), time.Now(), testdata.RequestID1)
 			helpers.FailOnError(b, err)
 			err = storageImpl.WriteRecommendationsForCluster(types.OrgID(1), types.ClusterName(id), Report20Rules, RecommendationCreatedAtTimestamp)
 			helpers.FailOnError(b, err)

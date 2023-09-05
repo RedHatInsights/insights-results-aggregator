@@ -42,7 +42,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // Consumer represents any consumer of insights-rules messages
@@ -214,28 +213,13 @@ func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
 		Int64(offsetKey, claim.InitialOffset()).
 		Msg("starting messages loop")
 
-	latestMessageOffset, err := consumer.Storage.GetLatestKafkaOffset()
-	if err != nil {
-		log.Error().Msg("unable to get latest offset")
-		latestMessageOffset = 0
-	}
-
 	for message := range claim.Messages() {
-		if types.KafkaOffset(message.Offset) <= latestMessageOffset {
-			log.Warn().
-				Int64(offsetKey, message.Offset).
-				Msg("this offset was already processed by aggregator")
-		}
-
-		err = consumer.HandleMessage(message)
+		err := consumer.HandleMessage(message)
 		if err != nil {
 			// already hanadled in HandleMessage, just log
 			log.Error().Err(err).Msg("Problem while handling the message")
 		}
 		session.MarkMessage(message, "")
-		if types.KafkaOffset(message.Offset) > latestMessageOffset {
-			latestMessageOffset = types.KafkaOffset(message.Offset)
-		}
 	}
 
 	return nil
