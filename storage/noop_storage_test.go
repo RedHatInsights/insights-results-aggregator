@@ -50,7 +50,6 @@ func TestNoopStorageEmptyMethods1(_ *testing.T) {
 	_ = noopStorage.DeleteReportsForOrg(orgID)
 	_ = noopStorage.DeleteReportsForCluster(clusterName)
 
-	_, _ = noopStorage.GetLatestKafkaOffset()
 	_ = noopStorage.MigrateToLatest()
 	_ = noopStorage.GetConnection()
 	noopStorage.PrintRuleDisableDebugInfo()
@@ -120,6 +119,6 @@ func TestNoopStorageEmptyMethods3(_ *testing.T) {
 	_, _ = noopStorage.ListOfReasons(userID)
 	_, _ = noopStorage.ListOfDisabledRulesForClusters([]string{""}, orgID)
 	_ = noopStorage.WriteConsumerError(nil, nil)
-	_ = noopStorage.WriteReportForCluster(0, "", "", []types.ReportItem{}, time.Now(), time.Now(), time.Now(), 0, "")
+	_ = noopStorage.WriteReportForCluster(0, "", "", []types.ReportItem{}, time.Now(), time.Now(), time.Now(), "")
 	_, _ = noopStorage.ReadReportsForClusters([]types.ClusterName{})
 }

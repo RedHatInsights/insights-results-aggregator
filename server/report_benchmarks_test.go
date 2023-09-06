@@ -144,7 +144,6 @@ func initTestReports(b *testing.B, n uint, mockStorage storage.Storage, reportPr
 			time.Now(),
 			time.Now(),
 			time.Now(),
-			testdata.KafkaOffset,
 			testdata.RequestID1,
 		)
 		helpers.FailOnError(b, err)

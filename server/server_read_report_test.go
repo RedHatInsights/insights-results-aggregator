@@ -92,7 +92,6 @@ func TestHttpServer_readReportForCluster_NoRules(t *testing.T) {
 		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
 		time.Now(),
-		testdata.KafkaOffset,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
@@ -144,7 +143,6 @@ func TestReadReport(t *testing.T) {
 		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
 		time.Now(),
-		testdata.KafkaOffset,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
@@ -188,7 +186,6 @@ func TestReadRuleReport(t *testing.T) {
 		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
 		time.Now(),
-		testdata.KafkaOffset,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
@@ -228,7 +225,6 @@ func TestReadReportDisableRule(t *testing.T) {
 		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
 		now,
-		testdata.KafkaOffset,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
@@ -339,7 +335,6 @@ func TestReadReport_RuleDisableFeedback(t *testing.T) {
 		testdata.LastCheckedAt,
 		testdata.LastCheckedAt,
 		now,
-		testdata.KafkaOffset,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)

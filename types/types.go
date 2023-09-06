@@ -84,8 +84,6 @@ type (
 	RuleWithContent = types.RuleWithContent
 	// Version represents the version of the cluster
 	Version = types.Version
-	// KafkaOffset type for kafka offset
-	KafkaOffset = types.KafkaOffset
 	// DBDriver type for db driver enum
 	DBDriver = types.DBDriver
 	// Identity contains internal user info

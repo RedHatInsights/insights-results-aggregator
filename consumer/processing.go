@@ -313,7 +313,6 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 		lastCheckedTime,
 		message.Metadata.GatheredAt,
 		storedAtTime,
-		types.KafkaOffset(msg.Offset),
 		message.RequestID,
 	)
 	if err == types.ErrOldReport {

@@ -88,7 +88,6 @@ func TestReadExistingEmptyReportMetainfo(t *testing.T) {
 		testdata.LastCheckedAt,
 		time.Now(),
 		testdata.LastCheckedAt,
-		testdata.KafkaOffset,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
@@ -136,7 +135,6 @@ func TestReadReportMetainfo(t *testing.T) {
 		testdata.LastCheckedAt,
 		time.Now(),
 		testdata.LastCheckedAt,
-		testdata.KafkaOffset,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)

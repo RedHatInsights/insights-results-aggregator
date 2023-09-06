@@ -152,7 +152,6 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 			time.Now(),
 			time.Now(),
 			time.Now(),
-			testdata.KafkaOffset,
 			testdata.RequestID1,
 		)
 		helpers.FailOnError(tb, err)

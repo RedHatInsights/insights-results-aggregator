@@ -77,7 +77,6 @@ type Storage interface {
 		orgID types.OrgID, clusterName types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey,
 	) (interface{}, error)
 	ReadReportForClusterByClusterName(clusterName types.ClusterName) ([]types.RuleOnReport, types.Timestamp, error)
-	GetLatestKafkaOffset() (types.KafkaOffset, error)
 	WriteReportForCluster(
 		orgID types.OrgID,
 		clusterName types.ClusterName,
@@ -86,7 +85,6 @@ type Storage interface {
 		collectedAtTime time.Time,
 		gatheredAtTime time.Time,
 		storedAtTime time.Time,
-		kafkaOffset types.KafkaOffset,
 		requestID types.RequestID,
 	) error
 	WriteReportInfoForCluster(
@@ -857,13 +855,6 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 	return report, types.Timestamp(lastChecked.UTC().Format(time.RFC3339)), err
 }
 
-// GetLatestKafkaOffset returns latest kafka offset from report table
-func (storage DBStorage) GetLatestKafkaOffset() (types.KafkaOffset, error) {
-	var offset types.KafkaOffset
-	err := storage.connection.QueryRow("SELECT COALESCE(MAX(kafka_offset), -1) FROM report;").Scan(&offset)
-	return offset, err
-}
-
 // GetRuleHitInsertStatement method prepares DB statement to be used to write
 // rule FQDN + rule error key into rule_hit table for given cluster_id
 func (storage DBStorage) GetRuleHitInsertStatement(rules []types.ReportItem) string {
@@ -926,7 +917,6 @@ func (storage DBStorage) updateReport(
 	lastCheckedTime time.Time,
 	gatheredAt time.Time,
 	reportedAtTime time.Time,
-	kafkaOffset types.KafkaOffset,
 ) error {
 	// Get the UPSERT query for writing a report into the database.
 	reportUpsertQuery := storage.getReportUpsertQuery()
@@ -968,9 +958,9 @@ func (storage DBStorage) updateReport(
 	}
 
 	if gatheredAt.IsZero() {
-		_, err = tx.Exec(reportUpsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, kafkaOffset, sql.NullTime{Valid: false})
+		_, err = tx.Exec(reportUpsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, 0, sql.NullTime{Valid: false})
 	} else {
-		_, err = tx.Exec(reportUpsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, kafkaOffset, gatheredAt)
+		_, err = tx.Exec(reportUpsertQuery, orgID, clusterName, report, reportedAtTime, lastCheckedTime, 0, gatheredAt)
 	}
 
 	if err != nil {
@@ -1108,7 +1098,6 @@ func (storage DBStorage) WriteReportForCluster(
 	lastCheckedTime time.Time,
 	gatheredAt time.Time,
 	storedAtTime time.Time,
-	kafkaOffset types.KafkaOffset,
 	_ types.RequestID,
 ) error {
 	// Skip writing the report if it isn't newer than a report
@@ -1147,7 +1136,7 @@ func (storage DBStorage) WriteReportForCluster(
 			return nil
 		}
 
-		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, gatheredAt, storedAtTime, kafkaOffset)
+		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, gatheredAt, storedAtTime)
 		if err != nil {
 			return err
 		}

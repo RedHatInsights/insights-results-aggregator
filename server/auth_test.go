@@ -24,7 +24,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	ctypes "github.com/RedHatInsights/insights-results-types"
 	types "github.com/RedHatInsights/insights-results-types"
 )
 
@@ -99,10 +98,10 @@ func TestBadOrganizationID(t *testing.T) {
 		Endpoint:     server.ClustersForOrganizationEndpoint,
 		EndpointArgs: []interface{}{providedOrgID},
 		XRHIdentity: helpers.MakeXRHTokenString(t, &types.Token{
-			Identity: ctypes.Identity{
+			Identity: types.Identity{
 				AccountNumber: testdata.UserID,
-				OrgID:         ctypes.OrgID(orgIDInXRH),
-				User: ctypes.User{
+				OrgID:         types.OrgID(orgIDInXRH),
+				User: types.User{
 					UserID: testdata.UserID,
 				},
 			},

@@ -129,7 +129,6 @@ func TestWrittenReportsMetric(t *testing.T) {
 		testdata.LastCheckedAt,
 		time.Now(),
 		time.Now(),
-		0,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
@@ -145,7 +144,6 @@ func TestWrittenReportsMetric(t *testing.T) {
 			testdata.LastCheckedAt.Add(time.Duration(i+1)*time.Second),
 			time.Now(),
 			time.Now(),
-			types.KafkaOffset(i+1),
 			testdata.RequestID1,
 		)
 		helpers.FailOnError(t, err)
