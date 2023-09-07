@@ -29,8 +29,21 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+const (
+	improperIncomeMessageError   = "Deserialized report read from message with improper structure "
+	numberOfExpectedKeysInReport = 4
+)
+
+var (
+	expectedKeysInReport = [numberOfExpectedKeysInReport]string{"fingerprints", "info", "reports", "system"}
+)
+
 // Report represents report send in a message consumed from any broker
 type Report map[string]*json.RawMessage
+
+type system struct {
+	Hostname string `json:"hostname"`
+}
 
 // incomingMessage is representation of message consumed from any broker
 type incomingMessage struct {
@@ -259,10 +272,35 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
-	message, err := parseMessage(consumer.Configuration.DisplayMessageWithWrongStructure, msg.Value)
+	message, err := parseMessage(msg.Value)
 	if err != nil {
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
 		return message.RequestID, message, err
+	}
+	keepProcessing, err := checkReportStructure(*message.Report)
+	if err != nil {
+		if err != nil {
+			if consumer.Configuration.DisplayMessageWithWrongStructure {
+				log.Err(err).Msgf(improperIncomeMessageError+"%v", string(msg.Value))
+			} else {
+				log.Err(err).Msg(improperIncomeMessageError)
+			}
+		}
+		return message.RequestID, message, err
+	}
+
+	if !keepProcessing {
+		logMessageInfo(consumer, msg, message, "This message will not be processed further")
+		metrics.SkippedEmptyReports.Inc()
+		return message.RequestID, message, err
+	}
+	err = parseReportContent(&message)
+	if err != nil {
+		if consumer.Configuration.DisplayMessageWithWrongStructure {
+			log.Err(err).Msgf(improperIncomeMessageError+"%v", string(msg.Value))
+		} else {
+			log.Err(err).Msg(improperIncomeMessageError)
+		}
 	}
 
 	logMessageInfo(consumer, msg, message, "Read")
@@ -363,27 +401,142 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 	return orgAllowed
 }
 
+// isReportWithEmptyAttributes checks if the report is empty, or if the attributes
+// expected in the report, minus the analysis_metadata, are empty.
+// If this function returns true, this report will not be processed further as it is
+// PROBABLY the result of an archive that was not processed by insights-core.
+// see https://github.com/RedHatInsights/insights-results-aggregator/issues/1834
+func isReportWithEmptyAttributes(r Report, keysToCheck [numberOfExpectedKeysInReport]string) (bool, error) {
+	/*
+		\"Report\": {
+			\"system\": {
+				\"metadata\": {},
+				\"hostname\": null
+			},
+			\"reports\": [],
+			\"fingerprints\": [],
+			\"analysis_metadata\": {
+				\"start\": \"2023-09-05T16:50:07.382006+00:00\",
+				\"finish\": \"2023-09-05T16:50:07.598543+00:00\",
+				\"execution_context\": \"insights.core.context.HostArchiveContext\",
+				\"plugin_sets\": {
+					\"insights-core\": {
+						\"version\": \"insights-core-3.2.14-1\",
+						\"commit\": \"placeholder\"
+					},
+					\"ccx_rules_ocp\": {
+						\"version\": \"ccx_rules_ocp-2023.8.30-1\",
+						\"commit\": null
+					},
+					\"ccx_ocp_core\": {
+						\"version\": \"ccx_ocp_core-2023.8.30-1\",
+						\"commit\": null}
+					}
+				}
+			}
+		}
+	*/
+
+	if len(r) == 0 {
+		// the received report object is totally empty. We will skip processing of this message
+		// right here, without considering it an error
+		return true, nil
+	}
+
+	// if the report object has attributes, we check that the ones that are present and if they
+	// are not empty, we consider it a malformed report
+
+	for _, key := range keysToCheck {
+		switch key {
+		case "system":
+			if _, exist := r["system"]; exist {
+				var s system
+				if err := json.Unmarshal(*r["system"], &s); err != nil {
+					return false, errors.New("couldn't unmarshall system attribute")
+				}
+				if s.Hostname != "" {
+					return false, errors.New("system attribute is not empty")
+				}
+			}
+		case "reports":
+			if _, exist := r["reports"]; exist {
+				var reports []types.ReportItem
+				if err := json.Unmarshal(*r["reports"], &reports); err != nil {
+					return false, errors.New("couldn't unmarshall reports attribute")
+				}
+				if len(reports) != 0 {
+					return false, errors.New("reports attribute is not empty")
+				}
+			}
+		case "fingerprints":
+			if _, exist := r["fingerprints"]; exist {
+				var f []json.RawMessage
+				if err := json.Unmarshal(*r["fingerprints"], &f); err != nil {
+					return false, errors.New("couldn't unmarshall fingerprints attribute")
+				}
+				if len(f) != 0 {
+					return false, errors.New("fingerprints attribute is not empty")
+				}
+			}
+		case "info":
+			if _, exist := r["info"]; exist {
+				var i []types.InfoItem
+				if err := json.Unmarshal(*r["info"], &i); err != nil {
+					return false, errors.New("couldn't unmarshall info attribute")
+				}
+				if len(i) != 0 {
+					return false, errors.New("info attribute is not empty")
+				}
+			}
+		}
+	}
+
+	return true, nil
+}
+
 // checkReportStructure tests if the report has correct structure
-func checkReportStructure(r Report) error {
+func checkReportStructure(r Report) (shouldProcess bool, err error) {
 	// the structure is not well defined yet, so all we should do is to check if all keys are there
-	expectedKeys := []string{"fingerprints", "info", "reports", "system"}
 
 	// 'skips' key is now optional, we should not expect it anymore:
 	// https://github.com/RedHatInsights/insights-results-aggregator/issues/1206
-	// expectedKeys := []string{"fingerprints", "info", "reports", "skips", "system"}
+	keysFound := [numberOfExpectedKeysInReport]string{}
+	keysNotFound := [numberOfExpectedKeysInReport]string{}
 
 	// check if the structure contains all expected keys
-	for _, expectedKey := range expectedKeys {
+	for _, expectedKey := range expectedKeysInReport {
 		_, found := r[expectedKey]
-		if !found {
-			return errors.New("Improper report structure, missing key with name '" + expectedKey + "'")
+		if found {
+			keysFound[len(keysFound)-1] = expectedKey
+		} else {
+			keysNotFound[len(keysNotFound)-1] = expectedKey
 		}
 	}
-	return nil
+
+	if len(keysFound) == numberOfExpectedKeysInReport {
+		// if all keys are present, let's process it
+		return true, nil
+	} else {
+		// report is either malformed, or is empty and this message should not be processed further
+		isEmpty, err := isReportWithEmptyAttributes(r, keysFound)
+		if err != nil {
+			return false, err
+		}
+		if isEmpty {
+			log.Debug().Msg("Empty report or report with empty attributes. Processing of this message will be skipped.")
+			return false, nil
+		}
+	}
+	if len(keysNotFound) != 0 {
+		// the report has improper format
+		return false, errors.New(fmt.Sprintf("Improper report structure, missing key(s) with name '%v'", keysNotFound))
+	}
+
+	return true, nil
 }
 
 // parseMessage tries to parse incoming message and read all required attributes from it
-func parseMessage(displayMessageWithWrongStructure bool, messageValue []byte) (incomingMessage, error) {
+func parseMessage(messageValue []byte) (incomingMessage, error) {
 	var deserialized incomingMessage
 
 	err := json.Unmarshal(messageValue, &deserialized)
@@ -406,30 +559,23 @@ func parseMessage(displayMessageWithWrongStructure bool, messageValue []byte) (i
 	if err != nil {
 		return deserialized, errors.New("cluster name is not a UUID")
 	}
+	return deserialized, nil
+}
 
-	err = checkReportStructure(*deserialized.Report)
+// parseReportContent verifies the content of the Report structure and parses it into
+// the relevant parts of the incomingMessage structure
+func parseReportContent(message *incomingMessage) error {
+	err := json.Unmarshal(*((*message.Report)["reports"]), &message.ParsedHits)
 	if err != nil {
-		const errorMessage = "Deserialized report read from message with improper structure"
-		if displayMessageWithWrongStructure {
-			log.Err(err).Msgf(errorMessage+"%v", string(messageValue))
-		} else {
-			log.Err(err).Msg(errorMessage)
-		}
-		return deserialized, err
-	}
-
-	err = json.Unmarshal(*((*deserialized.Report)["reports"]), &deserialized.ParsedHits)
-	if err != nil {
-		return deserialized, err
+		return err
 	}
 
 	// it is expected that message.ParsedInfo contains at least one item:
 	// result from special INFO rule containing cluster version that is
 	// used just in external data pipeline
-	err = json.Unmarshal(*((*deserialized.Report)["info"]), &deserialized.ParsedInfo)
+	err = json.Unmarshal(*((*message.Report)["info"]), &message.ParsedInfo)
 	if err != nil {
-		return deserialized, err
+		return err
 	}
-
-	return deserialized, nil
+	return nil
 }

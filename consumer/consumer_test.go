@@ -132,20 +132,20 @@ func TestConsumerConstructorNoKafka(t *testing.T) {
 }
 
 func TestParseEmptyMessage(t *testing.T) {
-	_, err := consumer.ParseMessage(false, []byte(""))
+	_, err := consumer.ParseMessage([]byte(""))
 	assert.EqualError(t, err, "unexpected end of JSON input")
 }
 
 func TestParseMessageWithWrongContent(t *testing.T) {
 	const message = `{"this":"is", "not":"expected content"}`
-	_, err := consumer.ParseMessage(false, []byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "missing required attribute")
 }
 
 func TestParseMessageWithImproperJSON(t *testing.T) {
 	const message = `"this_is_not_json_dude"`
-	_, err := consumer.ParseMessage(false, []byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(
 		t,
 		err,
@@ -169,7 +169,7 @@ func TestParseMessageWithImproperReport(t *testing.T) {
 			"info": []
 	}
 }`
-	_, err := consumer.ParseMessage(false, []byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(
 		t,
 		err,
@@ -178,7 +178,7 @@ func TestParseMessageWithImproperReport(t *testing.T) {
 }
 
 func TestParseProperMessage(t *testing.T) {
-	message, err := consumer.ParseMessage(false, []byte(testdata.ConsumerMessage))
+	message, err := consumer.ParseMessage([]byte(testdata.ConsumerMessage))
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, types.OrgID(1), *message.Organization)
@@ -218,7 +218,7 @@ func TestParseProperMessageWithInfoReport(t *testing.T) {
 
 	}`
 	consumerMessage := createConsumerMessage(consumerReport)
-	message, err := consumer.ParseMessage(false, []byte(consumerMessage))
+	message, err := consumer.ParseMessage([]byte(consumerMessage))
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, types.OrgID(1), *message.Organization)
@@ -251,7 +251,7 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
 		"ClusterName": "this is not a UUID",
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, err := consumer.ParseMessage(false, []byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "cluster name is not a UUID")
 }
 
@@ -260,7 +260,7 @@ func TestParseMessageWithoutOrgID(t *testing.T) {
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, err := consumer.ParseMessage(false, []byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'OrgID'")
 }
 
@@ -269,7 +269,7 @@ func TestParseMessageWithoutClusterName(t *testing.T) {
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, err := consumer.ParseMessage(false, []byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'ClusterName'")
 }
 
@@ -278,19 +278,19 @@ func TestParseMessageWithoutReport(t *testing.T) {
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `"
 	}`
-	_, err := consumer.ParseMessage(false, []byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 
-func TestParseMessageEmptyReport(t *testing.T) {
+func TestParseReportContentEmptyReport(t *testing.T) {
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report": {}
 	}`
 
-	_, err := consumer.ParseMessage(false, []byte(message))
-	assert.EqualError(t, err, "Improper report structure, missing key with name 'fingerprints'")
+	_, err := consumer.ParseMessage([]byte(message))
+	assert.Nil(t, err, "parseMessage should not return error for empty report")
 }
 
 func TestParseMessageNullReport(t *testing.T) {
@@ -300,8 +300,128 @@ func TestParseMessageNullReport(t *testing.T) {
 		"Report": null
 	}`
 
-	_, err := consumer.ParseMessage(false, []byte(message))
+	_, err := consumer.ParseMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'Report'")
+}
+
+func unmarshall(s string) *json.RawMessage {
+	var res json.RawMessage
+	err := json.Unmarshal([]byte(s), &res)
+	if err != nil {
+		panic(err)
+	}
+	return &res
+}
+
+func TestIsReportWithEmptyAttributesAllEmpty(t *testing.T) {
+	r := consumer.Report{
+		"system":       unmarshall(`{"metadata": {}, "hostname": null}`),
+		"reports":      unmarshall("[]"),
+		"fingerprints": unmarshall("[]"),
+		"skips":        unmarshall("[]"),
+		"info":         unmarshall("[]"),
+	}
+	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	assert.Nil(t, err, "IsReportWithEmptyAttributes should return err = nil for empty reports")
+	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = true for this report")
+}
+
+func TestIsReportWithEmptyAttributesEmptyReport(t *testing.T) {
+	r := consumer.Report{}
+	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	assert.Nil(t, err, "IsReportWithEmptyAttributes should return err = nil for empty reports")
+	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = true for this report")
+}
+
+func TestIsReportWithEmptyAttributesSystemDataIsPresent(t *testing.T) {
+	r := consumer.Report{
+		"system":       unmarshall(`{"metadata": {}, "hostname": "a_hostname_that_can_be_unmarshalled"}`),
+		"reports":      unmarshall("[]"),
+		"fingerprints": unmarshall("[]"),
+		"skips":        unmarshall("[]"),
+		"info":         unmarshall("[]"),
+	}
+	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	assert.EqualError(t, err, "system attribute is not empty", "IsReportWithEmptyAttributes did not return the expected error")
+	assert.False(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
+}
+
+// Additional existence check have been added to avoid the possibility of
+// panicking due to a nil pointer exception
+func TestIsReportWithEmptyAttributesLessAttributes(t *testing.T) {
+	r := consumer.Report{
+		"system":       unmarshall(`{"metadata": {}, "hostname": "a_hostname_that_can_be_unmarshalled"}`),
+		"reports":      unmarshall("[]"),
+		"fingerprints": unmarshall("[]"),
+	}
+	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	assert.EqualError(t, err, "system attribute is not empty", "IsReportWithEmptyAttributes did not return the expected error")
+	assert.False(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
+}
+
+func TestIsReportWithEmptyAttributesInfoIsNotPresent(t *testing.T) {
+	r := consumer.Report{
+		"system":       unmarshall(`{"metadata": {}, "hostname": null}`),
+		"reports":      unmarshall("[]"),
+		"fingerprints": unmarshall("[]"),
+		"skips":        unmarshall("[]"),
+	}
+	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	assert.Nil(t, err, "IsReportWithEmptyAttributes should not return an error")
+	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
+}
+
+func TestCheckReportStructureEmptyReport(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": {}
+	}`
+
+	parsed, err := consumer.ParseMessage([]byte(message))
+	assert.Nil(t, err, "parseMessage should not return error for empty report")
+
+	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
+	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
+	assert.False(t, shouldProcess, "checkReportStructure should return shouldProcess = false for empty reports")
+}
+
+func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": ` + testdata.ConsumerReport + `
+	}`
+
+	parsed, err := consumer.ParseMessage([]byte(message))
+	assert.Nil(t, err, "parseMessage should not return error for empty report")
+
+	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
+	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
+	assert.True(t, shouldProcess, "checkReportStructure should return"+
+		" shouldProcess = true for empty reports where all expected attributes are present")
+}
+
+// If some atributes are missing, but all the present attributes are empty, we just
+// skip the processing of the message.
+func TestCheckReportStructureReportWithEmptyAndMissingAttributes(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": {
+			"fingerprints": [],
+			"reports": [],
+			"skips": []
+		}
+	}`
+
+	parsed, err := consumer.ParseMessage([]byte(message))
+	assert.Nil(t, err, "parseMessage should not return error for empty report")
+
+	fmt.Println("parsed\n", parsed)
+	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
+	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
+	assert.False(t, shouldProcess, "checkReportStructure should return shouldProcess = false for empty reports")
 }
 
 func TestProcessEmptyMessage(t *testing.T) {

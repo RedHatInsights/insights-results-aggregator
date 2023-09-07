@@ -102,14 +102,14 @@ func getMessagesFromDir(b *testing.B, dataDir string) []string {
 				helpers.FailOnError(b, err)
 
 				zerolog.SetGlobalLevel(zerolog.Disabled)
-				parsedMessage, err := consumer.ParseMessage(false, fileBytes)
+				parsedMessage, err := consumer.ParseMessage(fileBytes)
 				zerolog.SetGlobalLevel(zerolog.WarnLevel)
 				if err != nil {
 					log.Warn().Msgf("skipping file %+v because it has bad structure", file.Name())
 					continue
 				}
-				err = consumer.CheckReportStructure(*parsedMessage.Report)
-				if err != nil {
+				canProcess, err := consumer.CheckReportStructure(*parsedMessage.Report)
+				if canProcess == false || err != nil {
 					log.Warn().Msgf("skipping file %+v because its report has bad structure", file.Name())
 					continue
 				}

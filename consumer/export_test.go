@@ -26,6 +26,11 @@ package consumer
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
 var (
-	ParseMessage         = parseMessage
-	CheckReportStructure = checkReportStructure
+	ParseMessage                = parseMessage
+	ParseReportContent          = parseReportContent
+	CheckReportStructure        = checkReportStructure
+	IsReportWithEmptyAttributes = isReportWithEmptyAttributes
+
+	NumberOfExpectedKeysInReport = numberOfExpectedKeysInReport
+	ExpectedKeysInReport         = expectedKeysInReport
 )

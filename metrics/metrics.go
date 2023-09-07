@@ -21,6 +21,9 @@ limitations under the License.
 //
 // consuming_errors - total number of errors during consuming messages from selected broker
 //
+// messages_with_empty_rule_execution_result - total number of consumed messages not
+// processed as rule execution result is an empty report
+//
 // successful_messages_processing_time - time to process successfully message
 //
 // failed_messages_processing_time - time to process message fail
@@ -56,6 +59,12 @@ var ConsumedMessages = promauto.NewCounter(prometheus.CounterOpts{
 var ConsumingErrors = promauto.NewCounter(prometheus.CounterOpts{
 	Name: "consuming_errors",
 	Help: "The total number of errors during consuming messages from Kafka",
+})
+
+// SkippedEmptyReports shows the total number of consumed messages not processed as the rule execution resulted in an empty report
+var SkippedEmptyReports = promauto.NewCounter(prometheus.CounterOpts{
+	Name: "messages_with_empty_rule_execution_result",
+	Help: "The total number of consumed messages not processed as the rule execution resulted in an empty report",
 })
 
 // SuccessfulMessagesProcessingTime collects the time to process message successfully
@@ -133,6 +142,7 @@ func AddMetricsWithNamespace(namespace string) {
 
 	prometheus.Unregister(ConsumedMessages)
 	prometheus.Unregister(ConsumingErrors)
+	prometheus.Unregister(SkippedEmptyReports)
 	prometheus.Unregister(SuccessfulMessagesProcessingTime)
 	prometheus.Unregister(FailedMessagesProcessingTime)
 	prometheus.Unregister(LastCheckedTimestampLagMinutes)
@@ -153,6 +163,11 @@ func AddMetricsWithNamespace(namespace string) {
 		Namespace: namespace,
 		Name:      "consuming_errors",
 		Help:      "The total number of errors during consuming messages from Kafka",
+	})
+	SkippedEmptyReports = promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "messages_with_empty_rule_execution_result",
+		Help:      "The total number of consumed messages not processed as the rule execution resulted in an empty report",
 	})
 	SuccessfulMessagesProcessingTime = promauto.NewHistogram(prometheus.HistogramOpts{
 		Namespace: namespace,
