@@ -138,7 +138,6 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error 
 	timeAfterProcessingMessage := time.Now()
 	messageProcessingDuration := timeAfterProcessingMessage.Sub(startTime).Seconds()
 
-	consumer.updatePayloadTracker(requestID, startTime, message.Organization, message.Account, producer.StatusReceived)
 	consumer.updatePayloadTracker(requestID, timeAfterProcessingMessage, message.Organization, message.Account, producer.StatusMessageProcessed)
 
 	log.Debug().
@@ -277,6 +276,9 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
 		return message.RequestID, message, err
 	}
+
+	consumer.updatePayloadTracker(message.RequestID, tStart, message.Organization, message.Account, producer.StatusReceived)
+
 	keepProcessing, err := checkReportStructure(*message.Report)
 	if err != nil {
 		if err != nil {
@@ -294,6 +296,7 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 		metrics.SkippedEmptyReports.Inc()
 		return message.RequestID, message, err
 	}
+
 	err = parseReportContent(&message)
 	if err != nil {
 		if consumer.Configuration.DisplayMessageWithWrongStructure {
@@ -513,23 +516,19 @@ func checkReportStructure(r Report) (shouldProcess bool, err error) {
 		}
 	}
 
-	if len(keysFound) == numberOfExpectedKeysInReport {
-		// if all keys are present, let's process it
-		return true, nil
-	} else {
-		// report is either malformed, or is empty and this message should not be processed further
-		isEmpty, err := isReportWithEmptyAttributes(r, keysFound)
-		if err != nil {
-			return false, err
-		}
-		if isEmpty {
-			log.Debug().Msg("Empty report or report with empty attributes. Processing of this message will be skipped.")
-			return false, nil
-		}
+	// empty reports mean that this message should not be processed further
+	isEmpty, err := isReportWithEmptyAttributes(r, keysFound)
+	if err != nil {
+		return false, err
 	}
+	if isEmpty {
+		log.Debug().Msg("Empty report or report with empty attributes. Processing of this message will be skipped.")
+		return false, nil
+	}
+
+	// report is not empty, and some keys have not been found -> malformed
 	if len(keysNotFound) != 0 {
-		// the report has improper format
-		return false, errors.New(fmt.Sprintf("Improper report structure, missing key(s) with name '%v'", keysNotFound))
+		return false, fmt.Errorf("improper report structure, missing key(s) with name '%v'", keysNotFound)
 	}
 
 	return true, nil

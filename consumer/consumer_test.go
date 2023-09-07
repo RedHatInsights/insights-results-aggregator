@@ -398,8 +398,8 @@ func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T
 
 	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
 	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
-	assert.True(t, shouldProcess, "checkReportStructure should return"+
-		" shouldProcess = true for empty reports where all expected attributes are present")
+	assert.False(t, shouldProcess, "checkReportStructure should return"+
+		" shouldProcess = false for empty reports where all expected attributes are present")
 }
 
 // If some atributes are missing, but all the present attributes are empty, we just
