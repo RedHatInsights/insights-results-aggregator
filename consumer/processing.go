@@ -266,54 +266,48 @@ func (consumer *KafkaConsumer) writeInfoReport(
 	return nil
 }
 
+func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.ConsumerMessage) {
+	if consumer.Configuration.DisplayMessageWithWrongStructure {
+		log.Err(err).Msgf(improperIncomeMessageError+"%v", string(msg.Value))
+	} else {
+		log.Err(err).Msg(improperIncomeMessageError)
+	}
+}
+
+func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, parsed *incomingMessage) bool {
+	keepProcessing, err := checkReportStructure(*parsed.Report)
+	if err != nil {
+		consumer.logReportStructureError(err, consumed)
+		return false
+	}
+
+	if !keepProcessing {
+		logMessageInfo(consumer, consumed, *parsed, "This message will not be processed further")
+		metrics.SkippedEmptyReports.Inc()
+		return false
+	}
+	return true
+}
+
 // processMessage processes an incoming message
 func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
-	message, err := parseMessage(msg.Value)
-	if err != nil {
-		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
-		return message.RequestID, message, err
+
+	message, process := consumer.parseMessage(msg, tStart)
+	if !process {
+		return message.RequestID, message, nil
 	}
-
-	consumer.updatePayloadTracker(message.RequestID, tStart, message.Organization, message.Account, producer.StatusReceived)
-
-	keepProcessing, err := checkReportStructure(*message.Report)
-	if err != nil {
-		if err != nil {
-			if consumer.Configuration.DisplayMessageWithWrongStructure {
-				log.Err(err).Msgf(improperIncomeMessageError+"%v", string(msg.Value))
-			} else {
-				log.Err(err).Msg(improperIncomeMessageError)
-			}
-		}
-		return message.RequestID, message, err
-	}
-
-	if !keepProcessing {
-		logMessageInfo(consumer, msg, message, "This message will not be processed further")
-		metrics.SkippedEmptyReports.Inc()
-		return message.RequestID, message, err
-	}
-
-	err = parseReportContent(&message)
-	if err != nil {
-		if consumer.Configuration.DisplayMessageWithWrongStructure {
-			log.Err(err).Msgf(improperIncomeMessageError+"%v", string(msg.Value))
-		} else {
-			log.Err(err).Msg(improperIncomeMessageError)
-		}
-	}
-
 	logMessageInfo(consumer, msg, message, "Read")
 	tRead := time.Now()
 
 	checkMessageVersion(consumer, &message, msg)
 
 	if ok, cause := checkMessageOrgInAllowList(consumer, &message, msg); !ok {
+		err := errors.New(cause)
 		logMessageError(consumer, msg, message, cause, err)
-		return message.RequestID, message, errors.New(cause)
+		return message.RequestID, message, err
 	}
 
 	tAllowlisted := time.Now()
@@ -404,97 +398,70 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 	return orgAllowed
 }
 
+func verifySystemAttributeIsEmpty(r Report) bool {
+	if r["system"] != nil {
+		var s system
+		if err := json.Unmarshal(*r["system"], &s); err != nil {
+			return false
+		}
+		if s.Hostname != "" {
+			return false
+		}
+	}
+	return true
+}
+
+func verifyJSONArrayAttributeIsEmpty[T any](attr string, r Report) bool {
+	if _, exist := r[attr]; exist && r[attr] != nil {
+		var arr []T
+		if err := json.Unmarshal(*r[attr], &arr); err != nil {
+			fmt.Println("unmarshalling")
+			return false
+		}
+		if len(arr) != 0 {
+			fmt.Println("len is not 0", arr)
+			return false
+		}
+	}
+	fmt.Println("returning true")
+	return true
+}
+
 // isReportWithEmptyAttributes checks if the report is empty, or if the attributes
 // expected in the report, minus the analysis_metadata, are empty.
 // If this function returns true, this report will not be processed further as it is
 // PROBABLY the result of an archive that was not processed by insights-core.
 // see https://github.com/RedHatInsights/insights-results-aggregator/issues/1834
-func isReportWithEmptyAttributes(r Report, keysToCheck [numberOfExpectedKeysInReport]string) (bool, error) {
-	/*
-		\"Report\": {
-			\"system\": {
-				\"metadata\": {},
-				\"hostname\": null
-			},
-			\"reports\": [],
-			\"fingerprints\": [],
-			\"analysis_metadata\": {
-				\"start\": \"2023-09-05T16:50:07.382006+00:00\",
-				\"finish\": \"2023-09-05T16:50:07.598543+00:00\",
-				\"execution_context\": \"insights.core.context.HostArchiveContext\",
-				\"plugin_sets\": {
-					\"insights-core\": {
-						\"version\": \"insights-core-3.2.14-1\",
-						\"commit\": \"placeholder\"
-					},
-					\"ccx_rules_ocp\": {
-						\"version\": \"ccx_rules_ocp-2023.8.30-1\",
-						\"commit\": null
-					},
-					\"ccx_ocp_core\": {
-						\"version\": \"ccx_ocp_core-2023.8.30-1\",
-						\"commit\": null}
-					}
-				}
-			}
-		}
-	*/
-
-	if len(r) == 0 {
-		// the received report object is totally empty. We will skip processing of this message
-		// right here, without considering it an error
-		return true, nil
-	}
-
-	// if the report object has attributes, we check that the ones that are present and if they
-	// are not empty, we consider it a malformed report
-
+func isReportWithEmptyAttributes(r Report, keysToCheck [numberOfExpectedKeysInReport]string) bool {
 	for _, key := range keysToCheck {
 		switch key {
 		case "system":
-			if _, exist := r["system"]; exist {
-				var s system
-				if err := json.Unmarshal(*r["system"], &s); err != nil {
-					return false, errors.New("couldn't unmarshall system attribute")
-				}
-				if s.Hostname != "" {
-					return false, errors.New("system attribute is not empty")
-				}
+			//if _, exist := r["system"]; !exist {
+			//	break
+			//}
+			//if _, exist := r["system"]; exist && !verifySystemAttributeIsEmpty(r) {
+			if !verifySystemAttributeIsEmpty(r) {
+				return false
 			}
 		case "reports":
-			if _, exist := r["reports"]; exist {
-				var reports []types.ReportItem
-				if err := json.Unmarshal(*r["reports"], &reports); err != nil {
-					return false, errors.New("couldn't unmarshall reports attribute")
-				}
-				if len(reports) != 0 {
-					return false, errors.New("reports attribute is not empty")
-				}
+			//if _, exist := r["reports"]; exist && !verifyJSONArrayAttributeIsEmpty[types.ReportItem]("reports", r) {
+			if !verifyJSONArrayAttributeIsEmpty[types.ReportItem]("reports", r) {
+				return false
 			}
 		case "fingerprints":
-			if _, exist := r["fingerprints"]; exist {
-				var f []json.RawMessage
-				if err := json.Unmarshal(*r["fingerprints"], &f); err != nil {
-					return false, errors.New("couldn't unmarshall fingerprints attribute")
-				}
-				if len(f) != 0 {
-					return false, errors.New("fingerprints attribute is not empty")
-				}
+			//if _, exist := r["fingerprints"]; exist && !verifyJSONArrayAttributeIsEmpty[json.RawMessage]("fingerprints", r) {
+			if !verifyJSONArrayAttributeIsEmpty[json.RawMessage]("fingerprints", r) {
+				return false
 			}
 		case "info":
-			if _, exist := r["info"]; exist {
-				var i []types.InfoItem
-				if err := json.Unmarshal(*r["info"], &i); err != nil {
-					return false, errors.New("couldn't unmarshall info attribute")
-				}
-				if len(i) != 0 {
-					return false, errors.New("info attribute is not empty")
-				}
+			//if _, exist := r["info"]; exist && !verifyJSONArrayAttributeIsEmpty[types.InfoItem]("info", r) {
+			if !verifyJSONArrayAttributeIsEmpty[types.InfoItem]("info", r) {
+				return false
 			}
 		}
 	}
 
-	return true, nil
+	return true
 }
 
 // checkReportStructure tests if the report has correct structure
@@ -517,10 +484,7 @@ func checkReportStructure(r Report) (shouldProcess bool, err error) {
 	}
 
 	// empty reports mean that this message should not be processed further
-	isEmpty, err := isReportWithEmptyAttributes(r, keysFound)
-	if err != nil {
-		return false, err
-	}
+	isEmpty := len(r) == 0 || isReportWithEmptyAttributes(r, keysFound)
 	if isEmpty {
 		log.Debug().Msg("Empty report or report with empty attributes. Processing of this message will be skipped.")
 		return false, nil
@@ -534,8 +498,8 @@ func checkReportStructure(r Report) (shouldProcess bool, err error) {
 	return true, nil
 }
 
-// parseMessage tries to parse incoming message and read all required attributes from it
-func parseMessage(messageValue []byte) (incomingMessage, error) {
+// deserializeMessage tries to parse incoming message and read all required attributes from it
+func deserializeMessage(messageValue []byte) (incomingMessage, error) {
 	var deserialized incomingMessage
 
 	err := json.Unmarshal(messageValue, &deserialized)
@@ -577,4 +541,26 @@ func parseReportContent(message *incomingMessage) error {
 		return err
 	}
 	return nil
+}
+
+func (consumer *KafkaConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart time.Time) (incomingMessage, bool) {
+	message, err := deserializeMessage(msg.Value)
+	if err != nil {
+		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
+		return message, false
+	}
+
+	consumer.updatePayloadTracker(message.RequestID, tStart, message.Organization, message.Account, producer.StatusReceived)
+
+	if !consumer.shouldProcess(msg, &message) {
+		return message, false
+	}
+
+	err = parseReportContent(&message)
+	if err != nil {
+		consumer.logReportStructureError(err, msg)
+		return message, false
+	}
+
+	return message, true
 }

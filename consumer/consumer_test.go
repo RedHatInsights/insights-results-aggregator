@@ -290,7 +290,7 @@ func TestParseReportContentEmptyReport(t *testing.T) {
 	}`
 
 	_, err := consumer.ParseMessage([]byte(message))
-	assert.Nil(t, err, "parseMessage should not return error for empty report")
+	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
 }
 
 func TestParseMessageNullReport(t *testing.T) {
@@ -308,7 +308,7 @@ func unmarshall(s string) *json.RawMessage {
 	var res json.RawMessage
 	err := json.Unmarshal([]byte(s), &res)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	return &res
 }
@@ -321,15 +321,13 @@ func TestIsReportWithEmptyAttributesAllEmpty(t *testing.T) {
 		"skips":        unmarshall("[]"),
 		"info":         unmarshall("[]"),
 	}
-	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
-	assert.Nil(t, err, "IsReportWithEmptyAttributes should return err = nil for empty reports")
+	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
 	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = true for this report")
 }
 
 func TestIsReportWithEmptyAttributesEmptyReport(t *testing.T) {
 	r := consumer.Report{}
-	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
-	assert.Nil(t, err, "IsReportWithEmptyAttributes should return err = nil for empty reports")
+	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
 	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = true for this report")
 }
 
@@ -341,8 +339,7 @@ func TestIsReportWithEmptyAttributesSystemDataIsPresent(t *testing.T) {
 		"skips":        unmarshall("[]"),
 		"info":         unmarshall("[]"),
 	}
-	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
-	assert.EqualError(t, err, "system attribute is not empty", "IsReportWithEmptyAttributes did not return the expected error")
+	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
 	assert.False(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
 }
 
@@ -354,8 +351,7 @@ func TestIsReportWithEmptyAttributesLessAttributes(t *testing.T) {
 		"reports":      unmarshall("[]"),
 		"fingerprints": unmarshall("[]"),
 	}
-	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
-	assert.EqualError(t, err, "system attribute is not empty", "IsReportWithEmptyAttributes did not return the expected error")
+	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
 	assert.False(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
 }
 
@@ -366,9 +362,26 @@ func TestIsReportWithEmptyAttributesInfoIsNotPresent(t *testing.T) {
 		"fingerprints": unmarshall("[]"),
 		"skips":        unmarshall("[]"),
 	}
-	isEmpty, err := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
-	assert.Nil(t, err, "IsReportWithEmptyAttributes should not return an error")
-	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
+	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = true for this report")
+}
+
+func TestIsReportWithEmptyAttributesReportsIsPresent(t *testing.T) {
+	reportItems := `[
+		{
+			"component": "test.rule",
+			"key": "test.key",
+			"details": ` + helpers.ToJSONString(testdata.Rule1ExtraData) + `
+		}
+	]`
+	r := consumer.Report{
+		"system":       unmarshall(`{"metadata": {}, "hostname": null}`),
+		"reports":      unmarshall(reportItems),
+		"fingerprints": unmarshall("[]"),
+		"skips":        unmarshall("[]"),
+	}
+	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	assert.False(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
 }
 
 func TestCheckReportStructureEmptyReport(t *testing.T) {
@@ -379,7 +392,7 @@ func TestCheckReportStructureEmptyReport(t *testing.T) {
 	}`
 
 	parsed, err := consumer.ParseMessage([]byte(message))
-	assert.Nil(t, err, "parseMessage should not return error for empty report")
+	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
 
 	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
 	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
@@ -394,7 +407,7 @@ func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T
 	}`
 
 	parsed, err := consumer.ParseMessage([]byte(message))
-	assert.Nil(t, err, "parseMessage should not return error for empty report")
+	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
 
 	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
 	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
@@ -402,7 +415,7 @@ func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T
 		" shouldProcess = false for empty reports where all expected attributes are present")
 }
 
-// If some atributes are missing, but all the present attributes are empty, we just
+// If some attributes are missing, but all the present attributes are empty, we just
 // skip the processing of the message.
 func TestCheckReportStructureReportWithEmptyAndMissingAttributes(t *testing.T) {
 	message := `{
@@ -416,7 +429,7 @@ func TestCheckReportStructureReportWithEmptyAndMissingAttributes(t *testing.T) {
 	}`
 
 	parsed, err := consumer.ParseMessage([]byte(message))
-	assert.Nil(t, err, "parseMessage should not return error for empty report")
+	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
 
 	fmt.Println("parsed\n", parsed)
 	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
