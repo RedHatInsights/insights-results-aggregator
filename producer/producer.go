@@ -81,7 +81,7 @@ func (producer *KafkaProducer) produceMessage(jsonBytes []byte, topic string) (i
 	if err != nil {
 		log.Error().Err(err).Msg("failed to produce message to Kafka")
 	} else {
-		log.Info().Msgf("message sent to partition %d at offset %d\n", partition, offset)
+		log.Info().Msgf("message sent to partition %d at offset %d", partition, offset)
 		metrics.ProducedMessages.Inc()
 	}
 	return partition, offset, err
