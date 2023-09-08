@@ -411,19 +411,16 @@ func verifySystemAttributeIsEmpty(r Report) bool {
 	return true
 }
 
-func verifyJSONArrayAttributeIsEmpty[T any](attr string, r Report) bool {
-	if _, exist := r[attr]; exist && r[attr] != nil {
-		var arr []T
-		if err := json.Unmarshal(*r[attr], &arr); err != nil {
-			fmt.Println("unmarshalling")
+func verifyJSONArrayAttributeIsEmpty(attr string, r Report) bool {
+	if val, exist := r[attr]; exist && val != nil {
+		var arr []interface{}
+		if err := json.Unmarshal(*val, &arr); err != nil {
 			return false
 		}
 		if len(arr) != 0 {
-			fmt.Println("len is not 0", arr)
 			return false
 		}
 	}
-	fmt.Println("returning true")
 	return true
 }
 
@@ -436,26 +433,19 @@ func isReportWithEmptyAttributes(r Report, keysToCheck [numberOfExpectedKeysInRe
 	for _, key := range keysToCheck {
 		switch key {
 		case "system":
-			//if _, exist := r["system"]; !exist {
-			//	break
-			//}
-			//if _, exist := r["system"]; exist && !verifySystemAttributeIsEmpty(r) {
 			if !verifySystemAttributeIsEmpty(r) {
 				return false
 			}
 		case "reports":
-			//if _, exist := r["reports"]; exist && !verifyJSONArrayAttributeIsEmpty[types.ReportItem]("reports", r) {
-			if !verifyJSONArrayAttributeIsEmpty[types.ReportItem]("reports", r) {
+			if !verifyJSONArrayAttributeIsEmpty("reports", r) {
 				return false
 			}
 		case "fingerprints":
-			//if _, exist := r["fingerprints"]; exist && !verifyJSONArrayAttributeIsEmpty[json.RawMessage]("fingerprints", r) {
-			if !verifyJSONArrayAttributeIsEmpty[json.RawMessage]("fingerprints", r) {
+			if !verifyJSONArrayAttributeIsEmpty("fingerprints", r) {
 				return false
 			}
 		case "info":
-			//if _, exist := r["info"]; exist && !verifyJSONArrayAttributeIsEmpty[types.InfoItem]("info", r) {
-			if !verifyJSONArrayAttributeIsEmpty[types.InfoItem]("info", r) {
+			if !verifyJSONArrayAttributeIsEmpty("info", r) {
 				return false
 			}
 		}
@@ -486,7 +476,7 @@ func checkReportStructure(r Report) (shouldProcess bool, err error) {
 	// empty reports mean that this message should not be processed further
 	isEmpty := len(r) == 0 || isReportWithEmptyAttributes(r, keysFound)
 	if isEmpty {
-		log.Debug().Msg("Empty report or report with empty attributes. Processing of this message will be skipped.")
+		log.Debug().Msg("Empty report or report with only empty attributes. Processing of this message will be skipped.")
 		return false, nil
 	}
 
