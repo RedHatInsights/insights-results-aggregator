@@ -30,12 +30,19 @@ import (
 )
 
 const (
-	improperIncomeMessageError   = "Deserialized report read from message with improper structure "
+	improperIncomeMessageError = "Deserialized report read from message with improper structure "
+
+	reportAttributeSystem        = "system"
+	reportAttributeReports       = "reports"
+	reportAttributeInfo          = "info"
+	reportAttributeFingerprints  = "fingerprints"
 	numberOfExpectedKeysInReport = 4
 )
 
 var (
-	expectedKeysInReport = [numberOfExpectedKeysInReport]string{"fingerprints", "info", "reports", "system"}
+	expectedKeysInReport = [numberOfExpectedKeysInReport]string{
+		reportAttributeFingerprints, reportAttributeInfo, reportAttributeReports, reportAttributeSystem,
+	}
 )
 
 // Report represents report send in a message consumed from any broker
@@ -399,9 +406,9 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 }
 
 func verifySystemAttributeIsEmpty(r Report) bool {
-	if r["system"] != nil {
+	if r[reportAttributeSystem] != nil {
 		var s system
-		if err := json.Unmarshal(*r["system"], &s); err != nil {
+		if err := json.Unmarshal(*r[reportAttributeSystem], &s); err != nil {
 			return false
 		}
 		if s.Hostname != "" {
@@ -432,20 +439,20 @@ func verifyJSONArrayAttributeIsEmpty(attr string, r Report) bool {
 func isReportWithEmptyAttributes(r Report, keysToCheck [numberOfExpectedKeysInReport]string) bool {
 	for _, key := range keysToCheck {
 		switch key {
-		case "system":
+		case reportAttributeSystem:
 			if !verifySystemAttributeIsEmpty(r) {
 				return false
 			}
-		case "reports":
-			if !verifyJSONArrayAttributeIsEmpty("reports", r) {
+		case reportAttributeReports:
+			if !verifyJSONArrayAttributeIsEmpty(reportAttributeReports, r) {
 				return false
 			}
-		case "fingerprints":
-			if !verifyJSONArrayAttributeIsEmpty("fingerprints", r) {
+		case reportAttributeFingerprints:
+			if !verifyJSONArrayAttributeIsEmpty(reportAttributeFingerprints, r) {
 				return false
 			}
-		case "info":
-			if !verifyJSONArrayAttributeIsEmpty("info", r) {
+		case reportAttributeInfo:
+			if !verifyJSONArrayAttributeIsEmpty(reportAttributeInfo, r) {
 				return false
 			}
 		}
@@ -518,7 +525,7 @@ func deserializeMessage(messageValue []byte) (incomingMessage, error) {
 // parseReportContent verifies the content of the Report structure and parses it into
 // the relevant parts of the incomingMessage structure
 func parseReportContent(message *incomingMessage) error {
-	err := json.Unmarshal(*((*message.Report)["reports"]), &message.ParsedHits)
+	err := json.Unmarshal(*((*message.Report)[reportAttributeReports]), &message.ParsedHits)
 	if err != nil {
 		return err
 	}
@@ -526,7 +533,7 @@ func parseReportContent(message *incomingMessage) error {
 	// it is expected that message.ParsedInfo contains at least one item:
 	// result from special INFO rule containing cluster version that is
 	// used just in external data pipeline
-	err = json.Unmarshal(*((*message.Report)["info"]), &message.ParsedInfo)
+	err = json.Unmarshal(*((*message.Report)[reportAttributeInfo]), &message.ParsedInfo)
 	if err != nil {
 		return err
 	}
