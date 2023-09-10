@@ -296,6 +296,25 @@ func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, p
 	return true, nil
 }
 
+func (consumer *KafkaConsumer) retrieveLastCheckedTime(msg *sarama.ConsumerMessage, parsedMsg *incomingMessage) (time.Time, error) {
+
+	lastCheckedTime, err := time.Parse(time.RFC3339Nano, parsedMsg.LastChecked)
+	if err != nil {
+		logMessageError(consumer, msg, *parsedMsg, "Error parsing date from message", err)
+		return time.Time{}, err
+	}
+
+	lastCheckedTimestampLagMinutes := time.Since(lastCheckedTime).Minutes()
+	if lastCheckedTimestampLagMinutes < 0 {
+		logMessageError(consumer, msg, *parsedMsg, "got a message from the future", nil)
+	}
+
+	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
+
+	logMessageDebug(consumer, msg, *parsedMsg, "Time ok")
+	return lastCheckedTime, nil
+}
+
 // processMessage processes an incoming message
 func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
@@ -322,20 +341,10 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 	logMessageDebug(consumer, msg, message, "Marshalled")
 	tMarshalled := time.Now()
 
-	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
+	lastCheckedTime, err := consumer.retrieveLastCheckedTime(msg, &message)
 	if err != nil {
-		logMessageError(consumer, msg, message, "Error parsing date from message", err)
 		return message.RequestID, message, err
 	}
-
-	lastCheckedTimestampLagMinutes := time.Since(lastCheckedTime).Minutes()
-	if lastCheckedTimestampLagMinutes < 0 {
-		logMessageError(consumer, msg, message, "got a message from the future", nil)
-	}
-
-	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
-
-	logMessageDebug(consumer, msg, message, "Time ok")
 	tTimeCheck := time.Now()
 
 	// timestamp when the report is about to be written into database
