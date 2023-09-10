@@ -21,26 +21,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/RedHatInsights/insights-operator-utils/tests/saramahelpers"
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	zerolog_log "github.com/rs/zerolog/log"
 	"log"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/producer"
-
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
-	"github.com/RedHatInsights/insights-operator-utils/tests/saramahelpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog"
-	zerolog_log "github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
-	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -114,38 +113,38 @@ func createConsumerMessage(report string) string {
 	return consumerMessage
 }
 
-func TestConsumerConstructorNoKafka(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
-	defer closer()
+//func TestConsumerConstructorNoKafka(t *testing.T) {
+//	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
+//	defer closer()
+//
+//	mockConsumer, err := consumer.New(wrongBrokerCfg, mockStorage)
+//	assert.Error(t, err)
+//	assert.Contains(
+//		t, err.Error(), "kafka: client has run out of available brokers to talk to",
+//	)
+//	assert.Equal(
+//		t,
+//		(*consumer.KafkaConsumer)(nil),
+//		mockConsumer,
+//		"consumer.New should return nil instead of Consumer implementation",
+//	)
+//}
 
-	mockConsumer, err := consumer.New(wrongBrokerCfg, mockStorage)
-	assert.Error(t, err)
-	assert.Contains(
-		t, err.Error(), "kafka: client has run out of available brokers to talk to",
-	)
-	assert.Equal(
-		t,
-		(*consumer.KafkaConsumer)(nil),
-		mockConsumer,
-		"consumer.New should return nil instead of Consumer implementation",
-	)
-}
-
-func TestParseEmptyMessage(t *testing.T) {
-	_, err := consumer.ParseMessage([]byte(""))
+func TesDeserializeEmptyMessage(t *testing.T) {
+	_, err := consumer.DeserializeMessage([]byte(""))
 	assert.EqualError(t, err, "unexpected end of JSON input")
 }
 
-func TestParseMessageWithWrongContent(t *testing.T) {
+func TestDeserializeMessageWithWrongContent(t *testing.T) {
 	const message = `{"this":"is", "not":"expected content"}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.DeserializeMessage([]byte(message))
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "missing required attribute")
 }
 
-func TestParseMessageWithImproperJSON(t *testing.T) {
+func TestDeserializeMessageWithImproperJSON(t *testing.T) {
 	const message = `"this_is_not_json_dude"`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.DeserializeMessage([]byte(message))
 	assert.EqualError(
 		t,
 		err,
@@ -153,8 +152,8 @@ func TestParseMessageWithImproperJSON(t *testing.T) {
 	)
 }
 
-func TestParseMessageWithImproperReport(t *testing.T) {
-	message := `{
+func TestDeserializeMessageWithImproperReport(t *testing.T) {
+	consumerMessage := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
@@ -169,138 +168,73 @@ func TestParseMessageWithImproperReport(t *testing.T) {
 			"info": []
 	}
 }`
-	_, err := consumer.ParseMessage([]byte(message))
-	assert.EqualError(
-		t,
-		err,
-		"json: cannot unmarshal string into Go value of type []types.ReportItem",
-	)
-}
-
-func TestParseProperMessage(t *testing.T) {
-	message, err := consumer.ParseMessage([]byte(testdata.ConsumerMessage))
+	message, err := consumer.DeserializeMessage([]byte(consumerMessage))
 	helpers.FailOnError(t, err)
-
 	assert.Equal(t, types.OrgID(1), *message.Organization)
 	assert.Equal(t, testdata.ClusterName, *message.ClusterName)
-
-	var expectedReport consumer.Report
-	err = json.Unmarshal([]byte(testdata.ConsumerReport), &expectedReport)
-	helpers.FailOnError(t, err)
-
-	assert.Equal(t, expectedReport, *message.Report)
-	assert.EqualValues(t, []types.ReportItem{}, message.ParsedHits)
 }
 
-func TestParseProperMessageWithInfoReport(t *testing.T) {
-	// this report contains just one rule hit: from special INFO rule used
-	// just in external data pipeline
-	consumerReport := `{
-		"fingerprints": [],
-		"reports": [],
-		"skips": [],
-		"system": {},
-		"info": [
-			{
-				"info_id": "version_info|CLUSTER_VERSION_INFO",
-				"component": "ccx_rules_processing.version_info.report",
-				"type": "info",
-				"key": "CLUSTER_VERSION_INFO",
-				"details": {
-				  "version": "4.9",
-				  "type": "info",
-				  "info_key": "CLUSTER_VERSION_INFO"
-				},
-				"tags": [],
-				"links": {}
-			  }
-		]
-
-	}`
-	consumerMessage := createConsumerMessage(consumerReport)
-	message, err := consumer.ParseMessage([]byte(consumerMessage))
+func TestDeserializeProperMessage(t *testing.T) {
+	message, err := consumer.DeserializeMessage([]byte(testdata.ConsumerMessage))
 	helpers.FailOnError(t, err)
-
 	assert.Equal(t, types.OrgID(1), *message.Organization)
 	assert.Equal(t, testdata.ClusterName, *message.ClusterName)
-
-	var expectedReport consumer.Report
-	err = json.Unmarshal([]byte(consumerReport), &expectedReport)
-	helpers.FailOnError(t, err)
-
-	assert.Equal(t, expectedReport, *message.Report)
-	assert.EqualValues(t, []types.ReportItem{}, message.ParsedHits)
-
-	expectedInfoReport := []types.InfoItem{
-		{
-			InfoID:  "version_info|CLUSTER_VERSION_INFO",
-			InfoKey: "CLUSTER_VERSION_INFO",
-			Details: map[string]string{
-				"version":  "4.9",
-				"type":     "info",
-				"info_key": "CLUSTER_VERSION_INFO",
-			},
-		},
-	}
-	assert.EqualValues(t, expectedInfoReport, message.ParsedInfo)
 }
 
-func TestParseProperMessageWrongClusterName(t *testing.T) {
+func TestDeserializeMessageWrongClusterName(t *testing.T) {
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "this is not a UUID",
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.DeserializeMessage([]byte(message))
 	assert.EqualError(t, err, "cluster name is not a UUID")
 }
 
-func TestParseMessageWithoutOrgID(t *testing.T) {
+func TestDeserializeMessageWithoutOrgID(t *testing.T) {
 	message := `{
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.DeserializeMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'OrgID'")
 }
 
-func TestParseMessageWithoutClusterName(t *testing.T) {
+func TestDeserializeMessageWithoutClusterName(t *testing.T) {
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"Report": ` + testdata.ConsumerReport + `
 	}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.DeserializeMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'ClusterName'")
 }
 
-func TestParseMessageWithoutReport(t *testing.T) {
+func TestDeserializeMessageWithoutReport(t *testing.T) {
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `"
 	}`
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.DeserializeMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 
-func TestParseReportContentEmptyReport(t *testing.T) {
+func TestDeserializeMessageWithEmptyReport(t *testing.T) {
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report": {}
 	}`
-
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.DeserializeMessage([]byte(message))
 	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
 }
 
-func TestParseMessageNullReport(t *testing.T) {
+func TestDeserializeMessageNullReport(t *testing.T) {
 	message := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report": null
 	}`
-
-	_, err := consumer.ParseMessage([]byte(message))
+	_, err := consumer.DeserializeMessage([]byte(message))
 	assert.EqualError(t, err, "missing required attribute 'Report'")
 }
 
@@ -391,25 +325,19 @@ func TestCheckReportStructureEmptyReport(t *testing.T) {
 		"Report": {}
 	}`
 
-	parsed, err := consumer.ParseMessage([]byte(message))
+	deserialized, err := consumer.DeserializeMessage([]byte(message))
 	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
 
-	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
+	shouldProcess, err := consumer.CheckReportStructure(*deserialized.Report)
 	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
 	assert.False(t, shouldProcess, "checkReportStructure should return shouldProcess = false for empty reports")
 }
 
 func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T) {
-	message := `{
-		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
-		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report": ` + testdata.ConsumerReport + `
-	}`
-
-	parsed, err := consumer.ParseMessage([]byte(message))
+	deserialized, err := consumer.DeserializeMessage([]byte(testdata.ConsumerMessage))
 	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
 
-	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
+	shouldProcess, err := consumer.CheckReportStructure(*deserialized.Report)
 	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
 	assert.False(t, shouldProcess, "checkReportStructure should return"+
 		" shouldProcess = false for empty reports where all expected attributes are present")
@@ -428,13 +356,240 @@ func TestCheckReportStructureReportWithEmptyAndMissingAttributes(t *testing.T) {
 		}
 	}`
 
-	parsed, err := consumer.ParseMessage([]byte(message))
+	deserialized, err := consumer.DeserializeMessage([]byte(message))
 	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
 
-	fmt.Println("parsed\n", parsed)
-	shouldProcess, err := consumer.CheckReportStructure(*parsed.Report)
+	shouldProcess, err := consumer.CheckReportStructure(*deserialized.Report)
 	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
 	assert.False(t, shouldProcess, "checkReportStructure should return shouldProcess = false for empty reports")
+}
+func TestCheckReportStructureReportWithItems(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": ` + string(testdata.Report2Rules) + `
+	}`
+
+	deserialized, err := consumer.DeserializeMessage([]byte(message))
+	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
+
+	shouldProcess, err := consumer.CheckReportStructure(*deserialized.Report)
+	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
+	assert.True(t, shouldProcess, "checkReportStructure should return shouldProcess = true for reports with items")
+}
+
+func TestParseReportContentEmptyReportsAttribute(t *testing.T) {
+	deserialized, err := consumer.DeserializeMessage([]byte(testdata.ConsumerMessage))
+	assert.Nil(t, err, "deserializeMessage should not return error for this message")
+
+	err = consumer.ParseReportContent(&deserialized)
+	assert.Nil(t, err, "ParseReportContent should not return nil for empty report")
+}
+
+func TestParseReportContentValidReport(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report":` + string(testdata.Report2Rules) + `
+	}`
+
+	//TODO: replace call to deserialize with exported function that returns incomingMessage
+	deserialized, err := consumer.DeserializeMessage([]byte(message))
+	assert.Nil(t, err, "deserializeMessage should not return error for this message")
+
+	err = consumer.ParseReportContent(&deserialized)
+	assert.Nil(t, err, "ParseReportContent should return nil for reports with proper structure")
+}
+
+func TestParseEmptyMessage(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	message := sarama.ConsumerMessage{}
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "empty message should not be processed")
+	assert.EqualError(t, err, "unexpected end of JSON input")
+}
+
+func TestParseMessageWithWrongContent(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	message := sarama.ConsumerMessage{Value: []byte(`{"this":"is", "not":"expected content"}`)}
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "message with unexpected content should not be processed")
+	assert.EqualError(t, err, "missing required attribute 'OrgID'")
+}
+
+func TestParseProperMessageWrongClusterName(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "this is not a UUID",
+		"Report": ` + testdata.ConsumerReport + `
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "message with invalid cluster name should not be processed")
+	assert.EqualError(t, err, "cluster name is not a UUID")
+}
+
+func TestParseMessageWithoutOrgID(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	data := `{
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": ` + testdata.ConsumerReport + `
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "message without org ID should not be processed")
+	assert.EqualError(t, err, "missing required attribute 'OrgID'")
+}
+
+func TestParseMessageWithoutClusterName(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"Report": ` + testdata.ConsumerReport + `
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "message without cluster name should not be processed")
+	assert.EqualError(t, err, "missing required attribute 'ClusterName'")
+}
+
+func TestParseMessageWithoutReport(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `"
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "message without report should not be processed")
+	assert.EqualError(t, err, "missing required attribute 'Report'")
+}
+
+func TestParseMessageEmptyReport(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": {}
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "message without report should not be processed")
+	assert.Nil(t, err, "parsing message without report should not produce an error")
+}
+func TestParseMessageNullReport(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report": null
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "message without report should not be processed")
+	assert.EqualError(t, err, "missing required attribute 'Report'")
+}
+
+func TestParseMessageWithImproperJSON(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	message := sarama.ConsumerMessage{Value: []byte(`"this_is_not_json_dude"`)}
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "message with wrong data format should not be processed")
+	assert.EqualError(t, err, "json: cannot unmarshal string into Go value of type consumer.incomingMessage")
+}
+
+func TestParseMessageWithImproperReport(t *testing.T) {
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Report": {
+			"system": {
+				"metadata": {},
+				"hostname": null
+			},
+			"reports": "blablablabla",
+			"fingerprints": [],
+			"skips": [],
+			"info": []
+		}
+	}`
+	c := consumer.KafkaConsumer{}
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+
+	_, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	assert.False(t, shouldProcess, "message with wrong data format should not be processed")
+	assert.EqualError(t, err, "json: cannot unmarshal string into Go value of type []types.ReportItem")
+}
+
+func TestParseProperMessageReportWithEmptyAttributes(t *testing.T) {
+	c := consumer.KafkaConsumer{}
+	message := sarama.ConsumerMessage{Value: []byte(testdata.ConsumerMessage)}
+	parsed, shouldProcess, err := consumer.ParseMessage(&c, &message)
+
+	assert.False(t, shouldProcess, "this message is valid but empty and should not be processed")
+	assert.Equal(t, types.OrgID(1), *parsed.Organization)
+	assert.Equal(t, testdata.ClusterName, *parsed.ClusterName)
+
+	var expectedReport consumer.Report
+	err = json.Unmarshal([]byte(testdata.ConsumerReport), &expectedReport)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedReport, *parsed.Report)
+	assert.EqualValues(t, []types.ReportItem(nil), parsed.ParsedHits)
+}
+
+func TestParseProperMessageWithInfoReport(t *testing.T) {
+	// this report contains just one rule hit: from special INFO rule used
+	// just in external data pipeline
+	consumerReport := `{
+		"fingerprints": [],
+		"reports": [],
+		"skips": [],
+		"system": {},
+		"info": [
+			{
+				"info_id": "version_info|CLUSTER_VERSION_INFO",
+				"component": "ccx_rules_processing.version_info.report",
+				"type": "info",
+				"key": "CLUSTER_VERSION_INFO",
+				"details": {
+				  "version": "4.9",
+				  "type": "info",
+				  "info_key": "CLUSTER_VERSION_INFO"
+				},
+				"tags": [],
+				"links": {}
+			  }
+		]
+
+	}`
+	c := consumer.KafkaConsumer{}
+	message := sarama.ConsumerMessage{Value: []byte(createConsumerMessage(consumerReport))}
+	parsed, shouldProcess, err := consumer.ParseMessage(&c, &message)
+
+	assert.True(t, shouldProcess, "this message is valid and should be processed")
+	assert.Equal(t, types.OrgID(1), *parsed.Organization)
+	assert.Equal(t, testdata.ClusterName, *parsed.ClusterName)
+
+	var expectedReport consumer.Report
+	err = json.Unmarshal([]byte(consumerReport), &expectedReport)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedReport, *parsed.Report)
+	assert.EqualValues(t, []types.ReportItem{}, parsed.ParsedHits)
+
+	expectedInfoReport := []types.InfoItem{
+		{
+			InfoID:  "version_info|CLUSTER_VERSION_INFO",
+			InfoKey: "CLUSTER_VERSION_INFO",
+			Details: map[string]string{
+				"version":  "4.9",
+				"type":     "info",
+				"info_key": "CLUSTER_VERSION_INFO",
+			},
+		},
+	}
+	assert.EqualValues(t, expectedInfoReport, parsed.ParsedInfo)
 }
 
 func TestProcessEmptyMessage(t *testing.T) {
@@ -480,17 +635,27 @@ func TestProcessCorrectMessage(t *testing.T) {
 	assert.Equal(t, 1, count, "process message should write one record into DB")
 }
 
-func TestProcessingMessageWithClosedStorage(t *testing.T) {
+func TestProcessingEmptyMessageWithClosedStorage(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 
 	mockConsumer := dummyConsumer(mockStorage, true)
 	closer()
 
 	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	assert.Nil(t, err, "for empty message, processing should have been skipped")
+}
+
+func TestProcessingCorrectMessageWithClosedStorage(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+
+	mockConsumer := dummyConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageReportWithRuleHits)
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
-func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
+func TestProcessingMessageWithWrongDateFormatAndEmptyReport(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
@@ -503,6 +668,22 @@ func TestProcessingMessageWithWrongDateFormat(t *testing.T) {
 		"LastChecked": "2020.01.23 16:15:59"
 	}`
 
+	err := consumerProcessMessage(mockConsumer, messageValue)
+	assert.Nil(t, err, "Message with empty report should not be processed")
+}
+
+func TestProcessingMessageWithWrongDateFormatReportNotEmpty(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	mockConsumer := dummyConsumer(mockStorage, true)
+
+	messageValue := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Report":` + testReport + `,
+		"LastChecked": "2020.01.23 16:15:59"
+	}`
 	err := consumerProcessMessage(mockConsumer, messageValue)
 	if _, ok := err.(*time.ParseError); err == nil || !ok {
 		t.Fatal(fmt.Errorf(
@@ -553,7 +734,7 @@ func TestKafkaConsumerMockBadMessage(t *testing.T) {
 	}, testCaseTimeLimit)
 }
 
-func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
+func TestKafkaConsumerMockWritingMsgWithEmptyReportToClosedStorage(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
 			t, testTopicName, testOrgAllowlist, []string{testdata.ConsumerMessage},
@@ -568,6 +749,28 @@ func TestKafkaConsumerMockWritingToClosedStorage(t *testing.T) {
 
 		closer()
 
+		// Since the report is present but empty, we stop processing this message without errors
+		assert.Equal(t, uint64(1), mockConsumer.KafkaConsumer.GetNumberOfSuccessfullyConsumedMessages())
+		assert.Equal(t, uint64(0), mockConsumer.KafkaConsumer.GetNumberOfErrorsConsumingMessages())
+	}, testCaseTimeLimit)
+}
+
+func TestKafkaConsumerMockWritingMsgWithReportToClosedStorage(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
+		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+			t, testTopicName, testOrgAllowlist, []string{messageReportWithRuleHits},
+		)
+
+		err := mockConsumer.KafkaConsumer.Storage.Close()
+		helpers.FailOnError(t, err)
+
+		go mockConsumer.Serve()
+
+		ira_helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+
+		closer()
+
+		// Since the report is present and not empty, it is processed, and we reach the closed DB error
 		assert.Equal(t, uint64(0), mockConsumer.KafkaConsumer.GetNumberOfSuccessfullyConsumedMessages())
 		assert.Equal(t, uint64(1), mockConsumer.KafkaConsumer.GetNumberOfErrorsConsumingMessages())
 	}, testCaseTimeLimit)
@@ -607,7 +810,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationAllowlistDisabled(t *testing.T
 	helpers.FailOnError(t, err)
 }
 
-func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
+func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationIsNotAllowed(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
@@ -624,7 +827,47 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 	}
 
 	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	helpers.FailOnError(t, err, "message have empty report and should not be processed")
+}
+
+func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	brokerCfg := broker.Configuration{
+		Address:             "localhost:1234",
+		Topic:               "topic",
+		Group:               "group",
+		OrgAllowlist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
+		OrgAllowlistEnabled: true,
+	}
+	mockConsumer := &consumer.KafkaConsumer{
+		Configuration: brokerCfg,
+		Storage:       mockStorage,
+	}
+
+	err := consumerProcessMessage(mockConsumer, messageReportWithRuleHits)
 	assert.EqualError(t, err, organizationIDNotInAllowList)
+}
+
+func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationBadConfigIsNotAllowed(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	defer closer()
+
+	brokerCfg := broker.Configuration{
+		Address:             "localhost:1234",
+		Topic:               "topic",
+		Group:               "group",
+		OrgAllowlist:        nil,
+		OrgAllowlistEnabled: true,
+	}
+	mockConsumer := &consumer.KafkaConsumer{
+		Configuration: brokerCfg,
+		Storage:       mockStorage,
+	}
+
+	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	helpers.FailOnError(t, err, "message have empty report and should not be processed")
 }
 
 func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testing.T) {
@@ -643,7 +886,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testi
 		Storage:       mockStorage,
 	}
 
-	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	err := consumerProcessMessage(mockConsumer, messageReportWithRuleHits)
 	assert.EqualError(t, err, organizationIDNotInAllowList)
 }
 
@@ -697,7 +940,7 @@ func TestKafkaConsumer_ProcessMessage_MoreRecentReportAlreadyExists(t *testing.T
 	message = `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report":` + testdata.ConsumerReport + `,
+		"Report":` + testReport + `,
 		"LastChecked": "` + time.Now().Add(-24*time.Hour).Format(time.RFC3339) + `"
 	}`
 

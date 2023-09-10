@@ -16,6 +16,11 @@ limitations under the License.
 
 package consumer
 
+import (
+	"github.com/Shopify/sarama"
+	"time"
+)
+
 // Export for testing
 //
 // This source file contains name aliases of all package-private functions
@@ -26,11 +31,16 @@ package consumer
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
 var (
-	ParseMessage                = deserializeMessage
-	ParseReportContent          = parseReportContent
-	CheckReportStructure        = checkReportStructure
-	IsReportWithEmptyAttributes = isReportWithEmptyAttributes
-
+	DeserializeMessage           = deserializeMessage
+	ParseReportContent           = parseReportContent
+	CheckReportStructure         = checkReportStructure
+	IsReportWithEmptyAttributes  = isReportWithEmptyAttributes
 	NumberOfExpectedKeysInReport = numberOfExpectedKeysInReport
 	ExpectedKeysInReport         = expectedKeysInReport
 )
+
+var ParseMessageTestStartTime = time.Now()
+
+func ParseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, bool, error) {
+	return consumer.parseMessage(msg, ParseMessageTestStartTime)
+}

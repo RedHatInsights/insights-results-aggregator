@@ -102,7 +102,7 @@ func getMessagesFromDir(b *testing.B, dataDir string) []string {
 				helpers.FailOnError(b, err)
 
 				zerolog.SetGlobalLevel(zerolog.Disabled)
-				parsedMessage, err := consumer.ParseMessage(fileBytes)
+				parsedMessage, err := consumer.DeserializeMessage(fileBytes)
 				zerolog.SetGlobalLevel(zerolog.WarnLevel)
 				if err != nil {
 					log.Warn().Msgf("skipping file %+v because it has bad structure", file.Name())

@@ -40,7 +40,7 @@ const (
 )
 
 var (
-	expectedKeysInReport = [numberOfExpectedKeysInReport]string{
+	expectedKeysInReport = []string{
 		reportAttributeFingerprints, reportAttributeInfo, reportAttributeReports, reportAttributeSystem,
 	}
 )
@@ -281,19 +281,19 @@ func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.Co
 	}
 }
 
-func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, parsed *incomingMessage) bool {
+func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, parsed *incomingMessage) (bool, error) {
 	keepProcessing, err := checkReportStructure(*parsed.Report)
 	if err != nil {
 		consumer.logReportStructureError(err, consumed)
-		return false
+		return false, err
 	}
 
 	if !keepProcessing {
 		logMessageInfo(consumer, consumed, *parsed, "This message will not be processed further")
 		metrics.SkippedEmptyReports.Inc()
-		return false
+		return false, nil
 	}
-	return true
+	return true, nil
 }
 
 // processMessage processes an incoming message
@@ -302,9 +302,9 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 
-	message, process := consumer.parseMessage(msg, tStart)
-	if !process {
-		return message.RequestID, message, nil
+	message, process, err := consumer.parseMessage(msg, tStart)
+	if !process || err != nil {
+		return message.RequestID, message, err
 	}
 	logMessageInfo(consumer, msg, message, "Read")
 	tRead := time.Now()
@@ -318,12 +318,6 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 	}
 
 	tAllowlisted := time.Now()
-
-	reportAsBytes, err := json.Marshal(*message.Report)
-	if err != nil {
-		logMessageError(consumer, msg, message, "Error marshalling report", err)
-		return message.RequestID, message, err
-	}
 
 	logMessageDebug(consumer, msg, message, "Marshalled")
 	tMarshalled := time.Now()
@@ -346,6 +340,12 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 
 	// timestamp when the report is about to be written into database
 	storedAtTime := time.Now()
+
+	reportAsBytes, err := json.Marshal(*message.Report)
+	if err != nil {
+		logMessageError(consumer, msg, message, "Error marshalling report", err)
+		return message.RequestID, message, err
+	}
 
 	err = consumer.Storage.WriteReportForCluster(
 		*message.Organization,
@@ -436,7 +436,7 @@ func verifyJSONArrayAttributeIsEmpty(attr string, r Report) bool {
 // If this function returns true, this report will not be processed further as it is
 // PROBABLY the result of an archive that was not processed by insights-core.
 // see https://github.com/RedHatInsights/insights-results-aggregator/issues/1834
-func isReportWithEmptyAttributes(r Report, keysToCheck [numberOfExpectedKeysInReport]string) bool {
+func isReportWithEmptyAttributes(r Report, keysToCheck []string) bool {
 	for _, key := range keysToCheck {
 		switch key {
 		case reportAttributeSystem:
@@ -467,16 +467,16 @@ func checkReportStructure(r Report) (shouldProcess bool, err error) {
 
 	// 'skips' key is now optional, we should not expect it anymore:
 	// https://github.com/RedHatInsights/insights-results-aggregator/issues/1206
-	keysFound := [numberOfExpectedKeysInReport]string{}
-	keysNotFound := [numberOfExpectedKeysInReport]string{}
+	keysFound := make([]string, 0, numberOfExpectedKeysInReport)
+	keysNotFound := make([]string, 0, numberOfExpectedKeysInReport)
 
 	// check if the structure contains all expected keys
 	for _, expectedKey := range expectedKeysInReport {
 		_, found := r[expectedKey]
 		if found {
-			keysFound[len(keysFound)-1] = expectedKey
+			keysFound = append(keysFound, expectedKey)
 		} else {
-			keysNotFound[len(keysNotFound)-1] = expectedKey
+			keysNotFound = append(keysNotFound, expectedKey)
 		}
 	}
 
@@ -520,6 +520,7 @@ func deserializeMessage(messageValue []byte) (incomingMessage, error) {
 		return deserialized, errors.New("cluster name is not a UUID")
 	}
 	return deserialized, nil
+
 }
 
 // parseReportContent verifies the content of the Report structure and parses it into
@@ -540,24 +541,24 @@ func parseReportContent(message *incomingMessage) error {
 	return nil
 }
 
-func (consumer *KafkaConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart time.Time) (incomingMessage, bool) {
+func (consumer *KafkaConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart time.Time) (incomingMessage, bool, error) {
 	message, err := deserializeMessage(msg.Value)
 	if err != nil {
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
-		return message, false
+		return message, false, err
 	}
 
 	consumer.updatePayloadTracker(message.RequestID, tStart, message.Organization, message.Account, producer.StatusReceived)
 
-	if !consumer.shouldProcess(msg, &message) {
-		return message, false
+	if process, err := consumer.shouldProcess(msg, &message); !process {
+		return message, false, err
 	}
 
 	err = parseReportContent(&message)
 	if err != nil {
 		consumer.logReportStructureError(err, msg)
-		return message, false
+		return message, false, err
 	}
 
-	return message, true
+	return message, true, nil
 }
