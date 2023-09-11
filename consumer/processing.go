@@ -29,8 +29,28 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
+const (
+	improperIncomeMessageError = "Deserialized report read from message with improper structure "
+
+	reportAttributeSystem        = "system"
+	reportAttributeReports       = "reports"
+	reportAttributeInfo          = "info"
+	reportAttributeFingerprints  = "fingerprints"
+	numberOfExpectedKeysInReport = 4
+)
+
+var (
+	expectedKeysInReport = []string{
+		reportAttributeFingerprints, reportAttributeInfo, reportAttributeReports, reportAttributeSystem,
+	}
+)
+
 // Report represents report send in a message consumed from any broker
 type Report map[string]*json.RawMessage
+
+type system struct {
+	Hostname string `json:"hostname"`
+}
 
 // incomingMessage is representation of message consumed from any broker
 type incomingMessage struct {
@@ -125,7 +145,6 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error 
 	timeAfterProcessingMessage := time.Now()
 	messageProcessingDuration := timeAfterProcessingMessage.Sub(startTime).Seconds()
 
-	consumer.updatePayloadTracker(requestID, startTime, message.Organization, message.Account, producer.StatusReceived)
 	consumer.updatePayloadTracker(requestID, timeAfterProcessingMessage, message.Organization, message.Account, producer.StatusMessageProcessed)
 
 	log.Debug().
@@ -254,56 +273,92 @@ func (consumer *KafkaConsumer) writeInfoReport(
 	return nil
 }
 
+func (consumer *KafkaConsumer) logMsgForFurtherAnalysis(msg *sarama.ConsumerMessage) {
+	if consumer.Configuration.DisplayMessageWithWrongStructure {
+		log.Info().Str("unparsed message", string(msg.Value)).Msg("Message for further analysis")
+	}
+}
+
+func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.ConsumerMessage) {
+	if consumer.Configuration.DisplayMessageWithWrongStructure {
+		log.Err(err).Str("unparsed message", string(msg.Value)).Msg(improperIncomeMessageError)
+	} else {
+		log.Err(err).Msg(improperIncomeMessageError)
+	}
+}
+
+func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
+	err := checkReportStructure(*parsed.Report)
+	if err != nil {
+		consumer.logReportStructureError(err, consumed)
+		return err
+	}
+	return nil
+}
+
+func (consumer *KafkaConsumer) retrieveLastCheckedTime(msg *sarama.ConsumerMessage, parsedMsg *incomingMessage) (time.Time, error) {
+	lastCheckedTime, err := time.Parse(time.RFC3339Nano, parsedMsg.LastChecked)
+	if err != nil {
+		logMessageError(consumer, msg, *parsedMsg, "Error parsing date from message", err)
+		return time.Time{}, err
+	}
+
+	lastCheckedTimestampLagMinutes := time.Since(lastCheckedTime).Minutes()
+	if lastCheckedTimestampLagMinutes < 0 {
+		logMessageError(consumer, msg, *parsedMsg, "got a message from the future", nil)
+	}
+
+	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
+
+	logMessageDebug(consumer, msg, *parsedMsg, "Time ok")
+	return lastCheckedTime, nil
+}
+
 // processMessage processes an incoming message
 func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
-	message, err := parseMessage(consumer.Configuration.DisplayMessageWithWrongStructure, msg.Value)
+
+	message, err := consumer.parseMessage(msg, tStart)
 	if err != nil {
-		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
+		if err == types.ErrEmptyReport {
+			logMessageInfo(consumer, msg, message, "This message has an empty report and will not be processed further")
+			metrics.SkippedEmptyReports.Inc()
+			return message.RequestID, message, nil
+		}
 		return message.RequestID, message, err
 	}
-
 	logMessageInfo(consumer, msg, message, "Read")
 	tRead := time.Now()
 
 	checkMessageVersion(consumer, &message, msg)
 
 	if ok, cause := checkMessageOrgInAllowList(consumer, &message, msg); !ok {
+		err := errors.New(cause)
 		logMessageError(consumer, msg, message, cause, err)
-		return message.RequestID, message, errors.New(cause)
+		return message.RequestID, message, err
 	}
 
 	tAllowlisted := time.Now()
+
+	logMessageDebug(consumer, msg, message, "Marshalled")
+	tMarshalled := time.Now()
+
+	lastCheckedTime, err := consumer.retrieveLastCheckedTime(msg, &message)
+	if err != nil {
+		return message.RequestID, message, err
+	}
+	tTimeCheck := time.Now()
+
+	// timestamp when the report is about to be written into database
+	storedAtTime := time.Now()
 
 	reportAsBytes, err := json.Marshal(*message.Report)
 	if err != nil {
 		logMessageError(consumer, msg, message, "Error marshalling report", err)
 		return message.RequestID, message, err
 	}
-
-	logMessageDebug(consumer, msg, message, "Marshalled")
-	tMarshalled := time.Now()
-
-	lastCheckedTime, err := time.Parse(time.RFC3339Nano, message.LastChecked)
-	if err != nil {
-		logMessageError(consumer, msg, message, "Error parsing date from message", err)
-		return message.RequestID, message, err
-	}
-
-	lastCheckedTimestampLagMinutes := time.Since(lastCheckedTime).Minutes()
-	if lastCheckedTimestampLagMinutes < 0 {
-		logMessageError(consumer, msg, message, "got a message from the future", nil)
-	}
-
-	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
-
-	logMessageDebug(consumer, msg, message, "Time ok")
-	tTimeCheck := time.Now()
-
-	// timestamp when the report is about to be written into database
-	storedAtTime := time.Now()
 
 	err = consumer.Storage.WriteReportForCluster(
 		*message.Organization,
@@ -363,27 +418,74 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 	return orgAllowed
 }
 
+func verifySystemAttributeIsEmpty(r Report) bool {
+	var s system
+	if err := json.Unmarshal(*r[reportAttributeSystem], &s); err != nil {
+		return false
+	}
+	if s.Hostname != "" {
+		return false
+	}
+	return true
+}
+
+// isReportWithEmptyAttributes checks if the report is empty, or if the attributes
+// expected in the report, minus the analysis_metadata, are empty.
+// If this function returns true, this report will not be processed further as it is
+// PROBABLY the result of an archive that was not processed by insights-core.
+// see https://github.com/RedHatInsights/insights-results-aggregator/issues/1834
+func isReportWithEmptyAttributes(r Report) bool {
+	// Create attribute checkers for each attribute
+	for attr, attrData := range r {
+		// special handling for the system attribute, as it comes with data when empty
+		if attr == reportAttributeSystem {
+			if !verifySystemAttributeIsEmpty(r) {
+				return false
+			}
+			continue
+		}
+		// Check if this attribute of the report is empty
+		checker := JSONAttributeChecker{data: *attrData}
+		if !checker.IsEmpty() {
+			return false
+		}
+	}
+	return true
+}
+
 // checkReportStructure tests if the report has correct structure
 func checkReportStructure(r Report) error {
-	// the structure is not well defined yet, so all we should do is to check if all keys are there
-	expectedKeys := []string{"fingerprints", "info", "reports", "system"}
+	// the structure is not well-defined yet, so all we should do is to check if all keys are there
 
 	// 'skips' key is now optional, we should not expect it anymore:
 	// https://github.com/RedHatInsights/insights-results-aggregator/issues/1206
-	// expectedKeys := []string{"fingerprints", "info", "reports", "skips", "system"}
+	keysNotFound := make([]string, 0, numberOfExpectedKeysInReport)
 
 	// check if the structure contains all expected keys
-	for _, expectedKey := range expectedKeys {
+	for _, expectedKey := range expectedKeysInReport {
 		_, found := r[expectedKey]
 		if !found {
-			return errors.New("Improper report structure, missing key with name '" + expectedKey + "'")
+			keysNotFound = append(keysNotFound, expectedKey)
 		}
 	}
+
+	// empty reports mean that this message should not be processed further
+	isEmpty := len(r) == 0 || isReportWithEmptyAttributes(r)
+	if isEmpty {
+		log.Debug().Msg("Empty report or report with only empty attributes. Processing of this message will be skipped.")
+		return types.ErrEmptyReport
+	}
+
+	// report is not empty, and some keys have not been found -> malformed
+	if len(keysNotFound) != 0 {
+		return fmt.Errorf("improper report structure, missing key(s) with name '%v'", keysNotFound)
+	}
+
 	return nil
 }
 
-// parseMessage tries to parse incoming message and read all required attributes from it
-func parseMessage(displayMessageWithWrongStructure bool, messageValue []byte) (incomingMessage, error) {
+// deserializeMessage tries to parse incoming message and read all required attributes from it
+func deserializeMessage(messageValue []byte) (incomingMessage, error) {
 	var deserialized incomingMessage
 
 	err := json.Unmarshal(messageValue, &deserialized)
@@ -406,30 +508,47 @@ func parseMessage(displayMessageWithWrongStructure bool, messageValue []byte) (i
 	if err != nil {
 		return deserialized, errors.New("cluster name is not a UUID")
 	}
+	return deserialized, nil
+}
 
-	err = checkReportStructure(*deserialized.Report)
+// parseReportContent verifies the content of the Report structure and parses it into
+// the relevant parts of the incomingMessage structure
+func parseReportContent(message *incomingMessage) error {
+	err := json.Unmarshal(*((*message.Report)[reportAttributeReports]), &message.ParsedHits)
 	if err != nil {
-		const errorMessage = "Deserialized report read from message with improper structure"
-		if displayMessageWithWrongStructure {
-			log.Err(err).Msgf(errorMessage+"%v", string(messageValue))
-		} else {
-			log.Err(err).Msg(errorMessage)
-		}
-		return deserialized, err
-	}
-
-	err = json.Unmarshal(*((*deserialized.Report)["reports"]), &deserialized.ParsedHits)
-	if err != nil {
-		return deserialized, err
+		return err
 	}
 
 	// it is expected that message.ParsedInfo contains at least one item:
 	// result from special INFO rule containing cluster version that is
 	// used just in external data pipeline
-	err = json.Unmarshal(*((*deserialized.Report)["info"]), &deserialized.ParsedInfo)
+	err = json.Unmarshal(*((*message.Report)[reportAttributeInfo]), &message.ParsedInfo)
 	if err != nil {
-		return deserialized, err
+		return err
+	}
+	return nil
+}
+
+func (consumer *KafkaConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart time.Time) (incomingMessage, error) {
+	message, err := deserializeMessage(msg.Value)
+	if err != nil {
+		consumer.logMsgForFurtherAnalysis(msg)
+		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
+		return message, err
 	}
 
-	return deserialized, nil
+	consumer.updatePayloadTracker(message.RequestID, tStart, message.Organization, message.Account, producer.StatusReceived)
+
+	//if process, err := consumer.shouldProcess(msg, &message); !process {
+	if err := consumer.shouldProcess(msg, &message); err != nil {
+		return message, err
+	}
+
+	err = parseReportContent(&message)
+	if err != nil {
+		consumer.logReportStructureError(err, msg)
+		return message, err
+	}
+
+	return message, nil
 }

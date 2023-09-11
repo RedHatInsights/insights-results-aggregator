@@ -41,6 +41,10 @@ type (
 // exists on the storage while attempting to write a report for a cluster.
 var ErrOldReport = types.ErrOldReport
 
+// ErrEmptyReport is an error returned if an empty report or a report with
+// only empty attributes is found in the parsed message
+var ErrEmptyReport = errors.New("empty report found in deserialized message")
+
 // TableNotFoundError table not found error
 type TableNotFoundError struct {
 	tableName string

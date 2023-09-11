@@ -216,7 +216,7 @@ func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
 	for message := range claim.Messages() {
 		err := consumer.HandleMessage(message)
 		if err != nil {
-			// already hanadled in HandleMessage, just log
+			// already handled in HandleMessage, just log
 			log.Error().Err(err).Msg("Problem while handling the message")
 		}
 		session.MarkMessage(message, "")
