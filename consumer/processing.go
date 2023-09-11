@@ -281,7 +281,7 @@ func (consumer *KafkaConsumer) logMsgForFurtherAnalysis(msg *sarama.ConsumerMess
 
 func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.ConsumerMessage) {
 	if consumer.Configuration.DisplayMessageWithWrongStructure {
-		log.Err(err).Msgf(improperIncomeMessageError+"%v", string(msg.Value))
+		log.Err(err).Str("unparsed message", string(msg.Value)).Msg(improperIncomeMessageError+)
 	} else {
 		log.Err(err).Msg(improperIncomeMessageError)
 	}

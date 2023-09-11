@@ -114,24 +114,24 @@ func createConsumerMessage(report string) string {
 	return consumerMessage
 }
 
-//func TestConsumerConstructorNoKafka(t *testing.T) {
-//	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
-//	defer closer()
-//
-//	mockConsumer, err := consumer.New(wrongBrokerCfg, mockStorage)
-//	assert.Error(t, err)
-//	assert.Contains(
-//		t, err.Error(), "kafka: client has run out of available brokers to talk to",
-//	)
-//	assert.Equal(
-//		t,
-//		(*consumer.KafkaConsumer)(nil),
-//		mockConsumer,
-//		"consumer.New should return nil instead of Consumer implementation",
-//	)
-//}
+func TestConsumerConstructorNoKafka(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
+	defer closer()
 
-func TesDeserializeEmptyMessage(t *testing.T) {
+	mockConsumer, err := consumer.New(wrongBrokerCfg, mockStorage)
+	assert.Error(t, err)
+	assert.Contains(
+		t, err.Error(), "kafka: client has run out of available brokers to talk to",
+	)
+	assert.Equal(
+		t,
+		(*consumer.KafkaConsumer)(nil),
+		mockConsumer,
+		"consumer.New should return nil instead of Consumer implementation",
+	)
+}
+
+func TestDeserializeEmptyMessage(t *testing.T) {
 	_, err := consumer.DeserializeMessage([]byte(""))
 	assert.EqualError(t, err, "unexpected end of JSON input")
 }
@@ -320,58 +320,45 @@ func TestIsReportWithEmptyAttributesReportsIsPresent(t *testing.T) {
 }
 
 func TestCheckReportStructureEmptyReport(t *testing.T) {
-	message := `{
-		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
-		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report": {}
-	}`
+	report := consumer.Report{}
 
-	deserialized, err := consumer.DeserializeMessage([]byte(message))
-	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
-
-	err = consumer.CheckReportStructure(*deserialized.Report)
+	err := consumer.CheckReportStructure(report)
 	assert.EqualError(t, err, "empty report found in deserialized message")
 }
 
 func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T) {
-	deserialized, err := consumer.DeserializeMessage([]byte(testdata.ConsumerMessage))
-	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
-
-	err = consumer.CheckReportStructure(*deserialized.Report)
+	report := consumer.Report{
+		"fingerprints": unmarshall("[]"),
+		"info":         unmarshall("[]"),
+		"reports":      unmarshall("[]"),
+		"skips":        unmarshall("[]"),
+		"system":       unmarshall("{}"),
+	}
+	err := consumer.CheckReportStructure(report)
 	assert.EqualError(t, err, "empty report found in deserialized message")
 }
 
 // If some attributes are missing, but all the present attributes are empty, we just
 // skip the processing of the message.
 func TestCheckReportStructureReportWithEmptyAndMissingAttributes(t *testing.T) {
-	message := `{
-		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
-		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report": {
-			"fingerprints": [],
-			"reports": [],
-			"skips": []
-		}
-	}`
-
-	deserialized, err := consumer.DeserializeMessage([]byte(message))
-	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
-
-	err = consumer.CheckReportStructure(*deserialized.Report)
+	report := consumer.Report{
+		"fingerprints": unmarshall("[]"),
+		"reports":      unmarshall("[]"),
+		"skips":        unmarshall("[]"),
+	}
+	err := consumer.CheckReportStructure(report)
 	assert.EqualError(t, err, "empty report found in deserialized message")
 }
 
 func TestCheckReportStructureReportWithItems(t *testing.T) {
-	message := `{
-		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
-		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report": ` + string(testdata.Report2Rules) + `
-	}`
-
-	deserialized, err := consumer.DeserializeMessage([]byte(message))
-	assert.Nil(t, err, "deserializeMessage should not return error for empty report")
-
-	err = consumer.CheckReportStructure(*deserialized.Report)
+	report := consumer.Report{
+		"fingerprints": unmarshall("[]"),
+		"info":         unmarshall("[]"),
+		"reports":      unmarshall(string(testdata.Report2Rules)),
+		"skips":        unmarshall("[]"),
+		"system":       unmarshall("{\"metadata\": {},\"hostname\": null}"),
+	}
+	err := consumer.CheckReportStructure(report)
 	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
 }
 
@@ -390,7 +377,6 @@ func TestParseReportContentValidReport(t *testing.T) {
 		"Report":` + string(testdata.Report2Rules) + `
 	}`
 
-	//TODO: replace call to deserialize with exported function that returns incomingMessage
 	deserialized, err := consumer.DeserializeMessage([]byte(message))
 	assert.Nil(t, err, "deserializeMessage should not return error for this message")
 
