@@ -17,8 +17,9 @@ limitations under the License.
 package consumer
 
 import (
-	"github.com/Shopify/sarama"
 	"time"
+
+	"github.com/Shopify/sarama"
 )
 
 // Export for testing
@@ -41,6 +42,13 @@ var (
 
 var ParseMessageTestStartTime = time.Now()
 
-func ParseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, bool, error) {
-	return consumer.parseMessage(msg, ParseMessageTestStartTime)
+// Inc type is a trick to get golint to work for the ParseMessage defined below...
+type Inc struct {
+	incomingMessage
+}
+
+// ParseMessage reproduces the functionality of the private parseMessage function for testing
+func ParseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (Inc, bool, error) {
+	incomingMessage, process, err := consumer.parseMessage(msg, ParseMessageTestStartTime)
+	return Inc{incomingMessage}, process, err
 }

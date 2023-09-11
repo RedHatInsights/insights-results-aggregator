@@ -297,7 +297,6 @@ func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, p
 }
 
 func (consumer *KafkaConsumer) retrieveLastCheckedTime(msg *sarama.ConsumerMessage, parsedMsg *incomingMessage) (time.Time, error) {
-
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, parsedMsg.LastChecked)
 	if err != nil {
 		logMessageError(consumer, msg, *parsedMsg, "Error parsing date from message", err)
@@ -529,7 +528,6 @@ func deserializeMessage(messageValue []byte) (incomingMessage, error) {
 		return deserialized, errors.New("cluster name is not a UUID")
 	}
 	return deserialized, nil
-
 }
 
 // parseReportContent verifies the content of the Report structure and parses it into

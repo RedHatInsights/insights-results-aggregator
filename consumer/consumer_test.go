@@ -21,14 +21,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/RedHatInsights/insights-operator-utils/tests/saramahelpers"
-	"github.com/RedHatInsights/insights-results-aggregator/producer"
-	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	zerolog_log "github.com/rs/zerolog/log"
 	"log"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/RedHatInsights/insights-operator-utils/tests/saramahelpers"
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	zerolog_log "github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
@@ -527,6 +528,7 @@ func TestParseProperMessageReportWithEmptyAttributes(t *testing.T) {
 	c := consumer.KafkaConsumer{}
 	message := sarama.ConsumerMessage{Value: []byte(testdata.ConsumerMessage)}
 	parsed, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	helpers.FailOnError(t, err)
 
 	assert.False(t, shouldProcess, "this message is valid but empty and should not be processed")
 	assert.Equal(t, types.OrgID(1), *parsed.Organization)
@@ -567,6 +569,7 @@ func TestParseProperMessageWithInfoReport(t *testing.T) {
 	c := consumer.KafkaConsumer{}
 	message := sarama.ConsumerMessage{Value: []byte(createConsumerMessage(consumerReport))}
 	parsed, shouldProcess, err := consumer.ParseMessage(&c, &message)
+	helpers.FailOnError(t, err)
 
 	assert.True(t, shouldProcess, "this message is valid and should be processed")
 	assert.Equal(t, types.OrgID(1), *parsed.Organization)
