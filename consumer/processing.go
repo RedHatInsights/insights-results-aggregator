@@ -273,6 +273,12 @@ func (consumer *KafkaConsumer) writeInfoReport(
 	return nil
 }
 
+func (consumer *KafkaConsumer) logMsgForFurtherAnalysis(msg *sarama.ConsumerMessage) {
+	if consumer.Configuration.DisplayMessageWithWrongStructure {
+		log.Info().Str("unparsed message", string(msg.Value)).Msg("Message for further analysis")
+	}
+}
+
 func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.ConsumerMessage) {
 	if consumer.Configuration.DisplayMessageWithWrongStructure {
 		log.Err(err).Msgf(improperIncomeMessageError+"%v", string(msg.Value))
@@ -551,6 +557,7 @@ func parseReportContent(message *incomingMessage) error {
 func (consumer *KafkaConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart time.Time) (incomingMessage, bool, error) {
 	message, err := deserializeMessage(msg.Value)
 	if err != nil {
+		consumer.logMsgForFurtherAnalysis(msg)
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
 		return message, false, err
 	}
