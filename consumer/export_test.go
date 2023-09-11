@@ -48,7 +48,7 @@ type Inc struct {
 }
 
 // ParseMessage reproduces the functionality of the private parseMessage function for testing
-func ParseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (Inc, bool, error) {
-	incomingMessage, process, err := consumer.parseMessage(msg, ParseMessageTestStartTime)
-	return Inc{incomingMessage}, process, err
+func ParseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (Inc, error) {
+	incomingMessage, err := consumer.parseMessage(msg, ParseMessageTestStartTime)
+	return Inc{incomingMessage}, err
 }

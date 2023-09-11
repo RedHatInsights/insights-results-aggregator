@@ -108,8 +108,8 @@ func getMessagesFromDir(b *testing.B, dataDir string) []string {
 					log.Warn().Msgf("skipping file %+v because it has bad structure", file.Name())
 					continue
 				}
-				canProcess, err := consumer.CheckReportStructure(*parsedMessage.Report)
-				if canProcess == false || err != nil {
+				err = consumer.CheckReportStructure(*parsedMessage.Report)
+				if err != nil {
 					log.Warn().Msgf("skipping file %+v because its report has bad structure", file.Name())
 					continue
 				}

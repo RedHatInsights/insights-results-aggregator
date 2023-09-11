@@ -287,19 +287,13 @@ func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.Co
 	}
 }
 
-func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, parsed *incomingMessage) (bool, error) {
-	keepProcessing, err := checkReportStructure(*parsed.Report)
+func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
+	err := checkReportStructure(*parsed.Report)
 	if err != nil {
 		consumer.logReportStructureError(err, consumed)
-		return false, err
+		return err
 	}
-
-	if !keepProcessing {
-		logMessageInfo(consumer, consumed, *parsed, "This message will not be processed further")
-		metrics.SkippedEmptyReports.Inc()
-		return false, nil
-	}
-	return true, nil
+	return nil
 }
 
 func (consumer *KafkaConsumer) retrieveLastCheckedTime(msg *sarama.ConsumerMessage, parsedMsg *incomingMessage) (time.Time, error) {
@@ -326,8 +320,13 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 
-	message, process, err := consumer.parseMessage(msg, tStart)
-	if !process || err != nil {
+	message, err := consumer.parseMessage(msg, tStart)
+	if err != nil {
+		if err == types.ErrEmptyReport {
+			logMessageInfo(consumer, msg, message, "This message has an empty report and will not be processed further")
+			metrics.SkippedEmptyReports.Inc()
+			return message.RequestID, message, nil
+		}
 		return message.RequestID, message, err
 	}
 	logMessageInfo(consumer, msg, message, "Read")
@@ -476,7 +475,7 @@ func isReportWithEmptyAttributes(r Report, keysToCheck []string) bool {
 }
 
 // checkReportStructure tests if the report has correct structure
-func checkReportStructure(r Report) (shouldProcess bool, err error) {
+func checkReportStructure(r Report) error {
 	// the structure is not well defined yet, so all we should do is to check if all keys are there
 
 	// 'skips' key is now optional, we should not expect it anymore:
@@ -498,15 +497,15 @@ func checkReportStructure(r Report) (shouldProcess bool, err error) {
 	isEmpty := len(r) == 0 || isReportWithEmptyAttributes(r, keysFound)
 	if isEmpty {
 		log.Debug().Msg("Empty report or report with only empty attributes. Processing of this message will be skipped.")
-		return false, nil
+		return types.ErrEmptyReport
 	}
 
 	// report is not empty, and some keys have not been found -> malformed
 	if len(keysNotFound) != 0 {
-		return false, fmt.Errorf("improper report structure, missing key(s) with name '%v'", keysNotFound)
+		return fmt.Errorf("improper report structure, missing key(s) with name '%v'", keysNotFound)
 	}
 
-	return true, nil
+	return nil
 }
 
 // deserializeMessage tries to parse incoming message and read all required attributes from it
@@ -554,25 +553,26 @@ func parseReportContent(message *incomingMessage) error {
 	return nil
 }
 
-func (consumer *KafkaConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart time.Time) (incomingMessage, bool, error) {
+func (consumer *KafkaConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart time.Time) (incomingMessage, error) {
 	message, err := deserializeMessage(msg.Value)
 	if err != nil {
 		consumer.logMsgForFurtherAnalysis(msg)
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
-		return message, false, err
+		return message, err
 	}
 
 	consumer.updatePayloadTracker(message.RequestID, tStart, message.Organization, message.Account, producer.StatusReceived)
 
-	if process, err := consumer.shouldProcess(msg, &message); !process {
-		return message, false, err
+	//if process, err := consumer.shouldProcess(msg, &message); !process {
+	if err := consumer.shouldProcess(msg, &message); err != nil {
+		return message, err
 	}
 
 	err = parseReportContent(&message)
 	if err != nil {
 		consumer.logReportStructureError(err, msg)
-		return message, false, err
+		return message, err
 	}
 
-	return message, true, nil
+	return message, nil
 }
