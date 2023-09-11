@@ -36,6 +36,7 @@ const (
 	reportAttributeReports       = "reports"
 	reportAttributeInfo          = "info"
 	reportAttributeFingerprints  = "fingerprints"
+	reportAttributeMetadata      = "analysis_metadata"
 	numberOfExpectedKeysInReport = 4
 )
 
@@ -437,6 +438,10 @@ func verifySystemAttributeIsEmpty(r Report) bool {
 func isReportWithEmptyAttributes(r Report) bool {
 	// Create attribute checkers for each attribute
 	for attr, attrData := range r {
+		// we don't care about the analysis_metadata attribute
+		if attr == reportAttributeMetadata {
+			continue
+		}
 		// special handling for the system attribute, as it comes with data when empty
 		if attr == reportAttributeSystem {
 			if !verifySystemAttributeIsEmpty(r) {

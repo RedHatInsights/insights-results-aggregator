@@ -338,6 +338,17 @@ func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T
 	assert.EqualError(t, err, "empty report found in deserialized message")
 }
 
+func TestCheckReportStructureReportWithAnalysisMetadata(t *testing.T) {
+	report := consumer.Report{
+		"system":            unmarshall(`{"metadata": {}, "hostname": null}`),
+		"reports":           unmarshall("[]"),
+		"fingerprints":      unmarshall("[]"),
+		"analysis_metadata": unmarshall(`{"start": "2023-09-11T18:33:14.527845+00:00", "finish": "2023-09-11T18:33:15.632777+00:00"}`),
+	}
+	err := consumer.CheckReportStructure(report)
+	assert.EqualError(t, err, "empty report found in deserialized message")
+}
+
 // If some attributes are missing, but all the present attributes are empty, we just
 // skip the processing of the message.
 func TestCheckReportStructureReportWithEmptyAndMissingAttributes(t *testing.T) {
@@ -356,7 +367,7 @@ func TestCheckReportStructureReportWithItems(t *testing.T) {
 		"info":         unmarshall("[]"),
 		"reports":      unmarshall(string(testdata.Report2Rules)),
 		"skips":        unmarshall("[]"),
-		"system":       unmarshall("{\"metadata\": {},\"hostname\": null}"),
+		"system":       unmarshall(`{"metadata": {},"hostname": null}`),
 	}
 	err := consumer.CheckReportStructure(report)
 	assert.Nil(t, err, "checkReportStructure should return err = nil for empty reports")
