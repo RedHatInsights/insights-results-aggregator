@@ -281,7 +281,7 @@ func (consumer *KafkaConsumer) logMsgForFurtherAnalysis(msg *sarama.ConsumerMess
 
 func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.ConsumerMessage) {
 	if consumer.Configuration.DisplayMessageWithWrongStructure {
-		log.Err(err).Str("unparsed message", string(msg.Value)).Msg(improperIncomeMessageError+)
+		log.Err(err).Str("unparsed message", string(msg.Value)).Msg(improperIncomeMessageError)
 	} else {
 		log.Err(err).Msg(improperIncomeMessageError)
 	}
@@ -419,27 +419,12 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 }
 
 func verifySystemAttributeIsEmpty(r Report) bool {
-	if r[reportAttributeSystem] != nil {
-		var s system
-		if err := json.Unmarshal(*r[reportAttributeSystem], &s); err != nil {
-			return false
-		}
-		if s.Hostname != "" {
-			return false
-		}
+	var s system
+	if err := json.Unmarshal(*r[reportAttributeSystem], &s); err != nil {
+		return false
 	}
-	return true
-}
-
-func verifyJSONArrayAttributeIsEmpty(attr string, r Report) bool {
-	if val, exist := r[attr]; exist && val != nil {
-		var arr []interface{}
-		if err := json.Unmarshal(*val, &arr); err != nil {
-			return false
-		}
-		if len(arr) != 0 {
-			return false
-		}
+	if s.Hostname != "" {
+		return false
 	}
 	return true
 }
@@ -449,52 +434,43 @@ func verifyJSONArrayAttributeIsEmpty(attr string, r Report) bool {
 // If this function returns true, this report will not be processed further as it is
 // PROBABLY the result of an archive that was not processed by insights-core.
 // see https://github.com/RedHatInsights/insights-results-aggregator/issues/1834
-func isReportWithEmptyAttributes(r Report, keysToCheck []string) bool {
-	for _, key := range keysToCheck {
-		switch key {
-		case reportAttributeSystem:
+func isReportWithEmptyAttributes(r Report) bool {
+	// Create attribute checkers for each attribute
+	for attr, attrData := range r {
+		// special handling for the system attribute, as it comes with data when empty
+		if attr == reportAttributeSystem {
 			if !verifySystemAttributeIsEmpty(r) {
 				return false
 			}
-		case reportAttributeReports:
-			if !verifyJSONArrayAttributeIsEmpty(reportAttributeReports, r) {
-				return false
-			}
-		case reportAttributeFingerprints:
-			if !verifyJSONArrayAttributeIsEmpty(reportAttributeFingerprints, r) {
-				return false
-			}
-		case reportAttributeInfo:
-			if !verifyJSONArrayAttributeIsEmpty(reportAttributeInfo, r) {
-				return false
-			}
+			continue
+		}
+		// Check if this attribute of the report is empty
+		checker := JSONAttributeChecker{data: *attrData}
+		if !checker.IsEmpty() {
+			return false
 		}
 	}
-
 	return true
 }
 
 // checkReportStructure tests if the report has correct structure
 func checkReportStructure(r Report) error {
-	// the structure is not well defined yet, so all we should do is to check if all keys are there
+	// the structure is not well-defined yet, so all we should do is to check if all keys are there
 
 	// 'skips' key is now optional, we should not expect it anymore:
 	// https://github.com/RedHatInsights/insights-results-aggregator/issues/1206
-	keysFound := make([]string, 0, numberOfExpectedKeysInReport)
 	keysNotFound := make([]string, 0, numberOfExpectedKeysInReport)
 
 	// check if the structure contains all expected keys
 	for _, expectedKey := range expectedKeysInReport {
 		_, found := r[expectedKey]
-		if found {
-			keysFound = append(keysFound, expectedKey)
-		} else {
+		if !found {
 			keysNotFound = append(keysNotFound, expectedKey)
 		}
 	}
 
 	// empty reports mean that this message should not be processed further
-	isEmpty := len(r) == 0 || isReportWithEmptyAttributes(r, keysFound)
+	isEmpty := len(r) == 0 || isReportWithEmptyAttributes(r)
 	if isEmpty {
 		log.Debug().Msg("Empty report or report with only empty attributes. Processing of this message will be skipped.")
 		return types.ErrEmptyReport

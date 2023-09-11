@@ -256,13 +256,13 @@ func TestIsReportWithEmptyAttributesAllEmpty(t *testing.T) {
 		"skips":        unmarshall("[]"),
 		"info":         unmarshall("[]"),
 	}
-	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	isEmpty := consumer.IsReportWithEmptyAttributes(r)
 	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = true for this report")
 }
 
 func TestIsReportWithEmptyAttributesEmptyReport(t *testing.T) {
 	r := consumer.Report{}
-	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	isEmpty := consumer.IsReportWithEmptyAttributes(r)
 	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = true for this report")
 }
 
@@ -274,7 +274,7 @@ func TestIsReportWithEmptyAttributesSystemDataIsPresent(t *testing.T) {
 		"skips":        unmarshall("[]"),
 		"info":         unmarshall("[]"),
 	}
-	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	isEmpty := consumer.IsReportWithEmptyAttributes(r)
 	assert.False(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
 }
 
@@ -286,7 +286,7 @@ func TestIsReportWithEmptyAttributesLessAttributes(t *testing.T) {
 		"reports":      unmarshall("[]"),
 		"fingerprints": unmarshall("[]"),
 	}
-	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	isEmpty := consumer.IsReportWithEmptyAttributes(r)
 	assert.False(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
 }
 
@@ -297,7 +297,7 @@ func TestIsReportWithEmptyAttributesInfoIsNotPresent(t *testing.T) {
 		"fingerprints": unmarshall("[]"),
 		"skips":        unmarshall("[]"),
 	}
-	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	isEmpty := consumer.IsReportWithEmptyAttributes(r)
 	assert.True(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = true for this report")
 }
 
@@ -315,7 +315,7 @@ func TestIsReportWithEmptyAttributesReportsIsPresent(t *testing.T) {
 		"fingerprints": unmarshall("[]"),
 		"skips":        unmarshall("[]"),
 	}
-	isEmpty := consumer.IsReportWithEmptyAttributes(r, consumer.ExpectedKeysInReport)
+	isEmpty := consumer.IsReportWithEmptyAttributes(r)
 	assert.False(t, isEmpty, "IsReportWithEmptyAttributes should return isEmpty = false for this report")
 }
 
