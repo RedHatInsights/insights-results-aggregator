@@ -544,7 +544,6 @@ func (consumer *KafkaConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart 
 
 	consumer.updatePayloadTracker(message.RequestID, tStart, message.Organization, message.Account, producer.StatusReceived)
 
-	//if process, err := consumer.shouldProcess(msg, &message); !process {
 	if err := consumer.shouldProcess(msg, &message); err != nil {
 		return message, err
 	}
