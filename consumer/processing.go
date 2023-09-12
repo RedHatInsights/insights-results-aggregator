@@ -211,23 +211,23 @@ func (consumer KafkaConsumer) sendDeadLetter(msg *sarama.ConsumerMessage) {
 func checkMessageVersion(consumer *KafkaConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) {
 	if _, ok := currentSchemaVersion[message.Version]; !ok {
 		warning := fmt.Sprintf("Received data with unexpected version %d.", message.Version)
-		logMessageWarning(consumer, msg, *message, warning)
+		logMessageWarning(consumer, msg, message, warning)
 	}
 }
 
 // checkMessageOrgInAllowList - checks up incoming data's OrganizationID against allowed orgs list
 func checkMessageOrgInAllowList(consumer *KafkaConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) (bool, string) {
 	if consumer.Configuration.OrgAllowlistEnabled {
-		logMessageInfo(consumer, msg, *message, "Checking organization ID against allow list")
+		logMessageInfo(consumer, msg, message, "Checking organization ID against allow list")
 
 		if ok := organizationAllowed(consumer, *message.Organization); !ok {
 			const cause = "organization ID is not in allow list"
 			return false, cause
 		}
 
-		logMessageDebug(consumer, msg, *message, "Organization is in allow list")
+		logMessageDebug(consumer, msg, message, "Organization is in allow list")
 	} else {
-		logMessageDebug(consumer, msg, *message, "Organization allow listing disabled")
+		logMessageDebug(consumer, msg, message, "Organization allow listing disabled")
 	}
 	return true, ""
 }
@@ -242,11 +242,11 @@ func (consumer *KafkaConsumer) writeRecommendations(
 		types.Timestamp(time.Now().UTC().Format(time.RFC3339)),
 	)
 	if err != nil {
-		logMessageError(consumer, msg, message, "Error writing recommendations to database", err)
+		logMessageError(consumer, msg, &message, "Error writing recommendations to database", err)
 		return time.Time{}, err
 	}
 	tStored := time.Now()
-	logMessageDebug(consumer, msg, message, "Stored recommendations")
+	logMessageDebug(consumer, msg, &message, "Stored recommendations")
 	logClusterInfo(&message)
 	return tStored, nil
 }
@@ -264,13 +264,13 @@ func (consumer *KafkaConsumer) writeInfoReport(
 		infoStoredAtTime,
 	)
 	if err == types.ErrOldReport {
-		logMessageInfo(consumer, msg, message, "Skipping because a more recent info report already exists for this cluster")
+		logMessageInfo(consumer, msg, &message, "Skipping because a more recent info report already exists for this cluster")
 		return nil
 	} else if err != nil {
-		logMessageError(consumer, msg, message, "Error writing info report to database", err)
+		logMessageError(consumer, msg, &message, "Error writing info report to database", err)
 		return err
 	}
-	logMessageInfo(consumer, msg, message, "Stored info report")
+	logMessageInfo(consumer, msg, &message, "Stored info report")
 	return nil
 }
 
@@ -300,18 +300,18 @@ func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, p
 func (consumer *KafkaConsumer) retrieveLastCheckedTime(msg *sarama.ConsumerMessage, parsedMsg *incomingMessage) (time.Time, error) {
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, parsedMsg.LastChecked)
 	if err != nil {
-		logMessageError(consumer, msg, *parsedMsg, "Error parsing date from message", err)
+		logMessageError(consumer, msg, parsedMsg, "Error parsing date from message", err)
 		return time.Time{}, err
 	}
 
 	lastCheckedTimestampLagMinutes := time.Since(lastCheckedTime).Minutes()
 	if lastCheckedTimestampLagMinutes < 0 {
-		logMessageError(consumer, msg, *parsedMsg, "got a message from the future", nil)
+		logMessageError(consumer, msg, parsedMsg, "got a message from the future", nil)
 	}
 
 	metrics.LastCheckedTimestampLagMinutes.Observe(lastCheckedTimestampLagMinutes)
 
-	logMessageDebug(consumer, msg, *parsedMsg, "Time ok")
+	logMessageDebug(consumer, msg, parsedMsg, "Time ok")
 	return lastCheckedTime, nil
 }
 
@@ -324,26 +324,26 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 	message, err := consumer.parseMessage(msg, tStart)
 	if err != nil {
 		if err == types.ErrEmptyReport {
-			logMessageInfo(consumer, msg, message, "This message has an empty report and will not be processed further")
+			logMessageInfo(consumer, msg, &message, "This message has an empty report and will not be processed further")
 			metrics.SkippedEmptyReports.Inc()
 			return message.RequestID, message, nil
 		}
 		return message.RequestID, message, err
 	}
-	logMessageInfo(consumer, msg, message, "Read")
+	logMessageInfo(consumer, msg, &message, "Read")
 	tRead := time.Now()
 
 	checkMessageVersion(consumer, &message, msg)
 
 	if ok, cause := checkMessageOrgInAllowList(consumer, &message, msg); !ok {
 		err := errors.New(cause)
-		logMessageError(consumer, msg, message, cause, err)
+		logMessageError(consumer, msg, &message, cause, err)
 		return message.RequestID, message, err
 	}
 
 	tAllowlisted := time.Now()
 
-	logMessageDebug(consumer, msg, message, "Marshalled")
+	logMessageDebug(consumer, msg, &message, "Marshalled")
 	tMarshalled := time.Now()
 
 	lastCheckedTime, err := consumer.retrieveLastCheckedTime(msg, &message)
@@ -357,7 +357,7 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 
 	reportAsBytes, err := json.Marshal(*message.Report)
 	if err != nil {
-		logMessageError(consumer, msg, message, "Error marshalling report", err)
+		logMessageError(consumer, msg, &message, "Error marshalling report", err)
 		return message.RequestID, message, err
 	}
 
@@ -372,13 +372,13 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 		message.RequestID,
 	)
 	if err == types.ErrOldReport {
-		logMessageInfo(consumer, msg, message, "Skipping because a more recent report already exists for this cluster")
+		logMessageInfo(consumer, msg, &message, "Skipping because a more recent report already exists for this cluster")
 		return message.RequestID, message, nil
 	} else if err != nil {
-		logMessageError(consumer, msg, message, "Error writing report to database", err)
+		logMessageError(consumer, msg, &message, "Error writing report to database", err)
 		return message.RequestID, message, err
 	}
-	logMessageDebug(consumer, msg, message, "Stored report")
+	logMessageDebug(consumer, msg, &message, "Stored report")
 	tStored := time.Now()
 
 	tRecommendationsStored, err := consumer.writeRecommendations(msg, message, reportAsBytes)
