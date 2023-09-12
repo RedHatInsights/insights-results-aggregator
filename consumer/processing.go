@@ -465,13 +465,19 @@ func checkReportStructure(r Report) error {
 	// 'skips' key is now optional, we should not expect it anymore:
 	// https://github.com/RedHatInsights/insights-results-aggregator/issues/1206
 	keysNotFound := make([]string, 0, numberOfExpectedKeysInReport)
-
+	keysFound := 0
 	// check if the structure contains all expected keys
 	for _, expectedKey := range expectedKeysInReport {
 		_, found := r[expectedKey]
 		if !found {
 			keysNotFound = append(keysNotFound, expectedKey)
+		} else {
+			keysFound++
 		}
+	}
+
+	if keysFound == numberOfExpectedKeysInReport {
+		return nil
 	}
 
 	// empty reports mean that this message should not be processed further

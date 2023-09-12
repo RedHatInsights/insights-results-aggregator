@@ -69,6 +69,20 @@ var (
 		"Report":` + testReport + `,
 		"LastChecked": "` + testdata.LastCheckedAt.UTC().Format(time.RFC3339) + `"
 	}`
+
+	messageNoReportsNoInfo = `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Report": {
+			"system": {
+				"metadata": {},
+				"hostname": null
+			},
+			"fingerprints": [],
+			"skips": []
+		}
+	}`
 )
 
 func init() {
@@ -168,7 +182,7 @@ func TestDeserializeMessageWithImproperReport(t *testing.T) {
 			"skips": [],
 			"info": []
 	}
-}`
+	}`
 	message, err := consumer.DeserializeMessage([]byte(consumerMessage))
 	helpers.FailOnError(t, err)
 	assert.Equal(t, types.OrgID(1), *message.Organization)
@@ -335,7 +349,7 @@ func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T
 		"system":       unmarshall("{}"),
 	}
 	err := consumer.CheckReportStructure(report)
-	assert.EqualError(t, err, "empty report found in deserialized message")
+	helpers.FailOnError(t, err, "empty report with all expected attributes present should be processed")
 }
 
 func TestCheckReportStructureReportWithAnalysisMetadata(t *testing.T) {
@@ -511,8 +525,8 @@ func TestParseProperMessageReportWithEmptyAttributes(t *testing.T) {
 	c := consumer.KafkaConsumer{}
 	message := sarama.ConsumerMessage{Value: []byte(testdata.ConsumerMessage)}
 	parsed, err := consumer.ParseMessage(&c, &message)
+	helpers.FailOnError(t, err, "empty report with all expected attributes present should be processed")
 
-	assert.EqualError(t, err, "empty report found in deserialized message")
 	assert.Equal(t, types.OrgID(1), *parsed.Organization)
 	assert.Equal(t, testdata.ClusterName, *parsed.ClusterName)
 
@@ -520,7 +534,7 @@ func TestParseProperMessageReportWithEmptyAttributes(t *testing.T) {
 	err = json.Unmarshal([]byte(testdata.ConsumerReport), &expectedReport)
 	helpers.FailOnError(t, err)
 	assert.Equal(t, expectedReport, *parsed.Report)
-	assert.EqualValues(t, []types.ReportItem(nil), parsed.ParsedHits)
+	assert.EqualValues(t, []types.ReportItem{}, parsed.ParsedHits)
 }
 
 func TestParseProperMessageWithInfoReport(t *testing.T) {
@@ -618,14 +632,24 @@ func TestProcessCorrectMessage(t *testing.T) {
 	assert.Equal(t, 1, count, "process message should write one record into DB")
 }
 
-func TestProcessingEmptyMessageWithClosedStorage(t *testing.T) {
+func TestProcessingEmptyReportMissingAttributesWithClosedStorage(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+
+	mockConsumer := dummyConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageNoReportsNoInfo)
+	helpers.FailOnError(t, err, "empty report should not be considered an error at HandleMessage level")
+}
+
+func TestProcessingValidMessageEmptyReportWithRequiredAttributesWithClosedStorage(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 
 	mockConsumer := dummyConsumer(mockStorage, true)
 	closer()
 
 	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
-	assert.Nil(t, err, "empty report should not be considered an error at HandleMessage level")
+	assert.EqualError(t, err, "sql: database is closed")
 }
 
 func TestProcessingCorrectMessageWithClosedStorage(t *testing.T) {
@@ -644,14 +668,7 @@ func TestProcessingMessageWithWrongDateFormatAndEmptyReport(t *testing.T) {
 
 	mockConsumer := dummyConsumer(mockStorage, true)
 
-	messageValue := `{
-		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
-		"ClusterName": "` + string(testdata.ClusterName) + `",
-		"Report": ` + testdata.ConsumerReport + `,
-		"LastChecked": "2020.01.23 16:15:59"
-	}`
-
-	err := consumerProcessMessage(mockConsumer, messageValue)
+	err := consumerProcessMessage(mockConsumer, messageNoReportsNoInfo)
 	assert.Nil(t, err, "Message with empty report should not be processed")
 }
 
@@ -720,7 +737,7 @@ func TestKafkaConsumerMockBadMessage(t *testing.T) {
 func TestKafkaConsumerMockWritingMsgWithEmptyReportToClosedStorage(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
-			t, testTopicName, testOrgAllowlist, []string{testdata.ConsumerMessage},
+			t, testTopicName, testOrgAllowlist, []string{messageNoReportsNoInfo},
 		)
 
 		err := mockConsumer.KafkaConsumer.Storage.Close()
@@ -809,7 +826,7 @@ func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationIsNotAllowed(t 
 		Storage:       mockStorage,
 	}
 
-	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	err := consumerProcessMessage(mockConsumer, messageNoReportsNoInfo)
 	helpers.FailOnError(t, err, "message have empty report and should not be processed")
 }
 
@@ -849,7 +866,7 @@ func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationBadConfigIsNotA
 		Storage:       mockStorage,
 	}
 
-	err := consumerProcessMessage(mockConsumer, testdata.ConsumerMessage)
+	err := consumerProcessMessage(mockConsumer, messageNoReportsNoInfo)
 	helpers.FailOnError(t, err, "message have empty report and should not be processed")
 }
 
