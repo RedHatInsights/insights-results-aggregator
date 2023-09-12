@@ -30,7 +30,7 @@ func printableRequestID(message *incomingMessage) string {
 	return string(requestID)
 }
 
-func logMessageDebug(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
+func logMessageDebug(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string) {
 	log.Debug().
 		Int(offsetKey, int(originalMessage.Offset)).
 		Int(partitionKey, int(originalMessage.Partition)).
@@ -38,11 +38,11 @@ func logMessageDebug(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMe
 		Int(organizationKey, int(*parsedMessage.Organization)).
 		Str(clusterKey, string(*parsedMessage.ClusterName)).
 		Int(versionKey, int(parsedMessage.Version)).
-		Str(requestIDKey, printableRequestID(&parsedMessage)).
+		Str(requestIDKey, printableRequestID(parsedMessage)).
 		Msg(event)
 }
 
-func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
+func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string) {
 	log.Info().
 		Int(offsetKey, int(originalMessage.Offset)).
 		Int(partitionKey, int(originalMessage.Partition)).
@@ -50,7 +50,7 @@ func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMes
 		Int(organizationKey, int(*parsedMessage.Organization)).
 		Str(clusterKey, string(*parsedMessage.ClusterName)).
 		Int(versionKey, int(parsedMessage.Version)).
-		Str(requestIDKey, printableRequestID(&parsedMessage)).
+		Str(requestIDKey, printableRequestID(parsedMessage)).
 		Msg(event)
 }
 
@@ -83,7 +83,7 @@ func logUnparsedMessageError(consumer *KafkaConsumer, originalMessage *sarama.Co
 		Msg(event)
 }
 
-func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string, err error) {
+func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string, err error) {
 	log.Error().
 		Int(offsetKey, int(originalMessage.Offset)).
 		Str(topicKey, consumer.Configuration.Topic).
@@ -94,7 +94,7 @@ func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMe
 		Msg(event)
 }
 
-func logMessageWarning(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage incomingMessage, event string) {
+func logMessageWarning(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string) {
 	log.Warn().
 		Int(offsetKey, int(originalMessage.Offset)).
 		Int(partitionKey, int(originalMessage.Partition)).
