@@ -247,7 +247,6 @@ func (consumer *KafkaConsumer) writeRecommendations(
 	}
 	tStored := time.Now()
 	logMessageDebug(consumer, msg, &message, "Stored recommendations")
-	logClusterInfo(&message)
 	return tStored, nil
 }
 
@@ -386,6 +385,7 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 		return message.RequestID, message, err
 	}
 
+	// rule hits has been stored into database - time to log all these great info
 	logClusterInfo(&message)
 
 	infoStoredAtTime := time.Now()
