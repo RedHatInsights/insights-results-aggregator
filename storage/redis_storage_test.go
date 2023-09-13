@@ -458,7 +458,7 @@ func Test_GetRuleHitsCSV_CCXDEV_11329_Reproducer(t *testing.T) {
 	// add .report suffix to rule modules
 	for i := range reportItems {
 		ruleModule := reportItems[i].Module
-		ruleModule = ruleModule + storage.ReportSuffix
+		ruleModule += storage.ReportSuffix
 		reportItems[i].Module = ruleModule
 	}
 
