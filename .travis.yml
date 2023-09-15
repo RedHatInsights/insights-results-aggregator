@@ -19,6 +19,9 @@ go:
 services:
   - postgresql
 
+cache:
+  directories:
+    - $TRAVIS_BUILD_DIR
 jobs:
   include:
     - name: "Build 1.20"
