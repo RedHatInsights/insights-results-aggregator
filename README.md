@@ -77,7 +77,7 @@ In order to run these tests, the following steps need to be made:
 
 1. clone the [Insights Behavioral Spec](https://github.com/RedHatInsights/insights-behavioral-spec) repository
 1. go into the cloned subdirectory `insights-behavioral-spec`
-1. run the `aggregator_tests.sh` from this subdirectory
+1. run the `insights_results_aggregator_tests.sh` from this subdirectory
 
 List of all test scenarios prepared for this service is available at
 <https://redhatinsights.github.io/insights-behavioral-spec/feature_list.html#insights-results-aggregator>
