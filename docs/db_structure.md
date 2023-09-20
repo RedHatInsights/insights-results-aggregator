@@ -37,8 +37,8 @@ for more details about tables, indexes, and keys.
 
 This table is used as a cache for reports consumed from broker. Size of this
 table (i.e. number of records) scales linearly with the number of clusters,
-because only latest report for given cluster is stored (it is guarantied by DB
-constraints). That table has defined compound key `org_id+cluster`,
+because only latest valid report for given cluster is stored (it is guarantied
+by DB constraints). That table has defined compound key `org_id+cluster`,
 additionally `cluster` name needs to be unique across all organizations.
 Additionally `kafka_offset` is used to speedup consuming messages from Kafka
 topic in case the offset is lost due to issues in Kafka, Kafka library, or
@@ -55,6 +55,25 @@ CREATE TABLE report (
     PRIMARY KEY(org_id, cluster)
 )
 ```
+
+We consider a report as valid if it includes all the required fields described
+in the [agreed-upon report structure](
+https://redhatinsights.github.io/insights-data-schemas/external-pipeline/ccx_data_pipeline.html#format-of-the-report-node).
+
+If any of those fields is missing, we interpret it as a malformed report, most-
+probably due to an error when the Insights Core engine processed the archive. In
+that situation, the processing of the archive is aborted without storing any new
+information in the databases. Therefore, it is important to understand the
+difference between:
+- an **empty** report, which is stored in the databases, as it indicates that any
+previously found issue in the cluster has been resolved or is no longer happening.
+- a **malformed** report, which can be empty but is missing required attributes,
+and is not stored in the database as there is no guarantee that it represents the
+latest state of the cluster.
+
+To learn more about Insights Core processing, please refer to the [Red Hat Insights Core](
+https://insights-core.readthedocs.io/en/latest/intro.html#id1) documentation.
+
 
 ## Table `rule_hit`
 
