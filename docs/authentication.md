@@ -19,7 +19,6 @@ Authentication is working through `x-rh-identity` token which is provided by 3sc
       "last_name": "Doe",
       "is_active": true,
       "is_org_admin": false,
-      "is_internal": false,
       "locale": "en_US"
     },
     "internal": {
