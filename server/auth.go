@@ -127,9 +127,7 @@ func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID,
 }
 
 func (server *HTTPServer) getAuthTokenHeader(_ http.ResponseWriter, r *http.Request) (string, error) {
-	var tokenHeader string
-
-	tokenHeader = r.Header.Get("x-rh-identity") // Grab the token from the header
+	tokenHeader := r.Header.Get("x-rh-identity") // Grab the token from the header
 
 	if tokenHeader == "" {
 		const message = "Missing auth token"
