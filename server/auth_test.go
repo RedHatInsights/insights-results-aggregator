@@ -27,6 +27,9 @@ import (
 	types "github.com/RedHatInsights/insights-results-types"
 )
 
+// goodXRHAuthToken contains dummy data
+const goodXRHAuthToken = `eyJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IjEiLCJvcmdfaWQiOiIxIiwidHlwZSI6IlVzZXIiLCJ1c2VyIjp7InVzZXJuYW1lIjoiamRvZSIsInVzZXJfaWQiOiIxIiwiZW1haWwiOiJqZG9lQGFjbWUuY29tIiwiZmlyc3RfbmFtZSI6IkpvaG4iLCJsYXN0X25hbWUiOiJEb2UiLCJpc19hY3RpdmUiOnRydWUsImlzX29yZ19hZG1pbiI6ZmFsc2UsImlzX2ludGVybmFsIjpmYWxzZSwibG9jYWxlIjoiZW5fVVMifSwiaW50ZXJuYWwiOnsib3JnX2lkIjoiMSIsImF1dGhfdHlwZSI6ImJhc2ljLWF1dGgiLCJhdXRoX3RpbWUiOjYzMDB9fX0K`
+
 var configAuth = server.Configuration{
 	Address:                      ":8080",
 	APIPrefix:                    "/api/test/",
@@ -109,5 +112,26 @@ func TestBadOrganizationID(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusForbidden,
 		Body:       body,
+	})
+}
+
+// TestUnsupportedAuthType checks how that only "xrh" auth type is supported
+func TestUnsupportedAuthType(t *testing.T) {
+	config := server.Configuration{
+		Address:                      ":8080",
+		APIPrefix:                    "/api/test/",
+		Debug:                        false,
+		Auth:                         true,
+		AuthType:                     "jwt", // unsupported auth type
+		MaximumFeedbackMessageLength: 255,
+	}
+
+	helpers.AssertAPIRequest(t, nil, &config, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.ClustersForOrganizationEndpoint,
+		EndpointArgs: []interface{}{1},
+		XRHIdentity:  goodXRHAuthToken,
+	}, &helpers.APIResponse{
+		StatusCode: http.StatusInternalServerError,
 	})
 }

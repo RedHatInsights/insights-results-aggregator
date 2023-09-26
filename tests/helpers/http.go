@@ -67,6 +67,7 @@ var DefaultServerConfigAuth = server.Configuration{
 	APISpecFile:                  "openapi.json",
 	Debug:                        true,
 	Auth:                         true,
+	AuthType:                     "xrh",
 	MaximumFeedbackMessageLength: 255,
 	OrgOverviewLimitHours:        2,
 }

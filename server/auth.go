@@ -1,5 +1,3 @@
-// Auth implementation based on JWT
-
 /*
 Copyright © 2019, 2020, 2021, 2022 Red Hat, Inc.
 
@@ -22,9 +20,9 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/RedHatInsights/insights-operator-utils/collections"
 	types "github.com/RedHatInsights/insights-results-types"
@@ -41,9 +39,6 @@ type Identity = types.Identity
 
 // Token is x-rh-identity struct
 type Token = types.Token
-
-// JWTPayload is structure that contain data from parsed JWT token
-type JWTPayload = types.JWTPayload
 
 // Authentication middleware for checking auth rights
 func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string) http.Handler {
@@ -74,25 +69,8 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 		}
 
 		tk := &types.Token{}
-		// if we took JWT token, it has different structure than x-rh-identity
-		if server.Config.AuthType == "jwt" {
-			jwtPayload := &types.JWTPayload{}
-			err = json.Unmarshal(decoded, jwtPayload)
-			if err != nil {
-				// malformed token, returns with HTTP code 403 as usual
-				log.Error().Err(err).Msg(malformedTokenMessage)
-				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
-				return
-			}
-			// Map JWT token to inner token
-			tk.Identity = types.Identity{
-				AccountNumber: jwtPayload.AccountNumber,
-				OrgID:         jwtPayload.OrgID,
-				User: types.User{
-					UserID: jwtPayload.UserID,
-				},
-			}
-		} else {
+
+		if server.Config.AuthType == "xrh" {
 			// auth type is xrh (x-rh-identity header)
 			err = json.Unmarshal(decoded, tk)
 			if err != nil {
@@ -101,6 +79,11 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 				handleServerError(w, &UnauthorizedError{ErrString: malformedTokenMessage})
 				return
 			}
+		} else {
+			err := errors.New("unknown auth type")
+			log.Error().Err(err).Send()
+			handleServerError(w, err)
+			return
 		}
 
 		if tk.Identity.OrgID == 0 {
@@ -144,22 +127,7 @@ func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID,
 }
 
 func (server *HTTPServer) getAuthTokenHeader(_ http.ResponseWriter, r *http.Request) (string, error) {
-	var tokenHeader string
-	// In case of testing on local machine we don't take x-rh-identity header, but instead Authorization with JWT token in it
-	if server.Config.AuthType == "jwt" {
-		tokenHeader = r.Header.Get("Authorization") // Grab the token from the header
-		splitted := strings.Split(tokenHeader, " ") // The token normally comes in format `Bearer {token-body}`, we check if the retrieved token matched this requirement
-		if len(splitted) != 2 {
-			const message = "Invalid/Malformed auth token"
-			return "", &UnauthorizedError{ErrString: message}
-		}
-
-		// Here we take JWT token which include 3 parts, we need only second one
-		splitted = strings.Split(splitted[1], ".")
-		tokenHeader = splitted[1]
-	} else {
-		tokenHeader = r.Header.Get("x-rh-identity") // Grab the token from the header
-	}
+	tokenHeader := r.Header.Get("x-rh-identity") // Grab the token from the header
 
 	if tokenHeader == "" {
 		const message = "Missing auth token"
