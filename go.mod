@@ -3,7 +3,7 @@ module github.com/RedHatInsights/insights-results-aggregator
 go 1.18
 
 require (
-	github.com/BurntSushi/toml v0.3.1
+	github.com/BurntSushi/toml v1.3.2
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/RedHatInsights/insights-content-service v0.0.0-20230607085809-59604fce8997
 	github.com/RedHatInsights/insights-operator-utils v1.24.9
@@ -61,7 +61,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mozillazg/request v0.8.0 // indirect
-	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
