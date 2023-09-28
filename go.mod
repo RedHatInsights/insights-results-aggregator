@@ -3,7 +3,7 @@ module github.com/RedHatInsights/insights-results-aggregator
 go 1.18
 
 require (
-	github.com/BurntSushi/toml v0.3.1
+	github.com/BurntSushi/toml v1.3.2
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/RedHatInsights/insights-content-service v0.0.0-20230607085809-59604fce8997
 	github.com/RedHatInsights/insights-operator-utils v1.24.9
