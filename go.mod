@@ -10,7 +10,7 @@ require (
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
 	github.com/RedHatInsights/insights-results-types v1.3.23
 	github.com/Shopify/sarama v1.27.1
-	github.com/deckarep/golang-set v1.7.1
+	github.com/deckarep/golang-set v1.8.0
 	github.com/gchaincl/sqlhooks v1.3.0
 	github.com/go-redis/redismock/v9 v9.0.3
 	github.com/google/uuid v1.3.0
