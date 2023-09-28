@@ -10,7 +10,7 @@ require (
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
 	github.com/RedHatInsights/insights-results-types v1.3.23
 	github.com/Shopify/sarama v1.27.1
-	github.com/deckarep/golang-set v1.7.1
+	github.com/deckarep/golang-set v1.8.0
 	github.com/gchaincl/sqlhooks v1.3.0
 	github.com/go-redis/redismock/v9 v9.0.3
 	github.com/google/uuid v1.3.0
@@ -61,7 +61,6 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mozillazg/request v0.8.0 // indirect
-	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
