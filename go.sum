@@ -58,8 +58,8 @@ github.com/RedHatInsights/cloudwatch v0.0.0-20200512151223-b0b55757a24b/go.mod h
 github.com/RedHatInsights/cloudwatch v0.0.0-20210111105023-1df2bdfe3291 h1:f2RIq2LvG0Nz7TrPYr8clzUPXIEf+Q3oDoCfAHym4/I=
 github.com/RedHatInsights/cloudwatch v0.0.0-20210111105023-1df2bdfe3291/go.mod h1:8l+HqU8iWM6hA9kSAHgY3ItSlpEsPr8fb2R0GBp9S0U=
 github.com/RedHatInsights/insights-content-service v0.0.0-20200619153839-23a428468a08/go.mod h1:CSzDwoJXMIPnRNOZfYn68YbXejRqSr0i4uqtB6oLYt4=
-github.com/RedHatInsights/insights-content-service v0.0.0-20230607085809-59604fce8997 h1:gMdRIId8AbNqTtNyrL8vyKzuSLdmNfI6BgB85mioMYg=
-github.com/RedHatInsights/insights-content-service v0.0.0-20230607085809-59604fce8997/go.mod h1:6nihzwhfwTZHM8ClPwISTntuYPf6W2UzcI+yPeUPMRk=
+github.com/RedHatInsights/insights-content-service v1.0.0 h1:rwxz1rCbZbjoR9isTcDlDUE9vNzgKvl5agxlxS2L18g=
+github.com/RedHatInsights/insights-content-service v1.0.0/go.mod h1:6nihzwhfwTZHM8ClPwISTntuYPf6W2UzcI+yPeUPMRk=
 github.com/RedHatInsights/insights-operator-utils v1.0.1/go.mod h1:gRzYBMY4csuOXgrxUuC10WUkz6STOm3mqVsQCb+AGOQ=
 github.com/RedHatInsights/insights-operator-utils v1.0.2-0.20200610143236-c868b2f93d2a/go.mod h1:0rhk13kn0BB+yKdfZjpMoQy0lXdXY3i4NJ1xGwGMcII=
 github.com/RedHatInsights/insights-operator-utils v1.4.1-0.20200729093922-bca68530a5ef/go.mod h1:F7KKAdWFR70H+3fa89ciXqimNycHdqO9HjLWRdZwOug=
