@@ -22,7 +22,7 @@ require (
 	github.com/redhatinsights/app-common-go v1.6.3
 	github.com/rs/zerolog v1.29.1
 	github.com/spf13/viper v1.16.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
 	golang.org/x/sync v0.3.0
 )
