@@ -71,7 +71,8 @@ func TestSaramaConfigFromBrokerConfig(t *testing.T) {
 
 func TestBadConfiguration(t *testing.T) {
 	cfg := broker.Configuration{
-		CertPath: "missing_path",
+		SecurityProtocol: "SSL",
+		CertPath:         "missing_path",
 	}
 
 	saramaCfg, err := broker.SaramaConfigFromBrokerConfig(cfg)

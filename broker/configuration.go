@@ -19,6 +19,7 @@ limitations under the License.
 package broker
 
 import (
+	"crypto/sha512"
 	"strings"
 	"time"
 
@@ -63,20 +64,28 @@ func SaramaConfigFromBrokerConfig(cfg Configuration) (*sarama.Config, error) {
 	if strings.Contains(cfg.SecurityProtocol, "SSL") {
 		saramaConfig.Net.TLS.Enable = true
 	}
-	if cfg.CertPath != "" {
+
+	if strings.EqualFold(cfg.SecurityProtocol, "SSL") && cfg.CertPath != "" {
 		tlsConfig, err := tlsutils.NewTLSConfig(cfg.CertPath)
 		if err != nil {
 			log.Error().Msgf("Unable to load TLS config for %s cert", cfg.CertPath)
 			return nil, err
 		}
 		saramaConfig.Net.TLS.Config = tlsConfig
-	}
-	if strings.HasPrefix(cfg.SecurityProtocol, "SASL_") {
+	} else if strings.HasPrefix(cfg.SecurityProtocol, "SASL_") {
 		log.Info().Msg("Configuring SASL authentication")
 		saramaConfig.Net.SASL.Enable = true
 		saramaConfig.Net.SASL.User = cfg.SaslUsername
 		saramaConfig.Net.SASL.Password = cfg.SaslPassword
 		saramaConfig.Net.SASL.Mechanism = sarama.SASLMechanism(cfg.SaslMechanism)
+
+		if strings.EqualFold(cfg.SaslMechanism, sarama.SASLTypeSCRAMSHA512) {
+			log.Info().Msg("Configuring SCRAM-SHA512")
+			saramaConfig.Net.SASL.Handshake = true
+			saramaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient {
+				return &SCRAMClient{HashGeneratorFcn: sha512.New}
+			}
+		}
 	}
 
 	// ClientID is fully optional, but by setting it, we can get rid of some warning messages in logs
