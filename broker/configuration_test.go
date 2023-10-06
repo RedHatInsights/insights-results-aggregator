@@ -67,11 +67,23 @@ func TestSaramaConfigFromBrokerConfig(t *testing.T) {
 	assert.Equal(t, "username", saramaConfig.Net.SASL.User)
 	assert.Equal(t, "password", saramaConfig.Net.SASL.Password)
 	assert.Equal(t, "foobarbaz", saramaConfig.ClientID)
+
+	cfg.SaslMechanism = "SCRAM-SHA-512"
+	saramaConfig, err = broker.SaramaConfigFromBrokerConfig(cfg)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, sarama.V0_10_2_0, saramaConfig.Version)
+	assert.True(t, saramaConfig.Net.TLS.Enable)
+	assert.True(t, saramaConfig.Net.SASL.Enable)
+	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeSCRAMSHA512), saramaConfig.Net.SASL.Mechanism)
+	assert.Equal(t, "username", saramaConfig.Net.SASL.User)
+	assert.Equal(t, "password", saramaConfig.Net.SASL.Password)
+	assert.Equal(t, "foobarbaz", saramaConfig.ClientID)
 }
 
 func TestBadConfiguration(t *testing.T) {
 	cfg := broker.Configuration{
-		CertPath: "missing_path",
+		SecurityProtocol: "SSL",
+		CertPath:         "missing_path",
 	}
 
 	saramaCfg, err := broker.SaramaConfigFromBrokerConfig(cfg)
