@@ -1,6 +1,6 @@
 package broker
 
-import "github.com/xdg/scram"
+import "github.com/xdg-go/scram"
 
 // SCRAMClient implementation for the SCRAM authentication
 type SCRAMClient struct {

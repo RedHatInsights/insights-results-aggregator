@@ -24,7 +24,7 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
-	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
+	github.com/xdg-go/scram v0.0.0-20180814205039-7eeb5667e42c
 	golang.org/x/sync v0.3.0
 )
 
@@ -75,7 +75,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
-	github.com/xdg/stringprep v1.0.0 // indirect
+	github.com/xdg-go/stringprep v1.0.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
