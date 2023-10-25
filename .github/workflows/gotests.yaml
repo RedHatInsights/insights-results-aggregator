@@ -17,6 +17,19 @@ jobs:
           - "1.20"
           - "1.21"
     name: Tests for Go ${{ matrix.go-version}}
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRESQL_USER: user
+          POSTGRESQL_PASSWORD: password
+          POSTGRESQL_ADMIN_PASSWOR: =admin
+          POSTGRESQL_DATABASE: aggregator
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
