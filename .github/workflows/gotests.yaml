@@ -19,12 +19,11 @@ jobs:
     name: Tests for Go ${{ matrix.go-version}}
     services:
       postgres:
-        image: registry.access.redhat.com/rhscl/postgresql-10-rhel7
+        image: postgres
         env:
-          POSTGRESQL_USER: user
-          POSTGRESQL_PASSWORD: password
-          POSTGRESQL_ADMIN_PASSWORD: admin
-          POSTGRESQL_DATABASE: aggregator
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s

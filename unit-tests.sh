@@ -53,7 +53,7 @@ fi
 path_to_config=$(pwd)/config-devel.toml
 export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE="$path_to_config"
 export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="postgres"
-export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="admin"
+export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="postgres"
 run_unit_tests
 
 if [ -z "$CI" ]; then
