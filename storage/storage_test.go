@@ -614,7 +614,7 @@ func TestDBStorageNewPostgresqlError(t *testing.T) {
 	})
 
 	err := s.Init()
-	assert.Contains(t, err.Error(), "server misbehaving")
+	assert.Contains(t, err.Error(), "non-existing-host")
 }
 
 func mustWriteReport(
