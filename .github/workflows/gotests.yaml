@@ -21,7 +21,7 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_USER: user
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
           POSTGRES_ADMIN_PASSWOR: admin
           POSTGRES_DATABASE: aggregator
