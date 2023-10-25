@@ -1,10 +1,10 @@
 name: Shell check
 
 on:
-  - push:
+  push:
     branches:
       - master
-  - pull_request:
+  pull_request:
 
 jobs:
   shellcheck:
