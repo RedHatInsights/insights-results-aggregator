@@ -23,7 +23,7 @@ jobs:
         env:
           POSTGRESQL_USER: user
           POSTGRESQL_PASSWORD: password
-          POSTGRESQL_ADMIN_PASSWOR: =admin
+          POSTGRESQL_ADMIN_PASSWOR: admin
           POSTGRESQL_DATABASE: aggregator
         options: >-
           --health-cmd pg_isready
