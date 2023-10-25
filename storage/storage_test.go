@@ -427,7 +427,7 @@ func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	assert.Error(t, err)
 
 	const sqliteErrMessage = "CHECK constraint failed: report"
-	const postgresErrMessage = "pq: invalid input syntax for integer"
+	const postgresErrMessage = "pq: invalid input syntax for type integer"
 	if err.Error() != sqliteErrMessage && !strings.HasPrefix(err.Error(), postgresErrMessage) {
 		t.Fatalf("expected on of: \n%v\n%v\ngot:\n%v", sqliteErrMessage, postgresErrMessage, err.Error())
 	}
@@ -614,7 +614,7 @@ func TestDBStorageNewPostgresqlError(t *testing.T) {
 	})
 
 	err := s.Init()
-	assert.Contains(t, err.Error(), "no such host")
+	assert.Contains(t, err.Error(), "server misbehaving")
 }
 
 func mustWriteReport(
