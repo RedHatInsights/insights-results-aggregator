@@ -1,0 +1,30 @@
+name: BDD tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  bdd:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        go-version:
+          - "1.18"
+    name: BDD for Go ${{ matrix.go-version}}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Build project
+        run: make build
+      - name: Retrieve Docker compose file
+        run: wget -O docker-compose.yml https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/docker-compose.yml
+      - name: Retrieve BDD runner
+        run: wget -O bdd_runner.sh https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/run_in_docker.sh && chmod +x bdd_runner.sh
+      - name: Run BDD
+        run: ./bdd_runner.sh aggregator-tests .

@@ -18,8 +18,9 @@ services:
     ports:
       - 5432:5432
     image: registry.redhat.io/rhscl/postgresql-10-rhel7
+    platform: linux/x86_64
     environment:
       - POSTGRESQL_USER=user
       - POSTGRESQL_PASSWORD=password
-      - POSTGRESQL_ADMIN_PASSWORD=admin
+      - POSTGRESQL_ADMIN_PASSWORD=postgres
       - POSTGRESQL_DATABASE=aggregator

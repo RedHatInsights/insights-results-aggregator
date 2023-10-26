@@ -1,0 +1,29 @@
+name: Go linters
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  golint:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        go-version:
+          - "1.18"
+          - "1.19"
+          - "1.20"
+          - "1.21"
+    name: Linters for Go ${{ matrix.go-version}}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Build project
+        run: go build
+      - name: Style linters
+        run: make style
