@@ -188,7 +188,7 @@ objects:
   kind: StatefulSet
   metadata:
     labels:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     name: ccx-redis
@@ -198,14 +198,14 @@ objects:
     replicas: 1
     selector:
       matchLabels:
-        app: ccx-data-pipeline
+        app: ccx-redis
         app.kubernetes.io/instance: cache-writer
         app.kubernetes.io/name: redis
     serviceName: ccx-redis-headless
     template:
       metadata:
         labels:
-          app: ccx-data-pipeline
+          app: ccx-redis
           app.kubernetes.io/instance: cache-writer
           app.kubernetes.io/name: redis
       spec:
@@ -215,7 +215,7 @@ objects:
             - podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: ccx-data-pipeline
+                    app: ccx-redis
                 topologyKey: kubernetes.io/hostname
               weight: 1
         containers:
@@ -348,7 +348,7 @@ objects:
     volumeClaimTemplates:
     - metadata:
         labels:
-          app: ccx-data-pipeline
+          app: ccx-redis
           app.kubernetes.io/instance: cache-writer
           app.kubernetes.io/name: redis
         name: ccx-redis-data
@@ -362,7 +362,7 @@ objects:
   kind: Service
   metadata:
     labels:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     name: ccx-redis-metrics
@@ -373,7 +373,7 @@ objects:
       protocol: TCP
       targetPort: metrics
     selector:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     type: ClusterIP
@@ -381,7 +381,7 @@ objects:
   kind: Service
   metadata:
     labels:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     name: ccx-redis
@@ -393,7 +393,7 @@ objects:
       port: 6379
       targetPort: redis
     selector:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     sessionAffinity: None
@@ -402,7 +402,7 @@ objects:
   kind: Service
   metadata:
     labels:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     name: ccx-redis-headless
@@ -413,7 +413,7 @@ objects:
       port: 6379
       targetPort: redis
     selector:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     type: ClusterIP
@@ -438,7 +438,7 @@ objects:
   kind: ConfigMap
   metadata:
     labels:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     name: ccx-redis-scripts
@@ -541,7 +541,7 @@ objects:
   kind: ConfigMap
   metadata:
     labels:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     name: ccx-redis-health
@@ -570,7 +570,7 @@ objects:
   kind: ConfigMap
   metadata:
     labels:
-      app: ccx-data-pipeline
+      app: ccx-redis
       app.kubernetes.io/instance: cache-writer
       app.kubernetes.io/name: redis
     name: ccx-redis-configuration
