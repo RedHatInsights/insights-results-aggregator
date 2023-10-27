@@ -23,10 +23,9 @@ APP_NAME="ccx-data-pipeline"  # name of app-sre "application" folder this compon
 REF_ENV="insights-production"
 COMPONENT_NAME="ccx-insights-results"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/insights-results-aggregator"
-COMPONENTS="ccx-data-pipeline ccx-insights-results insights-content-service insights-results-smart-proxy ocp-advisor-frontend ccx-mock-ams" # space-separated list of components to laod
+COMPONENTS="ccx-data-pipeline ccx-insights-results insights-content-service insights-results-smart-proxy ccx-mock-ams" # space-separated list of components to laod
 COMPONENTS_W_RESOURCES=""  # component to keep
 CACHE_FROM_LATEST_IMAGE="true"
-DEPLOY_FRONTENDS="true"   # enable for front-end/UI tests
 
 export IQE_PLUGINS="ccx"
 # Run all pipeline tests
@@ -37,6 +36,7 @@ export IQE_TEST_IMPORTANCE=""
 export IQE_CJI_TIMEOUT="30m"
 export IQE_SELENIUM="false"
 export IQE_ENV="ephemeral"
+export IQE_ENV_VARS="DYNACONF_USER_PROVIDER__rbac_enabled=false"
 
 # NOTE: Uncomment to skip pull request integration tests and comment out
 #       the rest of the file.
