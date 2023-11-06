@@ -25,8 +25,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
 	github.com/xdg/scram v1.0.5
-	golang.org/x/sync v0.4.0
-	google.golang.org/grpc v1.58.3
+	golang.org/x/sync v0.5.0
 )
 
 require (
