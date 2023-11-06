@@ -14,7 +14,7 @@ require (
 	github.com/gchaincl/sqlhooks v1.3.0
 	github.com/go-redis/redismock/v9 v9.0.3
 	github.com/google/uuid v1.3.1
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/prometheus/client_golang v1.17.0
