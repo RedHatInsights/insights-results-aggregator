@@ -28,7 +28,7 @@ import (
 
 // MockKafkaConsumer is mock consumer
 type MockKafkaConsumer struct {
-	KafkaConsumer consumer.KafkaConsumer
+	KafkaConsumer consumer.OCPRulesConsumer
 	topic         string
 	messages      []string
 }
@@ -78,7 +78,7 @@ func GetMockKafkaConsumerWithExpectedMessages(
 	mockStorage, storageCloser := MustGetMockStorage(t, true)
 
 	mockConsumer := &MockKafkaConsumer{
-		KafkaConsumer: consumer.KafkaConsumer{
+		KafkaConsumer: consumer.OCPRulesConsumer{
 			Configuration: broker.Configuration{
 				Address:      "",
 				Topic:        topic,
