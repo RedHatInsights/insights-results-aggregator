@@ -40,7 +40,7 @@ func startConsumer(brokerConf broker.Configuration) error {
 
 	defer closeStorage(dbStorage)
 
-	consumerInstance, err = consumer.New(brokerConf, dbStorage)
+	consumerInstance, err = consumer.NewKafkaConsumer(brokerConf, dbStorage)
 	if err != nil {
 		log.Error().Err(err).Msg("Broker initialization error")
 		return err
