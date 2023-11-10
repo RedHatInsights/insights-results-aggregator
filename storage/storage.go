@@ -1211,12 +1211,14 @@ func (storage DBStorage) WriteRecommendationsForCluster(
 			return err
 		}
 
-		log.Info().
-			Int64("Deleted", deleted).
-			Int("Inserted", inserted).
-			Int(organizationKey, int(orgID)).
-			Str(clusterKey, string(clusterName)).
-			Msg("Updated recommendation table")
+		if deleted != 0 || inserted != 0 {
+			log.Info().
+				Int64("Deleted", deleted).
+				Int("Inserted", inserted).
+				Int(organizationKey, int(orgID)).
+				Str(clusterKey, string(clusterName)).
+				Msg("Updated recommendation table")
+		}
 		// updateRecommendationsMetrics(string(clusterName), float64(deleted), float64(inserted))
 
 		return nil
