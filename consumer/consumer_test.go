@@ -132,7 +132,7 @@ func TestConsumerConstructorNoKafka(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
 
-	mockConsumer, err := consumer.New(wrongBrokerCfg, mockStorage)
+	mockConsumer, err := consumer.NewKafkaConsumer(wrongBrokerCfg, mockStorage)
 	assert.Error(t, err)
 	assert.Contains(
 		t, err.Error(), "kafka: client has run out of available brokers to talk to",
@@ -788,7 +788,7 @@ func TestKafkaConsumer_New(t *testing.T) {
 
 		mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
-		mockConsumer, err := consumer.New(broker.Configuration{
+		mockConsumer, err := consumer.NewKafkaConsumer(broker.Configuration{
 			Address: mockBroker.Addr(),
 			Topic:   testTopicName,
 			Enabled: true,
@@ -1093,7 +1093,7 @@ func TestKafkaConsumer_SetupCleanup(t *testing.T) {
 
 	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
-	mockConsumer, err := consumer.New(broker.Configuration{
+	mockConsumer, err := consumer.NewKafkaConsumer(broker.Configuration{
 		Address: mockBroker.Addr(),
 		Topic:   testTopicName,
 		Enabled: true,
@@ -1127,7 +1127,7 @@ func TestKafkaConsumer_NewDeadLetterProducer_Error(t *testing.T) {
 
 	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
-	_, err := consumer.New(broker.Configuration{
+	_, err := consumer.NewKafkaConsumer(broker.Configuration{
 		Address: mockBroker.Addr(),
 		Topic:   testTopicName,
 		Enabled: true,
@@ -1153,7 +1153,7 @@ func TestKafkaConsumer_NewPayloadTrackerProducer_Error(t *testing.T) {
 
 	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
-	_, err := consumer.New(broker.Configuration{
+	_, err := consumer.NewKafkaConsumer(broker.Configuration{
 		Address: mockBroker.Addr(),
 		Topic:   testTopicName,
 		Enabled: true,
