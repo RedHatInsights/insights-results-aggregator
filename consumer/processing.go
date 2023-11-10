@@ -131,7 +131,7 @@ var currentSchemaVersion = types.AllowedVersions{
 // 2:53PM DBG processing of message took '0.005895183' seconds offset=8 partition=0 topic=ccx.ocp.results
 // 2:53PM WRN request ID is missing, null or empty Operation=TrackPayload
 // 2:53PM INF Message consumed duration=6 offset=8
-func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error {
+func (consumer *OCPRulesConsumer) HandleMessage(msg *sarama.ConsumerMessage) error {
 	log.Info().
 		Int64(offsetKey, msg.Offset).
 		Int32(partitionKey, msg.Partition).
@@ -183,7 +183,7 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error 
 }
 
 // updatePayloadTracker
-func (consumer KafkaConsumer) updatePayloadTracker(
+func (consumer OCPRulesConsumer) updatePayloadTracker(
 	requestID types.RequestID,
 	timestamp time.Time,
 	orgID *types.OrgID,
@@ -199,7 +199,7 @@ func (consumer KafkaConsumer) updatePayloadTracker(
 }
 
 // sendDeadLetter - sends unprocessed message to dead letter queue
-func (consumer KafkaConsumer) sendDeadLetter(msg *sarama.ConsumerMessage) {
+func (consumer OCPRulesConsumer) sendDeadLetter(msg *sarama.ConsumerMessage) {
 	if consumer.deadLetterProducer != nil {
 		if err := consumer.deadLetterProducer.SendDeadLetter(msg); err != nil {
 			log.Error().Err(err).Msg("Failed to load message to dead letter queue")
@@ -208,7 +208,7 @@ func (consumer KafkaConsumer) sendDeadLetter(msg *sarama.ConsumerMessage) {
 }
 
 // checkMessageVersion - verifies incoming data's version is expected
-func checkMessageVersion(consumer *KafkaConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) {
+func checkMessageVersion(consumer *OCPRulesConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) {
 	if _, ok := currentSchemaVersion[message.Version]; !ok {
 		warning := fmt.Sprintf("Received data with unexpected version %d.", message.Version)
 		logMessageWarning(consumer, msg, message, warning)
@@ -216,7 +216,7 @@ func checkMessageVersion(consumer *KafkaConsumer, message *incomingMessage, msg 
 }
 
 // checkMessageOrgInAllowList - checks up incoming data's OrganizationID against allowed orgs list
-func checkMessageOrgInAllowList(consumer *KafkaConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) (bool, string) {
+func checkMessageOrgInAllowList(consumer *OCPRulesConsumer, message *incomingMessage, msg *sarama.ConsumerMessage) (bool, string) {
 	if consumer.Configuration.OrgAllowlistEnabled {
 		logMessageInfo(consumer, msg, message, "Checking organization ID against allow list")
 
@@ -232,7 +232,7 @@ func checkMessageOrgInAllowList(consumer *KafkaConsumer, message *incomingMessag
 	return true, ""
 }
 
-func (consumer *KafkaConsumer) writeRecommendations(
+func (consumer *OCPRulesConsumer) writeRecommendations(
 	msg *sarama.ConsumerMessage, message incomingMessage, reportAsBytes []byte,
 ) (time.Time, error) {
 	err := consumer.Storage.WriteRecommendationsForCluster(
@@ -250,7 +250,7 @@ func (consumer *KafkaConsumer) writeRecommendations(
 	return tStored, nil
 }
 
-func (consumer *KafkaConsumer) writeInfoReport(
+func (consumer *OCPRulesConsumer) writeInfoReport(
 	msg *sarama.ConsumerMessage, message incomingMessage, infoStoredAtTime time.Time,
 ) error {
 	// it is expected that message.ParsedInfo contains at least one item:
@@ -273,13 +273,13 @@ func (consumer *KafkaConsumer) writeInfoReport(
 	return nil
 }
 
-func (consumer *KafkaConsumer) logMsgForFurtherAnalysis(msg *sarama.ConsumerMessage) {
+func (consumer *OCPRulesConsumer) logMsgForFurtherAnalysis(msg *sarama.ConsumerMessage) {
 	if consumer.Configuration.DisplayMessageWithWrongStructure {
 		log.Info().Str("unparsed message", string(msg.Value)).Msg("Message for further analysis")
 	}
 }
 
-func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.ConsumerMessage) {
+func (consumer *OCPRulesConsumer) logReportStructureError(err error, msg *sarama.ConsumerMessage) {
 	if consumer.Configuration.DisplayMessageWithWrongStructure {
 		log.Err(err).Str("unparsed message", string(msg.Value)).Msg(improperIncomeMessageError)
 	} else {
@@ -287,7 +287,7 @@ func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.Co
 	}
 }
 
-func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
+func (consumer *OCPRulesConsumer) shouldProcess(consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
 	err := checkReportStructure(*parsed.Report)
 	if err != nil {
 		consumer.logReportStructureError(err, consumed)
@@ -296,7 +296,7 @@ func (consumer *KafkaConsumer) shouldProcess(consumed *sarama.ConsumerMessage, p
 	return nil
 }
 
-func (consumer *KafkaConsumer) retrieveLastCheckedTime(msg *sarama.ConsumerMessage, parsedMsg *incomingMessage) (time.Time, error) {
+func (consumer *OCPRulesConsumer) retrieveLastCheckedTime(msg *sarama.ConsumerMessage, parsedMsg *incomingMessage) (time.Time, error) {
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, parsedMsg.LastChecked)
 	if err != nil {
 		logMessageError(consumer, msg, parsedMsg, "Error parsing date from message", err)
@@ -315,7 +315,7 @@ func (consumer *KafkaConsumer) retrieveLastCheckedTime(msg *sarama.ConsumerMessa
 }
 
 // processMessage processes an incoming message
-func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
+func (consumer *OCPRulesConsumer) processMessage(msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
@@ -408,7 +408,7 @@ func (consumer *KafkaConsumer) processMessage(msg *sarama.ConsumerMessage) (type
 }
 
 // organizationAllowed checks whether the given organization is on allow list or not
-func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
+func organizationAllowed(consumer *OCPRulesConsumer, orgID types.OrgID) bool {
 	allowList := consumer.Configuration.OrgAllowlist
 	if allowList == nil {
 		return false
@@ -540,7 +540,7 @@ func parseReportContent(message *incomingMessage) error {
 	return nil
 }
 
-func (consumer *KafkaConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart time.Time) (incomingMessage, error) {
+func (consumer *OCPRulesConsumer) parseMessage(msg *sarama.ConsumerMessage, tStart time.Time) (incomingMessage, error) {
 	message, err := deserializeMessage(msg.Value)
 	if err != nil {
 		consumer.logMsgForFurtherAnalysis(msg)

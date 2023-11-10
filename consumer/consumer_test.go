@@ -111,7 +111,7 @@ func dummyConsumer(s storage.Storage, allowlist bool) consumer.Consumer {
 	} else {
 		brokerCfg.OrgAllowlistEnabled = false
 	}
-	return &consumer.KafkaConsumer{
+	return &consumer.OCPRulesConsumer{
 		Configuration: brokerCfg,
 		Storage:       s,
 	}
@@ -132,14 +132,14 @@ func TestConsumerConstructorNoKafka(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
 
-	mockConsumer, err := consumer.NewKafkaConsumer(wrongBrokerCfg, mockStorage)
+	mockConsumer, err := consumer.NewOCPRulesConsumer(wrongBrokerCfg, mockStorage)
 	assert.Error(t, err)
 	assert.Contains(
 		t, err.Error(), "kafka: client has run out of available brokers to talk to",
 	)
 	assert.Equal(
 		t,
-		(*consumer.KafkaConsumer)(nil),
+		(*consumer.OCPRulesConsumer)(nil),
 		mockConsumer,
 		"consumer.New should return nil instead of Consumer implementation",
 	)
@@ -410,21 +410,21 @@ func TestParseReportContentValidReport(t *testing.T) {
 }
 
 func TestParseEmptyMessage(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	message := sarama.ConsumerMessage{}
 	_, err := consumer.ParseMessage(&c, &message)
 	assert.EqualError(t, err, "unexpected end of JSON input")
 }
 
 func TestParseMessageWithWrongContent(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	message := sarama.ConsumerMessage{Value: []byte(`{"this":"is", "not":"expected content"}`)}
 	_, err := consumer.ParseMessage(&c, &message)
 	assert.EqualError(t, err, "missing required attribute 'OrgID'")
 }
 
 func TestParseProperMessageWrongClusterName(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	data := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "this is not a UUID",
@@ -436,7 +436,7 @@ func TestParseProperMessageWrongClusterName(t *testing.T) {
 }
 
 func TestParseMessageWithoutOrgID(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	data := `{
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"Report": ` + testdata.ConsumerReport + `
@@ -447,7 +447,7 @@ func TestParseMessageWithoutOrgID(t *testing.T) {
 }
 
 func TestParseMessageWithoutClusterName(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	data := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"Report": ` + testdata.ConsumerReport + `
@@ -458,7 +458,7 @@ func TestParseMessageWithoutClusterName(t *testing.T) {
 }
 
 func TestParseMessageWithoutReport(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	data := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `"
@@ -469,7 +469,7 @@ func TestParseMessageWithoutReport(t *testing.T) {
 }
 
 func TestParseMessageEmptyReport(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	data := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
@@ -480,7 +480,7 @@ func TestParseMessageEmptyReport(t *testing.T) {
 	assert.EqualError(t, err, "empty report found in deserialized message")
 }
 func TestParseMessageNullReport(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	data := `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
@@ -492,7 +492,7 @@ func TestParseMessageNullReport(t *testing.T) {
 }
 
 func TestParseMessageWithImproperJSON(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	message := sarama.ConsumerMessage{Value: []byte(`"this_is_not_json_dude"`)}
 	_, err := consumer.ParseMessage(&c, &message)
 	assert.EqualError(t, err, "json: cannot unmarshal string into Go value of type consumer.incomingMessage")
@@ -514,7 +514,7 @@ func TestParseMessageWithImproperReport(t *testing.T) {
 			"info": []
 		}
 	}`
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	message := sarama.ConsumerMessage{Value: []byte(data)}
 
 	_, err := consumer.ParseMessage(&c, &message)
@@ -522,7 +522,7 @@ func TestParseMessageWithImproperReport(t *testing.T) {
 }
 
 func TestParseProperMessageReportWithEmptyAttributes(t *testing.T) {
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	message := sarama.ConsumerMessage{Value: []byte(testdata.ConsumerMessage)}
 	parsed, err := consumer.ParseMessage(&c, &message)
 	helpers.FailOnError(t, err, "empty report with all expected attributes present should be processed")
@@ -562,7 +562,7 @@ func TestParseProperMessageWithInfoReport(t *testing.T) {
 		]
 
 	}`
-	c := consumer.KafkaConsumer{}
+	c := consumer.OCPRulesConsumer{}
 	message := sarama.ConsumerMessage{Value: []byte(createConsumerMessage(consumerReport))}
 	parsed, err := consumer.ParseMessage(&c, &message)
 	helpers.FailOnError(t, err, "this message is valid and should be processed")
@@ -788,7 +788,7 @@ func TestKafkaConsumer_New(t *testing.T) {
 
 		mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
-		mockConsumer, err := consumer.NewKafkaConsumer(broker.Configuration{
+		mockConsumer, err := consumer.NewOCPRulesConsumer(broker.Configuration{
 			Address: mockBroker.Addr(),
 			Topic:   testTopicName,
 			Enabled: true,
@@ -821,7 +821,7 @@ func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationIsNotAllowed(t 
 		OrgAllowlist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
 		OrgAllowlistEnabled: true,
 	}
-	mockConsumer := &consumer.KafkaConsumer{
+	mockConsumer := &consumer.OCPRulesConsumer{
 		Configuration: brokerCfg,
 		Storage:       mockStorage,
 	}
@@ -841,7 +841,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 		OrgAllowlist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
 		OrgAllowlistEnabled: true,
 	}
-	mockConsumer := &consumer.KafkaConsumer{
+	mockConsumer := &consumer.OCPRulesConsumer{
 		Configuration: brokerCfg,
 		Storage:       mockStorage,
 	}
@@ -861,7 +861,7 @@ func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationBadConfigIsNotA
 		OrgAllowlist:        nil,
 		OrgAllowlistEnabled: true,
 	}
-	mockConsumer := &consumer.KafkaConsumer{
+	mockConsumer := &consumer.OCPRulesConsumer{
 		Configuration: brokerCfg,
 		Storage:       mockStorage,
 	}
@@ -881,7 +881,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testi
 		OrgAllowlist:        nil,
 		OrgAllowlistEnabled: true,
 	}
-	mockConsumer := &consumer.KafkaConsumer{
+	mockConsumer := &consumer.OCPRulesConsumer{
 		Configuration: brokerCfg,
 		Storage:       mockStorage,
 	}
@@ -897,7 +897,7 @@ func TestKafkaConsumer_ProcessMessage_MessageFromTheFuture(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	mockConsumer := &consumer.KafkaConsumer{
+	mockConsumer := &consumer.OCPRulesConsumer{
 		Configuration: wrongBrokerCfg,
 		Storage:       mockStorage,
 	}
@@ -922,7 +922,7 @@ func TestKafkaConsumer_ProcessMessage_MoreRecentReportAlreadyExists(t *testing.T
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	mockConsumer := &consumer.KafkaConsumer{
+	mockConsumer := &consumer.OCPRulesConsumer{
 		Configuration: wrongBrokerCfg,
 		Storage:       mockStorage,
 	}
@@ -957,7 +957,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithNoSchemaVersion(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	mockConsumer := &consumer.KafkaConsumer{
+	mockConsumer := &consumer.OCPRulesConsumer{
 		Configuration: wrongBrokerCfg,
 		Storage:       mockStorage,
 	}
@@ -975,7 +975,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithUnexpectedSchemaVersion(t *test
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	mockConsumer := &consumer.KafkaConsumer{
+	mockConsumer := &consumer.OCPRulesConsumer{
 		Configuration: wrongBrokerCfg,
 		Storage:       mockStorage,
 	}
@@ -1001,7 +1001,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithExpectedSchemaVersion(t *testin
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	mockConsumer := &consumer.KafkaConsumer{
+	mockConsumer := &consumer.OCPRulesConsumer{
 		Configuration: wrongBrokerCfg,
 		Storage:       mockStorage,
 	}
@@ -1036,7 +1036,7 @@ func TestKafkaConsumer_ConsumeClaim(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	kafkaConsumer := consumer.KafkaConsumer{
+	kafkaConsumer := consumer.OCPRulesConsumer{
 		Storage: mockStorage,
 	}
 
@@ -1054,7 +1054,7 @@ func TestKafkaConsumer_ConsumeClaim_DBError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	closer()
 
-	kafkaConsumer := consumer.KafkaConsumer{
+	kafkaConsumer := consumer.OCPRulesConsumer{
 		Storage: mockStorage,
 	}
 
@@ -1071,7 +1071,7 @@ func TestKafkaConsumer_ConsumeClaim_OKMessage(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	kafkaConsumer := consumer.KafkaConsumer{
+	kafkaConsumer := consumer.OCPRulesConsumer{
 		Storage: mockStorage,
 	}
 
@@ -1093,7 +1093,7 @@ func TestKafkaConsumer_SetupCleanup(t *testing.T) {
 
 	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
-	mockConsumer, err := consumer.NewKafkaConsumer(broker.Configuration{
+	mockConsumer, err := consumer.NewOCPRulesConsumer(broker.Configuration{
 		Address: mockBroker.Addr(),
 		Topic:   testTopicName,
 		Enabled: true,
@@ -1127,7 +1127,7 @@ func TestKafkaConsumer_NewDeadLetterProducer_Error(t *testing.T) {
 
 	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
-	_, err := consumer.NewKafkaConsumer(broker.Configuration{
+	_, err := consumer.NewOCPRulesConsumer(broker.Configuration{
 		Address: mockBroker.Addr(),
 		Topic:   testTopicName,
 		Enabled: true,
@@ -1153,7 +1153,7 @@ func TestKafkaConsumer_NewPayloadTrackerProducer_Error(t *testing.T) {
 
 	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
-	_, err := consumer.NewKafkaConsumer(broker.Configuration{
+	_, err := consumer.NewOCPRulesConsumer(broker.Configuration{
 		Address: mockBroker.Addr(),
 		Topic:   testTopicName,
 		Enabled: true,

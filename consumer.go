@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	consumerInstance                                                 *consumer.KafkaConsumer
+	consumerInstance                                                 *consumer.OCPRulesConsumer
 	consumerInstanceIsStarting, finishConsumerInstanceInitialization = context.WithCancel(context.Background())
 )
 
@@ -40,7 +40,7 @@ func startConsumer(brokerConf broker.Configuration) error {
 
 	defer closeStorage(dbStorage)
 
-	consumerInstance, err = consumer.NewKafkaConsumer(brokerConf, dbStorage)
+	consumerInstance, err = consumer.NewOCPRulesConsumer(brokerConf, dbStorage)
 	if err != nil {
 		log.Error().Err(err).Msg("Broker initialization error")
 		return err

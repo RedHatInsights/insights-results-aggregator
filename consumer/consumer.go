@@ -51,23 +51,23 @@ type Consumer interface {
 	HandleMessage(msg *sarama.ConsumerMessage) error
 }
 
-// KafkaConsumer is an implementation of Consumer interface
+// OCPRulesConsumer is an implementation of Consumer interface
 // Example:
 //
-// kafkaConsumer, err := consumer.New(brokerCfg, storage)
+// ocpRulesConsumer, err := consumer.NewOCPRulesConsumer(brokerCfg, storage)
 //
 //	if err != nil {
 //	    panic(err)
 //	}
 //
-// kafkaConsumer.Serve()
+// ocpRulesConsumer.Serve()
 //
-// err := kafkaConsumer.Stop()
+// err := ocpRulesConsumer.Stop()
 //
 //	if err != nil {
 //	    panic(err)
 //	}
-type KafkaConsumer struct {
+type OCPRulesConsumer struct {
 	Configuration                        broker.Configuration
 	ConsumerGroup                        sarama.ConsumerGroup
 	Storage                              storage.Storage
@@ -84,17 +84,17 @@ type KafkaConsumer struct {
 // useful for testing
 var DefaultSaramaConfig *sarama.Config
 
-// NewKafkaConsumer constructs new implementation of Consumer interface
-func NewKafkaConsumer(brokerCfg broker.Configuration, storage storage.Storage) (*KafkaConsumer, error) {
-	return NewKafkaConsumerWithSaramaConfig(brokerCfg, storage, DefaultSaramaConfig)
+// NewOCPRulesConsumer constructs new implementation of Consumer interface
+func NewOCPRulesConsumer(brokerCfg broker.Configuration, storage storage.Storage) (*OCPRulesConsumer, error) {
+	return NewOCPRulesConsumerWithSaramaConfig(brokerCfg, storage, DefaultSaramaConfig)
 }
 
-// NewKafkaConsumerWithSaramaConfig constructs new implementation of Consumer interface with custom sarama config
-func NewKafkaConsumerWithSaramaConfig(
+// NewOCPRulesConsumerWithSaramaConfig constructs new implementation of Consumer interface with custom sarama config
+func NewOCPRulesConsumerWithSaramaConfig(
 	brokerCfg broker.Configuration,
 	storage storage.Storage,
 	saramaConfig *sarama.Config,
-) (*KafkaConsumer, error) {
+) (*OCPRulesConsumer, error) {
 	var err error
 
 	if saramaConfig == nil {
@@ -141,7 +141,7 @@ func NewKafkaConsumerWithSaramaConfig(
 		log.Info().Msg("Dead letter producer has been configured")
 	}
 
-	consumer := &KafkaConsumer{
+	consumer := &OCPRulesConsumer{
 		Configuration:                        brokerCfg,
 		ConsumerGroup:                        consumerGroup,
 		Storage:                              storage,
@@ -156,7 +156,7 @@ func NewKafkaConsumerWithSaramaConfig(
 }
 
 // Serve starts listening for messages and processing them. It blocks current thread.
-func (consumer *KafkaConsumer) Serve() {
+func (consumer *OCPRulesConsumer) Serve() {
 	ctx, cancel := context.WithCancel(context.Background())
 	consumer.cancel = cancel
 
@@ -194,7 +194,7 @@ func (consumer *KafkaConsumer) Serve() {
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
-func (consumer *KafkaConsumer) Setup(sarama.ConsumerGroupSession) error {
+func (consumer *OCPRulesConsumer) Setup(sarama.ConsumerGroupSession) error {
 	log.Info().Msg("new session has been setup")
 	// Mark the consumer as ready
 	close(consumer.ready)
@@ -202,13 +202,13 @@ func (consumer *KafkaConsumer) Setup(sarama.ConsumerGroupSession) error {
 }
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
-func (consumer *KafkaConsumer) Cleanup(sarama.ConsumerGroupSession) error {
+func (consumer *OCPRulesConsumer) Cleanup(sarama.ConsumerGroupSession) error {
 	log.Info().Msg("new session has been finished")
 	return nil
 }
 
 // ConsumeClaim starts a consumer loop of ConsumerGroupClaim's Messages().
-func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (consumer *OCPRulesConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	log.Info().
 		Int64(offsetKey, claim.InitialOffset()).
 		Msg("starting messages loop")
@@ -226,7 +226,7 @@ func (consumer *KafkaConsumer) ConsumeClaim(session sarama.ConsumerGroupSession,
 }
 
 // Close method closes all resources used by consumer
-func (consumer *KafkaConsumer) Close() error {
+func (consumer *OCPRulesConsumer) Close() error {
 	if consumer.cancel != nil {
 		consumer.cancel()
 	}
@@ -253,13 +253,13 @@ func (consumer *KafkaConsumer) Close() error {
 }
 
 // GetNumberOfSuccessfullyConsumedMessages returns number of consumed messages
-// since creating KafkaConsumer obj
-func (consumer *KafkaConsumer) GetNumberOfSuccessfullyConsumedMessages() uint64 {
+// since creating OCPRulesConsumer obj
+func (consumer *OCPRulesConsumer) GetNumberOfSuccessfullyConsumedMessages() uint64 {
 	return consumer.numberOfSuccessfullyConsumedMessages
 }
 
 // GetNumberOfErrorsConsumingMessages returns number of errors during consuming messages
-// since creating KafkaConsumer obj
-func (consumer *KafkaConsumer) GetNumberOfErrorsConsumingMessages() uint64 {
+// since creating OCPRulesConsumer obj
+func (consumer *OCPRulesConsumer) GetNumberOfErrorsConsumingMessages() uint64 {
 	return consumer.numberOfErrorsConsumingMessages
 }
