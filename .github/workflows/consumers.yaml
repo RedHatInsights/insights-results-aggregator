@@ -8,6 +8,8 @@ on:
 
 jobs:
   gotests:
+    env:
+        TEST_TO_RUN=./consumer
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -40,7 +42,7 @@ jobs:
       - name: Print env vars
         run: env
       - name: Unit tests
-        run: TEST_TO_RUN=./consumer:./unit-tests.sh
+        run: make test
       - name: Check code coverage
         run: ./check_coverage.sh
       - name: Display code coverage
