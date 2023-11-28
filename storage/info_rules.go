@@ -35,7 +35,7 @@ const (
 )
 
 // WriteReportInfoForCluster writes the relevant report info for selected cluster for hiven organization
-func (storage DBStorage) WriteReportInfoForCluster(
+func (storage OCPRecommendationsDBStorage) WriteReportInfoForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	info []types.InfoItem,
@@ -60,7 +60,7 @@ func (storage DBStorage) WriteReportInfoForCluster(
 	return err
 }
 
-func (storage DBStorage) updateInfoReport(
+func (storage OCPRecommendationsDBStorage) updateInfoReport(
 	tx *sql.Tx,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
@@ -83,7 +83,7 @@ func (storage DBStorage) updateInfoReport(
 }
 
 // ReadReportInfoForCluster retrieve the Version for a given cluster and org id
-func (storage *DBStorage) ReadReportInfoForCluster(
+func (storage *OCPRecommendationsDBStorage) ReadReportInfoForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 ) (types.Version, error) {
@@ -108,7 +108,7 @@ SELECT
 }
 
 // ReadClusterVersionsForClusterList retrieve the cluster version for a given cluster list and org id
-func (storage *DBStorage) ReadClusterVersionsForClusterList(
+func (storage *OCPRecommendationsDBStorage) ReadClusterVersionsForClusterList(
 	orgID types.OrgID,
 	clusterList []string,
 ) (map[types.ClusterName]types.Version, error) {
@@ -152,7 +152,7 @@ func (storage *DBStorage) ReadClusterVersionsForClusterList(
 	return clusterMap, err
 }
 
-func (storage DBStorage) fillInMetadata(orgID types.OrgID, clusterMap ctypes.ClusterRecommendationMap) {
+func (storage OCPRecommendationsDBStorage) fillInMetadata(orgID types.OrgID, clusterMap ctypes.ClusterRecommendationMap) {
 	clusterList := make([]string, len(clusterMap))
 	var i int
 

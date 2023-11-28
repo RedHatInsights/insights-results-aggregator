@@ -129,7 +129,7 @@ func TestCloseStorage_Error(t *testing.T) {
 	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
 	expects.ExpectClose().WillReturnError(fmt.Errorf(errStr))
 
-	main.CloseStorage(mockStorage.(*storage.DBStorage))
+	main.CloseStorage(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	assert.Contains(t, buf.String(), errStr)
 }

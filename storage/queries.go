@@ -16,7 +16,7 @@ package storage
 
 import "github.com/RedHatInsights/insights-results-aggregator/types"
 
-func (storage DBStorage) getReportUpsertQuery() string {
+func (storage OCPRecommendationsDBStorage) getReportUpsertQuery() string {
 	if storage.dbDriverType == types.DBDriverSQLite3 {
 		return `
 			INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
@@ -32,7 +32,7 @@ func (storage DBStorage) getReportUpsertQuery() string {
 	`
 }
 
-func (storage DBStorage) getReportInfoUpsertQuery() string {
+func (storage OCPRecommendationsDBStorage) getReportInfoUpsertQuery() string {
 	if storage.dbDriverType == types.DBDriverSQLite3 {
 		return `
 			INSERT OR REPLACE INTO report_info(org_id, cluster_id, version_info)

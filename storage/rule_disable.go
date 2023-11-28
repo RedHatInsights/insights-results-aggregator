@@ -26,7 +26,7 @@ import (
 
 // DisableRuleSystemWide disables the selected rule for all clusters visible to
 // given user
-func (storage DBStorage) DisableRuleSystemWide(
+func (storage OCPRecommendationsDBStorage) DisableRuleSystemWide(
 	orgID types.OrgID,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
@@ -67,7 +67,7 @@ func (storage DBStorage) DisableRuleSystemWide(
 
 // EnableRuleSystemWide enables the selected rule for all clusters visible to
 // given user
-func (storage DBStorage) EnableRuleSystemWide(
+func (storage OCPRecommendationsDBStorage) EnableRuleSystemWide(
 	orgID types.OrgID,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
@@ -98,7 +98,7 @@ func (storage DBStorage) EnableRuleSystemWide(
 }
 
 // UpdateDisabledRuleJustification change justification for already disabled rule
-func (storage DBStorage) UpdateDisabledRuleJustification(
+func (storage OCPRecommendationsDBStorage) UpdateDisabledRuleJustification(
 	orgID types.OrgID,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
@@ -133,7 +133,7 @@ func (storage DBStorage) UpdateDisabledRuleJustification(
 }
 
 // ReadDisabledRule function returns disabled rule (if disabled) from database
-func (storage DBStorage) ReadDisabledRule(
+func (storage OCPRecommendationsDBStorage) ReadDisabledRule(
 	orgID types.OrgID, ruleID types.RuleID, errorKey types.ErrorKey,
 ) (ctypes.SystemWideRuleDisable, bool, error) {
 	var disabledRule ctypes.SystemWideRuleDisable
@@ -185,7 +185,7 @@ func (storage DBStorage) ReadDisabledRule(
 
 // ListOfSystemWideDisabledRules function returns list of all rules that have been
 // disabled for all clusters by given user
-func (storage DBStorage) ListOfSystemWideDisabledRules(
+func (storage OCPRecommendationsDBStorage) ListOfSystemWideDisabledRules(
 	orgID types.OrgID,
 ) ([]ctypes.SystemWideRuleDisable, error) {
 	disabledRules := make([]ctypes.SystemWideRuleDisable, 0)

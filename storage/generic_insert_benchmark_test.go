@@ -44,7 +44,7 @@ func mustPrepareBenchmark(b *testing.B) (storage.OCPRecommendationsStorage, *sql
 	// Old version using the in-memory SQLite DB storage:
 	// mockStorage := helpers.MustGetMockStorage(b, false)
 
-	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	conn := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	_, err := conn.Exec("DROP TABLE IF EXISTS benchmark_tab;")
 	helpers.FailOnError(b, err)

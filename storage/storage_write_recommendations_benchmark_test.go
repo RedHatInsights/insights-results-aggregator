@@ -301,7 +301,7 @@ func mustPrepareRecommendationsBenchmark(b *testing.B) (storage.OCPRecommendatio
 	// to silence them this way to make benchmark results easier to find.
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	mockStorage, closer := ira_helpers.MustGetPostgresStorage(b, false)
-	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	conn := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	_, err := conn.Exec("DROP TABLE IF EXISTS recommendation;")
 	helpers.FailOnError(b, err)
@@ -325,7 +325,7 @@ func mustPrepareRecommendationsBenchmarkWithEntries(b *testing.B, numRows int) (
 			) VALUES ($1, $2, $3)
 		`, cluster, "a rule module", "an error key")
 		helpers.FailOnError(b, err)
-		storage.SetClustersLastChecked(mockStorage.(*storage.DBStorage), types.ClusterName(cluster), time.Now())
+		storage.SetClustersLastChecked(mockStorage.(*storage.OCPRecommendationsDBStorage), types.ClusterName(cluster), time.Now())
 	}
 
 	return mockStorage, conn, closer
@@ -337,7 +337,7 @@ func mustPrepareReportAndRecommendationsBenchmark(b *testing.B) (storage.OCPReco
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	mockStorage, closer := ira_helpers.MustGetPostgresStorage(b, false)
 
-	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	conn := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	_, err := conn.Exec("DROP TABLE IF EXISTS recommendation;")
 	helpers.FailOnError(b, err)
@@ -410,7 +410,7 @@ func BenchmarkNewRecommendationsExistingClusterConflict(b *testing.B) {
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
-			storage.SetClustersLastChecked(mockStorage.(*storage.DBStorage), types.ClusterName(id), time.Now())
+			storage.SetClustersLastChecked(mockStorage.(*storage.OCPRecommendationsDBStorage), types.ClusterName(id), time.Now())
 		}
 	}
 	clusterIds := make([]string, 2*len(clusterIDSet.content))
@@ -451,7 +451,7 @@ func BenchmarkNewRecommendations2000initialEntries(b *testing.B) {
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
-			storage.SetClustersLastChecked(mockStorage.(*storage.DBStorage), types.ClusterName(id), time.Now())
+			storage.SetClustersLastChecked(mockStorage.(*storage.OCPRecommendationsDBStorage), types.ClusterName(id), time.Now())
 		}
 	}
 

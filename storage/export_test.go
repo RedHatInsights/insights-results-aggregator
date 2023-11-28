@@ -47,20 +47,20 @@ var (
 	GetRuleHitsCSV          = getRuleHitsCSV
 )
 
-func GetConnection(storage *DBStorage) *sql.DB {
+func GetConnection(storage *OCPRecommendationsDBStorage) *sql.DB {
 	return storage.connection
 }
 
-func GetClustersLastChecked(storage *DBStorage) map[types.ClusterName]time.Time {
+func GetClustersLastChecked(storage *OCPRecommendationsDBStorage) map[types.ClusterName]time.Time {
 	return storage.clustersLastChecked
 }
 
-func SetClustersLastChecked(storage *DBStorage, cluster types.ClusterName, lastChecked time.Time) {
+func SetClustersLastChecked(storage *OCPRecommendationsDBStorage, cluster types.ClusterName, lastChecked time.Time) {
 	storage.clustersLastChecked[cluster] = lastChecked
 }
 
 func InsertRecommendations(
-	storage *DBStorage, orgID types.OrgID,
+	storage *OCPRecommendationsDBStorage, orgID types.OrgID,
 	clusterName types.ClusterName, report types.ReportRules,
 	createdAt types.Timestamp,
 	impactedSince map[string]types.Timestamp,

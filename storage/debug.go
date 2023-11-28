@@ -21,7 +21,7 @@ import (
 )
 
 // PrintRuleDisableDebugInfo is a temporary helper function used to print form cluster rule toggle related tables
-func (storage DBStorage) PrintRuleDisableDebugInfo() {
+func (storage OCPRecommendationsDBStorage) PrintRuleDisableDebugInfo() {
 	err := storage.PrintRuleToggles()
 	if err != nil {
 		log.Error().Err(err).Msg("unable to print records from cluster_rule_toggle")
@@ -35,7 +35,7 @@ func (storage DBStorage) PrintRuleDisableDebugInfo() {
 
 // PrintRuleToggles prints enable/disable counts for all rules
 // TEMPORARY because we currently don't have access to stage database when testing migrations.
-func (storage DBStorage) PrintRuleToggles() error {
+func (storage OCPRecommendationsDBStorage) PrintRuleToggles() error {
 	log.Info().Msg("PrintRuleToggles start")
 
 	query := `
@@ -75,7 +75,7 @@ func (storage DBStorage) PrintRuleToggles() error {
 
 // PrintRuleDisableFeedbacks prints enable/disable feedback counts for all rules
 // TEMPORARY because we currently don't have access to stage database when testing migrations.
-func (storage DBStorage) PrintRuleDisableFeedbacks() error {
+func (storage OCPRecommendationsDBStorage) PrintRuleDisableFeedbacks() error {
 	log.Info().Msg("PrintRuleDisableFeedbacks start")
 
 	query := `

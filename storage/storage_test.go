@@ -133,7 +133,7 @@ func TestNewStorageReturnedImplementation(t *testing.T) {
 		LogSQLQueries: true,
 		Type:          "sql",
 	})
-	assert.IsType(t, &storage.DBStorage{}, s)
+	assert.IsType(t, &storage.OCPRecommendationsDBStorage{}, s)
 
 	s, _ = storage.New(storage.Configuration{
 		Driver:        "postgres",
@@ -209,7 +209,7 @@ func TestDBStorageGetOrgIDByClusterID_Error(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
 
-	dbStorage := mockStorage.(*storage.DBStorage)
+	dbStorage := mockStorage.(*storage.OCPRecommendationsDBStorage)
 	connection := dbStorage.GetConnection()
 
 	query := `
@@ -394,7 +394,7 @@ func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	connection := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	query := "DROP TABLE report"
 	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
@@ -652,7 +652,7 @@ func TestDBStorageListOfOrgsLogError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	connection := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 	// write illegal negative org_id
 	mustWriteReport(t, connection, -1, testdata.ClusterName, testdata.ClusterReportEmpty)
 
@@ -797,7 +797,7 @@ func TestDBStorageWriteConsumerError(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	conn := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 	row := conn.QueryRow(`
 		SELECT key, message, produced_at, consumed_at, error
 		  FROM consumer_error
@@ -823,7 +823,7 @@ func TestDBStorage_Init(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
 	defer closer()
 
-	dbStorage := mockStorage.(*storage.DBStorage)
+	dbStorage := mockStorage.(*storage.OCPRecommendationsDBStorage)
 
 	err := dbStorage.MigrateToLatest()
 	helpers.FailOnError(t, err)
@@ -845,7 +845,7 @@ func TestDBStorage_Init_Error(t *testing.T) {
 
 	createReportTableWithBadClusterField(t, mockStorage)
 
-	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	connection := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	// create a table with a bad type
 	_, err := connection.Exec(`
@@ -864,7 +864,7 @@ func TestDBStorage_Init_Error(t *testing.T) {
 }
 
 func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.OCPRecommendationsStorage) {
-	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	connection := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	query := `
 		CREATE TABLE report (
@@ -1115,7 +1115,7 @@ func TestDBStorageInsertRecommendations(t *testing.T) {
 	// and created_at match
 	impactedSince := RecommendationImpactedSinceMap
 	inserted, err := storage.InsertRecommendations(
-		mockStorage.(*storage.DBStorage),
+		mockStorage.(*storage.OCPRecommendationsDBStorage),
 		testdata.OrgID, testdata.ClusterName, report,
 		RecommendationCreatedAtTimestamp, impactedSince)
 	assert.Equal(t, 3, inserted)
@@ -1173,7 +1173,7 @@ func TestDBStorageWriteRecommendationForClusterAlreadyStoredAndDeleted(t *testin
 	helpers.FailOnError(t, err)
 
 	// Need to update clustersLastChecked as would be done on init and in writeReportForClusters
-	dbStorage := mockStorage.(*storage.DBStorage)
+	dbStorage := mockStorage.(*storage.OCPRecommendationsDBStorage)
 	storage.SetClustersLastChecked(dbStorage, testdata.ClusterName, time.Now())
 
 	expects.ExpectBegin()
@@ -1209,7 +1209,7 @@ func TestDBStorageInsertRecommendationsNoRuleHit(t *testing.T) {
 	// impactedSincefirst time a recommendation is inserted impacted and created_at match
 	impactedSince := RecommendationImpactedSinceMap
 	inserted, err := storage.InsertRecommendations(
-		mockStorage.(*storage.DBStorage), testdata.OrgID, testdata.ClusterName,
+		mockStorage.(*storage.OCPRecommendationsDBStorage), testdata.OrgID, testdata.ClusterName,
 		report, RecommendationCreatedAtTimestamp, impactedSince)
 
 	assert.Equal(t, 0, inserted)

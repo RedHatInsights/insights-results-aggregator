@@ -514,7 +514,7 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	connection := mockStorage.(*storage.DBStorage).GetConnection()
+	connection := mockStorage.(*storage.OCPRecommendationsDBStorage).GetConnection()
 
 	_, err = connection.Exec(`DROP TABLE cluster_rule_user_feedback;`)
 	helpers.FailOnError(t, err)

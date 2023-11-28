@@ -493,7 +493,7 @@ func TestDBStorageVoteOnRuleDBError(t *testing.T) {
 func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
-	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	connection := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	query := `
 		CREATE TABLE cluster_rule_user_feedback (
