@@ -77,7 +77,7 @@ objects:
               value: "/data/org_whitelist.csv"
             - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
               value: "true"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
               value: redis
             - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE
               value: "${REDIS_DATABASE}"
