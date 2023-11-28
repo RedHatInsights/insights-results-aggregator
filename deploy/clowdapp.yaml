@@ -61,13 +61,13 @@ objects:
                   value: "false"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
                   value: "false"
-                - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
+                - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER
                   value: postgres
-                - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
+                - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS
                   value: ${PG_PARAMS}
-                - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES
+                - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__LOG_SQL_QUERIES
                   value: "true"
-                - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
+                - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
                   value: "sql"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
                   value: ${CLOUDWATCH_ENABLED}
@@ -151,11 +151,11 @@ objects:
               value: "/data/org_whitelist.csv"
             - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
               value: "true"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER
               value: postgres
-            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS
               value: ${PG_PARAMS}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
               value: "sql"
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
               value: ${LOG_LEVEL}
@@ -252,11 +252,11 @@ objects:
               value: "255"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ORG_OVERVIEW_LIMIT_HOURS
               value: "3"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER
               value: postgres
-            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS
               value: ${PG_PARAMS}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
               value: "sql"
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
               value: ${LOG_LEVEL}
