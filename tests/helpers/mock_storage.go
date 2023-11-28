@@ -144,7 +144,7 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendation
 	helpers.FailOnError(tb, err)
 
 	// force postgres and replace db name with test one
-	storageConf := &conf.Config.Storage
+	storageConf := &conf.Config.OCPRecommendationsStorage
 	storageConf.Driver = postgres
 	storageConf.PGDBName += "_test_db_" + strings.ReplaceAll(uuid.New().String(), "-", "_")
 	storageConf.PGPassword = dbAdminPassword
@@ -175,7 +175,7 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendation
 	return postgresStorage, func() {
 		MustCloseStorage(tb, postgresStorage)
 
-		_, err := adminConn.Exec("DROP DATABASE " + conf.Config.Storage.PGDBName)
+		_, err := adminConn.Exec("DROP DATABASE " + conf.Config.OCPRecommendationsStorage.PGDBName)
 		helpers.FailOnError(tb, err)
 
 		helpers.FailOnError(tb, adminConn.Close())
