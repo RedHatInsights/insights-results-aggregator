@@ -50,7 +50,7 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 }
 
-func assertNumberOfReports(t *testing.T, mockStorage storage.Storage, expectedNumberOfReports int) {
+func assertNumberOfReports(t *testing.T, mockStorage storage.OCPRecommendationsStorage, expectedNumberOfReports int) {
 	numberOfReports, err := mockStorage.ReportsCount()
 	helpers.FailOnError(t, err)
 	assert.Equal(t, expectedNumberOfReports, numberOfReports)
@@ -58,7 +58,7 @@ func assertNumberOfReports(t *testing.T, mockStorage storage.Storage, expectedNu
 
 func checkReportForCluster(
 	t *testing.T,
-	s storage.Storage,
+	s storage.OCPRecommendationsStorage,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	expected []types.RuleOnReport,
@@ -73,7 +73,7 @@ func checkReportForCluster(
 
 func writeReportForCluster(
 	t *testing.T,
-	storageImpl storage.Storage,
+	storageImpl storage.OCPRecommendationsStorage,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	clusterReport types.ClusterReport,
@@ -863,7 +863,7 @@ func TestDBStorage_Init_Error(t *testing.T) {
 	)
 }
 
-func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.Storage) {
+func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.OCPRecommendationsStorage) {
 	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
 
 	query := `

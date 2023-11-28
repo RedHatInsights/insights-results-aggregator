@@ -81,13 +81,13 @@ const (
 // HTTPServer in an implementation of Server interface
 type HTTPServer struct {
 	Config     Configuration
-	Storage    storage.Storage
+	Storage    storage.OCPRecommendationsStorage
 	Serv       *http.Server
 	InfoParams map[string]string
 }
 
 // New constructs new implementation of Server interface
-func New(config Configuration, storage storage.Storage) *HTTPServer {
+func New(config Configuration, storage storage.OCPRecommendationsStorage) *HTTPServer {
 	return &HTTPServer{
 		Config:     config,
 		Storage:    storage,

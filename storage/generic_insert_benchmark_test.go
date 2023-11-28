@@ -33,7 +33,7 @@ const (
 	// upsertQuery = "REPLACE INTO benchmark_tab (id, name, value) VALUES ($1, $2, $3);"
 )
 
-func mustPrepareBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {
+func mustPrepareBenchmark(b *testing.B) (storage.OCPRecommendationsStorage, *sql.DB, func()) {
 	// Postgres queries are very verbose at DEBUG log level, so it's better
 	// to silence them this way to make benchmark results easier to find.
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)

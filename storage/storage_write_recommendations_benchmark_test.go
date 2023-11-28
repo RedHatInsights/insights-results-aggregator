@@ -296,7 +296,7 @@ func stopBenchmarkTimer(b *testing.B) {
 }
 
 // Only create recommendation table in the test DB
-func mustPrepareRecommendationsBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {
+func mustPrepareRecommendationsBenchmark(b *testing.B) (storage.OCPRecommendationsStorage, *sql.DB, func()) {
 	// Postgres queries are very verbose at DEBUG log level, so it's better
 	// to silence them this way to make benchmark results easier to find.
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
@@ -314,7 +314,7 @@ func mustPrepareRecommendationsBenchmark(b *testing.B) (storage.Storage, *sql.DB
 
 // Only create recommendation table in the test DB, and insert numRows entries
 // in the table before the benchmarking timers are reset
-func mustPrepareRecommendationsBenchmarkWithEntries(b *testing.B, numRows int) (storage.Storage, *sql.DB, func()) {
+func mustPrepareRecommendationsBenchmarkWithEntries(b *testing.B, numRows int) (storage.OCPRecommendationsStorage, *sql.DB, func()) {
 	mockStorage, conn, closer := mustPrepareReportAndRecommendationsBenchmark(b)
 
 	for i := 0; i < numRows; i++ {
@@ -331,7 +331,7 @@ func mustPrepareRecommendationsBenchmarkWithEntries(b *testing.B, numRows int) (
 	return mockStorage, conn, closer
 }
 
-func mustPrepareReportAndRecommendationsBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {
+func mustPrepareReportAndRecommendationsBenchmark(b *testing.B) (storage.OCPRecommendationsStorage, *sql.DB, func()) {
 	// Postgres queries are very verbose at DEBUG log level, so it's better
 	// to silence them this way to make benchmark results easier to find.
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)

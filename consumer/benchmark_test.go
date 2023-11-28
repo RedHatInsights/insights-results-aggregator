@@ -31,7 +31,7 @@ import (
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
-func benchmarkProcessingMessage(b *testing.B, s storage.Storage, messageProducer func() string) {
+func benchmarkProcessingMessage(b *testing.B, s storage.OCPRecommendationsStorage, messageProducer func() string) {
 	kafkaConsumer := &consumer.OCPRulesConsumer{
 		Storage: s,
 	}
@@ -42,7 +42,7 @@ func benchmarkProcessingMessage(b *testing.B, s storage.Storage, messageProducer
 	}
 }
 
-func getNoopStorage(testing.TB, bool) (storage.Storage, func()) {
+func getNoopStorage(testing.TB, bool) (storage.OCPRecommendationsStorage, func()) {
 	return &storage.NoopStorage{}, func() {}
 }
 
@@ -51,7 +51,7 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 
 	var testCases = []struct {
 		Name            string
-		StorageProducer func(testing.TB, bool) (storage.Storage, func())
+		StorageProducer func(testing.TB, bool) (storage.OCPRecommendationsStorage, func())
 		RandomMessages  bool
 	}{
 		{"NoopStorage", getNoopStorage, false},
@@ -131,7 +131,7 @@ func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
 
 	var testCases = []struct {
 		Name            string
-		StorageProducer func(testing.TB, bool) (storage.Storage, func())
+		StorageProducer func(testing.TB, bool) (storage.OCPRecommendationsStorage, func())
 	}{
 		{"NoopStorage", getNoopStorage},
 		{"SQLiteInMemory", ira_helpers.MustGetSQLiteMemoryStorage},

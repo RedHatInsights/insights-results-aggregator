@@ -78,7 +78,7 @@ var DefaultServerConfigAuth = server.Configuration{
 // sends api request and checks api response (see docs for APIRequest and APIResponse)
 func AssertAPIRequest(
 	t testing.TB,
-	mockStorage storage.Storage,
+	mockStorage storage.OCPRecommendationsStorage,
 	serverConfig *server.Configuration,
 	request *helpers.APIRequest,
 	expectedResponse *helpers.APIResponse,

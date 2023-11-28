@@ -47,8 +47,8 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// Storage represents an interface to almost any database or storage system
-type Storage interface {
+// OCPRecommendationsStorage represents an interface to almost any database or storage system
+type OCPRecommendationsStorage interface {
 	Init() error
 	Close() error
 	ListOfOrgs() ([]types.OrgID, error)
@@ -239,7 +239,7 @@ type DBStorage struct {
 }
 
 // New function creates and initializes a new instance of Storage interface
-func New(configuration Configuration) (Storage, error) {
+func New(configuration Configuration) (OCPRecommendationsStorage, error) {
 	switch configuration.Type {
 	case types.SQLStorage:
 		return newSQLStorage(configuration)
@@ -256,12 +256,12 @@ func New(configuration Configuration) (Storage, error) {
 }
 
 // newNoopStorage function creates and initializes a new instance of Noop storage
-func newNoopStorage(_ Configuration) (Storage, error) {
+func newNoopStorage(_ Configuration) (OCPRecommendationsStorage, error) {
 	return &NoopStorage{}, nil
 }
 
 // newRedisStorage function creates and initializes a new instance of Redis storage
-func newRedisStorage(configuration Configuration) (Storage, error) {
+func newRedisStorage(configuration Configuration) (OCPRecommendationsStorage, error) {
 	redisCfg := configuration.RedisConfiguration
 	log.Info().
 		Str("Endpoint", redisCfg.RedisEndpoint).
@@ -300,7 +300,7 @@ func newRedisStorage(configuration Configuration) (Storage, error) {
 }
 
 // newSQLStorage function creates and initializes a new instance of DB storage
-func newSQLStorage(configuration Configuration) (Storage, error) {
+func newSQLStorage(configuration Configuration) (OCPRecommendationsStorage, error) {
 	driverType, driverName, dataSource, err := initAndGetDriver(configuration)
 	if err != nil {
 		return nil, err

@@ -56,7 +56,7 @@ func BenchmarkHTTPServer_VoteEndpoints_WithPostgresStorage(b *testing.B) {
 	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
 }
 
-func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage storage.Storage) {
+func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage storage.OCPRecommendationsStorage) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	// each test case will choose random endpoint args from this pool
@@ -134,7 +134,7 @@ type voteEndpointArg struct {
 	ErrorKey  types.ErrorKey
 }
 
-func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStorage storage.Storage) []voteEndpointArg {
+func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStorage storage.OCPRecommendationsStorage) []voteEndpointArg {
 	var endpointArgs []voteEndpointArg
 
 	for i := uint(0); i < numberOfEndpointArgs; i++ {
@@ -168,7 +168,7 @@ func prepareVoteEndpointArgs(tb testing.TB, numberOfEndpointArgs uint, mockStora
 	return endpointArgs
 }
 
-func cleanupEndpointArgs(tb testing.TB, args []voteEndpointArg, mockStorage storage.Storage) {
+func cleanupEndpointArgs(tb testing.TB, args []voteEndpointArg, mockStorage storage.OCPRecommendationsStorage) {
 	for _, arg := range args {
 		err := mockStorage.DeleteReportsForCluster(arg.ClusterID)
 		helpers.FailOnError(tb, err)
