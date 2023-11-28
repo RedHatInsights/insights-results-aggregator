@@ -51,7 +51,7 @@ func startServer() error {
 	// try to retrieve the actual DB migration version
 	// and add it into the `params` map
 	log.Info().Msg("Setting DB version for /info endpoint")
-	if conf.GetStorageConfiguration().Type == types.SQLStorage {
+	if conf.GetOCPRecommendationsStorageConfiguration().Type == types.SQLStorage {
 		// migration and DB versioning is now supported for SQL
 		// databases only
 		currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection())

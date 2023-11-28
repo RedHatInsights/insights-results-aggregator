@@ -75,13 +75,13 @@ type ConfigStruct struct {
 	Processing struct {
 		OrgAllowlistFile string `mapstructure:"org_allowlist_file" toml:"org_allowlist_file"`
 	} `mapstructure:"processing"`
-	Storage           storage.Configuration             `mapstructure:"storage" toml:"storage"`
-	Logging           logger.LoggingConfiguration       `mapstructure:"logging" toml:"logging"`
-	CloudWatch        logger.CloudWatchConfiguration    `mapstructure:"cloudwatch" toml:"cloudwatch"`
-	Redis             storage.RedisConfiguration        `mapstructure:"redis" toml:"redis"`
-	Metrics           MetricsConfiguration              `mapstructure:"metrics" toml:"metrics"`
-	SentryLoggingConf logger.SentryLoggingConfiguration `mapstructure:"sentry" toml:"sentry"`
-	KafkaZerologConf  logger.KafkaZerologConfiguration  `mapstructure:"kafka_zerolog" toml:"kafka_zerolog"`
+	OCPRecommendationsStorage storage.Configuration             `mapstructure:"storage" toml:"storage"`
+	Logging                   logger.LoggingConfiguration       `mapstructure:"logging" toml:"logging"`
+	CloudWatch                logger.CloudWatchConfiguration    `mapstructure:"cloudwatch" toml:"cloudwatch"`
+	Redis                     storage.RedisConfiguration        `mapstructure:"redis" toml:"redis"`
+	Metrics                   MetricsConfiguration              `mapstructure:"metrics" toml:"metrics"`
+	SentryLoggingConf         logger.SentryLoggingConfiguration `mapstructure:"sentry" toml:"sentry"`
+	KafkaZerologConf          logger.KafkaZerologConfiguration  `mapstructure:"kafka_zerolog" toml:"kafka_zerolog"`
 }
 
 // Config has exactly the same structure as *.toml file
@@ -179,9 +179,9 @@ func getOrganizationAllowlist() mapset.Set {
 	return allowlist
 }
 
-// GetStorageConfiguration returns storage configuration
-func GetStorageConfiguration() storage.Configuration {
-	return Config.Storage
+// GetOCPRecommendationsStorageConfiguration returns storage configuration
+func GetOCPRecommendationsStorageConfiguration() storage.Configuration {
+	return Config.OCPRecommendationsStorage
 }
 
 // GetRedisConfiguration returns Redis storage configuration
@@ -317,11 +317,11 @@ func updateConfigFromClowder(c *ConfigStruct) error {
 
 	if clowder.LoadedConfig.Database != nil {
 		// get DB configuration from clowder
-		c.Storage.PGDBName = clowder.LoadedConfig.Database.Name
-		c.Storage.PGHost = clowder.LoadedConfig.Database.Hostname
-		c.Storage.PGPort = clowder.LoadedConfig.Database.Port
-		c.Storage.PGUsername = clowder.LoadedConfig.Database.Username
-		c.Storage.PGPassword = clowder.LoadedConfig.Database.Password
+		c.OCPRecommendationsStorage.PGDBName = clowder.LoadedConfig.Database.Name
+		c.OCPRecommendationsStorage.PGHost = clowder.LoadedConfig.Database.Hostname
+		c.OCPRecommendationsStorage.PGPort = clowder.LoadedConfig.Database.Port
+		c.OCPRecommendationsStorage.PGUsername = clowder.LoadedConfig.Database.Username
+		c.OCPRecommendationsStorage.PGPassword = clowder.LoadedConfig.Database.Password
 	} else {
 		fmt.Println(noStorage)
 	}

@@ -112,7 +112,7 @@ func fillInInfoParams(params map[string]string) {
 // createStorage function initializes connection to preconfigured storage,
 // usually SQLite, PostgreSQL, or AWS RDS.
 func createStorage() (storage.OCPRecommendationsStorage, error) {
-	storageCfg := conf.GetStorageConfiguration()
+	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 	redisCfg := conf.GetRedisConfiguration()
 	// fill-in the missing sub-structure to have the whole Storage
 	// configuration represented as one data structure
@@ -144,7 +144,7 @@ func closeStorage(storage storage.OCPRecommendationsStorage) {
 // autoMigrate is set performs migration to the latest schema version
 // available.
 func prepareDBMigrations(dbStorage storage.OCPRecommendationsStorage) int {
-	if conf.GetStorageConfiguration().Type != types.SQLStorage {
+	if conf.GetOCPRecommendationsStorageConfiguration().Type != types.SQLStorage {
 		log.Info().Msg("Skipping migration for non-SQL database type")
 		return ExitStatusOK
 	}
