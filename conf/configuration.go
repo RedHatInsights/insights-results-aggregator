@@ -75,7 +75,7 @@ type ConfigStruct struct {
 	Processing struct {
 		OrgAllowlistFile string `mapstructure:"org_allowlist_file" toml:"org_allowlist_file"`
 	} `mapstructure:"processing"`
-	OCPRecommendationsStorage storage.Configuration             `mapstructure:"storage" toml:"ocp_recommendations_storage"`
+	OCPRecommendationsStorage storage.Configuration             `mapstructure:"ocp_recommendations_storage" toml:"ocp_recommendations_storage"`
 	Logging                   logger.LoggingConfiguration       `mapstructure:"logging" toml:"logging"`
 	CloudWatch                logger.CloudWatchConfiguration    `mapstructure:"cloudwatch" toml:"cloudwatch"`
 	Redis                     storage.RedisConfiguration        `mapstructure:"redis" toml:"redis"`
