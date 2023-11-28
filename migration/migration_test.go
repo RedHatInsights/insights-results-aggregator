@@ -68,7 +68,7 @@ func init() {
 
 func prepareDB(t *testing.T) (*sql.DB, types.DBDriver, func()) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
-	dbStorage := mockStorage.(*storage.DBStorage)
+	dbStorage := mockStorage.(*storage.OCPRecommendationsDBStorage)
 
 	return dbStorage.GetConnection(), dbStorage.GetDBDriverType(), closer
 }

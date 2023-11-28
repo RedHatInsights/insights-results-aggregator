@@ -111,7 +111,7 @@ func fillInInfoParams(params map[string]string) {
 
 // createStorage function initializes connection to preconfigured storage,
 // usually SQLite, PostgreSQL, or AWS RDS.
-func createStorage() (storage.Storage, error) {
+func createStorage() (storage.OCPRecommendationsStorage, error) {
 	storageCfg := conf.GetStorageConfiguration()
 	redisCfg := conf.GetRedisConfiguration()
 	// fill-in the missing sub-structure to have the whole Storage
@@ -132,7 +132,7 @@ func createStorage() (storage.Storage, error) {
 
 // closeStorage function closes specified DBStorage with proper error checking
 // whether the close operation was successful or not.
-func closeStorage(storage storage.Storage) {
+func closeStorage(storage storage.OCPRecommendationsStorage) {
 	err := storage.Close()
 	if err != nil {
 		// TODO: error state might be returned from this function
@@ -143,7 +143,7 @@ func closeStorage(storage storage.Storage) {
 // prepareDBMigrations function checks the actual database version and when
 // autoMigrate is set performs migration to the latest schema version
 // available.
-func prepareDBMigrations(dbStorage storage.Storage) int {
+func prepareDBMigrations(dbStorage storage.OCPRecommendationsStorage) int {
 	if conf.GetStorageConfiguration().Type != types.SQLStorage {
 		log.Info().Msg("Skipping migration for non-SQL database type")
 		return ExitStatusOK
@@ -356,7 +356,7 @@ func printEnv() int {
 // getDBForMigrations function opens a DB connection and prepares the DB for
 // migrations. Non-OK exit code is returned as the last return value in case
 // of an error. Otherwise, database and connection pointers are returned.
-func getDBForMigrations() (storage.Storage, *sql.DB, int) {
+func getDBForMigrations() (storage.OCPRecommendationsStorage, *sql.DB, int) {
 	db, err := createStorage()
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to prepare DB for migrations")

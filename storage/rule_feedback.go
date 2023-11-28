@@ -39,7 +39,7 @@ type UserFeedbackOnRule struct {
 }
 
 // VoteOnRule likes or dislikes rule for cluster by user. If entry exists, it overwrites it
-func (storage DBStorage) VoteOnRule(
+func (storage OCPRecommendationsDBStorage) VoteOnRule(
 	clusterID types.ClusterName,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
@@ -52,7 +52,7 @@ func (storage DBStorage) VoteOnRule(
 }
 
 // AddOrUpdateFeedbackOnRule adds feedback on rule for cluster by user. If entry exists, it overwrites it
-func (storage DBStorage) AddOrUpdateFeedbackOnRule(
+func (storage OCPRecommendationsDBStorage) AddOrUpdateFeedbackOnRule(
 	clusterID types.ClusterName,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
@@ -65,7 +65,7 @@ func (storage DBStorage) AddOrUpdateFeedbackOnRule(
 
 // addOrUpdateUserFeedbackOnRuleForCluster adds or updates feedback
 // will update user vote and messagePtr if the pointers are not nil
-func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
+func (storage OCPRecommendationsDBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	clusterID types.ClusterName,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
@@ -121,7 +121,7 @@ func (storage DBStorage) addOrUpdateUserFeedbackOnRuleForCluster(
 	return nil
 }
 
-func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote, updateMessage bool) (string, error) {
+func (storage OCPRecommendationsDBStorage) constructUpsertClusterRuleUserFeedback(updateVote, updateMessage bool) (string, error) {
 	var query string
 
 	switch storage.dbDriverType {
@@ -155,7 +155,7 @@ func (storage DBStorage) constructUpsertClusterRuleUserFeedback(updateVote, upda
 }
 
 // GetUserFeedbackOnRule gets user feedback from DB
-func (storage DBStorage) GetUserFeedbackOnRule(
+func (storage OCPRecommendationsDBStorage) GetUserFeedbackOnRule(
 	clusterID types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey, userID types.UserID,
 ) (*UserFeedbackOnRule, error) {
 	feedback := UserFeedbackOnRule{}
@@ -189,7 +189,7 @@ func (storage DBStorage) GetUserFeedbackOnRule(
 }
 
 // GetUserFeedbackOnRuleDisable gets user feedback from DB
-func (storage DBStorage) GetUserFeedbackOnRuleDisable(
+func (storage OCPRecommendationsDBStorage) GetUserFeedbackOnRuleDisable(
 	clusterID types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey, userID types.UserID,
 ) (*UserFeedbackOnRule, error) {
 	feedback := UserFeedbackOnRule{}
@@ -222,7 +222,7 @@ func (storage DBStorage) GetUserFeedbackOnRuleDisable(
 }
 
 // GetUserFeedbackOnRules gets user feedbacks for defined array of rule IDs from DB
-func (storage DBStorage) GetUserFeedbackOnRules(
+func (storage OCPRecommendationsDBStorage) GetUserFeedbackOnRules(
 	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
 ) (map[types.RuleID]types.UserVote, error) {
 	ruleIDs := make([]string, 0)
@@ -266,7 +266,7 @@ func (storage DBStorage) GetUserFeedbackOnRules(
 }
 
 // GetUserDisableFeedbackOnRules gets user disable feedbacks for defined array of rule IDs from DB
-func (storage DBStorage) GetUserDisableFeedbackOnRules(
+func (storage OCPRecommendationsDBStorage) GetUserDisableFeedbackOnRules(
 	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
 ) (map[types.RuleID]UserFeedbackOnRule, error) {
 	feedbacks := make(map[types.RuleID]UserFeedbackOnRule)
@@ -287,7 +287,7 @@ func (storage DBStorage) GetUserDisableFeedbackOnRules(
 }
 
 // AddFeedbackOnRuleDisable adds feedback on rule disable
-func (storage DBStorage) AddFeedbackOnRuleDisable(
+func (storage OCPRecommendationsDBStorage) AddFeedbackOnRuleDisable(
 	clusterID types.ClusterName,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,

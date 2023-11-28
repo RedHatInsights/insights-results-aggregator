@@ -37,7 +37,7 @@ type DisabledRuleReason struct {
 }
 
 // ListOfReasons function returns list of reasons for all disabled rules
-func (storage DBStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
+func (storage OCPRecommendationsDBStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReason, error) {
 	reasons := make([]DisabledRuleReason, 0)
 	query := `SELECT
                          cluster_id,
@@ -88,7 +88,7 @@ func (storage DBStorage) ListOfReasons(userID types.UserID) ([]DisabledRuleReaso
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account.
-func (storage DBStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.DisabledRule, error) {
+func (storage OCPRecommendationsDBStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.DisabledRule, error) {
 	disabledRules := make([]ctypes.DisabledRule, 0)
 	query := `SELECT
 		cluster_id,
@@ -141,7 +141,7 @@ func (storage DBStorage) ListOfDisabledRules(orgID types.OrgID) ([]ctypes.Disabl
 
 // ListOfDisabledRulesForClusters function returns list of all rules disabled from a
 // specified account for given list of clusters.
-func (storage DBStorage) ListOfDisabledRulesForClusters(
+func (storage OCPRecommendationsDBStorage) ListOfDisabledRulesForClusters(
 	clusterList []string,
 	orgID types.OrgID,
 ) ([]ctypes.DisabledRule, error) {

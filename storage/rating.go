@@ -26,7 +26,7 @@ import (
 )
 
 // RateOnRule function stores the vote (rating) from a given user to a rule+error key
-func (storage *DBStorage) RateOnRule(
+func (storage *OCPRecommendationsDBStorage) RateOnRule(
 	orgID types.OrgID,
 	ruleFqdn types.RuleID,
 	errorKey types.ErrorKey,
@@ -67,7 +67,7 @@ func (storage *DBStorage) RateOnRule(
 }
 
 // GetRuleRating retrieves rating for given rule and user
-func (storage *DBStorage) GetRuleRating(
+func (storage *OCPRecommendationsDBStorage) GetRuleRating(
 	orgID types.OrgID,
 	ruleSelector types.RuleSelector,
 ) (

@@ -296,12 +296,12 @@ func stopBenchmarkTimer(b *testing.B) {
 }
 
 // Only create recommendation table in the test DB
-func mustPrepareRecommendationsBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {
+func mustPrepareRecommendationsBenchmark(b *testing.B) (storage.OCPRecommendationsStorage, *sql.DB, func()) {
 	// Postgres queries are very verbose at DEBUG log level, so it's better
 	// to silence them this way to make benchmark results easier to find.
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	mockStorage, closer := ira_helpers.MustGetPostgresStorage(b, false)
-	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	conn := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	_, err := conn.Exec("DROP TABLE IF EXISTS recommendation;")
 	helpers.FailOnError(b, err)
@@ -314,7 +314,7 @@ func mustPrepareRecommendationsBenchmark(b *testing.B) (storage.Storage, *sql.DB
 
 // Only create recommendation table in the test DB, and insert numRows entries
 // in the table before the benchmarking timers are reset
-func mustPrepareRecommendationsBenchmarkWithEntries(b *testing.B, numRows int) (storage.Storage, *sql.DB, func()) {
+func mustPrepareRecommendationsBenchmarkWithEntries(b *testing.B, numRows int) (storage.OCPRecommendationsStorage, *sql.DB, func()) {
 	mockStorage, conn, closer := mustPrepareReportAndRecommendationsBenchmark(b)
 
 	for i := 0; i < numRows; i++ {
@@ -325,19 +325,19 @@ func mustPrepareRecommendationsBenchmarkWithEntries(b *testing.B, numRows int) (
 			) VALUES ($1, $2, $3)
 		`, cluster, "a rule module", "an error key")
 		helpers.FailOnError(b, err)
-		storage.SetClustersLastChecked(mockStorage.(*storage.DBStorage), types.ClusterName(cluster), time.Now())
+		storage.SetClustersLastChecked(mockStorage.(*storage.OCPRecommendationsDBStorage), types.ClusterName(cluster), time.Now())
 	}
 
 	return mockStorage, conn, closer
 }
 
-func mustPrepareReportAndRecommendationsBenchmark(b *testing.B) (storage.Storage, *sql.DB, func()) {
+func mustPrepareReportAndRecommendationsBenchmark(b *testing.B) (storage.OCPRecommendationsStorage, *sql.DB, func()) {
 	// Postgres queries are very verbose at DEBUG log level, so it's better
 	// to silence them this way to make benchmark results easier to find.
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	mockStorage, closer := ira_helpers.MustGetPostgresStorage(b, false)
 
-	conn := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	conn := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	_, err := conn.Exec("DROP TABLE IF EXISTS recommendation;")
 	helpers.FailOnError(b, err)
@@ -410,7 +410,7 @@ func BenchmarkNewRecommendationsExistingClusterConflict(b *testing.B) {
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
-			storage.SetClustersLastChecked(mockStorage.(*storage.DBStorage), types.ClusterName(id), time.Now())
+			storage.SetClustersLastChecked(mockStorage.(*storage.OCPRecommendationsDBStorage), types.ClusterName(id), time.Now())
 		}
 	}
 	clusterIds := make([]string, 2*len(clusterIDSet.content))
@@ -451,7 +451,7 @@ func BenchmarkNewRecommendations2000initialEntries(b *testing.B) {
 		id := uuid.New().String()
 		if !clusterIDSet.contains(id) {
 			clusterIDSet.add(id)
-			storage.SetClustersLastChecked(mockStorage.(*storage.DBStorage), types.ClusterName(id), time.Now())
+			storage.SetClustersLastChecked(mockStorage.(*storage.OCPRecommendationsDBStorage), types.ClusterName(id), time.Now())
 		}
 	}
 

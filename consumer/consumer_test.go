@@ -99,7 +99,7 @@ func mustConsumerProcessMessage(t testing.TB, mockConsumer consumer.Consumer, me
 	helpers.FailOnError(t, consumerProcessMessage(mockConsumer, message))
 }
 
-func dummyConsumer(s storage.Storage, allowlist bool) consumer.Consumer {
+func dummyConsumer(s storage.OCPRecommendationsStorage, allowlist bool) consumer.Consumer {
 	brokerCfg := broker.Configuration{
 		Address: "localhost:1234",
 		Topic:   "topic",

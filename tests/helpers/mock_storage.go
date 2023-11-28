@@ -38,7 +38,7 @@ const postgres = "postgres"
 // if env variable INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB is set to "postgres"
 // INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS is set to db admin's password
 // produces t.Fatal(err) on error
-func MustGetMockStorage(tb testing.TB, init bool) (storage.Storage, func()) {
+func MustGetMockStorage(tb testing.TB, init bool) (storage.OCPRecommendationsStorage, func()) {
 	return MustGetPostgresStorage(tb, init)
 }
 
@@ -46,7 +46,7 @@ func MustGetMockStorage(tb testing.TB, init bool) (storage.Storage, func()) {
 // with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
 // before each query, so first try to use MustGetMockStorage
 // don't forget to call MustCloseMockStorageWithExpects
-func MustGetMockStorageWithExpects(t *testing.T) (storage.Storage, sqlmock.Sqlmock) {
+func MustGetMockStorageWithExpects(t *testing.T) (storage.OCPRecommendationsStorage, sqlmock.Sqlmock) {
 	return MustGetMockStorageWithExpectsForDriver(t, types.DBDriverGeneral)
 }
 
@@ -57,7 +57,7 @@ func MustGetMockStorageWithExpects(t *testing.T) (storage.Storage, sqlmock.Sqlmo
 // don't forget to call MustCloseMockStorageWithExpects
 func MustGetMockStorageWithExpectsForDriver(
 	t *testing.T, driverType types.DBDriver,
-) (storage.Storage, sqlmock.Sqlmock) {
+) (storage.OCPRecommendationsStorage, sqlmock.Sqlmock) {
 	db, expects := MustGetMockDBWithExpects(t)
 
 	return storage.NewFromConnection(db, driverType), expects
@@ -76,7 +76,7 @@ func MustGetMockDBWithExpects(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 
 // MustCloseMockStorageWithExpects closes mock storage with expects and panics if it wasn't successful
 func MustCloseMockStorageWithExpects(
-	t *testing.T, mockStorage storage.Storage, expects sqlmock.Sqlmock,
+	t *testing.T, mockStorage storage.OCPRecommendationsStorage, expects sqlmock.Sqlmock,
 ) {
 	if err := expects.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
@@ -99,7 +99,7 @@ func MustCloseMockDBWithExpects(
 }
 
 // MustGetSQLiteMemoryStorage creates test sqlite storage in file
-func MustGetSQLiteMemoryStorage(tb testing.TB, init bool) (storage.Storage, func()) {
+func MustGetSQLiteMemoryStorage(tb testing.TB, init bool) (storage.OCPRecommendationsStorage, func()) {
 	sqliteStorage := mustGetSqliteStorage(tb, ":memory:", init)
 
 	return sqliteStorage, func() {
@@ -108,7 +108,7 @@ func MustGetSQLiteMemoryStorage(tb testing.TB, init bool) (storage.Storage, func
 }
 
 // MustGetSQLiteFileStorage creates test sqlite storage in file
-func MustGetSQLiteFileStorage(tb testing.TB, init bool) (storage.Storage, func()) {
+func MustGetSQLiteFileStorage(tb testing.TB, init bool) (storage.OCPRecommendationsStorage, func()) {
 	dbFilename := fmt.Sprintf("/tmp/insights-results-aggregator.test.%v.db", uuid.New().String())
 
 	sqliteStorage := mustGetSqliteStorage(tb, dbFilename, init)
@@ -119,7 +119,7 @@ func MustGetSQLiteFileStorage(tb testing.TB, init bool) (storage.Storage, func()
 	}
 }
 
-func mustGetSqliteStorage(tb testing.TB, datasource string, init bool) storage.Storage {
+func mustGetSqliteStorage(tb testing.TB, datasource string, init bool) storage.OCPRecommendationsStorage {
 	db, err := sql.Open(sqlite3, datasource)
 	helpers.FailOnError(tb, err)
 
@@ -137,7 +137,7 @@ func mustGetSqliteStorage(tb testing.TB, datasource string, init bool) storage.S
 }
 
 // MustGetPostgresStorage creates test postgres storage with credentials from config-devel
-func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) {
+func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendationsStorage, func()) {
 	dbAdminPassword := os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS")
 
 	err := conf.LoadConfiguration("../config-devel")
@@ -183,6 +183,6 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.Storage, func()) 
 }
 
 // MustCloseStorage closes the storage and calls t.Fatal on error
-func MustCloseStorage(tb testing.TB, s storage.Storage) {
+func MustCloseStorage(tb testing.TB, s storage.OCPRecommendationsStorage) {
 	helpers.FailOnError(tb, s.Close())
 }

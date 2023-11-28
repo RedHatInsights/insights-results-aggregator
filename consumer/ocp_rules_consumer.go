@@ -60,7 +60,7 @@ import (
 type OCPRulesConsumer struct {
 	Configuration                        broker.Configuration
 	ConsumerGroup                        sarama.ConsumerGroup
-	Storage                              storage.Storage
+	Storage                              storage.OCPRecommendationsStorage
 	numberOfSuccessfullyConsumedMessages uint64
 	numberOfErrorsConsumingMessages      uint64
 	ready                                chan bool
@@ -75,14 +75,14 @@ type OCPRulesConsumer struct {
 var DefaultSaramaConfig *sarama.Config
 
 // NewOCPRulesConsumer constructs new implementation of Consumer interface
-func NewOCPRulesConsumer(brokerCfg broker.Configuration, storage storage.Storage) (*OCPRulesConsumer, error) {
+func NewOCPRulesConsumer(brokerCfg broker.Configuration, storage storage.OCPRecommendationsStorage) (*OCPRulesConsumer, error) {
 	return NewOCPRulesConsumerWithSaramaConfig(brokerCfg, storage, DefaultSaramaConfig)
 }
 
 // NewOCPRulesConsumerWithSaramaConfig constructs new implementation of Consumer interface with custom sarama config
 func NewOCPRulesConsumerWithSaramaConfig(
 	brokerCfg broker.Configuration,
-	storage storage.Storage,
+	storage storage.OCPRecommendationsStorage,
 	saramaConfig *sarama.Config,
 ) (*OCPRulesConsumer, error) {
 	var err error

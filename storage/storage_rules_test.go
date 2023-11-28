@@ -37,7 +37,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
+func mustWriteReport3Rules(t *testing.T, mockStorage storage.OCPRecommendationsStorage) {
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, testdata.Report3RulesParsed,
 		testdata.LastCheckedAt, testdata.LastCheckedAt, time.Now(), testdata.RequestID1,
@@ -45,7 +45,7 @@ func mustWriteReport3Rules(t *testing.T, mockStorage storage.Storage) {
 	helpers.FailOnError(t, err)
 }
 
-func mustWriteReport3RulesForCluster(t *testing.T, mockStorage storage.Storage, clusterName types.ClusterName) {
+func mustWriteReport3RulesForCluster(t *testing.T, mockStorage storage.OCPRecommendationsStorage, clusterName types.ClusterName) {
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, clusterName, testdata.Report3Rules, testdata.Report3RulesParsed,
 		testdata.LastCheckedAt, testdata.LastCheckedAt, time.Now(), testdata.RequestID1,
@@ -493,7 +493,7 @@ func TestDBStorageVoteOnRuleDBError(t *testing.T) {
 func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
 	defer closer()
-	connection := storage.GetConnection(mockStorage.(*storage.DBStorage))
+	connection := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
 	query := `
 		CREATE TABLE cluster_rule_user_feedback (

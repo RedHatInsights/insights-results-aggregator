@@ -47,8 +47,8 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// Storage represents an interface to almost any database or storage system
-type Storage interface {
+// OCPRecommendationsStorage represents an interface to almost any database or storage system
+type OCPRecommendationsStorage interface {
 	Init() error
 	Close() error
 	ListOfOrgs() ([]types.OrgID, error)
@@ -227,11 +227,11 @@ type Storage interface {
 // ReportSuffix is used to strip away .report suffix from rule module names
 const ReportSuffix = ".report"
 
-// DBStorage is an implementation of Storage interface that use selected SQL like database
+// OCPRecommendationsDBStorage is an implementation of Storage interface that use selected SQL like database
 // like SQLite, PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
 // sql package. It is possible to configure connection via Configuration structure.
 // SQLQueriesLog is log for sql queries, default is nil which means nothing is logged
-type DBStorage struct {
+type OCPRecommendationsDBStorage struct {
 	connection   *sql.DB
 	dbDriverType types.DBDriver
 	// clusterLastCheckedDict is a dictionary of timestamps when the clusters were last checked.
@@ -239,7 +239,7 @@ type DBStorage struct {
 }
 
 // New function creates and initializes a new instance of Storage interface
-func New(configuration Configuration) (Storage, error) {
+func New(configuration Configuration) (OCPRecommendationsStorage, error) {
 	switch configuration.Type {
 	case types.SQLStorage:
 		return newSQLStorage(configuration)
@@ -256,12 +256,12 @@ func New(configuration Configuration) (Storage, error) {
 }
 
 // newNoopStorage function creates and initializes a new instance of Noop storage
-func newNoopStorage(_ Configuration) (Storage, error) {
+func newNoopStorage(_ Configuration) (OCPRecommendationsStorage, error) {
 	return &NoopStorage{}, nil
 }
 
 // newRedisStorage function creates and initializes a new instance of Redis storage
-func newRedisStorage(configuration Configuration) (Storage, error) {
+func newRedisStorage(configuration Configuration) (OCPRecommendationsStorage, error) {
 	redisCfg := configuration.RedisConfiguration
 	log.Info().
 		Str("Endpoint", redisCfg.RedisEndpoint).
@@ -300,7 +300,7 @@ func newRedisStorage(configuration Configuration) (Storage, error) {
 }
 
 // newSQLStorage function creates and initializes a new instance of DB storage
-func newSQLStorage(configuration Configuration) (Storage, error) {
+func newSQLStorage(configuration Configuration) (OCPRecommendationsStorage, error) {
 	driverType, driverName, dataSource, err := initAndGetDriver(configuration)
 	if err != nil {
 		return nil, err
@@ -321,8 +321,8 @@ func newSQLStorage(configuration Configuration) (Storage, error) {
 }
 
 // NewFromConnection function creates and initializes a new instance of Storage interface from prepared connection
-func NewFromConnection(connection *sql.DB, dbDriverType types.DBDriver) *DBStorage {
-	return &DBStorage{
+func NewFromConnection(connection *sql.DB, dbDriverType types.DBDriver) *OCPRecommendationsDBStorage {
+	return &OCPRecommendationsDBStorage{
 		connection:          connection,
 		dbDriverType:        dbDriverType,
 		clustersLastChecked: map[types.ClusterName]time.Time{},
@@ -366,7 +366,7 @@ func initAndGetDriver(configuration Configuration) (driverType types.DBDriver, d
 
 // MigrateToLatest migrates the database to the latest available
 // migration version. This must be done before an Init() call.
-func (storage DBStorage) MigrateToLatest() error {
+func (storage OCPRecommendationsDBStorage) MigrateToLatest() error {
 	if err := migration.InitInfoTable(storage.connection); err != nil {
 		return err
 	}
@@ -376,7 +376,7 @@ func (storage DBStorage) MigrateToLatest() error {
 
 // Init performs all database initialization
 // tasks necessary for further service operation.
-func (storage DBStorage) Init() error {
+func (storage OCPRecommendationsDBStorage) Init() error {
 	// Read clusterName:LastChecked dictionary from DB.
 	rows, err := storage.connection.Query("SELECT cluster, last_checked_at FROM report;")
 	if err != nil {
@@ -406,7 +406,7 @@ func (storage DBStorage) Init() error {
 }
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.
-func (storage DBStorage) Close() error {
+func (storage OCPRecommendationsDBStorage) Close() error {
 	log.Info().Msg("Closing connection to data storage")
 	if storage.connection != nil {
 		err := storage.connection.Close()
@@ -435,7 +435,7 @@ func closeRows(rows *sql.Rows) {
 }
 
 // ListOfOrgs reads list of all organizations that have at least one cluster report
-func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
+func (storage OCPRecommendationsDBStorage) ListOfOrgs() ([]types.OrgID, error) {
 	orgs := make([]types.OrgID, 0)
 
 	rows, err := storage.connection.Query("SELECT DISTINCT org_id FROM report ORDER BY org_id;")
@@ -459,7 +459,7 @@ func (storage DBStorage) ListOfOrgs() ([]types.OrgID, error) {
 }
 
 // ListOfClustersForOrg reads list of all clusters fro given organization
-func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.Time) ([]types.ClusterName, error) {
+func (storage OCPRecommendationsDBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.Time) ([]types.ClusterName, error) {
 	clusters := make([]types.ClusterName, 0)
 
 	q := `
@@ -492,7 +492,7 @@ func (storage DBStorage) ListOfClustersForOrg(orgID types.OrgID, timeLimit time.
 }
 
 // ListOfClustersForOrgSpecificRule returns list of all clusters for given organization that are affect by given rule
-func (storage DBStorage) ListOfClustersForOrgSpecificRule(
+func (storage OCPRecommendationsDBStorage) ListOfClustersForOrgSpecificRule(
 	orgID types.OrgID,
 	ruleID types.RuleSelector,
 	activeClusters []string) (
@@ -547,7 +547,7 @@ func (storage DBStorage) ListOfClustersForOrgSpecificRule(
 }
 
 // GetOrgIDByClusterID reads OrgID for specified cluster
-func (storage DBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error) {
+func (storage OCPRecommendationsDBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error) {
 	row := storage.connection.QueryRow("SELECT org_id FROM report WHERE cluster = $1 ORDER BY org_id;", cluster)
 
 	var orgID uint64
@@ -652,7 +652,7 @@ func updateRecommendationsMetrics(cluster string, deleted float64, inserted floa
 */
 
 // ReadOrgIDsForClusters read organization IDs for given list of cluster names.
-func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]types.OrgID, error) {
+func (storage OCPRecommendationsDBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName) ([]types.OrgID, error) {
 	// stub for return value
 	ids := make([]types.OrgID, 0)
 
@@ -701,7 +701,7 @@ func (storage DBStorage) ReadOrgIDsForClusters(clusterNames []types.ClusterName)
 
 // ReadReportsForClusters function reads reports for given list of cluster
 // names.
-func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
+func (storage OCPRecommendationsDBStorage) ReadReportsForClusters(clusterNames []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
 	// stub for return value
 	reports := make(map[types.ClusterName]types.ClusterReport)
 
@@ -752,7 +752,7 @@ func (storage DBStorage) ReadReportsForClusters(clusterNames []types.ClusterName
 }
 
 // ReadReportForCluster reads result (health status) for selected cluster
-func (storage DBStorage) ReadReportForCluster(
+func (storage OCPRecommendationsDBStorage) ReadReportForCluster(
 	orgID types.OrgID, clusterName types.ClusterName,
 ) ([]types.RuleOnReport, types.Timestamp, types.Timestamp, types.Timestamp, error) {
 	var lastChecked time.Time
@@ -803,7 +803,7 @@ func (storage DBStorage) ReadReportForCluster(
 }
 
 // ReadSingleRuleTemplateData reads template data for a single rule
-func (storage DBStorage) ReadSingleRuleTemplateData(
+func (storage OCPRecommendationsDBStorage) ReadSingleRuleTemplateData(
 	orgID types.OrgID, clusterName types.ClusterName, ruleID types.RuleID, errorKey types.ErrorKey,
 ) (interface{}, error) {
 	var templateDataBytes []byte
@@ -823,7 +823,7 @@ func (storage DBStorage) ReadSingleRuleTemplateData(
 }
 
 // ReadReportForClusterByClusterName reads result (health status) for selected cluster for given organization
-func (storage DBStorage) ReadReportForClusterByClusterName(
+func (storage OCPRecommendationsDBStorage) ReadReportForClusterByClusterName(
 	clusterName types.ClusterName,
 ) ([]types.RuleOnReport, types.Timestamp, error) {
 	report := make([]types.RuleOnReport, 0)
@@ -857,7 +857,7 @@ func (storage DBStorage) ReadReportForClusterByClusterName(
 
 // GetRuleHitInsertStatement method prepares DB statement to be used to write
 // rule FQDN + rule error key into rule_hit table for given cluster_id
-func (storage DBStorage) GetRuleHitInsertStatement(rules []types.ReportItem) string {
+func (storage OCPRecommendationsDBStorage) GetRuleHitInsertStatement(rules []types.ReportItem) string {
 	const ruleInsertStatement = "INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data, created_at) VALUES %s"
 
 	// pre-allocate array for placeholders
@@ -908,7 +908,7 @@ func valuesForRuleHitsInsert(
 	return values
 }
 
-func (storage DBStorage) updateReport(
+func (storage OCPRecommendationsDBStorage) updateReport(
 	tx *sql.Tx,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
@@ -1008,7 +1008,7 @@ func prepareInsertRecommendationsStatement(
 	return
 }
 
-func (storage DBStorage) insertRecommendations(
+func (storage OCPRecommendationsDBStorage) insertRecommendations(
 	tx *sql.Tx,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
@@ -1054,7 +1054,7 @@ func (storage DBStorage) insertRecommendations(
 // (rule_fqdn, error_key) -> created_at
 // for each rule_hit rows matching given
 // orgId and clusterName
-func (storage DBStorage) getRuleKeyCreatedAtMap(
+func (storage OCPRecommendationsDBStorage) getRuleKeyCreatedAtMap(
 	query string,
 	orgID types.OrgID,
 	clusterName types.ClusterName,
@@ -1090,7 +1090,7 @@ func (storage DBStorage) getRuleKeyCreatedAtMap(
 }
 
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
-func (storage DBStorage) WriteReportForCluster(
+func (storage OCPRecommendationsDBStorage) WriteReportForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	report types.ClusterReport,
@@ -1153,7 +1153,7 @@ func (storage DBStorage) WriteReportForCluster(
 }
 
 // WriteRecommendationsForCluster writes hitting rules in received report for selected cluster
-func (storage DBStorage) WriteRecommendationsForCluster(
+func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	stringReport types.ClusterReport,
@@ -1245,7 +1245,7 @@ func finishTransaction(tx *sql.Tx, err error) {
 }
 
 // ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization
-func (storage DBStorage) ReadRecommendationsForClusters(
+func (storage OCPRecommendationsDBStorage) ReadRecommendationsForClusters(
 	clusterList []string,
 	orgID types.OrgID,
 ) (ctypes.RecommendationImpactedClusters, error) {
@@ -1296,7 +1296,7 @@ func (storage DBStorage) ReadRecommendationsForClusters(
 }
 
 // ReadClusterListRecommendations retrieves cluster IDs and a list of hitting rules for each one
-func (storage DBStorage) ReadClusterListRecommendations(
+func (storage OCPRecommendationsDBStorage) ReadClusterListRecommendations(
 	clusterList []string,
 	orgID types.OrgID,
 ) (ctypes.ClusterRecommendationMap, error) {
@@ -1389,7 +1389,7 @@ func (storage DBStorage) ReadClusterListRecommendations(
 }
 
 // ReportsCount reads number of all records stored in database
-func (storage DBStorage) ReportsCount() (int, error) {
+func (storage OCPRecommendationsDBStorage) ReportsCount() (int, error) {
 	count := -1
 	err := storage.connection.QueryRow("SELECT count(*) FROM report;").Scan(&count)
 	err = types.ConvertDBError(err, nil)
@@ -1398,24 +1398,24 @@ func (storage DBStorage) ReportsCount() (int, error) {
 }
 
 // DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
-func (storage DBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
+func (storage OCPRecommendationsDBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
 	_, err := storage.connection.Exec("DELETE FROM report WHERE org_id = $1;", orgID)
 	return err
 }
 
 // DeleteReportsForCluster deletes all reports related to the specified cluster from the storage.
-func (storage DBStorage) DeleteReportsForCluster(clusterName types.ClusterName) error {
+func (storage OCPRecommendationsDBStorage) DeleteReportsForCluster(clusterName types.ClusterName) error {
 	_, err := storage.connection.Exec("DELETE FROM report WHERE cluster = $1;", clusterName)
 	return err
 }
 
 // GetConnection returns db connection(useful for testing)
-func (storage DBStorage) GetConnection() *sql.DB {
+func (storage OCPRecommendationsDBStorage) GetConnection() *sql.DB {
 	return storage.connection
 }
 
 // WriteConsumerError writes a report about a consumer error into the storage.
-func (storage DBStorage) WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error {
+func (storage OCPRecommendationsDBStorage) WriteConsumerError(msg *sarama.ConsumerMessage, consumerErr error) error {
 	_, err := storage.connection.Exec(`
 		INSERT INTO consumer_error (topic, partition, topic_offset, key, produced_at, consumed_at, message, error)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
@@ -1425,12 +1425,12 @@ func (storage DBStorage) WriteConsumerError(msg *sarama.ConsumerMessage, consume
 }
 
 // GetDBDriverType returns db driver type
-func (storage DBStorage) GetDBDriverType() types.DBDriver {
+func (storage OCPRecommendationsDBStorage) GetDBDriverType() types.DBDriver {
 	return storage.dbDriverType
 }
 
 // DoesClusterExist checks if cluster with this id exists
-func (storage DBStorage) DoesClusterExist(clusterID types.ClusterName) (bool, error) {
+func (storage OCPRecommendationsDBStorage) DoesClusterExist(clusterID types.ClusterName) (bool, error) {
 	err := storage.connection.QueryRow(
 		"SELECT cluster FROM report WHERE cluster = $1", clusterID,
 	).Scan(&clusterID)
@@ -1445,7 +1445,7 @@ func (storage DBStorage) DoesClusterExist(clusterID types.ClusterName) (bool, er
 
 // ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
 // specified account.
-func (storage DBStorage) ListOfDisabledClusters(
+func (storage OCPRecommendationsDBStorage) ListOfDisabledClusters(
 	orgID types.OrgID,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,

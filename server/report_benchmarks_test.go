@@ -44,14 +44,14 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 
 	type testCase struct {
 		storageName     string
-		storageProvider func(testing.TB, bool) (storage.Storage, func())
+		storageProvider func(testing.TB, bool) (storage.OCPRecommendationsStorage, func())
 		N               uint
 	}
 
 	var testCases []testCase
 
 	for _, n := range []uint{1, 10, 100, 1000} {
-		for storageName, storageProvider := range map[string]func(testing.TB, bool) (storage.Storage, func()){
+		for storageName, storageProvider := range map[string]func(testing.TB, bool) (storage.OCPRecommendationsStorage, func()){
 			"SQLiteMemory": helpers.MustGetSQLiteMemoryStorage,
 			"SQLiteFile":   helpers.MustGetSQLiteFileStorage,
 			"Postgres":     helpers.MustGetPostgresStorage,
@@ -80,7 +80,7 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 
 func benchmarkHTTPServerReadReportForCluster(
 	b *testing.B,
-	mockStorage storage.Storage,
+	mockStorage storage.OCPRecommendationsStorage,
 	testReportDataItems []testReportData,
 	n uint,
 ) {
@@ -128,7 +128,7 @@ type testReportData struct {
 	clusterID types.ClusterName
 }
 
-func initTestReports(b *testing.B, n uint, mockStorage storage.Storage, reportProvider func() (types.ClusterReport, []types.ReportItem)) []testReportData {
+func initTestReports(b *testing.B, n uint, mockStorage storage.OCPRecommendationsStorage, reportProvider func() (types.ClusterReport, []types.ReportItem)) []testReportData {
 	var testReportDataItems []testReportData
 
 	for i := uint(0); i < n; i++ {

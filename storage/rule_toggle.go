@@ -45,7 +45,7 @@ type ClusterRuleToggle struct {
 }
 
 // ToggleRuleForCluster toggles rule for specified cluster
-func (storage DBStorage) ToggleRuleForCluster(
+func (storage OCPRecommendationsDBStorage) ToggleRuleForCluster(
 	clusterID types.ClusterName,
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
@@ -100,7 +100,7 @@ func (storage DBStorage) ToggleRuleForCluster(
 }
 
 // GetFromClusterRuleToggle gets a rule from cluster_rule_toggle
-func (storage DBStorage) GetFromClusterRuleToggle(
+func (storage OCPRecommendationsDBStorage) GetFromClusterRuleToggle(
 	clusterID types.ClusterName, ruleID types.RuleID,
 ) (*ClusterRuleToggle, error) {
 	var disabledRule ClusterRuleToggle
@@ -146,7 +146,7 @@ func (storage DBStorage) GetFromClusterRuleToggle(
 }
 
 // GetTogglesForRules gets enable/disable toggle for rules
-func (storage DBStorage) GetTogglesForRules(
+func (storage OCPRecommendationsDBStorage) GetTogglesForRules(
 	clusterID types.ClusterName,
 	rulesReport []types.RuleOnReport,
 	orgID types.OrgID,
@@ -199,7 +199,7 @@ func (storage DBStorage) GetTogglesForRules(
 }
 
 // DeleteFromRuleClusterToggle deletes a record from the table rule_cluster_toggle. Only exposed in debug mode.
-func (storage DBStorage) DeleteFromRuleClusterToggle(
+func (storage OCPRecommendationsDBStorage) DeleteFromRuleClusterToggle(
 	clusterID types.ClusterName, ruleID types.RuleID,
 ) error {
 	query := `
