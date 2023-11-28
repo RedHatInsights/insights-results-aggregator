@@ -25,6 +25,11 @@ db_driver = "sqlite3"
 sqlite_datasource = "./test.db"
 type = "sql"
 
+[ocm_recommendations_storage]
+db_driver = "sqlite3"
+sqlite_datasource = "./test.db"
+type = "sql"
+
 [redis]
 database = 0
 endpoint = "localhost:6379"

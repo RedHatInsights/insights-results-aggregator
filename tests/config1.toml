@@ -20,6 +20,17 @@ org_overview_limit_hours = 2
 [processing]
 org_allowlist_file = "org_allowlist.csv"
 
+[storage]
+db_driver = "sqlite3"
+sqlite_datasource = ":memory:"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = ""
+type = "sql"
+
 [ocp_recommendations_storage]
 db_driver = "sqlite3"
 sqlite_datasource = ":memory:"
