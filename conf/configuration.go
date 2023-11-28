@@ -179,8 +179,8 @@ func getOrganizationAllowlist() mapset.Set {
 	return allowlist
 }
 
-// GetStorageConfiguration returns storage configuration
-func GetStorageConfiguration() storage.Configuration {
+// GetOCPRecommendationsStorageConfiguration returns storage configuration
+func GetOCPRecommendationsStorageConfiguration() storage.Configuration {
 	return Config.OCPRecommendationsStorage
 }
 

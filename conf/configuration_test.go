@@ -162,7 +162,7 @@ func TestLoadServerConfiguration(t *testing.T) {
 func TestLoadStorageConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
 
-	storageCfg := conf.GetStorageConfiguration()
+	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 
 	assert.Equal(t, "sqlite3", storageCfg.Driver)
 	assert.Equal(t, ":memory:", storageCfg.SQLiteDataSource)
@@ -189,7 +189,7 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 
 	mustLoadConfiguration(configPath)
 
-	storageCfg := conf.GetStorageConfiguration()
+	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "sqlite3",
 		SQLiteDataSource: ":memory:",
@@ -207,7 +207,7 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 
 	mustLoadConfiguration(configPath)
 
-	storageCfg = conf.GetStorageConfiguration()
+	storageCfg = conf.GetOCPRecommendationsStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
 		Driver:           "postgres",
 		SQLiteDataSource: ":memory:",
@@ -353,7 +353,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		PGDBName:         "aggregator",
 		PGParams:         "params",
 		Type:             "sql",
-	}, conf.GetStorageConfiguration())
+	}, conf.GetOCPRecommendationsStorageConfiguration())
 
 	assert.Equal(t, storage.RedisConfiguration{
 		RedisEndpoint:       "localhost:6379",
@@ -411,7 +411,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		PGDBName:         "aggregator",
 		PGParams:         "params",
 		Type:             "sql",
-	}, conf.GetStorageConfiguration())
+	}, conf.GetOCPRecommendationsStorageConfiguration())
 
 	assert.Equal(t, storage.RedisConfiguration{
 		RedisEndpoint:       "default-redis-endpoint",
@@ -498,7 +498,7 @@ func TestLoadConfigurationFromEnvVariableClowderEnabled(t *testing.T) {
 
 	// retrieve broker config
 	brokerCfg := conf.GetBrokerConfiguration()
-	storageCfg := conf.GetStorageConfiguration()
+	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 
 	// check
 	assert.Equal(t, "localhost:29092", brokerCfg.Address, "Broker doesn't match")
