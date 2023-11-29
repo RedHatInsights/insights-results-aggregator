@@ -25,6 +25,7 @@ cyclomatic complexity > 9
 * `abcgo` to measure ABC metrics for Go source code and check if the metrics does not exceed
   specified threshold
 * `golangci-lint` as Go linters aggregator with lot of linters enabled: https://golangci-lint.run/usage/linters/
+* BDD tests that checks the overall Insights Results Aggregator behaviour.
 
 Please note that all checks mentioned above have to pass for the change to be merged into master
 branch.

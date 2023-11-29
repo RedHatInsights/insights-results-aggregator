@@ -16,7 +16,7 @@ layout: page
 
 ## List of tables
 
-All tables that are stored in external data pipeline database:
+All tables that are stored in external data pipeline database (OCP Recommendations):
 
 ```
  Schema |                Name                | Type

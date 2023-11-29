@@ -18,6 +18,7 @@ Aggregator service for insights results
 * [Description](#description)
 * [Documentation](#documentation)
 * [Makefile targets](#makefile-targets)
+* [Usage](#usage)
 * [BDD tests](#bdd-tests)
 * [Package manifest](#package-manifest)
 
@@ -67,6 +68,26 @@ rest_api_tests       Run REST API tests
 before_commit        Checks done before commit
 help                 Show this help screen
 function_list        List all functions in generated binary file
+```
+
+## Usage
+
+```
+Usage:
+
+    ./insights-results-aggregator [command]
+
+The commands are:
+
+    <EMPTY>             starts aggregator
+    start-service       starts aggregator
+    help                prints help
+    print-help          prints help
+    print-config        prints current configuration set by files & env variables
+    print-env           prints env variables
+    print-version-info  prints version info
+    migration           prints information about migrations (current, latest)
+    migration <version> migrates database to the specified version
 ```
 
 ## BDD tests
