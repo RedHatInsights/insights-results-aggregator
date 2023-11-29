@@ -58,6 +58,8 @@ function deploy_ephemeral() {
 }
 
 function run_smoke_tests() {
+   # Workaround: cji_smoke_test.sh requires only one component name. Fallback to only one component name.
+   export COMPONENT_NAME="ccx-insights-results"
    source $CICD_ROOT/cji_smoke_test.sh
    source $CICD_ROOT/post_test_results.sh  # publish results in Ibutsu
 }
