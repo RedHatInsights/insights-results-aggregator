@@ -21,9 +21,14 @@ set -exv
 # --------------------------------------------
 APP_NAME="ccx-data-pipeline"  # name of app-sre "application" folder this component lives in
 REF_ENV="insights-production"
-COMPONENT_NAME="ccx-insights-results"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
+# NOTE: insights-results-aggregator contains deployment for multiple services
+#       for pull requests we need latest git PR version of these components to be
+#       deployed to ephemeral env and overriding resource template --set-template-ref.
+#       Using multiple components name in COMPONENT_NAME forces bonfire to use the
+#       git version of clowdapp.yaml(or any other) file from the pull request.
+COMPONENT_NAME="ccx-insights-results ccx-cache-writer"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/insights-results-aggregator"
-COMPONENTS="ccx-data-pipeline ccx-insights-results insights-content-service insights-results-smart-proxy ccx-mock-ams" # space-separated list of components to laod
+COMPONENTS="ccx-data-pipeline ccx-insights-results insights-content-service insights-results-smart-proxy ccx-mock-ams ccx-cache-writer" # space-separated list of components to laod
 COMPONENTS_W_RESOURCES=""  # component to keep
 CACHE_FROM_LATEST_IMAGE="true"
 DEPLOY_FRONTENDS="false"
