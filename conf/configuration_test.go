@@ -67,16 +67,16 @@ func setEnvVariables(t *testing.T) {
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_ALLOWLIST", "org_allowlist.csv")
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "sqlite3")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE", ":memory:")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_USERNAME", "user")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "password")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_HOST", "localhost")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PORT", "5432")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_DB_NAME", "aggregator")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PARAMS", "params")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__LOG_SQL_QUERIES", "true")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__TYPE", "sql")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER", "sqlite3")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE", ":memory:")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_USERNAME", "user")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PASSWORD", "password")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_HOST", "localhost")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PORT", "5432")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_DB_NAME", "aggregator")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS", "params")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__LOG_SQL_QUERIES", "true")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE", "sql")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
 
@@ -202,8 +202,8 @@ func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
 		Type:             "sql",
 	}, storageCfg)
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER", "postgres")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD", "some very secret password")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER", "postgres")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PASSWORD", "some very secret password")
 
 	mustLoadConfiguration(configPath)
 
@@ -282,7 +282,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		api_spec_file = "openapi.json"
 		debug = true
 
-		[storage]
+		[ocp_recommendations_storage]
 		db_driver = "sqlite3"
 		sqlite_datasource = ":memory:"
 		pg_username = "user"

@@ -32,8 +32,8 @@ type = "sql"
 and environment variables
 
 ```shell
-INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER="postgres"
-INSIGHTS_RESULTS_AGGREGATOR__STORAGE__PG_PASSWORD="your secret password"
+INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER="postgres"
+INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PASSWORD="your secret password"
 ```
 
 the actual driver will be postgres with password "your secret password"

@@ -79,8 +79,8 @@ func TestStartService(t *testing.T) {
 
 		mustLoadConfiguration("./tests/tests")
 		setEnvSettings(t, map[string]string{
-			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
-			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
+			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
 		})
 
 		go func() {
@@ -100,8 +100,8 @@ func TestStartService_DBError(t *testing.T) {
 		log.Logger = zerolog.New(buf)
 
 		setEnvSettings(t, map[string]string{
-			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
-			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
+			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
+			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
 		})
 
 		exitCode := main.StartService()
@@ -112,8 +112,8 @@ func TestStartService_DBError(t *testing.T) {
 
 func TestCreateStorage_BadDriver(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "non-existing-driver",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "non-existing-driver",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
 	})
 
 	_, err := main.CreateStorage()
@@ -136,8 +136,8 @@ func TestCloseStorage_Error(t *testing.T) {
 
 func TestPrepareDB_DBError(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "non-existing-driver",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "non-existing-driver",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
 	})
 
 	errCode := main.PrepareDB()
@@ -146,8 +146,8 @@ func TestPrepareDB_DBError(t *testing.T) {
 
 func TestPrepareDB(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
 	})
@@ -162,8 +162,8 @@ func TestPrepareDB(t *testing.T) {
 
 func TestPrepareDB_NoRulesDirectory(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "/non-existing-path",
 	})
@@ -174,8 +174,8 @@ func TestPrepareDB_NoRulesDirectory(t *testing.T) {
 
 func TestPrepareDB_BadRules(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/bad_metadata_status/",
 	})
@@ -186,8 +186,8 @@ func TestPrepareDB_BadRules(t *testing.T) {
 
 func TestStartConsumer_DBError(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "non-existing-driver",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "bad-data-source",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "non-existing-driver",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "bad-data-source",
 	})
 
 	err := main.StartConsumer(conf.GetBrokerConfiguration())
@@ -196,8 +196,8 @@ func TestStartConsumer_DBError(t *testing.T) {
 
 func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:999999",
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
@@ -211,8 +211,8 @@ func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 
 func TestStartServer_DBError(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "non-existing-driver",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": "bad-data-source",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "non-existing-driver",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "bad-data-source",
 	})
 
 	err := main.StartServer()
@@ -221,8 +221,8 @@ func TestStartServer_DBError(t *testing.T) {
 
 func TestStartServer_BadServerAddress(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       "localhost:999999",
 		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE": "openapi.json",
@@ -234,8 +234,8 @@ func TestStartServer_BadServerAddress(t *testing.T) {
 
 func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE__SQLITE_DATASOURCE": ":memory:",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:1",
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
