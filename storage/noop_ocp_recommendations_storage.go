@@ -257,7 +257,7 @@ func (*NoopOCPStorage) ReadOrgIDsForClusters(_ []types.ClusterName) ([]types.Org
 // ReadReportsForClusters function reads reports for given list of cluster
 // names.
 func (*NoopOCPStorage) ReadReportsForClusters(_ []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
-	return nNoopOCPStorage
+	return nil, nil
 }
 
 // ListOfDisabledRules function returns list of all rules disabled from a

@@ -257,7 +257,7 @@ func NewOCPRecommendationsStorage(configuration Configuration) (OCPRecommendatio
 
 // newNoopOCPStorage function creates and initializes a new instance of Noop storage
 func newNoopOCPStorage(_ Configuration) (OCPRecommendationsStorage, error) {
-	return &NoopStorage{}, nil
+	return &NoopOCPStorage{}, nil
 }
 
 // newRedisStorage function creates and initializes a new instance of Redis storage
