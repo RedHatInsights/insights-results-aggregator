@@ -65,7 +65,7 @@ func TestCreateStorage(t *testing.T) {
 	os.Clearenv()
 	mustLoadConfiguration("tests/config1")
 
-	_, err := main.CreateStorage()
+	_, _, err := main.CreateStorage()
 	helpers.FailOnError(t, err)
 }
 
@@ -116,7 +116,7 @@ func TestCreateStorage_BadDriver(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
 	})
 
-	_, err := main.CreateStorage()
+	_, _, err := main.CreateStorage()
 	assert.EqualError(t, err, "driver non-existing-driver is not supported")
 }
 
