@@ -118,8 +118,8 @@ func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendati
 	// configuration represented as one data structure
 	storageCfg.RedisConfiguration = redisCfg
 
-	var ocpStorage storage.OCPRecommendationsStorage = nil
-	var dvoStorage storage.DVORecommendationsStorage = nil
+	var ocpStorage storage.OCPRecommendationsStorage
+	var dvoStorage storage.DVORecommendationsStorage
 	var err error
 
 	log.Info().Str("type", storageCfg.Type).Msg("Storage type")
