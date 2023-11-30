@@ -246,7 +246,7 @@ func NewOCPRecommendationsStorage(configuration Configuration) (OCPRecommendatio
 	case types.RedisStorage:
 		return newRedisStorage(configuration)
 	case types.NoopStorage:
-		return newNoopStorage(configuration)
+		return newNoopOCPStorage(configuration)
 	default:
 		// error to be thrown
 		err := fmt.Errorf("Unknown storage type '%s'", configuration.Type)
@@ -255,8 +255,8 @@ func NewOCPRecommendationsStorage(configuration Configuration) (OCPRecommendatio
 	}
 }
 
-// newNoopStorage function creates and initializes a new instance of Noop storage
-func newNoopStorage(_ Configuration) (OCPRecommendationsStorage, error) {
+// newNoopOCPStorage function creates and initializes a new instance of Noop storage
+func newNoopOCPStorage(_ Configuration) (OCPRecommendationsStorage, error) {
 	return &NoopStorage{}, nil
 }
 
