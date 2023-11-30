@@ -33,6 +33,15 @@ sqlite_datasource = "./aggregator.db"
 log_sql_queries = true
 type = "sql"
 
+[dvo_recommendations_storage]
+db_driver = "sqlite3"
+sqlite_datasource = "./dvo.db"
+log_sql_queries = true
+type = "sql"
+
+[storage_backend]
+use = "ocp_recommendations"
+
 [redis]
 database = 0
 endpoint = "localhost:6379"

@@ -42,6 +42,9 @@ pg_db_name = "aggregator"
 pg_params = ""
 type = "sql"
 
+[storage_backend]
+use = "ocp_recommendations"
+
 [redis]
 database = 0
 endpoint = "localhost:6379"
