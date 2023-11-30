@@ -78,6 +78,17 @@ func setEnvVariables(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__LOG_SQL_QUERIES", "true")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE", "sql")
 
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__DB_DRIVER", "postgres")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE", "datasource")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_USERNAME", "user")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PASSWORD", "password")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_HOST", "localhost")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PORT", "5432")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_DB_NAME", "aggregator")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PARAMS", "params")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__LOG_SQL_QUERIES", "true")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE", "sql")
+
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__ENDPOINT", "default-redis-endpoint")
@@ -158,8 +169,9 @@ func TestLoadServerConfiguration(t *testing.T) {
 	assert.Equal(t, "/api/v1/", serverCfg.APIPrefix)
 }
 
-// TestLoadStorageConfiguration tests loading the storage configuration sub-tree
-func TestLoadStorageConfiguration(t *testing.T) {
+// TestLoadOCPRecommendationsStorageConfiguration tests loading the OCP
+// recommendations storage configuration sub-tree
+func TestLoadOCPRecommendationsStorageConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
 
 	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
@@ -181,8 +193,8 @@ func TestLoadRedisConfiguration(t *testing.T) {
 	assert.Equal(t, "", redisCfg.RedisPassword)
 }
 
-// TestLoadConfigurationOverrideFromEnv tests overriding configuration by env variables
-func TestLoadConfigurationOverrideFromEnv(t *testing.T) {
+// TestLoadConfigurationOverrideFromEnv1 tests overriding configuration by env variables
+func TestLoadConfigurationOverrideFromEnv1(t *testing.T) {
 	os.Clearenv()
 
 	const configPath = "../tests/config1"
