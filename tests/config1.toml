@@ -31,6 +31,17 @@ pg_db_name = "aggregator"
 pg_params = ""
 type = "sql"
 
+[dvo_recommendations_storage]
+db_driver = "postgres"
+sqlite_datasource = "datasource"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = ""
+type = "sql"
+
 [redis]
 database = 0
 endpoint = "localhost:6379"
