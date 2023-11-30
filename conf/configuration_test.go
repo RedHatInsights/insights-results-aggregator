@@ -169,6 +169,30 @@ func TestLoadServerConfiguration(t *testing.T) {
 	assert.Equal(t, "/api/v1/", serverCfg.APIPrefix)
 }
 
+// TestLoadStorageBackendConfiguration tests loading the storage backend
+// configuration configuration sub-tree
+func TestLoadStorageBackendConfiguration(t *testing.T) {
+	TestLoadConfiguration(t)
+
+	storageCfg := conf.GetStorageBackendConfiguration()
+	assert.Equal(t, "ocp_recommendations", storageCfg.Use)
+}
+
+// TestLoadStorageBackendConfigurationChangedFromEnvVar tests loading the
+// storage backend configuration configuration sub-tree
+func TestLoadStorageBackendConfigurationChangedFromEnvVar(t *testing.T) {
+	os.Clearenv()
+
+	const configPath = "../tests/config1"
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE", "dvo_recommendations")
+
+	mustLoadConfiguration(configPath)
+
+	storageCfg := conf.GetStorageBackendConfiguration()
+	assert.Equal(t, "dvo_recommendations", storageCfg.Use)
+}
+
 // TestLoadOCPRecommendationsStorageConfiguration tests loading the OCP
 // recommendations storage configuration sub-tree
 func TestLoadOCPRecommendationsStorageConfiguration(t *testing.T) {
