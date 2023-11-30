@@ -18,8 +18,7 @@ Also each key in config can be overwritten by corresponding env var. For example
 
 ```toml
 [ocp_recommendations_storage]
-db_driver = "sqlite3"
-sqlite_datasource = "./aggregator.db"
+db_driver = "postgres"
 pg_username = "user"
 pg_password = "password"
 pg_host = "localhost"
@@ -185,14 +184,24 @@ For each storage, specific section in configuration file is used:
 
 ```toml
 [ocp_recommendations_storage]
-db_driver = "sqlite3"
-sqlite_datasource = "./aggregator.db"
+db_driver = "postgres"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = ""
 log_sql_queries = true
 type = "sql"
 
 [dvo_recommendations_storage]
-db_driver = "sqlite3"
-sqlite_datasource = "./dvo.db"
+db_driver = "postgres"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = ""
 log_sql_queries = true
 type = "sql"
 ```
