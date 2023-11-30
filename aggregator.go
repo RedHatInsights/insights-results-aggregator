@@ -121,7 +121,7 @@ func createStorage() (storage.OCPRecommendationsStorage, error) {
 	log.Info().Str("type", storageCfg.Type).Msg("Storage type")
 
 	// try to initialize connection to storage
-	dbStorage, err := storage.New(storageCfg)
+	dbStorage, err := storage.NewOCPRecommendationsStorage(storageCfg)
 	if err != nil {
 		log.Error().Err(err).Msg("storage.New")
 		return nil, err

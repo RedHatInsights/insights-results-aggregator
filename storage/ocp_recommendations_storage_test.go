@@ -86,7 +86,7 @@ func writeReportForCluster(
 
 // TestNewStorageError checks whether constructor for new storage returns error for improper storage configuration
 func TestNewStorageError(t *testing.T) {
-	_, err := storage.New(storage.Configuration{
+	_, err := storage.NewOCPRecommendationsStorage(storage.Configuration{
 		Driver: "non existing driver",
 		Type:   "sql",
 	})
@@ -95,7 +95,7 @@ func TestNewStorageError(t *testing.T) {
 
 // TestNewStorageNoType checks whether constructor for new storage returns error for improper storage configuration
 func TestNewStorageNoType(t *testing.T) {
-	_, err := storage.New(storage.Configuration{
+	_, err := storage.NewOCPRecommendationsStorage(storage.Configuration{
 		Driver: "non existing driver",
 	})
 	assert.EqualError(t, err, "Unknown storage type ''")
@@ -103,7 +103,7 @@ func TestNewStorageNoType(t *testing.T) {
 
 // TestNewStorageWrongType checks whether constructor for new storage returns error for improper storage configuration
 func TestNewStorageWrongType(t *testing.T) {
-	_, err := storage.New(storage.Configuration{
+	_, err := storage.NewOCPRecommendationsStorage(storage.Configuration{
 		Driver: "non existing driver",
 		Type:   "foobar",
 	})
@@ -112,7 +112,7 @@ func TestNewStorageWrongType(t *testing.T) {
 
 // TestNewStorageWithLogging tests creating new storage with logs
 func TestNewStorageWithLoggingError(t *testing.T) {
-	s, _ := storage.New(storage.Configuration{
+	s, _ := storage.NewOCPRecommendationsStorage(storage.Configuration{
 		Driver:        "postgres",
 		PGPort:        1234,
 		PGUsername:    "user",
@@ -126,7 +126,7 @@ func TestNewStorageWithLoggingError(t *testing.T) {
 
 // TestNewStorageReturnedImplementation check what implementation of storage is returnd
 func TestNewStorageReturnedImplementation(t *testing.T) {
-	s, _ := storage.New(storage.Configuration{
+	s, _ := storage.NewOCPRecommendationsStorage(storage.Configuration{
 		Driver:        "postgres",
 		PGPort:        1234,
 		PGUsername:    "user",
@@ -135,7 +135,7 @@ func TestNewStorageReturnedImplementation(t *testing.T) {
 	})
 	assert.IsType(t, &storage.OCPRecommendationsDBStorage{}, s)
 
-	s, _ = storage.New(storage.Configuration{
+	s, _ = storage.NewOCPRecommendationsStorage(storage.Configuration{
 		Driver:        "postgres",
 		PGPort:        1234,
 		PGUsername:    "user",
@@ -144,14 +144,14 @@ func TestNewStorageReturnedImplementation(t *testing.T) {
 	})
 	assert.IsType(t, &storage.RedisStorage{}, s)
 
-	s, _ = storage.New(storage.Configuration{
+	s, _ = storage.NewOCPRecommendationsStorage(storage.Configuration{
 		Driver:        "postgres",
 		PGPort:        1234,
 		PGUsername:    "user",
 		LogSQLQueries: true,
 		Type:          "noop",
 	})
-	assert.IsType(t, &storage.NoopStorage{}, s)
+	assert.IsType(t, &storage.NoopOCPStorage{}, s)
 }
 
 // TestDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster
@@ -285,7 +285,7 @@ func TestDBStorageWriteReportForClusterClosedStorage(t *testing.T) {
 
 // TestDBStorageWriteReportForClusterClosedStorage check the behaviour of method WriteReportForCluster
 func TestDBStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
-	fakeStorage := storage.NewFromConnection(nil, -1)
+	fakeStorage := storage.NewOCPRecommendationsFromConnection(nil, -1)
 	// no need to close it
 
 	err := fakeStorage.WriteReportForCluster(
@@ -605,7 +605,7 @@ func TestMockDBReportsCountClosedStorage(t *testing.T) {
 }
 
 func TestDBStorageNewPostgresqlError(t *testing.T) {
-	s, _ := storage.New(storage.Configuration{
+	s, _ := storage.NewOCPRecommendationsStorage(storage.Configuration{
 		Driver:     "postgres",
 		PGHost:     "non-existing-host",
 		PGPort:     12345,
@@ -766,7 +766,7 @@ func TestDBStorage_CheckIfClusterExists_DBError(t *testing.T) {
 }
 
 func TestDBStorage_NewSQLite(t *testing.T) {
-	_, err := storage.New(storage.Configuration{
+	_, err := storage.NewOCPRecommendationsStorage(storage.Configuration{
 		Driver:           "sqlite3",
 		SQLiteDataSource: ":memory:",
 		Type:             "sql",

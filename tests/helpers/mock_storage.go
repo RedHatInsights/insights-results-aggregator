@@ -60,7 +60,7 @@ func MustGetMockStorageWithExpectsForDriver(
 ) (storage.OCPRecommendationsStorage, sqlmock.Sqlmock) {
 	db, expects := MustGetMockDBWithExpects(t)
 
-	return storage.NewFromConnection(db, driverType), expects
+	return storage.NewOCPRecommendationsFromConnection(db, driverType), expects
 }
 
 // MustGetMockDBWithExpects returns mock db
@@ -126,7 +126,7 @@ func mustGetSqliteStorage(tb testing.TB, datasource string, init bool) storage.O
 	_, err = db.Exec("PRAGMA foreign_keys = ON;")
 	helpers.FailOnError(tb, err)
 
-	sqliteStorage := storage.NewFromConnection(db, types.DBDriverSQLite3)
+	sqliteStorage := storage.NewOCPRecommendationsFromConnection(db, types.DBDriverSQLite3)
 
 	if init {
 		helpers.FailOnError(tb, sqliteStorage.MigrateToLatest())
@@ -162,7 +162,7 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendation
 	_, err = adminConn.Exec(query)
 	helpers.FailOnError(tb, err)
 
-	postgresStorage, err := storage.New(*storageConf)
+	postgresStorage, err := storage.NewOCPRecommendationsStorage(*storageConf)
 
 	helpers.FailOnError(tb, err)
 	helpers.FailOnError(tb, postgresStorage.GetConnection().Ping())

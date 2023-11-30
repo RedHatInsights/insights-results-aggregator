@@ -25,7 +25,7 @@ import (
 )
 
 func TestDBStorage_getRuleHitInsertStatement(t *testing.T) {
-	fakeStorage := storage.NewFromConnection(nil, -1)
+	fakeStorage := storage.NewOCPRecommendationsFromConnection(nil, -1)
 	r := fakeStorage.GetRuleHitInsertStatement(testdata.Report3RulesParsed)
 
 	// 5*3 placeholders expected

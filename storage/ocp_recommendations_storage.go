@@ -238,15 +238,15 @@ type OCPRecommendationsDBStorage struct {
 	clustersLastChecked map[types.ClusterName]time.Time
 }
 
-// New function creates and initializes a new instance of Storage interface
-func New(configuration Configuration) (OCPRecommendationsStorage, error) {
+// NewOCPRecommendationsStorage function creates and initializes a new instance of Storage interface
+func NewOCPRecommendationsStorage(configuration Configuration) (OCPRecommendationsStorage, error) {
 	switch configuration.Type {
 	case types.SQLStorage:
 		return newSQLStorage(configuration)
 	case types.RedisStorage:
 		return newRedisStorage(configuration)
 	case types.NoopStorage:
-		return newNoopStorage(configuration)
+		return newNoopOCPStorage(configuration)
 	default:
 		// error to be thrown
 		err := fmt.Errorf("Unknown storage type '%s'", configuration.Type)
@@ -255,9 +255,9 @@ func New(configuration Configuration) (OCPRecommendationsStorage, error) {
 	}
 }
 
-// newNoopStorage function creates and initializes a new instance of Noop storage
-func newNoopStorage(_ Configuration) (OCPRecommendationsStorage, error) {
-	return &NoopStorage{}, nil
+// newNoopOCPStorage function creates and initializes a new instance of Noop storage
+func newNoopOCPStorage(_ Configuration) (OCPRecommendationsStorage, error) {
+	return &NoopOCPStorage{}, nil
 }
 
 // newRedisStorage function creates and initializes a new instance of Redis storage
@@ -317,11 +317,11 @@ func newSQLStorage(configuration Configuration) (OCPRecommendationsStorage, erro
 		return nil, err
 	}
 
-	return NewFromConnection(connection, driverType), nil
+	return NewOCPRecommendationsFromConnection(connection, driverType), nil
 }
 
-// NewFromConnection function creates and initializes a new instance of Storage interface from prepared connection
-func NewFromConnection(connection *sql.DB, dbDriverType types.DBDriver) *OCPRecommendationsDBStorage {
+// NewOCPRecommendationsFromConnection function creates and initializes a new instance of Storage interface from prepared connection
+func NewOCPRecommendationsFromConnection(connection *sql.DB, dbDriverType types.DBDriver) *OCPRecommendationsDBStorage {
 	return &OCPRecommendationsDBStorage{
 		connection:          connection,
 		dbDriverType:        dbDriverType,
