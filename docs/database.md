@@ -13,12 +13,13 @@ no-ops (empty operations). In this mode, no DB-related operation will fail.
 
 ## PostgreSQL configuration
 
-To establish connection to the PostgreSQL instance provided by the minimal stack in
-`docker-compose.yml` for local setup, the following configuration options need to be changed in
-`storage` section of `config.toml`:
+To establish connection to the PostgreSQL instance provided by the minimal
+stack in `docker-compose.yml` for local setup, the following configuration
+options need to be changed in `ocp_recommendations_storage`,
+`dvo_recommendations_storage` and `storage_backend` sections of `config.toml`:
 
 ```toml
-[storage]
+[ocp_recommendations_storage]
 db_driver = "postgres"
 pg_username = "user"
 pg_password = "password"
@@ -26,6 +27,18 @@ pg_host = "localhost"
 pg_port = 55432
 pg_db_name = "aggregator"
 pg_params = "sslmode=disable"
+
+[dvo_recommendations_storage]
+db_driver = "postgres"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 55432
+pg_db_name = "aggregator"
+pg_params = "sslmode=disable"
+
+[storage_backend]
+use = "ocp_recommendations_storage"
 ```
 
 ## Redis configuration
