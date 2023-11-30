@@ -17,9 +17,8 @@ but it can be overwritten by `INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE` env var.
 Also each key in config can be overwritten by corresponding env var. For example if you have config
 
 ```toml
-[storage]
-db_driver = "sqlite3"
-sqlite_datasource = "./aggregator.db"
+[ocp_recommendations_storage]
+db_driver = "postgres"
 pg_username = "user"
 pg_password = "password"
 pg_host = "localhost"
@@ -173,6 +172,48 @@ debug = false
 * `stream_name` is a stream name for aws logging. If you're deploying multiple pods,
 you can add `$HOSTNAME` to the stream name so that they aren't writing to the same stream at once
 * `debug` is an option to enable debug output of cloudwatch logging
+
+## Storage configuration
+
+Two storage backends can be configured separately:
+
+* Storage for OCP recommendations
+* Storage for DVO recommendations
+
+For each storage, specific section in configuration file is used:
+
+```toml
+[ocp_recommendations_storage]
+db_driver = "postgres"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = ""
+log_sql_queries = true
+type = "sql"
+
+[dvo_recommendations_storage]
+db_driver = "postgres"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = ""
+log_sql_queries = true
+type = "sql"
+```
+
+Actually used storage backend is selected by the following configuration option:
+
+```toml
+[storage_backend]
+use = "ocp_recommendations"
+```
+
+By default OCP recommendations storage is selected if no backend is configured.
 
 ## Redis configuration
 

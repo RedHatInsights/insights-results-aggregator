@@ -28,10 +28,29 @@ org_overview_limit_hours = 2
 org_allowlist_file = "org_allowlist.csv"
 
 [ocp_recommendations_storage]
-db_driver = "sqlite3"
-sqlite_datasource = "./aggregator.db"
+db_driver = "postgres"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = ""
 log_sql_queries = true
 type = "sql"
+
+[dvo_recommendations_storage]
+db_driver = "postgres"
+pg_username = "user"
+pg_password = "password"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "dvo"
+pg_params = ""
+log_sql_queries = true
+type = "sql"
+
+[storage_backend]
+use = "ocp_recommendations"
 
 [redis]
 database = 0
