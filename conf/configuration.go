@@ -76,6 +76,7 @@ type ConfigStruct struct {
 		OrgAllowlistFile string `mapstructure:"org_allowlist_file" toml:"org_allowlist_file"`
 	} `mapstructure:"processing"`
 	OCPRecommendationsStorage storage.Configuration             `mapstructure:"ocp_recommendations_storage" toml:"ocp_recommendations_storage"`
+	DVORecommendationsStorage storage.Configuration             `mapstructure:"dvo_recommendations_storage" toml:"dvo_recommendations_storage"`
 	Logging                   logger.LoggingConfiguration       `mapstructure:"logging" toml:"logging"`
 	CloudWatch                logger.CloudWatchConfiguration    `mapstructure:"cloudwatch" toml:"cloudwatch"`
 	Redis                     storage.RedisConfiguration        `mapstructure:"redis" toml:"redis"`
@@ -179,9 +180,16 @@ func getOrganizationAllowlist() mapset.Set {
 	return allowlist
 }
 
-// GetOCPRecommendationsStorageConfiguration returns storage configuration
+// GetOCPRecommendationsStorageConfiguration returns storage configuration for
+// OCP recommendations database
 func GetOCPRecommendationsStorageConfiguration() storage.Configuration {
 	return Config.OCPRecommendationsStorage
+}
+
+// GetDVORecommendationsStorageConfiguration returns storage configuration for
+// DVO recommendations database
+func GetDVORecommendationsStorageConfiguration() storage.Configuration {
+	return Config.DVORecommendationsStorage
 }
 
 // GetRedisConfiguration returns Redis storage configuration
