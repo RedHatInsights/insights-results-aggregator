@@ -36,15 +36,15 @@ func startServer() error {
 	defer finishServerInstanceInitialization()
 
 	// right now, just the OCP recommendations storage are handled properly
-	dbStorage, _, err := createStorage()
+	ocpRecommendationsStorage, _, err := createStorage()
 	if err != nil {
 		return err
 	}
-	defer closeStorage(dbStorage)
+	defer closeStorage(ocpRecommendationsStorage)
 
 	serverCfg := conf.GetServerConfiguration()
 
-	serverInstance = server.New(serverCfg, dbStorage)
+	serverInstance = server.New(serverCfg, ocpRecommendationsStorage)
 
 	// fill-in additional info used by /info endpoint handler
 	fillInInfoParams(serverInstance.InfoParams)
@@ -55,7 +55,7 @@ func startServer() error {
 	if conf.GetOCPRecommendationsStorageConfiguration().Type == types.SQLStorage {
 		// migration and DB versioning is now supported for SQL
 		// databases only
-		currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection())
+		currentVersion, err := migration.GetDBVersion(ocpRecommendationsStorage.GetConnection())
 		if err != nil {
 			const msg = "Unable to retrieve DB migration version"
 			log.Error().Err(err).Msg(msg)

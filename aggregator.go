@@ -190,27 +190,29 @@ func prepareDBMigrations(dbStorage storage.OCPRecommendationsStorage) int {
 // prepareDB function opens a connection to database and loads all available
 // rule content into it.
 func prepareDB() int {
-	dbStorage, _, err := createStorage()
+	// TODO: when migrations for DVO will be available, update the code below
+
+	ocpRecommendationsStorage, _, err := createStorage()
 	if err != nil {
 		log.Error().Err(err).Msg("Error creating storage")
 		return ExitStatusPrepareDbError
 	}
-	defer closeStorage(dbStorage)
+	defer closeStorage(ocpRecommendationsStorage)
 
 	// Ensure that the DB is at the latest migration version.
-	if exitCode := prepareDBMigrations(dbStorage); exitCode != ExitStatusOK {
+	if exitCode := prepareDBMigrations(ocpRecommendationsStorage); exitCode != ExitStatusOK {
 		return exitCode
 	}
 
 	// Initialize the database.
-	err = dbStorage.Init()
+	err = ocpRecommendationsStorage.Init()
 	if err != nil {
 		log.Error().Err(err).Msg("DB initialization error")
 		return ExitStatusPrepareDbError
 	}
 
 	// temporarily print some information from DB because of limited access to DB
-	dbStorage.PrintRuleDisableDebugInfo()
+	ocpRecommendationsStorage.PrintRuleDisableDebugInfo()
 
 	return ExitStatusOK
 }
