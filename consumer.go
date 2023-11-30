@@ -33,7 +33,8 @@ var (
 func startConsumer(brokerConf broker.Configuration) error {
 	defer finishConsumerInstanceInitialization()
 
-	dbStorage, err := createStorage()
+	// right now just the OCP recommendation storage is handled by consumer
+	dbStorage, _, err := createStorage()
 	if err != nil {
 		return err
 	}

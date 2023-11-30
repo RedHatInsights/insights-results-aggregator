@@ -111,28 +111,44 @@ func fillInInfoParams(params map[string]string) {
 
 // createStorage function initializes connection to preconfigured storage,
 // usually SQLite, PostgreSQL, or AWS RDS.
-func createStorage() (storage.OCPRecommendationsStorage, error) {
+func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendationsStorage, error) {
 	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 	redisCfg := conf.GetRedisConfiguration()
 	// fill-in the missing sub-structure to have the whole Storage
 	// configuration represented as one data structure
 	storageCfg.RedisConfiguration = redisCfg
 
+	var ocpStorage storage.OCPRecommendationsStorage = nil
+	var dvoStorage storage.DVORecommendationsStorage = nil
+	var err error
+
 	log.Info().Str("type", storageCfg.Type).Msg("Storage type")
 
 	// try to initialize connection to storage
-	dbStorage, err := storage.NewOCPRecommendationsStorage(storageCfg)
-	if err != nil {
-		log.Error().Err(err).Msg("storage.New")
-		return nil, err
+	backend := conf.GetStorageBackendConfiguration().Use
+	switch backend {
+	case types.OCPRecommendationsStorage:
+		ocpStorage, err = storage.NewOCPRecommendationsStorage(storageCfg)
+		if err != nil {
+			log.Error().Err(err).Msg("storage.NewOCPRecommendationsStorage")
+			return nil, nil, err
+		}
+	case types.DVORecommendationsStorage:
+		dvoStorage, err = storage.NewDVORecommendationsStorage(storageCfg)
+		if err != nil {
+			log.Error().Err(err).Msg("storage.NewDVORecommendationsStorage")
+			return nil, nil, err
+		}
+	default:
+		return nil, nil, fmt.Errorf("Unknown storage backend %s", backend)
 	}
 
-	return dbStorage, nil
+	return ocpStorage, dvoStorage, nil
 }
 
 // closeStorage function closes specified DBStorage with proper error checking
 // whether the close operation was successful or not.
-func closeStorage(storage storage.OCPRecommendationsStorage) {
+func closeStorage(storage storage.Storage) {
 	err := storage.Close()
 	if err != nil {
 		// TODO: error state might be returned from this function
@@ -174,7 +190,7 @@ func prepareDBMigrations(dbStorage storage.OCPRecommendationsStorage) int {
 // prepareDB function opens a connection to database and loads all available
 // rule content into it.
 func prepareDB() int {
-	dbStorage, err := createStorage()
+	dbStorage, _, err := createStorage()
 	if err != nil {
 		log.Error().Err(err).Msg("Error creating storage")
 		return ExitStatusPrepareDbError
@@ -357,7 +373,8 @@ func printEnv() int {
 // migrations. Non-OK exit code is returned as the last return value in case
 // of an error. Otherwise, database and connection pointers are returned.
 func getDBForMigrations() (storage.OCPRecommendationsStorage, *sql.DB, int) {
-	db, err := createStorage()
+	// use OCP recommendations storage only, unless migrations will be available for other storage(s) too
+	db, _, err := createStorage()
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to prepare DB for migrations")
 		return nil, nil, ExitStatusPrepareDbError

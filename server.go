@@ -35,7 +35,8 @@ var (
 func startServer() error {
 	defer finishServerInstanceInitialization()
 
-	dbStorage, err := createStorage()
+	// right now, just the OCP recommendations storage are handled properly
+	dbStorage, _, err := createStorage()
 	if err != nil {
 		return err
 	}
