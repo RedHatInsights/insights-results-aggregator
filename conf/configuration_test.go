@@ -181,6 +181,19 @@ func TestLoadOCPRecommendationsStorageConfiguration(t *testing.T) {
 	assert.Equal(t, "sql", storageCfg.Type)
 }
 
+// TestLoadDVORecommendationsStorageConfiguration tests loading the DVO
+// recommendations storage configuration sub-tree
+func TestLoadDVORecommendationsStorageConfiguration(t *testing.T) {
+	TestLoadConfiguration(t)
+
+	storageCfg := conf.GetDVORecommendationsStorageConfiguration()
+
+	assert.Equal(t, "postgres", storageCfg.Driver)
+	assert.Equal(t, "user", storageCfg.PGUsername)
+	assert.Equal(t, "password", storageCfg.PGPassword)
+	assert.Equal(t, "sql", storageCfg.Type)
+}
+
 // TestLoadRedisConfiguration tests loading the Redis configuration sub-tree
 func TestLoadRedisConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
@@ -223,6 +236,46 @@ func TestLoadConfigurationOverrideFromEnv1(t *testing.T) {
 	assert.Equal(t, storage.Configuration{
 		Driver:           "postgres",
 		SQLiteDataSource: ":memory:",
+		PGUsername:       "user",
+		PGPassword:       "some very secret password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "",
+		Type:             "sql",
+	}, storageCfg)
+}
+
+// TestLoadConfigurationOverrideFromEnv2 tests overriding configuration by env variables
+func TestLoadConfigurationOverrideFromEnv2(t *testing.T) {
+	os.Clearenv()
+
+	const configPath = "../tests/config1"
+
+	mustLoadConfiguration(configPath)
+
+	storageCfg := conf.GetDVORecommendationsStorageConfiguration()
+	assert.Equal(t, storage.Configuration{
+		Driver:           "postgres",
+		SQLiteDataSource: "datasource",
+		PGUsername:       "user",
+		PGPassword:       "password",
+		PGHost:           "localhost",
+		PGPort:           5432,
+		PGDBName:         "aggregator",
+		PGParams:         "",
+		Type:             "sql",
+	}, storageCfg)
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__DB_DRIVER", "postgres")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PASSWORD", "some very secret password")
+
+	mustLoadConfiguration(configPath)
+
+	storageCfg = conf.GetDVORecommendationsStorageConfiguration()
+	assert.Equal(t, storage.Configuration{
+		Driver:           "postgres",
+		SQLiteDataSource: "datasource",
 		PGUsername:       "user",
 		PGPassword:       "some very secret password",
 		PGHost:           "localhost",
