@@ -26,60 +26,60 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-// NoopStorage represents a storage which does nothing (for benchmarking without a storage)
-type NoopStorage struct{}
+// NoopOCPStorage represents a storage which does nothing (for benchmarking without a storage)
+type NoopOCPStorage struct{}
 
 // Init noop
-func (*NoopStorage) Init() error {
+func (*NoopOCPStorage) Init() error {
 	return nil
 }
 
 // Close noop
-func (*NoopStorage) Close() error {
+func (*NoopOCPStorage) Close() error {
 	return nil
 }
 
 // ListOfOrgs noop
-func (*NoopStorage) ListOfOrgs() ([]types.OrgID, error) {
+func (*NoopOCPStorage) ListOfOrgs() ([]types.OrgID, error) {
 	return nil, nil
 }
 
 // ListOfClustersForOrg noop
-func (*NoopStorage) ListOfClustersForOrg(types.OrgID, time.Time) ([]types.ClusterName, error) {
+func (*NoopOCPStorage) ListOfClustersForOrg(types.OrgID, time.Time) ([]types.ClusterName, error) {
 	return nil, nil
 }
 
 // ReadReportForCluster noop
-func (*NoopStorage) ReadReportForCluster(types.OrgID, types.ClusterName) ([]types.RuleOnReport, types.Timestamp, types.Timestamp, types.Timestamp, error) {
+func (*NoopOCPStorage) ReadReportForCluster(types.OrgID, types.ClusterName) ([]types.RuleOnReport, types.Timestamp, types.Timestamp, types.Timestamp, error) {
 	return []types.RuleOnReport{}, "", "", "", nil
 }
 
 // ReadReportInfoForCluster noop
-func (*NoopStorage) ReadReportInfoForCluster(types.OrgID, types.ClusterName) (types.Version, error) {
+func (*NoopOCPStorage) ReadReportInfoForCluster(types.OrgID, types.ClusterName) (types.Version, error) {
 	return "", nil
 }
 
 // ReadClusterVersionsForClusterList noop
-func (*NoopStorage) ReadClusterVersionsForClusterList(
+func (*NoopOCPStorage) ReadClusterVersionsForClusterList(
 	types.OrgID, []string,
 ) (map[types.ClusterName]types.Version, error) {
 	return nil, nil
 }
 
 // ReadSingleRuleTemplateData noop
-func (*NoopStorage) ReadSingleRuleTemplateData(types.OrgID, types.ClusterName, types.RuleID, types.ErrorKey) (interface{}, error) {
+func (*NoopOCPStorage) ReadSingleRuleTemplateData(types.OrgID, types.ClusterName, types.RuleID, types.ErrorKey) (interface{}, error) {
 	return "", nil
 }
 
 // ReadReportForClusterByClusterName noop
-func (*NoopStorage) ReadReportForClusterByClusterName(
+func (*NoopOCPStorage) ReadReportForClusterByClusterName(
 	types.ClusterName,
 ) ([]types.RuleOnReport, types.Timestamp, error) {
 	return []types.RuleOnReport{}, "", nil
 }
 
 // WriteReportForCluster noop
-func (*NoopStorage) WriteReportForCluster(
+func (*NoopOCPStorage) WriteReportForCluster(
 	types.OrgID, types.ClusterName, types.ClusterReport, []types.ReportItem, time.Time, time.Time, time.Time,
 	types.RequestID,
 ) error {
@@ -87,7 +87,7 @@ func (*NoopStorage) WriteReportForCluster(
 }
 
 // WriteReportInfoForCluster noop
-func (*NoopStorage) WriteReportInfoForCluster(
+func (*NoopOCPStorage) WriteReportInfoForCluster(
 	_ types.OrgID,
 	_ types.ClusterName,
 	_ []types.InfoItem,
@@ -97,115 +97,115 @@ func (*NoopStorage) WriteReportInfoForCluster(
 }
 
 // WriteRecommendationsForCluster noop
-func (*NoopStorage) WriteRecommendationsForCluster(
+func (*NoopOCPStorage) WriteRecommendationsForCluster(
 	types.OrgID, types.ClusterName, types.ClusterReport, types.Timestamp,
 ) error {
 	return nil
 }
 
 // ReportsCount noop
-func (*NoopStorage) ReportsCount() (int, error) {
+func (*NoopOCPStorage) ReportsCount() (int, error) {
 	return 0, nil
 }
 
 // VoteOnRule noop
-func (*NoopStorage) VoteOnRule(types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID, types.UserID, types.UserVote, string) error {
+func (*NoopOCPStorage) VoteOnRule(types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID, types.UserID, types.UserVote, string) error {
 	return nil
 }
 
 // AddOrUpdateFeedbackOnRule noop
-func (*NoopStorage) AddOrUpdateFeedbackOnRule(
+func (*NoopOCPStorage) AddOrUpdateFeedbackOnRule(
 	types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID, types.UserID, string,
 ) error {
 	return nil
 }
 
 // AddFeedbackOnRuleDisable noop
-func (*NoopStorage) AddFeedbackOnRuleDisable(
+func (*NoopOCPStorage) AddFeedbackOnRuleDisable(
 	types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID, types.UserID, string,
 ) error {
 	return nil
 }
 
 // GetUserFeedbackOnRuleDisable noop
-func (*NoopStorage) GetUserFeedbackOnRuleDisable(
+func (*NoopOCPStorage) GetUserFeedbackOnRuleDisable(
 	types.ClusterName, types.RuleID, types.ErrorKey, types.UserID,
 ) (*UserFeedbackOnRule, error) {
 	return nil, nil
 }
 
 // GetUserFeedbackOnRule noop
-func (*NoopStorage) GetUserFeedbackOnRule(
+func (*NoopOCPStorage) GetUserFeedbackOnRule(
 	types.ClusterName, types.RuleID, types.ErrorKey, types.UserID,
 ) (*UserFeedbackOnRule, error) {
 	return nil, nil
 }
 
 // DeleteReportsForOrg noop
-func (*NoopStorage) DeleteReportsForOrg(types.OrgID) error {
+func (*NoopOCPStorage) DeleteReportsForOrg(types.OrgID) error {
 	return nil
 }
 
 // DeleteReportsForCluster noop
-func (*NoopStorage) DeleteReportsForCluster(types.ClusterName) error {
+func (*NoopOCPStorage) DeleteReportsForCluster(types.ClusterName) error {
 	return nil
 }
 
 // LoadRuleContent noop
-func (*NoopStorage) LoadRuleContent(content.RuleContentDirectory) error {
+func (*NoopOCPStorage) LoadRuleContent(content.RuleContentDirectory) error {
 	return nil
 }
 
 // GetRuleByID noop
-func (*NoopStorage) GetRuleByID(types.RuleID) (*types.Rule, error) {
+func (*NoopOCPStorage) GetRuleByID(types.RuleID) (*types.Rule, error) {
 	return nil, nil
 }
 
 // GetOrgIDByClusterID noop
-func (*NoopStorage) GetOrgIDByClusterID(types.ClusterName) (types.OrgID, error) {
+func (*NoopOCPStorage) GetOrgIDByClusterID(types.ClusterName) (types.OrgID, error) {
 	return 0, nil
 }
 
 // CreateRule noop
-func (*NoopStorage) CreateRule(types.Rule) error {
+func (*NoopOCPStorage) CreateRule(types.Rule) error {
 	return nil
 }
 
 // DeleteRule noop
-func (*NoopStorage) DeleteRule(types.RuleID) error {
+func (*NoopOCPStorage) DeleteRule(types.RuleID) error {
 	return nil
 }
 
 // CreateRuleErrorKey noop
-func (*NoopStorage) CreateRuleErrorKey(types.RuleErrorKey) error {
+func (*NoopOCPStorage) CreateRuleErrorKey(types.RuleErrorKey) error {
 	return nil
 }
 
 // DeleteRuleErrorKey noop
-func (*NoopStorage) DeleteRuleErrorKey(types.RuleID, types.ErrorKey) error {
+func (*NoopOCPStorage) DeleteRuleErrorKey(types.RuleID, types.ErrorKey) error {
 	return nil
 }
 
 // WriteConsumerError noop
-func (*NoopStorage) WriteConsumerError(*sarama.ConsumerMessage, error) error {
+func (*NoopOCPStorage) WriteConsumerError(*sarama.ConsumerMessage, error) error {
 	return nil
 }
 
 // ToggleRuleForCluster noop
-func (*NoopStorage) ToggleRuleForCluster(
+func (*NoopOCPStorage) ToggleRuleForCluster(
 	types.ClusterName, types.RuleID, types.ErrorKey, types.OrgID, RuleToggle,
 ) error {
 	return nil
 }
 
 // DeleteFromRuleClusterToggle noop
-func (*NoopStorage) DeleteFromRuleClusterToggle(
+func (*NoopOCPStorage) DeleteFromRuleClusterToggle(
 	types.ClusterName, types.RuleID) error {
 	return nil
 }
 
 // GetFromClusterRuleToggle noop
-func (*NoopStorage) GetFromClusterRuleToggle(
+func (*NoopOCPStorage) GetFromClusterRuleToggle(
 	types.ClusterName,
 	types.RuleID,
 ) (*ClusterRuleToggle, error) {
@@ -213,7 +213,7 @@ func (*NoopStorage) GetFromClusterRuleToggle(
 }
 
 // GetTogglesForRules noop
-func (*NoopStorage) GetTogglesForRules(
+func (*NoopOCPStorage) GetTogglesForRules(
 	types.ClusterName,
 	[]types.RuleOnReport,
 	types.OrgID,
@@ -222,7 +222,7 @@ func (*NoopStorage) GetTogglesForRules(
 }
 
 // GetUserFeedbackOnRules noop
-func (*NoopStorage) GetUserFeedbackOnRules(
+func (*NoopOCPStorage) GetUserFeedbackOnRules(
 	types.ClusterName,
 	[]types.RuleOnReport,
 	types.UserID,
@@ -231,50 +231,50 @@ func (*NoopStorage) GetUserFeedbackOnRules(
 }
 
 // GetRuleWithContent noop
-func (*NoopStorage) GetRuleWithContent(
+func (*NoopOCPStorage) GetRuleWithContent(
 	types.RuleID, types.ErrorKey,
 ) (*types.RuleWithContent, error) {
 	return nil, nil
 }
 
 // GetUserDisableFeedbackOnRules noop
-func (*NoopStorage) GetUserDisableFeedbackOnRules(
+func (*NoopOCPStorage) GetUserDisableFeedbackOnRules(
 	types.ClusterName, []types.RuleOnReport, types.UserID,
 ) (map[types.RuleID]UserFeedbackOnRule, error) {
 	return nil, nil
 }
 
 // DoesClusterExist noop
-func (*NoopStorage) DoesClusterExist(types.ClusterName) (bool, error) {
+func (*NoopOCPStorage) DoesClusterExist(types.ClusterName) (bool, error) {
 	return false, nil
 }
 
 // ReadOrgIDsForClusters read organization IDs for given list of cluster names.
-func (*NoopStorage) ReadOrgIDsForClusters(_ []types.ClusterName) ([]types.OrgID, error) {
+func (*NoopOCPStorage) ReadOrgIDsForClusters(_ []types.ClusterName) ([]types.OrgID, error) {
 	return nil, nil
 }
 
 // ReadReportsForClusters function reads reports for given list of cluster
 // names.
-func (*NoopStorage) ReadReportsForClusters(_ []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
-	return nil, nil
+func (*NoopOCPStorage) ReadReportsForClusters(_ []types.ClusterName) (map[types.ClusterName]types.ClusterReport, error) {
+	return nNoopOCPStorage
 }
 
 // ListOfDisabledRules function returns list of all rules disabled from a
 // specified account (noop).
-func (*NoopStorage) ListOfDisabledRules(_ types.OrgID) ([]ctypes.DisabledRule, error) {
+func (*NoopOCPStorage) ListOfDisabledRules(_ types.OrgID) ([]ctypes.DisabledRule, error) {
 	return nil, nil
 }
 
 // ListOfReasons function returns list of reasons for all rules disabled from a
 // specified account (noop).
-func (*NoopStorage) ListOfReasons(_ types.UserID) ([]DisabledRuleReason, error) {
+func (*NoopOCPStorage) ListOfReasons(_ types.UserID) ([]DisabledRuleReason, error) {
 	return nil, nil
 }
 
 // ListOfDisabledClusters function returns list of all clusters disabled for a rule from a
 // specified account (noop).
-func (*NoopStorage) ListOfDisabledClusters(
+func (*NoopOCPStorage) ListOfDisabledClusters(
 	_ types.OrgID,
 	_ types.RuleID,
 	_ types.ErrorKey,
@@ -284,7 +284,7 @@ func (*NoopStorage) ListOfDisabledClusters(
 
 // ListOfDisabledRulesForClusters function returns list of disabled rules for given clusters from a
 // specified account (noop).
-func (*NoopStorage) ListOfDisabledRulesForClusters(
+func (*NoopOCPStorage) ListOfDisabledRulesForClusters(
 	_ []string,
 	_ types.OrgID,
 ) ([]ctypes.DisabledRule, error) {
@@ -292,7 +292,7 @@ func (*NoopStorage) ListOfDisabledRulesForClusters(
 }
 
 // RateOnRule function stores the vote (rating) given by an user to a rule+error key
-func (*NoopStorage) RateOnRule(
+func (*NoopOCPStorage) RateOnRule(
 	types.OrgID,
 	types.RuleID,
 	types.ErrorKey,
@@ -302,7 +302,7 @@ func (*NoopStorage) RateOnRule(
 }
 
 // GetRuleRating retrieves rating for given rule and user
-func (*NoopStorage) GetRuleRating(
+func (*NoopOCPStorage) GetRuleRating(
 	_ types.OrgID,
 	_ types.RuleSelector,
 ) (
@@ -314,7 +314,7 @@ func (*NoopStorage) GetRuleRating(
 
 // DisableRuleSystemWide disables the selected rule for all clusters visible to
 // given user
-func (*NoopStorage) DisableRuleSystemWide(
+func (*NoopOCPStorage) DisableRuleSystemWide(
 	_ types.OrgID, _ types.RuleID,
 	_ types.ErrorKey, _ string,
 ) error {
@@ -323,14 +323,14 @@ func (*NoopStorage) DisableRuleSystemWide(
 
 // EnableRuleSystemWide enables the selected rule for all clusters visible to
 // given user
-func (*NoopStorage) EnableRuleSystemWide(
+func (*NoopOCPStorage) EnableRuleSystemWide(
 	_ types.OrgID, _ types.RuleID, _ types.ErrorKey,
 ) error {
 	return nil
 }
 
 // UpdateDisabledRuleJustification change justification for already disabled rule
-func (*NoopStorage) UpdateDisabledRuleJustification(
+func (*NoopOCPStorage) UpdateDisabledRuleJustification(
 	_ types.OrgID,
 	_ types.RuleID,
 	_ types.ErrorKey,
@@ -340,7 +340,7 @@ func (*NoopStorage) UpdateDisabledRuleJustification(
 }
 
 // ReadDisabledRule function returns disabled rule (if disabled) from database
-func (*NoopStorage) ReadDisabledRule(
+func (*NoopOCPStorage) ReadDisabledRule(
 	_ types.OrgID, _ types.RuleID, _ types.ErrorKey,
 ) (ctypes.SystemWideRuleDisable, bool, error) {
 	return ctypes.SystemWideRuleDisable{}, true, nil
@@ -348,14 +348,14 @@ func (*NoopStorage) ReadDisabledRule(
 
 // ListOfSystemWideDisabledRules function returns list of all rules that have been
 // disabled for all clusters by given user
-func (*NoopStorage) ListOfSystemWideDisabledRules(
+func (*NoopOCPStorage) ListOfSystemWideDisabledRules(
 	_ types.OrgID,
 ) ([]ctypes.SystemWideRuleDisable, error) {
 	return nil, nil
 }
 
 // ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization
-func (*NoopStorage) ReadRecommendationsForClusters(
+func (*NoopOCPStorage) ReadRecommendationsForClusters(
 	_ []string,
 	_ types.OrgID,
 ) (ctypes.RecommendationImpactedClusters, error) {
@@ -364,14 +364,14 @@ func (*NoopStorage) ReadRecommendationsForClusters(
 
 // ListOfClustersForOrgSpecificRule returns list of all clusters for
 // given organization that are affected by given rule
-func (*NoopStorage) ListOfClustersForOrgSpecificRule(
+func (*NoopOCPStorage) ListOfClustersForOrgSpecificRule(
 	_ types.OrgID, _ types.RuleSelector, _ []string,
 ) ([]ctypes.HittingClustersData, error) {
 	return nil, nil
 }
 
 // ReadClusterListRecommendations retrieves cluster IDs and a list of hitting rules for each one
-func (*NoopStorage) ReadClusterListRecommendations(
+func (*NoopOCPStorage) ReadClusterListRecommendations(
 	_ []string, _ types.OrgID,
 ) (ctypes.ClusterRecommendationMap, error) {
 	return nil, nil
@@ -379,21 +379,21 @@ func (*NoopStorage) ReadClusterListRecommendations(
 
 // MigrateToLatest migrates the database to the latest available
 // migration version. This must be done before an Init() call.
-func (*NoopStorage) MigrateToLatest() error {
+func (*NoopOCPStorage) MigrateToLatest() error {
 	return nil
 }
 
 // GetConnection returns db connection(useful for testing)
-func (*NoopStorage) GetConnection() *sql.DB {
+func (*NoopOCPStorage) GetConnection() *sql.DB {
 	return nil
 }
 
 // PrintRuleDisableDebugInfo is a temporary helper function used to print form
 // cluster rule toggle related tables
-func (*NoopStorage) PrintRuleDisableDebugInfo() {
+func (*NoopOCPStorage) PrintRuleDisableDebugInfo() {
 }
 
 // GetDBDriverType returns db driver type
-func (*NoopStorage) GetDBDriverType() types.DBDriver {
+func (*NoopOCPStorage) GetDBDriverType() types.DBDriver {
 	return types.DBDriverGeneral
 }

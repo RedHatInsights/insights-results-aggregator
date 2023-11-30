@@ -43,7 +43,7 @@ func benchmarkProcessingMessage(b *testing.B, s storage.OCPRecommendationsStorag
 }
 
 func getNoopStorage(testing.TB, bool) (storage.OCPRecommendationsStorage, func()) {
-	return &storage.NoopStorage{}, func() {}
+	return &storage.NoopOCPStorage{}, func() {}
 }
 
 func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {

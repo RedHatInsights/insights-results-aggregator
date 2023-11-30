@@ -151,7 +151,7 @@ func TestNewStorageReturnedImplementation(t *testing.T) {
 		LogSQLQueries: true,
 		Type:          "noop",
 	})
-	assert.IsType(t, &storage.NoopStorage{}, s)
+	assert.IsType(t, &storage.NoopOCPStorage{}, s)
 }
 
 // TestDBStorageReadReportForClusterEmptyTable check the behaviour of method ReadReportForCluster

@@ -29,7 +29,7 @@ import (
 // TestNoopStorageEmptyMethods1 calls empty methods that just needs to be
 // defined in order for NoopStorage to satisfy Storage interface.
 func TestNoopStorageEmptyMethods1(_ *testing.T) {
-	noopStorage := storage.NoopStorage{}
+	noopStorage := storage.NoopOCPStorage{}
 	orgID := types.OrgID(1)
 	clusterName := types.ClusterName("")
 
@@ -59,7 +59,7 @@ func TestNoopStorageEmptyMethods1(_ *testing.T) {
 // TestNoopStorageEmptyMethods2 calls empty methods that just needs to be
 // defined in order for NoopStorage to satisfy Storage interface.
 func TestNoopStorageEmptyMethods2(_ *testing.T) {
-	noopStorage := storage.NoopStorage{}
+	noopStorage := storage.NoopOCPStorage{}
 	orgID := types.OrgID(1)
 	clusterName := types.ClusterName("")
 	ruleID := types.RuleID("")
@@ -88,7 +88,7 @@ func TestNoopStorageEmptyMethods2(_ *testing.T) {
 // TestNoopStorageEmptyMethods3 calls empty methods that just needs to be
 // defined in order for NoopStorage to satisfy Storage interface.
 func TestNoopStorageEmptyMethods3(_ *testing.T) {
-	noopStorage := storage.NoopStorage{}
+	noopStorage := storage.NoopOCPStorage{}
 	orgID := types.OrgID(1)
 	clusterName := types.ClusterName("")
 	rule := types.Rule{}
