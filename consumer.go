@@ -33,14 +33,17 @@ var (
 func startConsumer(brokerConf broker.Configuration) error {
 	defer finishConsumerInstanceInitialization()
 
-	dbStorage, err := createStorage()
+	// right now just the OCP recommendation storage is handled by consumer
+	ocpRecommendationsStorage, _, err := createStorage()
 	if err != nil {
 		return err
 	}
 
-	defer closeStorage(dbStorage)
+	defer closeStorage(ocpRecommendationsStorage)
 
-	consumerInstance, err = consumer.NewOCPRulesConsumer(brokerConf, dbStorage)
+	// when DVO consumer will be made, it will need to use DVO storage
+	// (see line that calls createStorage())
+	consumerInstance, err = consumer.NewOCPRulesConsumer(brokerConf, ocpRecommendationsStorage)
 	if err != nil {
 		log.Error().Err(err).Msg("Broker initialization error")
 		return err
