@@ -56,6 +56,7 @@ import (
 const (
 	configFileEnvVariableName   = "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE"
 	defaultOrgAllowlistFileName = "org_allowlist.csv"
+	defaultStorageBackend       = "ocp_recommendations"
 
 	noBrokerConfig = "warning: no broker configurations found in clowder config"
 	noSaslConfig   = "warning: SASL configuration is missing"
@@ -68,6 +69,11 @@ type MetricsConfiguration struct {
 	Namespace string `mapstructure:"namespace" toml:"namespace"`
 }
 
+// StorageBackend contains global storage backend configuration
+type StorageBackend struct {
+	Use string `mapstructure:"use" toml:"use"`
+}
+
 // ConfigStruct is a structure holding the whole service configuration
 type ConfigStruct struct {
 	Broker     broker.Configuration `mapstructure:"broker" toml:"broker"`
@@ -77,6 +83,7 @@ type ConfigStruct struct {
 	} `mapstructure:"processing"`
 	OCPRecommendationsStorage storage.Configuration             `mapstructure:"ocp_recommendations_storage" toml:"ocp_recommendations_storage"`
 	DVORecommendationsStorage storage.Configuration             `mapstructure:"dvo_recommendations_storage" toml:"dvo_recommendations_storage"`
+	StorageBackend            StorageBackend                    `mapstructure:"storage_backend" toml:"storage_backend"`
 	Logging                   logger.LoggingConfiguration       `mapstructure:"logging" toml:"logging"`
 	CloudWatch                logger.CloudWatchConfiguration    `mapstructure:"cloudwatch" toml:"cloudwatch"`
 	Redis                     storage.RedisConfiguration        `mapstructure:"redis" toml:"redis"`
@@ -147,6 +154,12 @@ func LoadConfiguration(defaultConfigFile string) error {
 		return err
 	}
 
+	// manage default storage backend
+	if Config.StorageBackend.Use == "" {
+		fmt.Println("Setting default storage backend")
+		Config.StorageBackend.Use = defaultStorageBackend
+	}
+
 	// everything's should be ok
 	return nil
 }
@@ -178,6 +191,11 @@ func getOrganizationAllowlist() mapset.Set {
 	}
 
 	return allowlist
+}
+
+// GetStorageBackendConfiguration returns storage backend configuration
+func GetStorageBackendConfiguration() StorageBackend {
+	return Config.StorageBackend
 }
 
 // GetOCPRecommendationsStorageConfiguration returns storage configuration for
