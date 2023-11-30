@@ -238,8 +238,8 @@ type OCPRecommendationsDBStorage struct {
 	clustersLastChecked map[types.ClusterName]time.Time
 }
 
-// New function creates and initializes a new instance of Storage interface
-func New(configuration Configuration) (OCPRecommendationsStorage, error) {
+// NewOCPRecommendationsStorage function creates and initializes a new instance of Storage interface
+func NewOCPRecommendationsStorage(configuration Configuration) (OCPRecommendationsStorage, error) {
 	switch configuration.Type {
 	case types.SQLStorage:
 		return newSQLStorage(configuration)
@@ -317,11 +317,11 @@ func newSQLStorage(configuration Configuration) (OCPRecommendationsStorage, erro
 		return nil, err
 	}
 
-	return NewFromConnection(connection, driverType), nil
+	return NewOCPRecommendationsFromConnection(connection, driverType), nil
 }
 
-// NewFromConnection function creates and initializes a new instance of Storage interface from prepared connection
-func NewFromConnection(connection *sql.DB, dbDriverType types.DBDriver) *OCPRecommendationsDBStorage {
+// NewOCPRecommendationsFromConnection function creates and initializes a new instance of Storage interface from prepared connection
+func NewOCPRecommendationsFromConnection(connection *sql.DB, dbDriverType types.DBDriver) *OCPRecommendationsDBStorage {
 	return &OCPRecommendationsDBStorage{
 		connection:          connection,
 		dbDriverType:        dbDriverType,
