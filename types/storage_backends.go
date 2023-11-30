@@ -15,9 +15,9 @@
 package types
 
 const (
-	// OCPRecommendationsStorage repesents OCP recommendations database schema
+	// OCPRecommendationsStorage represents OCP recommendations database schema
 	OCPRecommendationsStorage = "ocp_recommendations"
 
-	// DVORecommendationsStorage repesents DVO recommendations database schema
+	// DVORecommendationsStorage represents DVO recommendations database schema
 	DVORecommendationsStorage = "dvo_recommendations"
 )
