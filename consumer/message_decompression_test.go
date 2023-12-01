@@ -72,8 +72,14 @@ func compressConsumerMessage(original []byte) []byte {
 	if err != nil {
 		panic(err)
 	}
-	gzipWritter.Flush()
-	gzipWritter.Close()
+	err = gzipWritter.Flush()
+	if err {
+		panic(err)
+	}
+	err = gzipWritter.Close()
+	if err {
+		panic(err)
+	}
 	return compressed.Bytes()
 }
 
