@@ -60,7 +60,6 @@ func IsMessageInGzipFormat(messageValue []byte) bool {
 		return true
 	}
 	return false
-
 }
 
 // DecompressMessage will try to decompress the message if the message is compressed
