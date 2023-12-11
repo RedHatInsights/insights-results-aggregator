@@ -183,6 +183,6 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendation
 }
 
 // MustCloseStorage closes the storage and calls t.Fatal on error
-func MustCloseStorage(tb testing.TB, s storage.OCPRecommendationsStorage) {
+func MustCloseStorage(tb testing.TB, s storage.Storage) {
 	helpers.FailOnError(tb, s.Close())
 }

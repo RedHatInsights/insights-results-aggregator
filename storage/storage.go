@@ -15,7 +15,12 @@ See the License for the specific language governing permissions and
 
 package storage
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
+)
 
 // PostgreSQL database driver
 // SQLite database driver
@@ -25,4 +30,8 @@ type Storage interface {
 	Init() error
 	Close() error
 	GetConnection() *sql.DB
+	GetMigrations() []migration.Migration
+	GetDBDriverType() types.DBDriver
+	GetMaxVersion() migration.Version
+	MigrateToLatest() error
 }

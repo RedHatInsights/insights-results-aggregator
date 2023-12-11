@@ -30,6 +30,7 @@ import (
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -69,6 +70,16 @@ func (storage *RedisStorage) Close() error {
 		return storage.Client.Connection.Close()
 	}
 	return nil
+}
+
+// GetMigrations noop
+func (storage *RedisStorage) GetMigrations() []migration.Migration {
+	return nil
+}
+
+// GetMaxVersion noop
+func (storage *RedisStorage) GetMaxVersion() migration.Version {
+	return migration.Version(0)
 }
 
 // ListOfOrgs noop
