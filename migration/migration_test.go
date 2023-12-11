@@ -85,22 +85,6 @@ func prepareDBAndInfo(t *testing.T) (*sql.DB, types.DBDriver, func()) {
 	return db, dbDriver, closer
 }
 
-func stepUpAndDown(t *testing.T, db *sql.DB, dbDriver types.DBDriver, upVer, downVer migration.Version) {
-	err := migration.SetDBVersion(db, dbDriver, upVer, testMigrations)
-	helpers.FailOnError(t, err)
-
-	currentVer, err := migration.GetDBVersion(db)
-	helpers.FailOnError(t, err)
-	assert.Equal(t, upVer, currentVer, "unexpected version")
-
-	err = migration.SetDBVersion(db, dbDriver, 0, testMigrations)
-	helpers.FailOnError(t, err)
-
-	currentVer, err = migration.GetDBVersion(db)
-	helpers.FailOnError(t, err)
-	assert.Equal(t, downVer, currentVer, "unexpected version")
-}
-
 // TestMigrationInit checks that database migration table initialization succeeds.
 func TestMigrationInit(t *testing.T) {
 	db, _, closer := prepareDB(t)
@@ -401,7 +385,6 @@ func TestInitInfoTable_CountDBError(t *testing.T) {
 }
 
 func updateVersionInDBCommon(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
-
 	db, expects := ira_helpers.MustGetMockDBWithExpects(t)
 
 	expects.ExpectBegin()

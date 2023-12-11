@@ -23,6 +23,7 @@ import (
 )
 
 const (
+	// DriverUnsupportedErr error message indicating unsupported DB driver
 	DriverUnsupportedErr = "%v driver is not supported"
 	tableTag             = "table"
 )
@@ -41,6 +42,7 @@ func NewUpdateTableMigration(tableName, previousSchema string, previousColumns [
 	}
 }
 
+// UpgradeTable runs ALTER TABLE based on the given definition
 func UpgradeTable(tx *sql.Tx, tableName, newTableDefinition string) error {
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
@@ -104,6 +106,7 @@ func DowngradeTable(tx *sql.Tx, tableName, oldTableDefinition string, columns []
 	return nil
 }
 
+// UpdateTableData updates data and checks rows affected
 func UpdateTableData(tx *sql.Tx, table, query string, args ...interface{}) error {
 	log.Debug().Str(tableTag, table).Msg("Updating rows...")
 	result, err := tx.Exec(query, args...)
