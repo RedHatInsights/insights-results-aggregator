@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	driverUnsupportedErr = "%v driver is not supported"
+	DriverUnsupportedErr = "%v driver is not supported"
 	tableTag             = "table"
 )
 
@@ -33,15 +33,15 @@ const (
 func NewUpdateTableMigration(tableName, previousSchema string, previousColumns []string, newSchema string) Migration {
 	return Migration{
 		StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
-			return upgradeTable(tx, tableName, newSchema)
+			return UpgradeTable(tx, tableName, newSchema)
 		},
 		StepDown: func(tx *sql.Tx, _ types.DBDriver) error {
-			return downgradeTable(tx, tableName, previousSchema, previousColumns)
+			return DowngradeTable(tx, tableName, previousSchema, previousColumns)
 		},
 	}
 }
 
-func upgradeTable(tx *sql.Tx, tableName, newTableDefinition string) error {
+func UpgradeTable(tx *sql.Tx, tableName, newTableDefinition string) error {
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
 	_, err := tx.Exec(`ALTER TABLE ` + tableName + ` RENAME TO tmp;`)
@@ -69,9 +69,9 @@ func upgradeTable(tx *sql.Tx, tableName, newTableDefinition string) error {
 	return nil
 }
 
-// downgradeTable downgrades table to oldTableDefinition, useful for sqlite which doesn't support
+// DowngradeTable downgrades table to oldTableDefinition, useful for sqlite which doesn't support
 // most of alter table queries. Set columns to the list of new columns if you're removing any columns
-func downgradeTable(tx *sql.Tx, tableName, oldTableDefinition string, columns []string) error {
+func DowngradeTable(tx *sql.Tx, tableName, oldTableDefinition string, columns []string) error {
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
 	_, err := tx.Exec(`ALTER TABLE ` + tableName + ` RENAME TO tmp;`)
@@ -104,7 +104,7 @@ func downgradeTable(tx *sql.Tx, tableName, oldTableDefinition string, columns []
 	return nil
 }
 
-func updateTableData(tx *sql.Tx, table, query string, args ...interface{}) error {
+func UpdateTableData(tx *sql.Tx, table, query string, args ...interface{}) error {
 	log.Debug().Str(tableTag, table).Msg("Updating rows...")
 	result, err := tx.Exec(query, args...)
 

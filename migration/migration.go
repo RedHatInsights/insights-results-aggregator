@@ -42,26 +42,6 @@ type Migration struct {
 	StepDown Step
 }
 
-const (
-	ruleErrorKeyTable                   = "rule_error_key"
-	clusterRuleUserFeedbackTable        = "cluster_rule_user_feedback"
-	clusterReportTable                  = "report"
-	clusterRuleToggleTable              = "cluster_rule_toggle"
-	clusterUserRuleDisableFeedbackTable = "cluster_user_rule_disable_feedback"
-	alterTableDropColumnQuery           = "ALTER TABLE %v DROP COLUMN IF EXISTS %v"
-	alterTableAddVarcharColumn          = "ALTER TABLE %v ADD COLUMN %v VARCHAR NOT NULL DEFAULT '-1'"
-	alterTableDropPK                    = "ALTER TABLE %v DROP CONSTRAINT IF EXISTS %v_pkey"
-	alterTableAddPK                     = "ALTER TABLE %v ADD CONSTRAINT %v_pkey PRIMARY KEY %v"
-	userIDColumn                        = "user_id"
-)
-
-// GetMaxVersion returns the highest available migration version.
-// The DB version cannot be set to a value higher than this.
-// This value is equivalent to the length of the list of available migrations.
-func GetMaxVersion() Version {
-	return Version(len(migrations))
-}
-
 // InitInfoTable ensures that the migration information table is created.
 // If it already exists, no changes will be made to the database.
 // Otherwise, a new migration information table will be created and initialized.
@@ -108,8 +88,13 @@ func GetDBVersion(db *sql.DB) (Version, error) {
 
 // SetDBVersion attempts to get the database into the specified
 // target version using available migration steps.
-func SetDBVersion(db *sql.DB, dbDriver types.DBDriver, targetVer Version) error {
-	maxVer := GetMaxVersion()
+func SetDBVersion(
+	db *sql.DB,
+	dbDriver types.DBDriver,
+	targetVer Version,
+	migrations []Migration,
+) error {
+	maxVer := Version(len(migrations))
 	if targetVer > maxVer {
 		return fmt.Errorf("invalid target version (available version range is 0-%d)", maxVer)
 	}
@@ -125,7 +110,7 @@ func SetDBVersion(db *sql.DB, dbDriver types.DBDriver, targetVer Version) error 
 		return fmt.Errorf("current version (%d) is outside of available migration boundaries", currentVer)
 	}
 
-	return execStepsInTx(db, dbDriver, currentVer, targetVer)
+	return execStepsInTx(db, dbDriver, currentVer, targetVer, migrations)
 }
 
 // updateVersionInDB updates the migration version number in the migration info table.
@@ -150,7 +135,7 @@ func updateVersionInDB(tx *sql.Tx, newVersion Version) error {
 }
 
 // execStepsInTx executes the necessary migration steps in a single transaction.
-func execStepsInTx(db *sql.DB, dbDriver types.DBDriver, currentVer, targetVer Version) error {
+func execStepsInTx(db *sql.DB, dbDriver types.DBDriver, currentVer, targetVer Version, migrations []Migration) error {
 	// Already at target version.
 	if currentVer == targetVer {
 		return nil

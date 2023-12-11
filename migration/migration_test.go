@@ -60,6 +60,7 @@ var (
 			return err
 		},
 	}
+	testMigrations = []migration.Migration{testMigration}
 )
 
 func init() {
@@ -84,38 +85,15 @@ func prepareDBAndInfo(t *testing.T) (*sql.DB, types.DBDriver, func()) {
 	return db, dbDriver, closer
 }
 
-func prepareDBAndMigrations(t *testing.T) (*sql.DB, types.DBDriver, func()) {
-	*migration.Migrations = []migration.Migration{testMigration}
-	return prepareDBAndInfo(t)
-}
-
-// TestMigrationFull tests majority of the migration
-// mechanism's functionality, all in one place.
-func TestMigrationFull(t *testing.T) {
-	// Don't overwrite the migration list, use the real migrations.
-	db, dbDriver, closer := prepareDBAndInfo(t)
-	defer closer()
-
-	maxVer := migration.GetMaxVersion()
-	assert.NotEqual(t, 0, maxVer, "no migrations available")
-
-	currentVer, err := migration.GetDBVersion(db)
-	helpers.FailOnError(t, err)
-
-	assert.Equal(t, migration.Version(0), currentVer, "unexpected version")
-
-	stepUpAndDown(t, db, dbDriver, maxVer, 0)
-}
-
 func stepUpAndDown(t *testing.T, db *sql.DB, dbDriver types.DBDriver, upVer, downVer migration.Version) {
-	err := migration.SetDBVersion(db, dbDriver, upVer)
+	err := migration.SetDBVersion(db, dbDriver, upVer, testMigrations)
 	helpers.FailOnError(t, err)
 
 	currentVer, err := migration.GetDBVersion(db)
 	helpers.FailOnError(t, err)
 	assert.Equal(t, upVer, currentVer, "unexpected version")
 
-	err = migration.SetDBVersion(db, dbDriver, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0, testMigrations)
 	helpers.FailOnError(t, err)
 
 	currentVer, err = migration.GetDBVersion(db)
@@ -138,7 +116,7 @@ func TestMigrationInit(t *testing.T) {
 // TestMigrationReInit checks that an attempt to re-initialize an already initialized
 // migration info table will simply result in a no-op without any error.
 func TestMigrationReInit(t *testing.T) {
-	db, _, closer := prepareDBAndMigrations(t)
+	db, _, closer := prepareDBAndInfo(t)
 	defer closer()
 
 	err := migration.InitInfoTable(db)
@@ -146,7 +124,7 @@ func TestMigrationReInit(t *testing.T) {
 }
 
 func TestMigrationInitNotOneRow(t *testing.T) {
-	db, _, closer := prepareDBAndMigrations(t)
+	db, _, closer := prepareDBAndInfo(t)
 	defer closer()
 
 	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10);")
@@ -159,7 +137,7 @@ func TestMigrationInitNotOneRow(t *testing.T) {
 
 // TestMigrationGetVersion checks that the initial database migration version is 0.
 func TestMigrationGetVersion(t *testing.T) {
-	db, _, closer := prepareDBAndMigrations(t)
+	db, _, closer := prepareDBAndInfo(t)
 	defer closer()
 
 	version, err := migration.GetDBVersion(db)
@@ -178,7 +156,7 @@ func TestMigrationGetVersionMissingInfoTable(t *testing.T) {
 }
 
 func TestMigrationGetVersionMultipleRows(t *testing.T) {
-	db, _, closer := prepareDBAndMigrations(t)
+	db, _, closer := prepareDBAndInfo(t)
 	defer closer()
 
 	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10);")
@@ -189,7 +167,7 @@ func TestMigrationGetVersionMultipleRows(t *testing.T) {
 }
 
 func TestMigrationGetVersionEmptyTable(t *testing.T) {
-	db, _, closer := prepareDBAndMigrations(t)
+	db, _, closer := prepareDBAndInfo(t)
 	defer closer()
 
 	_, err := db.Exec("DELETE FROM migration_info;")
@@ -218,11 +196,11 @@ func TestMigrationGetVersionInvalidType(t *testing.T) {
 // TestMigrationSetVersion checks that it is possible to change
 // the database version in both direction (upgrade and downgrade).
 func TestMigrationSetVersion(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndMigrations(t)
+	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
 	// Step-up from 0 to 1.
-	err := migration.SetDBVersion(db, dbDriver, 1)
+	err := migration.SetDBVersion(db, dbDriver, 1, testMigrations)
 	helpers.FailOnError(t, err)
 
 	version, err := migration.GetDBVersion(db)
@@ -231,7 +209,7 @@ func TestMigrationSetVersion(t *testing.T) {
 	assert.Equal(t, migration.Version(1), version, "unexpected database version")
 
 	// Step-down from 1 to 0.
-	err = migration.SetDBVersion(db, dbDriver, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0, testMigrations)
 	helpers.FailOnError(t, err)
 
 	version, err = migration.GetDBVersion(db)
@@ -253,15 +231,15 @@ func TestMigrationNoInfoTable(t *testing.T) {
 }
 
 func TestMigrationSetVersionSame(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndMigrations(t)
+	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
 	// Step-up from 0 to 1.
-	err := migration.SetDBVersion(db, dbDriver, 1)
+	err := migration.SetDBVersion(db, dbDriver, 1, testMigrations)
 	helpers.FailOnError(t, err)
 
 	// Set version to.
-	err = migration.SetDBVersion(db, dbDriver, 1)
+	err = migration.SetDBVersion(db, dbDriver, 1, testMigrations)
 	helpers.FailOnError(t, err)
 
 	version, err := migration.GetDBVersion(db)
@@ -271,36 +249,36 @@ func TestMigrationSetVersionSame(t *testing.T) {
 }
 
 func TestMigrationSetVersionTargetTooHigh(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndMigrations(t)
+	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
 	// Step-up from 0 to 2 (impossible -- only 1 migration is available).
-	err := migration.SetDBVersion(db, dbDriver, 2)
+	err := migration.SetDBVersion(db, dbDriver, 2, testMigrations)
 	assert.EqualError(t, err, "invalid target version (available version range is 0-1)")
 }
 
 // TestMigrationSetVersionUpError checks that an error during a step-up is correctly handled.
 func TestMigrationSetVersionUpError(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndMigrations(t)
+	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	*migration.Migrations = []migration.Migration{
+	tMigrations := []migration.Migration{
 		{
 			StepUp:   stepErrorFn,
 			StepDown: stepNoopFn,
 		},
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 1)
+	err := migration.SetDBVersion(db, dbDriver, 1, tMigrations)
 	assert.EqualError(t, err, stepErrorMsg)
 }
 
 // TestMigrationSetVersionDownError checks that an error during a step-down is correctly handled.
 func TestMigrationSetVersionDownError(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndMigrations(t)
+	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	*migration.Migrations = []migration.Migration{
+	tMigrations := []migration.Migration{
 		{
 			StepUp:   stepNoopFn,
 			StepDown: stepErrorFn,
@@ -308,24 +286,24 @@ func TestMigrationSetVersionDownError(t *testing.T) {
 	}
 
 	// First we need to step-up before we can step-down.
-	err := migration.SetDBVersion(db, dbDriver, 1)
+	err := migration.SetDBVersion(db, dbDriver, 1, tMigrations)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0, tMigrations)
 	assert.EqualError(t, err, stepErrorMsg)
 }
 
 // TestMigrationSetVersionCurrentTooHighError makes sure that if the current DB version
 // is outside of the available migration range, it is reported as an error.
 func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndMigrations(t)
+	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
 	_, err := db.Exec("UPDATE migration_info SET version=10;")
 	helpers.FailOnError(t, err)
 
 	const expectedErrStr = "current version (10) is outside of available migration boundaries"
-	err = migration.SetDBVersion(db, dbDriver, 0)
+	err = migration.SetDBVersion(db, dbDriver, 0, testMigrations)
 	assert.EqualError(t, err, expectedErrStr)
 }
 
@@ -339,7 +317,7 @@ func TestMigrationInitClosedDB(t *testing.T) {
 }
 
 func TestMigrationGetVersionClosedDB(t *testing.T) {
-	db, _, closer := prepareDBAndMigrations(t)
+	db, _, closer := prepareDBAndInfo(t)
 	// Intentionally no `defer` here.
 	closer()
 
@@ -348,25 +326,25 @@ func TestMigrationGetVersionClosedDB(t *testing.T) {
 }
 
 func TestMigrationSetVersionClosedDB(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndMigrations(t)
+	db, dbDriver, closer := prepareDBAndInfo(t)
 	// Intentionally no `defer` here.
 	closer()
 
-	err := migration.SetDBVersion(db, dbDriver, 0)
+	err := migration.SetDBVersion(db, dbDriver, 0, testMigrations)
 	assert.EqualError(t, err, dbClosedErrorMsg)
 }
 
 func TestMigrationInitRollbackStep(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndMigrations(t)
+	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	*migration.Migrations = []migration.Migration{{
+	tMigrations := []migration.Migration{{
 		StepUp:   stepRollbackFn,
 		StepDown: stepNoopFn,
 	}}
 
 	const expectedErrStr = "sql: transaction has already been committed or rolled back"
-	err := migration.SetDBVersion(db, dbDriver, 1)
+	err := migration.SetDBVersion(db, dbDriver, 1, tMigrations)
 	assert.EqualError(t, err, expectedErrStr)
 }
 
@@ -423,8 +401,6 @@ func TestInitInfoTable_CountDBError(t *testing.T) {
 }
 
 func updateVersionInDBCommon(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
-	// set test migrations
-	*migration.Migrations = []migration.Migration{testMigration}
 
 	db, expects := ira_helpers.MustGetMockDBWithExpects(t)
 
@@ -461,7 +437,7 @@ func TestUpdateVersionInDB_RowsAffectedError(t *testing.T) {
 		WithArgs(1).
 		WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf(errStr)))
 
-	err := migration.SetDBVersion(db, types.DBDriverGeneral, migration.GetMaxVersion())
+	err := migration.SetDBVersion(db, types.DBDriverGeneral, 1, testMigrations)
 	assert.EqualError(t, err, errStr)
 }
 
@@ -473,10 +449,7 @@ func TestUpdateVersionInDB_MoreThan1RowAffected(t *testing.T) {
 		WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(1, 2))
 
-	// set test migrations
-	*migration.Migrations = []migration.Migration{testMigration}
-
-	err := migration.SetDBVersion(db, types.DBDriverGeneral, migration.GetMaxVersion())
+	err := migration.SetDBVersion(db, types.DBDriverGeneral, 1, testMigrations)
 	assert.EqualError(
 		t, err, "unexpected number of affected rows in migration info table (expected: 1, reality: 2)",
 	)
