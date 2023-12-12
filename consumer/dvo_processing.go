@@ -15,8 +15,12 @@
 package consumer
 
 import (
+	"encoding/json"
+	"errors"
+
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/Shopify/sarama"
+	"github.com/google/uuid"
 )
 
 // DVORulesProcessor satisfies MessageProcessor interface
@@ -24,8 +28,26 @@ type DVORulesProcessor struct {
 }
 
 func (DVORulesProcessor) deserializeMessage(messageValue []byte) (incomingMessage, error) {
-	//TODO implement me
-	panic("implement me")
+	var deserialized incomingMessage
+
+	err := json.Unmarshal(messageValue, &deserialized)
+	if err != nil {
+		return deserialized, err
+	}
+	if deserialized.Organization == nil {
+		return deserialized, errors.New("missing required attribute 'OrgID'")
+	}
+	if deserialized.ClusterName == nil {
+		return deserialized, errors.New("missing required attribute 'ClusterName'")
+	}
+	if deserialized.DvoMetrics == nil {
+		return deserialized, errors.New("missing required attribute 'Metrics'")
+	}
+	_, err = uuid.Parse(string(*deserialized.ClusterName))
+	if err != nil {
+		return deserialized, errors.New("cluster name is not a UUID")
+	}
+	return deserialized, nil
 }
 
 func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, error) {
