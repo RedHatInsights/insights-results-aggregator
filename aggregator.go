@@ -377,7 +377,6 @@ func printEnv() int {
 func getDBForMigrations() (storage.Storage, *sql.DB, int) {
 	// use OCP recommendations storage only, unless migrations will be available for other storage(s) too
 	var db storage.Storage
-	var err error
 
 	ocpStorage, dvoStorage, err := createStorage()
 	if err != nil {
