@@ -18,8 +18,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
@@ -66,7 +67,6 @@ func (consumer *KafkaConsumer) writeReport(
 	reportAsBytes []byte, lastCheckedTime time.Time,
 ) error {
 	if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
-
 		// timestamp when the report is about to be written into database
 		storedAtTime := time.Now()
 

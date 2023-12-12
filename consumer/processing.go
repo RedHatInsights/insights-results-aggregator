@@ -18,8 +18,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
