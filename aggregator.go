@@ -190,6 +190,7 @@ func prepareDBMigrations(dbStorage storage.Storage) int {
 // rule content into it.
 func prepareDB() int {
 	// TODO: when aggregator supports both storages at once, update the code below
+	// task to support both storages at once: https://issues.redhat.com/browse/CCXDEV-12316
 
 	ocpRecommendationsStorage, _, err := createStorage()
 	if err != nil {
