@@ -60,10 +60,10 @@ func getCounterValue(counter prometheus.Counter) float64 {
 	return pb.GetCounter().GetValue()
 }
 
-// TestConsumedMessagesMetric tests that consumed messages metric works
-func TestConsumedMessagesMetric(t *testing.T) {
+// TestConsumedOCPMessagesMetric tests that consumed messages metric works
+func TestConsumedOCPMessagesMetric(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
-		mockConsumer, closer := ira_helpers.MustGetMockKafkaConsumerWithExpectedMessages(
+		mockConsumer, closer := ira_helpers.MustGetMockOCPRulesConsumerWithExpectedMessages(
 			t, testTopicName, testOrgAllowlist, []string{testdata.ConsumerMessage, testdata.ConsumerMessage},
 		)
 		defer closer()
