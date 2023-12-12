@@ -246,8 +246,10 @@ type OCPRecommendationsDBStorage struct {
 func NewOCPRecommendationsStorage(configuration Configuration) (OCPRecommendationsStorage, error) {
 	switch configuration.Type {
 	case types.SQLStorage:
+		log.Info().Str("OCP storage type", configuration.Type).Send()
 		return newSQLStorage(configuration)
 	case types.RedisStorage:
+		log.Info().Str("Redis storage type", configuration.Type).Send()
 		return newRedisStorage(configuration)
 	case types.NoopStorage:
 		return newNoopOCPStorage(configuration)

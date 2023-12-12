@@ -113,14 +113,14 @@ func fillInInfoParams(params map[string]string) {
 // usually SQLite, PostgreSQL, or AWS RDS.
 func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendationsStorage, error) {
 	ocpStorageCfg := conf.GetOCPRecommendationsStorageConfiguration()
+	// Redis configuration needs to be present in ocpStorageCfg, as the connection is created in the same function
+	ocpStorageCfg.RedisConfiguration = conf.GetRedisConfiguration()
+
 	dvoStorageCfg := conf.GetDVORecommendationsStorageConfiguration()
 
 	var ocpStorage storage.OCPRecommendationsStorage
 	var dvoStorage storage.DVORecommendationsStorage
 	var err error
-
-	log.Info().Str("OCP storage type", ocpStorageCfg.Type).Msg("Storage type")
-	log.Info().Str("DVO storage type", dvoStorageCfg.Type).Msg("Storage type")
 
 	// try to initialize connection to storage
 	backend := conf.GetStorageBackendConfiguration().Use

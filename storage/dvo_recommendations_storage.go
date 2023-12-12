@@ -52,6 +52,7 @@ type DVORecommendationsDBStorage struct {
 func NewDVORecommendationsStorage(configuration Configuration) (DVORecommendationsStorage, error) {
 	switch configuration.Type {
 	case types.SQLStorage:
+		log.Info().Str("DVO storage type", configuration.Type).Send()
 		return newDVOStorage(configuration)
 	case types.NoopStorage:
 		return newNoopDVOStorage(configuration)
@@ -116,7 +117,7 @@ func (storage DVORecommendationsDBStorage) Close() error {
 	return nil
 }
 
-// GetMigrations returns a list of database migrations related to OCP recommendation tables
+// GetMigrations returns a list of database migrations related to DVO recommendation tables
 func (storage DVORecommendationsDBStorage) GetMigrations() []migration.Migration {
 	return dvomigrations.UsableDVOMigrations
 }
