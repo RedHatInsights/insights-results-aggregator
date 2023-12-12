@@ -28,7 +28,7 @@ import (
 
 // MockKafkaConsumer is mock consumer
 type MockKafkaConsumer struct {
-	KafkaConsumer consumer.OCPRulesConsumer
+	KafkaConsumer consumer.KafkaConsumer
 	topic         string
 	messages      []string
 }
@@ -53,16 +53,16 @@ func (mockKafkaConsumer *MockKafkaConsumer) Close(t testing.TB) {
 	helpers.FailOnError(t, err)
 }
 
-// MustGetMockKafkaConsumerWithExpectedMessages creates mocked kafka consumer
-// which produces list of messages automatically
+// MustGetMockOCPRulesConsumerWithExpectedMessages creates mocked OCP rules
+// consumer which produces list of messages automatically
 // calls t.Fatal on error
-func MustGetMockKafkaConsumerWithExpectedMessages(
+func MustGetMockOCPRulesConsumerWithExpectedMessages(
 	t testing.TB,
 	topic string,
 	orgAllowlist mapset.Set,
 	messages []string,
 ) (*MockKafkaConsumer, func()) {
-	mockConsumer, closer, err := GetMockKafkaConsumerWithExpectedMessages(t, topic, orgAllowlist, messages)
+	mockConsumer, closer, err := GetMockOCPRulesConsumerWithExpectedMessages(t, topic, orgAllowlist, messages)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,15 +70,15 @@ func MustGetMockKafkaConsumerWithExpectedMessages(
 	return mockConsumer, closer
 }
 
-// GetMockKafkaConsumerWithExpectedMessages creates mocked kafka consumer
-// which produces list of messages automatically
-func GetMockKafkaConsumerWithExpectedMessages(
+// GetMockOCPRulesConsumerWithExpectedMessages creates mocked OCP rules
+// consumer which produces list of messages automatically
+func GetMockOCPRulesConsumerWithExpectedMessages(
 	t testing.TB, topic string, orgAllowlist mapset.Set, messages []string,
 ) (*MockKafkaConsumer, func(), error) {
 	mockStorage, storageCloser := MustGetMockStorage(t, true)
 
 	mockConsumer := &MockKafkaConsumer{
-		KafkaConsumer: consumer.OCPRulesConsumer{
+		KafkaConsumer: consumer.KafkaConsumer{
 			Configuration: broker.Configuration{
 				Address:      "",
 				Topic:        topic,
@@ -86,7 +86,8 @@ func GetMockKafkaConsumerWithExpectedMessages(
 				Enabled:      true,
 				OrgAllowlist: orgAllowlist,
 			},
-			Storage: mockStorage,
+			Storage:          mockStorage,
+			MessageProcessor: consumer.OCPRulesProcessor{},
 		},
 		topic:    topic,
 		messages: messages,
