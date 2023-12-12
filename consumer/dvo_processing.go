@@ -17,8 +17,10 @@ package consumer
 import (
 	"encoding/json"
 	"errors"
-	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
+	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/Shopify/sarama"
@@ -64,10 +66,19 @@ func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.Consu
 }
 
 func (DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
-	//TODO implement me
-	panic("implement me")
+	tStart := time.Now()
+	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
+	message, err := consumer.MessageProcessor.parseMessage(consumer, msg)
+	if err != nil {
+		return message.RequestID, message, err
+	}
+	logMessageInfo(consumer, msg, &message, "Read")
+	tRead := time.Now()
+	// log durations for every message consumption steps
+	logDuration(tStart, tRead, msg.Offset, "read")
+	return message.RequestID, message, nil
 }
 
-func (DVORulesProcessor) shouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
+func (DVORulesProcessor) shouldProcess(_ *KafkaConsumer, _ *sarama.ConsumerMessage, _ *incomingMessage) error {
 	return nil
 }
