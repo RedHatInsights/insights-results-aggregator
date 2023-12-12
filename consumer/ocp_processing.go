@@ -18,22 +18,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	"time"
 )
 
 // OCPRulesProcessor satisfies MessageProcessor interface
 type OCPRulesProcessor struct {
 }
 
-// DeserializeMessage tries to unmarshall the received message
+// deserializeMessage tries to unmarshall the received message
 // and read all required attributes from it
-func (OCPRulesProcessor) DeserializeMessage(messageValue []byte) (incomingMessage, error) {
+func (OCPRulesProcessor) deserializeMessage(messageValue []byte) (incomingMessage, error) {
 	var deserialized incomingMessage
 
 	err := json.Unmarshal(messageValue, &deserialized)
@@ -59,13 +60,13 @@ func (OCPRulesProcessor) DeserializeMessage(messageValue []byte) (incomingMessag
 	return deserialized, nil
 }
 
-// ProcessMessage processes an incoming message
-func (OCPRulesProcessor) ProcessMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
+// processMessage processes an incoming message
+func (OCPRulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
 
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 
-	message, err := consumer.MessageProcessor.ParseMessage(consumer, msg)
+	message, err := consumer.MessageProcessor.parseMessage(consumer, msg)
 	if err != nil {
 		if errors.Is(err, types.ErrEmptyReport) {
 			logMessageInfo(consumer, msg, &message, "This message has an empty report and will not be processed further")
@@ -152,8 +153,8 @@ func (OCPRulesProcessor) ProcessMessage(consumer *KafkaConsumer, msg *sarama.Con
 	return message.RequestID, message, nil
 }
 
-// ShouldProcess determines if a parsed message should be processed further
-func (OCPRulesProcessor) ShouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
+// shouldProcess determines if a parsed message should be processed further
+func (OCPRulesProcessor) shouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
 	err := checkReportStructure(*parsed.Report)
 	if err != nil {
 		consumer.logReportStructureError(err, consumed)
@@ -256,12 +257,11 @@ func parseReportContent(message *incomingMessage) error {
 	return nil
 }
 
-// ParseMessage is the entry point for parsing the received message.
+// parseMessage is the entry point for parsing the received message.
 // It should be the first method called within ProcessMessage in order
 // to convert the message into a struct that can be worked with
-//lint:ignore U1000 Ignore the golint warning about an exported method returning an unexported type.
-func (OCPRulesProcessor) ParseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, error) {
-	message, err := consumer.MessageProcessor.DeserializeMessage(msg.Value)
+func (OCPRulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, error) {
+	message, err := consumer.MessageProcessor.deserializeMessage(msg.Value)
 	if err != nil {
 		consumer.logMsgForFurtherAnalysis(msg)
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
@@ -270,7 +270,7 @@ func (OCPRulesProcessor) ParseMessage(consumer *KafkaConsumer, msg *sarama.Consu
 
 	consumer.updatePayloadTracker(message.RequestID, time.Now(), message.Organization, message.Account, producer.StatusReceived)
 
-	if err := consumer.MessageProcessor.ShouldProcess(consumer, msg, &message); err != nil {
+	if err := consumer.MessageProcessor.shouldProcess(consumer, msg, &message); err != nil {
 		return message, err
 	}
 

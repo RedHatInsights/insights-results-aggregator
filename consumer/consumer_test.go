@@ -20,11 +20,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"log"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"

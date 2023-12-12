@@ -16,6 +16,8 @@ limitations under the License.
 
 package consumer
 
+import "github.com/Shopify/sarama"
+
 // Export for testing
 //
 // This source file contains name aliases of all package-private functions
@@ -26,9 +28,30 @@ package consumer
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
 var (
-	ParseReportContent           = parseReportContent
 	CheckReportStructure         = checkReportStructure
 	IsReportWithEmptyAttributes  = isReportWithEmptyAttributes
 	NumberOfExpectedKeysInReport = numberOfExpectedKeysInReport
 	ExpectedKeysInReport         = expectedKeysInReport
 )
+
+// Inc type is a trick to get golint to work for the ParseMessage defined below...
+type Inc struct {
+	incomingMessage
+}
+
+// DeserializeMessage returns the result of the private MessageProcessor.DeserializeMessage method
+func DeserializeMessage(consumer *KafkaConsumer, msg []byte) (Inc, error) {
+	incomingMessage, err := consumer.MessageProcessor.deserializeMessage(msg)
+	return Inc{incomingMessage}, err
+}
+
+// ParseMessage returns the result of the private MessageProcessor.parseMessage method
+func ParseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (Inc, error) {
+	incomingMessage, err := consumer.MessageProcessor.parseMessage(consumer, msg)
+	return Inc{incomingMessage}, err
+}
+
+// ParseMessage returns the result of the private parseReportContent function
+func ParseReportContent(message *Inc) error {
+	return parseReportContent(&message.incomingMessage)
+}

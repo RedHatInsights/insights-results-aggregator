@@ -45,12 +45,11 @@ var (
 )
 
 // MessageProcessor offers the interface for processing a received message
-//lint:ignore U1000 Ignore the golint warning about an exported method returning an unexported type.
 type MessageProcessor interface {
-	DeserializeMessage(messageValue []byte) (incomingMessage, error)
-	ParseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, error)
-	ProcessMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error)
-	ShouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error
+	deserializeMessage(messageValue []byte) (incomingMessage, error)
+	parseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, error)
+	processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error)
+	shouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error
 }
 
 // Report represents report send in a message consumed from any broker
@@ -149,7 +148,7 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error 
 	metrics.ConsumedMessages.Inc()
 
 	startTime := time.Now()
-	requestID, message, err := consumer.MessageProcessor.ProcessMessage(consumer, msg)
+	requestID, message, err := consumer.MessageProcessor.processMessage(consumer, msg)
 	timeAfterProcessingMessage := time.Now()
 	messageProcessingDuration := timeAfterProcessingMessage.Sub(startTime).Seconds()
 
