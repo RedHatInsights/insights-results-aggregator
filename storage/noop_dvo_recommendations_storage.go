@@ -14,6 +14,8 @@
 
 package storage
 
+import "database/sql"
+
 // NoopDVOStorage represents a storage which does nothing (for benchmarking without a storage)
 type NoopDVOStorage struct{}
 
@@ -24,5 +26,10 @@ func (*NoopDVOStorage) Init() error {
 
 // Close noop
 func (*NoopDVOStorage) Close() error {
+	return nil
+}
+
+// GetConnection noop
+func (*NoopDVOStorage) GetConnection() *sql.DB {
 	return nil
 }
