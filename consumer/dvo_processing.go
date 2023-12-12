@@ -17,6 +17,8 @@ package consumer
 import (
 	"encoding/json"
 	"errors"
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
+	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/Shopify/sarama"
@@ -40,19 +42,25 @@ func (DVORulesProcessor) deserializeMessage(messageValue []byte) (incomingMessag
 	if deserialized.ClusterName == nil {
 		return deserialized, errors.New("missing required attribute 'ClusterName'")
 	}
-	if deserialized.DvoMetrics == nil {
-		return deserialized, errors.New("missing required attribute 'Metrics'")
-	}
 	_, err = uuid.Parse(string(*deserialized.ClusterName))
 	if err != nil {
 		return deserialized, errors.New("cluster name is not a UUID")
+	}
+	if deserialized.DvoMetrics == nil {
+		return deserialized, errors.New("missing required attribute 'Metrics'")
 	}
 	return deserialized, nil
 }
 
 func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, error) {
-	//TODO implement me
-	panic("implement me")
+	message, err := consumer.MessageProcessor.deserializeMessage(msg.Value)
+	if err != nil {
+		consumer.logMsgForFurtherAnalysis(msg)
+		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
+		return message, err
+	}
+	consumer.updatePayloadTracker(message.RequestID, time.Now(), message.Organization, message.Account, producer.StatusReceived)
+	return message, nil
 }
 
 func (DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
@@ -61,6 +69,5 @@ func (DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.Con
 }
 
 func (DVORulesProcessor) shouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
