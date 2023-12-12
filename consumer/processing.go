@@ -52,8 +52,12 @@ type MessageProcessor interface {
 	shouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error
 }
 
-// Report represents report send in a message consumed from any broker
+// Report represents report sent in a message consumed from any broker
 type Report map[string]*json.RawMessage
+
+// DvoMetrics represents DVO workload recommendations received as part
+// of the incoming message
+type DvoMetrics map[string]*json.RawMessage
 
 type system struct {
 	Hostname string `json:"hostname"`
@@ -65,6 +69,7 @@ type incomingMessage struct {
 	Account      *types.Account     `json:"AccountNumber"`
 	ClusterName  *types.ClusterName `json:"ClusterName"`
 	Report       *Report            `json:"Report"`
+	DvoMetrics   *DvoMetrics        `json:"Metrics"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
 	LastChecked string              `json:"LastChecked"`
 	Version     types.SchemaVersion `json:"Version"`
