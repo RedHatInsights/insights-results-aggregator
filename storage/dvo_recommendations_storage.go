@@ -30,6 +30,7 @@ import (
 type DVORecommendationsStorage interface {
 	Init() error
 	Close() error
+	GetConnection() *sql.DB
 }
 
 // DVORecommendationsDBStorage is an implementation of Storage interface that use selected SQL like database
@@ -107,4 +108,9 @@ func (storage DVORecommendationsDBStorage) Close() error {
 		}
 	}
 	return nil
+}
+
+// GetConnection returns db connection(useful for testing)
+func (storage DVORecommendationsDBStorage) GetConnection() *sql.DB {
+	return storage.connection
 }

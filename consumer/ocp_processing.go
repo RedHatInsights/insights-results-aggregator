@@ -97,33 +97,16 @@ func (OCPRulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.Con
 	}
 	tTimeCheck := time.Now()
 
-	// timestamp when the report is about to be written into database
-	storedAtTime := time.Now()
-
 	reportAsBytes, err := json.Marshal(*message.Report)
 	if err != nil {
 		logMessageError(consumer, msg, &message, "Error marshalling report", err)
 		return message.RequestID, message, err
 	}
 
-	err = consumer.Storage.WriteReportForCluster(
-		*message.Organization,
-		*message.ClusterName,
-		types.ClusterReport(reportAsBytes),
-		message.ParsedHits,
-		lastCheckedTime,
-		message.Metadata.GatheredAt,
-		storedAtTime,
-		message.RequestID,
-	)
-	if err == types.ErrOldReport {
-		logMessageInfo(consumer, msg, &message, "Skipping because a more recent report already exists for this cluster")
-		return message.RequestID, message, nil
-	} else if err != nil {
-		logMessageError(consumer, msg, &message, "Error writing report to database", err)
+	err = consumer.writeReport(msg, message, reportAsBytes, lastCheckedTime)
+	if err != nil {
 		return message.RequestID, message, err
 	}
-	logMessageDebug(consumer, msg, &message, "Stored report")
 	tStored := time.Now()
 
 	tRecommendationsStored, err := consumer.writeRecommendations(msg, message, reportAsBytes)

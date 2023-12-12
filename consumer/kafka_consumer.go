@@ -60,7 +60,7 @@ import (
 type KafkaConsumer struct {
 	Configuration                        broker.Configuration
 	ConsumerGroup                        sarama.ConsumerGroup
-	Storage                              storage.OCPRecommendationsStorage
+	Storage                              storage.Storage
 	MessageProcessor                     MessageProcessor
 	numberOfSuccessfullyConsumedMessages uint64
 	numberOfErrorsConsumingMessages      uint64

@@ -15,7 +15,9 @@ See the License for the specific language governing permissions and
 
 package storage
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 // PostgreSQL database driver
 // SQLite database driver
