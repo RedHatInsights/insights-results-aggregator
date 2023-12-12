@@ -136,3 +136,66 @@ func TestDeserializeDVOMessageWithImproperMetrics(t *testing.T) {
 	assert.Equal(t, types.OrgID(1), *message.Organization)
 	assert.Equal(t, testdata.ClusterName, *message.ClusterName)
 }
+
+//TODO: We don't know yet what a proper message is
+//func TestDeserializeDVOProperMessage(t *testing.T) {}
+
+func TestDeserializeDVOMessageWrongClusterName(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "this is not a UUID"
+	}`
+	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
+	_, err := consumer.DeserializeMessage(&c, []byte(message))
+	assert.EqualError(t, err, "cluster name is not a UUID")
+}
+
+func TestDeserializeDVOMessageWithoutOrgID(t *testing.T) {
+	message := `{
+		"ClusterName": "` + string(testdata.ClusterName) + `"
+	}`
+	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
+	_, err := consumer.DeserializeMessage(&c, []byte(message))
+	assert.EqualError(t, err, "missing required attribute 'OrgID'")
+}
+
+func TestDeserializeDVOMessageWithoutClusterName(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `
+	}`
+	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
+	_, err := consumer.DeserializeMessage(&c, []byte(message))
+	assert.EqualError(t, err, "missing required attribute 'ClusterName'")
+}
+
+func TestDeserializeDVOMessageWithoutMetrics(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `"
+	}`
+	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
+	_, err := consumer.DeserializeMessage(&c, []byte(message))
+	assert.EqualError(t, err, "missing required attribute 'Metrics'")
+}
+
+func TestDeserializeDVOMessageWithEmptyReport(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics": {}
+	}`
+	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
+	_, err := consumer.DeserializeMessage(&c, []byte(message))
+	assert.Nil(t, err, "deserializeMessage should not return error for empty metrics")
+}
+
+func TestDeserializeDVOMessageNullMetrics(t *testing.T) {
+	message := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics": null
+	}`
+	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
+	_, err := consumer.DeserializeMessage(&c, []byte(message))
+	assert.EqualError(t, err, "missing required attribute 'Metrics'")
+}
