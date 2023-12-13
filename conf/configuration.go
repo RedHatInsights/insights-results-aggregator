@@ -342,13 +342,19 @@ func updateConfigFromClowder(c *ConfigStruct) error {
 		}
 	}
 
+	// get DB configuration from clowder
 	if clowder.LoadedConfig.Database != nil {
-		// get DB configuration from clowder
-		c.OCPRecommendationsStorage.PGDBName = clowder.LoadedConfig.Database.Name
-		c.OCPRecommendationsStorage.PGHost = clowder.LoadedConfig.Database.Hostname
-		c.OCPRecommendationsStorage.PGPort = clowder.LoadedConfig.Database.Port
-		c.OCPRecommendationsStorage.PGUsername = clowder.LoadedConfig.Database.Username
-		c.OCPRecommendationsStorage.PGPassword = clowder.LoadedConfig.Database.Password
+		storageConfig := storage.Configuration{
+			PGDBName:   clowder.LoadedConfig.Database.Name,
+			PGHost:     clowder.LoadedConfig.Database.Hostname,
+			PGPort:     clowder.LoadedConfig.Database.Port,
+			PGUsername: clowder.LoadedConfig.Database.Username,
+			PGPassword: clowder.LoadedConfig.Database.Password,
+		}
+
+		// we're currently using the same storage in all Clowderized envs (stage/prod)
+		c.OCPRecommendationsStorage = storageConfig
+		c.DVORecommendationsStorage = storageConfig
 	} else {
 		fmt.Println(noStorage)
 	}

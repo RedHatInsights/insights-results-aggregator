@@ -636,3 +636,48 @@ func TestClowderConfigForKafka(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s:%d", hostname, port), brokerCfg.Address)
 	assert.Equal(t, newTopicName, conf.Config.Broker.Topic)
 }
+
+// TestClowderConfigForStorage tests loading the config file for testing from an
+// environment variable. Clowder config is enabled in this case, checking the database
+// configuration.
+func TestClowderConfigForStorage(t *testing.T) {
+	os.Clearenv()
+
+	var name = "db"
+	var hostname = "hostname"
+	var port = 8888
+	var username = "username"
+	var password = "password"
+
+	// explicit database and broker config
+	clowder.LoadedConfig = &clowder.AppConfig{
+		Database: &clowder.DatabaseConfig{
+			Name:     name,
+			Hostname: hostname,
+			Port:     port,
+			Username: username,
+			Password: password,
+		},
+	}
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "../tests/config1")
+	mustSetEnv(t, "ACG_CONFIG", "tests/clowder_config.json")
+
+	err := conf.LoadConfiguration("config")
+	assert.NoError(t, err, "Failed loading configuration file")
+
+	ocpStorageConf := conf.GetOCPRecommendationsStorageConfiguration()
+	assert.Equal(t, ocpStorageConf.PGDBName, name)
+	assert.Equal(t, ocpStorageConf.PGHost, hostname)
+	assert.Equal(t, ocpStorageConf.PGPort, port)
+	assert.Equal(t, ocpStorageConf.PGUsername, username)
+	assert.Equal(t, ocpStorageConf.PGPassword, password)
+
+	// same config loaded for DVO storage in envs using clowder (stage/prod)
+	dvoStorageConf := conf.GetDVORecommendationsStorageConfiguration()
+	assert.Equal(t, dvoStorageConf.PGDBName, name)
+	assert.Equal(t, dvoStorageConf.PGHost, hostname)
+	assert.Equal(t, dvoStorageConf.PGPort, port)
+	assert.Equal(t, dvoStorageConf.PGUsername, username)
+	assert.Equal(t, dvoStorageConf.PGPassword, password)
+}
