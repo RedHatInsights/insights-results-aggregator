@@ -667,17 +667,23 @@ func TestClowderConfigForStorage(t *testing.T) {
 	assert.NoError(t, err, "Failed loading configuration file")
 
 	ocpStorageConf := conf.GetOCPRecommendationsStorageConfiguration()
-	assert.Equal(t, ocpStorageConf.PGDBName, name)
-	assert.Equal(t, ocpStorageConf.PGHost, hostname)
-	assert.Equal(t, ocpStorageConf.PGPort, port)
-	assert.Equal(t, ocpStorageConf.PGUsername, username)
-	assert.Equal(t, ocpStorageConf.PGPassword, password)
+	assert.Equal(t, name, ocpStorageConf.PGDBName)
+	assert.Equal(t, hostname, ocpStorageConf.PGHost)
+	assert.Equal(t, port, ocpStorageConf.PGPort)
+	assert.Equal(t, username, ocpStorageConf.PGUsername)
+	assert.Equal(t, password, ocpStorageConf.PGPassword)
+	// rest of config outside of clowder must be loaded correctly
+	assert.Equal(t, "sqlite3", ocpStorageConf.Driver)
+	assert.Equal(t, "sql", ocpStorageConf.Type)
 
 	// same config loaded for DVO storage in envs using clowder (stage/prod)
 	dvoStorageConf := conf.GetDVORecommendationsStorageConfiguration()
-	assert.Equal(t, dvoStorageConf.PGDBName, name)
-	assert.Equal(t, dvoStorageConf.PGHost, hostname)
-	assert.Equal(t, dvoStorageConf.PGPort, port)
-	assert.Equal(t, dvoStorageConf.PGUsername, username)
-	assert.Equal(t, dvoStorageConf.PGPassword, password)
+	assert.Equal(t, name, dvoStorageConf.PGDBName)
+	assert.Equal(t, hostname, dvoStorageConf.PGHost)
+	assert.Equal(t, port, dvoStorageConf.PGPort)
+	assert.Equal(t, username, dvoStorageConf.PGUsername)
+	assert.Equal(t, password, dvoStorageConf.PGPassword)
+	// rest of config outside of clowder must be loaded correctly
+	assert.Equal(t, "postgres", dvoStorageConf.Driver)
+	assert.Equal(t, "sql", dvoStorageConf.Type)
 }
