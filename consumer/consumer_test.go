@@ -116,7 +116,7 @@ func unmarshall(s string) *json.RawMessage {
 }
 
 func TestConsumerConstructorNoKafka(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, false)
 	defer closer()
 
 	mockConsumer, err := consumer.NewKafkaConsumer(wrongBrokerCfg, mockStorage, nil)
@@ -136,7 +136,7 @@ func TestKafkaConsumer_New(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
 
-		mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+		mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 		defer closer()
 
 		mockBroker := sarama.NewMockBroker(t, 0)
@@ -157,7 +157,7 @@ func TestKafkaConsumer_New(t *testing.T) {
 }
 
 func TestKafkaConsumer_SetupCleanup(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, false)
 	defer closer()
 
 	mockBroker := sarama.NewMockBroker(t, 0)
@@ -200,7 +200,7 @@ func TestKafkaConsumer_NewDeadLetterProducer_Error(t *testing.T) {
 		return nil, nil
 	}
 
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockBroker := sarama.NewMockBroker(t, 0)
@@ -235,7 +235,7 @@ func TestKafkaConsumer_NewPayloadTrackerProducer_Error(t *testing.T) {
 		return nil, errors.New("error happened")
 	}
 
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockBroker := sarama.NewMockBroker(t, 0)

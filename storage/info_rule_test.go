@@ -27,7 +27,7 @@ import (
 )
 
 func TestWriteReportInfoForCluster(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	expectations := []struct {
@@ -89,7 +89,7 @@ func TestWriteReportInfoForCluster(t *testing.T) {
 }
 
 func TestReadClusterVersionsForClusterList(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusterList := make([]string, 4)
@@ -161,7 +161,7 @@ func TestReadClusterVersionsForClusterList(t *testing.T) {
 }
 
 func TestReadClusterVersionsForClusterListEmpty(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	versionMap, err := mockStorage.ReadClusterVersionsForClusterList(
@@ -172,7 +172,7 @@ func TestReadClusterVersionsForClusterListEmpty(t *testing.T) {
 }
 
 func TestReadClusterVersionsForClusterListDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	_, err := mockStorage.ReadClusterVersionsForClusterList(
@@ -183,7 +183,7 @@ func TestReadClusterVersionsForClusterListDBError(t *testing.T) {
 // TestDBStorageReadClusterListRecommendationsNoRecommendations checks that when no recommendations
 // are stored, it is an OK state
 func TestDBStorageReadClusterListRecommendationsNoRecommendationsWithVersion(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -214,7 +214,7 @@ func TestDBStorageReadClusterListRecommendationsNoRecommendationsWithVersion(t *
 // TestDBStorageReadClusterListRecommendationsWithVersion checks that a cluster with cluster_version
 // is OK
 func TestDBStorageReadClusterListRecommendationsWithVersion(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(

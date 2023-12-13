@@ -35,20 +35,6 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-func BenchmarkHTTPServer_VoteEndpoints_WithSQLiteMemoryStorage(b *testing.B) {
-	mockStorage, closer := helpers.MustGetMockStorage(b, true)
-	defer closer()
-
-	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
-}
-
-func BenchmarkHTTPServer_VoteEndpoints_WithSQLiteFileStorage(b *testing.B) {
-	mockStorage, cleaner := helpers.MustGetSQLiteFileStorage(b, true)
-	defer cleaner()
-
-	benchmarkHTTPServerVoteEndpointsWithStorage(b, mockStorage)
-}
-
 func BenchmarkHTTPServer_VoteEndpoints_WithPostgresStorage(b *testing.B) {
 	mockStorage, cleaner := helpers.MustGetPostgresStorage(b, true)
 	defer cleaner()

@@ -58,7 +58,7 @@ func TestDBStorage_ToggleRuleForCluster(t *testing.T) {
 		storage.RuleToggleDisable, storage.RuleToggleEnable,
 	} {
 		func(state storage.RuleToggle) {
-			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 			defer closer()
 
 			mustWriteReport3Rules(t, mockStorage)
@@ -74,7 +74,7 @@ func TestDBStorage_ToggleRuleForCluster(t *testing.T) {
 }
 
 func TestDBStorage_ToggleRuleForCluster_UnexpectedRuleToggleValue(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.ToggleRuleForCluster(
@@ -84,7 +84,7 @@ func TestDBStorage_ToggleRuleForCluster_UnexpectedRuleToggleValue(t *testing.T) 
 }
 
 func TestDBStorage_ToggleRuleForCluster_DBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	err := mockStorage.ToggleRuleForCluster(
@@ -94,7 +94,7 @@ func TestDBStorage_ToggleRuleForCluster_DBError(t *testing.T) {
 }
 
 func TestDBStorageGetTogglesForRules_NoRules(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	_, err := mockStorage.GetTogglesForRules(
@@ -104,7 +104,7 @@ func TestDBStorageGetTogglesForRules_NoRules(t *testing.T) {
 }
 
 func TestDBStorageGetTogglesForRules_AllRulesEnabled(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	_, err := mockStorage.GetTogglesForRules(
@@ -114,7 +114,7 @@ func TestDBStorageGetTogglesForRules_AllRulesEnabled(t *testing.T) {
 }
 
 func TestDBStorageGetTogglesForRules_OneRuleDisabled(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.FailOnError(t, mockStorage.ToggleRuleForCluster(
@@ -141,7 +141,7 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 		storage.RuleToggleDisable, storage.RuleToggleEnable,
 	} {
 		func(state storage.RuleToggle) {
-			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 			defer closer()
 
 			mustWriteReport3Rules(t, mockStorage)
@@ -170,7 +170,7 @@ func TestDBStorageToggleRuleAndGet(t *testing.T) {
 // TestDBStorageListRulesReasonsOnDBError checks that no rules reasons are
 // returned for DB error.
 func TestDBStorageListRulesReasonsOnDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	// close storage immediately
 	closer()
 
@@ -182,7 +182,7 @@ func TestDBStorageListRulesReasonsOnDBError(t *testing.T) {
 // TestDBStorageListRulesReasonsEmptyDB checks that no rules reasons are
 // returned for empty DB.
 func TestDBStorageListRulesReasonsEmptyDB(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	// try to read list of reasons
@@ -196,7 +196,7 @@ func TestDBStorageListRulesReasonsEmptyDB(t *testing.T) {
 // TestDBStorageListOfRulesReasonsOneRule checks that one rule is returned
 // for non empty DB.
 func TestDBStorageListOfRulesReasonsOneRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	// write some rules into database
@@ -228,7 +228,7 @@ func TestDBStorageListOfRulesReasonsOneRule(t *testing.T) {
 // TestDBStorageListOfDisabledRulesDBError checks that no rules are returned
 // for DB error.
 func TestDBStorageListOfDisabledRulesDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	// close storage immediately
 	closer()
 
@@ -240,7 +240,7 @@ func TestDBStorageListOfDisabledRulesDBError(t *testing.T) {
 // TestDBStorageListOfDisabledRulesEmptyDB checks that no rules are returned
 // for empty DB.
 func TestDBStorageListOfDisabledRulesEmptyDB(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	// try to read list of disabled rules
@@ -254,7 +254,7 @@ func TestDBStorageListOfDisabledRulesEmptyDB(t *testing.T) {
 // TestDBStorageListOfDisabledRulesOneRule checks that one rule is returned
 // for non empty DB.
 func TestDBStorageListOfDisabledRulesOneRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	// write some rules into database
@@ -284,7 +284,7 @@ func TestDBStorageListOfDisabledRulesOneRule(t *testing.T) {
 // TestDBStorageListOfDisabledRulesTwoRules checks that two rules are returned
 // for non empty DB.
 func TestDBStorageListOfDisabledRulesTwoRules(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	// write some rules into database
@@ -320,7 +320,7 @@ func TestDBStorageListOfDisabledRulesTwoRules(t *testing.T) {
 // TestDBStorageListOfDisabledRulesNoRule checks that no rule is returned
 // for non empty DB when all rules are enabled.
 func TestDBStorageListOfDisabledRulesNoRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	// write some rules into database
@@ -345,7 +345,7 @@ func TestDBStorageVoteOnRule(t *testing.T) {
 		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
 	} {
 		func(vote types.UserVote) {
-			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 			defer closer()
 
 			mustWriteReport3Rules(t, mockStorage)
@@ -373,7 +373,7 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 		types.UserVoteDislike, types.UserVoteLike, types.UserVoteNone,
 	} {
 		func(vote types.UserVote) {
-			mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 			defer closer()
 
 			err := mockStorage.VoteOnRule(
@@ -386,7 +386,7 @@ func TestDBStorageVoteOnRule_NoCluster(t *testing.T) {
 }
 
 func TestDBStorageChangeVote(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -415,7 +415,7 @@ func TestDBStorageChangeVote(t *testing.T) {
 }
 
 func TestDBStorageTextFeedback(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -437,7 +437,7 @@ func TestDBStorageTextFeedback(t *testing.T) {
 }
 
 func TestDBStorageFeedbackChangeMessage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -465,7 +465,7 @@ func TestDBStorageFeedbackChangeMessage(t *testing.T) {
 }
 
 func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
@@ -475,7 +475,7 @@ func TestDBStorageFeedbackErrorItemNotFound(t *testing.T) {
 }
 
 func TestDBStorageFeedbackErrorDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	_, err := mockStorage.GetUserFeedbackOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
@@ -483,7 +483,7 @@ func TestDBStorageFeedbackErrorDBError(t *testing.T) {
 }
 
 func TestDBStorageVoteOnRuleDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	err := mockStorage.VoteOnRule(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, types.UserVoteNone, "")
@@ -491,7 +491,7 @@ func TestDBStorageVoteOnRuleDBError(t *testing.T) {
 }
 
 func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, false)
 	defer closer()
 	connection := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
@@ -570,7 +570,7 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 }
 
 func TestDBStorageGetVotesForNoRules(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	feedbacks, err := mockStorage.GetUserFeedbackOnRules(
@@ -582,7 +582,7 @@ func TestDBStorageGetVotesForNoRules(t *testing.T) {
 }
 
 func TestDBStorageGetDisableFeedback(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	feedbacks, err := mockStorage.GetUserDisableFeedbackOnRules(
@@ -594,7 +594,7 @@ func TestDBStorageGetDisableFeedback(t *testing.T) {
 }
 
 func TestDBStorageGetVotes(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -619,7 +619,7 @@ func TestDBStorageGetVotes(t *testing.T) {
 }
 
 func TestDBStorageTextDisableFeedback(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -642,7 +642,7 @@ func TestDBStorageTextDisableFeedback(t *testing.T) {
 }
 
 func TestDBStorageDisableFeedbackChangeMessage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -670,7 +670,7 @@ func TestDBStorageDisableFeedbackChangeMessage(t *testing.T) {
 }
 
 func TestDBStorageDisableFeedbackErrorItemNotFound(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
@@ -680,7 +680,7 @@ func TestDBStorageDisableFeedbackErrorItemNotFound(t *testing.T) {
 }
 
 func TestDBStorageDisableFeedbackErrorDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	_, err := mockStorage.GetUserFeedbackOnRuleDisable(testdata.ClusterName, testdata.Rule1ID, testdata.ErrorKey1, testdata.UserID)
@@ -690,7 +690,7 @@ func TestDBStorageDisableFeedbackErrorDBError(t *testing.T) {
 // TestDBStorageListClustersForHittingRules checks the list of HittingClustersData
 // objects retrieved when ListOfClustersForOrgSpecificRule is called
 func TestDBStorageListClustersForHittingRules(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusterIds := []ctypes.ClusterName{
@@ -766,12 +766,16 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 	// but only clusters for testdata.OrgID are returned, and since clusterIds[0] is
 	// not active, an empty list of hitting clusters should be returned as well as an
 	// ItemNotFoundError
-	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID), []string{string(clusterIds[1]), string(clusterIds[2])})
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule1CompositeID), []string{
+		string(clusterIds[1]), string(clusterIds[2]),
+	})
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
 	assert.Equal(t, []ctypes.HittingClustersData{}, list)
 
-	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), []string{string(clusterIds[0]), string(clusterIds[1])})
+	list, err = mockStorage.ListOfClustersForOrgSpecificRule(testdata.Org2ID, types.RuleSelector(testdata.Rule1CompositeID), []string{
+		string(clusterIds[0]), string(clusterIds[1]),
+	})
 	assert.Error(t, err)
 	assert.IsType(t, &utypes.ItemNotFoundError{}, err)
 	assert.Equal(t, []ctypes.HittingClustersData{}, list)
@@ -781,7 +785,7 @@ func TestDBStorageListClustersForHittingRules(t *testing.T) {
 // list of HittingClustersData objects is returned when the given org ID
 // has no associated entries in the recommendation table
 func TestDBStorageListClustersForHittingRulesOrgNotFound(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
@@ -800,7 +804,7 @@ func TestDBStorageListClustersForHittingRulesOrgNotFound(t *testing.T) {
 // ItemNotFoundError, independently of if a list of active clusters is passed
 // as the SQL query filter.
 func TestDBStorageListClustersForHittingRulesRuleNotFound(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.FailOnError(t, mockStorage.WriteRecommendationsForCluster(
@@ -824,7 +828,7 @@ func TestDBStorageListClustersForHittingRulesRuleNotFound(t *testing.T) {
 // hitting recommendations returns no rows (Any other DB error will
 // be indicated to client as a 503).
 func TestDBStorageListClustersForHittingRulesNoRowsFound(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), nil)
@@ -841,7 +845,7 @@ func TestDBStorageListClustersForHittingRulesNoRowsFound(t *testing.T) {
 // is given, which changes the query made to the DB, but not the expected
 // behavior.
 func TestDBStorageListFilteredClustersForHittingRulesNoRowsFound(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	list, err := mockStorage.ListOfClustersForOrgSpecificRule(testdata.OrgID, types.RuleSelector(testdata.Rule3CompositeID), []string{string(testdata.ClusterName)})
@@ -852,7 +856,7 @@ func TestDBStorageListFilteredClustersForHittingRulesNoRowsFound(t *testing.T) {
 
 // TestDBStorageListOfDisabledClustersOneRule checks that one cluster is returned
 func TestDBStorageListOfDisabledClustersOneRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]types.ClusterName, 2)
@@ -882,7 +886,7 @@ func TestDBStorageListOfDisabledClustersOneRule(t *testing.T) {
 
 // TestDBStorageListOfDisabledClustersTwoClusters checks that two specific clusters are returned
 func TestDBStorageListOfDisabledClustersTwoClusters(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]types.ClusterName, 3)
@@ -920,7 +924,7 @@ func TestDBStorageListOfDisabledClustersTwoClusters(t *testing.T) {
 // TestDBStorageListOfDisabledClustersDifferentRule checks that no cluster is returned
 // when a different rule is disabled.
 func TestDBStorageListOfDisabledClustersDifferentRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]types.ClusterName, 2)
@@ -948,7 +952,7 @@ func TestDBStorageListOfDisabledClustersDifferentRule(t *testing.T) {
 // TestDBStorageListOfDisabledClustersFeedback tests that the disable feedback is properly returned
 func TestDBStorageListOfDisabledClustersFeedback(t *testing.T) {
 	const feedback = "feedback test"
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]types.ClusterName, 2)
@@ -985,7 +989,7 @@ func TestDBStorageListOfDisabledClustersFeedback(t *testing.T) {
 func TestDBStorageListOfDisabledClustersFeedbackUpdate(t *testing.T) {
 	const oldFeedback = "feedback old"
 	const newFeedback = "feedback new"
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]types.ClusterName, 2)
@@ -1027,7 +1031,7 @@ func TestDBStorageListOfDisabledClustersFeedbackUpdate(t *testing.T) {
 
 // TestDBStorageListOfDisabledRulesForClustersDBError checks for DB error.
 func TestDBStorageListOfDisabledRulesForClustersDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	clusters := make([]string, 3)
@@ -1043,7 +1047,7 @@ func TestDBStorageListOfDisabledRulesForClustersDBError(t *testing.T) {
 // TestDBStorageListOfDisabledRulesForClustersEmptyDB checks that no rules are returned
 // for empty DB.
 func TestDBStorageListOfDisabledRulesForClustersEmptyDB(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]string, 3)
@@ -1062,7 +1066,7 @@ func TestDBStorageListOfDisabledRulesForClustersEmptyDB(t *testing.T) {
 // TestDBStorageListOfDisabledRulesForClustersOneRule checks that one rule is returned
 // for non empty DB and selected cluster
 func TestDBStorageListOfDisabledRulesForClustersOneRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]string, 3)
@@ -1099,7 +1103,7 @@ func TestDBStorageListOfDisabledRulesForClustersOneRule(t *testing.T) {
 // TestDBStorageListOfDisabledRulesForClustersTwoRules checks that two rules are returned
 // for non empty DB.
 func TestDBStorageListOfDisabledRulesForClustersTwoRules(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]string, 3)
@@ -1133,7 +1137,7 @@ func TestDBStorageListOfDisabledRulesForClustersTwoRules(t *testing.T) {
 // TestDBStorageListOfDisabledRulesForClustersNoRule checks that no rule is returned
 // for cluster that wasnt requested
 func TestDBStorageListOfDisabledRulesForClustersNoRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]string, 3)

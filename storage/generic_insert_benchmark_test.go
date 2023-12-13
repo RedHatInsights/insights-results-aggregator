@@ -29,8 +29,6 @@ const (
 	rowCount    = 1000
 	insertQuery = "INSERT INTO benchmark_tab (name, value) VALUES ($1, $2);"
 	upsertQuery = "INSERT INTO benchmark_tab (id, name, value) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET name=$2, value=$3;"
-	// SQLite alternative to the upsert query above:
-	// upsertQuery = "REPLACE INTO benchmark_tab (id, name, value) VALUES ($1, $2, $3);"
 )
 
 func mustPrepareBenchmark(b *testing.B) (storage.OCPRecommendationsStorage, *sql.DB, func()) {
@@ -39,10 +37,6 @@ func mustPrepareBenchmark(b *testing.B) (storage.OCPRecommendationsStorage, *sql
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	mockStorage, closer := ira_helpers.MustGetPostgresStorage(b, false)
-	// Alternative using the file-based SQLite DB storage:
-	// mockStorage, _ := helpers.MustGetSQLiteFileStorage(b)
-	// Old version using the in-memory SQLite DB storage:
-	// mockStorage := helpers.MustGetMockStorage(b, false)
 
 	conn := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 

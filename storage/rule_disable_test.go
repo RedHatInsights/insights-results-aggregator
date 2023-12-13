@@ -29,7 +29,7 @@ import (
 
 // Check the method DisableRuleSystemWide.
 func TestDBStorageDisableRuleSystemWide(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	// try to call the method
 	err := mockStorage.DisableRuleSystemWide(
@@ -45,7 +45,7 @@ func TestDBStorageDisableRuleSystemWide(t *testing.T) {
 
 // Check the method DisableRuleSystemWide in case of DB error.
 func TestDBStorageDisableRuleSystemWideOnDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	// close storage immediately
 	closer()
 
@@ -60,7 +60,7 @@ func TestDBStorageDisableRuleSystemWideOnDBError(t *testing.T) {
 
 // Check the method EnableRuleSystemWide.
 func TestDBStorageEnableRuleSystemWide(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	// try to call the method
 	err := mockStorage.EnableRuleSystemWide(
@@ -78,7 +78,7 @@ func TestDBStorageEnableRuleSystemWide(t *testing.T) {
 // This shouldn't happen in real environment because
 // Re-enabling/Updating justification/Getting from the rule_disable table is used
 func TestDBStorageEnableRuleSystemWideDifferentUser(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	user1Justification := "first user reason"
 	user2Justification := "second user reason"
 
@@ -122,7 +122,7 @@ func TestDBStorageEnableRuleSystemWideDifferentUser(t *testing.T) {
 
 // Check the method EnableRuleSystemWide in case of DB error.
 func TestDBStorageEnableRuleSystemWideOnDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	// close storage immediately
 	closer()
 
@@ -137,7 +137,7 @@ func TestDBStorageEnableRuleSystemWideOnDBError(t *testing.T) {
 
 // Check the method UpdateDisabledRuleJustification.
 func TestDBStorageUpdateDisabledRuleJustifiction(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	// try to call the method
 	err := mockStorage.UpdateDisabledRuleJustification(
@@ -153,7 +153,7 @@ func TestDBStorageUpdateDisabledRuleJustifiction(t *testing.T) {
 
 // Check the method UpdateDisabledRuleJustification in case of DB error.
 func TestDBStorageUpdateDisabledRuleJustification(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	// close storage immediately
 	closer()
 
@@ -168,7 +168,7 @@ func TestDBStorageUpdateDisabledRuleJustification(t *testing.T) {
 
 // Check the method ReadDisabledRule.
 func TestDBStorageReadDisabledRuleNoRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	// try to call the method
 	_, found, err := mockStorage.ReadDisabledRule(
@@ -187,7 +187,7 @@ func TestDBStorageReadDisabledRuleNoRule(t *testing.T) {
 
 // Check the method ReadDisabledRule.
 func TestDBStorageReadDisabledRuleOneRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	const justification = "JUSTIFICATION"
 
@@ -217,7 +217,7 @@ func TestDBStorageReadDisabledRuleOneRule(t *testing.T) {
 
 // Check the method ReadDisabledRule in case of DB error.
 func TestDBStorageReadDisabledRuleOnRBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	// close storage immediately
 	closer()
 
@@ -232,7 +232,7 @@ func TestDBStorageReadDisabledRuleOnRBError(t *testing.T) {
 
 // Check the method ListOfSystemWideDisabledRules.
 func TestDBStorageListOfSystemWideDisabledRulesNoRules(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	// try to call the method
 	list, err := mockStorage.ListOfSystemWideDisabledRules(testdata.OrgID)
@@ -249,7 +249,7 @@ func TestDBStorageListOfSystemWideDisabledRulesNoRules(t *testing.T) {
 
 // Check the method ListOfSystemWideDisabledRules.
 func TestDBStorageListOfSystemWideDisabledRulesOneRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	const justification = "JUSTIFICATION"
 
@@ -279,7 +279,7 @@ func TestDBStorageListOfSystemWideDisabledRulesOneRule(t *testing.T) {
 
 // Check the method ListOfSystemWideDisabledRules.
 func TestDBStorageListOfSystemWideDisabledRulesTwoRules(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	const justification = "JUSTIFICATION"
 
@@ -318,7 +318,7 @@ func TestDBStorageListOfSystemWideDisabledRulesTwoRules(t *testing.T) {
 
 // Check the method ListOfSystemWideDisabledRules in case of DB error.
 func TestDBStorageListOfSystemWideDisabledRulesDBError(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	// close storage immediately
 	closer()
 

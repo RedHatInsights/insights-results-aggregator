@@ -68,7 +68,7 @@ func init() {
 }
 
 func prepareDB(t *testing.T) (*sql.DB, types.DBDriver, func()) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, false)
 	dbStorage := mockStorage.(*storage.OCPRecommendationsDBStorage)
 
 	return dbStorage.GetConnection(), dbStorage.GetDBDriverType(), closer
@@ -322,10 +322,12 @@ func TestMigrationInitRollbackStep(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	tMigrations := []migration.Migration{{
-		StepUp:   stepRollbackFn,
-		StepDown: stepNoopFn,
-	}}
+	tMigrations := []migration.Migration{
+		{
+			StepUp:   stepRollbackFn,
+			StepDown: stepNoopFn,
+		},
+	}
 
 	const expectedErrStr = "sql: transaction has already been committed or rolled back"
 	err := migration.SetDBVersion(db, dbDriver, 1, tMigrations)
