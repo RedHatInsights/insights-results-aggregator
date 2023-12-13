@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	consumerInstance                                                 *consumer.OCPRulesConsumer
+	consumerInstance                                                 *consumer.KafkaConsumer
 	consumerInstanceIsStarting, finishConsumerInstanceInitialization = context.WithCancel(context.Background())
 )
 

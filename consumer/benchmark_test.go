@@ -31,9 +31,10 @@ import (
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 )
 
-func benchmarkProcessingMessage(b *testing.B, s storage.OCPRecommendationsStorage, messageProducer func() string) {
-	kafkaConsumer := &consumer.OCPRulesConsumer{
-		Storage: s,
+func benchmarkProcessingOCPMessage(b *testing.B, s storage.OCPRecommendationsStorage, messageProducer func() string) {
+	kafkaConsumer := &consumer.KafkaConsumer{
+		Storage:          s,
+		MessageProcessor: consumer.OCPRulesProcessor{},
 	}
 
 	b.ResetTimer()
@@ -46,7 +47,7 @@ func getNoopStorage(testing.TB, bool) (storage.OCPRecommendationsStorage, func()
 	return &storage.NoopOCPStorage{}, func() {}
 }
 
-func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
+func BenchmarkOCPRulesConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	var testCases = []struct {
@@ -77,9 +78,9 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 			defer ira_helpers.MustCloseStorage(b, benchStorage)
 
 			if testCase.RandomMessages {
-				benchmarkProcessingMessage(b, benchStorage, testdata.GetRandomConsumerMessage)
+				benchmarkProcessingOCPMessage(b, benchStorage, testdata.GetRandomConsumerMessage)
 			} else {
-				benchmarkProcessingMessage(b, benchStorage, func() string {
+				benchmarkProcessingOCPMessage(b, benchStorage, func() string {
 					return testdata.ConsumerMessage
 				})
 			}
@@ -87,11 +88,14 @@ func BenchmarkKafkaConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 	}
 }
 
-func getMessagesFromDir(b *testing.B, dataDir string) []string {
+func getOCPMessagesFromDir(b *testing.B, dataDir string) []string {
 	files, err := os.ReadDir(dataDir)
 	helpers.FailOnError(b, err)
 
 	var messages []string
+	c := consumer.KafkaConsumer{
+		MessageProcessor: consumer.OCPRulesProcessor{},
+	}
 
 	for _, file := range files {
 		if file.Type().IsRegular() {
@@ -102,7 +106,7 @@ func getMessagesFromDir(b *testing.B, dataDir string) []string {
 				helpers.FailOnError(b, err)
 
 				zerolog.SetGlobalLevel(zerolog.Disabled)
-				parsedMessage, err := consumer.DeserializeMessage(fileBytes)
+				parsedMessage, err := consumer.DeserializeMessage(&c, fileBytes)
 				zerolog.SetGlobalLevel(zerolog.WarnLevel)
 				if err != nil {
 					log.Warn().Msgf("skipping file %+v because it has bad structure", file.Name())
@@ -124,10 +128,10 @@ func getMessagesFromDir(b *testing.B, dataDir string) []string {
 	return messages
 }
 
-func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
+func BenchmarkOCPRulesConsumer_ProcessMessage_RealMessages(b *testing.B) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
-	messages := getMessagesFromDir(b, "../utils/produce_insights_results/")
+	messages := getOCPMessagesFromDir(b, "../utils/produce_insights_results/")
 
 	var testCases = []struct {
 		Name            string
@@ -149,8 +153,9 @@ func BenchmarkKafkaConsumer_ProcessMessage_RealMessages(b *testing.B) {
 			}
 			defer ira_helpers.MustCloseStorage(b, benchStorage)
 
-			kafkaConsumer := &consumer.OCPRulesConsumer{
-				Storage: benchStorage,
+			kafkaConsumer := &consumer.KafkaConsumer{
+				Storage:          benchStorage,
+				MessageProcessor: consumer.OCPRulesProcessor{},
 			}
 
 			b.ResetTimer()
