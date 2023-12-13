@@ -138,7 +138,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
               value: ":9000"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
-              value: "${IRDW_API_PREFIX}"
+              value: "${DVO_WRITER_API_PREFIX}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
               value: "/openapi/openapi.json"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG
@@ -195,7 +195,7 @@ objects:
           livenessProbe:
             failureThreshold: 10
             httpGet:
-              path: "${IRDW_API_PREFIX}metrics"
+              path: "${DVO_WRITER_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
             initialDelaySeconds: 60
@@ -205,7 +205,7 @@ objects:
           readinessProbe:
             failureThreshold: 10
             httpGet:
-              path: "${IRDW_API_PREFIX}metrics"
+              path: "${DVO_WRITER_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
             initialDelaySeconds: 60
@@ -457,7 +457,7 @@ parameters:
 - name: GROUP_ID
   value: ccx_data_pipeline_app
   required: true
-- name: IRDW_API_PREFIX
+- name: DVO_WRITER_API_PREFIX
   required: true
   value: /
 - name: IRDW_LOG_STREAM
