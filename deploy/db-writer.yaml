@@ -57,6 +57,8 @@ objects:
             - name: execute-migrations
               image: ${IMAGE}:${IMAGE_TAG}
               env:
+                - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE
+                  value: "dvo_recommendations"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
                   value: "false"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
@@ -113,6 +115,8 @@ objects:
                 - migration
                 - latest
           env:
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE
+              value: "dvo_recommendations"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
               value: "${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__TIMEOUT
