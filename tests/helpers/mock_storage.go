@@ -30,21 +30,11 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-const sqlite3 = "sqlite3"
 const postgres = "postgres"
-
-// MustGetMockStorage creates mocked storage based on in-memory Sqlite instance by default
-// or on postgresql with config taken from config-devel.toml
-// if env variable INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB is set to "postgres"
-// INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS is set to db admin's password
-// produces t.Fatal(err) on error
-func MustGetMockStorage(tb testing.TB, init bool) (storage.OCPRecommendationsStorage, func()) {
-	return MustGetPostgresStorage(tb, init)
-}
 
 // MustGetMockStorageWithExpects returns mock db storage
 // with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
-// before each query, so first try to use MustGetMockStorage
+// before each query, so first try to use MustGetPostgresStorage
 // don't forget to call MustCloseMockStorageWithExpects
 func MustGetMockStorageWithExpects(t *testing.T) (storage.OCPRecommendationsStorage, sqlmock.Sqlmock) {
 	return MustGetMockStorageWithExpectsForDriver(t, types.DBDriverGeneral)
@@ -53,7 +43,7 @@ func MustGetMockStorageWithExpects(t *testing.T) (storage.OCPRecommendationsStor
 // MustGetMockStorageWithExpectsForDriver returns mock db storage
 // with specified driver type and
 // with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
-// before each query, so first try to use MustGetMockStorage
+// before each query, so first try to use MustGetPostgresStorage
 // don't forget to call MustCloseMockStorageWithExpects
 func MustGetMockStorageWithExpectsForDriver(
 	t *testing.T, driverType types.DBDriver,
@@ -65,7 +55,7 @@ func MustGetMockStorageWithExpectsForDriver(
 
 // MustGetMockDBWithExpects returns mock db
 // with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
-// before each query, so first try to use MustGetMockStorage
+// before each query, so first try to use MustGetPostgresStorage
 // don't forget to call MustCloseMockDBWithExpects
 func MustGetMockDBWithExpects(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	db, expects, err := sqlmock.New()
@@ -96,44 +86,6 @@ func MustCloseMockDBWithExpects(
 
 	expects.ExpectClose()
 	helpers.FailOnError(t, db.Close())
-}
-
-// MustGetSQLiteMemoryStorage creates test sqlite storage in file
-func MustGetSQLiteMemoryStorage(tb testing.TB, init bool) (storage.OCPRecommendationsStorage, func()) {
-	sqliteStorage := mustGetSqliteStorage(tb, ":memory:", init)
-
-	return sqliteStorage, func() {
-		MustCloseStorage(tb, sqliteStorage)
-	}
-}
-
-// MustGetSQLiteFileStorage creates test sqlite storage in file
-func MustGetSQLiteFileStorage(tb testing.TB, init bool) (storage.OCPRecommendationsStorage, func()) {
-	dbFilename := fmt.Sprintf("/tmp/insights-results-aggregator.test.%v.db", uuid.New().String())
-
-	sqliteStorage := mustGetSqliteStorage(tb, dbFilename, init)
-
-	return sqliteStorage, func() {
-		MustCloseStorage(tb, sqliteStorage)
-		helpers.FailOnError(tb, os.Remove(dbFilename))
-	}
-}
-
-func mustGetSqliteStorage(tb testing.TB, datasource string, init bool) storage.OCPRecommendationsStorage {
-	db, err := sql.Open(sqlite3, datasource)
-	helpers.FailOnError(tb, err)
-
-	_, err = db.Exec("PRAGMA foreign_keys = ON;")
-	helpers.FailOnError(tb, err)
-
-	sqliteStorage := storage.NewOCPRecommendationsFromConnection(db, types.DBDriverSQLite3)
-
-	if init {
-		helpers.FailOnError(tb, sqliteStorage.MigrateToLatest())
-		helpers.FailOnError(tb, sqliteStorage.Init())
-	}
-
-	return sqliteStorage
 }
 
 // MustGetPostgresStorage creates test postgres storage with credentials from config-devel

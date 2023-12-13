@@ -88,7 +88,7 @@ func TestListOfClustersForNonExistingOrganization(t *testing.T) {
 }
 
 func TestListOfClustersForOrganizationOK(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -116,7 +116,7 @@ func TestListOfClustersForOrganizationOK(t *testing.T) {
 // TestListOfClustersForOrganizationDBError expects db error
 // because the storage is closed before the query
 func TestListOfClustersForOrganizationDBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -176,7 +176,7 @@ func TestListOfOrganizationsEmpty(t *testing.T) {
 }
 
 func TestListOfOrganizationsOK(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -213,7 +213,7 @@ func TestListOfOrganizationsOK(t *testing.T) {
 }
 
 func TestListOfOrganizationsDBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -328,7 +328,7 @@ func TestRuleFeedbackVote(t *testing.T) {
 		}
 
 		func(endpoint string) {
-			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
@@ -447,7 +447,7 @@ func checkBadRuleFeedbackRequest(t *testing.T, message, expectedStatus string) {
 			"status": "` + expectedStatus + `"
 	}`
 
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -505,7 +505,7 @@ func TestHTTPServer_GetVoteOnRule_BadRuleID(t *testing.T) {
 }
 
 func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -530,7 +530,7 @@ func TestHTTPServer_GetVoteOnRule_DBError(t *testing.T) {
 }
 
 func TestRuleFeedbackErrorClosedStorage(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -561,7 +561,7 @@ func TestHTTPServer_GetVoteOnRule(t *testing.T) {
 		}
 
 		func(endpoint string) {
-			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
@@ -613,7 +613,7 @@ func TestRuleToggle(t *testing.T) {
 		}
 
 		func(endpoint string) {
-			mockStorage, closer := helpers.MustGetMockStorage(t, true)
+			mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 			defer closer()
 
 			err := mockStorage.WriteReportForCluster(
@@ -675,7 +675,7 @@ func TestHTTPServer_deleteOrganizations_NonIntOrgID(t *testing.T) {
 }
 
 func TestHTTPServer_deleteOrganizations_DBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -700,7 +700,7 @@ func TestHTTPServer_deleteClusters(t *testing.T) {
 }
 
 func TestHTTPServer_deleteClusters_DBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -725,7 +725,7 @@ func TestHTTPServer_deleteClusters_BadClusterName(t *testing.T) {
 }
 
 func TestHTTPServer_SaveDisableFeedback(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -773,7 +773,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_BadClusterName(t *testing.T) {
 }
 
 func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -810,7 +810,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_CheckUserClusterPermissions(t *tes
 }
 
 func TestHTTPServer_SaveDisableFeedback_Error_BadBody(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -837,7 +837,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_BadBody(t *testing.T) {
 }
 
 func TestHTTPServer_SaveDisableFeedback_Error_DBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
@@ -865,7 +865,7 @@ func TestHTTPServer_SaveDisableFeedback_Error_DBError(t *testing.T) {
 }
 
 func TestHTTPServer_ListDisabledRules(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -879,7 +879,7 @@ func TestHTTPServer_ListDisabledRules(t *testing.T) {
 }
 
 func TestHTTPServer_ListOfReasons(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -893,7 +893,7 @@ func TestHTTPServer_ListOfReasons(t *testing.T) {
 }
 
 func TestHTTPServer_ListDisabledRulesForClusters(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusterList := []types.ClusterName{testdata.ClusterName}
@@ -911,7 +911,7 @@ func TestHTTPServer_ListDisabledRulesForClusters(t *testing.T) {
 }
 
 func TestHTTPServer_EnableRuleSystemWide(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -929,7 +929,7 @@ func TestHTTPServer_EnableRuleSystemWide(t *testing.T) {
 }
 
 func TestHTTPServer_EnableRuleSystemWideWrongOrgID(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -947,7 +947,7 @@ func TestHTTPServer_EnableRuleSystemWideWrongOrgID(t *testing.T) {
 }
 
 func TestHTTPServer_DisableRuleSystemWide(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -966,7 +966,7 @@ func TestHTTPServer_DisableRuleSystemWide(t *testing.T) {
 }
 
 func TestHTTPServer_DisableRuleSystemWideWrongOrgID(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -984,7 +984,7 @@ func TestHTTPServer_DisableRuleSystemWideWrongOrgID(t *testing.T) {
 }
 
 func TestHTTPServer_DisableRuleSystemWideNoJustification(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1002,7 +1002,7 @@ func TestHTTPServer_DisableRuleSystemWideNoJustification(t *testing.T) {
 }
 
 func TestHTTPServer_UpdateRuleSystemWide(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1021,7 +1021,7 @@ func TestHTTPServer_UpdateRuleSystemWide(t *testing.T) {
 }
 
 func TestHTTPServer_UpdateRuleSystemWideWrongOrgID(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1039,7 +1039,7 @@ func TestHTTPServer_UpdateRuleSystemWideWrongOrgID(t *testing.T) {
 }
 
 func TestHTTPServer_UpdateRuleSystemWideNoJustification(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1057,7 +1057,7 @@ func TestHTTPServer_UpdateRuleSystemWideNoJustification(t *testing.T) {
 }
 
 func TestHTTPServer_ReadRuleSystemWideNoRule(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1075,7 +1075,7 @@ func TestHTTPServer_ReadRuleSystemWideNoRule(t *testing.T) {
 }
 
 func TestHTTPServer_ReadRuleSystemWideExistingRule(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	// disable rule first
@@ -1108,7 +1108,7 @@ func TestHTTPServer_ReadRuleSystemWideExistingRule(t *testing.T) {
 }
 
 func TestHTTPServer_ReadRuleSystemWideWrongOrgID(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1126,7 +1126,7 @@ func TestHTTPServer_ReadRuleSystemWideWrongOrgID(t *testing.T) {
 }
 
 func TestHTTPServer_ListOfDisabledRulesSystemWide(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1140,7 +1140,7 @@ func TestHTTPServer_ListOfDisabledRulesSystemWide(t *testing.T) {
 }
 
 func TestHTTPServer_RecommendationsListEndpoint_NoRecommendations(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
@@ -1163,7 +1163,7 @@ func TestHTTPServer_RecommendationsListEndpoint_NoRecommendations(t *testing.T) 
 }
 
 func TestHTTPServer_RecommendationsListEndpoint_DifferentClusters(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
@@ -1186,7 +1186,7 @@ func TestHTTPServer_RecommendationsListEndpoint_DifferentClusters(t *testing.T) 
 }
 
 func TestHTTPServer_RecommendationsListEndpoint_3Recs1Cluster(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
@@ -1216,7 +1216,7 @@ func TestHTTPServer_RecommendationsListEndpoint_3Recs1Cluster(t *testing.T) {
 }
 
 func TestHTTPServer_RecommendationsListEndpoint_3Recs2Clusters(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusterList := make([]types.ClusterName, 2)
@@ -1282,7 +1282,7 @@ func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenOrgDBError(t *testing.T) {
 func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenSelectorDBError(t *testing.T) {
 	const errStr = "Item with ID test.rule3|ek3 was not found in the storage"
 
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, time.RFC3339)
@@ -1300,7 +1300,7 @@ func TestRuleClusterDetailEndpoint_NoRowsFoundForGivenSelectorDBError(t *testing
 func TestRuleClusterDetailEndpoint_BadBodyInRequest(t *testing.T) {
 	errStr := "Internal Server Error"
 
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	_ = mockStorage.WriteRecommendationsForCluster(testdata.OrgID, testdata.ClusterName, testdata.Report2Rules, time.RFC3339)
@@ -1357,7 +1357,7 @@ func TestRuleClusterDetailEndpoint_OtherDBErrors(t *testing.T) {
 }
 
 func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "impacted":"%v", "meta":{"cluster_version":"%v"},"last_checked_at":"%v"}],"status":"ok"}`
@@ -1423,7 +1423,7 @@ func TestRuleClusterDetailEndpoint_ValidParameters(t *testing.T) {
 }
 
 func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	respBody := `{"clusters":[{"cluster":"%v", "cluster_name":"", "impacted":"%v", "meta":{"cluster_version":"%v"}, "last_checked_at":"%v"}],"status":"ok"}`
@@ -1465,7 +1465,7 @@ func TestRuleClusterDetailEndpoint_ValidParametersActiveClusters(t *testing.T) {
 }
 
 func TestRuleClusterDetailEndpoint_InvalidParametersActiveClusters(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	errStr := `Error during parsing param 'org_id' with value 'x'. Error: 'unsigned integer expected'`
@@ -1500,7 +1500,7 @@ func TestRuleClusterDetailEndpoint_InvalidParametersActiveClusters(t *testing.T)
 
 // TestServeInfoMap checks the REST API server behaviour for info endpoint
 func TestServeInfoMap(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1512,7 +1512,7 @@ func TestServeInfoMap(t *testing.T) {
 }
 
 func TestHTTPServer_ClustersRecommendationsListEndpoint_NoRecommendations(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteRecommendationsForCluster(
@@ -1535,7 +1535,7 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_NoRecommendations(t *tes
 }
 
 func TestHTTPServer_ClustersRecommendationsListEndpoint_2Recs1Cluster(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	respBody := `{"recommendations":{"%v":["%v"],"%v":["%v"]},"status":"ok"}`
@@ -1565,7 +1565,7 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_2Recs1Cluster(t *testing
 }
 
 func TestHTTPServer_ClustersRecommendationsListEndpoint_BadOrgIDBadRequest(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusterList := []types.ClusterName{testdata.GetRandomClusterID()}
@@ -1582,7 +1582,7 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_BadOrgIDBadRequest(t *te
 }
 
 func TestHTTPServer_ClustersRecommendationsListEndpoint_MissingClusterListBadRequest(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	var clusterListBadType string
@@ -1599,7 +1599,7 @@ func TestHTTPServer_ClustersRecommendationsListEndpoint_MissingClusterListBadReq
 }
 
 func TestHTTPServer_ListOfDisabledClusters_NoneDisabled(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -1621,7 +1621,7 @@ func TestHTTPServer_ListOfDisabledClusters_NoneDisabled(t *testing.T) {
 }
 
 func TestHTTPServer_ListOfDisabledClusters_OneDisabled(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]types.ClusterName, 2)
@@ -1660,7 +1660,7 @@ func TestHTTPServer_ListOfDisabledClusters_OneDisabled(t *testing.T) {
 }
 
 func TestHTTPServer_ListOfDisabledClusters_JustificationTests(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	clusters := make([]types.ClusterName, 2)

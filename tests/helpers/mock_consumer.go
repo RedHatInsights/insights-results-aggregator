@@ -75,7 +75,7 @@ func MustGetMockOCPRulesConsumerWithExpectedMessages(
 func GetMockOCPRulesConsumerWithExpectedMessages(
 	t testing.TB, topic string, orgAllowlist mapset.Set, messages []string,
 ) (*MockKafkaConsumer, func(), error) {
-	mockStorage, storageCloser := MustGetMockStorage(t, true)
+	mockStorage, storageCloser := MustGetPostgresStorage(t, true)
 
 	mockConsumer := &MockKafkaConsumer{
 		KafkaConsumer: consumer.KafkaConsumer{
