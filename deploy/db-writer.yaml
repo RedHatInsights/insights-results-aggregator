@@ -269,7 +269,7 @@ parameters:
   value: dvo-writer
   required: true
 - name: GROUP_ID
-  value: ccx_data_pipeline_app
+  value: dvo_writer_app
   required: true
 - name: IRDW_API_PREFIX
   required: true
