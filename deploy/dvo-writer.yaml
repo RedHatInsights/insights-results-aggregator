@@ -260,7 +260,7 @@ parameters:
   value: ccx.dvo.results
   required: true
 - name: DEAD_LETTER_QUEUE_TOPIC
-  value: ccx.aggregator.dead.letter.queue
+  value: ccx.dvowriter.dead.letter.queue
   required: true
 - name: PAYLOAD_TRACKER_TOPIC
   value: platform.payload-status
