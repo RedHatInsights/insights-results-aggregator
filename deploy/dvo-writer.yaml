@@ -185,7 +185,7 @@ objects:
           livenessProbe:
             failureThreshold: 10
             httpGet:
-              path: "${IRDW_API_PREFIX}metrics"
+              path: "${DVO_WRITER_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
             initialDelaySeconds: 60
@@ -195,7 +195,7 @@ objects:
           readinessProbe:
             failureThreshold: 10
             httpGet:
-              path: "${IRDW_API_PREFIX}metrics"
+              path: "${DVO_WRITER_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
             initialDelaySeconds: 60
@@ -271,7 +271,7 @@ parameters:
 - name: GROUP_ID
   value: dvo_writer_app
   required: true
-- name: IRDW_API_PREFIX
+- name: DVO_WRITER_API_PREFIX
   required: true
   value: /
 - name: IRDW_LOG_STREAM
