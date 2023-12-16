@@ -76,7 +76,7 @@ objects:
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
                   value: ${CLOUDWATCH_DEBUG}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
-                  value: ${IRDW_LOG_STREAM}
+                  value: ${LOG_STREAM}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
                   value: ${CREATE_STREAM_IF_NOT_EXISTS}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
@@ -154,7 +154,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
               value: ${CLOUDWATCH_DEBUG}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
-              value: ${IRDW_LOG_STREAM}
+              value: ${LOG_STREAM}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
               value: ${CREATE_STREAM_IF_NOT_EXISTS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
@@ -274,7 +274,7 @@ parameters:
 - name: DVO_WRITER_API_PREFIX
   required: true
   value: /
-- name: IRDW_LOG_STREAM
+- name: LOG_STREAM
   value: dvo-writer
 - name: DVO_WRITER_REPLICAS
   description: The number of replicas to use for the dvo-writer deployment
