@@ -34,7 +34,12 @@ type DVORulesProcessor struct {
 func (DVORulesProcessor) deserializeMessage(messageValue []byte) (incomingMessage, error) {
 	var deserialized incomingMessage
 
-	err := json.Unmarshal(messageValue, &deserialized)
+	received, err := DecompressMessage(messageValue)
+	if err != nil {
+		return deserialized, err
+	}
+
+	err = json.Unmarshal(received, &deserialized)
 	if err != nil {
 		return deserialized, err
 	}
