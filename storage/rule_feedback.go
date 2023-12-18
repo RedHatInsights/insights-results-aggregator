@@ -125,7 +125,7 @@ func (storage OCPRecommendationsDBStorage) constructUpsertClusterRuleUserFeedbac
 	var query string
 
 	switch storage.dbDriverType {
-	case types.DBDriverSQLite3, types.DBDriverPostgres, types.DBDriverGeneral:
+	case types.DBDriverPostgres, types.DBDriverGeneral:
 		query = `
 			INSERT INTO cluster_rule_user_feedback
 			(cluster_id, rule_id, user_id, user_vote, added_at, updated_at, message, error_key, org_id)

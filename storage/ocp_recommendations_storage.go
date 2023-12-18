@@ -35,8 +35,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/lib/pq"           // PostgreSQL database driver
-	"github.com/mattn/go-sqlite3" // SQLite database driver
+	"github.com/lib/pq" // PostgreSQL database driver
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-operator-utils/redis"
@@ -342,10 +341,6 @@ func initAndGetDriver(configuration Configuration) (driverType types.DBDriver, d
 	driverName = configuration.Driver
 
 	switch driverName {
-	case "sqlite3":
-		driverType = types.DBDriverSQLite3
-		driver = &sqlite3.SQLiteDriver{}
-		dataSource = configuration.SQLiteDataSource
 	case "postgres":
 		driverType = types.DBDriverPostgres
 		driver = &pq.Driver{}
@@ -1129,7 +1124,7 @@ func (storage OCPRecommendationsDBStorage) WriteReportForCluster(
 		return types.ErrOldReport
 	}
 
-	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
+	if storage.dbDriverType != types.DBDriverPostgres {
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
@@ -1358,40 +1353,19 @@ func (storage OCPRecommendationsDBStorage) ReadClusterListRecommendations(
 
 	for rows.Next() {
 		var (
-			clusterID    ctypes.ClusterName
-			ruleID       ctypes.RuleID
-			timestampStr string
-			timestamp    time.Time
+			clusterID ctypes.ClusterName
+			ruleID    ctypes.RuleID
+			timestamp time.Time
 		)
 
-		if storage.dbDriverType != types.DBDriverSQLite3 {
-			// postgres is able to auto scan created_at into time.Time
-			err := rows.Scan(
-				&clusterID,
-				&timestamp,
-				&ruleID,
-			)
-			if err != nil {
-				log.Error().Err(err).Msg("problem reading one recommendation")
-				return clusterMap, err
-			}
-		} else {
-			// sqlite cannot auto scan into time.Time, needs manual parse
-			err := rows.Scan(
-				&clusterID,
-				&timestampStr,
-				&ruleID,
-			)
-			if err != nil {
-				log.Error().Err(err).Msg("problem reading one recommendation")
-				return clusterMap, err
-			}
-
-			timestamp, err = time.Parse(time.RFC3339, timestampStr)
-			if err != nil {
-				log.Error().Err(err).Msgf("unparsable timestamp %v", timestamp)
-				return clusterMap, err
-			}
+		err := rows.Scan(
+			&clusterID,
+			&timestamp,
+			&ruleID,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("problem reading one recommendation")
+			return clusterMap, err
 		}
 
 		if cluster, exists := clusterMap[clusterID]; exists {
