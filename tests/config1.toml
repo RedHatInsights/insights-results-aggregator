@@ -63,3 +63,7 @@ logging_to_cloud_watch_enabled = false
 
 [metrics]
 namespace = "aggregator"
+
+[sentry]
+dsn = "test.example.com"
+environment = "test"

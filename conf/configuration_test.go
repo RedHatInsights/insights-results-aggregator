@@ -95,6 +95,9 @@ func setEnvVariables(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE", "42")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS", "0")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__PASSWORD", "top secret")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN", "test.example.com")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT", "test")
 }
 
 func mustSetEnv(t *testing.T, key, val string) {
@@ -388,6 +391,10 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		endpoint = "localhost:6379"
 		password = ""
 		timeout_seconds = 30
+
+		[sentry]
+		dsn = "test.example2.com"
+		environment = "test2"
 	`
 
 	tmpFilename, err := GetTmpConfigFile(config)
@@ -450,6 +457,11 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		RedisTimeoutSeconds: 30,
 		RedisPassword:       "",
 	}, conf.GetRedisConfiguration())
+
+	assert.Equal(t, logger.SentryLoggingConfiguration{
+		SentryDSN:         "test.example2.com",
+		SentryEnvironment: "test2",
+	}, conf.GetSentryLoggingConfiguration())
 }
 
 func TestLoadConfigurationFromEnv(t *testing.T) {
@@ -508,6 +520,11 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		RedisTimeoutSeconds: 0,
 		RedisPassword:       "top secret",
 	}, conf.GetRedisConfiguration())
+
+	assert.Equal(t, logger.SentryLoggingConfiguration{
+		SentryDSN:         "test.example.com",
+		SentryEnvironment: "test",
+	}, conf.GetSentryLoggingConfiguration())
 }
 
 func TestGetLoggingConfigurationDefault(t *testing.T) {
