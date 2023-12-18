@@ -1092,7 +1092,7 @@ func TestDBStorageWriteRecommendationForClusterNoConflict(t *testing.T) {
 // TestDBStorageInsertRecommendations checks that only hitting rules in the report
 // are inserted in the recommendation table
 func TestDBStorageInsertRecommendations(t *testing.T) {
-	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpectsForDriver(t, types.DBDriverSQLite3)
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpectsForDriver(t, types.DBDriverPostgres)
 	defer ira_helpers.MustCloseMockStorageWithExpects(t, mockStorage, expects)
 
 	expects.ExpectBegin()
