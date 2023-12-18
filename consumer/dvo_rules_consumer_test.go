@@ -200,6 +200,24 @@ func TestDeserializeDVOMessageNullMetrics(t *testing.T) {
 	assert.EqualError(t, err, "missing required attribute 'Metrics'")
 }
 
+func TestDeserializeCompressedDVOMessage(t *testing.T) {
+	consumerMessage := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Metrics": {
+			"we_dont_know_yet": "what_format_it_will_have",
+            "but": "this should be deserialized properly"
+		}
+	}`
+	compressed := compressConsumerMessage([]byte(consumerMessage))
+	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
+	message, err := consumer.DeserializeMessage(&c, compressed)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, types.OrgID(1), *message.Organization)
+	assert.Equal(t, testdata.ClusterName, *message.ClusterName)
+}
+
 func TestParseEmptyDVOMessage(t *testing.T) {
 	message := sarama.ConsumerMessage{}
 	_, err := consumer.ParseMessage(&dvoConsumer, &message)
