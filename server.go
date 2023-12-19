@@ -55,7 +55,7 @@ func startServer() error {
 	if conf.GetOCPRecommendationsStorageConfiguration().Type == types.SQLStorage {
 		// migration and DB versioning is now supported for SQL
 		// databases only
-		currentVersion, err := migration.GetDBVersion(ocpRecommendationsStorage.GetConnection())
+		currentVersion, err := migration.GetDBVersion(ocpRecommendationsStorage.GetConnection(), ocpRecommendationsStorage.GetDBSchema())
 		if err != nil {
 			const msg = "Unable to retrieve DB migration version"
 			log.Error().Err(err).Msg(msg)
