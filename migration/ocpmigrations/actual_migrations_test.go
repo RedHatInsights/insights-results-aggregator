@@ -49,19 +49,25 @@ func GetTxForMigration(t *testing.T) (*sql.Tx, *sql.DB, sqlmock.Sqlmock) {
 }
 
 func TestAllMigrations(t *testing.T) {
-	db, dbDriver, closer := prepareDB(t)
+	db, closer := ira_helpers.PrepareDB(t)
 	defer closer()
 
-	err := migration.InitInfoTable(db)
+	dbConn := db.GetConnection()
+	dbSchema := db.GetDBSchema()
+
+	err := migration.InitInfoTable(dbConn, dbSchema)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, db.GetDBDriverType(), dbSchema, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 }
 
 func TestMigrationsOneByOne(t *testing.T) {
-	db, dbDriver, closer := prepareDB(t)
+	db, closer := ira_helpers.PrepareDB(t)
 	defer closer()
+
+	dbConn := db.GetConnection()
+	dbSchema := db.GetDBSchema()
 
 	allMigrations := make([]migration.Migration, len(ocpmigrations.UsableOCPMigrations))
 	copy(allMigrations, ocpmigrations.UsableOCPMigrations)
@@ -71,152 +77,152 @@ func TestMigrationsOneByOne(t *testing.T) {
 		// add one migration to the list
 		testMigrations = append(testMigrations, allMigrations[i])
 
-		err := migration.InitInfoTable(db)
+		err := migration.InitInfoTable(dbConn, dbSchema)
 		helpers.FailOnError(t, err)
 
-		err = migration.SetDBVersion(db, dbDriver, migration.Version(i), testMigrations)
+		err = migration.SetDBVersion(dbConn, db.GetDBDriverType(), dbSchema, migration.Version(i), testMigrations)
 		helpers.FailOnError(t, err)
 	}
 }
 
 func TestMigration1_TableReportAlreadyExists(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec(`CREATE TABLE report(c INTEGER);`)
+	_, err := dbConn.Exec(`CREATE TABLE report(c INTEGER);`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "table report already exists")
 }
 
 func TestMigration1_TableReportDoesNotExist(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	// set to the version with the report table
-	err := migration.SetDBVersion(db, dbDriver, 1, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 1, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`DROP TABLE report;`)
+	_, err = dbConn.Exec(`DROP TABLE report;`)
 	helpers.FailOnError(t, err)
 
 	// try to set to the first version
-	err = migration.SetDBVersion(db, dbDriver, 0, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "no such table: report")
 }
 
 func TestMigration2_TableRuleAlreadyExists(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec(`CREATE TABLE rule(c INTEGER);`)
+	_, err := dbConn.Exec(`CREATE TABLE rule(c INTEGER);`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "table rule already exists")
 }
 
 func TestMigration2_TableRuleDoesNotExist(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	// set to the version where table rule exists
-	err := migration.SetDBVersion(db, dbDriver, 2, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 2, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	if dbDriver == types.DBDriverSQLite3 {
-		_, err = db.Exec(`DROP TABLE rule;`)
+		_, err = dbConn.Exec(`DROP TABLE rule;`)
 		helpers.FailOnError(t, err)
 	} else {
-		_, err = db.Exec(`DROP TABLE rule CASCADE;`)
+		_, err = dbConn.Exec(`DROP TABLE rule CASCADE;`)
 		helpers.FailOnError(t, err)
 	}
 
 	// try to set to the first version
-	err = migration.SetDBVersion(db, dbDriver, 0, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "no such table: rule")
 }
 
 func TestMigration2_TableRuleErrorKeyAlreadyExists(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec(`CREATE TABLE rule_error_key(c INTEGER);`)
+	_, err := dbConn.Exec(`CREATE TABLE rule_error_key(c INTEGER);`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "table rule_error_key already exists")
 }
 
 func TestMigration2_TableRuleErrorKeyDoesNotExist(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	// set to the latest version
-	err := migration.SetDBVersion(db, dbDriver, 2, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 2, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`DROP TABLE rule_error_key;`)
+	_, err = dbConn.Exec(`DROP TABLE rule_error_key;`)
 	helpers.FailOnError(t, err)
 
 	// try to set to the first version
-	err = migration.SetDBVersion(db, dbDriver, 0, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "no such table: rule_error_key")
 }
 
 func TestMigration3_TableClusterRuleUserFeedbackAlreadyExists(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec(`CREATE TABLE cluster_rule_user_feedback(c INTEGER);`)
+	_, err := dbConn.Exec(`CREATE TABLE cluster_rule_user_feedback(c INTEGER);`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "table cluster_rule_user_feedback already exists")
 }
 
 func TestMigration3_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	// set to the latest version
-	err := migration.SetDBVersion(db, dbDriver, 3, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 3, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
+	_, err = dbConn.Exec(`DROP TABLE cluster_rule_user_feedback;`)
 	helpers.FailOnError(t, err)
 
 	// try to set to the first version
-	err = migration.SetDBVersion(db, dbDriver, 0, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
 
 func TestMigration4_StepUp_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	err := migration.SetDBVersion(db, dbDriver, 3, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 3, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
+	_, err = dbConn.Exec(`DROP TABLE cluster_rule_user_feedback;`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
 
 func TestMigration4_StepDown_TableClusterRuleUserFeedbackDoesNotExist(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	err := migration.SetDBVersion(db, dbDriver, 4, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 4, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`DROP TABLE cluster_rule_user_feedback;`)
+	_, err = dbConn.Exec(`DROP TABLE cluster_rule_user_feedback;`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 0, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "no such table: cluster_rule_user_feedback")
 }
 
@@ -287,32 +293,32 @@ func TestMigration4_DropTableError(t *testing.T) {
 }
 
 func TestMigration5_TableAlreadyExists(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec("CREATE TABLE consumer_error(c INTEGER);")
+	_, err := dbConn.Exec("CREATE TABLE consumer_error(c INTEGER);")
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, getMaxVersion(), ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "table consumer_error already exists")
 }
 
 func TestMigration5_NoSuchTable(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	err := migration.SetDBVersion(db, dbDriver, 5, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 5, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`DROP TABLE consumer_error`)
+	_, err = dbConn.Exec(`DROP TABLE consumer_error`)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 0, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, ocpmigrations.UsableOCPMigrations)
 	assert.EqualError(t, err, "no such table: consumer_error")
 }
 
 func TestMigration13(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -320,10 +326,10 @@ func TestMigration13(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 12, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 12, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
 		VALUES ($1, $2, $3, $4, $5)
 	`,
@@ -335,7 +341,7 @@ func TestMigration13(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 13, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 13, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	assertRule := func(ruleFQDN types.RuleID, errorKey types.ErrorKey, expectedTemplateData string) {
@@ -343,7 +349,7 @@ func TestMigration13(t *testing.T) {
 			templateData string
 		)
 
-		err := db.QueryRow(`
+		err := dbConn.QueryRow(`
 			SELECT
 				template_data
 			FROM
@@ -374,13 +380,13 @@ func TestMigration13(t *testing.T) {
 }
 
 func TestMigration16(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	err := migration.SetDBVersion(db, dbDriver, 15, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 15, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
 	`,
@@ -397,10 +403,10 @@ func TestMigration16(t *testing.T) {
 		assert.Contains(t, err.Error(), `relation "recommendation" does not exist`)
 	}
 
-	err = migration.SetDBVersion(db, dbDriver, 16, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 16, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
 	`,
@@ -413,7 +419,7 @@ func TestMigration16(t *testing.T) {
 }
 
 func TestMigration19(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -421,12 +427,12 @@ func TestMigration19(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 18, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 18, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	err = db.QueryRow(`SELECT created_at FROM recommendation`).Err()
+	err = dbConn.QueryRow(`SELECT created_at FROM recommendation`).Err()
 	assert.Error(t, err, "created_at column should not exist")
-	err = db.QueryRow(`SELECT rule_id FROM recommendation`).Err()
+	err = dbConn.QueryRow(`SELECT rule_id FROM recommendation`).Err()
 	assert.Error(t, err, "rule_id column should not exist")
 
 	correctRuleID := testdata.Rule1ID + "|" + testdata.ErrorKey1
@@ -434,7 +440,7 @@ func TestMigration19(t *testing.T) {
 
 	expectedRuleAfterMigration := string(testdata.Rule1ID)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
 		`,
@@ -445,7 +451,7 @@ func TestMigration19(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key)
 		VALUES ($1, $2, $3, $4)
 		`,
@@ -456,7 +462,7 @@ func TestMigration19(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 19, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 19, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	var (
@@ -464,7 +470,7 @@ func TestMigration19(t *testing.T) {
 		ruleID   string
 	)
 
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 			SELECT
 				rule_fqdn, rule_id
 			FROM
@@ -479,7 +485,7 @@ func TestMigration19(t *testing.T) {
 	assert.Equal(t, expectedRuleAfterMigration, ruleFQDN)
 	assert.Equal(t, string(correctRuleID), ruleID)
 
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 			SELECT
 				rule_fqdn, rule_id
 			FROM
@@ -495,7 +501,7 @@ func TestMigration19(t *testing.T) {
 	assert.Equal(t, string(correctRuleID), ruleID)
 	var timestamp time.Time
 
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 			SELECT
 				created_at
 			FROM
@@ -511,23 +517,23 @@ func TestMigration19(t *testing.T) {
 	assert.True(t, timestamp.UTC().Equal(timestamp), "The stored timestamp is not in UTC format")
 
 	// Step down should remove created_at and rule_id columns
-	err = migration.SetDBVersion(db, dbDriver, 18, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 18, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	err = db.QueryRow(`SELECT created_at FROM recommendation`).Err()
+	err = dbConn.QueryRow(`SELECT created_at FROM recommendation`).Err()
 	assert.Error(t, err, "created_at column should not exist")
-	err = db.QueryRow(`SELECT rule_id FROM recommendation`).Err()
+	err = dbConn.QueryRow(`SELECT rule_id FROM recommendation`).Err()
 	assert.Error(t, err, "rule_id column should not exist")
 }
 
 func TestMigration18(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	err := migration.SetDBVersion(db, dbDriver, 17, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 17, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO advisor_ratings
 		(user_id, org_id, rule_id, error_key, rated_at, last_updated_at, rating)
 		VALUES
@@ -549,10 +555,10 @@ func TestMigration18(t *testing.T) {
 		assert.Contains(t, err.Error(), `relation "advisor_ratings" does not exist`)
 	}
 
-	err = migration.SetDBVersion(db, dbDriver, 18, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 18, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO advisor_ratings
 		(user_id, org_id, rule_id, error_key, rated_at, last_updated_at, rating)
 		VALUES
@@ -570,7 +576,7 @@ func TestMigration18(t *testing.T) {
 }
 
 func TestMigration20(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -578,13 +584,13 @@ func TestMigration20(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 19, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 19, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	err = db.QueryRow(`SELECT rule_fqdn FROM advisor_ratings`).Err()
+	err = dbConn.QueryRow(`SELECT rule_fqdn FROM advisor_ratings`).Err()
 	assert.Error(t, err, "rule_fqdn column should not exist")
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO advisor_ratings
 		(user_id, org_id, rule_id, error_key, rated_at, last_updated_at, rating)
 		VALUES
@@ -600,7 +606,7 @@ func TestMigration20(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 20, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 20, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	var (
@@ -608,7 +614,7 @@ func TestMigration20(t *testing.T) {
 		ruleID   string
 	)
 
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 			SELECT
 				rule_fqdn, rule_id
 			FROM
@@ -624,12 +630,12 @@ func TestMigration20(t *testing.T) {
 	assert.Equal(t, testdata.Rule1CompositeID, types.RuleID(ruleID))
 
 	// Step down should rename rule_fqdn column to rule_id and it contains only plugin name
-	err = migration.SetDBVersion(db, dbDriver, 19, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 19, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	err = db.QueryRow(`SELECT rule_fqdn FROM advisor_ratings`).Err()
+	err = dbConn.QueryRow(`SELECT rule_fqdn FROM advisor_ratings`).Err()
 	assert.Error(t, err, "rule_fqdn column should not exist")
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 			SELECT
 				rule_id
 			FROM
@@ -645,7 +651,7 @@ func TestMigration20(t *testing.T) {
 }
 
 func TestMigration22(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -653,7 +659,7 @@ func TestMigration22(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 21, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 21, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	var expectedCorrectCount int
@@ -670,7 +676,7 @@ func TestMigration22(t *testing.T) {
 		}
 
 		// insert toggles
-		_, err = db.Exec(`
+		_, err = dbConn.Exec(`
 				INSERT INTO cluster_rule_toggle
 				(cluster_id, rule_id, error_key, user_id, disabled, updated_at)
 				VALUES
@@ -686,7 +692,7 @@ func TestMigration22(t *testing.T) {
 		helpers.FailOnError(t, err)
 
 		// insert disable feedbacks
-		_, err = db.Exec(`
+		_, err = dbConn.Exec(`
 				INSERT INTO cluster_user_rule_disable_feedback
 				(cluster_id, rule_id, error_key, user_id, message, added_at, updated_at)
 				VALUES
@@ -703,13 +709,13 @@ func TestMigration22(t *testing.T) {
 	}
 
 	// migrate to 22
-	err = migration.SetDBVersion(db, dbDriver, 22, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 22, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	// retrieve numbers of rows
 	var togglesAfterMigrationCount, feedbacksAfterMigrationCount int
 
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 	SELECT
 		count(*)
 	FROM
@@ -721,7 +727,7 @@ func TestMigration22(t *testing.T) {
 	// must match with expected count
 	assert.Equal(t, expectedCorrectCount, togglesAfterMigrationCount)
 
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 	SELECT
 		count(*)
 	FROM
@@ -737,7 +743,7 @@ func TestMigration22(t *testing.T) {
 }
 
 func TestMigration24(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -745,26 +751,26 @@ func TestMigration24(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 23, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 23, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`SELECT created_at FROM rule_hit`,
 	)
 	assert.NotNil(t, err)
 
 	// migrate to 24
-	err = migration.SetDBVersion(db, dbDriver, 24, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 24, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`SELECT created_at FROM rule_hit`,
 	)
 	helpers.FailOnError(t, err)
 }
 
 func TestMigration25(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -772,26 +778,26 @@ func TestMigration25(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 24, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 24, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`SELECT impacted_since FROM recommendation`,
 	)
 	assert.Error(t, err)
 
 	// migrate to 25
-	err = migration.SetDBVersion(db, dbDriver, 25, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 25, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`SELECT impacted_since FROM recommendation`,
 	)
 	helpers.FailOnError(t, err)
 }
 
 func TestMigration26(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -799,26 +805,26 @@ func TestMigration26(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 25, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 25, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`SELECT org_id FROM cluster_rule_toggle`,
 	)
 	assert.Error(t, err)
 
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`SELECT org_id FROM cluster_rule_user_feedback`,
 	)
 	assert.Error(t, err)
 
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`SELECT org_id FROM cluster_user_rule_disable_feedback`,
 	)
 	assert.Error(t, err)
 
 	// insert into report table
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
 		VALUES ($1, $2, $3, $4, $5)
 		`,
@@ -831,7 +837,7 @@ func TestMigration26(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// insert into cluster_rule_toggle
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`INSERT INTO cluster_rule_toggle (cluster_id, rule_id, error_key, user_id, disabled, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)`,
 		testdata.ClusterName,
@@ -845,7 +851,7 @@ func TestMigration26(t *testing.T) {
 
 	unknownClusterID := testdata.GetRandomClusterID()
 	// insert into cluster_rule_toggle
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`INSERT INTO cluster_rule_toggle (cluster_id, rule_id, error_key, user_id, disabled, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)`,
 		unknownClusterID,
@@ -858,11 +864,11 @@ func TestMigration26(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// migrate to 26, popoulating org_id column based on report table
-	err = migration.SetDBVersion(db, dbDriver, 26, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 26, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	var orgID types.OrgID
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 	SELECT
 		org_id
 	FROM
@@ -878,7 +884,7 @@ func TestMigration26(t *testing.T) {
 	// org_id must match that in report table
 	assert.Equal(t, orgID, testdata.OrgID)
 
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 	SELECT
 		org_id
 	FROM
@@ -905,7 +911,7 @@ func TestMigration27(t *testing.T) {
 		"cluster_user_rule_disable_feedback",
 	}
 
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -913,11 +919,11 @@ func TestMigration27(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 26, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 26, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	// insert into report table because of DB constraints
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO report (org_id, cluster, report, reported_at, last_checked_at)
 		VALUES ($1, $2, $3, $4, $5)
 		`,
@@ -933,7 +939,7 @@ func TestMigration27(t *testing.T) {
 	for i, orgID := range orgIDList {
 		// insert into cluster_rule_toggle
 		userID := fmt.Sprintf("%v", i)
-		_, err = db.Exec(
+		_, err = dbConn.Exec(
 			`INSERT INTO cluster_rule_toggle (cluster_id, rule_id, error_key, user_id, disabled, updated_at, org_id)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 			testdata.ClusterName,
@@ -947,7 +953,7 @@ func TestMigration27(t *testing.T) {
 		helpers.FailOnError(t, err)
 
 		// insert into cluster_user_rule_disable_feedback
-		_, err = db.Exec(
+		_, err = dbConn.Exec(
 			`INSERT INTO cluster_user_rule_disable_feedback
 				(cluster_id, rule_id, error_key, user_id, message, added_at, updated_at, org_id)
 			VALUES
@@ -964,7 +970,7 @@ func TestMigration27(t *testing.T) {
 		helpers.FailOnError(t, err)
 
 		// insert into cluster_rule_user_feedback
-		_, err = db.Exec(
+		_, err = dbConn.Exec(
 			`INSERT INTO cluster_rule_user_feedback
 				(cluster_id, rule_id, error_key, user_id, message, added_at, updated_at, user_vote, org_id)
 			VALUES
@@ -986,21 +992,21 @@ func TestMigration27(t *testing.T) {
 	for _, table := range tableList {
 		var cnt int
 		query := fmt.Sprintf(countQuery, table)
-		err = db.QueryRow(query).Scan(&cnt)
+		err = dbConn.QueryRow(query).Scan(&cnt)
 		helpers.FailOnError(t, err)
 		// expect 3 rows
 		assert.Equal(t, cnt, 3)
 	}
 
 	// migrate to 27, deleting rows where org_id = 0
-	err = migration.SetDBVersion(db, dbDriver, 27, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 27, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	// check correct number of rows remaining (2)
 	for _, table := range tableList {
 		var cnt int
 		query := fmt.Sprintf(countQuery, table)
-		err = db.QueryRow(query).Scan(&cnt)
+		err = dbConn.QueryRow(query).Scan(&cnt)
 		helpers.FailOnError(t, err)
 		// expect 2 rows, one was supposed to be deleted in all tables
 		assert.Equal(t, cnt, 2)
@@ -1008,7 +1014,7 @@ func TestMigration27(t *testing.T) {
 }
 
 func TestMigration28(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -1016,11 +1022,11 @@ func TestMigration28(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 27, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 27, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	// insert into rule_disable
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`INSERT INTO rule_disable
 				(org_id, user_id, rule_id, error_key, created_at)
 			VALUES
@@ -1034,7 +1040,7 @@ func TestMigration28(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// insert into rule_disable different user_id, same org_id
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`INSERT INTO rule_disable
 				(org_id, user_id, rule_id, error_key, created_at)
 			VALUES
@@ -1049,17 +1055,17 @@ func TestMigration28(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// delete from table
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`DELETE FROM rule_disable`,
 	)
 	helpers.FailOnError(t, err)
 
 	// migrate to different constraint
-	err = migration.SetDBVersion(db, dbDriver, 28, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 28, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	// insert into rule_disable
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`INSERT INTO rule_disable
 				(org_id, user_id, rule_id, error_key, created_at)
 			VALUES
@@ -1073,7 +1079,7 @@ func TestMigration28(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// insert into rule_disable different user_id, same org_id
-	_, err = db.Exec(
+	_, err = dbConn.Exec(
 		`INSERT INTO rule_disable
 				(org_id, user_id, rule_id, error_key, created_at)
 			VALUES
@@ -1089,7 +1095,7 @@ func TestMigration28(t *testing.T) {
 }
 
 func TestMigration29(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -1097,10 +1103,10 @@ func TestMigration29(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 28, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 28, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO cluster_rule_toggle
 		(cluster_id, user_id, org_id, rule_id, error_key, disabled, disabled_at, updated_at)
 		VALUES
@@ -1117,17 +1123,17 @@ func TestMigration29(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 29, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 29, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	err = db.QueryRow(`SELECT user_id FROM cluster_rule_toggle`).Err()
+	err = dbConn.QueryRow(`SELECT user_id FROM cluster_rule_toggle`).Err()
 	assert.Error(t, err, "user_id column should not exist")
 
-	err = migration.SetDBVersion(db, dbDriver, 28, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 28, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	var userID types.UserID
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 	SELECT
 		user_id
 	FROM
@@ -1143,7 +1149,7 @@ func TestMigration29(t *testing.T) {
 }
 
 func TestMigration30(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -1151,10 +1157,10 @@ func TestMigration30(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 29, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 29, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO rule_disable
 		(user_id, org_id, rule_id, error_key, justification, created_at, updated_at)
 		VALUES
@@ -1170,17 +1176,17 @@ func TestMigration30(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 30, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 30, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	err = db.QueryRow(`SELECT user_id FROM rule_disable`).Err()
+	err = dbConn.QueryRow(`SELECT user_id FROM rule_disable`).Err()
 	assert.Error(t, err, "user_id column should not exist")
 
-	err = migration.SetDBVersion(db, dbDriver, 29, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 29, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	var userID types.UserID
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 	SELECT
 		user_id
 	FROM
@@ -1196,7 +1202,7 @@ func TestMigration30(t *testing.T) {
 }
 
 func TestMigration31(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	if dbDriver == types.DBDriverSQLite3 {
@@ -1204,10 +1210,10 @@ func TestMigration31(t *testing.T) {
 		return
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 30, ocpmigrations.UsableOCPMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 30, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO advisor_ratings
 		(user_id, org_id, rule_fqdn, error_key, rated_at, last_updated_at, rating, rule_id)
 		VALUES
@@ -1224,10 +1230,10 @@ func TestMigration31(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 31, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 31, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec(`
+	_, err = dbConn.Exec(`
 		INSERT INTO advisor_ratings
 		(org_id, rule_fqdn, error_key, rated_at, last_updated_at, rating, rule_id)
 		VALUES
@@ -1243,14 +1249,14 @@ func TestMigration31(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	err = db.QueryRow(`SELECT user_id FROM advisor_ratings`).Err()
+	err = dbConn.QueryRow(`SELECT user_id FROM advisor_ratings`).Err()
 	assert.Error(t, err, "user_id column should not exist")
 
-	err = migration.SetDBVersion(db, dbDriver, 30, ocpmigrations.UsableOCPMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 30, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
 	var userID types.UserID
-	err = db.QueryRow(`
+	err = dbConn.QueryRow(`
 	SELECT
 		user_id
 	FROM

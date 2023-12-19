@@ -29,14 +29,13 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
-	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 const (
 	dbClosedErrorMsg    = "sql: database is closed"
-	noSuchTableErrorMsg = "no such table: migration_info"
+	noSuchTableErrorMsg = "no such table: public.migration_info"
 	stepErrorMsg        = "migration Step Error"
 )
 
@@ -67,64 +66,48 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 }
 
-func prepareDB(t *testing.T) (*sql.DB, types.DBDriver, func()) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
-	dbStorage := mockStorage.(*storage.OCPRecommendationsDBStorage)
-
-	return dbStorage.GetConnection(), dbStorage.GetDBDriverType(), closer
-}
-
-func prepareDBAndInfo(t *testing.T) (*sql.DB, types.DBDriver, func()) {
-	db, dbDriver, closer := prepareDB(t)
-
-	if err := migration.InitInfoTable(db); err != nil {
-		closer()
-		t.Fatal(err)
-	}
-
-	return db, dbDriver, closer
-}
-
 // TestMigrationInit checks that database migration table initialization succeeds.
 func TestMigrationInit(t *testing.T) {
-	db, _, closer := prepareDB(t)
+	db, closer := ira_helpers.PrepareDB(t)
 	defer closer()
 
-	err := migration.InitInfoTable(db)
+	dbConn := db.GetConnection()
+	dbSchema := db.GetDBSchema()
+	err := migration.InitInfoTable(dbConn, dbSchema)
 	helpers.FailOnError(t, err)
 
-	_, err = migration.GetDBVersion(db)
+	_, err = migration.GetDBVersion(dbConn, dbSchema)
 	helpers.FailOnError(t, err)
 }
 
 // TestMigrationReInit checks that an attempt to re-initialize an already initialized
 // migration info table will simply result in a no-op without any error.
 func TestMigrationReInit(t *testing.T) {
-	db, _, closer := prepareDBAndInfo(t)
+	dbConn, _, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	err := migration.InitInfoTable(db)
+	err := migration.InitInfoTable(dbConn, dbSchema)
 	helpers.FailOnError(t, err)
 }
 
 func TestMigrationInitNotOneRow(t *testing.T) {
-	db, _, closer := prepareDBAndInfo(t)
+	dbConn, _, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10);")
+	_, err := dbConn.Exec("INSERT INTO public.migration_info(version) VALUES(10);")
 	helpers.FailOnError(t, err)
 
 	const expectedErrStr = "unexpected number of rows in migration info table (expected: 1, reality: 2)"
-	err = migration.InitInfoTable(db)
+	err = migration.InitInfoTable(dbConn, dbSchema)
 	assert.EqualError(t, err, expectedErrStr)
 }
 
 // TestMigrationGetVersion checks that the initial database migration version is 0.
 func TestMigrationGetVersion(t *testing.T) {
-	db, _, closer := prepareDBAndInfo(t)
+	dbConn, _, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	version, err := migration.GetDBVersion(db)
+	version, err := migration.GetDBVersion(dbConn, dbSchema)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, migration.Version(0), version, "unexpected database version")
@@ -132,118 +115,120 @@ func TestMigrationGetVersion(t *testing.T) {
 
 func TestMigrationGetVersionMissingInfoTable(t *testing.T) {
 	// Prepare DB without preparing the migration info table.
-	db, _, closer := prepareDB(t)
+	db, closer := ira_helpers.PrepareDB(t)
 	defer closer()
 
-	_, err := migration.GetDBVersion(db)
+	_, err := migration.GetDBVersion(db.GetConnection(), db.GetDBSchema())
 	assert.EqualError(t, err, noSuchTableErrorMsg)
 }
 
 func TestMigrationGetVersionMultipleRows(t *testing.T) {
-	db, _, closer := prepareDBAndInfo(t)
+	dbConn, _, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec("INSERT INTO migration_info(version) VALUES(10);")
+	_, err := dbConn.Exec("INSERT INTO public.migration_info(version) VALUES(10);")
 	helpers.FailOnError(t, err)
 
-	_, err = migration.GetDBVersion(db)
+	_, err = migration.GetDBVersion(dbConn, dbSchema)
 	assert.EqualError(t, err, "migration info table contain 2 rows")
 }
 
 func TestMigrationGetVersionEmptyTable(t *testing.T) {
-	db, _, closer := prepareDBAndInfo(t)
+	dbConn, _, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec("DELETE FROM migration_info;")
+	_, err := dbConn.Exec("DELETE FROM migration_info;")
 	helpers.FailOnError(t, err)
 
-	_, err = migration.GetDBVersion(db)
+	_, err = migration.GetDBVersion(dbConn, dbSchema)
 	assert.EqualError(t, err, "migration info table contain 0 rows")
 }
 
 func TestMigrationGetVersionInvalidType(t *testing.T) {
-	db, _, closer := prepareDB(t)
+	db, closer := ira_helpers.PrepareDB(t)
 	defer closer()
 
-	_, err := db.Exec("CREATE TABLE migration_info ( version TEXT );")
+	dbConn := db.GetConnection()
+
+	_, err := dbConn.Exec("CREATE TABLE public.migration_info ( version TEXT );")
 	helpers.FailOnError(t, err)
 
-	_, err = db.Exec("INSERT INTO migration_info(version) VALUES('hello world');")
+	_, err = dbConn.Exec("INSERT INTO public.migration_info(version) VALUES('hello world');")
 	helpers.FailOnError(t, err)
 
 	const expectedErrStr = `sql: Scan error on column index 0, name "version": ` +
 		`converting driver.Value type string ("hello world") to a uint: invalid syntax`
-	_, err = migration.GetDBVersion(db)
+	_, err = migration.GetDBVersion(dbConn, db.GetDBSchema())
 	assert.EqualError(t, err, expectedErrStr)
 }
 
 // TestMigrationSetVersion checks that it is possible to change
 // the database version in both direction (upgrade and downgrade).
 func TestMigrationSetVersion(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	// Step-up from 0 to 1.
-	err := migration.SetDBVersion(db, dbDriver, 1, testMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 1, testMigrations)
 	helpers.FailOnError(t, err)
 
-	version, err := migration.GetDBVersion(db)
+	version, err := migration.GetDBVersion(dbConn, dbSchema)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, migration.Version(1), version, "unexpected database version")
 
 	// Step-down from 1 to 0.
-	err = migration.SetDBVersion(db, dbDriver, 0, testMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, testMigrations)
 	helpers.FailOnError(t, err)
 
-	version, err = migration.GetDBVersion(db)
+	version, err = migration.GetDBVersion(dbConn, dbSchema)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, migration.Version(0), version, "unexpected database version")
 }
 
 func TestMigrationNoInfoTable(t *testing.T) {
-	db, _, closer := prepareDB(t)
+	db, closer := ira_helpers.PrepareDB(t)
 	defer closer()
 
 	// Intentionally missing info table initialization here.
 
-	_, err := migration.GetDBVersion(db)
+	_, err := migration.GetDBVersion(db.GetConnection(), db.GetDBSchema())
 	assert.EqualError(
 		t, err, noSuchTableErrorMsg, "migration info table should be missing when not initialized",
 	)
 }
 
 func TestMigrationSetVersionSame(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	// Step-up from 0 to 1.
-	err := migration.SetDBVersion(db, dbDriver, 1, testMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 1, testMigrations)
 	helpers.FailOnError(t, err)
 
 	// Set version to.
-	err = migration.SetDBVersion(db, dbDriver, 1, testMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 1, testMigrations)
 	helpers.FailOnError(t, err)
 
-	version, err := migration.GetDBVersion(db)
+	version, err := migration.GetDBVersion(dbConn, dbSchema)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, migration.Version(1), version, "unexpected database version")
 }
 
 func TestMigrationSetVersionTargetTooHigh(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	// Step-up from 0 to 2 (impossible -- only 1 migration is available).
-	err := migration.SetDBVersion(db, dbDriver, 2, testMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 2, testMigrations)
 	assert.EqualError(t, err, "invalid target version (available version range is 0-1)")
 }
 
 // TestMigrationSetVersionUpError checks that an error during a step-up is correctly handled.
 func TestMigrationSetVersionUpError(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	tMigrations := []migration.Migration{
@@ -253,13 +238,13 @@ func TestMigrationSetVersionUpError(t *testing.T) {
 		},
 	}
 
-	err := migration.SetDBVersion(db, dbDriver, 1, tMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 1, tMigrations)
 	assert.EqualError(t, err, stepErrorMsg)
 }
 
 // TestMigrationSetVersionDownError checks that an error during a step-down is correctly handled.
 func TestMigrationSetVersionDownError(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	tMigrations := []migration.Migration{
@@ -270,56 +255,56 @@ func TestMigrationSetVersionDownError(t *testing.T) {
 	}
 
 	// First we need to step-up before we can step-down.
-	err := migration.SetDBVersion(db, dbDriver, 1, tMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 1, tMigrations)
 	helpers.FailOnError(t, err)
 
-	err = migration.SetDBVersion(db, dbDriver, 0, tMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, tMigrations)
 	assert.EqualError(t, err, stepErrorMsg)
 }
 
 // TestMigrationSetVersionCurrentTooHighError makes sure that if the current DB version
 // is outside of the available migration range, it is reported as an error.
 func TestMigrationSetVersionCurrentTooHighError(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	_, err := db.Exec("UPDATE migration_info SET version=10;")
+	_, err := dbConn.Exec("UPDATE public.migration_info SET version=10;")
 	helpers.FailOnError(t, err)
 
 	const expectedErrStr = "current version (10) is outside of available migration boundaries"
-	err = migration.SetDBVersion(db, dbDriver, 0, testMigrations)
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, testMigrations)
 	assert.EqualError(t, err, expectedErrStr)
 }
 
 func TestMigrationInitClosedDB(t *testing.T) {
-	db, _, closer := prepareDB(t)
+	db, closer := ira_helpers.PrepareDB(t)
 	// Intentionally no `defer` here.
 	closer()
 
-	err := migration.InitInfoTable(db)
+	err := migration.InitInfoTable(db.GetConnection(), db.GetDBSchema())
 	assert.EqualError(t, err, dbClosedErrorMsg)
 }
 
 func TestMigrationGetVersionClosedDB(t *testing.T) {
-	db, _, closer := prepareDBAndInfo(t)
+	dbConn, _, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	// Intentionally no `defer` here.
 	closer()
 
-	_, err := migration.GetDBVersion(db)
+	_, err := migration.GetDBVersion(dbConn, dbSchema)
 	assert.EqualError(t, err, dbClosedErrorMsg)
 }
 
 func TestMigrationSetVersionClosedDB(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	// Intentionally no `defer` here.
 	closer()
 
-	err := migration.SetDBVersion(db, dbDriver, 0, testMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 0, testMigrations)
 	assert.EqualError(t, err, dbClosedErrorMsg)
 }
 
 func TestMigrationInitRollbackStep(t *testing.T) {
-	db, dbDriver, closer := prepareDBAndInfo(t)
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
 	tMigrations := []migration.Migration{{
@@ -328,14 +313,14 @@ func TestMigrationInitRollbackStep(t *testing.T) {
 	}}
 
 	const expectedErrStr = "sql: transaction has already been committed or rolled back"
-	err := migration.SetDBVersion(db, dbDriver, 1, tMigrations)
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 1, tMigrations)
 	assert.EqualError(t, err, expectedErrStr)
 }
 
 func TestInitInfoTable_BeginTransactionDBError(t *testing.T) {
-	db, _, closer := prepareDB(t)
+	db, closer := ira_helpers.PrepareDB(t)
 	closer()
-	err := migration.InitInfoTable(db)
+	err := migration.InitInfoTable(db.GetConnection(), db.GetDBSchema())
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
@@ -346,10 +331,10 @@ func TestInitInfoTable_InitTableDBError(t *testing.T) {
 	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
-	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectExec("CREATE TABLE IF NOT EXISTS public.migration_info").WillReturnError(fmt.Errorf(errStr))
 	expects.ExpectRollback()
 
-	err := migration.InitInfoTable(db)
+	err := migration.InitInfoTable(db, "")
 	assert.EqualError(t, err, errStr)
 }
 
@@ -360,11 +345,11 @@ func TestInitInfoTable_InitVersionDBError(t *testing.T) {
 	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
-	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
-	expects.ExpectExec("INSERT INTO migration_info").WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectExec("CREATE TABLE IF NOT EXISTS public.migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectExec("INSERT INTO public.migration_info").WillReturnError(fmt.Errorf(errStr))
 	expects.ExpectRollback()
 
-	err := migration.InitInfoTable(db)
+	err := migration.InitInfoTable(db, "")
 	assert.EqualError(t, err, errStr)
 }
 
@@ -375,12 +360,12 @@ func TestInitInfoTable_CountDBError(t *testing.T) {
 	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
-	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
-	expects.ExpectExec("INSERT INTO migration_info").WillReturnResult(sql_driver.ResultNoRows)
-	expects.ExpectQuery("SELECT COUNT.+FROM migration_info").WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectExec("CREATE TABLE IF NOT EXISTS public.migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectExec("INSERT INTO public.migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectQuery("SELECT COUNT.+FROM public.migration_info").WillReturnError(fmt.Errorf(errStr))
 	expects.ExpectRollback()
 
-	err := migration.InitInfoTable(db)
+	err := migration.InitInfoTable(db, "")
 	assert.EqualError(t, err, errStr)
 }
 
@@ -388,20 +373,20 @@ func updateVersionInDBCommon(t *testing.T) (*sql.DB, sqlmock.Sqlmock) {
 	db, expects := ira_helpers.MustGetMockDBWithExpects(t)
 
 	expects.ExpectBegin()
-	expects.ExpectExec("CREATE TABLE IF NOT EXISTS migration_info").WillReturnResult(sql_driver.ResultNoRows)
-	expects.ExpectExec("INSERT INTO migration_info").WillReturnResult(sql_driver.ResultNoRows)
-	expects.ExpectQuery("SELECT COUNT.+FROM migration_info").WillReturnRows(
+	expects.ExpectExec("CREATE TABLE IF NOT EXISTS public.migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectExec("INSERT INTO public.migration_info").WillReturnResult(sql_driver.ResultNoRows)
+	expects.ExpectQuery("SELECT COUNT.+FROM public.migration_info").WillReturnRows(
 		sqlmock.NewRows([]string{"version"}).AddRow(1),
 	)
 	expects.ExpectCommit()
 
-	err := migration.InitInfoTable(db)
+	err := migration.InitInfoTable(db, "")
 	helpers.FailOnError(t, err)
 
-	expects.ExpectQuery("SELECT COUNT.+FROM migration_info").WillReturnRows(
+	expects.ExpectQuery("SELECT COUNT.+FROM public.migration_info").WillReturnRows(
 		sqlmock.NewRows([]string{"version"}).AddRow(1),
 	)
-	expects.ExpectQuery("SELECT version FROM migration_info").WillReturnRows(
+	expects.ExpectQuery("SELECT version FROM public.migration_info").WillReturnRows(
 		sqlmock.NewRows([]string{"version"}).AddRow(0),
 	)
 	expects.ExpectBegin()
@@ -416,11 +401,11 @@ func TestUpdateVersionInDB_RowsAffectedError(t *testing.T) {
 	db, expects := updateVersionInDBCommon(t)
 	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
-	expects.ExpectExec("UPDATE migration_info SET version").
+	expects.ExpectExec("UPDATE public.migration_info SET version").
 		WithArgs(1).
 		WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf(errStr)))
 
-	err := migration.SetDBVersion(db, types.DBDriverGeneral, 1, testMigrations)
+	err := migration.SetDBVersion(db, types.DBDriverGeneral, "", 1, testMigrations)
 	assert.EqualError(t, err, errStr)
 }
 
@@ -428,11 +413,11 @@ func TestUpdateVersionInDB_MoreThan1RowAffected(t *testing.T) {
 	db, expects := updateVersionInDBCommon(t)
 	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
-	expects.ExpectExec("UPDATE migration_info SET version").
+	expects.ExpectExec("UPDATE public.migration_info SET version").
 		WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(1, 2))
 
-	err := migration.SetDBVersion(db, types.DBDriverGeneral, 1, testMigrations)
+	err := migration.SetDBVersion(db, types.DBDriverGeneral, "", 1, testMigrations)
 	assert.EqualError(
 		t, err, "unexpected number of affected rows in migration info table (expected: 1, reality: 2)",
 	)
