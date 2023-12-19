@@ -1,6 +1,6 @@
-# Deployment
+# Deploying in ephemeral for troubleshooting and local testing
 
-## Testing the local version of the cache-writer in ephemeral
+In order to reserve a namespace, follow these steps:
 
 1. Install `bonfire`
 ```
@@ -17,6 +17,15 @@ oc login --token=${TOKEN} --server=https://api.c-rh-c-eph.8p0c.p1.openshiftapps.
 ```
 NAMESPACE=$(bonfire namespace reserve)
 ```
+
+## Testing the local version of the dvo-writer
+
+4. Deploy the dvo-writer
+```
+bonfire deploy -c deploy/test-dvo-writer.yaml -n $NAMESPACE --component dvo-writer ccx-data-pipeline
+```
+
+## Testing the local version of the cache-writer
 
 4. Deploy the cache-writer and Redis workloads
 ```
