@@ -1,0 +1,89 @@
+// Copyright 2023 Red Hat, Inc
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package consumer
+
+import (
+	"encoding/json"
+	"errors"
+	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/producer"
+	"github.com/rs/zerolog/log"
+
+	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/Shopify/sarama"
+	"github.com/google/uuid"
+)
+
+// DVORulesProcessor satisfies MessageProcessor interface
+type DVORulesProcessor struct {
+}
+
+func (DVORulesProcessor) deserializeMessage(messageValue []byte) (incomingMessage, error) {
+	var deserialized incomingMessage
+
+	received, err := DecompressMessage(messageValue)
+	if err != nil {
+		return deserialized, err
+	}
+
+	err = json.Unmarshal(received, &deserialized)
+	if err != nil {
+		return deserialized, err
+	}
+	if deserialized.Organization == nil {
+		return deserialized, errors.New("missing required attribute 'OrgID'")
+	}
+	if deserialized.ClusterName == nil {
+		return deserialized, errors.New("missing required attribute 'ClusterName'")
+	}
+	_, err = uuid.Parse(string(*deserialized.ClusterName))
+	if err != nil {
+		return deserialized, errors.New("cluster name is not a UUID")
+	}
+	if deserialized.DvoMetrics == nil {
+		return deserialized, errors.New("missing required attribute 'Metrics'")
+	}
+	return deserialized, nil
+}
+
+func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, error) {
+	message, err := consumer.MessageProcessor.deserializeMessage(msg.Value)
+	if err != nil {
+		consumer.logMsgForFurtherAnalysis(msg)
+		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
+		return message, err
+	}
+	consumer.updatePayloadTracker(message.RequestID, time.Now(), message.Organization, message.Account, producer.StatusReceived)
+	return message, nil
+}
+
+func (DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
+	tStart := time.Now()
+	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
+	message, err := consumer.MessageProcessor.parseMessage(consumer, msg)
+	if err != nil {
+		return message.RequestID, message, err
+	}
+	logMessageInfo(consumer, msg, &message, "Read")
+	tRead := time.Now()
+	// log durations for every message consumption steps
+	logDuration(tStart, tRead, msg.Offset, "read")
+	return message.RequestID, message, nil
+}
+
+func (DVORulesProcessor) shouldProcess(_ *KafkaConsumer, _ *sarama.ConsumerMessage, _ *incomingMessage) error {
+	return nil
+}

@@ -16,8 +16,11 @@ package consumer
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
+
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
@@ -29,6 +32,7 @@ import (
 
 const (
 	improperIncomeMessageError = "Deserialized report read from message with improper structure "
+	unexpectedStorageType      = "Unexpected storage type"
 
 	reportAttributeSystem        = "system"
 	reportAttributeReports       = "reports"
@@ -52,8 +56,12 @@ type MessageProcessor interface {
 	shouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error
 }
 
-// Report represents report send in a message consumed from any broker
+// Report represents report sent in a message consumed from any broker
 type Report map[string]*json.RawMessage
+
+// DvoMetrics represents DVO workload recommendations received as part
+// of the incoming message
+type DvoMetrics map[string]*json.RawMessage
 
 type system struct {
 	Hostname string `json:"hostname"`
@@ -65,6 +73,7 @@ type incomingMessage struct {
 	Account      *types.Account     `json:"AccountNumber"`
 	ClusterName  *types.ClusterName `json:"ClusterName"`
 	Report       *Report            `json:"Report"`
+	DvoMetrics   *DvoMetrics        `json:"Metrics"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
 	LastChecked string              `json:"LastChecked"`
 	Version     types.SchemaVersion `json:"Version"`
@@ -167,11 +176,13 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error 
 
 		log.Error().Err(err).Msg("Error processing message consumed from Kafka")
 		consumer.numberOfErrorsConsumingMessages++
-
-		if err := consumer.Storage.WriteConsumerError(msg, err); err != nil {
-			log.Error().Err(err).Msg("Unable to write consumer error to storage")
+		if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
+			if err := ocpStorage.WriteConsumerError(msg, err); err != nil {
+				log.Error().Err(err).Msg("Unable to write consumer error to storage")
+			}
+		} else {
+			logMessageError(consumer, msg, &message, unexpectedStorageType, errors.New("consumer error could not be stored"))
 		}
-
 		consumer.sendDeadLetter(msg)
 
 		consumer.updatePayloadTracker(requestID, time.Now(), message.Organization, message.Account, producer.StatusError)
@@ -236,47 +247,6 @@ func checkMessageOrgInAllowList(consumer *KafkaConsumer, message *incomingMessag
 		logMessageDebug(consumer, msg, message, "Organization allow listing disabled")
 	}
 	return true, ""
-}
-
-func (consumer *KafkaConsumer) writeRecommendations(
-	msg *sarama.ConsumerMessage, message incomingMessage, reportAsBytes []byte,
-) (time.Time, error) {
-	err := consumer.Storage.WriteRecommendationsForCluster(
-		*message.Organization,
-		*message.ClusterName,
-		types.ClusterReport(reportAsBytes),
-		types.Timestamp(time.Now().UTC().Format(time.RFC3339)),
-	)
-	if err != nil {
-		logMessageError(consumer, msg, &message, "Error writing recommendations to database", err)
-		return time.Time{}, err
-	}
-	tStored := time.Now()
-	logMessageDebug(consumer, msg, &message, "Stored recommendations")
-	return tStored, nil
-}
-
-func (consumer *KafkaConsumer) writeInfoReport(
-	msg *sarama.ConsumerMessage, message incomingMessage, infoStoredAtTime time.Time,
-) error {
-	// it is expected that message.ParsedInfo contains at least one item:
-	// result from special INFO rule containing cluster version that is
-	// used just in external data pipeline
-	err := consumer.Storage.WriteReportInfoForCluster(
-		*message.Organization,
-		*message.ClusterName,
-		message.ParsedInfo,
-		infoStoredAtTime,
-	)
-	if err == types.ErrOldReport {
-		logMessageInfo(consumer, msg, &message, "Skipping because a more recent info report already exists for this cluster")
-		return nil
-	} else if err != nil {
-		logMessageError(consumer, msg, &message, "Error writing info report to database", err)
-		return err
-	}
-	logMessageInfo(consumer, msg, &message, "Stored info report")
-	return nil
 }
 
 func (consumer *KafkaConsumer) logMsgForFurtherAnalysis(msg *sarama.ConsumerMessage) {

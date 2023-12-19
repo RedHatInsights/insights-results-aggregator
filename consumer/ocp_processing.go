@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
+
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -60,6 +62,88 @@ func (OCPRulesProcessor) deserializeMessage(messageValue []byte) (incomingMessag
 	return deserialized, nil
 }
 
+func (consumer *KafkaConsumer) writeReport(
+	msg *sarama.ConsumerMessage, message incomingMessage,
+	reportAsBytes []byte, lastCheckedTime time.Time,
+) error {
+	if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
+		// timestamp when the report is about to be written into database
+		storedAtTime := time.Now()
+
+		err := ocpStorage.WriteReportForCluster(
+			*message.Organization,
+			*message.ClusterName,
+			types.ClusterReport(reportAsBytes),
+			message.ParsedHits,
+			lastCheckedTime,
+			message.Metadata.GatheredAt,
+			storedAtTime,
+			message.RequestID,
+		)
+		if err == types.ErrOldReport {
+			logMessageInfo(consumer, msg, &message, "Skipping because a more recent report already exists for this cluster")
+			return nil
+		} else if err != nil {
+			logMessageError(consumer, msg, &message, "Error writing report to database", err)
+			return err
+		}
+		logMessageDebug(consumer, msg, &message, "Stored report")
+		return nil
+	}
+	err := errors.New("report could not be stored")
+	logMessageError(consumer, msg, &message, unexpectedStorageType, err)
+	return err
+}
+
+func (consumer *KafkaConsumer) writeRecommendations(
+	msg *sarama.ConsumerMessage, message incomingMessage, reportAsBytes []byte,
+) (time.Time, error) {
+	if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
+		err := ocpStorage.WriteRecommendationsForCluster(
+			*message.Organization,
+			*message.ClusterName,
+			types.ClusterReport(reportAsBytes),
+			types.Timestamp(time.Now().UTC().Format(time.RFC3339)),
+		)
+		if err != nil {
+			logMessageError(consumer, msg, &message, "Error writing recommendations to database", err)
+			return time.Time{}, err
+		}
+		tStored := time.Now()
+		logMessageDebug(consumer, msg, &message, "Stored recommendations")
+		return tStored, nil
+	}
+	logMessageError(consumer, msg, &message, unexpectedStorageType, errors.New("recommendation could not be stored"))
+	return time.Time{}, nil
+}
+
+func (consumer *KafkaConsumer) writeInfoReport(
+	msg *sarama.ConsumerMessage, message incomingMessage, infoStoredAtTime time.Time,
+) error {
+	// it is expected that message.ParsedInfo contains at least one item:
+	// result from special INFO rule containing cluster version that is
+	// used just in external data pipeline
+	if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
+		err := ocpStorage.WriteReportInfoForCluster(
+			*message.Organization,
+			*message.ClusterName,
+			message.ParsedInfo,
+			infoStoredAtTime,
+		)
+		if errors.Is(err, types.ErrOldReport) {
+			logMessageInfo(consumer, msg, &message, "Skipping because a more recent info report already exists for this cluster")
+			return nil
+		} else if err != nil {
+			logMessageError(consumer, msg, &message, "Error writing info report to database", err)
+			return err
+		}
+		logMessageInfo(consumer, msg, &message, "Stored info report")
+		return nil
+	}
+	logMessageError(consumer, msg, &message, unexpectedStorageType, errors.New("info report could not be stored"))
+	return nil
+}
+
 // processMessage processes an incoming message
 func (OCPRulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
@@ -97,33 +181,16 @@ func (OCPRulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.Con
 	}
 	tTimeCheck := time.Now()
 
-	// timestamp when the report is about to be written into database
-	storedAtTime := time.Now()
-
 	reportAsBytes, err := json.Marshal(*message.Report)
 	if err != nil {
 		logMessageError(consumer, msg, &message, "Error marshalling report", err)
 		return message.RequestID, message, err
 	}
 
-	err = consumer.Storage.WriteReportForCluster(
-		*message.Organization,
-		*message.ClusterName,
-		types.ClusterReport(reportAsBytes),
-		message.ParsedHits,
-		lastCheckedTime,
-		message.Metadata.GatheredAt,
-		storedAtTime,
-		message.RequestID,
-	)
-	if err == types.ErrOldReport {
-		logMessageInfo(consumer, msg, &message, "Skipping because a more recent report already exists for this cluster")
-		return message.RequestID, message, nil
-	} else if err != nil {
-		logMessageError(consumer, msg, &message, "Error writing report to database", err)
+	err = consumer.writeReport(msg, message, reportAsBytes, lastCheckedTime)
+	if err != nil {
 		return message.RequestID, message, err
 	}
-	logMessageDebug(consumer, msg, &message, "Stored report")
 	tStored := time.Now()
 
 	tRecommendationsStored, err := consumer.writeRecommendations(msg, message, reportAsBytes)

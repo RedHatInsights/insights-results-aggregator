@@ -95,6 +95,9 @@ func setEnvVariables(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE", "42")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS", "0")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__PASSWORD", "top secret")
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN", "test.example.com")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT", "test")
 }
 
 func mustSetEnv(t *testing.T, key, val string) {
@@ -388,6 +391,10 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		endpoint = "localhost:6379"
 		password = ""
 		timeout_seconds = 30
+
+		[sentry]
+		dsn = "test.example2.com"
+		environment = "test2"
 	`
 
 	tmpFilename, err := GetTmpConfigFile(config)
@@ -450,6 +457,11 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		RedisTimeoutSeconds: 30,
 		RedisPassword:       "",
 	}, conf.GetRedisConfiguration())
+
+	assert.Equal(t, logger.SentryLoggingConfiguration{
+		SentryDSN:         "test.example2.com",
+		SentryEnvironment: "test2",
+	}, conf.GetSentryLoggingConfiguration())
 }
 
 func TestLoadConfigurationFromEnv(t *testing.T) {
@@ -508,6 +520,11 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		RedisTimeoutSeconds: 0,
 		RedisPassword:       "top secret",
 	}, conf.GetRedisConfiguration())
+
+	assert.Equal(t, logger.SentryLoggingConfiguration{
+		SentryDSN:         "test.example.com",
+		SentryEnvironment: "test",
+	}, conf.GetSentryLoggingConfiguration())
 }
 
 func TestGetLoggingConfigurationDefault(t *testing.T) {
@@ -635,4 +652,55 @@ func TestClowderConfigForKafka(t *testing.T) {
 	brokerCfg := conf.GetBrokerConfiguration()
 	assert.Equal(t, fmt.Sprintf("%s:%d", hostname, port), brokerCfg.Address)
 	assert.Equal(t, newTopicName, conf.Config.Broker.Topic)
+}
+
+// TestClowderConfigForStorage tests loading the config file for testing from an
+// environment variable. Clowder config is enabled in this case, checking the database
+// configuration.
+func TestClowderConfigForStorage(t *testing.T) {
+	os.Clearenv()
+
+	var name = "db"
+	var hostname = "hostname"
+	var port = 8888
+	var username = "username"
+	var password = "password"
+
+	// explicit database and broker config
+	clowder.LoadedConfig = &clowder.AppConfig{
+		Database: &clowder.DatabaseConfig{
+			Name:     name,
+			Hostname: hostname,
+			Port:     port,
+			Username: username,
+			Password: password,
+		},
+	}
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "../tests/config1")
+	mustSetEnv(t, "ACG_CONFIG", "tests/clowder_config.json")
+
+	err := conf.LoadConfiguration("config")
+	assert.NoError(t, err, "Failed loading configuration file")
+
+	ocpStorageConf := conf.GetOCPRecommendationsStorageConfiguration()
+	assert.Equal(t, name, ocpStorageConf.PGDBName)
+	assert.Equal(t, hostname, ocpStorageConf.PGHost)
+	assert.Equal(t, port, ocpStorageConf.PGPort)
+	assert.Equal(t, username, ocpStorageConf.PGUsername)
+	assert.Equal(t, password, ocpStorageConf.PGPassword)
+	// rest of config outside of clowder must be loaded correctly
+	assert.Equal(t, "sqlite3", ocpStorageConf.Driver)
+	assert.Equal(t, "sql", ocpStorageConf.Type)
+
+	// same config loaded for DVO storage in envs using clowder (stage/prod)
+	dvoStorageConf := conf.GetDVORecommendationsStorageConfiguration()
+	assert.Equal(t, name, dvoStorageConf.PGDBName)
+	assert.Equal(t, hostname, dvoStorageConf.PGHost)
+	assert.Equal(t, port, dvoStorageConf.PGPort)
+	assert.Equal(t, username, dvoStorageConf.PGUsername)
+	assert.Equal(t, password, dvoStorageConf.PGPassword)
+	// rest of config outside of clowder must be loaded correctly
+	assert.Equal(t, "postgres", dvoStorageConf.Driver)
+	assert.Equal(t, "sql", dvoStorageConf.Type)
 }
