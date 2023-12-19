@@ -23,6 +23,8 @@ import (
 	// SQLite database driver
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
+	"github.com/RedHatInsights/insights-results-aggregator/migration/dvomigrations"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -30,7 +32,11 @@ import (
 type DVORecommendationsStorage interface {
 	Init() error
 	Close() error
+	GetMigrations() []migration.Migration
+	GetDBDriverType() types.DBDriver
 	GetConnection() *sql.DB
+	GetMaxVersion() migration.Version
+	MigrateToLatest() error
 }
 
 // DVORecommendationsDBStorage is an implementation of Storage interface that use selected SQL like database
@@ -46,6 +52,7 @@ type DVORecommendationsDBStorage struct {
 func NewDVORecommendationsStorage(configuration Configuration) (DVORecommendationsStorage, error) {
 	switch configuration.Type {
 	case types.SQLStorage:
+		log.Info().Str("DVO storage type", configuration.Type).Send()
 		return newDVOStorage(configuration)
 	case types.NoopStorage:
 		return newNoopDVOStorage(configuration)
@@ -110,7 +117,39 @@ func (storage DVORecommendationsDBStorage) Close() error {
 	return nil
 }
 
+// GetMigrations returns a list of database migrations related to DVO recommendation tables
+func (storage DVORecommendationsDBStorage) GetMigrations() []migration.Migration {
+	return dvomigrations.UsableDVOMigrations
+}
+
+// GetDBDriverType returns db driver type
+func (storage DVORecommendationsDBStorage) GetDBDriverType() types.DBDriver {
+	return storage.dbDriverType
+}
+
 // GetConnection returns db connection(useful for testing)
 func (storage DVORecommendationsDBStorage) GetConnection() *sql.DB {
 	return storage.connection
+}
+
+// GetMaxVersion returns the highest available migration version.
+// The DB version cannot be set to a value higher than this.
+// This value is equivalent to the length of the list of available migrations.
+func (storage DVORecommendationsDBStorage) GetMaxVersion() migration.Version {
+	return migration.Version(len(storage.GetMigrations()))
+}
+
+// MigrateToLatest migrates the database to the latest available
+// migration version. This must be done before an Init() call.
+func (storage DVORecommendationsDBStorage) MigrateToLatest() error {
+	if err := migration.InitInfoTable(storage.connection); err != nil {
+		return err
+	}
+
+	return migration.SetDBVersion(
+		storage.connection,
+		storage.dbDriverType,
+		storage.GetMaxVersion(),
+		storage.GetMigrations(),
+	)
 }

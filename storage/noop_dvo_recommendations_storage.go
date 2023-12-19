@@ -14,7 +14,12 @@
 
 package storage
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
+)
 
 // NoopDVOStorage represents a storage which does nothing (for benchmarking without a storage)
 type NoopDVOStorage struct{}
@@ -29,7 +34,27 @@ func (*NoopDVOStorage) Close() error {
 	return nil
 }
 
+// GetMigrations noop
+func (*NoopDVOStorage) GetMigrations() []migration.Migration {
+	return nil
+}
+
+// GetDBDriverType noop
+func (*NoopDVOStorage) GetDBDriverType() types.DBDriver {
+	return types.DBDriver(-1)
+}
+
 // GetConnection noop
 func (*NoopDVOStorage) GetConnection() *sql.DB {
+	return nil
+}
+
+// GetMaxVersion noop
+func (*NoopDVOStorage) GetMaxVersion() migration.Version {
+	return migration.Version(0)
+}
+
+// MigrateToLatest noop
+func (*NoopDVOStorage) MigrateToLatest() error {
 	return nil
 }

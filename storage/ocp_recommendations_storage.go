@@ -44,6 +44,8 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
+	"github.com/RedHatInsights/insights-results-aggregator/migration/ocpmigrations"
+
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -222,6 +224,8 @@ type OCPRecommendationsStorage interface {
 	GetConnection() *sql.DB
 	PrintRuleDisableDebugInfo()
 	GetDBDriverType() types.DBDriver
+	GetMigrations() []migration.Migration
+	GetMaxVersion() migration.Version
 }
 
 // ReportSuffix is used to strip away .report suffix from rule module names
@@ -242,8 +246,10 @@ type OCPRecommendationsDBStorage struct {
 func NewOCPRecommendationsStorage(configuration Configuration) (OCPRecommendationsStorage, error) {
 	switch configuration.Type {
 	case types.SQLStorage:
+		log.Info().Str("OCP storage type", configuration.Type).Send()
 		return newSQLStorage(configuration)
 	case types.RedisStorage:
+		log.Info().Str("Redis storage type", configuration.Type).Send()
 		return newRedisStorage(configuration)
 	case types.NoopStorage:
 		return newNoopOCPStorage(configuration)
@@ -364,6 +370,18 @@ func initAndGetDriver(configuration Configuration) (driverType types.DBDriver, d
 	return
 }
 
+// GetMigrations returns a list of database migrations related to OCP recommendation tables
+func (storage OCPRecommendationsDBStorage) GetMigrations() []migration.Migration {
+	return ocpmigrations.UsableOCPMigrations
+}
+
+// GetMaxVersion returns the highest available migration version.
+// The DB version cannot be set to a value higher than this.
+// This value is equivalent to the length of the list of available migrations.
+func (storage OCPRecommendationsDBStorage) GetMaxVersion() migration.Version {
+	return migration.Version(len(storage.GetMigrations()))
+}
+
 // MigrateToLatest migrates the database to the latest available
 // migration version. This must be done before an Init() call.
 func (storage OCPRecommendationsDBStorage) MigrateToLatest() error {
@@ -371,7 +389,12 @@ func (storage OCPRecommendationsDBStorage) MigrateToLatest() error {
 		return err
 	}
 
-	return migration.SetDBVersion(storage.connection, storage.dbDriverType, migration.GetMaxVersion())
+	return migration.SetDBVersion(
+		storage.connection,
+		storage.dbDriverType,
+		storage.GetMaxVersion(),
+		storage.GetMigrations(),
+	)
 }
 
 // Init performs all database initialization

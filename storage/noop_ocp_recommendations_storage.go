@@ -23,6 +23,7 @@ import (
 
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -37,6 +38,16 @@ func (*NoopOCPStorage) Init() error {
 // Close noop
 func (*NoopOCPStorage) Close() error {
 	return nil
+}
+
+// GetMigrations noop
+func (*NoopOCPStorage) GetMigrations() []migration.Migration {
+	return nil
+}
+
+// GetMaxVersion noop
+func (*NoopOCPStorage) GetMaxVersion() migration.Version {
+	return migration.Version(0)
 }
 
 // ListOfOrgs noop

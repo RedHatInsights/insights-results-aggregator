@@ -293,7 +293,7 @@ func TestPrintMigrationInfo(t *testing.T) {
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	defer ira_helpers.MustCloseStorage(t, db)
 
-	exitCode = main.PrintMigrationInfo(dbConn)
+	exitCode = main.PrintMigrationInfo(db, dbConn)
 	assert.Equal(t, main.ExitStatusOK, exitCode)
 }
 
@@ -305,7 +305,7 @@ func TestPrintMigrationInfoClosedDB(t *testing.T) {
 	// Close DB connection immediately.
 	ira_helpers.MustCloseStorage(t, db)
 
-	exitCode = main.PrintMigrationInfo(dbConn)
+	exitCode = main.PrintMigrationInfo(db, dbConn)
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
 }
 
@@ -315,7 +315,7 @@ func TestSetMigrationVersionZero(t *testing.T) {
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	defer ira_helpers.MustCloseStorage(t, db)
 
-	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "0")
+	exitCode = main.SetMigrationVersion(db, dbConn, "0")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
 
 	version, err := migration.GetDBVersion(dbConn)
@@ -330,13 +330,13 @@ func TestSetMigrationVersionLatest(t *testing.T) {
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	defer ira_helpers.MustCloseStorage(t, db)
 
-	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "latest")
+	exitCode = main.SetMigrationVersion(db, dbConn, "latest")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
 
 	version, err := migration.GetDBVersion(dbConn)
 	assert.NoError(t, err, "unable to get migration version")
 
-	assert.Equal(t, migration.GetMaxVersion(), version)
+	assert.Equal(t, db.GetMaxVersion(), version)
 }
 
 // TestSetMigrationVersionClosedDB checks that setting the migration version
@@ -347,7 +347,7 @@ func TestSetMigrationVersionClosedDB(t *testing.T) {
 	// Close DB connection immediately.
 	ira_helpers.MustCloseStorage(t, db)
 
-	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "0")
+	exitCode = main.SetMigrationVersion(db, dbConn, "0")
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
 }
 
@@ -359,7 +359,7 @@ func TestSetMigrationVersionInvalid(t *testing.T) {
 	// Close DB connection immediately.
 	ira_helpers.MustCloseStorage(t, db)
 
-	exitCode = main.SetMigrationVersion(dbConn, db.GetDBDriverType(), "")
+	exitCode = main.SetMigrationVersion(db, dbConn, "")
 	assert.Equal(t, main.ExitStatusMigrationError, exitCode)
 }
 

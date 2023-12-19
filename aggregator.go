@@ -112,29 +112,27 @@ func fillInInfoParams(params map[string]string) {
 // createStorage function initializes connection to preconfigured storage,
 // usually SQLite, PostgreSQL, or AWS RDS.
 func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendationsStorage, error) {
-	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
-	redisCfg := conf.GetRedisConfiguration()
-	// fill-in the missing sub-structure to have the whole Storage
-	// configuration represented as one data structure
-	storageCfg.RedisConfiguration = redisCfg
+	ocpStorageCfg := conf.GetOCPRecommendationsStorageConfiguration()
+	// Redis configuration needs to be present in ocpStorageCfg, as the connection is created in the same function
+	ocpStorageCfg.RedisConfiguration = conf.GetRedisConfiguration()
+
+	dvoStorageCfg := conf.GetDVORecommendationsStorageConfiguration()
 
 	var ocpStorage storage.OCPRecommendationsStorage
 	var dvoStorage storage.DVORecommendationsStorage
 	var err error
 
-	log.Info().Str("type", storageCfg.Type).Msg("Storage type")
-
 	// try to initialize connection to storage
 	backend := conf.GetStorageBackendConfiguration().Use
 	switch backend {
 	case types.OCPRecommendationsStorage:
-		ocpStorage, err = storage.NewOCPRecommendationsStorage(storageCfg)
+		ocpStorage, err = storage.NewOCPRecommendationsStorage(ocpStorageCfg)
 		if err != nil {
 			log.Error().Err(err).Msg("storage.NewOCPRecommendationsStorage")
 			return nil, nil, err
 		}
 	case types.DVORecommendationsStorage:
-		dvoStorage, err = storage.NewDVORecommendationsStorage(storageCfg)
+		dvoStorage, err = storage.NewDVORecommendationsStorage(dvoStorageCfg)
 		if err != nil {
 			log.Error().Err(err).Msg("storage.NewDVORecommendationsStorage")
 			return nil, nil, err
@@ -159,8 +157,9 @@ func closeStorage(storage storage.Storage) {
 // prepareDBMigrations function checks the actual database version and when
 // autoMigrate is set performs migration to the latest schema version
 // available.
-func prepareDBMigrations(dbStorage storage.OCPRecommendationsStorage) int {
-	if conf.GetOCPRecommendationsStorageConfiguration().Type != types.SQLStorage {
+func prepareDBMigrations(dbStorage storage.Storage) int {
+	driverType := dbStorage.GetDBDriverType()
+	if driverType != types.DBDriverPostgres && driverType != types.DBDriverSQLite3 {
 		log.Info().Msg("Skipping migration for non-SQL database type")
 		return ExitStatusOK
 	}
@@ -177,7 +176,7 @@ func prepareDBMigrations(dbStorage storage.OCPRecommendationsStorage) int {
 			return ExitStatusPrepareDbError
 		}
 
-		maxVersion := migration.GetMaxVersion()
+		maxVersion := dbStorage.GetMaxVersion()
 		if currentVersion != maxVersion {
 			log.Error().Msgf("old DB migration version (current: %d, latest: %d)", currentVersion, maxVersion)
 			return ExitStatusPrepareDbError
@@ -190,7 +189,8 @@ func prepareDBMigrations(dbStorage storage.OCPRecommendationsStorage) int {
 // prepareDB function opens a connection to database and loads all available
 // rule content into it.
 func prepareDB() int {
-	// TODO: when migrations for DVO will be available, update the code below
+	// TODO: when aggregator supports both storages at once, update the code below
+	// task to support both storages at once: https://issues.redhat.com/browse/CCXDEV-12316
 
 	ocpRecommendationsStorage, _, err := createStorage()
 	if err != nil {
@@ -374,12 +374,25 @@ func printEnv() int {
 // getDBForMigrations function opens a DB connection and prepares the DB for
 // migrations. Non-OK exit code is returned as the last return value in case
 // of an error. Otherwise, database and connection pointers are returned.
-func getDBForMigrations() (storage.OCPRecommendationsStorage, *sql.DB, int) {
+func getDBForMigrations() (storage.Storage, *sql.DB, int) {
 	// use OCP recommendations storage only, unless migrations will be available for other storage(s) too
-	db, _, err := createStorage()
+	var db storage.Storage
+
+	ocpStorage, dvoStorage, err := createStorage()
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to prepare DB for migrations")
 		return nil, nil, ExitStatusPrepareDbError
+	}
+
+	backend := conf.GetStorageBackendConfiguration().Use
+	switch backend {
+	case types.OCPRecommendationsStorage:
+		db = ocpStorage
+	case types.DVORecommendationsStorage:
+		db = dvoStorage
+	default:
+		log.Error().Msgf("storage backend %v does not support database migrations", db.GetDBDriverType())
+		return nil, nil, ExitStatusMigrationError
 	}
 
 	dbConn := db.GetConnection()
@@ -395,7 +408,7 @@ func getDBForMigrations() (storage.OCPRecommendationsStorage, *sql.DB, int) {
 
 // printMigrationInfo function prints information about current DB migration
 // version without making any modifications.
-func printMigrationInfo(dbConn *sql.DB) int {
+func printMigrationInfo(storage storage.Storage, dbConn *sql.DB) int {
 	currMigVer, err := migration.GetDBVersion(dbConn)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get current DB version")
@@ -403,16 +416,17 @@ func printMigrationInfo(dbConn *sql.DB) int {
 	}
 
 	log.Info().Msgf("Current DB version: %d", currMigVer)
-	log.Info().Msgf("Maximum available version: %d", migration.GetMaxVersion())
+	log.Info().Msgf("Maximum available version: %d", storage.GetMaxVersion())
 	return ExitStatusOK
 }
 
 // setMigrationVersion function attempts to migrate the DB to the target
 // version.
-func setMigrationVersion(dbConn *sql.DB, dbDriver types.DBDriver, versStr string) int {
+func setMigrationVersion(db storage.Storage, dbConn *sql.DB, versStr string) int {
 	var targetVersion migration.Version
+
 	if versStrLower := strings.ToLower(versStr); versStrLower == "latest" || versStrLower == "max" {
-		targetVersion = migration.GetMaxVersion()
+		targetVersion = db.GetMaxVersion()
 	} else {
 		vers, err := strconv.Atoi(versStr)
 		if err != nil {
@@ -423,7 +437,7 @@ func setMigrationVersion(dbConn *sql.DB, dbDriver types.DBDriver, versStr string
 		targetVersion = migration.Version(vers)
 	}
 
-	if err := migration.SetDBVersion(dbConn, dbDriver, targetVersion); err != nil {
+	if err := migration.SetDBVersion(dbConn, db.GetDBDriverType(), targetVersion, db.GetMigrations()); err != nil {
 		log.Error().Err(err).Msg("Unable to perform migration")
 		return ExitStatusMigrationError
 	}
@@ -446,10 +460,10 @@ func performMigrations() int {
 
 	switch len(migrationArgs) {
 	case 0:
-		return printMigrationInfo(dbConn)
+		return printMigrationInfo(db, dbConn)
 
 	case 1:
-		return setMigrationVersion(dbConn, db.GetDBDriverType(), migrationArgs[0])
+		return setMigrationVersion(db, dbConn, migrationArgs[0])
 
 	default:
 		log.Error().Msg("Unexpected number of arguments to migrations command (expected 0-1)")
