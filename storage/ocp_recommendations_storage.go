@@ -318,7 +318,7 @@ func newSQLStorage(configuration Configuration) (OCPRecommendationsStorage, erro
 
 	connection, err := sql.Open(driverName, dataSource)
 	if err != nil {
-		log.Error().Err(err).Msg("Can not connect to data storage")
+		log.Error().Err(err).Msg("Cannot connect to data storage")
 		return nil, err
 	}
 

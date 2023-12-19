@@ -18,8 +18,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-content-service/content"
-
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -73,7 +71,6 @@ func TestNoopStorageEmptyMethods2(_ *testing.T) {
 	_ = noopStorage.AddFeedbackOnRuleDisable(clusterName, ruleID, errorKey, orgID, userID, "")
 	_, _ = noopStorage.GetUserFeedbackOnRuleDisable(clusterName, ruleID, errorKey, userID)
 	_, _ = noopStorage.GetUserFeedbackOnRule(clusterName, ruleID, errorKey, userID)
-	_ = noopStorage.LoadRuleContent(content.RuleContentDirectory{})
 	_, _ = noopStorage.GetRuleByID(ruleID)
 	_, _ = noopStorage.GetOrgIDByClusterID(clusterName)
 	_, _ = noopStorage.ListOfSystemWideDisabledRules(orgID)

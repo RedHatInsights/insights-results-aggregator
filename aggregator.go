@@ -193,6 +193,8 @@ func prepareDB() int {
 	// task to support both storages at once: https://issues.redhat.com/browse/CCXDEV-12316
 
 	ocpRecommendationsStorage, _, err := createStorage()
+	log.Error().Err(err).Msg("1")
+
 	if err != nil {
 		log.Error().Err(err).Msg("Error creating storage")
 		return ExitStatusPrepareDbError
@@ -201,6 +203,8 @@ func prepareDB() int {
 
 	// Ensure that the DB is at the latest migration version.
 	if exitCode := prepareDBMigrations(ocpRecommendationsStorage); exitCode != ExitStatusOK {
+		log.Error().Err(err).Msg("2")
+
 		return exitCode
 	}
 
@@ -208,11 +212,14 @@ func prepareDB() int {
 	err = ocpRecommendationsStorage.Init()
 	if err != nil {
 		log.Error().Err(err).Msg("DB initialization error")
+		log.Error().Err(err).Msg("3")
+
 		return ExitStatusPrepareDbError
 	}
 
 	// temporarily print some information from DB because of limited access to DB
 	ocpRecommendationsStorage.PrintRuleDisableDebugInfo()
+	log.Error().Err(err).Msg("4")
 
 	return ExitStatusOK
 }
