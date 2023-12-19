@@ -54,6 +54,11 @@ func (*NoopDVOStorage) GetMaxVersion() migration.Version {
 	return migration.Version(0)
 }
 
+// GetDBSchema noop
+func (*NoopDVOStorage) GetDBSchema() migration.Schema {
+	return migration.Schema("")
+}
+
 // MigrateToLatest noop
 func (*NoopDVOStorage) MigrateToLatest() error {
 	return nil

@@ -26,6 +26,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
+	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -185,4 +186,32 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendation
 // MustCloseStorage closes the storage and calls t.Fatal on error
 func MustCloseStorage(tb testing.TB, s storage.Storage) {
 	helpers.FailOnError(tb, s.Close())
+}
+
+// PrepareDB prepares mock OCPRecommendationsDBStorage
+func PrepareDB(t *testing.T) (*storage.OCPRecommendationsDBStorage, func()) {
+	mockStorage, closer := MustGetMockStorage(t, false)
+	dbStorage := mockStorage.(*storage.OCPRecommendationsDBStorage)
+
+	return dbStorage, closer
+}
+
+// PrepareDBAndInfo prepares mock OCPRecommendationsDBStorage and info table
+func PrepareDBAndInfo(t *testing.T) (
+	*sql.DB,
+	types.DBDriver,
+	migration.Schema,
+	func(),
+) {
+	storage, closer := PrepareDB(t)
+
+	dbConn := storage.GetConnection()
+	dbSchema := storage.GetDBSchema()
+
+	if err := migration.InitInfoTable(dbConn, dbSchema); err != nil {
+		closer()
+		t.Fatal(err)
+	}
+
+	return dbConn, storage.GetDBDriverType(), dbSchema, closer
 }
