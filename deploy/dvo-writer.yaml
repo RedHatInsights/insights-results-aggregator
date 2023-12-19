@@ -262,6 +262,21 @@ objects:
       pod: dvo-writer-instance
 
 parameters:
+- description: Env Name
+  name: ENV_NAME
+  required: true
+- description: Image name
+  name: IMAGE
+  value: quay.io/cloudservices/insights-results-aggregator
+- description: Image tag
+  name: IMAGE_TAG
+  required: true
+- description: Minimum number of pods to use when autoscaling is enabled
+  name: MIN_REPLICAS
+  value: '2'
+- description: Maximum number of pods to use when autoscaling is enabled
+  name: MAX_REPLICAS
+  value: '6'
 - name: PG_PARAMS
   value: sslmode=require
 - name: KAFKA_BOOTSTRAP_HOST
@@ -311,3 +326,5 @@ parameters:
   required: true
 - name: CREATE_STREAM_IF_NOT_EXISTS
   value: "true"
+- name: LOG_LEVEL
+  value: "INFO"
