@@ -28,23 +28,6 @@ var mig0010AddTagsFieldToRuleErrorKeyTable = migration.Migration{
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		if driver == types.DBDriverSQLite3 {
-			return migration.DowngradeTable(tx, ruleErrorKeyTable, `
-				CREATE TABLE rule_error_key (
-					"error_key"     VARCHAR NOT NULL,
-					"rule_module"   VARCHAR NOT NULL REFERENCES rule(module) ON DELETE CASCADE,
-					"condition"     VARCHAR NOT NULL,
-					"description"   VARCHAR NOT NULL,
-					"impact"        INTEGER NOT NULL,
-					"likelihood"    INTEGER NOT NULL,
-					"publish_date"  TIMESTAMP NOT NULL,
-					"active"        BOOLEAN NOT NULL,
-					"generic"       VARCHAR NOT NULL,
-					PRIMARY KEY("error_key", "rule_module")
-				)
-			`, []string{"error_key", "rule_module", "condition", "description", "impact", "likelihood", "publish_date", "active", "generic"})
-		}
-
 		_, err := tx.Exec(`
 			ALTER TABLE rule_error_key DROP COLUMN tags
 		`)

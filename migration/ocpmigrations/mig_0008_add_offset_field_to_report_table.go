@@ -28,19 +28,6 @@ var mig0008AddOffsetFieldToReportTable = migration.Migration{
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		if driver == types.DBDriverSQLite3 {
-			return migration.DowngradeTable(tx, clusterReportTable, `
-				CREATE TABLE report (
-					org_id          INTEGER NOT NULL,
-					cluster         VARCHAR NOT NULL UNIQUE,
-					report          VARCHAR NOT NULL,
-					reported_at     TIMESTAMP,
-					last_checked_at TIMESTAMP,
-					PRIMARY KEY(org_id, cluster)
-				)
-			`, []string{"org_id", "cluster", "report", "reported_at", "last_checked_at"})
-		}
-
 		_, err := tx.Exec(`
 			ALTER TABLE report DROP COLUMN kafka_offset
 		`)

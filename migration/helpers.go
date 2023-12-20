@@ -71,8 +71,8 @@ func UpgradeTable(tx *sql.Tx, tableName, newTableDefinition string) error {
 	return nil
 }
 
-// DowngradeTable downgrades table to oldTableDefinition, useful for sqlite which doesn't support
-// most of alter table queries. Set columns to the list of new columns if you're removing any columns
+// DowngradeTable downgrades table to oldTableDefinition.
+// Set columns to the list of new columns if you're removing any columns
 func DowngradeTable(tx *sql.Tx, tableName, oldTableDefinition string, columns []string) error {
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202

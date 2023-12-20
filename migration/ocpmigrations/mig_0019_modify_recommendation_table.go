@@ -25,23 +25,6 @@ import (
 
 var mig0019ModifyRecommendationTable = migration.Migration{
 	StepUp: func(tx *sql.Tx, driver types.DBDriver) error {
-		if driver != types.DBDriverPostgres {
-			// Add rule_id column
-			_, err := tx.Exec(`
-				ALTER TABLE recommendation ADD COLUMN rule_id VARCHAR NOT NULL DEFAULT '.';
-				UPDATE recommendation SET rule_id = rule_fqdn + '|' + error_key;
-			`)
-			if err != nil {
-				return err
-			}
-
-			// Add the created_at column
-			_, err = tx.Exec(`
-				ALTER TABLE recommendation ADD COLUMN created_at TIMESTAMP WITHOUT TIME ZONE;
-			`)
-			return err
-		}
-
 		// Fix rule_fqdn value for records created in migration 16
 		// The regex expression has two parts separated by a logical or `|`:
 		// - (\.(?!.*\|)(?!.*\.|\|).*) finds the last dot and all the characters that follow it,
@@ -79,23 +62,12 @@ var mig0019ModifyRecommendationTable = migration.Migration{
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		if driver == types.DBDriverPostgres {
-			// Remove the created_at column
-			_, err := tx.Exec(`
+		// Remove the created_at column
+		_, err := tx.Exec(`
 				ALTER TABLE recommendation DROP COLUMN IF EXISTS created_at;
 				ALTER TABLE recommendation DROP COLUMN IF EXISTS rule_id;
 			`)
 
-			return err
-		} else if driver == types.DBDriverSQLite3 {
-			// Why would SQLite allow you to drop a column...
-			_, err := tx.Exec(`
-				CREATE TABLE recommendation_temp AS SELECT org_id, cluster_id, rule_fqdn, error_key FROM recommendation;
-				DROP TABLE recommendation;
-				ALTER TABLE recommendation_temp RENAME TO recommendation;
-			`)
-			return err
-		}
-		return nil
+		return err
 	},
 }

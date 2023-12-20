@@ -37,11 +37,6 @@ var mig0013AddRuleHitTable = migration.Migration{
 			return err
 		}
 
-		if driver != types.DBDriverPostgres {
-			// if sqlite, just ignore the actual migration cuz sqlite is too stupid for that
-			return nil
-		}
-
 		_, err = tx.Exec(`
 			DECLARE report_cursor CURSOR FOR
 			SELECT
