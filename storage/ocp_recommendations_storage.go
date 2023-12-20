@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 */
 
 // Package storage contains an implementation of interface between Go code and
-// (almost any) SQL database like PostgreSQL, SQLite, or MariaDB. An implementation
-// named DBStorage is constructed via New function and it is mandatory to call Close
-// for any opened connection to database. The storage might be initialized by Init
-// method if database schema is empty.
+// (almost any) SQL database like PostgreSQL or MariaDB. An implementation
+// named DBStorage is constructed using the function 'New' and it is mandatory to
+// call 'Close' for any opened connection to the database. The storage might be
+// initialized by 'Init' method if database schema is empty.
 //
 // It is possible to configure connection to selected database by using Configuration
-// structure. Currently that structure contains two configurable parameter:
+// structure. Currently, that structure contains two configurable parameter:
 //
-// Driver - a SQL driver, like "sqlite3", "pq" etc.
+// Driver - a SQL driver, like "pq", "pgx", etc.
 // DataSource - specification of data source. The content of this parameter depends on the database used.
 package storage
 
@@ -231,7 +231,7 @@ type OCPRecommendationsStorage interface {
 const ReportSuffix = ".report"
 
 // OCPRecommendationsDBStorage is an implementation of Storage interface that use selected SQL like database
-// like SQLite, PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
+// like PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
 // sql package. It is possible to configure connection via Configuration structure.
 // SQLQueriesLog is log for sql queries, default is nil which means nothing is logged
 type OCPRecommendationsDBStorage struct {

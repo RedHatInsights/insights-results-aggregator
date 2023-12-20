@@ -23,7 +23,6 @@ import (
 )
 
 // PostgreSQL database driver
-// SQLite database driver
 
 // Storage represents an interface to almost any database or storage system
 type Storage interface {

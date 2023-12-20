@@ -535,10 +535,9 @@ func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 
 	err = mockStorage.VoteOnRule("non int", testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, types.UserVoteNone, "")
 	assert.Error(t, err)
-	const sqliteErrMessage = "CHECK constraint failed: cluster_rule_user_feedback"
 	const postgresErrMessage = "pq: invalid input syntax for type integer: \"non int\""
-	if err.Error() != sqliteErrMessage && !strings.HasPrefix(err.Error(), postgresErrMessage) {
-		t.Fatalf("expected one of: \n%v\n%v\ngot:\n%v", sqliteErrMessage, postgresErrMessage, err.Error())
+	if !strings.HasPrefix(err.Error(), postgresErrMessage) {
+		t.Fatalf("expected : \n%v\ngot:\n%v", postgresErrMessage, err.Error())
 	}
 }
 

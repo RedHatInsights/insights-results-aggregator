@@ -19,8 +19,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	// PostgreSQL database driver
-	// SQLite database driver
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
