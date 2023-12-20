@@ -110,6 +110,17 @@ function populate_db_with_mock_data() {
     fi
 }
 
+function check_composer() {
+    if command -v docker-compose > /dev/null; then
+        COMPOSER=docker-compose
+    elif command -v podman-compose > /dev/null; then
+        COMPOSER=podman-compose
+    else
+        echo "Please, install docker-compose or podman-compose to run this tests"
+        exit 1
+    fi
+}
+
 function start_service() {
     if [ "$NO_SERVICE" = true ]; then
         echo "Not starting service"
@@ -120,6 +131,8 @@ function start_service() {
     # TODO: stop parent(this script) if service died
     INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL=$LOG_LEVEL \
         INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE=./tests/tests \
+        INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB=aggregator \
+        INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS=postgres \
         ./insights-results-aggregator ||
         echo -e "${COLORS_RED}service exited with error${COLORS_RESET}" &
     # shellcheck disable=2181
@@ -170,6 +183,13 @@ function wait_for_postgres() {
 
 echo -e "------------------------------------------------------------------------------------------------"
 
+if [ -z "$CI" ]; then
+    echo "Running postgres container locally"
+    check_composer
+    $COMPOSER up -d > /dev/null
+    wait_for_postgres
+fi
+
 case $1 in
 rest_api)
     test_rest_api
@@ -185,6 +205,11 @@ rest_api)
 
     ;;
 esac
+
+if [ -z "$CI" ]; then
+    echo "Stopping postgres container"
+    $COMPOSER down > /dev/null
+fi
 
 echo -e "------------------------------------------------------------------------------------------------"
 
