@@ -19,7 +19,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -497,7 +496,7 @@ func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 
 	query := `
 		CREATE TABLE cluster_rule_user_feedback (
-			cluster_id INTEGER NOT NULL CHECK(typeof(cluster_id) = 'integer'),
+			cluster_id INTEGER NOT NULL,
 			rule_id INTEGER NOT NULL,
 			org_id VARCHAR NOT NULL,
 			user_id INTEGER NOT NULL,
@@ -511,31 +510,13 @@ func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 		)
 	`
 
-	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
-		query = `
-			CREATE TABLE cluster_rule_user_feedback (
-				cluster_id INTEGER NOT NULL,
-				rule_id INTEGER NOT NULL,
-				org_id VARCHAR NOT NULL,
-				user_id INTEGER NOT NULL,
-				message INTEGER NOT NULL,
-				user_vote INTEGER NOT NULL,
-				added_at INTEGER NOT NULL,
-				updated_at INTEGER NOT NULL,
-				error_key VARCHAR NOT NULL,
-
-				PRIMARY KEY(cluster_id, rule_id, user_id, error_key)
-			)
-		`
-	}
-
 	// create a table with a bad type
 	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
 
 	err = mockStorage.VoteOnRule("non int", testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, types.UserVoteNone, "")
 	assert.Error(t, err)
-	const postgresErrMessage = "pq: invalid input syntax for type integer: \"non int\""
+	const postgresErrMessage = "pq: invalid input syntax for integer: \"non int\""
 	if !strings.HasPrefix(err.Error(), postgresErrMessage) {
 		t.Fatalf("expected : \n%v\ngot:\n%v", postgresErrMessage, err.Error())
 	}

@@ -97,8 +97,6 @@ type (
 )
 
 const (
-	// DBDriverSQLite3 shows that db driver is sqlite
-	DBDriverSQLite3 = types.DBDriverSQLite3
 	// DBDriverPostgres shows that db driver is postgres
 	DBDriverPostgres = types.DBDriverPostgres
 	// DBDriverGeneral general sql(used for mock now)

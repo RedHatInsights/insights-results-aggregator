@@ -161,6 +161,13 @@ function test_rest_api() {
     return $EXIT_CODE
 }
 
+function wait_for_postgres() {
+    until psql "dbname=aggregator user=postgres password=postgres host=localhost sslmode=disable" -c '\q' > /dev/null 2>&1; do
+         sleep 1
+    done
+}
+
+
 echo -e "------------------------------------------------------------------------------------------------"
 
 case $1 in

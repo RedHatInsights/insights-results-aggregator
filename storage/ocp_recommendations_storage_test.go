@@ -21,7 +21,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -396,11 +395,7 @@ func TestDBStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 
 	connection := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
 
-	query := "DROP TABLE report"
-	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
-		query += " CASCADE"
-	}
-	query += ";"
+	query := "DROP TABLE report CASCADE;"
 
 	_, err := connection.Exec(query)
 	helpers.FailOnError(t, err)
@@ -426,9 +421,9 @@ func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	)
 	assert.Error(t, err)
 
-	const postgresErrMessage = "pq: invalid input syntax for type integer"
+	const postgresErrMessage = "pq: invalid input syntax for integer"
 	if !strings.HasPrefix(err.Error(), postgresErrMessage) {
-		t.Fatalf("expected on of: \n%v\ngot:\n%v", postgresErrMessage, err.Error())
+		t.Fatalf("expected: \n%v\ngot:\n%v", postgresErrMessage, err.Error())
 	}
 }
 
@@ -855,11 +850,10 @@ func TestDBStorage_Init_Error(t *testing.T) {
 
 func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.OCPRecommendationsStorage) {
 	connection := storage.GetConnection(mockStorage.(*storage.OCPRecommendationsDBStorage))
-
 	query := `
 		CREATE TABLE report (
 			org_id          INTEGER NOT NULL,
-			cluster         INTEGER NOT NULL UNIQUE CHECK(typeof(cluster) = 'integer'),
+			cluster         INTEGER NOT NULL UNIQUE,
 			report          VARCHAR NOT NULL,
 			reported_at     TIMESTAMP,
 			last_checked_at TIMESTAMP,
@@ -867,20 +861,6 @@ func createReportTableWithBadClusterField(t *testing.T, mockStorage storage.OCPR
 			PRIMARY KEY(org_id, cluster)
 		)
 	`
-
-	if os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB") == "postgres" {
-		query = `
-			CREATE TABLE report (
-				org_id          INTEGER NOT NULL,
-				cluster         INTEGER NOT NULL UNIQUE,
-				report          VARCHAR NOT NULL,
-				reported_at     TIMESTAMP,
-				last_checked_at TIMESTAMP,
-				kafka_offset    BIGINT NOT NULL DEFAULT 0,
-				PRIMARY KEY(org_id, cluster)
-			)
-		`
-	}
 
 	// create a table with a bad type
 	_, err := connection.Exec(query)
