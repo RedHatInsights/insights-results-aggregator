@@ -125,13 +125,8 @@ func TestMigration2_TableRuleDoesNotExist(t *testing.T) {
 	err := migration.SetDBVersion(db, dbDriver, 2, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
-	if dbDriver == types.DBDriverSQLite3 {
-		_, err = db.Exec(`DROP TABLE rule;`)
-		helpers.FailOnError(t, err)
-	} else {
-		_, err = db.Exec(`DROP TABLE rule CASCADE;`)
-		helpers.FailOnError(t, err)
-	}
+	_, err = db.Exec(`DROP TABLE rule CASCADE;`)
+	helpers.FailOnError(t, err)
 
 	// try to set to the first version
 	err = migration.SetDBVersion(db, dbDriver, 0, ocpmigrations.UsableOCPMigrations)
@@ -315,11 +310,6 @@ func TestMigration13(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	if dbDriver == types.DBDriverSQLite3 {
-		// migration is not implemented for sqlite
-		return
-	}
-
 	err := migration.SetDBVersion(db, dbDriver, 12, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
@@ -391,11 +381,7 @@ func TestMigration16(t *testing.T) {
 	)
 	assert.Error(t, err, `Expected error since recommendation table does not exist yet`)
 
-	if dbDriver == types.DBDriverSQLite3 {
-		assert.Contains(t, err.Error(), "no such table: recommendation")
-	} else if dbDriver == types.DBDriverPostgres {
-		assert.Contains(t, err.Error(), `relation "recommendation" does not exist`)
-	}
+	assert.Contains(t, err.Error(), `relation "recommendation" does not exist`)
 
 	err = migration.SetDBVersion(db, dbDriver, 16, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
@@ -415,11 +401,6 @@ func TestMigration16(t *testing.T) {
 func TestMigration19(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
-
-	if dbDriver == types.DBDriverSQLite3 {
-		// nothing worth testing for sqlite
-		return
-	}
 
 	err := migration.SetDBVersion(db, dbDriver, 18, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
@@ -543,11 +524,7 @@ func TestMigration18(t *testing.T) {
 	)
 	assert.Error(t, err, `Expected error since advisor_ratings table does not exist yet`)
 
-	if dbDriver == types.DBDriverSQLite3 {
-		assert.Contains(t, err.Error(), "no such table: advisor_ratings")
-	} else if dbDriver == types.DBDriverPostgres {
-		assert.Contains(t, err.Error(), `relation "advisor_ratings" does not exist`)
-	}
+	assert.Contains(t, err.Error(), `relation "advisor_ratings" does not exist`)
 
 	err = migration.SetDBVersion(db, dbDriver, 18, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
@@ -572,11 +549,6 @@ func TestMigration18(t *testing.T) {
 func TestMigration20(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
-
-	if dbDriver == types.DBDriverSQLite3 {
-		// nothing worth testing for sqlite
-		return
-	}
 
 	err := migration.SetDBVersion(db, dbDriver, 19, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
@@ -647,11 +619,6 @@ func TestMigration20(t *testing.T) {
 func TestMigration22(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
-
-	if dbDriver == types.DBDriverSQLite3 {
-		// sqlite is no longer supported
-		return
-	}
 
 	err := migration.SetDBVersion(db, dbDriver, 21, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
@@ -740,11 +707,6 @@ func TestMigration24(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	if dbDriver == types.DBDriverSQLite3 {
-		// sqlite is no longer supported
-		return
-	}
-
 	err := migration.SetDBVersion(db, dbDriver, 23, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
@@ -767,11 +729,6 @@ func TestMigration25(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	if dbDriver == types.DBDriverSQLite3 {
-		// sqlite is no longer supported
-		return
-	}
-
 	err := migration.SetDBVersion(db, dbDriver, 24, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
@@ -793,11 +750,6 @@ func TestMigration25(t *testing.T) {
 func TestMigration26(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
-
-	if dbDriver == types.DBDriverSQLite3 {
-		// sqlite is no longer supported
-		return
-	}
 
 	err := migration.SetDBVersion(db, dbDriver, 25, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
@@ -908,11 +860,6 @@ func TestMigration27(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	if dbDriver == types.DBDriverSQLite3 {
-		// sqlite is no longer supported
-		return
-	}
-
 	err := migration.SetDBVersion(db, dbDriver, 26, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
@@ -1011,11 +958,6 @@ func TestMigration28(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	if dbDriver == types.DBDriverSQLite3 {
-		// sqlite is no longer supported
-		return
-	}
-
 	err := migration.SetDBVersion(db, dbDriver, 27, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
@@ -1092,11 +1034,6 @@ func TestMigration29(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	if dbDriver == types.DBDriverSQLite3 {
-		// nothing worth testing for sqlite
-		return
-	}
-
 	err := migration.SetDBVersion(db, dbDriver, 28, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
@@ -1146,11 +1083,6 @@ func TestMigration30(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
 
-	if dbDriver == types.DBDriverSQLite3 {
-		// nothing worth testing for sqlite
-		return
-	}
-
 	err := migration.SetDBVersion(db, dbDriver, 29, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)
 
@@ -1198,11 +1130,6 @@ func TestMigration30(t *testing.T) {
 func TestMigration31(t *testing.T) {
 	db, dbDriver, closer := prepareDBAndInfo(t)
 	defer closer()
-
-	if dbDriver == types.DBDriverSQLite3 {
-		// nothing worth testing for sqlite
-		return
-	}
 
 	err := migration.SetDBVersion(db, dbDriver, 30, ocpmigrations.UsableOCPMigrations)
 	helpers.FailOnError(t, err)

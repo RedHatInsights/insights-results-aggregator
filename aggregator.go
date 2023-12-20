@@ -95,7 +95,7 @@ var (
 
 	// autoMigrate determines if the prepareDB function upgrades
 	// the database to the latest migration version. This is necessary
-	// for certain tests that work with a temporary, empty SQLite DB.
+	// for unit tests that work with an empty DB.
 	autoMigrate = false
 )
 
@@ -110,7 +110,7 @@ func fillInInfoParams(params map[string]string) {
 }
 
 // createStorage function initializes connection to preconfigured storage,
-// usually SQLite, PostgreSQL, or AWS RDS.
+// usually PostgreSQL or AWS RDS.
 func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendationsStorage, error) {
 	ocpStorageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 	// Redis configuration needs to be present in ocpStorageCfg, as the connection is created in the same function

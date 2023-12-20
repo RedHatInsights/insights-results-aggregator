@@ -42,66 +42,22 @@ var mig0015ClusterRuleToggle = migration.Migration{
 			return err
 		}
 
-		if driver == types.DBDriverPostgres {
-			_, err = tx.Exec(`
+		_, err = tx.Exec(`
 				ALTER TABLE cluster_rule_toggle DROP CONSTRAINT cluster_rule_toggle_pkey,
 					ADD CONSTRAINT cluster_rule_toggle_pkey PRIMARY KEY (cluster_id, rule_id, error_key);
 			`)
 
-		} else {
-			err = mig0015ClusterRuleTogglePrimaryKeysSQLite.StepUp(tx, driver)
-		}
-
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		if driver == types.DBDriverPostgres {
-			_, err := tx.Exec(`
+		_, err := tx.Exec(`
 				ALTER TABLE cluster_rule_toggle DROP CONSTRAINT cluster_rule_toggle_pkey,
 					ADD CONSTRAINT cluster_rule_toggle_pkey PRIMARY KEY (cluster_id, rule_id);
 				ALTER TABLE cluster_rule_toggle DROP COLUMN error_key;
 			`)
-			return err
-		}
-
-		return mig0015ClusterRuleTogglePrimaryKeysSQLite.StepDown(tx, driver)
+		return err
 	},
 }
-
-// mig0015ClusterRuleTogglePrimaryKeysSQLite is a helper to update PKs on cluster_rule_toggle table in SQLite
-var mig0015ClusterRuleTogglePrimaryKeysSQLite = migration.NewUpdateTableMigration(
-	clusterRuleToggleTable,
-	`
-		CREATE TABLE cluster_rule_toggle (
-			cluster_id VARCHAR NOT NULL,
-			rule_id VARCHAR NOT NULL,
-			user_id VARCHAR NULL,
-			disabled SMALLINT NOT NULL,
-			disabled_at TIMESTAMP NULL,
-			enabled_at TIMESTAMP NULL,
-			updated_at TIMESTAMP NOT NULL,
-
-			CHECK (disabled >= 0 AND disabled <= 1),
-			PRIMARY KEY(cluster_id, rule_id)
-		)
-	`,
-	[]string{"cluster_id", "rule_id", "user_id", "disabled", "disabled_at", "enabled_at", "updated_at"},
-	`
-		CREATE TABLE cluster_rule_toggle (
-			cluster_id VARCHAR NOT NULL,
-			rule_id VARCHAR NOT NULL,
-			user_id VARCHAR NULL,
-			disabled SMALLINT NOT NULL,
-			disabled_at TIMESTAMP NULL,
-			enabled_at TIMESTAMP NULL,
-			updated_at TIMESTAMP NOT NULL,
-			error_key VARCHAR NOT NULL,
-
-			CHECK (disabled >= 0 AND disabled <= 1),
-			PRIMARY KEY(cluster_id, rule_id, error_key)
-		)
-	`,
-)
 
 // mig0015ClusterRuleUserFeedback is a helper for update the cluster_rule_user_feedback table
 var mig0015ClusterRuleUserFeedback = migration.Migration{
@@ -113,66 +69,23 @@ var mig0015ClusterRuleUserFeedback = migration.Migration{
 			return err
 		}
 
-		if driver == types.DBDriverPostgres {
-			_, err = tx.Exec(`
+		_, err = tx.Exec(`
 				ALTER TABLE cluster_rule_user_feedback DROP CONSTRAINT cluster_rule_user_feedback_pkey1,
 					ADD CONSTRAINT cluster_rule_user_feedback_pkey PRIMARY KEY (cluster_id, rule_id, user_id, error_key);
 			`)
 
-		} else {
-			err = mig0015ClusterRuleUserFeedbackPrimaryKeysSQLite.StepUp(tx, driver)
-		}
-
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		if driver == types.DBDriverPostgres {
-			_, err := tx.Exec(`
+		_, err := tx.Exec(`
 				ALTER TABLE cluster_rule_user_feedback DROP CONSTRAINT cluster_rule_user_feedback_pkey,
 					ADD CONSTRAINT cluster_rule_user_feedback_pkey1 PRIMARY KEY (cluster_id, rule_id, user_id);
 				ALTER TABLE cluster_rule_user_feedback DROP COLUMN error_key;
 			`)
-			return err
-		}
+		return err
 
-		return mig0015ClusterRuleUserFeedbackPrimaryKeysSQLite.StepDown(tx, driver)
 	},
 }
-
-// mig0015ClusterRuleUserFeedbackPrimaryKeysSQLite is a helper to update PKs on cluster_rule_user_feedback table in SQLite
-var mig0015ClusterRuleUserFeedbackPrimaryKeysSQLite = migration.NewUpdateTableMigration(
-	clusterRuleUserFeedbackTable,
-	`
-	CREATE TABLE cluster_rule_user_feedback (
-		cluster_id VARCHAR NOT NULL,
-		rule_id VARCHAR NOT NULL,
-		user_id VARCHAR NOT NULL,
-		message VARCHAR NOT NULL,
-		user_vote SMALLINT NOT NULL,
-		added_at TIMESTAMP NOT NULL,
-		updated_at TIMESTAMP NOT NULL,
-
-		PRIMARY KEY(cluster_id, rule_id, user_id),
-		FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
-	)
-	`,
-	[]string{"cluster_id", "rule_id", "user_id", "message", "user_vote", "added_at", "updated_at"},
-	`
-	CREATE TABLE cluster_rule_user_feedback (
-		cluster_id VARCHAR NOT NULL,
-		rule_id VARCHAR NOT NULL,
-		user_id VARCHAR NOT NULL,
-		message VARCHAR NOT NULL,
-		user_vote SMALLINT NOT NULL,
-		added_at TIMESTAMP NOT NULL,
-		updated_at TIMESTAMP NOT NULL,
-		error_key VARCHAR NOT NULL,
-		
-		PRIMARY KEY(cluster_id, rule_id, user_id, error_key),
-		FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
-	)
-	`,
-)
 
 // mig0015ClusterUserRuleDisableFeedback is a helper for update the cluster_user_rule_disable_feedback
 var mig0015ClusterUserRuleDisableFeedback = migration.Migration{
@@ -185,62 +98,22 @@ var mig0015ClusterUserRuleDisableFeedback = migration.Migration{
 			return err
 		}
 
-		if driver == types.DBDriverPostgres {
-			_, err = tx.Exec(`
+		_, err = tx.Exec(`
 				ALTER TABLE cluster_user_rule_disable_feedback DROP CONSTRAINT cluster_user_rule_disable_feedback_pkey,
 					ADD CONSTRAINT cluster_user_rule_disable_feedback_pkey PRIMARY KEY (cluster_id, user_id, rule_id, error_key);
 			`)
 
-		} else {
-			err = mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite.StepUp(tx, driver)
-		}
-
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		if driver == types.DBDriverPostgres {
-			_, err := tx.Exec(`
+		_, err := tx.Exec(`
 				ALTER TABLE cluster_user_rule_disable_feedback DROP CONSTRAINT cluster_user_rule_disable_feedback_pkey,
 					ADD CONSTRAINT cluster_user_rule_disable_feedback_pkey PRIMARY KEY (cluster_id, user_id, rule_id);
 				ALTER TABLE cluster_user_rule_disable_feedback DROP COLUMN error_key;
 			`)
-			return err
-		}
-
-		return mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite.StepDown(tx, driver)
+		return err
 	},
 }
-
-// mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite is a helper to update PKs on cluster_user_rule_disable_feedback table in SQLite
-var mig0015ClusterUserRuleDisableFeedbackPrimaryKeysSQLite = migration.NewUpdateTableMigration(
-	clusterUserRuleDisableFeedbackTable,
-	`
-	CREATE TABLE cluster_user_rule_disable_feedback (
-		cluster_id VARCHAR NOT NULL,
-		user_id VARCHAR NOT NULL,
-		rule_id VARCHAR NOT NULL,
-		message VARCHAR NOT NULL,
-		added_at TIMESTAMP NOT NULL,
-		updated_at TIMESTAMP NOT NULL,
-			
-		PRIMARY KEY(cluster_id, user_id, rule_id)
-	)
-	`,
-	[]string{"cluster_id", "user_id", "rule_id", "message", "added_at", "updated_at"},
-	`
-	CREATE TABLE cluster_user_rule_disable_feedback (
-		cluster_id VARCHAR NOT NULL,
-		user_id VARCHAR NOT NULL,
-		rule_id VARCHAR NOT NULL,
-		message VARCHAR NOT NULL,
-		added_at TIMESTAMP NOT NULL,
-		updated_at TIMESTAMP NOT NULL,
-		error_key VARCHAR NOT NULL,
-		
-		PRIMARY KEY(cluster_id, user_id, rule_id, error_key)		
-	)
-	`,
-)
 
 // migrateClusterRoleToggleData is a helper to update the current data with default values
 // It takes the only possible value for error_key on the rules that only has one possible error key
