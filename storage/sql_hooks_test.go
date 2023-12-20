@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -38,12 +37,6 @@ func TestInitSQLDriverWithLogs(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
 	driverName := storage.InitSQLDriverWithLogs(
-		&sqlite3.SQLiteDriver{},
-		"sqlite3",
-	)
-	assert.Equal(t, "sqlite3WithHooks", driverName)
-
-	driverName = storage.InitSQLDriverWithLogs(
 		&pq.Driver{},
 		"postgres",
 	)
@@ -57,10 +50,10 @@ func TestInitSQLDriverWithLogsMultipleCalls(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		driverName := storage.InitSQLDriverWithLogs(
-			&sqlite3.SQLiteDriver{},
-			"sqlite3",
+			&pq.Driver{},
+			"postgres",
 		)
-		assert.Equal(t, "sqlite3WithHooks", driverName)
+		assert.Equal(t, "postgresWithHooks", driverName)
 	}
 }
 

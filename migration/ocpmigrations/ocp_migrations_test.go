@@ -11,7 +11,7 @@ import (
 )
 
 func prepareDB(t *testing.T) (*sql.DB, types.DBDriver, func()) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, false)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, false)
 	dbStorage := mockStorage.(*storage.OCPRecommendationsDBStorage)
 
 	return dbStorage.GetConnection(), dbStorage.GetDBDriverType(), closer
