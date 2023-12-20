@@ -21,8 +21,8 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: aggregator
         options: >-
           --health-cmd pg_isready
