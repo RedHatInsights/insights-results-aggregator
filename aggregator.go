@@ -159,7 +159,7 @@ func closeStorage(storage storage.Storage) {
 // available.
 func prepareDBMigrations(dbStorage storage.Storage) int {
 	driverType := dbStorage.GetDBDriverType()
-	if driverType != types.DBDriverPostgres && driverType != types.DBDriverSQLite3 {
+	if driverType != types.DBDriverPostgres {
 		log.Info().Msg("Skipping migration for non-SQL database type")
 		return ExitStatusOK
 	}

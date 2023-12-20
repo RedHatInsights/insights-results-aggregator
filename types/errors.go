@@ -26,7 +26,6 @@ import (
 	"github.com/RedHatInsights/insights-operator-utils/types"
 
 	"github.com/lib/pq"
-	"github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 )
 
@@ -66,7 +65,6 @@ func (err *TableAlreadyExistsError) Error() string {
 }
 
 // ForeignKeyError something violates foreign key error
-// tableName and foreignKeyName can be empty for DBs not supporting it (SQLite)
 type ForeignKeyError struct {
 	TableName      string
 	ForeignKeyName string
@@ -102,7 +100,6 @@ func ConvertDBError(err error, itemID interface{}) error {
 	}
 
 	err = convertPostgresError(err)
-	err = convertSQLiteError(err)
 
 	return err
 }
@@ -162,33 +159,6 @@ func convertPostgresError(err error) error {
 			TableName:      pqError.Table,
 			ForeignKeyName: pqError.Constraint,
 			Details:        pqError.Detail,
-		}
-	}
-
-	return err
-}
-
-func convertSQLiteError(err error) error {
-	sqlite3Error, ok := err.(sqlite3.Error)
-	if !ok {
-		return err
-	}
-
-	errString := sqlite3Error.Error()
-
-	if errString == "FOREIGN KEY constraint failed" {
-		return &ForeignKeyError{}
-	}
-
-	if match, err := regexGetFirstMatch(`no such table: (.+)`, errString); err == nil {
-		return &TableNotFoundError{
-			tableName: match,
-		}
-	}
-
-	if match, err := regexGetFirstMatch(`table (.+) already exists`, errString); err == nil {
-		return &TableAlreadyExistsError{
-			tableName: match,
 		}
 	}
 
