@@ -22,7 +22,6 @@ import (
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
