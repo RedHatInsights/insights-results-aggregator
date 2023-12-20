@@ -100,7 +100,6 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendation
 	storageConf.Driver = postgres
 	storageConf.PGDBName += "_test_db_" + strings.ReplaceAll(uuid.New().String(), "-", "_")
 	storageConf.PGPassword = dbAdminPassword
-	storageConf.PGUsername = postgres
 
 	connString := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s sslmode=disable",

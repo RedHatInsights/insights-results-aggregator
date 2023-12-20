@@ -38,6 +38,20 @@ pg_params = "sslmode=disable"
 log_sql_queries = true
 type = "sql"
 
+[dvo_recommendations_storage]
+db_driver = "postgres"
+pg_username = "postgres"
+pg_password = "postgres"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "dvo"
+pg_params = ""
+log_sql_queries = true
+type = "sql"
+
+[storage_backend]
+use = "ocp_recommendations"
+
 [redis]
 database = 0
 endpoint = "localhost:6379"

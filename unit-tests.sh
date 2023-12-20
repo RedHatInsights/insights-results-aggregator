@@ -43,16 +43,22 @@ function check_composer() {
 }
 
 
+function wait_for_postgres() {
+    until psql "dbname=aggregator user=postgres password=postgres host=localhost sslmode=disable" -c '\q' ; do
+         sleep 1
+    done
+}
 
 if [ -z "$CI" ]; then
     echo "Running postgres container locally"
     check_composer
     $COMPOSER up -d > /dev/null
+    wait_for_postgres
 fi
 
 path_to_config=$(pwd)/config-devel.toml
 export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE="$path_to_config"
-export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="postgres"
+export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="aggregator"
 export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="postgres"
 run_unit_tests
 

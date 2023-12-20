@@ -119,9 +119,6 @@ func regexGetNthMatchOrLogError(regexStr string, nMatch uint, str string) string
 
 	return match
 }
-func regexGetFirstMatch(regexStr, str string) (string, error) {
-	return regexGetNthMatch(regexStr, 1, str)
-}
 
 func regexGetNthMatch(regexStr string, nMatch uint, str string) (string, error) {
 	regex := regexp.MustCompile(regexStr)
