@@ -16,5 +16,5 @@
 
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
-psql "dbname=aggregator user=user password=password host=localhost sslmode=disable" -f "${SCRIPT_DIR}/test_data.sql"
+psql "dbname=aggregator user=postgres password=postgres host=localhost sslmode=disable" -f "${SCRIPT_DIR}/test_data.sql"
 

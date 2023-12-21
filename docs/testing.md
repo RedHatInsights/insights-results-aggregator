@@ -57,7 +57,6 @@ By default all logs from the application aren't shown, if you want to see them, 
 
 To make a coverage report you need to start `./make-coverage.sh` tool with one of these arguments:
 
-1. `unit-sqlite` unit tests with sqlite in memory database
 1. `unit-posgres` unit tests with postgres database(don't forget to start `docker-compose up` with the DB)
 1. `rest` REST API tests from `test.sh` file
 1. `integration` Any external tests, for example from iqe-ccx-plugin.
@@ -65,7 +64,7 @@ Only this option requires you to run tests manually and stop the script by `Ctrl
 
 For example:
 
-`./make-coverage.sh unit-sqlite` will generate a report file `coverage.out`
+`./make-coverage.sh unit-postgres` will generate a report file `coverage.out`
 which you can investigate by either of those commands:
 
 - `go tool cover -func=coverage.out`
