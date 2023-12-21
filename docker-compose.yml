@@ -20,7 +20,7 @@ services:
     image: registry.redhat.io/rhscl/postgresql-10-rhel7
     platform: linux/x86_64
     environment:
-      - POSTGRESQL_USER=postgre
-      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_USER=user
+      - POSTGRESQL_PASSWORD=password
       - POSTGRESQL_ADMIN_PASSWORD=postgres
       - POSTGRESQL_DATABASE=aggregator
