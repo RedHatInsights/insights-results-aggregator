@@ -14,10 +14,15 @@
 # limitations under the License.
 
 if ! command -v shellcheck > /dev/null 2>&1; then
+    echo "Installing shellcheck"
     scversion="stable" # or "v0.4.7", or "latest"
-    wget -qO- "https://github.com/koalaman/shellcheck/releases/download/${scversion?}/shellcheck-${scversion?}.linux.x86_64.tar.xz" | tar -xJv
-    shellcheck-stable/shellcheck --version
-    shellcheck-stable/shellcheck --exclude=SC1090,SC2086,SC2034,SC1091 -- *.sh */*.sh
-else
-    shellcheck --exclude=SC1090,SC2086,SC2034,SC1091 -- *.sh */*.sh
+    unameOut="$(uname -s)"
+    case "${unameOut}" in
+        Linux*)     wget -qO- "https://github.com/koalaman/shellcheck/releases/download/${scversion?}/shellcheck-${scversion?}.linux.x86_64.tar.xz" | tar -xJv ;;
+        Darwin*)    brew install shellcheck ;;
+        *)          machine="UNKNOWN:${unameOut}"
+    esac
+    
 fi
+shellcheck --version
+shellcheck --exclude=SC1090,SC2086,SC2034,SC1091 -- *.sh */*.sh
