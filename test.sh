@@ -176,7 +176,7 @@ function test_rest_api() {
 
 function wait_for_postgres() {
     until psql "dbname=aggregator user=postgres password=postgres host=localhost sslmode=disable" -c '\q' > /dev/null 2>&1; do
-         sleep 1
+         sleep 2
     done
 }
 
