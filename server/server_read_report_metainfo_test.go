@@ -77,7 +77,7 @@ func TestReadNonExistingReportMetainfo(t *testing.T) {
 }
 
 func TestReadExistingEmptyReportMetainfo(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(
@@ -110,7 +110,7 @@ func TestReadExistingEmptyReportMetainfo(t *testing.T) {
 }
 
 func TestReadReportMetainfoDBError(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
@@ -124,7 +124,7 @@ func TestReadReportMetainfoDBError(t *testing.T) {
 }
 
 func TestReadReportMetainfo(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.WriteReportForCluster(

@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 */
 
 // Package storage contains an implementation of interface between Go code and
-// (almost any) SQL database like PostgreSQL, SQLite, or MariaDB. An implementation
-// named DBStorage is constructed via New function and it is mandatory to call Close
-// for any opened connection to database. The storage might be initialized by Init
-// method if database schema is empty.
+// (almost any) SQL database like PostgreSQL or MariaDB. An implementation
+// named DBStorage is constructed using the function 'New' and it is mandatory to
+// call 'Close' for any opened connection to the database. The storage might be
+// initialized by 'Init' method if database schema is empty.
 //
 // It is possible to configure connection to selected database by using Configuration
-// structure. Currently that structure contains two configurable parameter:
+// structure. Currently, that structure contains two configurable parameter:
 //
-// Driver - a SQL driver, like "sqlite3", "pq" etc.
+// Driver - a SQL driver, like "pq", "pgx", etc.
 // DataSource - specification of data source. The content of this parameter depends on the database used.
 package storage
 
@@ -35,8 +35,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/lib/pq"           // PostgreSQL database driver
-	"github.com/mattn/go-sqlite3" // SQLite database driver
+	"github.com/lib/pq" // PostgreSQL database driver
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-operator-utils/redis"
@@ -238,7 +237,7 @@ const (
 )
 
 // OCPRecommendationsDBStorage is an implementation of Storage interface that use selected SQL like database
-// like SQLite, PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
+// like PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
 // sql package. It is possible to configure connection via Configuration structure.
 // SQLQueriesLog is log for sql queries, default is nil which means nothing is logged
 type OCPRecommendationsDBStorage struct {
@@ -325,7 +324,7 @@ func newSQLStorage(configuration Configuration) (OCPRecommendationsStorage, erro
 
 	connection, err := sql.Open(driverName, dataSource)
 	if err != nil {
-		log.Error().Err(err).Msg("Can not connect to data storage")
+		log.Error().Err(err).Msg("Cannot connect to data storage")
 		return nil, err
 	}
 
@@ -348,10 +347,6 @@ func initAndGetDriver(configuration Configuration) (driverType types.DBDriver, d
 	driverName = configuration.Driver
 
 	switch driverName {
-	case "sqlite3":
-		driverType = types.DBDriverSQLite3
-		driver = &sqlite3.SQLiteDriver{}
-		dataSource = configuration.SQLiteDataSource
 	case "postgres":
 		driverType = types.DBDriverPostgres
 		driver = &pq.Driver{}
@@ -1143,7 +1138,7 @@ func (storage OCPRecommendationsDBStorage) WriteReportForCluster(
 		return types.ErrOldReport
 	}
 
-	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
+	if storage.dbDriverType != types.DBDriverPostgres {
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
@@ -1372,40 +1367,19 @@ func (storage OCPRecommendationsDBStorage) ReadClusterListRecommendations(
 
 	for rows.Next() {
 		var (
-			clusterID    ctypes.ClusterName
-			ruleID       ctypes.RuleID
-			timestampStr string
-			timestamp    time.Time
+			clusterID ctypes.ClusterName
+			ruleID    ctypes.RuleID
+			timestamp time.Time
 		)
 
-		if storage.dbDriverType != types.DBDriverSQLite3 {
-			// postgres is able to auto scan created_at into time.Time
-			err := rows.Scan(
-				&clusterID,
-				&timestamp,
-				&ruleID,
-			)
-			if err != nil {
-				log.Error().Err(err).Msg("problem reading one recommendation")
-				return clusterMap, err
-			}
-		} else {
-			// sqlite cannot auto scan into time.Time, needs manual parse
-			err := rows.Scan(
-				&clusterID,
-				&timestampStr,
-				&ruleID,
-			)
-			if err != nil {
-				log.Error().Err(err).Msg("problem reading one recommendation")
-				return clusterMap, err
-			}
-
-			timestamp, err = time.Parse(time.RFC3339, timestampStr)
-			if err != nil {
-				log.Error().Err(err).Msgf("unparsable timestamp %v", timestamp)
-				return clusterMap, err
-			}
+		err := rows.Scan(
+			&clusterID,
+			&timestamp,
+			&ruleID,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("problem reading one recommendation")
+			return clusterMap, err
 		}
 
 		if cluster, exists := clusterMap[clusterID]; exists {

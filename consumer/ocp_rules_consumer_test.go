@@ -80,7 +80,7 @@ func TestOCPRulesConsumer_New(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
 
-		mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+		mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 		defer closer()
 
 		mockBroker := sarama.NewMockBroker(t, 0)
@@ -535,7 +535,7 @@ func TestParseProperMessageWithInfoReport(t *testing.T) {
 }
 
 func TestProcessEmptyMessage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	c := dummyOCPConsumer(mockStorage, true)
@@ -558,7 +558,7 @@ func TestProcessEmptyMessage(t *testing.T) {
 }
 
 func TestProcessCorrectMessage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	defer closer()
 
@@ -578,7 +578,7 @@ func TestProcessCorrectMessage(t *testing.T) {
 }
 
 func TestProcessingEmptyReportMissingAttributesWithClosedStorage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	mockConsumer := dummyOCPConsumer(mockStorage, true)
 	closer()
@@ -588,7 +588,7 @@ func TestProcessingEmptyReportMissingAttributesWithClosedStorage(t *testing.T) {
 }
 
 func TestProcessingValidMessageEmptyReportWithRequiredAttributesWithClosedStorage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	mockConsumer := dummyOCPConsumer(mockStorage, true)
 	closer()
@@ -598,7 +598,7 @@ func TestProcessingValidMessageEmptyReportWithRequiredAttributesWithClosedStorag
 }
 
 func TestProcessingCorrectMessageWithClosedStorage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 
 	mockConsumer := dummyOCPConsumer(mockStorage, true)
 	closer()
@@ -608,7 +608,7 @@ func TestProcessingCorrectMessageWithClosedStorage(t *testing.T) {
 }
 
 func TestProcessingMessageWithWrongDateFormatAndEmptyReport(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockConsumer := dummyOCPConsumer(mockStorage, true)
@@ -618,7 +618,7 @@ func TestProcessingMessageWithWrongDateFormatAndEmptyReport(t *testing.T) {
 }
 
 func TestProcessingMessageWithWrongDateFormatReportNotEmpty(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockConsumer := dummyOCPConsumer(mockStorage, true)
@@ -722,7 +722,7 @@ func TestKafkaConsumerMockWritingMsgWithReportToClosedStorage(t *testing.T) {
 }
 
 func TestKafkaConsumer_ProcessMessage_OrganizationAllowlistDisabled(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockConsumer := dummyOCPConsumer(mockStorage, false)
@@ -732,7 +732,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationAllowlistDisabled(t *testing.T
 }
 
 func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationIsNotAllowed(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	brokerCfg := broker.Configuration{
@@ -749,7 +749,7 @@ func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationIsNotAllowed(t 
 }
 
 func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	brokerCfg := broker.Configuration{
@@ -766,7 +766,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 }
 
 func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationBadConfigIsNotAllowed(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	brokerCfg := broker.Configuration{
@@ -783,7 +783,7 @@ func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationBadConfigIsNotA
 }
 
 func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	brokerCfg := broker.Configuration{
@@ -803,7 +803,7 @@ func TestKafkaConsumer_ProcessMessage_MessageFromTheFuture(t *testing.T) {
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockConsumer := createOCPConsumer(wrongBrokerCfg, mockStorage)
@@ -825,7 +825,7 @@ func TestKafkaConsumer_ProcessMessage_MoreRecentReportAlreadyExists(t *testing.T
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockConsumer := createOCPConsumer(wrongBrokerCfg, mockStorage)
@@ -857,7 +857,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithNoSchemaVersion(t *testing.T) {
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockConsumer := createOCPConsumer(wrongBrokerCfg, mockStorage)
@@ -872,7 +872,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithUnexpectedSchemaVersion(t *test
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockConsumer := createOCPConsumer(wrongBrokerCfg, mockStorage)
@@ -895,7 +895,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithExpectedSchemaVersion(t *testin
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mockConsumer := createOCPConsumer(wrongBrokerCfg, mockStorage)
@@ -927,7 +927,7 @@ func TestKafkaConsumer_ProcessMessage_MessageWithExpectedSchemaVersion(t *testin
 }
 
 func TestKafkaConsumer_ConsumeClaim(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	kafkaConsumer := createOCPConsumer(broker.Configuration{}, mockStorage)
@@ -943,7 +943,7 @@ func TestKafkaConsumer_ConsumeClaim_DBError(t *testing.T) {
 	buf := new(bytes.Buffer)
 	zerolog_log.Logger = zerolog.New(buf)
 
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	closer()
 
 	kafkaConsumer := createOCPConsumer(broker.Configuration{}, mockStorage)
@@ -958,7 +958,7 @@ func TestKafkaConsumer_ConsumeClaim_DBError(t *testing.T) {
 }
 
 func TestKafkaConsumer_ConsumeClaim_OKMessage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	kafkaConsumer := createOCPConsumer(broker.Configuration{}, mockStorage)

@@ -77,7 +77,7 @@ func TestHTTPServer_getRuleRating_NoRating(t *testing.T) {
 }
 
 func TestHTTPServer_getRuleRating_OK(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.RateOnRule(
@@ -99,7 +99,7 @@ func TestHTTPServer_getRuleRating_OK(t *testing.T) {
 }
 
 func TestHTTPServer_getRuleRating_MultipleOK(t *testing.T) {
-	mockStorage, closer := helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	err := mockStorage.RateOnRule(

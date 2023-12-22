@@ -52,9 +52,7 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 
 	for _, n := range []uint{1, 10, 100, 1000} {
 		for storageName, storageProvider := range map[string]func(testing.TB, bool) (storage.OCPRecommendationsStorage, func()){
-			"SQLiteMemory": helpers.MustGetSQLiteMemoryStorage,
-			"SQLiteFile":   helpers.MustGetSQLiteFileStorage,
-			"Postgres":     helpers.MustGetPostgresStorage,
+			"Postgres": helpers.MustGetPostgresStorage,
 		} {
 			testCases = append(testCases, testCase{
 				storageName,

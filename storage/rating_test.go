@@ -26,7 +26,7 @@ import (
 )
 
 func TestDBStorage_RateOnRule(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -38,7 +38,7 @@ func TestDBStorage_RateOnRule(t *testing.T) {
 }
 
 func TestDBStorage_GetRuleRating(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)
@@ -56,7 +56,7 @@ func TestDBStorage_GetRuleRating(t *testing.T) {
 }
 
 func TestDBStorage_GetRuleRating_NotFound(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	mustWriteReport3Rules(t, mockStorage)

@@ -95,7 +95,7 @@ var (
 
 	// autoMigrate determines if the prepareDB function upgrades
 	// the database to the latest migration version. This is necessary
-	// for certain tests that work with a temporary, empty SQLite DB.
+	// for unit tests that work with an empty DB.
 	autoMigrate = false
 )
 
@@ -110,7 +110,7 @@ func fillInInfoParams(params map[string]string) {
 }
 
 // createStorage function initializes connection to preconfigured storage,
-// usually SQLite, PostgreSQL, or AWS RDS.
+// usually PostgreSQL or AWS RDS.
 func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendationsStorage, error) {
 	ocpStorageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 	// Redis configuration needs to be present in ocpStorageCfg, as the connection is created in the same function
@@ -159,7 +159,7 @@ func closeStorage(storage storage.Storage) {
 // available.
 func prepareDBMigrations(dbStorage storage.Storage) int {
 	driverType := dbStorage.GetDBDriverType()
-	if driverType != types.DBDriverPostgres && driverType != types.DBDriverSQLite3 {
+	if driverType != types.DBDriverPostgres {
 		log.Info().Msg("Skipping migration for non-SQL database type")
 		return ExitStatusOK
 	}
@@ -193,6 +193,7 @@ func prepareDB() int {
 	// task to support both storages at once: https://issues.redhat.com/browse/CCXDEV-12316
 
 	ocpRecommendationsStorage, _, err := createStorage()
+
 	if err != nil {
 		log.Error().Err(err).Msg("Error creating storage")
 		return ExitStatusPrepareDbError

@@ -44,7 +44,7 @@ func (storage OCPRecommendationsDBStorage) WriteReportInfoForCluster(
 	// Not checking if there is a previous report because this method will
 	// only be called after successfully writing the main report. If that
 	// fails, this method won't be called
-	if storage.dbDriverType != types.DBDriverSQLite3 && storage.dbDriverType != types.DBDriverPostgres {
+	if storage.dbDriverType != types.DBDriverPostgres {
 		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
 	}
 
@@ -91,13 +91,13 @@ func (storage *OCPRecommendationsDBStorage) ReadReportInfoForCluster(
 
 	err := storage.connection.QueryRow(
 		`
-SELECT 
-	COALESCE ( 
-		( 
-			SELECT version_info 
-			FROM report_info 
-			WHERE org_id = $1 AND cluster_id = $2 
-		), '') 
+SELECT
+	COALESCE (
+		(
+			SELECT version_info
+			FROM report_info
+			WHERE org_id = $1 AND cluster_id = $2
+		), '')
 		AS version_info;
 		`,
 		orgID, clusterName,
@@ -120,7 +120,7 @@ func (storage *OCPRecommendationsDBStorage) ReadClusterVersionsForClusterList(
 
 	query := `
 	SELECT cluster_id, COALESCE(version_info, '') as version_info
-	FROM report_info 
+	FROM report_info
 	WHERE org_id = $1 AND cluster_id IN (%v)
 	`
 

@@ -24,7 +24,6 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
@@ -307,10 +306,12 @@ func TestMigrationInitRollbackStep(t *testing.T) {
 	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
 	defer closer()
 
-	tMigrations := []migration.Migration{{
-		StepUp:   stepRollbackFn,
-		StepDown: stepNoopFn,
-	}}
+	tMigrations := []migration.Migration{
+		{
+			StepUp:   stepRollbackFn,
+			StepDown: stepNoopFn,
+		},
+	}
 
 	const expectedErrStr = "sql: transaction has already been committed or rolled back"
 	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 1, tMigrations)

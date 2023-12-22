@@ -22,7 +22,6 @@ import (
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -57,12 +56,8 @@ func BenchmarkOCPRulesConsumer_ProcessMessage_SimpleMessages(b *testing.B) {
 	}{
 		{"NoopStorage", getNoopStorage, false},
 		{"NoopStorage", getNoopStorage, true},
-		{"SQLiteInMemory", ira_helpers.MustGetSQLiteMemoryStorage, false},
-		{"SQLiteInMemory", ira_helpers.MustGetSQLiteMemoryStorage, true},
 		{"Postgres", ira_helpers.MustGetPostgresStorage, false},
 		{"Postgres", ira_helpers.MustGetPostgresStorage, true},
-		{"SQLiteFile", ira_helpers.MustGetSQLiteFileStorage, false},
-		{"SQLiteFile", ira_helpers.MustGetSQLiteFileStorage, true},
 	}
 
 	for _, testCase := range testCases {
@@ -138,9 +133,7 @@ func BenchmarkOCPRulesConsumer_ProcessMessage_RealMessages(b *testing.B) {
 		StorageProducer func(testing.TB, bool) (storage.OCPRecommendationsStorage, func())
 	}{
 		{"NoopStorage", getNoopStorage},
-		{"SQLiteInMemory", ira_helpers.MustGetSQLiteMemoryStorage},
 		{"Postgres", ira_helpers.MustGetPostgresStorage},
-		{"SQLiteFile", ira_helpers.MustGetSQLiteFileStorage},
 	}
 
 	for _, testCase := range testCases {

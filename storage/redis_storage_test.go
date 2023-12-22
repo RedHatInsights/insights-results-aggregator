@@ -25,7 +25,6 @@ import (
 	"github.com/go-redis/redismock/v9"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/RedHatInsights/insights-operator-utils/redis"
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
@@ -404,7 +403,6 @@ func TestRedisStorageEmptyMethods2(_ *testing.T) {
 	_ = RedisStorage.AddFeedbackOnRuleDisable(clusterName, ruleID, errorKey, orgID, userID, "")
 	_, _ = RedisStorage.GetUserFeedbackOnRuleDisable(clusterName, ruleID, errorKey, userID)
 	_, _ = RedisStorage.GetUserFeedbackOnRule(clusterName, ruleID, errorKey, userID)
-	_ = RedisStorage.LoadRuleContent(content.RuleContentDirectory{})
 	_, _ = RedisStorage.GetRuleByID(ruleID)
 	_, _ = RedisStorage.GetOrgIDByClusterID(clusterName)
 	_, _ = RedisStorage.ListOfSystemWideDisabledRules(orgID)

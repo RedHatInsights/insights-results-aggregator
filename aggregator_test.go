@@ -76,12 +76,7 @@ func TestStartService(t *testing.T) {
 
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		os.Clearenv()
-
 		mustLoadConfiguration("./tests/tests")
-		setEnvSettings(t, map[string]string{
-			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
-			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
-		})
 
 		go func() {
 			main.StartService()
@@ -96,24 +91,29 @@ func TestStartService(t *testing.T) {
 
 func TestStartService_DBError(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
+		os.Clearenv()
+
 		buf := new(bytes.Buffer)
 		log.Logger = zerolog.New(buf)
 
 		setEnvSettings(t, map[string]string{
-			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
-			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
+			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER": "sqlite3",
+			"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE":      "sql",
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE":                   "ocp_recommendations",
 		})
 
 		exitCode := main.StartService()
 		assert.Equal(t, main.ExitStatusPrepareDbError, exitCode)
-		assert.Contains(t, buf.String(), "unable to open database file: no such file or directory")
+		assert.Contains(t, buf.String(), "driver sqlite3 is not supported")
 	}, testsTimeout)
 }
 
 func TestCreateStorage_BadDriver(t *testing.T) {
+	os.Clearenv()
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "non-existing-driver",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE":      "sql",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE":                   "ocp_recommendations",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER": "non-existing-driver",
 	})
 
 	_, _, err := main.CreateStorage()
@@ -134,23 +134,14 @@ func TestCloseStorage_Error(t *testing.T) {
 	assert.Contains(t, buf.String(), errStr)
 }
 
-func TestPrepareDB_DBError(t *testing.T) {
-	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "non-existing-driver",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "/non/existing/path",
-	})
-
+func TestPrepareDB_DBErrorCode(t *testing.T) {
 	errCode := main.PrepareDB()
 	assert.Equal(t, main.ExitStatusPrepareDbError, errCode)
 }
 
 func TestPrepareDB(t *testing.T) {
-	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
-
-		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
-	})
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 
 	*main.AutoMigratePtr = true
 
@@ -160,44 +151,11 @@ func TestPrepareDB(t *testing.T) {
 	*main.AutoMigratePtr = false
 }
 
-func TestPrepareDB_NoRulesDirectory(t *testing.T) {
-	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
-
-		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "/non-existing-path",
-	})
-
-	errCode := main.PrepareDB()
-	assert.Equal(t, main.ExitStatusPrepareDbError, errCode)
-}
-
-func TestPrepareDB_BadRules(t *testing.T) {
-	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
-
-		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/bad_metadata_status/",
-	})
-
-	errCode := main.PrepareDB()
-	assert.Equal(t, main.ExitStatusPrepareDbError, errCode)
-}
-
-func TestStartConsumer_DBError(t *testing.T) {
-	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "non-existing-driver",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "bad-data-source",
-	})
-
-	err := main.StartConsumer(conf.GetBrokerConfiguration())
-	assert.EqualError(t, err, "driver non-existing-driver is not supported")
-}
-
 func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER": "postgres",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE":      "sql",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE":                   "ocp_recommendations",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:999999",
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
@@ -211,8 +169,9 @@ func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 
 func TestStartServer_DBError(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "non-existing-driver",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": "bad-data-source",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER": "non-existing-driver",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE":      "sql",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE":                   "ocp_recommendations",
 	})
 
 	err := main.StartServer()
@@ -221,8 +180,9 @@ func TestStartServer_DBError(t *testing.T) {
 
 func TestStartServer_BadServerAddress(t *testing.T) {
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER": "postgres",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE":      "sql",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE":                   "ocp_recommendations",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       "localhost:999999",
 		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE": "openapi.json",
@@ -233,17 +193,14 @@ func TestStartServer_BadServerAddress(t *testing.T) {
 }
 
 func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER":         "sqlite3",
-		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE": ":memory:",
-
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:1",
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       "non-existing-host:1",
 		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE": "openapi.json",
-
-		"INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH": "./tests/content/ok/",
 	})
 
 	*main.AutoMigratePtr = true
@@ -277,6 +234,8 @@ func TestPrintEnv(t *testing.T) {
 // TestGetDBForMigrations checks that the function ensures the existence of
 // the migration_info table and that the SQL DB connection works correctly.
 func TestGetDBForMigrations(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, main.ExitStatusOK, exitCode)
 	defer ira_helpers.MustCloseStorage(t, db)
@@ -289,6 +248,8 @@ func TestGetDBForMigrations(t *testing.T) {
 
 // TestPrintMigrationInfo checks that printing migration info exits with OK code.
 func TestPrintMigrationInfo(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	defer ira_helpers.MustCloseStorage(t, db)
@@ -300,6 +261,8 @@ func TestPrintMigrationInfo(t *testing.T) {
 // TestPrintMigrationInfoClosedDB checks that printing migration info with
 // a closed DB connection results in a migration error exit code.
 func TestPrintMigrationInfoClosedDB(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	// Close DB connection immediately.
@@ -311,6 +274,8 @@ func TestPrintMigrationInfoClosedDB(t *testing.T) {
 
 // TestSetMigrationVersionZero checks that it is possible to set migration version to 0.
 func TestSetMigrationVersionZero(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	defer ira_helpers.MustCloseStorage(t, db)
@@ -326,6 +291,8 @@ func TestSetMigrationVersionZero(t *testing.T) {
 
 // TestSetMigrationVersionZero checks that it is to upgrade DB to the latest migration.
 func TestSetMigrationVersionLatest(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	defer ira_helpers.MustCloseStorage(t, db)
@@ -342,6 +309,8 @@ func TestSetMigrationVersionLatest(t *testing.T) {
 // TestSetMigrationVersionClosedDB checks that setting the migration version
 // with a closed DB connection results in a migration error exit code.
 func TestSetMigrationVersionClosedDB(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	// Close DB connection immediately.
@@ -354,6 +323,8 @@ func TestSetMigrationVersionClosedDB(t *testing.T) {
 // TestSetMigrationVersionInvalid checks that when supplied an invalid version
 // argument, the set version function exits with a migration error code.
 func TestSetMigrationVersionInvalid(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 	db, dbConn, exitCode := main.GetDBForMigrations()
 	assert.Equal(t, exitCode, main.ExitStatusOK)
 	// Close DB connection immediately.
@@ -366,6 +337,8 @@ func TestSetMigrationVersionInvalid(t *testing.T) {
 // TestPerformMigrationsPrint checks that the command for
 // printing migration info exits with the OK exit code.
 func TestPerformMigrationsPrint(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
 	oldArgs := os.Args
 
 	os.Args = []string{os.Args[0], "migrations"}
@@ -378,6 +351,9 @@ func TestPerformMigrationsPrint(t *testing.T) {
 // TestPerformMigrationsPrint checks that the command for
 // setting migration version exits with the OK exit code.
 func TestPerformMigrationsSet(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
+
 	oldArgs := os.Args
 
 	os.Args = []string{os.Args[0], "migrations", "0"}
@@ -390,6 +366,9 @@ func TestPerformMigrationsSet(t *testing.T) {
 // TestPerformMigrationsPrint checks that supplying too many arguments
 // to the migration sub-commands results in the migration error exit code.
 func TestPerformMigrationsTooManyArgs(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
+
 	oldArgs := os.Args
 
 	os.Args = []string{os.Args[0], "migrations", "hello", "world"}
@@ -407,7 +386,7 @@ func TestFillInInfoParams(t *testing.T) {
 	// preliminary test if Go Universe is still ok
 	assert.Empty(t, m, "Map should be empty at the beginning")
 
-	// try to fill-in all info params
+	// try to fill in all info params
 	main.FillInInfoParams(m)
 
 	// preliminary test if Go Universe is still ok

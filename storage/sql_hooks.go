@@ -91,7 +91,7 @@ func InitSQLDriverWithLogs(
 	realDriver sql_driver.Driver,
 	realDriverName string,
 ) string {
-	// linear search is not gonna be an issue since there's not many drivers
+	// linear search is not going to be an issue since there's not many drivers
 	// and we call New() only ones/twice per process life
 	foundHooksDriver := false
 	hooksDriverName := realDriverName + "WithHooks"

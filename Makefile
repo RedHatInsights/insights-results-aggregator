@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test cover integration_tests rest_api_tests sqlite_db license before_commit help godoc install_docgo install_addlicense
+.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test cover integration_tests rest_api_tests license before_commit help godoc install_docgo install_addlicense
 
 SOURCES:=$(shell find . -name '*.go')
 BINARY:=insights-results-aggregator
@@ -89,10 +89,6 @@ integration_tests: ${BINARY} ## Run all integration tests
 rest_api_tests: ${BINARY} ## Run REST API tests
 	@echo "Running REST API tests"
 	@./test.sh rest_api
-
-sqlite_db:
-	mv aggregator.db aggragator.db.backup
-	local_storage/create_database_sqlite.sh
 
 license: install_addlicense
 	addlicense -c "Red Hat, Inc" -l "apache" -v ./

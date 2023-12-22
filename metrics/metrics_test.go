@@ -115,7 +115,7 @@ func TestProducedMessagesMetric(t *testing.T) {
 }
 
 func TestWrittenReportsMetric(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetMockStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
 	// other tests may run at the same process

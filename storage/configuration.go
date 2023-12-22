@@ -19,7 +19,6 @@ package storage
 // Configuration represents configuration of data storage
 type Configuration struct {
 	Driver             string `mapstructure:"db_driver" toml:"db_driver"`
-	SQLiteDataSource   string `mapstructure:"sqlite_datasource" toml:"sqlite_datasource"`
 	LogSQLQueries      bool   `mapstructure:"log_sql_queries" toml:"log_sql_queries"`
 	PGUsername         string `mapstructure:"pg_username" toml:"pg_username"`
 	PGPassword         string `mapstructure:"pg_password" toml:"pg_password"`

@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/Shopify/sarama"
 
 	"github.com/rs/zerolog/log"
@@ -240,11 +239,6 @@ func (*RedisStorage) DeleteReportsForOrg(types.OrgID) error {
 
 // DeleteReportsForCluster noop
 func (*RedisStorage) DeleteReportsForCluster(types.ClusterName) error {
-	return nil
-}
-
-// LoadRuleContent noop
-func (*RedisStorage) LoadRuleContent(content.RuleContentDirectory) error {
 	return nil
 }
 

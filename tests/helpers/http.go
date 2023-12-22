@@ -85,7 +85,7 @@ func AssertAPIRequest(
 ) {
 	if mockStorage == nil {
 		var closer func()
-		mockStorage, closer = MustGetMockStorage(t, true)
+		mockStorage, closer = MustGetPostgresStorage(t, true)
 		defer closer()
 	}
 	if serverConfig == nil {

@@ -56,32 +56,11 @@ var migrationClusterRuleUserFeedback = migration.Migration{
 		return err
 	},
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
-		if driver == types.DBDriverPostgres {
-			_, err := tx.Exec(`
+		_, err := tx.Exec(`
 				ALTER TABLE cluster_rule_user_feedback
 					ADD FOREIGN KEY(rule_id) REFERENCES rule(module) ON DELETE CASCADE
 				`)
-			return err
-		}
-
-		return migration.DowngradeTable(
-			tx,
-			clusterRuleUserFeedbackTable,
-			`
-			CREATE TABLE cluster_rule_user_feedback (
-				cluster_id VARCHAR NOT NULL,
-				rule_id VARCHAR NOT NULL,
-				user_id VARCHAR NOT NULL,
-				message VARCHAR NOT NULL,
-				user_vote SMALLINT NOT NULL,
-				added_at TIMESTAMP NOT NULL,
-				updated_at TIMESTAMP NOT NULL,
-
-				PRIMARY KEY(cluster_id, rule_id, user_id),
-				FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
-				FOREIGN KEY (rule_id) REFERENCES rule(module) ON DELETE CASCADE
-			)`,
-			nil)
+		return err
 	},
 }
 

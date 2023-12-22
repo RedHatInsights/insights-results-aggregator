@@ -20,10 +20,6 @@ TIMEOUT_INTEGRATION=1440m
 rm coverage.out 2>/dev/null
 
 case $1 in
-"unit-sqlite")
-    echo "Running unit tests with SQLite in memory..."
-    go test -timeout $TIMEOUT -coverprofile=coverage.out ./... 1>&2
-    ;;
 "unit-postgres")
     export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="postgres"
     export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="admin"
@@ -64,7 +60,7 @@ case $1 in
     go test -timeout $TIMEOUT_INTEGRATION -v -tags testrunmain -run "^TestRunMain$" -coverprofile=coverage.out -coverpkg="./..." . 1>&2
     ;;
 *)
-    echo 'Please, choose "unit-sqlite", "unit-postgres", "rest" or "integration"'
+    echo 'Please, choose "unit-postgres", "rest" or "integration"'
     echo "Aggregator's output will be redirected to stderr."
     echo "Coverage is saved to 'coverage.out' file"
     exit 1

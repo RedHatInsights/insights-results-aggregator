@@ -67,8 +67,7 @@ func setEnvVariables(t *testing.T) {
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_ALLOWLIST", "org_allowlist.csv")
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER", "sqlite3")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE", ":memory:")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER", "postgres")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_USERNAME", "user")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PASSWORD", "password")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_HOST", "localhost")
@@ -79,7 +78,6 @@ func setEnvVariables(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE", "sql")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__DB_DRIVER", "postgres")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__SQLITE_DATASOURCE", "datasource")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_USERNAME", "user")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PASSWORD", "password")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_HOST", "localhost")
@@ -88,8 +86,6 @@ func setEnvVariables(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PARAMS", "params")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__LOG_SQL_QUERIES", "true")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE", "sql")
-
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH", "/rules-content")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__ENDPOINT", "default-redis-endpoint")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE", "42")
@@ -182,7 +178,7 @@ func TestLoadStorageBackendConfiguration(t *testing.T) {
 }
 
 // TestLoadStorageBackendConfigurationChangedFromEnvVar tests loading the
-// storage backend configuration configuration sub-tree
+// storage backend configuration subtree
 func TestLoadStorageBackendConfigurationChangedFromEnvVar(t *testing.T) {
 	os.Clearenv()
 
@@ -197,19 +193,18 @@ func TestLoadStorageBackendConfigurationChangedFromEnvVar(t *testing.T) {
 }
 
 // TestLoadOCPRecommendationsStorageConfiguration tests loading the OCP
-// recommendations storage configuration sub-tree
+// recommendations storage configuration subtree
 func TestLoadOCPRecommendationsStorageConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
 
 	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 
-	assert.Equal(t, "sqlite3", storageCfg.Driver)
-	assert.Equal(t, ":memory:", storageCfg.SQLiteDataSource)
+	assert.Equal(t, "postgres", storageCfg.Driver)
 	assert.Equal(t, "sql", storageCfg.Type)
 }
 
 // TestLoadDVORecommendationsStorageConfiguration tests loading the DVO
-// recommendations storage configuration sub-tree
+// recommendations storage configuration subtree
 func TestLoadDVORecommendationsStorageConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
 
@@ -221,7 +216,7 @@ func TestLoadDVORecommendationsStorageConfiguration(t *testing.T) {
 	assert.Equal(t, "sql", storageCfg.Type)
 }
 
-// TestLoadRedisConfiguration tests loading the Redis configuration sub-tree
+// TestLoadRedisConfiguration tests loading the Redis configuration subtree
 func TestLoadRedisConfiguration(t *testing.T) {
 	TestLoadConfiguration(t)
 
@@ -243,33 +238,30 @@ func TestLoadConfigurationOverrideFromEnv1(t *testing.T) {
 
 	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
-		Driver:           "sqlite3",
-		SQLiteDataSource: ":memory:",
-		PGUsername:       "user",
-		PGPassword:       "password",
-		PGHost:           "localhost",
-		PGPort:           5432,
-		PGDBName:         "aggregator",
-		PGParams:         "",
-		Type:             "sql",
+		Driver:     "postgres",
+		PGUsername: "user",
+		PGPassword: "password",
+		PGHost:     "localhost",
+		PGPort:     5432,
+		PGDBName:   "aggregator",
+		PGParams:   "",
+		Type:       "sql",
 	}, storageCfg)
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER", "postgres")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PASSWORD", "some very secret password")
 
 	mustLoadConfiguration(configPath)
 
 	storageCfg = conf.GetOCPRecommendationsStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
-		Driver:           "postgres",
-		SQLiteDataSource: ":memory:",
-		PGUsername:       "user",
-		PGPassword:       "some very secret password",
-		PGHost:           "localhost",
-		PGPort:           5432,
-		PGDBName:         "aggregator",
-		PGParams:         "",
-		Type:             "sql",
+		Driver:     "postgres",
+		PGUsername: "user",
+		PGPassword: "some very secret password",
+		PGHost:     "localhost",
+		PGPort:     5432,
+		PGDBName:   "aggregator",
+		PGParams:   "",
+		Type:       "sql",
 	}, storageCfg)
 }
 
@@ -283,37 +275,34 @@ func TestLoadConfigurationOverrideFromEnv2(t *testing.T) {
 
 	storageCfg := conf.GetDVORecommendationsStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
-		Driver:           "postgres",
-		SQLiteDataSource: "datasource",
-		PGUsername:       "user",
-		PGPassword:       "password",
-		PGHost:           "localhost",
-		PGPort:           5432,
-		PGDBName:         "aggregator",
-		PGParams:         "",
-		Type:             "sql",
+		Driver:     "postgres",
+		PGUsername: "user",
+		PGPassword: "password",
+		PGHost:     "localhost",
+		PGPort:     5432,
+		PGDBName:   "aggregator",
+		PGParams:   "",
+		Type:       "sql",
 	}, storageCfg)
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__DB_DRIVER", "postgres")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PASSWORD", "some very secret password")
 
 	mustLoadConfiguration(configPath)
 
 	storageCfg = conf.GetDVORecommendationsStorageConfiguration()
 	assert.Equal(t, storage.Configuration{
-		Driver:           "postgres",
-		SQLiteDataSource: "datasource",
-		PGUsername:       "user",
-		PGPassword:       "some very secret password",
-		PGHost:           "localhost",
-		PGPort:           5432,
-		PGDBName:         "aggregator",
-		PGParams:         "",
-		Type:             "sql",
+		Driver:     "postgres",
+		PGUsername: "user",
+		PGPassword: "some very secret password",
+		PGHost:     "localhost",
+		PGPort:     5432,
+		PGDBName:   "aggregator",
+		PGParams:   "",
+		Type:       "sql",
 	}, storageCfg)
 }
 
-// TestLoadOrganizationAllowlist tests if the allowlist CSV file gets loaded properly
+// TestLoadOrganizationAllowlist tests if the allow-list CSV file gets loaded properly
 func TestLoadOrganizationAllowlist(t *testing.T) {
 	expectedAllowlist := mapset.NewSetWith(
 		types.OrgID(1),
@@ -362,9 +351,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		enabled = true
 		enable_org_allowlist = true
 
-		[content]
-		path = "/rules-content"
-
 		[processing]
 		org_allowlist_file = "org_allowlist.csv"
 
@@ -375,8 +361,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		debug = true
 
 		[ocp_recommendations_storage]
-		db_driver = "sqlite3"
-		sqlite_datasource = ":memory:"
+		db_driver = "postgres"
 		pg_username = "user"
 		pg_password = "password"
 		pg_host = "localhost"
@@ -439,16 +424,15 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 	)
 
 	assert.Equal(t, storage.Configuration{
-		Driver:           "sqlite3",
-		SQLiteDataSource: ":memory:",
-		LogSQLQueries:    true,
-		PGUsername:       "user",
-		PGPassword:       "password",
-		PGHost:           "localhost",
-		PGPort:           5432,
-		PGDBName:         "aggregator",
-		PGParams:         "params",
-		Type:             "sql",
+		Driver:        "postgres",
+		LogSQLQueries: true,
+		PGUsername:    "user",
+		PGPassword:    "password",
+		PGHost:        "localhost",
+		PGPort:        5432,
+		PGDBName:      "aggregator",
+		PGParams:      "params",
+		Type:          "sql",
 	}, conf.GetOCPRecommendationsStorageConfiguration())
 
 	assert.Equal(t, storage.RedisConfiguration{
@@ -502,16 +486,15 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 	)
 
 	assert.Equal(t, storage.Configuration{
-		Driver:           "sqlite3",
-		SQLiteDataSource: ":memory:",
-		LogSQLQueries:    true,
-		PGUsername:       "user",
-		PGPassword:       "password",
-		PGHost:           "localhost",
-		PGPort:           5432,
-		PGDBName:         "aggregator",
-		PGParams:         "params",
-		Type:             "sql",
+		Driver:        "postgres",
+		LogSQLQueries: true,
+		PGUsername:    "user",
+		PGPassword:    "password",
+		PGHost:        "localhost",
+		PGPort:        5432,
+		PGDBName:      "aggregator",
+		PGParams:      "params",
+		Type:          "sql",
 	}, conf.GetOCPRecommendationsStorageConfiguration())
 
 	assert.Equal(t, storage.RedisConfiguration{
@@ -690,7 +673,7 @@ func TestClowderConfigForStorage(t *testing.T) {
 	assert.Equal(t, username, ocpStorageConf.PGUsername)
 	assert.Equal(t, password, ocpStorageConf.PGPassword)
 	// rest of config outside of clowder must be loaded correctly
-	assert.Equal(t, "sqlite3", ocpStorageConf.Driver)
+	assert.Equal(t, "postgres", ocpStorageConf.Driver)
 	assert.Equal(t, "sql", ocpStorageConf.Type)
 
 	// same config loaded for DVO storage in envs using clowder (stage/prod)

@@ -18,7 +18,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/RedHatInsights/insights-content-service/content"
 	"github.com/Shopify/sarama"
 
 	ctypes "github.com/RedHatInsights/insights-results-types"
@@ -164,11 +163,6 @@ func (*NoopOCPStorage) DeleteReportsForOrg(types.OrgID) error {
 
 // DeleteReportsForCluster noop
 func (*NoopOCPStorage) DeleteReportsForCluster(types.ClusterName) error {
-	return nil
-}
-
-// LoadRuleContent noop
-func (*NoopOCPStorage) LoadRuleContent(content.RuleContentDirectory) error {
 	return nil
 }
 

@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-# Copyright 2020, 2023 Red Hat, Inc
+# Copyright 2021 Red Hat, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +13,22 @@
 # limitations under the License.
 
 
-SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
-psql "dbname=aggregator user=postgres password=postgres host=localhost sslmode=disable" -f "${SCRIPT_DIR}/test_data.sql"
+# Bonfire deployment configuration
+# Defines where to fetch the file that defines application configs
 
+appsFile:
+  host: gitlab
+  repo: insights-platform/cicd-common
+  path: bonfire_configs/ephemeral_apps.yaml
+
+apps:
+- name: ccx-data-pipeline
+  components:
+    - name:  dvo-writer
+      host: local
+      repo: .
+      path: deploy/dvo-writer.yaml
+      parameters:
+        ENV_NAME: env-ocm
+        IMAGE_TAG: latest
