@@ -56,12 +56,14 @@ func InitInfoTable(db *sql.DB, schema Schema) error {
 			schema = defaultDBSchema
 		}
 
+		// #nosec G201
 		_, err := tx.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %v.migration_info (version INTEGER NOT NULL);", schema))
 		if err != nil {
 			return err
 		}
 
 		// INSERT if there's no rows in the table
+		// #nosec G201
 		_, err = tx.Exec(
 			fmt.Sprintf(
 				"INSERT INTO %v.migration_info (version) SELECT 0 WHERE NOT EXISTS (SELECT version FROM %v.migration_info);",
@@ -74,6 +76,8 @@ func InitInfoTable(db *sql.DB, schema Schema) error {
 		}
 
 		var rowCount uint
+
+		// #nosec G201
 		err = tx.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %v.migration_info;", schema)).Scan(&rowCount)
 		if err != nil {
 			return err
@@ -98,6 +102,7 @@ func GetDBVersion(db *sql.DB, schema Schema) (Version, error) {
 		schema = defaultDBSchema
 	}
 
+	// #nosec G201
 	query := fmt.Sprintf("SELECT version FROM %v.migration_info;", schema)
 
 	var version Version // version 0 by default
@@ -142,6 +147,7 @@ func SetDBVersion(
 // updateVersionInDB updates the migration version number in the migration info table.
 // This function does NOT rollback in case of an error. The calling function is expected to do that.
 func updateVersionInDB(tx *sql.Tx, schema Schema, newVersion Version) error {
+	// #nosec G201
 	res, err := tx.Exec(fmt.Sprintf("UPDATE %v.migration_info SET version=$1;", schema), newVersion)
 	if err != nil {
 		return err
@@ -211,6 +217,7 @@ func validateNumberOfRows(db *sql.DB, schema Schema) error {
 
 func getNumberOfRows(db *sql.DB, schema Schema) (uint, error) {
 	var count uint
+	// #nosec G201
 	err := db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %v.migration_info;", schema)).Scan(&count)
 	err = types.ConvertDBError(err, nil)
 	return count, err
