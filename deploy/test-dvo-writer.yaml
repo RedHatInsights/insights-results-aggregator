@@ -32,3 +32,4 @@ apps:
       parameters:
         ENV_NAME: env-ocm
         IMAGE_TAG: latest
+        PG_PARAMS: "sslmode=disable"
