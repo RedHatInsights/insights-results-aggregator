@@ -198,10 +198,9 @@ func TestLoadStorageBackendConfigurationNotChangedWhenEmpty(t *testing.T) {
 	os.Clearenv()
 
 	const configPath = "../tests/config1"
+	mustLoadConfiguration(configPath)
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE", "")
-
-	mustLoadConfiguration(configPath)
 
 	storageCfg := conf.GetStorageBackendConfiguration()
 	assert.Equal(t, "", storageCfg.Use)

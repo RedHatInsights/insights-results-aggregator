@@ -122,13 +122,13 @@ func InitInfoTable(db *sql.DB, schema Schema) error {
 
 // GetDBVersion reads the current version of the database from the migration info table.
 func GetDBVersion(db *sql.DB, schema Schema) (Version, error) {
+	if schema == "" {
+		schema = defaultDBSchema
+	}
+
 	err := validateNumberOfRows(db, schema)
 	if err != nil {
 		return 0, err
-	}
-
-	if schema == "" {
-		schema = defaultDBSchema
 	}
 
 	// #nosec G201
