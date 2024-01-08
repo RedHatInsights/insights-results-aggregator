@@ -283,7 +283,7 @@ func TestSetMigrationVersionZero(t *testing.T) {
 	exitCode = main.SetMigrationVersion(db, dbConn, "0")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
 
-	version, err := migration.GetDBVersion(dbConn)
+	version, err := migration.GetDBVersion(dbConn, db.GetDBSchema())
 	assert.NoError(t, err, "unable to get migration version")
 
 	assert.Equal(t, migration.Version(0), version)
@@ -300,7 +300,7 @@ func TestSetMigrationVersionLatest(t *testing.T) {
 	exitCode = main.SetMigrationVersion(db, dbConn, "latest")
 	assert.Equal(t, main.ExitStatusOK, exitCode)
 
-	version, err := migration.GetDBVersion(dbConn)
+	version, err := migration.GetDBVersion(dbConn, db.GetDBSchema())
 	assert.NoError(t, err, "unable to get migration version")
 
 	assert.Equal(t, db.GetMaxVersion(), version)

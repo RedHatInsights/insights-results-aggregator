@@ -44,6 +44,11 @@ func (*NoopOCPStorage) GetMigrations() []migration.Migration {
 	return nil
 }
 
+// GetDBSchema noop
+func (*NoopOCPStorage) GetDBSchema() migration.Schema {
+	return migration.Schema("")
+}
+
 // GetMaxVersion noop
 func (*NoopOCPStorage) GetMaxVersion() migration.Version {
 	return migration.Version(0)

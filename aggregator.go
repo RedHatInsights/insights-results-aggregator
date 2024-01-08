@@ -170,7 +170,7 @@ func prepareDBMigrations(dbStorage storage.Storage) int {
 			return ExitStatusPrepareDbError
 		}
 	} else {
-		currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection())
+		currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection(), dbStorage.GetDBSchema())
 		if err != nil {
 			log.Error().Err(err).Msg("unable to check DB migration version")
 			return ExitStatusPrepareDbError
@@ -398,7 +398,7 @@ func getDBForMigrations() (storage.Storage, *sql.DB, int) {
 
 	dbConn := db.GetConnection()
 
-	if err := migration.InitInfoTable(dbConn); err != nil {
+	if err := migration.InitInfoTable(dbConn, db.GetDBSchema()); err != nil {
 		closeStorage(db)
 		log.Error().Err(err).Msg("Unable to initialize migration info table")
 		return nil, nil, ExitStatusPrepareDbError
@@ -410,7 +410,7 @@ func getDBForMigrations() (storage.Storage, *sql.DB, int) {
 // printMigrationInfo function prints information about current DB migration
 // version without making any modifications.
 func printMigrationInfo(storage storage.Storage, dbConn *sql.DB) int {
-	currMigVer, err := migration.GetDBVersion(dbConn)
+	currMigVer, err := migration.GetDBVersion(dbConn, storage.GetDBSchema())
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to get current DB version")
 		return ExitStatusMigrationError
@@ -438,7 +438,7 @@ func setMigrationVersion(db storage.Storage, dbConn *sql.DB, versStr string) int
 		targetVersion = migration.Version(vers)
 	}
 
-	if err := migration.SetDBVersion(dbConn, db.GetDBDriverType(), targetVersion, db.GetMigrations()); err != nil {
+	if err := migration.SetDBVersion(dbConn, db.GetDBDriverType(), db.GetDBSchema(), targetVersion, db.GetMigrations()); err != nil {
 		log.Error().Err(err).Msg("Unable to perform migration")
 		return ExitStatusMigrationError
 	}

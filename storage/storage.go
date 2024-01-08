@@ -31,6 +31,7 @@ type Storage interface {
 	GetConnection() *sql.DB
 	GetMigrations() []migration.Migration
 	GetDBDriverType() types.DBDriver
+	GetDBSchema() migration.Schema
 	GetMaxVersion() migration.Version
 	MigrateToLatest() error
 }

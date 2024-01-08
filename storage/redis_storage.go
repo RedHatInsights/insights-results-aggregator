@@ -474,6 +474,11 @@ func (*RedisStorage) GetConnection() *sql.DB {
 	return nil
 }
 
+// GetDBSchema returns db schema (unused for Redis)
+func (*RedisStorage) GetDBSchema() migration.Schema {
+	return migration.Schema("")
+}
+
 // PrintRuleDisableDebugInfo is a temporary helper function used to print form
 // cluster rule toggle related tables
 func (*RedisStorage) PrintRuleDisableDebugInfo() {

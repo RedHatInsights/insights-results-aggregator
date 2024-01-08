@@ -224,11 +224,17 @@ type OCPRecommendationsStorage interface {
 	PrintRuleDisableDebugInfo()
 	GetDBDriverType() types.DBDriver
 	GetMigrations() []migration.Migration
+	GetDBSchema() migration.Schema
 	GetMaxVersion() migration.Version
 }
 
-// ReportSuffix is used to strip away .report suffix from rule module names
-const ReportSuffix = ".report"
+const (
+	// ReportSuffix is used to strip away .report suffix from rule module names
+	ReportSuffix = ".report"
+
+	// ocpDBSchema uses the default public schema in all queries/migrations and all environments
+	ocpDBSchema = "public"
+)
 
 // OCPRecommendationsDBStorage is an implementation of Storage interface that use selected SQL like database
 // like PostgreSQL, MariaDB, RDS etc. That implementation is based on the standard
@@ -370,6 +376,11 @@ func (storage OCPRecommendationsDBStorage) GetMigrations() []migration.Migration
 	return ocpmigrations.UsableOCPMigrations
 }
 
+// GetDBSchema returns the schema name to be used in queries
+func (storage OCPRecommendationsDBStorage) GetDBSchema() migration.Schema {
+	return migration.Schema(ocpDBSchema)
+}
+
 // GetMaxVersion returns the highest available migration version.
 // The DB version cannot be set to a value higher than this.
 // This value is equivalent to the length of the list of available migrations.
@@ -380,13 +391,16 @@ func (storage OCPRecommendationsDBStorage) GetMaxVersion() migration.Version {
 // MigrateToLatest migrates the database to the latest available
 // migration version. This must be done before an Init() call.
 func (storage OCPRecommendationsDBStorage) MigrateToLatest() error {
-	if err := migration.InitInfoTable(storage.connection); err != nil {
+	dbConn, dbSchema := storage.GetConnection(), storage.GetDBSchema()
+
+	if err := migration.InitInfoTable(dbConn, dbSchema); err != nil {
 		return err
 	}
 
 	return migration.SetDBVersion(
-		storage.connection,
+		dbConn,
 		storage.dbDriverType,
+		dbSchema,
 		storage.GetMaxVersion(),
 		storage.GetMigrations(),
 	)
