@@ -406,7 +406,7 @@ func getDBForMigrations() (storage.Storage, *sql.DB, int) {
 	case types.DVORecommendationsStorage:
 		db = dvoStorage
 	default:
-		log.Error().Msgf("storage backend %v does not support database migrations", db.GetDBDriverType())
+		log.Error().Msg("storage backend does not support database migrations")
 		return nil, nil, ExitStatusMigrationError
 	}
 
