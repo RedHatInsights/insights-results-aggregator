@@ -57,4 +57,5 @@ debug = false
 log_level = ""
 logging_to_cloud_watch_enabled = false
 
-[cloudwatch]
+[metrics]
+namespace = "aggregator"
