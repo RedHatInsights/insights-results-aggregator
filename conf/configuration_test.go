@@ -192,6 +192,21 @@ func TestLoadStorageBackendConfigurationChangedFromEnvVar(t *testing.T) {
 	assert.Equal(t, "dvo_recommendations", storageCfg.Use)
 }
 
+// TestLoadStorageBackendConfigurationChangedFromEnvVar tests loading the
+// storage backend configuration subtree doesn't change from empty
+func TestLoadStorageBackendConfigurationNotChangedWhenEmpty(t *testing.T) {
+	os.Clearenv()
+
+	const configPath = "../tests/config1"
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE", "")
+
+	mustLoadConfiguration(configPath)
+
+	storageCfg := conf.GetStorageBackendConfiguration()
+	assert.Equal(t, "", storageCfg.Use)
+}
+
 // TestLoadOCPRecommendationsStorageConfiguration tests loading the OCP
 // recommendations storage configuration subtree
 func TestLoadOCPRecommendationsStorageConfiguration(t *testing.T) {
