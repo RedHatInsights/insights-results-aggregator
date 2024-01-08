@@ -47,6 +47,35 @@ type Migration struct {
 	StepDown Step
 }
 
+// InitDBSchema ensures that a given database schema exists.
+// If it already exists, no changes will be made to the database,
+// otherwise it will attempt to create the schema.
+func InitDBSchema(db *sql.DB, schema Schema) error {
+	return withTransaction(db, func(tx *sql.Tx) error {
+		if schema == "" {
+			schema = defaultDBSchema
+		}
+
+		// #nosec G201
+		_, err := tx.Exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %v;", schema))
+		if err != nil {
+			return err
+		}
+
+		var schemaExists bool
+		err = tx.QueryRow("SELECT EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = $1);", schema).Scan(&schemaExists)
+		if err != nil {
+			return err
+		}
+
+		if !schemaExists {
+			return fmt.Errorf("unable to create schema %v", schema)
+		}
+
+		return nil
+	})
+}
+
 // InitInfoTable ensures that the migration information table is created.
 // If it already exists, no changes will be made to the database.
 // Otherwise, a new migration information table will be created and initialized.
