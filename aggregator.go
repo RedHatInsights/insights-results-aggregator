@@ -122,23 +122,15 @@ func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendati
 	var dvoStorage storage.DVORecommendationsStorage
 	var err error
 
-	// try to initialize connection to storage
-	backend := conf.GetStorageBackendConfiguration().Use
-	switch backend {
-	case types.OCPRecommendationsStorage:
-		ocpStorage, err = storage.NewOCPRecommendationsStorage(ocpStorageCfg)
-		if err != nil {
-			log.Error().Err(err).Msg("storage.NewOCPRecommendationsStorage")
-			return nil, nil, err
-		}
-	case types.DVORecommendationsStorage:
-		dvoStorage, err = storage.NewDVORecommendationsStorage(dvoStorageCfg)
-		if err != nil {
-			log.Error().Err(err).Msg("storage.NewDVORecommendationsStorage")
-			return nil, nil, err
-		}
-	default:
-		return nil, nil, fmt.Errorf("Unknown storage backend %s", backend)
+	ocpStorage, err = storage.NewOCPRecommendationsStorage(ocpStorageCfg)
+	if err != nil {
+		log.Error().Err(err).Msg("storage.NewOCPRecommendationsStorage")
+		return nil, nil, err
+	}
+	dvoStorage, err = storage.NewDVORecommendationsStorage(dvoStorageCfg)
+	if err != nil {
+		log.Error().Err(err).Msg("storage.NewDVORecommendationsStorage")
+		return nil, nil, err
 	}
 
 	return ocpStorage, dvoStorage, nil
@@ -163,6 +155,16 @@ func prepareDBMigrations(dbStorage storage.Storage) int {
 		log.Info().Msg("Skipping migration for non-SQL database type")
 		return ExitStatusOK
 	}
+
+	dbConn, dbSchema := dbStorage.GetConnection(), dbStorage.GetDBSchema()
+
+	// ensure DB schema exists
+	if err := migration.InitDBSchema(dbConn, dbSchema); err != nil {
+		closeStorage(dbStorage)
+		log.Error().Err(err).Msg("Unable to initialize DB schema")
+		return ExitStatusPrepareDbError
+	}
+
 	// This is only used by some unit tests.
 	if autoMigrate {
 		if err := dbStorage.MigrateToLatest(); err != nil {
@@ -192,28 +194,39 @@ func prepareDB() int {
 	// TODO: when aggregator supports both storages at once, update the code below
 	// task to support both storages at once: https://issues.redhat.com/browse/CCXDEV-12316
 
-	ocpRecommendationsStorage, _, err := createStorage()
-
+	ocpRecommendationsStorage, dvoRecommendationsStorage, err := createStorage()
 	if err != nil {
 		log.Error().Err(err).Msg("Error creating storage")
 		return ExitStatusPrepareDbError
 	}
-	defer closeStorage(ocpRecommendationsStorage)
 
-	// Ensure that the DB is at the latest migration version.
-	if exitCode := prepareDBMigrations(ocpRecommendationsStorage); exitCode != ExitStatusOK {
-		return exitCode
+	if ocpRecommendationsStorage != nil {
+		defer closeStorage(ocpRecommendationsStorage)
+
+		// Ensure that the DB is at the latest migration version.
+		if exitCode := prepareDBMigrations(ocpRecommendationsStorage); exitCode != ExitStatusOK {
+			return exitCode
+		}
+
+		// Initialize the database.
+		err = ocpRecommendationsStorage.Init()
+		if err != nil {
+			log.Error().Err(err).Msg("DB initialization error")
+			return ExitStatusPrepareDbError
+		}
+
+		// temporarily print some information from DB because of limited access to DB
+		ocpRecommendationsStorage.PrintRuleDisableDebugInfo()
 	}
 
-	// Initialize the database.
-	err = ocpRecommendationsStorage.Init()
-	if err != nil {
-		log.Error().Err(err).Msg("DB initialization error")
-		return ExitStatusPrepareDbError
-	}
+	if dvoRecommendationsStorage != nil {
+		defer closeStorage(dvoRecommendationsStorage)
 
-	// temporarily print some information from DB because of limited access to DB
-	ocpRecommendationsStorage.PrintRuleDisableDebugInfo()
+		// Ensure that the DB is at the latest migration version.
+		if exitCode := prepareDBMigrations(dvoRecommendationsStorage); exitCode != ExitStatusOK {
+			return exitCode
+		}
+	}
 
 	return ExitStatusOK
 }
@@ -385,6 +398,7 @@ func getDBForMigrations() (storage.Storage, *sql.DB, int) {
 		return nil, nil, ExitStatusPrepareDbError
 	}
 
+	// migrations are allowed only if a single storage backend is selected
 	backend := conf.GetStorageBackendConfiguration().Use
 	switch backend {
 	case types.OCPRecommendationsStorage:
@@ -397,6 +411,13 @@ func getDBForMigrations() (storage.Storage, *sql.DB, int) {
 	}
 
 	dbConn := db.GetConnection()
+
+	// ensure DB schema is created
+	if err := migration.InitDBSchema(dbConn, db.GetDBSchema()); err != nil {
+		closeStorage(db)
+		log.Error().Err(err).Msg("Unable to initialize DB schema")
+		return nil, nil, ExitStatusPrepareDbError
+	}
 
 	if err := migration.InitInfoTable(dbConn, db.GetDBSchema()); err != nil {
 		closeStorage(db)

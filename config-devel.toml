@@ -45,7 +45,7 @@ pg_password = "postgres"
 pg_host = "localhost"
 pg_port = 5432
 pg_db_name = "dvo"
-pg_params = ""
+pg_params = "sslmode=disable"
 log_sql_queries = true
 type = "sql"
 
