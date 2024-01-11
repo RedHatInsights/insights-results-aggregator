@@ -30,6 +30,8 @@ jobs:
         run: ./bdd_runner.sh aggregator-tests .
       - name: Set container ID as env
         run: echo "BDD_CONTAINER=$(docker ps | grep 'insights-behavioral-spec:latest' | cut -d ' ' -f 1)" >> $GITHUB_ENV
+      - name: Debug
+        run: docker exec -u root "$BDD_CONTAINER" /bin/bash -c "tree /insights-behavioral-spec/logs"
       - name: Copy logs from container to host
         run: docker cp "$BDD_CONTAINER:/insights-behavioral-spec/logs" .
       - name: Store service logs
