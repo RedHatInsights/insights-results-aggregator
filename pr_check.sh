@@ -22,7 +22,7 @@ set -exv
 APP_NAME="ccx-data-pipeline"  # name of app-sre "application" folder this component lives in
 # TODO set it to "insights-stage" once we have dvo-writer/dvo-extractor stage deploy config
 # TODO set it back to "insights-production" once we have dvo deployed to prod
-REF_ENV="ephemeral"
+REF_ENV="insights-ephemeral"
 # NOTE: insights-results-aggregator contains deployment for multiple services
 #       for pull requests we need latest git PR version of these components to be
 #       deployed to ephemeral env and overriding resource template --set-template-ref.
