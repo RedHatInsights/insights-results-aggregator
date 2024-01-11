@@ -34,6 +34,9 @@ jobs:
         run: docker exec -u root "$BDD_CONTAINER" /bin/bash -c "ls -R /insights-behavioral-spec/logs"
       - name: Copy logs from container to host
         run: docker cp "$BDD_CONTAINER:/insights-behavioral-spec/logs" .
+      - name: Rename logs
+        # Otherwise the upload-artifact action will complain
+        run: for filename in logs/insights-results-aggregator/*; do mv -n "$filename" "$(echo "$filename" | sed -e 's/["><]//g')";  done
       - name: Store service logs
         uses: actions/upload-artifact@v3
         with:
