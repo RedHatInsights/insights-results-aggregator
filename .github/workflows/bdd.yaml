@@ -28,6 +28,10 @@ jobs:
         run: wget -O bdd_runner.sh https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/run_in_docker.sh && chmod +x bdd_runner.sh
       - name: Run BDD
         run: ./bdd_runner.sh aggregator-tests .
+      - name: Set container ID as env
+        run: echo "BDD_CONTAINER=$(docker ps | grep 'insights-behavioral-spec:latest' | cut -d ' ' -f 1)" >> $GITHUB_ENV
+      - name: Copy logs from container to host
+        run: docker cp "$BDD_CONTAINER:/insights-behavioral-spec/logs" .
       - name: Store service logs
         uses: actions/upload-artifact@v3
         with:
