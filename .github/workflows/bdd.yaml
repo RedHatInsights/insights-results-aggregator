@@ -28,3 +28,9 @@ jobs:
         run: wget -O bdd_runner.sh https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/run_in_docker.sh && chmod +x bdd_runner.sh
       - name: Run BDD
         run: ./bdd_runner.sh aggregator-tests .
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: store-logs
+          path: |
+            logs/insights-results-aggregator
