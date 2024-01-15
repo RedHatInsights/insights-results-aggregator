@@ -122,6 +122,26 @@ func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendati
 	var dvoStorage storage.DVORecommendationsStorage
 	var err error
 
+	backend := conf.GetStorageBackendConfiguration().Use
+	switch backend {
+	case types.OCPRecommendationsStorage:
+		ocpStorage, err = storage.NewOCPRecommendationsStorage(ocpStorageCfg)
+		if err != nil {
+			log.Error().Err(err).Msg("storage.NewOCPRecommendationsStorage")
+			return nil, nil, err
+		}
+		return ocpStorage, nil, nil
+	case types.DVORecommendationsStorage:
+		dvoStorage, err = storage.NewDVORecommendationsStorage(dvoStorageCfg)
+		if err != nil {
+			log.Error().Err(err).Msg("storage.NewDVORecommendationsStorage")
+			return nil, nil, err
+		}
+		return nil, dvoStorage, nil
+	default:
+		log.Debug().Msg("no single storage selected, initializing connection to both storages")
+	}
+
 	ocpStorage, err = storage.NewOCPRecommendationsStorage(ocpStorageCfg)
 	if err != nil {
 		log.Error().Err(err).Msg("storage.NewOCPRecommendationsStorage")
