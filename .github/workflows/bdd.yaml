@@ -29,15 +29,20 @@ jobs:
       - name: Run BDD
         run: ./bdd_runner.sh aggregator-tests .
       - name: Set container ID as env
+        if: always()
         run: echo "BDD_CONTAINER=$(docker ps | grep 'insights-behavioral-spec:latest' | cut -d ' ' -f 1)" >> $GITHUB_ENV
       - name: Debug
+        if: always()
         run: docker exec -u root "$BDD_CONTAINER" /bin/bash -c "ls -R /insights-behavioral-spec/logs"
       - name: Copy logs from container to host
+        if: always()
         run: docker cp "$BDD_CONTAINER:/insights-behavioral-spec/logs" .
       - name: Rename logs
+        if: always()
         # Otherwise the upload-artifact action will complain
         run: for filename in logs/insights-results-aggregator/*; do mv -n "$filename" "$(echo "$filename" | sed -e 's/["><:]//g')";  done
       - name: Store service logs
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: store-logs
