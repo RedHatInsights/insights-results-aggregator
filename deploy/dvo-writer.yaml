@@ -197,6 +197,8 @@ objects:
                   optional: true
             - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
               value: ${ENV_NAME}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
+              value: "/openapi/openapi.json"
           image: ${IMAGE}:${IMAGE_TAG}
           livenessProbe:
             failureThreshold: 10
