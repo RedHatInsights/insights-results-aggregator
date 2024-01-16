@@ -227,6 +227,8 @@ objects:
               memory: ${DVO_WRITER_MEMORY_REQUEST}
     database:
       sharedDbAppName: ccx-insights-results
+    dependencies:
+      - ccx-insights-results
     kafkaTopics:
       - replicas: 3
         partitions: 1
