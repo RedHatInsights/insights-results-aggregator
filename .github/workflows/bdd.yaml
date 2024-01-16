@@ -27,7 +27,7 @@ jobs:
       - name: Retrieve BDD runner
         run: wget -O bdd_runner.sh https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/run_in_docker.sh && chmod +x bdd_runner.sh
       - name: Run BDD
-        run: exit 1
+        run: ./bdd_runner.sh aggregator-tests .
       - name: Set container ID as env
         if: always()
         run: echo "BDD_CONTAINER=$(docker ps | grep 'insights-behavioral-spec:latest' | cut -d ' ' -f 1)" >> $GITHUB_ENV
