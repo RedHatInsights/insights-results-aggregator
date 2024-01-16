@@ -31,6 +31,7 @@ data:
           }
         ]
       },
+      "description": "",
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
@@ -39,6 +40,7 @@ data:
       "panels": [
         {
           "datasource": {
+            "type": "prometheus",
             "uid": "$datasource"
           },
           "fieldConfig": {
@@ -73,8 +75,8 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 5,
-            "w": 3,
+            "h": 6,
+            "w": 6,
             "x": 0,
             "y": 0
           },
@@ -101,7 +103,8 @@ data:
               "datasource": {
                 "uid": "$datasource"
               },
-              "expr": "sum (up{service=\"ccx-insights-results-db-writer-prometheus-exporter\", namespace=\"$namespace\"})",
+              "editorMode": "code",
+              "expr": "sum (up{service=~\"$services\", namespace=\"$namespace\"}) by (container)",
               "format": "time_series",
               "groupBy": [
                 {
@@ -119,6 +122,7 @@ data:
               ],
               "instant": false,
               "intervalFactor": 1,
+              "legendFormat": "{{container}}",
               "orderByTime": "ASC",
               "policy": "default",
               "refId": "A",
@@ -145,63 +149,131 @@ data:
           "type": "stat"
         },
         {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
           "datasource": {
+            "type": "prometheus",
             "uid": "$datasource"
           },
           "fieldConfig": {
             "defaults": {
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
+              "links": []
             },
             "overrides": []
           },
+          "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
-            "h": 5,
-            "w": 6,
-            "x": 3,
+            "h": 6,
+            "w": 9,
+            "x": 6,
             "y": 0
           },
-          "id": 18,
-          "options": {
-            "colorMode": "background",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "horizontal",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
+          "hiddenSeries": false,
+          "id": 6,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
           },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
           "pluginVersion": "9.3.8",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
           "targets": [
             {
               "datasource": {
                 "uid": "$datasource"
               },
-              "expr": "sum(increase(consuming_errors{namespace=\"$namespace\"}[1w]))",
-              "interval": "",
-              "legendFormat": "",
-              "refId": "A"
+              "editorMode": "code",
+              "expr": "sum(\n  increase(successful_messages_processing_time_sum{service=~\"$services\",namespace=\"$namespace\"}[1m])\n) by (container)\n/\nsum(\n  increase(successful_messages_processing_time_count{service=~\"$services\",namespace=\"$namespace\"}[1m])\n) by (container)",
+              "format": "time_series",
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "interval": "1m",
+              "intervalFactor": 1,
+              "legendFormat": "{{container}}",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "range": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
             }
           ],
-          "title": "Consuming Errors (Past Week)",
-          "type": "stat"
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Average Successful Message Processing Time",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": false
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
         },
         {
           "aliasColors": {},
@@ -209,6 +281,134 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 6,
+            "w": 9,
+            "x": 15,
+            "y": 0
+          },
+          "hiddenSeries": false,
+          "id": 4,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.3.8",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$datasource"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(consuming_errors{namespace=\"$namespace\", service=~\"$services\"}[1m])) by (container)",
+              "format": "time_series",
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "instant": false,
+              "interval": "1m",
+              "intervalFactor": 1,
+              "legendFormat": "{{container}}",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Consuming Errors",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
             "uid": "$datasource"
           },
           "decimals": 2,
@@ -224,10 +424,10 @@ data:
           "fillGradient": 0,
           "grid": {},
           "gridPos": {
-            "h": 5,
-            "w": 24,
+            "h": 6,
+            "w": 8,
             "x": 0,
-            "y": 5
+            "y": 6
           },
           "hiddenSeries": false,
           "id": 14,
@@ -237,8 +437,8 @@ data:
             "current": true,
             "max": true,
             "min": false,
-            "rightSide": true,
-            "show": true,
+            "rightSide": false,
+            "show": false,
             "sort": "current",
             "sortDesc": true,
             "total": false,
@@ -265,12 +465,14 @@ data:
               "datasource": {
                 "uid": "$datasource"
               },
-              "expr": "sum (container_memory_working_set_bytes{namespace=\"$namespace\",pod=~\"ccx-insights-results-db-writer-.*\"}) by (pod)",
+              "editorMode": "code",
+              "expr": "sum (container_memory_working_set_bytes{namespace=\"$namespace\",pod=~\"$services\"}) by (pod)",
               "format": "time_series",
               "interval": "10s",
               "intervalFactor": 1,
               "legendFormat": "{{ pod }}",
               "metric": "container_memory_usage:sort_desc",
+              "range": true,
               "refId": "A",
               "step": 10
             }
@@ -312,6 +514,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
+            "type": "prometheus",
             "uid": "$datasource"
           },
           "decimals": 3,
@@ -327,10 +530,10 @@ data:
           "fillGradient": 0,
           "grid": {},
           "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 10
+            "h": 6,
+            "w": 8,
+            "x": 8,
+            "y": 6
           },
           "height": "",
           "hiddenSeries": false,
@@ -342,7 +545,7 @@ data:
             "max": true,
             "min": false,
             "rightSide": false,
-            "show": true,
+            "show": false,
             "sort": "current",
             "sortDesc": true,
             "total": false,
@@ -369,12 +572,14 @@ data:
               "datasource": {
                 "uid": "$datasource"
               },
-              "expr": "sum (rate (container_cpu_usage_seconds_total{namespace=\"$namespace\",container=\"ccx-insights-results-db-writer\"}[1m])) by (pod)",
+              "editorMode": "code",
+              "expr": "sum (rate (container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=~\"$services\"}[1m])) by (pod)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 1,
               "legendFormat": "{{ pod }}",
               "metric": "container_cpu",
+              "range": true,
               "refId": "A",
               "step": 10
             }
@@ -417,6 +622,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": {
+            "type": "prometheus",
             "uid": "$datasource"
           },
           "fieldConfig": {
@@ -428,10 +634,10 @@ data:
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 12,
-            "y": 10
+            "h": 6,
+            "w": 8,
+            "x": 16,
+            "y": 6
           },
           "hiddenSeries": false,
           "id": 10,
@@ -465,16 +671,18 @@ data:
               "datasource": {
                 "uid": "$datasource"
               },
-              "expr": "sum(kafka_consumergroup_group_lag{topic=~\".*ccx.ocp.results\", group=\"ccx_data_pipeline_app\"}) by (topic, group)",
+              "editorMode": "code",
+              "expr": "sum(kafka_consumergroup_group_lag{topic=~\".*ccx.ocp.results\", group=~\"$consumer_groups\"}) by (topic, group)",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "topic: {{topic}} group: {{group}}",
+              "legendFormat": "{{group}}",
+              "range": true,
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeRegions": [],
-          "title": "Kafka lag",
+          "title": "Kafka lag with ccx.ocp.results",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -510,7 +718,7 @@ data:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "P21873DB8DE1CE799"
+            "uid": "$datasource"
           },
           "fieldConfig": {
             "defaults": {
@@ -522,9 +730,359 @@ data:
           "fillGradient": 0,
           "gridPos": {
             "h": 8,
-            "w": 6,
-            "x": 18,
-            "y": 10
+            "w": 8,
+            "x": 0,
+            "y": 12
+          },
+          "hiddenSeries": false,
+          "id": 2,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": true,
+            "show": true,
+            "total": true,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.3.8",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$datasource"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(consumed_messages{service=~\"$services\",namespace=\"$namespace\"}[1m])) by (container)",
+              "format": "time_series",
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "instant": false,
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{container}}",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Consumed Messages",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 12
+          },
+          "hiddenSeries": false,
+          "id": 20,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": true,
+            "show": true,
+            "total": true,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.3.8",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$datasource"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(written_reports{service=~\"$services\",namespace=\"$namespace\"}[1m]))  by (container)",
+              "format": "time_series",
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "intervalFactor": 1,
+              "legendFormat": "{{container}}",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "range": true,
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Written Reports",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 12
+          },
+          "hiddenSeries": false,
+          "id": 21,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": true,
+            "show": true,
+            "total": true,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.3.8",
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "$datasource"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(produced_messages{service=~\"$services\",namespace=\"$namespace\"}[1m])) by (container)",
+              "hide": false,
+              "legendFormat": "{{container}}",
+              "range": true,
+              "refId": "C"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Produced Messages",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P21873DB8DE1CE799"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 6,
+            "w": 4,
+            "x": 12,
+            "y": 20
           },
           "hiddenSeries": false,
           "id": 19,
@@ -598,548 +1156,6 @@ data:
           "yaxis": {
             "align": false
           }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 0,
-            "y": 18
-          },
-          "hiddenSeries": false,
-          "id": 2,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": true,
-            "show": true,
-            "total": true,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.3.8",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(increase(consumed_messages{service=\"ccx-insights-results-db-writer-prometheus-exporter\",namespace=\"$namespace\"}[1m]))",
-              "format": "time_series",
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "instant": false,
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "consumed messages",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "A",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            },
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(increase(written_reports{service=\"ccx-insights-results-db-writer-prometheus-exporter\",namespace=\"$namespace\"}[1m]))",
-              "format": "time_series",
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "intervalFactor": 1,
-              "legendFormat": "written reports",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "B",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Consumed Messages & Written Reports",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 12,
-            "y": 18
-          },
-          "hiddenSeries": false,
-          "id": 4,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.3.8",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "increase(consuming_errors{namespace=\"$namespace\"}[1m])",
-              "format": "time_series",
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "instant": false,
-              "interval": "1m",
-              "intervalFactor": 1,
-              "legendFormat": "errors",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "A",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Consuming Errors",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "description": "Should normally be 0, because we use it only for testing",
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 0,
-            "y": 27
-          },
-          "hiddenSeries": false,
-          "id": 8,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.3.8",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "increase(produced_messages{service=\"ccx-insights-results-db-writer-prometheus-exporter\",namespace=\"$namespace\"}[1m])",
-              "format": "time_series",
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "interval": "1m",
-              "intervalFactor": 1,
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "A",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Produced Messages",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "logBase": 1,
-              "min": "0",
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 12,
-            "y": 27
-          },
-          "hiddenSeries": false,
-          "id": 6,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": false,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.3.8",
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$datasource"
-              },
-              "expr": "sum(\n  increase(successful_messages_processing_time_sum{service=\"ccx-insights-results-db-writer-prometheus-exporter\",namespace=\"$namespace\"}[1m])\n) by (service)\n/\nsum(\n  increase(successful_messages_processing_time_count{service=\"ccx-insights-results-db-writer-prometheus-exporter\",namespace=\"$namespace\"}[1m])\n) by (service)",
-              "format": "time_series",
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "interval": "1m",
-              "intervalFactor": 1,
-              "legendFormat": "",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "A",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "Average Successful Message Processing Time",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "s",
-              "logBase": 1,
-              "show": true
-            },
-            {
-              "format": "short",
-              "logBase": 1,
-              "show": false
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
         }
       ],
       "refresh": false,
@@ -1192,6 +1208,48 @@ data:
             "query": "ccx-data-pipeline-stage,ccx-data-pipeline-prod",
             "skipUrlSync": false,
             "type": "custom"
+          },
+          {
+            "current": {
+              "selected": false,
+              "text": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*",
+              "value": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*"
+            },
+            "description": "The RegEx to match the services to monitor",
+            "hide": 0,
+            "label": "services",
+            "name": "services",
+            "options": [
+              {
+                "selected": true,
+                "text": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*",
+                "value": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*"
+              }
+            ],
+            "query": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*",
+            "skipUrlSync": false,
+            "type": "textbox"
+          },
+          {
+            "current": {
+              "selected": false,
+              "text": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app",
+              "value": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app"
+            },
+            "description": "The RegEx to match the consumer groups to monitor",
+            "hide": 0,
+            "label": "consumer_groups",
+            "name": "consumer_groups",
+            "options": [
+              {
+                "selected": true,
+                "text": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app",
+                "value": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app"
+              }
+            ],
+            "query": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app",
+            "skipUrlSync": false,
+            "type": "textbox"
           }
         ]
       },
@@ -1225,8 +1283,8 @@ data:
         ]
       },
       "timezone": "",
-      "title": "CCX Insights Results DB Writer",
+      "title": "CCX Writers",
       "uid": "C4vK5h2Wk",
-      "version": 2,
+      "version": 1,
       "weekStart": ""
     }
