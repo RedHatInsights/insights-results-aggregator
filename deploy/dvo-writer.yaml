@@ -249,6 +249,8 @@ objects:
               memory: ${DVO_WRITER_MEMORY_REQUEST}
     database:
       sharedDbAppName: ccx-insights-results
+    # This dependency is also specified here because clowder syntax
+    # requires it when using `sharedDbAppName`.
     dependencies:
       - ccx-insights-results
     kafkaTopics:
