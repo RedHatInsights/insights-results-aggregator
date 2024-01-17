@@ -154,13 +154,6 @@ func LoadConfiguration(defaultConfigFile string) error {
 		return err
 	}
 
-	// manage default storage backend
-	if Config.StorageBackend.Use == "" {
-		// don't use right now as it breaks BDD:
-		// fmt.Println("Setting default storage backend")
-		Config.StorageBackend.Use = defaultStorageBackend
-	}
-
 	// everything's should be ok
 	return nil
 }

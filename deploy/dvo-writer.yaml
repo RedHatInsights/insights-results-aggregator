@@ -155,6 +155,12 @@ objects:
               value: ${PG_PARAMS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE
               value: "sql"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER
+              value: postgres
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS
+              value: ${PG_PARAMS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
+              value: "sql"
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
               value: ${LOG_LEVEL}
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
@@ -197,6 +203,18 @@ objects:
                   optional: true
             - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
               value: ${ENV_NAME}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
+              value: ":9000"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
+              value: "${DVO_WRITER_API_PREFIX}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
+              value: "/openapi/openapi.json"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG
+              value: "true"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH
+              value: "false"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH_TYPE
+              value: "xrh"
           image: ${IMAGE}:${IMAGE_TAG}
           livenessProbe:
             failureThreshold: 10

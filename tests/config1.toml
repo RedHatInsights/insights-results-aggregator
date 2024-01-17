@@ -41,7 +41,7 @@ pg_params = ""
 type = "sql"
 
 [storage_backend]
-use = "ocp_recommendations"
+use = ""
 
 [redis]
 database = 0

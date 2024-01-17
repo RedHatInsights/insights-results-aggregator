@@ -35,7 +35,6 @@ var (
 func startServer() error {
 	defer finishServerInstanceInitialization()
 
-	// right now, just the OCP recommendations storage are handled properly
 	ocpRecommendationsStorage, _, err := createStorage()
 	if err != nil {
 		return err

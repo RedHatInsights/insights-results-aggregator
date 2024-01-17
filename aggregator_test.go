@@ -89,6 +89,55 @@ func TestStartService(t *testing.T) {
 	*main.AutoMigratePtr = false
 }
 
+func TestStartServiceDVOStorage(t *testing.T) {
+	// It is necessary to perform migrations for this test
+	// because the service won't run on top of an empty DB.
+	*main.AutoMigratePtr = true
+
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
+		os.Clearenv()
+		mustLoadConfiguration("./tests/tests")
+
+		setEnvSettings(t, map[string]string{
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE": "dvo_recommendations",
+		})
+
+		go func() {
+			main.StartService()
+		}()
+
+		errCode := main.StopService()
+		assert.Equal(t, main.ExitStatusOK, errCode)
+	}, testsTimeout)
+
+	*main.AutoMigratePtr = false
+}
+
+// TestStartServiceBothStorages tests aggregator service config (no backend to use specified == use both)
+func TestStartServiceBothStorages(t *testing.T) {
+	// It is necessary to perform migrations for this test
+	// because the service won't run on top of an empty DB.
+	*main.AutoMigratePtr = true
+
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
+		os.Clearenv()
+		mustLoadConfiguration("./tests/tests")
+
+		setEnvSettings(t, map[string]string{
+			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE": "",
+		})
+
+		go func() {
+			main.StartService()
+		}()
+
+		errCode := main.StopService()
+		assert.Equal(t, main.ExitStatusOK, errCode)
+	}, testsTimeout)
+
+	*main.AutoMigratePtr = false
+}
+
 func TestStartService_DBError(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		os.Clearenv()
@@ -241,6 +290,24 @@ func TestGetDBForMigrations(t *testing.T) {
 	defer ira_helpers.MustCloseStorage(t, db)
 
 	row := dbConn.QueryRow("SELECT version FROM migration_info;")
+	var version migration.Version
+	err := row.Scan(&version)
+	assert.NoError(t, err, "unable to read version from migration info table")
+}
+
+func TestGetDBForMigrationsDVO(t *testing.T) {
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
+
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE": "dvo_recommendations",
+	})
+
+	db, dbConn, exitCode := main.GetDBForMigrations()
+	assert.Equal(t, main.ExitStatusOK, exitCode)
+	defer ira_helpers.MustCloseStorage(t, db)
+
+	row := dbConn.QueryRow("SELECT version FROM dvo.migration_info;")
 	var version migration.Version
 	err := row.Scan(&version)
 	assert.NoError(t, err, "unable to read version from migration info table")

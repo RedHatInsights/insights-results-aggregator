@@ -57,6 +57,8 @@ objects:
             - name: execute-migrations
               image: ${IMAGE}:${IMAGE_TAG}
               env:
+                - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE
+                  value: "ocp_recommendations"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
                   value: "false"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
@@ -113,6 +115,8 @@ objects:
                 - migration
                 - latest
           env:
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE
+              value: "ocp_recommendations"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
               value: "${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__TIMEOUT
@@ -257,6 +261,12 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS
               value: ${PG_PARAMS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
+              value: "sql"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__DB_DRIVER
+              value: postgres
+            - name: INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PARAMS
+              value: ${PG_PARAMS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE
               value: "sql"
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
               value: ${LOG_LEVEL}

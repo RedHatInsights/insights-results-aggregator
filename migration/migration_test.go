@@ -79,6 +79,70 @@ func TestMigrationInit(t *testing.T) {
 	helpers.FailOnError(t, err)
 }
 
+func TestMigrationInitDBSchema(t *testing.T) {
+	db, closer := ira_helpers.PrepareDB(t)
+	defer closer()
+
+	dbConn := db.GetConnection()
+	dbSchema := db.GetDBSchema()
+	err := migration.InitDBSchema(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+
+	err = migration.InitInfoTable(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+
+	_, err = migration.GetDBVersion(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+}
+
+func TestMigrationInitDBSchemaMultipleTimes(t *testing.T) {
+	db, closer := ira_helpers.PrepareDB(t)
+	defer closer()
+
+	dbConn := db.GetConnection()
+	dbSchema := db.GetDBSchema()
+	err := migration.InitDBSchema(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+
+	err = migration.InitInfoTable(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+
+	_, err = migration.GetDBVersion(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+
+	// running again must be idempotent
+	err = migration.InitDBSchema(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+
+	_, err = migration.GetDBVersion(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+}
+
+// TestMigrationInitDBSchemaEmptySchema must work with empty schema (uses default "public")
+func TestMigrationInitDBSchemaEmptySchema(t *testing.T) {
+	db, closer := ira_helpers.PrepareDB(t)
+	defer closer()
+
+	dbConn := db.GetConnection()
+	err := migration.InitDBSchema(dbConn, "")
+	helpers.FailOnError(t, err)
+
+	err = migration.InitInfoTable(dbConn, "")
+	helpers.FailOnError(t, err)
+
+	_, err = migration.GetDBVersion(dbConn, "")
+	helpers.FailOnError(t, err)
+}
+
+func TestMigrationInitDBSchemaWrongSchema(t *testing.T) {
+	db, closer := ira_helpers.PrepareDB(t)
+	defer closer()
+
+	dbConn := db.GetConnection()
+	err := migration.InitDBSchema(dbConn, "-1")
+	assert.Error(t, err)
+}
+
 // TestMigrationReInit checks that an attempt to re-initialize an already initialized
 // migration info table will simply result in a no-op without any error.
 func TestMigrationReInit(t *testing.T) {
