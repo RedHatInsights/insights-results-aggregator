@@ -73,6 +73,8 @@ objects:
                   value: "sql"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
                   value: ${CLOUDWATCH_ENABLED}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_SENTRY_ENABLED
+                  value: ${SENTRY_ENABLED}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
                   value: ${CLOUDWATCH_DEBUG}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
@@ -339,6 +341,9 @@ parameters:
   value: "false"
   required: true
 - name: CLOUDWATCH_ENABLED
+  value: "true"
+  required: true
+- name: SENTRY_ENABLED
   value: "true"
   required: true
 - name: CREATE_STREAM_IF_NOT_EXISTS
