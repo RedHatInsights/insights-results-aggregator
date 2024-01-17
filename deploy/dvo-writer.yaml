@@ -205,6 +205,8 @@ objects:
               value: ${ENV_NAME}
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
               value: "/openapi/openapi.json"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
+              value: ":9000"
           image: ${IMAGE}:${IMAGE_TAG}
           livenessProbe:
             failureThreshold: 10
