@@ -49,7 +49,7 @@ var migrationClusterRuleUserFeedback = migration.Migration{
 					updated_at TIMESTAMP NOT NULL,
 
 					PRIMARY KEY(cluster_id, rule_id, user_id),
-					CONSTRAINT fk_cluster_rule_feedback
+					CONSTRAINT fk_cluster_rule_feedback_report_cluster
 					FOREIGN KEY (cluster_id) REFERENCES report(cluster) ON DELETE CASCADE
 )
 `)
@@ -59,7 +59,7 @@ var migrationClusterRuleUserFeedback = migration.Migration{
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		_, err := tx.Exec(`
 				ALTER TABLE cluster_rule_user_feedback
-					ADD CONSTRAINT fk_cluster_rule_feedback FOREIGN KEY(rule_id) REFERENCES rule(module) ON DELETE CASCADE
+					ADD CONSTRAINT fk_cluster_rule_feedback_report_cluster FOREIGN KEY(rule_id) REFERENCES rule(module) ON DELETE CASCADE
 				`)
 		return err
 	},
