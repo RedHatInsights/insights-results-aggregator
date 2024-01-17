@@ -25,7 +25,7 @@ var mig0006AddOnDeleteCascade = migration.NewUpdateTableMigration(
 	`
 		CREATE TABLE rule_error_key (
 			"error_key"     VARCHAR NOT NULL,
-			"rule_module"   VARCHAR NOT NULL REFERENCES rule(module),
+			"rule_module"   VARCHAR NOT NULL,
 			"condition"     VARCHAR NOT NULL,
 			"description"   VARCHAR NOT NULL,
 			"impact"        INTEGER NOT NULL,
@@ -33,7 +33,9 @@ var mig0006AddOnDeleteCascade = migration.NewUpdateTableMigration(
 			"publish_date"  TIMESTAMP NOT NULL,
 			"active"        BOOLEAN NOT NULL,
 			"generic"       VARCHAR NOT NULL,
-			PRIMARY KEY("error_key", "rule_module")
+			PRIMARY KEY("error_key", "rule_module"),
+			CONSTRAINT fk_rule_error_key
+        		FOREIGN KEY ("rule_module") REFERENCES rule("module")
 		)
 		`,
 	nil,
@@ -48,7 +50,9 @@ var mig0006AddOnDeleteCascade = migration.NewUpdateTableMigration(
 			"publish_date"  TIMESTAMP NOT NULL,
 			"active"        BOOLEAN NOT NULL,
 			"generic"       VARCHAR NOT NULL,
-			PRIMARY KEY("error_key", "rule_module")
+			PRIMARY KEY("error_key", "rule_module"),
+			CONSTRAINT fk_rule_error_key
+        		FOREIGN KEY ("rule_module") REFERENCES rule("module") ON DELETE CASCADE
 		)
 	`,
 )
