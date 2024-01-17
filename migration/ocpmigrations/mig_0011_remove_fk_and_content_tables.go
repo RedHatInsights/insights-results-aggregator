@@ -59,7 +59,7 @@ var migrationClusterRuleUserFeedback = migration.Migration{
 	StepDown: func(tx *sql.Tx, driver types.DBDriver) error {
 		_, err := tx.Exec(`
 				ALTER TABLE cluster_rule_user_feedback
-					ADD CONSTRAINT cluster_rule_user_feedback_cluster_id_fkey FOREIGN KEY(rule_id) REFERENCES rule(module) ON DELETE CASCADE
+					ADD CONSTRAINT cluster_rule_user_feedback_rule_id_fkey FOREIGN KEY(rule_id) REFERENCES rule(module) ON DELETE CASCADE
 				`)
 		return err
 	},
