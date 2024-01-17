@@ -206,13 +206,13 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
               value: ":9000"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
-              value: "${CW_API_PREFIX}"
+              value: "${DVO_WRITER_API_PREFIX}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
               value: "/openapi/openapi.json"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG
-              value: "${DEBUG}"
+              value: "true"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH
-              value: "${AUTH}"
+              value: "false"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH_TYPE
               value: "xrh"
           image: ${IMAGE}:${IMAGE_TAG}
