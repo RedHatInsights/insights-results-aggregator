@@ -181,6 +181,13 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error 
 				log.Error().Err(err).Msg("Unable to write consumer error to storage")
 			}
 		} else {
+			// Troubleshooting CCXDEV-12426
+			if consumer == nil {
+				log.Debug().Msg("consumer is nil")
+			}
+			if msg == nil {
+				log.Debug().Msg("msg is nil")
+			}
 			logMessageError(consumer, msg, &message, unexpectedStorageType, errors.New("consumer error could not be stored"))
 		}
 		consumer.sendDeadLetter(msg)

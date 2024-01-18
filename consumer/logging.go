@@ -84,6 +84,13 @@ func logUnparsedMessageError(consumer *KafkaConsumer, originalMessage *sarama.Co
 }
 
 func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string, err error) {
+	// Troubleshooting CCXDEV-12426
+	if parsedMessage.Organization == nil {
+		log.Debug().Msg("*parsedMessage.Organization is nil")
+	}
+	if parsedMessage.ClusterName == nil {
+		log.Debug().Msg("parsedMessage.ClusterName is nil")
+	}
 	log.Error().
 		Int(offsetKey, int(originalMessage.Offset)).
 		Str(topicKey, consumer.Configuration.Topic).
