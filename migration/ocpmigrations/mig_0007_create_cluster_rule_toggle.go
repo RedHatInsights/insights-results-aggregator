@@ -32,7 +32,7 @@ var mig0007CreateClusterRuleToggle = migration.Migration{
 				enabled_at TIMESTAMP NULL,
 				updated_at TIMESTAMP NOT NULL,
 
-				CHECK (disabled >= 0 AND disabled <= 1),
+				disabled_check SMALLINT CHECK (disabled >= 0 AND disabled <= 1),
 				PRIMARY KEY(cluster_id, rule_id, user_id)
 			)`)
 		return err

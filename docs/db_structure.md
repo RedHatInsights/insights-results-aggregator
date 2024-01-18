@@ -108,9 +108,11 @@ CREATE TABLE cluster_rule_user_feedback (
     updated_at  TIMESTAMP NOT NULL,
 
     PRIMARY KEY(cluster_id, rule_id, user_id, error_key),
+    CONSTRAINT cluster_rule_user_feedback_cluster_id_fkey
     FOREIGN KEY (cluster_id)
         REFERENCES report(cluster)
         ON DELETE CASCADE,
+    CONSTRAINT cluster_rule_user_feedback_rule_id_fkey
     FOREIGN KEY (rule_id)
         REFERENCES rule(module)
         ON DELETE CASCADE
@@ -130,7 +132,7 @@ CREATE TABLE cluster_rule_toggle (
     enabled_at  TIMESTAMP NULL,
     updated_at  TIMESTAMP NOT NULL,
 
-    CHECK (disabled >= 0 AND disabled <= 1),
+    disabled_check SMALLINT CHECK (disabled >= 0 AND disabled <= 1),
 
     PRIMARY KEY(cluster_id, rule_id, user_id)
 )

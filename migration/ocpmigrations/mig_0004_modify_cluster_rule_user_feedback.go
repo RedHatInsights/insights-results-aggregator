@@ -51,10 +51,12 @@ var mig0004ModifyClusterRuleUserFeedback = migration.NewUpdateTableMigration(
 			updated_at TIMESTAMP NOT NULL,
 
 			PRIMARY KEY(cluster_id, rule_id, user_id),
-			FOREIGN KEY (cluster_id)
+			CONSTRAINT cluster_rule_user_feedback_cluster_id_fkey
+				FOREIGN KEY (cluster_id)
 				REFERENCES report(cluster)
 				ON DELETE CASCADE,
-			FOREIGN KEY (rule_id)
+			CONSTRAINT cluster_rule_user_feedback_rule_id_fkey
+				FOREIGN KEY (rule_id)
 				REFERENCES rule(module)
 				ON DELETE CASCADE
 		);
