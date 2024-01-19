@@ -122,8 +122,8 @@ func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendati
 	var dvoStorage storage.DVORecommendationsStorage
 	var err error
 
-	// create any storage we have credentials for
-	if ocpStorageCfg.Driver != "" {
+	// create any storage we have configured
+	if ocpStorageCfg.Type != "" {
 		ocpStorage, err = storage.NewOCPRecommendationsStorage(ocpStorageCfg)
 		if err != nil {
 			log.Error().Err(err).Msg("storage.NewOCPRecommendationsStorage")
@@ -131,7 +131,7 @@ func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendati
 		}
 	}
 
-	if dvoStorageCfg.Driver != "" {
+	if dvoStorageCfg.Type != "" {
 		dvoStorage, err = storage.NewDVORecommendationsStorage(dvoStorageCfg)
 		if err != nil {
 			log.Error().Err(err).Msg("storage.NewDVORecommendationsStorage")
