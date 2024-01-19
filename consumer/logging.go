@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -31,27 +32,11 @@ func printableRequestID(message *incomingMessage) string {
 }
 
 func logMessageDebug(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string) {
-	log.Debug().
-		Int(offsetKey, int(originalMessage.Offset)).
-		Int(partitionKey, int(originalMessage.Partition)).
-		Str(topicKey, consumer.Configuration.Topic).
-		Int(organizationKey, int(*parsedMessage.Organization)).
-		Str(clusterKey, string(*parsedMessage.ClusterName)).
-		Int(versionKey, int(parsedMessage.Version)).
-		Str(requestIDKey, printableRequestID(parsedMessage)).
-		Msg(event)
+	fillEvent(log.Debug(), consumer, originalMessage, parsedMessage).Msg(event)
 }
 
 func logMessageInfo(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string) {
-	log.Info().
-		Int(offsetKey, int(originalMessage.Offset)).
-		Int(partitionKey, int(originalMessage.Partition)).
-		Str(topicKey, consumer.Configuration.Topic).
-		Int(organizationKey, int(*parsedMessage.Organization)).
-		Str(clusterKey, string(*parsedMessage.ClusterName)).
-		Int(versionKey, int(parsedMessage.Version)).
-		Str(requestIDKey, printableRequestID(parsedMessage)).
-		Msg(event)
+	fillEvent(log.Info(), consumer, originalMessage, parsedMessage).Msg(event)
 }
 
 func logClusterInfo(message *incomingMessage) {
@@ -84,28 +69,46 @@ func logUnparsedMessageError(consumer *KafkaConsumer, originalMessage *sarama.Co
 }
 
 func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string, err error) {
-	log.Error().
-		Int(offsetKey, int(originalMessage.Offset)).
-		Str(topicKey, consumer.Configuration.Topic).
-		Int(organizationKey, int(*parsedMessage.Organization)).
-		Str(clusterKey, string(*parsedMessage.ClusterName)).
-		Int(versionKey, int(parsedMessage.Version)).
-		Err(err).
-		Msg(event)
+	fillEvent(log.Error(), consumer, originalMessage, parsedMessage).Err(err).Msg(event)
 }
 
 func logMessageWarning(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string) {
-	log.Warn().
-		Int(offsetKey, int(originalMessage.Offset)).
-		Int(partitionKey, int(originalMessage.Partition)).
-		Str(topicKey, consumer.Configuration.Topic).
-		Int(organizationKey, int(*parsedMessage.Organization)).
-		Str(clusterKey, string(*parsedMessage.ClusterName)).
-		Int(versionKey, int(parsedMessage.Version)).
-		Msg(event)
+	fillEvent(log.Warn(), consumer, originalMessage, parsedMessage).Msg(event)
 }
 
 func logDuration(tStart, tEnd time.Time, offset int64, key string) {
 	duration := tEnd.Sub(tStart)
 	log.Debug().Int64(durationKey, duration.Microseconds()).Int64(offsetKey, offset).Msg(key)
+}
+
+func fillEvent(baseEvent *zerolog.Event, consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage) *zerolog.Event {
+	baseEvent = baseEvent.Str(topicKey, consumer.Configuration.Topic)
+
+	// Check for nil pointers before raising the log error (CCXDEV-12426)
+	if originalMessage == nil {
+		log.Debug().Msg("originalMessage is nil")
+	} else {
+		baseEvent = baseEvent.
+			Int(offsetKey, int(originalMessage.Offset)).
+			Int(partitionKey, int(originalMessage.Partition))
+	}
+	if parsedMessage == nil {
+		log.Debug().Msg("parsedMessage is nil")
+	} else {
+		baseEvent = baseEvent.
+			Int(versionKey, int(parsedMessage.Version)).
+			Str(requestIDKey, printableRequestID(parsedMessage))
+		if parsedMessage.Organization == nil {
+			log.Debug().Msg("*parsedMessage.Organization is nil")
+		} else {
+			baseEvent = baseEvent.Int(organizationKey, int(*parsedMessage.Organization))
+		}
+		if parsedMessage.ClusterName == nil {
+			log.Debug().Msg("parsedMessage.ClusterName is nil")
+		} else {
+			baseEvent = baseEvent.Str(clusterKey, string(*parsedMessage.ClusterName))
+		}
+	}
+
+	return baseEvent
 }
