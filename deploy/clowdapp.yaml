@@ -42,6 +42,8 @@ objects:
     envName: ${ENV_NAME}
     testing:
       iqePlugin: ccx
+    dependencies:
+      - dvo-writer
     deployments:
       - name: db-writer
         minReplicas: ${{DB_WRITER_REPLICAS}}
