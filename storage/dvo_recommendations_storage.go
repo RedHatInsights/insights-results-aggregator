@@ -79,8 +79,13 @@ func newDVOStorage(configuration Configuration) (DVORecommendationsStorage, erro
 	}
 
 	log.Info().Msgf(
-		"Making connection to DVO data storage, driver=%s",
+		"Making connection to DVO data storage, driver=%s, connection string 'postgresql://%v:<password>@%v:%v/%v?%v'",
 		driverName,
+		configuration.PGUsername,
+		configuration.PGHost,
+		configuration.PGPort,
+		configuration.PGDBName,
+		configuration.PGParams,
 	)
 
 	connection, err := sql.Open(driverName, dataSource)
@@ -88,6 +93,8 @@ func newDVOStorage(configuration Configuration) (DVORecommendationsStorage, erro
 		log.Error().Err(err).Msg("Can not connect to data storage")
 		return nil, err
 	}
+
+	log.Debug().Msg("connection to DVO storage created")
 
 	return NewDVORecommendationsFromConnection(connection, driverType), nil
 }
