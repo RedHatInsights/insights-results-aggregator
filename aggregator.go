@@ -171,6 +171,8 @@ func prepareDBMigrations(dbStorage storage.Storage) int {
 		return ExitStatusPrepareDbError
 	}
 
+	log.Debug().Msgf("%v DB schema found", dbSchema)
+
 	// This is only used by some unit tests.
 	if autoMigrate {
 		if err := dbStorage.MigrateToLatest(); err != nil {
@@ -207,6 +209,7 @@ func prepareDB() int {
 	}
 
 	if ocpRecommendationsStorage != nil {
+		log.Debug().Msg("checking OCP storage migrations")
 		defer closeStorage(ocpRecommendationsStorage)
 
 		// Ensure that the DB is at the latest migration version.
@@ -226,6 +229,7 @@ func prepareDB() int {
 	}
 
 	if dvoRecommendationsStorage != nil {
+		log.Debug().Msg("checking DVO storage migrations")
 		defer closeStorage(dvoRecommendationsStorage)
 
 		// Ensure that the DB is at the latest migration version.
@@ -251,6 +255,8 @@ func startService() int {
 		log.Info().Msgf(databasePreparationMessage, prepDbExitCode)
 		return prepDbExitCode
 	}
+
+	log.Debug().Msg("DB initialized")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
