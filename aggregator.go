@@ -185,12 +185,14 @@ func prepareDBMigrations(dbStorage storage.Storage) int {
 			log.Error().Err(err).Msg("unable to check DB migration version")
 			return ExitStatusPrepareDbError
 		}
+		log.Debug().Msgf("%v DB schema current migration %v", dbSchema, currentVersion)
 
 		maxVersion := dbStorage.GetMaxVersion()
 		if currentVersion != maxVersion {
 			log.Error().Msgf("old DB migration version (current: %d, latest: %d)", currentVersion, maxVersion)
 			return ExitStatusPrepareDbError
 		}
+		log.Debug().Msgf("%v DB schema maximum migration %v", dbSchema, maxVersion)
 	}
 
 	return ExitStatusOK
