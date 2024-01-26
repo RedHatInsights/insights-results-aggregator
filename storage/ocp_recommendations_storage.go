@@ -415,6 +415,7 @@ func (storage OCPRecommendationsDBStorage) Init() error {
 		return err
 	}
 
+	log.Debug().Msg("executing last_checked_at query")
 	for rows.Next() {
 		var (
 			clusterName types.ClusterName
