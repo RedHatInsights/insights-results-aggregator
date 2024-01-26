@@ -219,11 +219,14 @@ func prepareDB() int {
 			return exitCode
 		}
 
-		// Initialize the database.
-		err = ocpRecommendationsStorage.Init()
-		if err != nil {
-			log.Error().Err(err).Msg("DB initialization error")
-			return ExitStatusPrepareDbError
+		// do not initialize last_checked_at map if we're running as dvo-writer
+		if conf.GetStorageBackendConfiguration().Use != types.DVORecommendationsStorage {
+			// Initialize the database.
+			err = ocpRecommendationsStorage.Init()
+			if err != nil {
+				log.Error().Err(err).Msg("DB initialization error")
+				return ExitStatusPrepareDbError
+			}
 		}
 
 		// temporarily print some information from DB because of limited access to DB
