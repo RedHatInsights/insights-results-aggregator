@@ -75,7 +75,7 @@ func TestDVORulesConsumer_New(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
 
-		mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+		mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 		defer closer()
 
 		mockBroker := sarama.NewMockBroker(t, 0)
@@ -295,7 +295,7 @@ func TestParseDVOMessageWithImproperJSON(t *testing.T) {
 //func TestParseMessageWithImproperMetrics(t *testing.T) {}
 
 func TestProcessEmptyDVOMessage(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
 
 	c := dummyDVOConsumer(mockStorage, true)
