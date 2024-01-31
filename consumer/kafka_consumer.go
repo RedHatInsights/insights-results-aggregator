@@ -76,14 +76,14 @@ type KafkaConsumer struct {
 var DefaultSaramaConfig *sarama.Config
 
 // NewKafkaConsumer constructs new implementation of Consumer interface
-func NewKafkaConsumer(brokerCfg broker.Configuration, storage storage.OCPRecommendationsStorage, processor MessageProcessor) (*KafkaConsumer, error) {
+func NewKafkaConsumer(brokerCfg broker.Configuration, storage storage.Storage, processor MessageProcessor) (*KafkaConsumer, error) {
 	return NewKafkaConsumerWithSaramaConfig(brokerCfg, storage, DefaultSaramaConfig, processor)
 }
 
 // NewKafkaConsumerWithSaramaConfig constructs new implementation of Consumer interface with custom sarama config
 func NewKafkaConsumerWithSaramaConfig(
 	brokerCfg broker.Configuration,
-	storage storage.OCPRecommendationsStorage,
+	storage storage.Storage,
 	saramaConfig *sarama.Config,
 	processor MessageProcessor,
 ) (*KafkaConsumer, error) {
