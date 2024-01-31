@@ -304,7 +304,6 @@ func TestProcessEmptyDVOMessage(t *testing.T) {
 	// message is empty -> nothing should be written into storage
 	err := c.HandleMessage(&message)
 	assert.EqualError(t, err, "unexpected end of JSON input")
-	helpers.FailOnError(t, err)
 
 	// no record should be written into database
 }
