@@ -22,6 +22,6 @@ import (
 )
 
 // NewDVORulesConsumer constructs new implementation of Consumer interface
-func NewDVORulesConsumer(brokerCfg broker.Configuration, storage storage.OCPRecommendationsStorage) (*KafkaConsumer, error) {
+func NewDVORulesConsumer(brokerCfg broker.Configuration, storage storage.DVORecommendationsStorage) (*KafkaConsumer, error) {
 	return NewKafkaConsumer(brokerCfg, storage, DVORulesProcessor{})
 }
