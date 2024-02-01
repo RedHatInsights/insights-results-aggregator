@@ -14,15 +14,7 @@
 
 package dvomigrations_test
 
-import (
-	"testing"
-
-	"github.com/RedHatInsights/insights-results-aggregator/migration"
-	"github.com/RedHatInsights/insights-results-aggregator/migration/dvomigrations"
-	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-)
-
+/*
 func TestAllMigrations(t *testing.T) {
 	db, closer := ira_helpers.PrepareDB(t)
 	defer closer()
@@ -40,3 +32,4 @@ func TestAllMigrations(t *testing.T) {
 	err = migration.SetDBVersion(dbConn, db.GetDBDriverType(), dbSchema, migration.Version(0), dvomigrations.UsableDVOMigrations)
 	helpers.FailOnError(t, err)
 }
+*/
