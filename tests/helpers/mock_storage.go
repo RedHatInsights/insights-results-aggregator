@@ -134,6 +134,51 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendation
 	}
 }
 
+// MustGetPostgresStorageDVO creates test postgres storage with credentials from config-devel for DVO storage
+func MustGetPostgresStorageDVO(tb testing.TB, init bool) (storage.DVORecommendationsStorage, func()) {
+	dbAdminPassword := os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS")
+
+	err := conf.LoadConfiguration("../config-devel")
+	helpers.FailOnError(tb, err)
+
+	// force postgres and replace db name with test one
+	storageConf := &conf.Config.DVORecommendationsStorage
+	storageConf.Driver = postgres
+	storageConf.PGDBName += "_test_db_" + strings.ReplaceAll(uuid.New().String(), "-", "_")
+	storageConf.PGPassword = dbAdminPassword
+
+	connString := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s sslmode=disable",
+		storageConf.PGHost, storageConf.PGPort, storageConf.PGUsername, storageConf.PGPassword,
+	)
+
+	adminConn, err := sql.Open(storageConf.Driver, connString)
+	helpers.FailOnError(tb, err)
+
+	query := "CREATE DATABASE " + storageConf.PGDBName + ";"
+	_, err = adminConn.Exec(query)
+	helpers.FailOnError(tb, err)
+
+	postgresStorage, err := storage.NewOCPRecommendationsStorage(*storageConf)
+
+	helpers.FailOnError(tb, err)
+	helpers.FailOnError(tb, postgresStorage.GetConnection().Ping())
+
+	if init {
+		helpers.FailOnError(tb, postgresStorage.MigrateToLatest())
+		helpers.FailOnError(tb, postgresStorage.Init())
+	}
+
+	return postgresStorage, func() {
+		MustCloseStorage(tb, postgresStorage)
+
+		_, err := adminConn.Exec("DROP DATABASE " + conf.Config.DVORecommendationsStorage.PGDBName)
+		helpers.FailOnError(tb, err)
+
+		helpers.FailOnError(tb, adminConn.Close())
+	}
+}
+
 // MustCloseStorage closes the storage and calls t.Fatal on error
 func MustCloseStorage(tb testing.TB, s storage.Storage) {
 	helpers.FailOnError(tb, s.Close())
