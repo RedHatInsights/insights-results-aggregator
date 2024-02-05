@@ -35,16 +35,16 @@ var (
 func startServer() error {
 	defer finishServerInstanceInitialization()
 
-	ocpRecommendationsStorage, _, err := createStorage()
+	ocpRecommendationsStorage, dvoRecommendationsStorage, err := createStorage()
 	if err != nil {
 		return err
 	}
 	defer closeStorage(ocpRecommendationsStorage)
+	defer closeStorage(dvoRecommendationsStorage)
 
 	serverCfg := conf.GetServerConfiguration()
 
-	serverInstance = server.New(serverCfg, ocpRecommendationsStorage)
-
+	serverInstance = server.New(serverCfg, ocpRecommendationsStorage, dvoRecommendationsStorage)
 	// fill-in additional info used by /info endpoint handler
 	fillInInfoParams(serverInstance.InfoParams)
 
@@ -64,6 +64,21 @@ func startServer() error {
 		}
 	} else {
 		serverInstance.InfoParams["DB_version"] = "not supported"
+	}
+	log.Info().Msg("Setting DB version for /info endpoint")
+	if conf.GetDVORecommendationsStorageConfiguration().Type == types.SQLStorage {
+		// migration and DB versioning is now supported for SQL
+		// databases only
+		currentVersion, err := migration.GetDBVersion(dvoRecommendationsStorage.GetConnection(), dvoRecommendationsStorage.GetDBSchema())
+		if err != nil {
+			const msg = "Unable to retrieve DB migration version"
+			log.Error().Err(err).Msg(msg)
+			serverInstance.InfoParamsDVO["DB_version"] = msg
+		} else {
+			serverInstance.InfoParamsDVO["DB_version"] = strconv.Itoa(int(currentVersion))
+		}
+	} else {
+		serverInstance.InfoParamsDVO["DB_version"] = "not supported"
 	}
 
 	err = serverInstance.Start(finishServerInstanceInitialization)

@@ -80,18 +80,22 @@ const (
 
 // HTTPServer in an implementation of Server interface
 type HTTPServer struct {
-	Config     Configuration
-	Storage    storage.OCPRecommendationsStorage
-	Serv       *http.Server
-	InfoParams map[string]string
+	Config        Configuration
+	Storage       storage.OCPRecommendationsStorage
+	StorageDvo    storage.DVORecommendationsStorage
+	Serv          *http.Server
+	InfoParams    map[string]string
+	InfoParamsDVO map[string]string
 }
 
 // New constructs new implementation of Server interface
-func New(config Configuration, storage storage.OCPRecommendationsStorage) *HTTPServer {
+func New(config Configuration, storage storage.OCPRecommendationsStorage, storageDvo storage.DVORecommendationsStorage) *HTTPServer {
 	return &HTTPServer{
-		Config:     config,
-		Storage:    storage,
-		InfoParams: make(map[string]string),
+		Config:        config,
+		Storage:       storage,
+		StorageDvo:    storageDvo,
+		InfoParams:    make(map[string]string),
+		InfoParamsDVO: make(map[string]string),
 	}
 }
 
