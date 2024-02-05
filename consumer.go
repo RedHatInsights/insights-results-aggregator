@@ -60,8 +60,8 @@ func startConsumer(brokerConf broker.Configuration) error {
 			return err
 		}
 	} else {
-		log.Error().Msg("No backend storage selected. Exitting")
-		return errors.New("no backend storage selected")
+		log.Error().Msg("No backend storage or incompatible one selected. Exitting")
+		return errors.New("no backend storage or incompatible selected")
 	}
 
 	finishConsumerInstanceInitialization()

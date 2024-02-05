@@ -226,7 +226,7 @@ func TestStartConsumer_BadBackendStorage(t *testing.T) {
 
 	err := main.StartConsumer(conf.GetBrokerConfiguration())
 	assert.EqualError(
-		t, err, "no backend storage selected",
+		t, err, "no backend storage or incompatible selected",
 	)
 }
 
