@@ -163,6 +163,7 @@ func MustGetPostgresStorageDVO(tb testing.TB, init bool) (storage.DVORecommendat
 
 	helpers.FailOnError(tb, err)
 	helpers.FailOnError(tb, postgresStorage.GetConnection().Ping())
+	helpers.FailOnError(tb, migration.InitDBSchema(postgresStorage.GetConnection(), postgresStorage.GetDBSchema()))
 
 	if init {
 		helpers.FailOnError(tb, postgresStorage.MigrateToLatest())
