@@ -194,7 +194,7 @@ func PrepareDB(t *testing.T) (*storage.OCPRecommendationsDBStorage, func()) {
 
 // PrepareDBDVO prepares mock DVORecommendationsDBStorage
 func PrepareDBDVO(t *testing.T) (*storage.DVORecommendationsDBStorage, func()) {
-	mockStorage, closer := MustGetPostgresStorageDVO(t, false)
+	mockStorage, closer := MustGetPostgresStorageDVO(t, true)
 	dbStorage := mockStorage.(*storage.DVORecommendationsDBStorage)
 
 	return dbStorage, closer
