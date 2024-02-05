@@ -216,6 +216,19 @@ func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 	)
 }
 
+func TestStartConsumer_BadBackendStorage(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER": "postgres",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE":      "sql",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE":                   "what a terrible failure",
+	})
+
+	err := main.StartConsumer(conf.GetBrokerConfiguration())
+	assert.EqualError(
+		t, err, "no backend storage selected",
+	)
+}
+
 func TestStartServer_DBError(t *testing.T) {
 	setEnvSettings(t, map[string]string{
 		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER": "non-existing-driver",

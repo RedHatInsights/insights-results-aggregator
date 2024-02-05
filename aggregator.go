@@ -145,6 +145,10 @@ func createStorage() (storage.OCPRecommendationsStorage, storage.DVORecommendati
 // closeStorage function closes specified DBStorage with proper error checking
 // whether the close operation was successful or not.
 func closeStorage(storage storage.Storage) {
+	if storage == nil {
+		return
+	}
+
 	err := storage.Close()
 	if err != nil {
 		// TODO: error state might be returned from this function

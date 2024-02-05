@@ -16,11 +16,14 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var (
@@ -34,19 +37,31 @@ func startConsumer(brokerConf broker.Configuration) error {
 	defer finishConsumerInstanceInitialization()
 
 	// right now just the OCP recommendation storage is handled by consumer
-	ocpRecommendationsStorage, _, err := createStorage()
+	ocpRecommendationsStorage, dvoRecommendationStorage, err := createStorage()
 	if err != nil {
 		return err
 	}
 
 	defer closeStorage(ocpRecommendationsStorage)
+	defer closeStorage(dvoRecommendationStorage)
 
 	// when DVO consumer will be made, it will need to use DVO storage
 	// (see line that calls createStorage())
-	consumerInstance, err = consumer.NewOCPRulesConsumer(brokerConf, ocpRecommendationsStorage)
-	if err != nil {
-		log.Error().Err(err).Msg("Broker initialization error")
-		return err
+	if conf.GetStorageBackendConfiguration().Use == types.OCPRecommendationsStorage {
+		consumerInstance, err = consumer.NewOCPRulesConsumer(brokerConf, ocpRecommendationsStorage)
+		if err != nil {
+			log.Error().Err(err).Msg("Broker initialization error")
+			return err
+		}
+	} else if conf.GetStorageBackendConfiguration().Use == types.DVORecommendationsStorage {
+		consumerInstance, err = consumer.NewDVORulesConsumer(brokerConf, dvoRecommendationStorage)
+		if err != nil {
+			log.Error().Err(err).Msg("Broker initialization error")
+			return err
+		}
+	} else {
+		log.Error().Msg("No backend storage selected. Exitting")
+		return errors.New("no backend storage selected")
 	}
 
 	finishConsumerInstanceInitialization()
