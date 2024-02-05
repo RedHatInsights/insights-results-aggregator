@@ -23,7 +23,7 @@ import (
 )
 
 func TestAllMigrations(t *testing.T) {
-	db, closer := helpers.PrepareDVODB(t)
+	db, closer := helpers.PrepareDBDVO(t)
 	defer closer()
 
 	dbConn := db.GetConnection()
