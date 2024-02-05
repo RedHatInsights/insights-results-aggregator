@@ -100,6 +100,7 @@ func TestStartServiceDVOStorage(t *testing.T) {
 
 		setEnvSettings(t, map[string]string{
 			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE": "dvo_recommendations",
+			"INSIGHTS_RESULTS_AGGREGATOR__METRICS__NAMESPACE":   "dvo_writer",
 		})
 
 		go func() {
