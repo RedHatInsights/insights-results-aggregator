@@ -125,20 +125,33 @@ func TestDeserializeDVOMessageWithImproperMetrics(t *testing.T) {
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
-		"Metrics": {
-			"we_dont_know_yet": "what_format_it_will_have",
-            "but": "this should be deserialized properly"
-		}
+		"Metrics": "this is not a JSON"
+	}`
+	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
+	_, err := consumer.DeserializeMessage(&c, []byte(consumerMessage))
+	assert.EqualError(
+		t,
+		err,
+		"json: cannot unmarshal string into Go struct field incomingMessage.Metrics of type consumer.DvoMetrics",
+	)
+}
+
+func TestDeserializeDVOProperMessage(t *testing.T) {
+	consumerMessage := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Metrics":` + testMetrics + `
 	}`
 	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
 	message, err := consumer.DeserializeMessage(&c, []byte(consumerMessage))
 	helpers.FailOnError(t, err)
 	assert.Equal(t, types.OrgID(1), *message.Organization)
 	assert.Equal(t, testdata.ClusterName, *message.ClusterName)
-}
 
-//TODO: We don't know yet what a proper message is
-//func TestDeserializeDVOProperMessage(t *testing.T) {}
+	// TODO: check the DVO report
+	// var expectedReport consumer.DVOReport
+}
 
 func TestDeserializeDVOMessageWrongClusterName(t *testing.T) {
 	message := `{
@@ -206,7 +219,7 @@ func TestDeserializeCompressedDVOMessage(t *testing.T) {
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
 		"Metrics": {
-			"we_dont_know_yet": "what_format_it_will_have",
+			"this_is_not": "a_proper_format",
 			"but": "this should be deserialized properly"
 		}
 	}`
