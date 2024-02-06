@@ -45,7 +45,7 @@ func startServer() error {
 
 	serverCfg := conf.GetServerConfiguration()
 
-	serverInstance = server.New(serverCfg, ocpRecommendationsStorage)
+	serverInstance = server.New(serverCfg, ocpRecommendationsStorage, dvoRecommendationsStorage)
 
 	// fill-in additional info used by /info endpoint handler
 	fillInInfoParams(serverInstance.InfoParams)

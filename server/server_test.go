@@ -226,6 +226,8 @@ func TestListOfOrganizationsDBError(t *testing.T) {
 }
 
 func TestServerStart(t *testing.T) {
+	mockStorageDVO, closer := helpers.MustGetPostgresStorageDVO(t, true)
+	closer()
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
 		s := server.New(server.Configuration{
 			// will use any free port
@@ -234,7 +236,7 @@ func TestServerStart(t *testing.T) {
 			Auth:                         true,
 			Debug:                        true,
 			MaximumFeedbackMessageLength: 255,
-		}, nil)
+		}, nil, mockStorageDVO)
 
 		go func() {
 			for {
@@ -269,7 +271,7 @@ func TestServerStartError(t *testing.T) {
 		Address:                      "localhost:99999",
 		APIPrefix:                    "",
 		MaximumFeedbackMessageLength: 255,
-	}, nil)
+	}, nil, nil)
 
 	err := testServer.Start(nil)
 	assert.EqualError(t, err, "listen tcp: address 99999: invalid port")

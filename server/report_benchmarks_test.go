@@ -82,7 +82,7 @@ func benchmarkHTTPServerReadReportForCluster(
 	testReportDataItems []testReportData,
 	n uint,
 ) {
-	testServer := server.New(helpers.DefaultServerConfig, mockStorage)
+	testServer := server.New(helpers.DefaultServerConfig, mockStorage, nil)
 
 	b.ResetTimer()
 	for benchIndex := 0; benchIndex < b.N; benchIndex++ {
