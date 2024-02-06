@@ -63,3 +63,8 @@ func (*NoopDVOStorage) GetDBSchema() migration.Schema {
 func (*NoopDVOStorage) MigrateToLatest() error {
 	return nil
 }
+
+// ReportsCount noop
+func (*NoopDVOStorage) ReportsCount() (int, error) {
+	return 0, nil
+}

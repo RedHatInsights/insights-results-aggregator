@@ -304,4 +304,15 @@ func TestProcessEmptyDVOMessage(t *testing.T) {
 	// message is empty -> nothing should be written into storage
 	err := c.HandleMessage(&message)
 	assert.EqualError(t, err, "unexpected end of JSON input")
+
+	count, err := mockStorage.ReportsCount()
+	helpers.FailOnError(t, err)
+
+	// no record should be written into database
+	assert.Equal(
+		t,
+		0,
+		count,
+		"process message shouldn't write anything into the DB",
+	)
 }

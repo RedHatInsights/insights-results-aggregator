@@ -36,6 +36,7 @@ type DVORecommendationsStorage interface {
 	GetConnection() *sql.DB
 	GetMaxVersion() migration.Version
 	MigrateToLatest() error
+	ReportsCount() (int, error)
 }
 
 // dvoDBSchema represents the name of the DB schema used by DVO-related queries/migrations
@@ -169,4 +170,13 @@ func (storage DVORecommendationsDBStorage) MigrateToLatest() error {
 		storage.GetMaxVersion(),
 		storage.GetMigrations(),
 	)
+}
+
+// ReportsCount reads number of all records stored in the dvo.dvo_report table
+func (storage DVORecommendationsDBStorage) ReportsCount() (int, error) {
+	count := -1
+	err := storage.connection.QueryRow("SELECT count(*) FROM dvo.dvo_report;").Scan(&count)
+	err = types.ConvertDBError(err, nil)
+
+	return count, err
 }
