@@ -51,7 +51,7 @@ func benchmarkHTTPServerVoteEndpointsWithStorage(b *testing.B, mockStorage stora
 	endpointArgs := prepareVoteEndpointArgs(b, numberOfEndpointArgs, mockStorage)
 	defer cleanupEndpointArgs(b, endpointArgs, mockStorage)
 
-	testServer := server.New(helpers.DefaultServerConfig, mockStorage)
+	testServer := server.New(helpers.DefaultServerConfig, mockStorage, nil)
 
 	type TestCase struct {
 		TestName string

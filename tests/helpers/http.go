@@ -92,7 +92,7 @@ func AssertAPIRequest(
 		serverConfig = &DefaultServerConfig
 	}
 
-	testServer := server.New(*serverConfig, mockStorage)
+	testServer := server.New(*serverConfig, mockStorage, nil)
 
 	helpers.AssertAPIRequest(t, testServer, serverConfig.APIPrefix, request, expectedResponse)
 }
