@@ -23,6 +23,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/server"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -80,6 +81,20 @@ func startServer() error {
 	} else {
 		serverInstance.InfoParamsDVO["DB_version"] = "not supported"
 	}
+	log.Info().Msg("Setting OCP DB version for /info endpoint")
+	setDBVersion(
+		serverInstance,
+		conf.GetOCPRecommendationsStorageConfiguration(),
+		ocpRecommendationsStorage,
+		"OCP_DB_version",
+	)
+	log.Info().Msg("Setting DVO DB version for /info endpoint")
+	setDBVersion(
+		serverInstance,
+		conf.GetDVORecommendationsStorageConfiguration(),
+		dvoRecommendationsStorage,
+		"DVO_DB_version",
+	)
 
 	err = serverInstance.Start(finishServerInstanceInitialization)
 	if err != nil {
@@ -88,6 +103,22 @@ func startServer() error {
 	}
 
 	return nil
+}
+
+func setDBVersion(s *server.HTTPServer, storageConf storage.Configuration, storage storage.Storage, key string) {
+	if storageConf.Type != types.SQLStorage {
+		// migration and DB versioning is now supported for SQL databases only
+		s.InfoParams[key] = "not supported"
+		return
+	}
+	currentVersion, err := migration.GetDBVersion(storage.GetConnection(), storage.GetDBSchema())
+	if err != nil {
+		const msg = "Unable to retrieve DB migration version"
+		log.Error().Err(err).Msg(msg)
+		serverInstance.InfoParams[key] = msg
+	} else {
+		serverInstance.InfoParams[key] = strconv.Itoa(int(currentVersion))
+	}
 }
 
 func stopServer() error {

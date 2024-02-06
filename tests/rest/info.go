@@ -35,7 +35,8 @@ func checkInfoEndpoint() {
 		"BuildCommit",
 		"BuildTime",
 		"BuildVersion",
-		"DB_version",
+		"OCP_DB_version",
+		"DVO_DB_version",
 		"UtilsVersion",
 	}
 
