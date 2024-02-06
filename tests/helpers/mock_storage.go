@@ -159,10 +159,11 @@ func MustGetPostgresStorageDVO(tb testing.TB, init bool) (storage.DVORecommendat
 	_, err = adminConn.Exec(query)
 	helpers.FailOnError(tb, err)
 
-	postgresStorage, err := storage.NewOCPRecommendationsStorage(*storageConf)
+	postgresStorage, err := storage.NewDVORecommendationsStorage(*storageConf)
 
 	helpers.FailOnError(tb, err)
 	helpers.FailOnError(tb, postgresStorage.GetConnection().Ping())
+	helpers.FailOnError(tb, migration.InitDBSchema(postgresStorage.GetConnection(), postgresStorage.GetDBSchema()))
 
 	if init {
 		helpers.FailOnError(tb, postgresStorage.MigrateToLatest())
@@ -188,6 +189,14 @@ func MustCloseStorage(tb testing.TB, s storage.Storage) {
 func PrepareDB(t *testing.T) (*storage.OCPRecommendationsDBStorage, func()) {
 	mockStorage, closer := MustGetPostgresStorage(t, false)
 	dbStorage := mockStorage.(*storage.OCPRecommendationsDBStorage)
+
+	return dbStorage, closer
+}
+
+// PrepareDBDVO prepares mock DVORecommendationsDBStorage
+func PrepareDBDVO(t *testing.T) (*storage.DVORecommendationsDBStorage, func()) {
+	mockStorage, closer := MustGetPostgresStorageDVO(t, true)
+	dbStorage := mockStorage.(*storage.DVORecommendationsDBStorage)
 
 	return dbStorage, closer
 }
