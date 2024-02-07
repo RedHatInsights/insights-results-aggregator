@@ -123,10 +123,48 @@ type InfoItem struct {
 	Details map[string]string `json:"details"`
 }
 
+/* This is how a DVO workload should look like:
+{
+    "system": {
+        "metadata": {},
+        "hostname": null
+    },
+    "fingerprints": [],
+    "version": 1,
+    "analysis_metadata": {},
+    "workload_recommendations": [
+        {
+            "response_id": "an_issue|DVO_AN_ISSUE",
+            "component": "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
+            "key": "DVO_AN_ISSUE",
+            "details": {},
+            "tags": [],
+            "links": {
+                "jira": [
+                    "https://issues.redhat.com/browse/AN_ISSUE"
+                ],
+                "product_documentation": []
+            },
+            "workloads": [
+                {
+                    "namespace": "namespace-name-A",
+                    "namespace_uid": "NAMESPACE-UID-A",
+                    "kind": "DaemonSet",
+                    "name": "test-name-0099",
+                    "uid": "UID-0099"
+                }
+            ]
+        }
+    ]
+}
+*/
+
+// DVOMetrics contains all the workload recommendations for a single cluster
 type DVOMetrics struct {
 	WorkloadRecommendations []WorkloadRecommendation `json:"workload_recommendations"`
 }
 
+// WorkloadRecommendation contains all the information about the recommendation
 type WorkloadRecommendation struct {
 	ResponseID string        `json:"response_id"`
 	Component  string        `json:"component"`
@@ -137,12 +175,14 @@ type WorkloadRecommendation struct {
 	Workloads  []DVOWorkload `json:"workloads"`
 }
 
+// DVODetails contains some information about the workload
 type DVODetails struct {
 	CheckName string        `json:"check_name"`
 	CheckURL  string        `json:"check_url"`
 	Samples   []DVOWorkload `json:"samples"` // we shouldn't use this field as it's a subset of workloads
 }
 
+// DVOWorkload contains the main information of the workload recommendation
 type DVOWorkload struct {
 	Namespace    string `json:"namespace"`
 	NamespaceUID string `json:"namespace_uid"`
@@ -151,6 +191,7 @@ type DVOWorkload struct {
 	UID          string `json:"uid"`
 }
 
+// DVOLinks contains some URLs with relevant information about the recommendation
 type DVOLinks struct {
 	Jira                 []string `json:"jira"`
 	ProductDocumentation []string `json:"product_documentation"`
