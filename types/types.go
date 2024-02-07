@@ -177,9 +177,8 @@ type WorkloadRecommendation struct {
 
 // DVODetails contains some information about the workload
 type DVODetails struct {
-	CheckName string        `json:"check_name"`
-	CheckURL  string        `json:"check_url"`
-	Samples   []DVOWorkload `json:"samples"` // we shouldn't use this field as it's a subset of workloads
+	CheckName string `json:"check_name"`
+	CheckURL  string `json:"check_url"`
 }
 
 // DVOWorkload contains the main information of the workload recommendation

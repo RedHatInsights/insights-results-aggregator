@@ -348,7 +348,7 @@ func TestParseDVOMessageWithProperMetrics(t *testing.T) {
 				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
 				ProductDocumentation: []string{},
 			},
-			Details: types.DVODetails{CheckName: "", CheckURL: "", Samples: []types.DVOWorkload(nil)},
+			Details: types.DVODetails{CheckName: "", CheckURL: ""},
 			Tags:    []string{},
 			Workloads: []types.DVOWorkload{
 				{
