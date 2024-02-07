@@ -104,7 +104,7 @@ func (DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.Con
 	return message.RequestID, message, nil
 }
 
-func (DVORulesProcessor) shouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
+func (DVORulesProcessor) shouldProcess(_ *KafkaConsumer, _ *sarama.ConsumerMessage, parsed *incomingMessage) error {
 	rawMetrics := *parsed.DvoMetrics
 	if len(rawMetrics) == 0 {
 		log.Debug().Msg("The 'Metrics' part of the JSON is empty. This message will be skipped")
