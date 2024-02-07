@@ -66,6 +66,12 @@ var (
 		"Report":` + testReport + `,
 		"LastChecked": "` + testdata.LastCheckedAt.UTC().Format(time.RFC3339) + `"
 	}`
+	messageReportWithDVOHits = `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics":` + testMetrics + `,
+		"LastChecked": "` + testdata.LastCheckedAt.UTC().Format(time.RFC3339) + `"
+	}`
 
 	messageNoReportsNoInfo = `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
@@ -79,6 +85,13 @@ var (
 			"fingerprints": [],
 			"skips": []
 		}
+	}`
+
+	messageReportNoDVOMetrics = `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics": {},
+		"LastChecked": "` + testdata.LastCheckedAt.UTC().Format(time.RFC3339) + `"
 	}`
 )
 

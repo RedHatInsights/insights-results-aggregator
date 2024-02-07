@@ -386,3 +386,83 @@ func TestProcessEmptyDVOMessage(t *testing.T) {
 		"process message shouldn't write anything into the DB",
 	)
 }
+
+func TestProcessCorrectDVOMessage(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	defer closer()
+
+	c := dummyDVOConsumer(mockStorage, true)
+
+	message := sarama.ConsumerMessage{}
+	message.Value = []byte(messageReportWithDVOHits)
+	// message is correct -> one record should be written into storage
+	err := c.HandleMessage(&message)
+	helpers.FailOnError(t, err)
+
+	count, err := mockStorage.ReportsCount()
+	helpers.FailOnError(t, err)
+
+	// exactly one record should be written into database
+	assert.Equal(t, 1, count, "process message should write one record into DB")
+}
+
+func TestProcessingEmptyMetricsMissingAttributesWithClosedStorage(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageReportNoDVOMetrics)
+	helpers.FailOnError(t, err, "empty report should not be considered an error at HandleMessage level")
+}
+
+func TestProcessingValidDVOMessageEmptyReportWithRequiredAttributesWithClosedStorage(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageReportNoDVOMetrics)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestProcessingCorrectDVOMessageWithClosedStorage(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageReportWithDVOHits)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestProcessingDVOMessageWithWrongDateFormatAndEmptyReport(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageReportNoDVOMetrics)
+	assert.Nil(t, err, "Message with empty metrics should not be processed")
+}
+
+func TestProcessingDVOMessageWithWrongDateFormatReportNotEmpty(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+
+	messageValue := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics":` + testMetrics + `,
+		"LastChecked": "2020.01.23 16:15:59"
+	}`
+	err := consumerProcessMessage(mockConsumer, messageValue)
+	if _, ok := err.(*time.ParseError); err == nil || !ok {
+		t.Fatal(fmt.Errorf(
+			"expected time.ParseError error because date format is wrong. Got %+v", err,
+		))
+	}
+}
