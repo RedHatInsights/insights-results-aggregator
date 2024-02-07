@@ -148,9 +148,6 @@ func TestDeserializeDVOProperMessage(t *testing.T) {
 	helpers.FailOnError(t, err)
 	assert.Equal(t, types.OrgID(1), *message.Organization)
 	assert.Equal(t, testdata.ClusterName, *message.ClusterName)
-
-	// TODO: check the DVO report
-	// var expectedReport consumer.DVOReport
 }
 
 func TestDeserializeDVOMessageWrongClusterName(t *testing.T) {
@@ -284,8 +281,17 @@ func TestParseMessageWithoutMetrics(t *testing.T) {
 	assert.EqualError(t, err, "missing required attribute 'Metrics'")
 }
 
-//TODO: We don't know yet how we will handle "empty" metrics situations
-//func TestParseDVOMessageEmptyMetrics(t *testing.T) {}
+func TestParseDVOMessageEmptyMetrics(t *testing.T) {
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics": {}
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	parsed, err := consumer.ParseMessage(&dvoConsumer, &message)
+	helpers.FailOnError(t, err, "an archive with no DVO metrics shouldn't be an issue")
+	assert.Equal(t, 0, len(parsed.ParsedWorkloads))
+}
 
 func TestParseDVOMessageNullMetrics(t *testing.T) {
 	data := `{
@@ -304,8 +310,16 @@ func TestParseDVOMessageWithImproperJSON(t *testing.T) {
 	assert.EqualError(t, err, "json: cannot unmarshal string into Go value of type consumer.incomingMessage")
 }
 
-//TODO: parseMessage only deserializes the message for now.
-//func TestParseMessageWithImproperMetrics(t *testing.T) {}
+func TestParseDVOMessageWithImproperMetrics(t *testing.T) {
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics": "this is not a JSON"
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	_, err := consumer.ParseMessage(&dvoConsumer, &message)
+	assert.EqualError(t, err, "json: cannot unmarshal string into Go struct field incomingMessage.Metrics of type consumer.DvoMetrics")
+}
 
 func TestProcessEmptyDVOMessage(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)

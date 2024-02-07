@@ -75,12 +75,13 @@ type incomingMessage struct {
 	Report       *Report            `json:"Report"`
 	DvoMetrics   *DvoMetrics        `json:"Metrics"`
 	// LastChecked is a date in format "2020-01-23T16:15:59.478901889Z"
-	LastChecked string              `json:"LastChecked"`
-	Version     types.SchemaVersion `json:"Version"`
-	RequestID   types.RequestID     `json:"RequestId"`
-	Metadata    types.Metadata      `json:"Metadata"`
-	ParsedHits  []types.ReportItem
-	ParsedInfo  []types.InfoItem
+	LastChecked     string              `json:"LastChecked"`
+	Version         types.SchemaVersion `json:"Version"`
+	RequestID       types.RequestID     `json:"RequestId"`
+	Metadata        types.Metadata      `json:"Metadata"`
+	ParsedHits      []types.ReportItem
+	ParsedInfo      []types.InfoItem
+	ParsedWorkloads []types.WorkloadRecommendation
 }
 
 var currentSchemaVersion = types.AllowedVersions{

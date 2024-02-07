@@ -123,6 +123,39 @@ type InfoItem struct {
 	Details map[string]string `json:"details"`
 }
 
+type DVOMetrics struct {
+	WorkloadRecommendations []WorkloadRecommendation `json:"workload_recommendations"`
+}
+
+type WorkloadRecommendation struct {
+	ResponseID string        `json:"response_id"`
+	Component  string        `json:"component"`
+	Key        string        `json:"key"`
+	Details    []DVODetails  `json:"details"`
+	Tags       []string      `json:"tags"`
+	Links      DVOLinks      `json:"links"`
+	Workloads  []DVOWorkload `json:"workloads"`
+}
+
+type DVODetails struct {
+	CheckName string        `json:"check_name"`
+	CheckURL  string        `json:"check_url"`
+	Samples   []DVOWorkload `json:"samples"`
+}
+
+type DVOWorkload struct {
+	Namespace    string `json:"namespace"`
+	NamespaceUID string `json:"namespace_uid"`
+	Kind         string `json:"kind"`
+	Name         string `json:"name"`
+	UID          string `json:"uid"`
+}
+
+type DVOLinks struct {
+	Jira                 []string `json:"jira"`
+	ProductDocumentation []string `json:"product_documentation"`
+}
+
 // ClusterReports is a data structure containing list of clusters, list of
 // errors and dictionary with results per cluster.
 type ClusterReports = types.ClusterReports
