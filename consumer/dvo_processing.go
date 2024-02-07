@@ -106,6 +106,10 @@ func (DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.Con
 
 func (DVORulesProcessor) shouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
 	rawMetrics := *parsed.DvoMetrics
+	if len(rawMetrics) == 0 {
+		log.Debug().Msg("The 'Metrics' part of the JSON is empty. This message will be skipped")
+		return types.ErrEmptyReport
+	}
 	if _, found := rawMetrics["workload_recommendations"]; !found {
 		return fmt.Errorf("improper report structure, missing key with name 'workload_recommendations'")
 	}

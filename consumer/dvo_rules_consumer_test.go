@@ -289,9 +289,8 @@ func TestParseDVOMessageEmptyMetrics(t *testing.T) {
 		"Metrics": {}
 	}`
 	message := sarama.ConsumerMessage{Value: []byte(data)}
-	parsed, err := consumer.ParseMessage(&dvoConsumer, &message)
-	helpers.FailOnError(t, err, "an archive with no DVO metrics shouldn't be an issue")
-	assert.Equal(t, 0, len(parsed.ParsedWorkloads))
+	_, err := consumer.ParseMessage(&dvoConsumer, &message)
+	assert.Equal(t, types.ErrEmptyReport, err)
 }
 
 func TestParseDVOMessageNullMetrics(t *testing.T) {
