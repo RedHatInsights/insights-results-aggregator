@@ -17,6 +17,7 @@ limitations under the License.
 package consumer_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -319,6 +320,49 @@ func TestParseDVOMessageWithImproperMetrics(t *testing.T) {
 	message := sarama.ConsumerMessage{Value: []byte(data)}
 	_, err := consumer.ParseMessage(&dvoConsumer, &message)
 	assert.EqualError(t, err, "json: cannot unmarshal string into Go struct field incomingMessage.Metrics of type consumer.DvoMetrics")
+}
+
+func TestParseDVOMessageWithProperMetrics(t *testing.T) {
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Metrics":` + testMetrics + `
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	parsed, err := consumer.ParseMessage(&dvoConsumer, &message)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, types.OrgID(1), *parsed.Organization)
+	assert.Equal(t, testdata.ClusterName, *parsed.ClusterName)
+
+	var expectedDvoMetrics consumer.DvoMetrics
+	err = json.Unmarshal([]byte(testMetrics), &expectedDvoMetrics)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedDvoMetrics, *parsed.DvoMetrics)
+
+	expectedWorkloads := []types.WorkloadRecommendation{
+		{
+			ResponseID: "an_issue|DVO_AN_ISSUE",
+			Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
+			Key:        "DVO_AN_ISSUE",
+			Links: types.DVOLinks{
+				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+				ProductDocumentation: []string{},
+			},
+			Details: types.DVODetails{CheckName: "", CheckURL: "", Samples: []types.DVOWorkload(nil)},
+			Tags:    []string{},
+			Workloads: []types.DVOWorkload{
+				{
+					Namespace:    "namespace-name-A",
+					NamespaceUID: "NAMESPACE-UID-A",
+					Kind:         "DaemonSet",
+					Name:         "test-name-0099",
+					UID:          "UID-0099",
+				},
+			},
+		},
+	}
+	assert.EqualValues(t, expectedWorkloads, parsed.ParsedWorkloads)
 }
 
 func TestProcessEmptyDVOMessage(t *testing.T) {

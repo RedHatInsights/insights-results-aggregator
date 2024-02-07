@@ -17,8 +17,10 @@ package consumer
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/rs/zerolog/log"
 
@@ -59,6 +61,9 @@ func (DVORulesProcessor) deserializeMessage(messageValue []byte) (incomingMessag
 	return deserialized, nil
 }
 
+// parseMessage is the entry point for parsing the received message.
+// It should be the first method called within ProcessMessage in order
+// to convert the message into a struct that can be worked with
 func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, error) {
 	message, err := consumer.MessageProcessor.deserializeMessage(msg.Value)
 	if err != nil {
@@ -67,6 +72,16 @@ func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.Consu
 		return message, err
 	}
 	consumer.updatePayloadTracker(message.RequestID, time.Now(), message.Organization, message.Account, producer.StatusReceived)
+
+	if err := consumer.MessageProcessor.shouldProcess(consumer, msg, &message); err != nil {
+		return message, err
+	}
+	err = parseDVOContent(&message)
+	if err != nil {
+		consumer.logReportStructureError(err, msg)
+		return message, err
+	}
+
 	return message, nil
 }
 
@@ -75,6 +90,11 @@ func (DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.Con
 	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
 	message, err := consumer.MessageProcessor.parseMessage(consumer, msg)
 	if err != nil {
+		if errors.Is(err, types.ErrEmptyReport) {
+			logMessageInfo(consumer, msg, &message, "This message has an empty report and will not be processed further")
+			metrics.SkippedEmptyReports.Inc()
+			return message.RequestID, message, nil
+		}
 		return message.RequestID, message, err
 	}
 	logMessageInfo(consumer, msg, &message, "Read")
@@ -84,6 +104,16 @@ func (DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.Con
 	return message.RequestID, message, nil
 }
 
-func (DVORulesProcessor) shouldProcess(_ *KafkaConsumer, _ *sarama.ConsumerMessage, _ *incomingMessage) error {
+func (DVORulesProcessor) shouldProcess(consumer *KafkaConsumer, consumed *sarama.ConsumerMessage, parsed *incomingMessage) error {
+	rawMetrics := *parsed.DvoMetrics
+	if _, found := rawMetrics["workload_recommendations"]; !found {
+		return fmt.Errorf("improper report structure, missing key with name 'workload_recommendations'")
+	}
 	return nil
+}
+
+// parseDVOContent verifies the content of the DVO structure and parses it into
+// the relevant parts of the incomingMessage structure
+func parseDVOContent(message *incomingMessage) error {
+	return json.Unmarshal(*((*message.DvoMetrics)["workload_recommendations"]), &message.ParsedWorkloads)
 }

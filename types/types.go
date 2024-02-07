@@ -131,7 +131,7 @@ type WorkloadRecommendation struct {
 	ResponseID string        `json:"response_id"`
 	Component  string        `json:"component"`
 	Key        string        `json:"key"`
-	Details    []DVODetails  `json:"details"`
+	Details    DVODetails    `json:"details"`
 	Tags       []string      `json:"tags"`
 	Links      DVOLinks      `json:"links"`
 	Workloads  []DVOWorkload `json:"workloads"`
@@ -140,7 +140,7 @@ type WorkloadRecommendation struct {
 type DVODetails struct {
 	CheckName string        `json:"check_name"`
 	CheckURL  string        `json:"check_url"`
-	Samples   []DVOWorkload `json:"samples"`
+	Samples   []DVOWorkload `json:"samples"` // we shouldn't use this field as it's a subset of workloads
 }
 
 type DVOWorkload struct {
