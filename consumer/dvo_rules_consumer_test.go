@@ -17,6 +17,7 @@ limitations under the License.
 package consumer_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -125,10 +126,23 @@ func TestDeserializeDVOMessageWithImproperMetrics(t *testing.T) {
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
-		"Metrics": {
-			"we_dont_know_yet": "what_format_it_will_have",
-            "but": "this should be deserialized properly"
-		}
+		"Metrics": "this is not a JSON"
+	}`
+	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
+	_, err := consumer.DeserializeMessage(&c, []byte(consumerMessage))
+	assert.EqualError(
+		t,
+		err,
+		"json: cannot unmarshal string into Go struct field incomingMessage.Metrics of type consumer.DvoMetrics",
+	)
+}
+
+func TestDeserializeDVOProperMessage(t *testing.T) {
+	consumerMessage := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Metrics":` + testMetrics + `
 	}`
 	c := consumer.KafkaConsumer{MessageProcessor: consumer.DVORulesProcessor{}}
 	message, err := consumer.DeserializeMessage(&c, []byte(consumerMessage))
@@ -136,9 +150,6 @@ func TestDeserializeDVOMessageWithImproperMetrics(t *testing.T) {
 	assert.Equal(t, types.OrgID(1), *message.Organization)
 	assert.Equal(t, testdata.ClusterName, *message.ClusterName)
 }
-
-//TODO: We don't know yet what a proper message is
-//func TestDeserializeDVOProperMessage(t *testing.T) {}
 
 func TestDeserializeDVOMessageWrongClusterName(t *testing.T) {
 	message := `{
@@ -206,7 +217,7 @@ func TestDeserializeCompressedDVOMessage(t *testing.T) {
 		"ClusterName": "` + string(testdata.ClusterName) + `",
 		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
 		"Metrics": {
-			"we_dont_know_yet": "what_format_it_will_have",
+			"this_is_not": "a_proper_format",
 			"but": "this should be deserialized properly"
 		}
 	}`
@@ -271,8 +282,16 @@ func TestParseMessageWithoutMetrics(t *testing.T) {
 	assert.EqualError(t, err, "missing required attribute 'Metrics'")
 }
 
-//TODO: We don't know yet how we will handle "empty" metrics situations
-//func TestParseDVOMessageEmptyMetrics(t *testing.T) {}
+func TestParseDVOMessageEmptyMetrics(t *testing.T) {
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics": {}
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	_, err := consumer.ParseMessage(&dvoConsumer, &message)
+	assert.Equal(t, types.ErrEmptyReport, err)
+}
 
 func TestParseDVOMessageNullMetrics(t *testing.T) {
 	data := `{
@@ -291,8 +310,59 @@ func TestParseDVOMessageWithImproperJSON(t *testing.T) {
 	assert.EqualError(t, err, "json: cannot unmarshal string into Go value of type consumer.incomingMessage")
 }
 
-//TODO: parseMessage only deserializes the message for now.
-//func TestParseMessageWithImproperMetrics(t *testing.T) {}
+func TestParseDVOMessageWithImproperMetrics(t *testing.T) {
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics": "this is not a JSON"
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	_, err := consumer.ParseMessage(&dvoConsumer, &message)
+	assert.EqualError(t, err, "json: cannot unmarshal string into Go struct field incomingMessage.Metrics of type consumer.DvoMetrics")
+}
+
+func TestParseDVOMessageWithProperMetrics(t *testing.T) {
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Metrics":` + testMetrics + `
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+	parsed, err := consumer.ParseMessage(&dvoConsumer, &message)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, types.OrgID(1), *parsed.Organization)
+	assert.Equal(t, testdata.ClusterName, *parsed.ClusterName)
+
+	var expectedDvoMetrics consumer.DvoMetrics
+	err = json.Unmarshal([]byte(testMetrics), &expectedDvoMetrics)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, expectedDvoMetrics, *parsed.DvoMetrics)
+
+	expectedWorkloads := []types.WorkloadRecommendation{
+		{
+			ResponseID: "an_issue|DVO_AN_ISSUE",
+			Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
+			Key:        "DVO_AN_ISSUE",
+			Links: types.DVOLinks{
+				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+				ProductDocumentation: []string{},
+			},
+			Details: types.DVODetails{CheckName: "", CheckURL: ""},
+			Tags:    []string{},
+			Workloads: []types.DVOWorkload{
+				{
+					Namespace:    "namespace-name-A",
+					NamespaceUID: "NAMESPACE-UID-A",
+					Kind:         "DaemonSet",
+					Name:         "test-name-0099",
+					UID:          "UID-0099",
+				},
+			},
+		},
+	}
+	assert.EqualValues(t, expectedWorkloads, parsed.ParsedWorkloads)
+}
 
 func TestProcessEmptyDVOMessage(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
@@ -304,4 +374,107 @@ func TestProcessEmptyDVOMessage(t *testing.T) {
 	// message is empty -> nothing should be written into storage
 	err := c.HandleMessage(&message)
 	assert.EqualError(t, err, "unexpected end of JSON input")
+
+	count, err := mockStorage.ReportsCount()
+	helpers.FailOnError(t, err)
+
+	// no record should be written into database
+	assert.Equal(
+		t,
+		0,
+		count,
+		"process message shouldn't write anything into the DB",
+	)
+}
+
+func TestProcessCorrectDVOMessage(t *testing.T) {
+	// TODO: Unskip
+	t.Skip("not implemented yet")
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	defer closer()
+
+	c := dummyDVOConsumer(mockStorage, true)
+
+	message := sarama.ConsumerMessage{}
+	message.Value = []byte(messageReportWithDVOHits)
+	// message is correct -> one record should be written into storage
+	err := c.HandleMessage(&message)
+	helpers.FailOnError(t, err)
+
+	count, err := mockStorage.ReportsCount()
+	helpers.FailOnError(t, err)
+
+	// exactly one record should be written into database
+	assert.Equal(t, 1, count, "process message should write one record into DB")
+}
+
+func TestProcessingEmptyMetricsMissingAttributesWithClosedStorage(t *testing.T) {
+	// TODO: Unskip
+	t.Skip("not implemented yet")
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageReportNoDVOMetrics)
+	helpers.FailOnError(t, err, "empty report should not be considered an error at HandleMessage level")
+}
+
+func TestProcessingValidDVOMessageEmptyReportWithRequiredAttributesWithClosedStorage(t *testing.T) {
+	// TODO: Unskip
+	t.Skip("not implemented yet")
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageReportNoDVOMetrics)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestProcessingCorrectDVOMessageWithClosedStorage(t *testing.T) {
+	// TODO: Unskip
+	t.Skip("not implemented yet")
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageReportWithDVOHits)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+func TestProcessingDVOMessageWithWrongDateFormatAndEmptyReport(t *testing.T) {
+	// TODO: Unskip
+	t.Skip("not implemented yet")
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+	closer()
+
+	err := consumerProcessMessage(mockConsumer, messageReportNoDVOMetrics)
+	assert.Nil(t, err, "Message with empty metrics should not be processed")
+}
+
+func TestProcessingDVOMessageWithWrongDateFormatReportNotEmpty(t *testing.T) {
+	// TODO: Unskip
+	t.Skip("not implemented yet")
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	mockConsumer := dummyDVOConsumer(mockStorage, true)
+
+	messageValue := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics":` + testMetrics + `,
+		"LastChecked": "2020.01.23 16:15:59"
+	}`
+	err := consumerProcessMessage(mockConsumer, messageValue)
+	if _, ok := err.(*time.ParseError); err == nil || !ok {
+		t.Fatal(fmt.Errorf(
+			"expected time.ParseError error because date format is wrong. Got %+v", err,
+		))
+	}
 }

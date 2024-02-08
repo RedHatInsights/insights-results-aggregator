@@ -49,7 +49,8 @@ const (
 	// message to be checked
 	organizationIDNotInAllowList = "organization ID is not in allow list"
 
-	testReport = `{"fingerprints": [], "info": [], "skips": [], "system": {}, "analysis_metadata":{"metadata":"some metadata"},"reports":[{"rule_id":"rule_4|RULE_4","component":"ccx_rules_ocp.external.rules.rule_1.report","type":"rule","key":"RULE_4","details":"some details"},{"rule_id":"rule_4|RULE_4","component":"ccx_rules_ocp.external.rules.rule_2.report","type":"rule","key":"RULE_2","details":"some details"},{"rule_id":"rule_5|RULE_5","component":"ccx_rules_ocp.external.rules.rule_5.report","type":"rule","key":"RULE_3","details":"some details"}]}`
+	testReport  = `{"fingerprints": [], "info": [], "skips": [], "system": {}, "analysis_metadata":{"metadata":"some metadata"},"reports":[{"rule_id":"rule_4|RULE_4","component":"ccx_rules_ocp.external.rules.rule_1.report","type":"rule","key":"RULE_4","details":"some details"},{"rule_id":"rule_4|RULE_4","component":"ccx_rules_ocp.external.rules.rule_2.report","type":"rule","key":"RULE_2","details":"some details"},{"rule_id":"rule_5|RULE_5","component":"ccx_rules_ocp.external.rules.rule_5.report","type":"rule","key":"RULE_3","details":"some details"}]}`
+	testMetrics = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
 )
 
 var (
@@ -65,6 +66,12 @@ var (
 		"Report":` + testReport + `,
 		"LastChecked": "` + testdata.LastCheckedAt.UTC().Format(time.RFC3339) + `"
 	}`
+	messageReportWithDVOHits = `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics":` + testMetrics + `,
+		"LastChecked": "` + testdata.LastCheckedAt.UTC().Format(time.RFC3339) + `"
+	}`
 
 	messageNoReportsNoInfo = `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
@@ -78,6 +85,13 @@ var (
 			"fingerprints": [],
 			"skips": []
 		}
+	}`
+
+	messageReportNoDVOMetrics = `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"Metrics": {},
+		"LastChecked": "` + testdata.LastCheckedAt.UTC().Format(time.RFC3339) + `"
 	}`
 )
 

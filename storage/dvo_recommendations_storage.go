@@ -18,9 +18,11 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/migration/dvomigrations"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -36,6 +38,7 @@ type DVORecommendationsStorage interface {
 	GetConnection() *sql.DB
 	GetMaxVersion() migration.Version
 	MigrateToLatest() error
+	ReportsCount() (int, error)
 }
 
 // dvoDBSchema represents the name of the DB schema used by DVO-related queries/migrations
@@ -169,4 +172,93 @@ func (storage DVORecommendationsDBStorage) MigrateToLatest() error {
 		storage.GetMaxVersion(),
 		storage.GetMigrations(),
 	)
+}
+
+// ReportsCount reads number of all records stored in the dvo.dvo_report table
+func (storage DVORecommendationsDBStorage) ReportsCount() (int, error) {
+	count := -1
+	err := storage.connection.QueryRow("SELECT count(*) FROM dvo.dvo_report;").Scan(&count)
+	err = types.ConvertDBError(err, nil)
+
+	return count, err
+}
+
+// WriteReportForCluster writes result (health status) for selected cluster for given organization
+func (storage DVORecommendationsDBStorage) WriteReportForCluster(
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+	report types.ClusterReport,
+	rules []types.ReportItem,
+	lastCheckedTime time.Time,
+	gatheredAt time.Time,
+	storedAtTime time.Time,
+	_ types.RequestID,
+) error {
+	// TODO:
+	// Skip writing the report if it isn't newer than a report
+	// that is already in the database for the same cluster.
+	// if oldLastChecked, exists := storage.clustersLastChecked[clusterName]; exists && !lastCheckedTime.After(oldLastChecked) {
+	// 	return types.ErrOldReport
+	// }
+
+	if storage.dbDriverType != types.DBDriverPostgres {
+		return fmt.Errorf("writing workloads with DB %v is not supported", storage.dbDriverType)
+	}
+
+	// Begin a new transaction.
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = func(tx *sql.Tx) error {
+		// Check if there is a more recent report for the cluster already in the database.
+		rows, err := tx.Query(
+			"SELECT last_checked_at FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND last_checked_at > $3;",
+			orgID, clusterName, lastCheckedTime)
+		err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to look up the most recent report in the database")
+			return err
+		}
+
+		defer closeRows(rows)
+
+		// If there is one, print a warning and discard the report (don't update it).
+		if rows.Next() {
+			log.Warn().Msgf("Database already contains report for organization %d and cluster name %s more recent than %v",
+				orgID, clusterName, lastCheckedTime)
+			return nil
+		}
+
+		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, gatheredAt, storedAtTime)
+		if err != nil {
+			return err
+		}
+
+		// TODO:
+		// storage.clustersLastChecked[clusterName] = lastCheckedTime
+		metrics.WrittenReports.Inc()
+
+		return nil
+	}(tx)
+
+	finishTransaction(tx, err)
+
+	return err
+}
+
+func (storage DVORecommendationsDBStorage) updateReport(
+	_ *sql.Tx,
+	_ types.OrgID,
+	_ types.ClusterName,
+	_ types.ClusterReport,
+	_ []types.ReportItem,
+	_ time.Time,
+	_ time.Time,
+	_ time.Time,
+) error {
+	// TODO
+	log.Debug().Msg("updating report in database")
+	return nil
 }
