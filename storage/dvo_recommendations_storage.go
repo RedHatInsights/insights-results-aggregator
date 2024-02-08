@@ -212,8 +212,23 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 	}
 
 	err = func(tx *sql.Tx) error {
-		if ok, err := reportExists(tx, "dvo.dvo_report", orgID, clusterName, report, lastCheckedTime); ok {
+		// Check if there is a more recent report for the cluster already in the database.
+		rows, err := tx.Query(
+			"SELECT last_checked_at FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND last_checked_at > $3;",
+			orgID, clusterName, lastCheckedTime)
+		err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to look up the most recent report in the database")
 			return err
+		}
+
+		defer closeRows(rows)
+
+		// If there is one, print a warning and discard the report (don't update it).
+		if rows.Next() {
+			log.Warn().Msgf("Database already contains report for organization %d and cluster name %s more recent than %v",
+				orgID, clusterName, lastCheckedTime)
+			return nil
 		}
 
 		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, gatheredAt, storedAtTime)
@@ -234,15 +249,16 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 }
 
 func (storage DVORecommendationsDBStorage) updateReport(
-	tx *sql.Tx,
-	orgID types.OrgID,
-	clusterName types.ClusterName,
-	report types.ClusterReport,
-	rules []types.ReportItem,
-	lastCheckedTime time.Time,
-	gatheredAt time.Time,
-	reportedAtTime time.Time,
+	_ *sql.Tx,
+	_ types.OrgID,
+	_ types.ClusterName,
+	_ types.ClusterReport,
+	_ []types.ReportItem,
+	_ time.Time,
+	_ time.Time,
+	_ time.Time,
 ) error {
 	// TODO
+	log.Debug().Msg("updating report in database")
 	return nil
 }
