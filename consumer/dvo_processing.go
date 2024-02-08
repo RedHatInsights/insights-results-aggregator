@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
+	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -85,23 +85,8 @@ func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.Consu
 	return message, nil
 }
 
-func (DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
-	tStart := time.Now()
-	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
-	message, err := consumer.MessageProcessor.parseMessage(consumer, msg)
-	if err != nil {
-		if errors.Is(err, types.ErrEmptyReport) {
-			logMessageInfo(consumer, msg, &message, "This message has an empty report and will not be processed further")
-			metrics.SkippedEmptyReports.Inc()
-			return message.RequestID, message, nil
-		}
-		return message.RequestID, message, err
-	}
-	logMessageInfo(consumer, msg, &message, "Read")
-	tRead := time.Now()
-	// log durations for every message consumption steps
-	logDuration(tStart, tRead, msg.Offset, "read")
-	return message.RequestID, message, nil
+func (processor DVORulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
+	return commonProcessMessage(consumer, msg, processor.storeInDB)
 }
 
 func (DVORulesProcessor) shouldProcess(_ *KafkaConsumer, _ *sarama.ConsumerMessage, parsed *incomingMessage) error {
@@ -120,4 +105,61 @@ func (DVORulesProcessor) shouldProcess(_ *KafkaConsumer, _ *sarama.ConsumerMessa
 // the relevant parts of the incomingMessage structure
 func parseDVOContent(message *incomingMessage) error {
 	return json.Unmarshal(*((*message.DvoMetrics)["workload_recommendations"]), &message.ParsedWorkloads)
+}
+
+func (DVORulesProcessor) storeInDB(consumer *KafkaConsumer, msg *sarama.ConsumerMessage, message incomingMessage) (types.RequestID, incomingMessage, error) {
+	tStart := time.Now()
+	lastCheckedTime, err := consumer.retrieveLastCheckedTime(msg, &message)
+	if err != nil {
+		return message.RequestID, message, err
+	}
+	tTimeCheck := time.Now()
+	logDuration(tStart, tTimeCheck, msg.Offset, "time_check")
+
+	reportAsBytes, err := json.Marshal(*message.DvoMetrics)
+	if err != nil {
+		logMessageError(consumer, msg, &message, "Error marshalling report", err)
+		return message.RequestID, message, err
+	}
+
+	err = consumer.writeDVOReport(msg, message, reportAsBytes, lastCheckedTime)
+	if err != nil {
+		return message.RequestID, message, err
+	}
+	tStored := time.Now()
+	logDuration(tTimeCheck, tStored, msg.Offset, "db_store_report")
+	return message.RequestID, message, nil
+}
+
+func (consumer *KafkaConsumer) writeDVOReport(
+	msg *sarama.ConsumerMessage, message incomingMessage,
+	reportAsBytes []byte, lastCheckedTime time.Time,
+) error {
+	if dvoStorage, ok := consumer.Storage.(storage.DVORecommendationsDBStorage); ok {
+		// timestamp when the report is about to be written into database
+		storedAtTime := time.Now()
+
+		err := dvoStorage.WriteReportForCluster(
+			*message.Organization,
+			*message.ClusterName,
+			types.ClusterReport(reportAsBytes),
+			message.ParsedHits,
+			lastCheckedTime,
+			message.Metadata.GatheredAt,
+			storedAtTime,
+			message.RequestID,
+		)
+		if err == types.ErrOldReport {
+			logMessageInfo(consumer, msg, &message, "Skipping because a more recent report already exists for this cluster")
+			return nil
+		} else if err != nil {
+			logMessageError(consumer, msg, &message, "Error writing report to database", err)
+			return err
+		}
+		logMessageDebug(consumer, msg, &message, "Stored report")
+		return nil
+	}
+	err := errors.New("report could not be stored")
+	logMessageError(consumer, msg, &message, unexpectedStorageType, err)
+	return err
 }

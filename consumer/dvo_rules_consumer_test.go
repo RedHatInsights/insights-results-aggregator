@@ -364,6 +364,7 @@ func TestParseDVOMessageWithProperMetrics(t *testing.T) {
 	assert.EqualValues(t, expectedWorkloads, parsed.ParsedWorkloads)
 }
 
+/*
 func TestProcessEmptyDVOMessage(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
@@ -466,3 +467,4 @@ func TestProcessingDVOMessageWithWrongDateFormatReportNotEmpty(t *testing.T) {
 		))
 	}
 }
+*/

@@ -18,9 +18,11 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/migration/dvomigrations"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -179,4 +181,68 @@ func (storage DVORecommendationsDBStorage) ReportsCount() (int, error) {
 	err = types.ConvertDBError(err, nil)
 
 	return count, err
+}
+
+// WriteReportForCluster writes result (health status) for selected cluster for given organization
+func (storage DVORecommendationsDBStorage) WriteReportForCluster(
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+	report types.ClusterReport,
+	rules []types.ReportItem,
+	lastCheckedTime time.Time,
+	gatheredAt time.Time,
+	storedAtTime time.Time,
+	_ types.RequestID,
+) error {
+	// TODO:
+	// Skip writing the report if it isn't newer than a report
+	// that is already in the database for the same cluster.
+	// if oldLastChecked, exists := storage.clustersLastChecked[clusterName]; exists && !lastCheckedTime.After(oldLastChecked) {
+	// 	return types.ErrOldReport
+	// }
+
+	if storage.dbDriverType != types.DBDriverPostgres {
+		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
+	}
+
+	// Begin a new transaction.
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = func(tx *sql.Tx) error {
+		if ok, err := reportExists(tx, "dvo.dvo_report", orgID, clusterName, report, lastCheckedTime); ok {
+			return err
+		}
+
+		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, gatheredAt, storedAtTime)
+		if err != nil {
+			return err
+		}
+
+		// TODO:
+		// storage.clustersLastChecked[clusterName] = lastCheckedTime
+		metrics.WrittenReports.Inc()
+
+		return nil
+	}(tx)
+
+	finishTransaction(tx, err)
+
+	return err
+}
+
+func (storage DVORecommendationsDBStorage) updateReport(
+	tx *sql.Tx,
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+	report types.ClusterReport,
+	rules []types.ReportItem,
+	lastCheckedTime time.Time,
+	gatheredAt time.Time,
+	reportedAtTime time.Time,
+) error {
+	// TODO
+	return nil
 }

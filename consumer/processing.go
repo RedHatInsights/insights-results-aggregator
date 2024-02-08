@@ -293,3 +293,49 @@ func organizationAllowed(consumer *KafkaConsumer, orgID types.OrgID) bool {
 
 	return orgAllowed
 }
+
+type storeInDBFunction func(
+	consumer *KafkaConsumer,
+	msg *sarama.ConsumerMessage,
+	message incomingMessage) (types.RequestID, incomingMessage, error)
+
+// commonProcessMessage is used by both DVO and OCP message processors as they share
+// some steps in common. However, storing the DVO and OCP reports in the DB is done
+// differently, so it was needed to introduce a storeInDBFunction type
+func commonProcessMessage(
+	consumer *KafkaConsumer,
+	msg *sarama.ConsumerMessage,
+	storeInDBFunction storeInDBFunction,
+) (types.RequestID, incomingMessage, error) {
+	tStart := time.Now()
+	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
+	message, err := consumer.MessageProcessor.parseMessage(consumer, msg)
+	if err != nil {
+		if errors.Is(err, types.ErrEmptyReport) {
+			logMessageInfo(consumer, msg, &message, "This message has an empty report and will not be processed further")
+			metrics.SkippedEmptyReports.Inc()
+			return message.RequestID, message, nil
+		}
+		return message.RequestID, message, err
+	}
+	logMessageInfo(consumer, msg, &message, "Read")
+	tRead := time.Now()
+	logDuration(tStart, tRead, msg.Offset, "read")
+
+	checkMessageVersion(consumer, &message, msg)
+
+	if ok, cause := checkMessageOrgInAllowList(consumer, &message, msg); !ok {
+		err := errors.New(cause)
+		logMessageError(consumer, msg, &message, cause, err)
+		return message.RequestID, message, err
+	}
+
+	tAllowlisted := time.Now()
+	logDuration(tRead, tAllowlisted, msg.Offset, "org_filtering")
+
+	logMessageDebug(consumer, msg, &message, "Marshalled")
+	tMarshalled := time.Now()
+	logDuration(tAllowlisted, tMarshalled, msg.Offset, "marshalling")
+
+	return storeInDBFunction(consumer, msg, message)
+}

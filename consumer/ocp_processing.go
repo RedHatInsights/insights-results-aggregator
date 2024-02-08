@@ -22,7 +22,6 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
-	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 	"github.com/Shopify/sarama"
@@ -62,7 +61,7 @@ func (OCPRulesProcessor) deserializeMessage(messageValue []byte) (incomingMessag
 	return deserialized, nil
 }
 
-func (consumer *KafkaConsumer) writeReport(
+func (consumer *KafkaConsumer) writeOCPReport(
 	msg *sarama.ConsumerMessage, message incomingMessage,
 	reportAsBytes []byte, lastCheckedTime time.Time,
 ) error {
@@ -145,41 +144,18 @@ func (consumer *KafkaConsumer) writeInfoReport(
 }
 
 // processMessage processes an incoming message
-func (OCPRulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
+func (processor OCPRulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (types.RequestID, incomingMessage, error) {
+	return commonProcessMessage(consumer, msg, processor.storeInDB)
+}
+
+func (OCPRulesProcessor) storeInDB(consumer *KafkaConsumer, msg *sarama.ConsumerMessage, message incomingMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
-
-	log.Info().Int(offsetKey, int(msg.Offset)).Str(topicKey, consumer.Configuration.Topic).Str(groupKey, consumer.Configuration.Group).Msg("Consumed")
-
-	message, err := consumer.MessageProcessor.parseMessage(consumer, msg)
-	if err != nil {
-		if errors.Is(err, types.ErrEmptyReport) {
-			logMessageInfo(consumer, msg, &message, "This message has an empty report and will not be processed further")
-			metrics.SkippedEmptyReports.Inc()
-			return message.RequestID, message, nil
-		}
-		return message.RequestID, message, err
-	}
-	logMessageInfo(consumer, msg, &message, "Read")
-	tRead := time.Now()
-
-	checkMessageVersion(consumer, &message, msg)
-
-	if ok, cause := checkMessageOrgInAllowList(consumer, &message, msg); !ok {
-		err := errors.New(cause)
-		logMessageError(consumer, msg, &message, cause, err)
-		return message.RequestID, message, err
-	}
-
-	tAllowlisted := time.Now()
-
-	logMessageDebug(consumer, msg, &message, "Marshalled")
-	tMarshalled := time.Now()
-
 	lastCheckedTime, err := consumer.retrieveLastCheckedTime(msg, &message)
 	if err != nil {
 		return message.RequestID, message, err
 	}
 	tTimeCheck := time.Now()
+	logDuration(tStart, tTimeCheck, msg.Offset, "time_check")
 
 	reportAsBytes, err := json.Marshal(*message.Report)
 	if err != nil {
@@ -187,16 +163,18 @@ func (OCPRulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.Con
 		return message.RequestID, message, err
 	}
 
-	err = consumer.writeReport(msg, message, reportAsBytes, lastCheckedTime)
+	err = consumer.writeOCPReport(msg, message, reportAsBytes, lastCheckedTime)
 	if err != nil {
 		return message.RequestID, message, err
 	}
 	tStored := time.Now()
+	logDuration(tTimeCheck, tStored, msg.Offset, "db_store_report")
 
 	tRecommendationsStored, err := consumer.writeRecommendations(msg, message, reportAsBytes)
 	if err != nil {
 		return message.RequestID, message, err
 	}
+	logDuration(tStored, tRecommendationsStored, msg.Offset, "db_store_recommendations")
 
 	// rule hits has been stored into database - time to log all these great info
 	logClusterInfo(&message)
@@ -206,17 +184,8 @@ func (OCPRulesProcessor) processMessage(consumer *KafkaConsumer, msg *sarama.Con
 		return message.RequestID, message, err
 	}
 	infoStored := time.Now()
-
-	// log durations for every message consumption steps
-	logDuration(tStart, tRead, msg.Offset, "read")
-	logDuration(tRead, tAllowlisted, msg.Offset, "org_filtering")
-	logDuration(tAllowlisted, tMarshalled, msg.Offset, "marshalling")
-	logDuration(tMarshalled, tTimeCheck, msg.Offset, "time_check")
-	logDuration(tTimeCheck, tStored, msg.Offset, "db_store_report")
-	logDuration(tStored, tRecommendationsStored, msg.Offset, "db_store_recommendations")
 	logDuration(infoStoredAtTime, infoStored, msg.Offset, "db_store_info_report")
 
-	// message has been parsed and stored into storage
 	return message.RequestID, message, nil
 }
 
