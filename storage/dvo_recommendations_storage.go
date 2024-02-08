@@ -202,7 +202,7 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 	// }
 
 	if storage.dbDriverType != types.DBDriverPostgres {
-		return fmt.Errorf("writing report with DB %v is not supported", storage.dbDriverType)
+		return fmt.Errorf("writing workloads with DB %v is not supported", storage.dbDriverType)
 	}
 
 	// Begin a new transaction.
