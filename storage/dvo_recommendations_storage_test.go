@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"database/sql/driver"
+
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
@@ -205,4 +207,29 @@ func TestDVOStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 		testdata.RequestID1,
 	)
 	assert.EqualError(t, err, "no such table: dvo.dvo_report")
+}
+
+func TestDVOStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
+	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpectsForDriverDVO(t, types.DBDriverPostgres)
+	defer ira_helpers.MustCloseMockStorageWithExpectsDVO(t, mockStorage, expects)
+
+	expects.ExpectBegin()
+
+	expects.ExpectQuery(`SELECT last_checked_at FROM dvo.dvo_report`).
+		WillReturnRows(expects.NewRows([]string{"last_checked_at"})).
+		RowsWillBeClosed()
+
+	expects.ExpectExec("INSERT INTO dvo.dvo_report").
+		WillReturnResult(driver.ResultNoRows)
+
+	expects.ExpectCommit()
+	expects.ExpectClose()
+	expects.ExpectClose()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, `{"test": "report"}`,
+		validDVORecommendation, testdata.LastCheckedAt, time.Now(), time.Now(),
+		testdata.RequestID1)
+	helpers.FailOnError(t, mockStorage.Close())
+	helpers.FailOnError(t, err)
 }
