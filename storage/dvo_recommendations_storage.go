@@ -75,7 +75,7 @@ func NewDVORecommendationsStorage(configuration Configuration) (DVORecommendatio
 		return newNoopDVOStorage(configuration)
 	default:
 		// error to be thrown
-		err := fmt.Errorf("unknown storage type '%s'", configuration.Type)
+		err := fmt.Errorf("Unknown storage type '%s'", configuration.Type)
 		log.Error().Err(err).Msg("Init failure")
 		return nil, err
 	}
