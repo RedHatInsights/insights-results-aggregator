@@ -202,8 +202,8 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 	report types.ClusterReport,
 	workloads []types.WorkloadRecommendation,
 	lastCheckedTime time.Time,
-	gatheredAt time.Time,
-	storedAtTime time.Time,
+	_ time.Time,
+	_ time.Time,
 	_ types.RequestID,
 ) error {
 	// TODO:
@@ -243,7 +243,7 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 			return nil
 		}
 
-		err = storage.updateReport(tx, orgID, clusterName, report, workloads, lastCheckedTime, gatheredAt, storedAtTime)
+		err = storage.updateReport(tx, orgID, clusterName, report, workloads, lastCheckedTime)
 		if err != nil {
 			return err
 		}
@@ -267,8 +267,6 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	report types.ClusterReport,
 	recommendations []types.WorkloadRecommendation,
 	lastCheckedTime time.Time,
-	gatheredAt time.Time,
-	reportedAtTime time.Time,
 ) error {
 	deleteQuery := "DELETE FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;"
 	_, err := tx.Exec(deleteQuery, orgID, clusterName)
@@ -297,7 +295,7 @@ func (storage DVORecommendationsDBStorage) updateReport(
 			if _, ok := objectsMap[workload.NamespaceUID]; !ok {
 				objectsMap[workload.NamespaceUID] = 1
 			} else {
-				objectsMap[workload.NamespaceUID] += 1
+				objectsMap[workload.NamespaceUID]++
 			}
 		}
 	}
@@ -320,11 +318,12 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		} else {
 			values[6*index+4] = string(workloadAsJSON) // report
 		}
-		values[6*index+5] = nRecommendations                                       // recommendations
-		values[6*index+6] = objectsMap[namespaceUID]                               // objects
+		values[6*index+5] = nRecommendations         // recommendations
+		values[6*index+6] = objectsMap[namespaceUID] // objects
+		// TODO: Not sure what to put here
 		values[6*index+7] = types.Timestamp(time.Now().UTC().Format(time.RFC3339)) // reported_at
-		values[6*index+8] = types.Timestamp(time.Now().UTC().Format(time.RFC3339)) // last_checked_at
-		index += 1
+		values[6*index+8] = lastCheckedTime                                        // last_checked_at
+		index++
 	}
 	_, err = tx.Exec(workloadInsertStatement, values...)
 	if err != nil {
