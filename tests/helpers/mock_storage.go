@@ -31,7 +31,10 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-const postgres = "postgres"
+const (
+	postgres                = "postgres"
+	unfulfilledExpectations = "there were unfulfilled expectations: %s"
+)
 
 // MustGetMockStorageWithExpects returns mock db storage
 // with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
@@ -80,7 +83,7 @@ func MustCloseMockStorageWithExpects(
 	t *testing.T, mockStorage storage.OCPRecommendationsStorage, expects sqlmock.Sqlmock,
 ) {
 	if err := expects.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+		t.Errorf(unfulfilledExpectations, err)
 	}
 
 	expects.ExpectClose()
@@ -92,7 +95,7 @@ func MustCloseMockStorageWithExpectsDVO(
 	t *testing.T, mockStorage storage.DVORecommendationsStorage, expects sqlmock.Sqlmock,
 ) {
 	if err := expects.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+		t.Errorf(unfulfilledExpectations, err)
 	}
 
 	expects.ExpectClose()
@@ -104,7 +107,7 @@ func MustCloseMockDBWithExpects(
 	t *testing.T, db *sql.DB, expects sqlmock.Sqlmock,
 ) {
 	if err := expects.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+		t.Errorf(unfulfilledExpectations, err)
 	}
 
 	expects.ExpectClose()
