@@ -408,8 +408,6 @@ func TestProcessCorrectDVOMessage(t *testing.T) {
 }
 
 func TestProcessingEmptyMetricsMissingAttributesWithClosedStorage(t *testing.T) {
-	// TODO: Unskip
-	t.Skip("not implemented yet")
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 
 	mockConsumer := dummyDVOConsumer(mockStorage, true)
