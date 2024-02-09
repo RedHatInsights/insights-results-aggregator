@@ -31,3 +31,12 @@ func (storage OCPRecommendationsDBStorage) getReportInfoUpsertQuery() string {
 		DO UPDATE SET org_id = $1, version_info = $3
 	`
 }
+
+func (storage DVORecommendationsDBStorage) getReportUpsertQuery() string {
+	return `
+		INSERT INTO dvo.dvo_report(org_id, cluster_id, namespace_id, namespace_name, report, recommendations, objects, reported_at, last_checked_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT (org_id, cluster_id, namespace_id)
+		DO UPDATE SET namespace_name = $4, report = $5, recommendations = $6, objects = $7, reported_at = $8, last_checked_at = $9
+	`
+}

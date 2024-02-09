@@ -84,12 +84,3 @@ func TestNewDVOStorageReturnedImplementation(t *testing.T) {
 	})
 	assert.Nil(t, s, "redis type is not supported for DVO storage")
 }
-
-func TestDBStorage_getWorkloadsInsertStatement(t *testing.T) {
-	fakeStorage := storage.NewDVORecommendationsFromConnection(nil, -1)
-	r := fakeStorage.GetWorkloadsInsertStatement(3)
-
-	// 5*3 placeholders expected
-	const expected = "INSERT INTO dvo.dvo_report(org_id, cluster_id, namespace_id, namespace_name, report, recommendations, objects, reported_at, last_checked_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9),($10,$11,$12,$13,$14,$15,$16,$17,$18),($19,$20,$21,$22,$23,$24,$25,$26,$27)"
-	assert.Equal(t, expected, r)
-}

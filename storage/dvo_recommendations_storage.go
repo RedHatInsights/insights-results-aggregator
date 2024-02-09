@@ -19,7 +19,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -302,13 +301,6 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		reportedAtMap = make(map[string]types.Timestamp) // create empty map
 	}
 
-	deleteQuery := "DELETE FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;"
-	_, err = tx.Exec(deleteQuery, orgID, clusterName)
-	if err != nil {
-		log.Err(err).Msgf("Unable to remove previous cluster reports (org: %v, cluster: %v)", orgID, clusterName)
-		return err
-	}
-
 	if len(recommendations) == 0 {
 		return nil
 	}
@@ -335,73 +327,44 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	}
 
 	// Get the INSERT statement for writing a workload into the database.
-	workloadInsertStatement := storage.GetWorkloadsInsertStatement(len(namespaceMap))
+	workloadInsertStatement := storage.getReportUpsertQuery()
 
 	// Get values to be stored in dvo.dvo_report table
-	values := make([]interface{}, len(namespaceMap)*9)
-	index := 0
+	values := make([]interface{}, 9)
 	for namespaceUID, namespaceName := range namespaceMap {
-		values[6*index] = orgID           // org_id
-		values[6*index+1] = clusterName   // cluster_id
-		values[6*index+2] = namespaceUID  // namespace_id
-		values[6*index+3] = namespaceName // namespace_name
+		values[0] = orgID         // org_id
+		values[1] = clusterName   // cluster_id
+		values[2] = namespaceUID  // namespace_id
+		values[3] = namespaceName // namespace_name
 
 		workloadAsJSON, err := json.Marshal(report)
 		if err != nil {
 			log.Error().Err(err).Msg("cannot store raw workload report")
-			values[6*index+4] = "{}" // report
+			values[4] = "{}" // report
 		} else {
-			values[6*index+4] = string(workloadAsJSON) // report
+			values[4] = string(workloadAsJSON) // report
 		}
 
-		values[6*index+5] = nRecommendations         // recommendations
-		values[6*index+6] = objectsMap[namespaceUID] // objects
+		values[5] = nRecommendations         // recommendations
+		values[6] = objectsMap[namespaceUID] // objects
 
 		if reportedAt, ok := reportedAtMap[namespaceUID]; ok {
-			values[6*index+7] = reportedAt // reported_at
+			values[7] = reportedAt // reported_at
 		} else {
-			values[6*index+7] = lastCheckedTime
+			values[7] = lastCheckedTime
 		}
 
-		values[6*index+8] = lastCheckedTime // last_checked_at
-		index++
-	}
-	_, err = tx.Exec(workloadInsertStatement, values...)
-	if err != nil {
-		log.Err(err).Msgf("Unable to insert the cluster workloads (org: %v, cluster: %v)",
-			orgID, clusterName,
-		)
-		return err
+		values[8] = lastCheckedTime // last_checked_at
+		_, err = tx.Exec(workloadInsertStatement, values...)
+		if err != nil {
+			log.Err(err).Msgf("Unable to insert the cluster workloads (org: %v, cluster: %v)",
+				orgID, clusterName,
+			)
+			return err
+		}
 	}
 
 	return nil
-}
-
-// GetWorkloadsInsertStatement method prepares DB statement to be used to write
-// the workloads into dvo.dvo_report table for given cluster_id
-func (storage DVORecommendationsDBStorage) GetWorkloadsInsertStatement(nNamespaces int) string {
-	const workloadInsertStatement = "INSERT INTO dvo.dvo_report(org_id, cluster_id, namespace_id, namespace_name, report, recommendations, objects, reported_at, last_checked_at) VALUES %s"
-
-	// pre-allocate array for placeholders
-	placeholders := make([]string, nNamespaces)
-
-	// fill-in placeholders for INSERT statement
-	for index := 0; index < nNamespaces; index++ {
-		placeholders[index] = fmt.Sprintf("($%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d,$%d)",
-			index*9+1,
-			index*9+2,
-			index*9+3,
-			index*9+4,
-			index*9+5,
-			index*9+6,
-			index*9+7,
-			index*9+8,
-			index*9+9,
-		)
-	}
-
-	// construct INSERT statement for multiple values
-	return fmt.Sprintf(workloadInsertStatement, strings.Join(placeholders, ","))
 }
 
 // getRuleKeyCreatedAtMap returns a map between
