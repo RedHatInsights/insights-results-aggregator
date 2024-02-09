@@ -100,6 +100,7 @@ func TestStartServiceDVOStorage(t *testing.T) {
 
 		setEnvSettings(t, map[string]string{
 			"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE": "dvo_recommendations",
+			"INSIGHTS_RESULTS_AGGREGATOR__METRICS__NAMESPACE":   "dvo_writer",
 		})
 
 		go func() {
@@ -213,6 +214,19 @@ func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 	err := main.StartConsumer(conf.GetBrokerConfiguration())
 	assert.EqualError(
 		t, err, "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)",
+	)
+}
+
+func TestStartConsumer_BadBackendStorage(t *testing.T) {
+	setEnvSettings(t, map[string]string{
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER": "postgres",
+		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE":      "sql",
+		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE":                   "what a terrible failure",
+	})
+
+	err := main.StartConsumer(conf.GetBrokerConfiguration())
+	assert.EqualError(
+		t, err, "no backend storage or incompatible selected",
 	)
 }
 
