@@ -185,3 +185,24 @@ func TestDVOStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 	)
 	assert.Equal(t, types.ErrOldReport, err)
 }
+
+// TestDVOStorageWriteReportForClusterDroppedReportTable checks the error
+// returned when trying to SELECT from a dropped/missing dvo.dvo_report table.
+func TestDVOStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	connection := storage.GetConnectionDVO(mockStorage.(*storage.DVORecommendationsDBStorage))
+
+	query := "DROP TABLE dvo.dvo_report CASCADE;"
+
+	_, err := connection.Exec(query)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty,
+		validDVORecommendation, time.Now(), time.Now(), time.Now(),
+		testdata.RequestID1,
+	)
+	assert.EqualError(t, err, "no such table: dvo.dvo_report")
+}
