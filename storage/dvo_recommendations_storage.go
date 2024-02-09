@@ -295,8 +295,15 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	recommendations []types.WorkloadRecommendation,
 	lastCheckedTime time.Time,
 ) error {
+	// Get reported_at if present before deletion
+	reportedAtMap, err := storage.getReportedAtMap(orgID, clusterName)
+	if err != nil {
+		log.Error().Err(err).Msgf("Unable to get dvo report reported_at")
+		reportedAtMap = make(map[string]types.Timestamp) // create empty map
+	}
+
 	deleteQuery := "DELETE FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;"
-	_, err := tx.Exec(deleteQuery, orgID, clusterName)
+	_, err = tx.Exec(deleteQuery, orgID, clusterName)
 	if err != nil {
 		log.Err(err).Msgf("Unable to remove previous cluster reports (org: %v, cluster: %v)", orgID, clusterName)
 		return err
@@ -338,6 +345,7 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		values[6*index+1] = clusterName   // cluster_id
 		values[6*index+2] = namespaceUID  // namespace_id
 		values[6*index+3] = namespaceName // namespace_name
+
 		workloadAsJSON, err := json.Marshal(report)
 		if err != nil {
 			log.Error().Err(err).Msg("cannot store raw workload report")
@@ -345,11 +353,17 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		} else {
 			values[6*index+4] = string(workloadAsJSON) // report
 		}
+
 		values[6*index+5] = nRecommendations         // recommendations
 		values[6*index+6] = objectsMap[namespaceUID] // objects
-		// TODO: Not sure what to put here
-		values[6*index+7] = types.Timestamp(time.Now().UTC().Format(time.RFC3339)) // reported_at
-		values[6*index+8] = lastCheckedTime                                        // last_checked_at
+
+		if reportedAt, ok := reportedAtMap[namespaceUID]; ok {
+			values[6*index+7] = reportedAt // reported_at
+		} else {
+			values[6*index+7] = lastCheckedTime
+		}
+
+		values[6*index+8] = lastCheckedTime // last_checked_at
 		index++
 	}
 	_, err = tx.Exec(workloadInsertStatement, values...)
@@ -388,4 +402,35 @@ func (storage DVORecommendationsDBStorage) GetWorkloadsInsertStatement(nNamespac
 
 	// construct INSERT statement for multiple values
 	return fmt.Sprintf(workloadInsertStatement, strings.Join(placeholders, ","))
+}
+
+// getRuleKeyCreatedAtMap returns a map between
+// (rule_fqdn, error_key) -> created_at
+// for each rule_hit rows matching given
+// orgId and clusterName
+func (storage DVORecommendationsDBStorage) getReportedAtMap(orgID types.OrgID, clusterName types.ClusterName) (map[string]types.Timestamp, error) {
+	query := "SELECT namespace_id, reported_at FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;"
+	reportedAtRows, err := storage.connection.Query(
+		query, orgID, clusterName)
+	if err != nil {
+		log.Error().Err(err).Msg("error retrieving dvo.dvo_report created_at timestamp")
+		return nil, err
+	}
+	defer closeRows(reportedAtRows)
+
+	reportedAtMap := make(map[string]types.Timestamp)
+	for reportedAtRows.Next() {
+		var namespaceID string
+		var reportedAt time.Time
+		err := reportedAtRows.Scan(
+			&namespaceID,
+			&reportedAt,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("error scanning for rule id -> created_at map")
+			continue
+		}
+		reportedAtMap[namespaceID] = types.Timestamp(reportedAt.UTC().Format(time.RFC3339))
+	}
+	return reportedAtMap, err
 }
