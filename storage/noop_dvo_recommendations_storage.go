@@ -16,6 +16,7 @@ package storage
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -67,4 +68,12 @@ func (*NoopDVOStorage) MigrateToLatest() error {
 // ReportsCount noop
 func (*NoopDVOStorage) ReportsCount() (int, error) {
 	return 0, nil
+}
+
+// WriteReportForCluster noop
+func (*NoopDVOStorage) WriteReportForCluster(
+	types.OrgID, types.ClusterName, types.ClusterReport, []types.WorkloadRecommendation, time.Time, time.Time, time.Time,
+	types.RequestID,
+) error {
+	return nil
 }

@@ -388,8 +388,6 @@ func TestProcessEmptyDVOMessage(t *testing.T) {
 }
 
 func TestProcessCorrectDVOMessage(t *testing.T) {
-	// TODO: Unskip
-	t.Skip("not implemented yet")
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 
 	defer closer()
