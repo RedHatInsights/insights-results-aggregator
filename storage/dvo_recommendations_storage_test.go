@@ -18,12 +18,39 @@ package storage_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
+
+var validDVORecommendation = []types.WorkloadRecommendation{
+	{
+		ResponseID: "an_issue|DVO_AN_ISSUE",
+		Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
+		Key:        "DVO_AN_ISSUE",
+		Links: types.DVOLinks{
+			Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+			ProductDocumentation: []string{},
+		},
+		Details: types.DVODetails{CheckName: "", CheckURL: ""},
+		Tags:    []string{},
+		Workloads: []types.DVOWorkload{
+			{
+				Namespace:    "namespace-name-A",
+				NamespaceUID: "NAMESPACE-UID-A",
+				Kind:         "DaemonSet",
+				Name:         "test-name-0099",
+				UID:          "UID-0099",
+			},
+		},
+	},
+}
 
 func init() {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -83,4 +110,41 @@ func TestNewDVOStorageReturnedImplementation(t *testing.T) {
 		Type:          "redis",
 	})
 	assert.Nil(t, s, "redis type is not supported for DVO storage")
+}
+
+// TestDVOStorageWriteReportForClusterClosedStorage check the behaviour of method WriteReportForCluster
+func TestDVOStorageWriteReportForClusterClosedStorage(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	// we need to close storage right now
+	closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.ClusterReportEmpty,
+		validDVORecommendation,
+		time.Now(),
+		time.Now(),
+		time.Now(),
+		testdata.RequestID1,
+	)
+	assert.EqualError(t, err, "sql: database is closed")
+}
+
+// TestDVOStorageWriteReportForClusterUnsupportedDriverError check the behaviour of method WriteReportForCluster
+func TestDVOStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
+	fakeStorage := storage.NewDVORecommendationsFromConnection(nil, -1)
+	// no need to close it
+
+	err := fakeStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.ClusterReportEmpty,
+		validDVORecommendation,
+		time.Now(),
+		time.Now(),
+		time.Now(),
+		testdata.RequestID1,
+	)
+	assert.EqualError(t, err, "writing workloads with DB -1 is not supported")
 }
