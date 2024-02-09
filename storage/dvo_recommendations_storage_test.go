@@ -23,6 +23,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
@@ -147,4 +148,40 @@ func TestDVOStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
 		testdata.RequestID1,
 	)
 	assert.EqualError(t, err, "writing workloads with DB -1 is not supported")
+}
+
+// TestDVOStorageWriteReportForClusterMoreRecentInDB checks that older report
+// will not replace a more recent one when writing a report to storage.
+func TestDVOStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	newerTime := time.Now().UTC()
+	olderTime := newerTime.Add(-time.Hour)
+
+	// Insert newer report.
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.ClusterReportEmpty,
+		validDVORecommendation,
+		newerTime,
+		time.Now(),
+		time.Now(),
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// Try to insert older report.
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		testdata.ClusterReportEmpty,
+		validDVORecommendation,
+		olderTime,
+		time.Now(),
+		time.Now(),
+		testdata.RequestID1,
+	)
+	assert.Equal(t, types.ErrOldReport, err)
 }
