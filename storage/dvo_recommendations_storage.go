@@ -63,6 +63,8 @@ const dvoDBSchema = "dvo"
 type DVORecommendationsDBStorage struct {
 	connection   *sql.DB
 	dbDriverType types.DBDriver
+	// clusterLastCheckedDict is a dictionary of timestamps when the clusters were last checked.
+	clustersLastChecked map[types.ClusterName]time.Time
 }
 
 // NewDVORecommendationsStorage function creates and initializes a new instance of Storage interface
@@ -117,15 +119,42 @@ func newDVOStorage(configuration Configuration) (DVORecommendationsStorage, erro
 // NewDVORecommendationsFromConnection function creates and initializes a new instance of Storage interface from prepared connection
 func NewDVORecommendationsFromConnection(connection *sql.DB, dbDriverType types.DBDriver) *DVORecommendationsDBStorage {
 	return &DVORecommendationsDBStorage{
-		connection:   connection,
-		dbDriverType: dbDriverType,
+		connection:          connection,
+		dbDriverType:        dbDriverType,
+		clustersLastChecked: map[types.ClusterName]time.Time{},
 	}
 }
 
 // Init performs all database initialization
 // tasks necessary for further service operation.
 func (storage DVORecommendationsDBStorage) Init() error {
-	return nil
+	// Read clusterName:LastChecked dictionary from DB.
+	rows, err := storage.connection.Query("SELECT cluster_id, last_checked_at FROM dvo.dvo_report;")
+	if err != nil {
+		return err
+	}
+
+	log.Debug().Msg("executing last_checked_at query")
+	for rows.Next() {
+		var (
+			clusterName types.ClusterName
+			lastChecked time.Time
+		)
+
+		if err := rows.Scan(&clusterName, &lastChecked); err != nil {
+			if closeErr := rows.Close(); closeErr != nil {
+				log.Error().Err(closeErr).Msg("Unable to close the DB rows handle")
+			}
+			return err
+		}
+
+		storage.clustersLastChecked[clusterName] = lastChecked
+	}
+
+	// Not using defer to close the rows here to:
+	// - make errcheck happy (it doesn't like ignoring returned errors),
+	// - return a possible error returned by the Close method.
+	return rows.Close()
 }
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.
@@ -206,12 +235,11 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 	_ time.Time,
 	_ types.RequestID,
 ) error {
-	// TODO:
 	// Skip writing the report if it isn't newer than a report
 	// that is already in the database for the same cluster.
-	// if oldLastChecked, exists := storage.clustersLastChecked[clusterName]; exists && !lastCheckedTime.After(oldLastChecked) {
-	// 	return types.ErrOldReport
-	// }
+	if oldLastChecked, exists := storage.clustersLastChecked[clusterName]; exists && !lastCheckedTime.After(oldLastChecked) {
+		return types.ErrOldReport
+	}
 
 	if storage.dbDriverType != types.DBDriverPostgres {
 		return fmt.Errorf("writing workloads with DB %v is not supported", storage.dbDriverType)
@@ -248,8 +276,7 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 			return err
 		}
 
-		// TODO:
-		// storage.clustersLastChecked[clusterName] = lastCheckedTime
+		storage.clustersLastChecked[clusterName] = lastCheckedTime
 		metrics.WrittenReports.Inc()
 
 		return nil
