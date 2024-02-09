@@ -305,26 +305,7 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		return nil
 	}
 
-	// map the namespace ID to the namespace name
-	namespaceMap := make(map[string]string)
-	// map the number of different workloads in the report per namespace
-	objectsMap := make(map[string]int)
-	nRecommendations := len(recommendations)
-
-	for _, recommendation := range recommendations {
-		log.Warn().Interface("workload", recommendation).Msg("reading workload")
-		for _, workload := range recommendation.Workloads {
-			if _, ok := namespaceMap[workload.NamespaceUID]; !ok {
-				// store the namespace name in the namespaceMap if it's not already there
-				namespaceMap[workload.NamespaceUID] = workload.Namespace
-			}
-			if _, ok := objectsMap[workload.NamespaceUID]; !ok {
-				objectsMap[workload.NamespaceUID] = 1
-			} else {
-				objectsMap[workload.NamespaceUID]++
-			}
-		}
-	}
+	namespaceMap, objectsMap, nRecommendations := mapWorkloadRecommendations(&recommendations)
 
 	// Get the INSERT statement for writing a workload into the database.
 	workloadInsertStatement := storage.getReportUpsertQuery()
@@ -365,6 +346,31 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	}
 
 	return nil
+}
+
+func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation) (
+	map[string]string, map[string]int, int) {
+	// map the namespace ID to the namespace name
+	namespaceMap := make(map[string]string)
+	// map the number of different workloads in the report per namespace
+	objectsMap := make(map[string]int)
+	nRecommendations := len(*recommendations)
+
+	for _, recommendation := range *recommendations {
+		log.Warn().Interface("workload", recommendation).Msg("reading workload")
+		for _, workload := range recommendation.Workloads {
+			if _, ok := namespaceMap[workload.NamespaceUID]; !ok {
+				// store the namespace name in the namespaceMap if it's not already there
+				namespaceMap[workload.NamespaceUID] = workload.Namespace
+			}
+			if _, ok := objectsMap[workload.NamespaceUID]; !ok {
+				objectsMap[workload.NamespaceUID] = 1
+			} else {
+				objectsMap[workload.NamespaceUID]++
+			}
+		}
+	}
+	return namespaceMap, objectsMap, nRecommendations
 }
 
 // getRuleKeyCreatedAtMap returns a map between
