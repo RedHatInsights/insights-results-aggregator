@@ -294,15 +294,15 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	recommendations []types.WorkloadRecommendation,
 	lastCheckedTime time.Time,
 ) error {
+	if len(recommendations) == 0 {
+		return nil
+	}
+
 	// Get reported_at if present before deletion
 	reportedAtMap, err := storage.getReportedAtMap(orgID, clusterName)
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get dvo report reported_at")
 		reportedAtMap = make(map[string]types.Timestamp) // create empty map
-	}
-
-	if len(recommendations) == 0 {
-		return nil
 	}
 
 	namespaceMap, objectsMap, nRecommendations := mapWorkloadRecommendations(&recommendations)
