@@ -17,6 +17,8 @@ limitations under the License.
 package storage_test
 
 import (
+	"encoding/json"
+	"strconv"
 	"testing"
 	"time"
 
@@ -32,31 +34,44 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-var validDVORecommendation = []types.WorkloadRecommendation{
-	{
-		ResponseID: "an_issue|DVO_AN_ISSUE",
-		Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
-		Key:        "DVO_AN_ISSUE",
-		Links: types.DVOLinks{
-			Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
-			ProductDocumentation: []string{},
-		},
-		Details: types.DVODetails{CheckName: "", CheckURL: ""},
-		Tags:    []string{},
-		Workloads: []types.DVOWorkload{
-			{
-				Namespace:    "namespace-name-A",
-				NamespaceUID: "NAMESPACE-UID-A",
-				Kind:         "DaemonSet",
-				Name:         "test-name-0099",
-				UID:          "UID-0099",
+var (
+	validDVORecommendation = []types.WorkloadRecommendation{
+		{
+			ResponseID: "an_issue|DVO_AN_ISSUE",
+			Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
+			Key:        "DVO_AN_ISSUE",
+			Links: types.DVOLinks{
+				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+				ProductDocumentation: []string{},
+			},
+			Details: types.DVODetails{CheckName: "", CheckURL: ""},
+			Tags:    []string{},
+			Workloads: []types.DVOWorkload{
+				{
+					Namespace:    "namespace-name-A",
+					NamespaceUID: "NAMESPACE-UID-A",
+					Kind:         "DaemonSet",
+					Name:         "test-name-0099",
+					UID:          "UID-0099",
+				},
 			},
 		},
-	},
-}
+	}
+	validReport = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
+)
 
 func init() {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+}
+
+func TestDVOStorage_Init(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	dbStorage := mockStorage.(*storage.DVORecommendationsDBStorage)
+
+	err := dbStorage.MigrateToLatest()
+	helpers.FailOnError(t, err)
 }
 
 // TestNewDVOStorageError checks whether constructor for new DVO storage returns error for improper storage configuration
@@ -232,4 +247,51 @@ func TestDVOStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 		testdata.RequestID1)
 	helpers.FailOnError(t, mockStorage.Close())
 	helpers.FailOnError(t, err)
+}
+
+func TestDVOStorageWriteReportForClusterCheckItIsStored(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	now := time.Now().UTC()
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		validDVORecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	var (
+		namespaceID     string
+		namespaceName   string
+		report          types.ClusterReport
+		recommendations int
+		objects         int
+		lastChecked     time.Time
+		reportedAt      time.Time
+	)
+	err = mockStorage.GetConnection().QueryRow(
+		"SELECT namespace_id, namespace_name, report, recommendations, objects, reported_at, last_checked_at FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;",
+		testdata.OrgID, testdata.ClusterName,
+	).Scan(&namespaceID, &namespaceName, &report, &recommendations, &objects, &lastChecked, &reportedAt)
+	helpers.FailOnError(t, err)
+
+	unquotedReport, err := strconv.Unquote(string(report))
+	helpers.FailOnError(t, err)
+	var gotWorkloads types.DVOMetrics
+	err = json.Unmarshal([]byte(unquotedReport), &gotWorkloads)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, "NAMESPACE-UID-A", namespaceID, "the column namespace_id is different than expected")
+	assert.Equal(t, "namespace-name-A", namespaceName, "the column namespace_name is different than expected")
+	assert.Equal(t, validDVORecommendation, gotWorkloads.WorkloadRecommendations, "the column report is different than expected")
+	assert.Equal(t, 1, recommendations, "the column recommendations is different than expected")
+	assert.Equal(t, 1, objects, "the column objects is different than expected")
+	assert.Equal(t, now, lastChecked.UTC(), "the column reported_at is different than expected")
+	assert.Equal(t, now, reportedAt.UTC(), "the column last_checked_at is different than expected")
 }
