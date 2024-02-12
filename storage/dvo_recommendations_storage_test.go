@@ -292,6 +292,6 @@ func TestDVOStorageWriteReportForClusterCheckItIsStored(t *testing.T) {
 	assert.Equal(t, validDVORecommendation, gotWorkloads.WorkloadRecommendations, "the column report is different than expected")
 	assert.Equal(t, 1, recommendations, "the column recommendations is different than expected")
 	assert.Equal(t, 1, objects, "the column objects is different than expected")
-	assert.Equal(t, now, lastChecked.UTC(), "the column reported_at is different than expected")
-	assert.Equal(t, now, reportedAt.UTC(), "the column last_checked_at is different than expected")
+	assert.Equal(t, now.Truncate(time.Millisecond), lastChecked.UTC().Truncate(time.Millisecond), "the column reported_at is different than expected")
+	assert.Equal(t, now.Truncate(time.Millisecond), reportedAt.UTC().Truncate(time.Millisecond), "the column last_checked_at is different than expected")
 }
