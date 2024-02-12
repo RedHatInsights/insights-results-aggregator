@@ -357,7 +357,6 @@ func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation)
 	nRecommendations := len(*recommendations)
 
 	for _, recommendation := range *recommendations {
-		log.Warn().Interface("workload", recommendation).Msg("reading workload")
 		for _, workload := range recommendation.Workloads {
 			if _, ok := namespaceMap[workload.NamespaceUID]; !ok {
 				// store the namespace name in the namespaceMap if it's not already there
