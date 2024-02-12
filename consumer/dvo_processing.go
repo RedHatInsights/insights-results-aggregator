@@ -135,7 +135,7 @@ func (consumer *KafkaConsumer) writeDVOReport(
 	msg *sarama.ConsumerMessage, message incomingMessage,
 	reportAsBytes []byte, lastCheckedTime time.Time,
 ) error {
-	if dvoStorage, ok := consumer.Storage.(storage.DVORecommendationsDBStorage); ok {
+	if dvoStorage, ok := consumer.Storage.(storage.DVORecommendationsStorage); ok {
 		// timestamp when the report is about to be written into database
 		storedAtTime := time.Now()
 
@@ -143,7 +143,7 @@ func (consumer *KafkaConsumer) writeDVOReport(
 			*message.Organization,
 			*message.ClusterName,
 			types.ClusterReport(reportAsBytes),
-			message.ParsedHits,
+			message.ParsedWorkloads,
 			lastCheckedTime,
 			message.Metadata.GatheredAt,
 			storedAtTime,

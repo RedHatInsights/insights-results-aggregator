@@ -17,6 +17,7 @@ package storage
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -39,6 +40,16 @@ type DVORecommendationsStorage interface {
 	GetMaxVersion() migration.Version
 	MigrateToLatest() error
 	ReportsCount() (int, error)
+	WriteReportForCluster(
+		orgID types.OrgID,
+		clusterName types.ClusterName,
+		report types.ClusterReport,
+		workloads []types.WorkloadRecommendation,
+		collectedAtTime time.Time,
+		gatheredAtTime time.Time,
+		storedAtTime time.Time,
+		requestID types.RequestID,
+	) error
 }
 
 // dvoDBSchema represents the name of the DB schema used by DVO-related queries/migrations
@@ -51,6 +62,8 @@ const dvoDBSchema = "dvo"
 type DVORecommendationsDBStorage struct {
 	connection   *sql.DB
 	dbDriverType types.DBDriver
+	// clusterLastCheckedDict is a dictionary of timestamps when the clusters were last checked.
+	clustersLastChecked map[types.ClusterName]time.Time
 }
 
 // NewDVORecommendationsStorage function creates and initializes a new instance of Storage interface
@@ -105,15 +118,42 @@ func newDVOStorage(configuration Configuration) (DVORecommendationsStorage, erro
 // NewDVORecommendationsFromConnection function creates and initializes a new instance of Storage interface from prepared connection
 func NewDVORecommendationsFromConnection(connection *sql.DB, dbDriverType types.DBDriver) *DVORecommendationsDBStorage {
 	return &DVORecommendationsDBStorage{
-		connection:   connection,
-		dbDriverType: dbDriverType,
+		connection:          connection,
+		dbDriverType:        dbDriverType,
+		clustersLastChecked: map[types.ClusterName]time.Time{},
 	}
 }
 
 // Init performs all database initialization
 // tasks necessary for further service operation.
 func (storage DVORecommendationsDBStorage) Init() error {
-	return nil
+	// Read clusterName:LastChecked dictionary from DB.
+	rows, err := storage.connection.Query("SELECT cluster_id, last_checked_at FROM dvo.dvo_report;")
+	if err != nil {
+		return err
+	}
+
+	log.Debug().Msg("executing last_checked_at query")
+	for rows.Next() {
+		var (
+			clusterName types.ClusterName
+			lastChecked time.Time
+		)
+
+		if err := rows.Scan(&clusterName, &lastChecked); err != nil {
+			if closeErr := rows.Close(); closeErr != nil {
+				log.Error().Err(closeErr).Msg("Unable to close the DB rows handle")
+			}
+			return err
+		}
+
+		storage.clustersLastChecked[clusterName] = lastChecked
+	}
+
+	// Not using defer to close the rows here to:
+	// - make errcheck happy (it doesn't like ignoring returned errors),
+	// - return a possible error returned by the Close method.
+	return rows.Close()
 }
 
 // Close method closes the connection to database. Needs to be called at the end of application lifecycle.
@@ -188,18 +228,17 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 	orgID types.OrgID,
 	clusterName types.ClusterName,
 	report types.ClusterReport,
-	rules []types.ReportItem,
+	workloads []types.WorkloadRecommendation,
 	lastCheckedTime time.Time,
-	gatheredAt time.Time,
-	storedAtTime time.Time,
+	_ time.Time,
+	_ time.Time,
 	_ types.RequestID,
 ) error {
-	// TODO:
 	// Skip writing the report if it isn't newer than a report
 	// that is already in the database for the same cluster.
-	// if oldLastChecked, exists := storage.clustersLastChecked[clusterName]; exists && !lastCheckedTime.After(oldLastChecked) {
-	// 	return types.ErrOldReport
-	// }
+	if oldLastChecked, exists := storage.clustersLastChecked[clusterName]; exists && !lastCheckedTime.After(oldLastChecked) {
+		return types.ErrOldReport
+	}
 
 	if storage.dbDriverType != types.DBDriverPostgres {
 		return fmt.Errorf("writing workloads with DB %v is not supported", storage.dbDriverType)
@@ -231,13 +270,12 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 			return nil
 		}
 
-		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, gatheredAt, storedAtTime)
+		err = storage.updateReport(tx, orgID, clusterName, report, workloads, lastCheckedTime)
 		if err != nil {
 			return err
 		}
 
-		// TODO:
-		// storage.clustersLastChecked[clusterName] = lastCheckedTime
+		storage.clustersLastChecked[clusterName] = lastCheckedTime
 		metrics.WrittenReports.Inc()
 
 		return nil
@@ -249,16 +287,118 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 }
 
 func (storage DVORecommendationsDBStorage) updateReport(
-	_ *sql.Tx,
-	_ types.OrgID,
-	_ types.ClusterName,
-	_ types.ClusterReport,
-	_ []types.ReportItem,
-	_ time.Time,
-	_ time.Time,
-	_ time.Time,
+	tx *sql.Tx,
+	orgID types.OrgID,
+	clusterName types.ClusterName,
+	report types.ClusterReport,
+	recommendations []types.WorkloadRecommendation,
+	lastCheckedTime time.Time,
 ) error {
-	// TODO
-	log.Debug().Msg("updating report in database")
+	if len(recommendations) == 0 {
+		return nil
+	}
+
+	// Get reported_at if present before deletion
+	reportedAtMap, err := storage.getReportedAtMap(orgID, clusterName)
+	if err != nil {
+		log.Error().Err(err).Msgf("Unable to get dvo report reported_at")
+		reportedAtMap = make(map[string]types.Timestamp) // create empty map
+	}
+
+	namespaceMap, objectsMap, nRecommendations := mapWorkloadRecommendations(&recommendations)
+
+	// Get the INSERT statement for writing a workload into the database.
+	workloadInsertStatement := storage.getReportUpsertQuery()
+
+	// Get values to be stored in dvo.dvo_report table
+	values := make([]interface{}, 9)
+	for namespaceUID, namespaceName := range namespaceMap {
+		values[0] = orgID         // org_id
+		values[1] = clusterName   // cluster_id
+		values[2] = namespaceUID  // namespace_id
+		values[3] = namespaceName // namespace_name
+
+		workloadAsJSON, err := json.Marshal(report)
+		if err != nil {
+			log.Error().Err(err).Msg("cannot store raw workload report")
+			values[4] = "{}" // report
+		} else {
+			values[4] = string(workloadAsJSON) // report
+		}
+
+		values[5] = nRecommendations         // recommendations
+		values[6] = objectsMap[namespaceUID] // objects
+
+		if reportedAt, ok := reportedAtMap[namespaceUID]; ok {
+			values[7] = reportedAt // reported_at
+		} else {
+			values[7] = lastCheckedTime
+		}
+
+		values[8] = lastCheckedTime // last_checked_at
+		_, err = tx.Exec(workloadInsertStatement, values...)
+		if err != nil {
+			log.Err(err).Msgf("Unable to insert the cluster workloads (org: %v, cluster: %v)",
+				orgID, clusterName,
+			)
+			return err
+		}
+	}
+
 	return nil
+}
+
+func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation) (
+	map[string]string, map[string]int, int) {
+	// map the namespace ID to the namespace name
+	namespaceMap := make(map[string]string)
+	// map the number of different workloads in the report per namespace
+	objectsMap := make(map[string]int)
+	nRecommendations := len(*recommendations)
+
+	for _, recommendation := range *recommendations {
+		for _, workload := range recommendation.Workloads {
+			if _, ok := namespaceMap[workload.NamespaceUID]; !ok {
+				// store the namespace name in the namespaceMap if it's not already there
+				namespaceMap[workload.NamespaceUID] = workload.Namespace
+			}
+			if _, ok := objectsMap[workload.NamespaceUID]; !ok {
+				objectsMap[workload.NamespaceUID] = 1
+			} else {
+				objectsMap[workload.NamespaceUID]++
+			}
+		}
+	}
+	return namespaceMap, objectsMap, nRecommendations
+}
+
+// getRuleKeyCreatedAtMap returns a map between
+// (rule_fqdn, error_key) -> created_at
+// for each rule_hit rows matching given
+// orgId and clusterName
+func (storage DVORecommendationsDBStorage) getReportedAtMap(orgID types.OrgID, clusterName types.ClusterName) (map[string]types.Timestamp, error) {
+	query := "SELECT namespace_id, reported_at FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;"
+	reportedAtRows, err := storage.connection.Query(
+		query, orgID, clusterName)
+	if err != nil {
+		log.Error().Err(err).Msg("error retrieving dvo.dvo_report created_at timestamp")
+		return nil, err
+	}
+	defer closeRows(reportedAtRows)
+
+	reportedAtMap := make(map[string]types.Timestamp)
+	for reportedAtRows.Next() {
+		var namespaceID string
+		var reportedAt time.Time
+		err := reportedAtRows.Scan(
+			&namespaceID,
+			&reportedAt,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("error scanning for rule id -> created_at map")
+			continue
+		}
+		reportedAtMap[namespaceID] = types.Timestamp(reportedAt.UTC().Format(time.RFC3339))
+	}
+	return reportedAtMap, err
 }

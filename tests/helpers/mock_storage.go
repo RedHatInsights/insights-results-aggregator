@@ -31,7 +31,10 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
-const postgres = "postgres"
+const (
+	postgres                = "postgres"
+	unfulfilledExpectations = "there were unfulfilled expectations: %s"
+)
 
 // MustGetMockStorageWithExpects returns mock db storage
 // with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
@@ -54,6 +57,16 @@ func MustGetMockStorageWithExpectsForDriver(
 	return storage.NewOCPRecommendationsFromConnection(db, driverType), expects
 }
 
+// MustGetMockStorageWithExpectsForDriverDVO same as MustGetMockStorageWithExpectsForDriver
+// but for DVO
+func MustGetMockStorageWithExpectsForDriverDVO(
+	t *testing.T, driverType types.DBDriver,
+) (storage.DVORecommendationsStorage, sqlmock.Sqlmock) {
+	db, expects := MustGetMockDBWithExpects(t)
+
+	return storage.NewDVORecommendationsFromConnection(db, driverType), expects
+}
+
 // MustGetMockDBWithExpects returns mock db
 // with a driver "github.com/DATA-DOG/go-sqlmock" which requires you to write expect
 // before each query, so first try to use MustGetPostgresStorage
@@ -70,7 +83,19 @@ func MustCloseMockStorageWithExpects(
 	t *testing.T, mockStorage storage.OCPRecommendationsStorage, expects sqlmock.Sqlmock,
 ) {
 	if err := expects.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+		t.Errorf(unfulfilledExpectations, err)
+	}
+
+	expects.ExpectClose()
+	helpers.FailOnError(t, mockStorage.Close())
+}
+
+// MustCloseMockStorageWithExpectsDVO same asMustCloseMockStorageWithExpects
+func MustCloseMockStorageWithExpectsDVO(
+	t *testing.T, mockStorage storage.DVORecommendationsStorage, expects sqlmock.Sqlmock,
+) {
+	if err := expects.ExpectationsWereMet(); err != nil {
+		t.Errorf(unfulfilledExpectations, err)
 	}
 
 	expects.ExpectClose()
@@ -82,7 +107,7 @@ func MustCloseMockDBWithExpects(
 	t *testing.T, db *sql.DB, expects sqlmock.Sqlmock,
 ) {
 	if err := expects.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+		t.Errorf(unfulfilledExpectations, err)
 	}
 
 	expects.ExpectClose()

@@ -388,8 +388,6 @@ func TestProcessEmptyDVOMessage(t *testing.T) {
 }
 
 func TestProcessCorrectDVOMessage(t *testing.T) {
-	// TODO: Unskip
-	t.Skip("not implemented yet")
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 
 	defer closer()
@@ -410,8 +408,6 @@ func TestProcessCorrectDVOMessage(t *testing.T) {
 }
 
 func TestProcessingEmptyMetricsMissingAttributesWithClosedStorage(t *testing.T) {
-	// TODO: Unskip
-	t.Skip("not implemented yet")
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 
 	mockConsumer := dummyDVOConsumer(mockStorage, true)
@@ -421,21 +417,7 @@ func TestProcessingEmptyMetricsMissingAttributesWithClosedStorage(t *testing.T) 
 	helpers.FailOnError(t, err, "empty report should not be considered an error at HandleMessage level")
 }
 
-func TestProcessingValidDVOMessageEmptyReportWithRequiredAttributesWithClosedStorage(t *testing.T) {
-	// TODO: Unskip
-	t.Skip("not implemented yet")
-	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
-
-	mockConsumer := dummyDVOConsumer(mockStorage, true)
-	closer()
-
-	err := consumerProcessMessage(mockConsumer, messageReportNoDVOMetrics)
-	assert.EqualError(t, err, "sql: database is closed")
-}
-
 func TestProcessingCorrectDVOMessageWithClosedStorage(t *testing.T) {
-	// TODO: Unskip
-	t.Skip("not implemented yet")
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 
 	mockConsumer := dummyDVOConsumer(mockStorage, true)
@@ -445,21 +427,7 @@ func TestProcessingCorrectDVOMessageWithClosedStorage(t *testing.T) {
 	assert.EqualError(t, err, "sql: database is closed")
 }
 
-func TestProcessingDVOMessageWithWrongDateFormatAndEmptyReport(t *testing.T) {
-	// TODO: Unskip
-	t.Skip("not implemented yet")
-	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
-
-	mockConsumer := dummyDVOConsumer(mockStorage, true)
-	closer()
-
-	err := consumerProcessMessage(mockConsumer, messageReportNoDVOMetrics)
-	assert.Nil(t, err, "Message with empty metrics should not be processed")
-}
-
 func TestProcessingDVOMessageWithWrongDateFormatReportNotEmpty(t *testing.T) {
-	// TODO: Unskip
-	t.Skip("not implemented yet")
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
 

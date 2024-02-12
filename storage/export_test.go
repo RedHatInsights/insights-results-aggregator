@@ -51,6 +51,10 @@ func GetConnection(storage *OCPRecommendationsDBStorage) *sql.DB {
 	return storage.connection
 }
 
+func GetConnectionDVO(storage *DVORecommendationsDBStorage) *sql.DB {
+	return storage.connection
+}
+
 func GetClustersLastChecked(storage *OCPRecommendationsDBStorage) map[types.ClusterName]time.Time {
 	return storage.clustersLastChecked
 }
