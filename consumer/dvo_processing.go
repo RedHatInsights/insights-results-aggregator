@@ -29,6 +29,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const msgKey = "msg"
+
 // DVORulesProcessor satisfies MessageProcessor interface
 type DVORulesProcessor struct {
 }
@@ -65,14 +67,14 @@ func (DVORulesProcessor) deserializeMessage(messageValue []byte) (incomingMessag
 // It should be the first method called within ProcessMessage in order
 // to convert the message into a struct that can be worked with
 func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.ConsumerMessage) (incomingMessage, error) {
-	log.Debug().Bytes("msg", msg.Value).Msg("message before being deserialized")
+	log.Debug().Bytes(msgKey, msg.Value).Msg("message before being deserialized")
 	message, err := consumer.MessageProcessor.deserializeMessage(msg.Value)
 	if err != nil {
 		consumer.logMsgForFurtherAnalysis(msg)
 		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
 		return message, err
 	}
-	log.Debug().Interface("msg", message).Msg("message deserialized")
+	log.Debug().Interface(msgKey, message).Msg("message deserialized")
 	consumer.updatePayloadTracker(message.RequestID, time.Now(), message.Organization, message.Account, producer.StatusReceived)
 
 	if err := consumer.MessageProcessor.shouldProcess(consumer, msg, &message); err != nil {
@@ -83,7 +85,7 @@ func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.Consu
 		consumer.logReportStructureError(err, msg)
 		return message, err
 	}
-	log.Debug().Interface("msg", message).Msg("message with DVO content parsed")
+	log.Debug().Interface(msgKey, message).Msg("message with DVO content parsed")
 	return message, nil
 }
 
