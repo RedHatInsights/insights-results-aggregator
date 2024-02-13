@@ -265,6 +265,7 @@ func (consumer *KafkaConsumer) logReportStructureError(err error, msg *sarama.Co
 }
 
 func (consumer *KafkaConsumer) retrieveLastCheckedTime(msg *sarama.ConsumerMessage, parsedMsg *incomingMessage) (time.Time, error) {
+	log.Debug().Str("lastCheckedTime", parsedMsg.LastChecked).Msg("Retrieving last checked time")
 	lastCheckedTime, err := time.Parse(time.RFC3339Nano, parsedMsg.LastChecked)
 	if err != nil {
 		logMessageError(consumer, msg, parsedMsg, "Error parsing date from message", err)
