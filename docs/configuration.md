@@ -57,7 +57,7 @@ Broker configuration is in section `[broker]` in config file
 
 ```toml
 [broker]
-address = "localhost:9092"
+addresses = "localhost:9092"
 security_protocol = ""
 cert_path = ""
 sasl_mechanism = ""
@@ -74,7 +74,7 @@ org_allowlist_file = ""
 enable_org_allowlist = false
 ```
 
-* `address` is an address of kafka broker (DEFAULT: "")
+* `addresses` is a comma separated list of addresses of Kafka brokers; e.g kafka:9093,localhost:9092,kafka_2:9092
 * `security_protocol` is a value for the `security.protocol` Kafka configuration. Defaults to ""
 * `cert_path` is a path to a file containing an SSL certificate, only used if `secutiy_protocol` is properly set to `SSL`
 * `sasl_mechanism` is the SASL authentication mechanism to use when `SASL_SSL` is set as `security_protocol`
@@ -95,7 +95,7 @@ consuming will be started from the most recent message (DEFAULT: false)
 
 Option names in env configuration:
 
-* `address` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
+* `addresses` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESSES
 * `security_protocol` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SECURITY_PROTOCOL
 * `cert_path` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__CERT_PATH
 * `sasl_mechanism` - INSIGHTS_RESULTS_AGGREGATOR__BROKER__SASL_MECHANISM

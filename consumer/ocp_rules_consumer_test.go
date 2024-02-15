@@ -63,9 +63,9 @@ func createOCPConsumer(brokerCfg broker.Configuration, mockStorage storage.OCPRe
 
 func dummyOCPConsumer(s storage.OCPRecommendationsStorage, allowlist bool) consumer.Consumer {
 	brokerCfg := broker.Configuration{
-		Address: "localhost:1234",
-		Topic:   "topic",
-		Group:   "group",
+		Addresses: "localhost:1234",
+		Topic:     "topic",
+		Group:     "group",
 	}
 	if allowlist {
 		brokerCfg.OrgAllowlist = mapset.NewSetWith(types.OrgID(1))
@@ -89,9 +89,9 @@ func TestOCPRulesConsumer_New(t *testing.T) {
 		mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
 		mockConsumer, err := consumer.NewOCPRulesConsumer(broker.Configuration{
-			Address: mockBroker.Addr(),
-			Topic:   testTopicName,
-			Enabled: true,
+			Addresses: mockBroker.Addr(),
+			Topic:     testTopicName,
+			Enabled:   true,
 		}, mockStorage)
 		helpers.FailOnError(t, err)
 
@@ -736,7 +736,7 @@ func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationIsNotAllowed(t 
 	defer closer()
 
 	brokerCfg := broker.Configuration{
-		Address:             "localhost:1234",
+		Addresses:           "localhost:1234",
 		Topic:               "topic",
 		Group:               "group",
 		OrgAllowlist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
@@ -753,7 +753,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 	defer closer()
 
 	brokerCfg := broker.Configuration{
-		Address:             "localhost:1234",
+		Addresses:           "localhost:1234",
 		Topic:               "topic",
 		Group:               "group",
 		OrgAllowlist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
@@ -770,7 +770,7 @@ func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationBadConfigIsNotA
 	defer closer()
 
 	brokerCfg := broker.Configuration{
-		Address:             "localhost:1234",
+		Addresses:           "localhost:1234",
 		Topic:               "topic",
 		Group:               "group",
 		OrgAllowlist:        nil,
@@ -787,7 +787,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationBadConfigIsNotAllowed(t *testi
 	defer closer()
 
 	brokerCfg := broker.Configuration{
-		Address:             "localhost:1234",
+		Addresses:           "localhost:1234",
 		Topic:               "topic",
 		Group:               "group",
 		OrgAllowlist:        nil,

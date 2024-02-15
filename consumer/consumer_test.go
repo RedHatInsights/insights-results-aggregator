@@ -56,9 +56,9 @@ const (
 var (
 	testOrgAllowlist = mapset.NewSetWith(types.OrgID(1))
 	wrongBrokerCfg   = broker.Configuration{
-		Address: "localhost:1234",
-		Topic:   "topic",
-		Group:   "group",
+		Addresses: "localhost:1234",
+		Topic:     "topic",
+		Group:     "group",
 	}
 	messageReportWithRuleHits = `{
 		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
@@ -159,9 +159,9 @@ func TestKafkaConsumer_New(t *testing.T) {
 		mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
 		mockConsumer, err := consumer.NewKafkaConsumer(broker.Configuration{
-			Address: mockBroker.Addr(),
-			Topic:   testTopicName,
-			Enabled: true,
+			Addresses: mockBroker.Addr(),
+			Topic:     testTopicName,
+			Enabled:   true,
 		}, mockStorage, nil)
 		helpers.FailOnError(t, err)
 
@@ -180,9 +180,9 @@ func TestKafkaConsumer_SetupCleanup(t *testing.T) {
 	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
 	mockConsumer, err := consumer.NewKafkaConsumer(broker.Configuration{
-		Address: mockBroker.Addr(),
-		Topic:   testTopicName,
-		Enabled: true,
+		Addresses: mockBroker.Addr(),
+		Topic:     testTopicName,
+		Enabled:   true,
 	}, mockStorage, nil)
 	helpers.FailOnError(t, err)
 
@@ -206,11 +206,11 @@ func TestKafkaConsumer_NewDeadLetterProducer_Error(t *testing.T) {
 	}()
 
 	// Override functions for testing
-	producer.NewDeadLetterProducer = func(brokerCfg broker.Configuration) (*producer.DeadLetterProducer, error) {
+	producer.NewDeadLetterProducer = func(_ broker.Configuration) (*producer.DeadLetterProducer, error) {
 		return nil, errors.New("error happened")
 	}
 
-	producer.NewPayloadTrackerProducer = func(brokerCfg broker.Configuration) (*producer.PayloadTrackerProducer, error) {
+	producer.NewPayloadTrackerProducer = func(_ broker.Configuration) (*producer.PayloadTrackerProducer, error) {
 		return nil, nil
 	}
 
@@ -223,9 +223,9 @@ func TestKafkaConsumer_NewDeadLetterProducer_Error(t *testing.T) {
 	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
 	_, err := consumer.NewKafkaConsumer(broker.Configuration{
-		Address: mockBroker.Addr(),
-		Topic:   testTopicName,
-		Enabled: true,
+		Addresses: mockBroker.Addr(),
+		Topic:     testTopicName,
+		Enabled:   true,
 	}, mockStorage, nil)
 
 	assert.EqualError(t, err, "error happened")
@@ -241,11 +241,11 @@ func TestKafkaConsumer_NewPayloadTrackerProducer_Error(t *testing.T) {
 	}()
 
 	// Override functions for testing
-	producer.NewDeadLetterProducer = func(brokerCfg broker.Configuration) (*producer.DeadLetterProducer, error) {
+	producer.NewDeadLetterProducer = func(_ broker.Configuration) (*producer.DeadLetterProducer, error) {
 		return nil, nil
 	}
 
-	producer.NewPayloadTrackerProducer = func(brokerCfg broker.Configuration) (*producer.PayloadTrackerProducer, error) {
+	producer.NewPayloadTrackerProducer = func(_ broker.Configuration) (*producer.PayloadTrackerProducer, error) {
 		return nil, errors.New("error happened")
 	}
 
@@ -258,9 +258,9 @@ func TestKafkaConsumer_NewPayloadTrackerProducer_Error(t *testing.T) {
 	mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
 	_, err := consumer.NewKafkaConsumer(broker.Configuration{
-		Address: mockBroker.Addr(),
-		Topic:   testTopicName,
-		Enabled: true,
+		Addresses: mockBroker.Addr(),
+		Topic:     testTopicName,
+		Enabled:   true,
 	}, mockStorage, nil)
 
 	assert.EqualError(t, err, "error happened")

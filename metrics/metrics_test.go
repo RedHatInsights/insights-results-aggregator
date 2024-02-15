@@ -80,7 +80,7 @@ func TestConsumedOCPMessagesMetric(t *testing.T) {
 
 func TestProducedMessagesMetric(t *testing.T) {
 	brokerCfg := broker.Configuration{
-		Address:             "localhost:1234",
+		Addresses:           "localhost:1234",
 		Topic:               "consumer-topic",
 		PayloadTrackerTopic: "payload-tracker-topic",
 		Group:               "test-group",

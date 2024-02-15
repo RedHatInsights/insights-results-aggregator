@@ -31,12 +31,11 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 var (
 	brokerCfg = broker.Configuration{
-		Address:              "localhost:1234",
+		Addresses:            "localhost:1234",
 		Topic:                "consumer-topic",
 		PayloadTrackerTopic:  "payload-tracker-topic",
 		DeadLetterQueueTopic: "dlq-topic",
@@ -50,7 +49,7 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 }
 
-// Test Producer creation with a non accessible Kafka broker
+// Test Producer creation with a non-accessible Kafka broker
 func TestNewProducerBadBroker(t *testing.T) {
 	const expectedErr = "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
 
@@ -89,7 +88,7 @@ func TestProducerTrackPayloadEmptyRequestID(t *testing.T) {
 		helpers.FailOnError(t, payloadTrackerProducer.Close())
 	}()
 
-	err := payloadTrackerProducer.TrackPayload(types.RequestID(""), testTimestamp, nil, nil, producer.StatusReceived)
+	err := payloadTrackerProducer.TrackPayload("", testTimestamp, nil, nil, producer.StatusReceived)
 	assert.NoError(t, err, "payload tracking failed")
 }
 
@@ -133,7 +132,7 @@ func TestProducerNew(t *testing.T) {
 
 	prod, err := producer.New(
 		broker.Configuration{
-			Address:             mockBroker.Addr(),
+			Addresses:           mockBroker.Addr(),
 			Topic:               brokerCfg.Topic,
 			PayloadTrackerTopic: brokerCfg.PayloadTrackerTopic,
 			Enabled:             brokerCfg.Enabled,
@@ -152,7 +151,7 @@ func TestDeadLetterProducerNew(t *testing.T) {
 
 	prod, err := producer.NewDeadLetterProducer(
 		broker.Configuration{
-			Address:              mockBroker.Addr(),
+			Addresses:            mockBroker.Addr(),
 			Topic:                brokerCfg.Topic,
 			PayloadTrackerTopic:  brokerCfg.PayloadTrackerTopic,
 			Enabled:              brokerCfg.Enabled,
@@ -172,7 +171,7 @@ func TestPayloadTrackerProducerNew(t *testing.T) {
 
 	prod, err := producer.NewPayloadTrackerProducer(
 		broker.Configuration{
-			Address:             mockBroker.Addr(),
+			Addresses:           mockBroker.Addr(),
 			Topic:               brokerCfg.Topic,
 			PayloadTrackerTopic: brokerCfg.PayloadTrackerTopic,
 			Enabled:             brokerCfg.Enabled,

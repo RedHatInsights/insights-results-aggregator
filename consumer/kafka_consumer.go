@@ -32,6 +32,7 @@ package consumer
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
@@ -98,11 +99,11 @@ func NewKafkaConsumerWithSaramaConfig(
 	}
 
 	log.Info().
-		Str("addr", brokerCfg.Address).
+		Str("addresses", brokerCfg.Addresses).
 		Str("group", brokerCfg.Group).
 		Msg("New consumer group")
 
-	consumerGroup, err := sarama.NewConsumerGroup([]string{brokerCfg.Address}, brokerCfg.Group, saramaConfig)
+	consumerGroup, err := sarama.NewConsumerGroup(strings.Split(brokerCfg.Addresses, ","), brokerCfg.Group, saramaConfig)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to create consumer group")
 		return nil, err

@@ -1,5 +1,5 @@
 [broker]
-address = "localhost:29092"
+addresses = "localhost:29092"
 security_protocol = ""
 sasl_mechanism = "PLAIN"
 sasl_username = "username"

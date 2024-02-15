@@ -19,6 +19,8 @@ limitations under the License.
 package producer
 
 import (
+	"strings"
+
 	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
 
@@ -57,7 +59,7 @@ func New(brokerCfg broker.Configuration) (*KafkaProducer, error) {
 	// needed producer parameter
 	saramaConfig.Producer.Return.Successes = true
 
-	producer, err := sarama.NewSyncProducer([]string{brokerCfg.Address}, saramaConfig)
+	producer, err := sarama.NewSyncProducer(strings.Split(brokerCfg.Addresses, ","), saramaConfig)
 	if err != nil {
 		log.Error().Err(err).Msg("unable to create a new Kafka producer")
 		return nil, err
