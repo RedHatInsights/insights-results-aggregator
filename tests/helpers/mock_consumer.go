@@ -80,7 +80,7 @@ func GetMockOCPRulesConsumerWithExpectedMessages(
 	mockConsumer := &MockKafkaConsumer{
 		KafkaConsumer: consumer.KafkaConsumer{
 			Configuration: broker.Configuration{
-				Address:      "",
+				Addresses:    "",
 				Topic:        topic,
 				Group:        "",
 				Enabled:      true,

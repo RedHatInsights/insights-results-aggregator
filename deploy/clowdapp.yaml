@@ -117,7 +117,7 @@ objects:
           env:
             - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE
               value: "ocp_recommendations"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESSES
               value: "${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__TIMEOUT
               value: "${KAFKA_TIMEOUT}"

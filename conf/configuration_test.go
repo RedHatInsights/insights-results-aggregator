@@ -55,7 +55,7 @@ func removeFile(t *testing.T, filename string) {
 func setEnvVariables(t *testing.T) {
 	os.Clearenv()
 
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS", "localhost:9093")
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESSES", "localhost:9093")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC", "platform.results.ccx")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP", "aggregator")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED", "true")
@@ -152,7 +152,7 @@ func TestLoadBrokerConfiguration(t *testing.T) {
 
 	brokerCfg := conf.GetBrokerConfiguration()
 
-	assert.Equal(t, "localhost:29092", brokerCfg.Address)
+	assert.Equal(t, "localhost:29092", brokerCfg.Addresses)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
 	assert.Equal(t, expectedTimeout, brokerCfg.Timeout)
@@ -350,7 +350,7 @@ str
 
 func TestLoadConfigurationFromFile(t *testing.T) {
 	config := `[broker]
-		address = "localhost:29092"
+		Addresses = "localhost:29092"
 		topic = "platform.results.ccx"
 		group = "aggregator"
 		enabled = true
@@ -360,7 +360,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		org_allowlist_file = "org_allowlist.csv"
 
 		[server]
-		address = ":8080"
+		Addresses = ":8080"
 		api_prefix = "/api/v1/"
 		api_spec_file = "openapi.json"
 		debug = true
@@ -398,7 +398,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 
 	brokerCfg := conf.GetBrokerConfiguration()
 
-	assert.Equal(t, "localhost:29092", brokerCfg.Address)
+	assert.Equal(t, "localhost:29092", brokerCfg.Addresses)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
 	assert.Equal(t, true, brokerCfg.Enabled)
@@ -460,7 +460,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 
 	brokerCfg := conf.GetBrokerConfiguration()
 
-	assert.Equal(t, "localhost:9093", brokerCfg.Address)
+	assert.Equal(t, "localhost:9093", brokerCfg.Addresses)
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic)
 	assert.Equal(t, "aggregator", brokerCfg.Group)
 	assert.Equal(t, true, brokerCfg.Enabled)
@@ -595,7 +595,7 @@ func TestLoadConfigurationFromEnvVariableClowderEnabled(t *testing.T) {
 	storageCfg := conf.GetOCPRecommendationsStorageConfiguration()
 
 	// check
-	assert.Equal(t, "localhost:29092", brokerCfg.Address, "Broker doesn't match")
+	assert.Equal(t, "localhost:29092", brokerCfg.Addresses, "Broker doesn't match")
 	assert.Equal(t, "platform.results.ccx", brokerCfg.Topic, "Topic doesn't match")
 	assert.Equal(t, testDB, storageCfg.PGDBName)
 }
@@ -638,7 +638,7 @@ func TestClowderConfigForKafka(t *testing.T) {
 	conf.Config.Broker.OrgAllowlistEnabled = false
 
 	brokerCfg := conf.GetBrokerConfiguration()
-	assert.Equal(t, fmt.Sprintf("%s:%d", hostname, port), brokerCfg.Address)
+	assert.Equal(t, fmt.Sprintf("%s:%d", hostname, port), brokerCfg.Addresses)
 	assert.Equal(t, newTopicName, conf.Config.Broker.Topic)
 }
 

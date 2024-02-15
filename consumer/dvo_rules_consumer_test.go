@@ -59,9 +59,9 @@ func createDVOConsumer(brokerCfg broker.Configuration, mockStorage storage.DVORe
 
 func dummyDVOConsumer(s storage.DVORecommendationsStorage, allowlist bool) consumer.Consumer {
 	brokerCfg := broker.Configuration{
-		Address: "localhost:1234",
-		Topic:   "topic",
-		Group:   "group",
+		Addresses: "localhost:1234",
+		Topic:     "topic",
+		Group:     "group",
 	}
 	if allowlist {
 		brokerCfg.OrgAllowlist = mapset.NewSetWith(types.OrgID(1))
@@ -85,9 +85,9 @@ func TestDVORulesConsumer_New(t *testing.T) {
 		mockBroker.SetHandlerByMap(ira_helpers.GetHandlersMapForMockConsumer(t, mockBroker, testTopicName))
 
 		mockConsumer, err := consumer.NewDVORulesConsumer(broker.Configuration{
-			Address: mockBroker.Addr(),
-			Topic:   testTopicName,
-			Enabled: true,
+			Addresses: mockBroker.Addr(),
+			Topic:     testTopicName,
+			Enabled:   true,
 		}, mockStorage)
 		helpers.FailOnError(t, err)
 

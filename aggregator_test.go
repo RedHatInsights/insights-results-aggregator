@@ -207,8 +207,8 @@ func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE":      "sql",
 		"INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE":                   "ocp_recommendations",
 
-		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:999999",
-		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
+		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESSES": "non-existing-host:999999",
+		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED":   "true",
 	})
 
 	err := main.StartConsumer(conf.GetBrokerConfiguration())
@@ -259,8 +259,8 @@ func TestStartService_BadBrokerAndServerAddress(t *testing.T) {
 	os.Clearenv()
 	mustLoadConfiguration("./tests/tests")
 	setEnvSettings(t, map[string]string{
-		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS": "non-existing-host:1",
-		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED": "true",
+		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESSES": "non-existing-host:1",
+		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED":   "true",
 
 		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS":       "non-existing-host:1",
 		"INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE": "openapi.json",

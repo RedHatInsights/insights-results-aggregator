@@ -291,6 +291,42 @@ func loadAllowlistFromCSV(r io.Reader) (mapset.Set, error) {
 	return allowlist, nil
 }
 
+func updateBrokerCfgFromClowder(configuration *ConfigStruct) {
+	// make sure broker(s) are configured in Clowder
+	if len(clowder.LoadedConfig.Kafka.Brokers) > 0 {
+		configuration.Broker.Addresses = ""
+		for _, broker := range clowder.LoadedConfig.Kafka.Brokers {
+			if broker.Port != nil {
+				configuration.Broker.Addresses += fmt.Sprintf("%s:%d", broker.Hostname, *broker.Port) + ","
+			} else {
+				configuration.Broker.Addresses += broker.Hostname + ","
+			}
+		}
+		// remove the extra comma
+		configuration.Broker.Addresses = configuration.Broker.Addresses[:len(configuration.Broker.Addresses)-1]
+
+		// SSL config
+		clowderBrokerCfg := clowder.LoadedConfig.Kafka.Brokers[0]
+		if clowderBrokerCfg.Authtype != nil {
+			fmt.Println("kafka is configured to use authentication")
+			if clowderBrokerCfg.Sasl != nil {
+				configuration.Broker.SaslUsername = *clowderBrokerCfg.Sasl.Username
+				configuration.Broker.SaslPassword = *clowderBrokerCfg.Sasl.Password
+				configuration.Broker.SaslMechanism = *clowderBrokerCfg.Sasl.SaslMechanism
+				configuration.Broker.SecurityProtocol = *clowderBrokerCfg.SecurityProtocol
+				if caPath, err := clowder.LoadedConfig.KafkaCa(clowderBrokerCfg); err == nil {
+					configuration.Broker.CertPath = caPath
+				}
+			} else {
+				fmt.Println(noSaslConfig)
+			}
+		}
+	} else {
+		fmt.Println(noBrokerConfig)
+	}
+	updateTopicsMapping(configuration)
+}
+
 // updateConfigFromClowder updates the current config with the values defined in clowder
 func updateConfigFromClowder(c *ConfigStruct) error {
 	if !clowder.IsClowderEnabled() {
@@ -303,36 +339,7 @@ func updateConfigFromClowder(c *ConfigStruct) error {
 	if clowder.LoadedConfig.Kafka == nil {
 		fmt.Println("No Kafka configuration available in Clowder, using default one")
 	} else {
-		if len(clowder.LoadedConfig.Kafka.Brokers) > 0 {
-			broker := clowder.LoadedConfig.Kafka.Brokers[0]
-			// port can be empty in clowder, so taking it into account
-			if broker.Port != nil {
-				c.Broker.Address = fmt.Sprintf("%s:%d", broker.Hostname, *broker.Port)
-			} else {
-				c.Broker.Address = broker.Hostname
-			}
-
-			// SSL config
-			if broker.Authtype != nil {
-				if broker.Sasl != nil {
-					c.Broker.SaslUsername = *broker.Sasl.Username
-					c.Broker.SaslPassword = *broker.Sasl.Password
-					c.Broker.SaslMechanism = *broker.Sasl.SaslMechanism
-					c.Broker.SecurityProtocol = *broker.SecurityProtocol
-					if caPath, err := clowder.LoadedConfig.KafkaCa(broker); err == nil {
-						c.Broker.CertPath = caPath
-					}
-				} else {
-					fmt.Println(noSaslConfig)
-				}
-			}
-		} else {
-			fmt.Println(noBrokerConfig)
-		}
-
-		if err := updateTopicsMapping(c); err != nil {
-			fmt.Println("warning: an error occurred when applying new topics")
-		}
+		updateBrokerCfgFromClowder(c)
 	}
 
 	// get DB configuration from clowder
@@ -355,7 +362,7 @@ func updateStorageConfFromClowder(conf *storage.Configuration) {
 	conf.PGPassword = clowder.LoadedConfig.Database.Password
 }
 
-func updateTopicsMapping(c *ConfigStruct) error {
+func updateTopicsMapping(c *ConfigStruct) {
 	// Updating topics from clowder mapping if available
 	if topicCfg, ok := clowder.KafkaTopics[c.Broker.Topic]; ok {
 		c.Broker.Topic = topicCfg.Name
@@ -374,6 +381,4 @@ func updateTopicsMapping(c *ConfigStruct) error {
 	} else {
 		fmt.Printf(noTopicMapping, c.Broker.PayloadTrackerTopic)
 	}
-
-	return nil
 }

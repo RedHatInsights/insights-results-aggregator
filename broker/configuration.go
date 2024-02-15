@@ -31,7 +31,7 @@ import (
 
 // Configuration represents configuration of Kafka broker
 type Configuration struct {
-	Address                          string        `mapstructure:"address" toml:"address"`
+	Addresses                        string        `mapstructure:"addresses" toml:"addresses"`
 	SecurityProtocol                 string        `mapstructure:"security_protocol" toml:"security_protocol"`
 	CertPath                         string        `mapstructure:"cert_path" toml:"cert_path"`
 	SaslMechanism                    string        `mapstructure:"sasl_mechanism" toml:"sasl_mechanism"`

@@ -41,7 +41,7 @@ objects:
             enabled: true
         podSpec:
           env:
-            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESS
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESSES
               value: "${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__TIMEOUT
               value: "${KAFKA_TIMEOUT}"
