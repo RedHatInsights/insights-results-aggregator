@@ -672,7 +672,7 @@ data:
                 "uid": "$datasource"
               },
               "editorMode": "code",
-              "expr": "sum(kafka_consumergroup_group_lag{topic=~\".*ccx.ocp.results\", group=~\"$consumer_groups\"}) by (topic, group)",
+              "expr": "sum(kafka_consumergroup_group_lag{group=~\"$consumer_groups\"}) by (topic, group)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{group}}",
@@ -682,7 +682,7 @@ data:
           ],
           "thresholds": [],
           "timeRegions": [],
-          "title": "Kafka lag with ccx.ocp.results",
+          "title": "Kafka lag",
           "tooltip": {
             "shared": true,
             "sort": 0,
