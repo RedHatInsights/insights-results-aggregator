@@ -636,7 +636,7 @@ parameters:
   value: "true"
   required: true
 - name: CW_LOG_STREAM
-  value: $HOSTNAME
+  value: "cache-writer"
 - name: CREATE_STREAM_IF_NOT_EXISTS
   value: "true"
 - name: CACHE_WRITER_CPU_LIMIT
