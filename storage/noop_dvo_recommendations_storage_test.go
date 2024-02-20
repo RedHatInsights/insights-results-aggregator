@@ -39,5 +39,4 @@ func TestDVONoopStorageEmptyMethods(_ *testing.T) {
 	_ = noopStorage.GetDBDriverType()
 
 	_ = noopStorage.WriteReportForCluster(0, "", "", validDVORecommendation, time.Now(), time.Now(), time.Now(), "")
-
 }
