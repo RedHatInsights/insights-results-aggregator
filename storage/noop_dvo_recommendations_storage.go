@@ -77,3 +77,8 @@ func (*NoopDVOStorage) WriteReportForCluster(
 ) error {
 	return nil
 }
+
+// DeleteReportsForOrg noop
+func (*NoopDVOStorage) DeleteReportsForOrg(types.OrgID) error {
+	return nil
+}

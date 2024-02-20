@@ -70,6 +70,22 @@ func MustGetMockOCPRulesConsumerWithExpectedMessages(
 	return mockConsumer, closer
 }
 
+// MustGetMockDVOConsumerWithExpectedMessages same as MustGetMockOCPRulesConsumerWithExpectedMessages
+// but for DVO
+func MustGetMockDVOConsumerWithExpectedMessages(
+	t testing.TB,
+	topic string,
+	orgAllowlist mapset.Set,
+	messages []string,
+) (*MockKafkaConsumer, func()) {
+	mockConsumer, closer, err := GetMockDVOConsumerWithExpectedMessages(t, topic, orgAllowlist, messages)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return mockConsumer, closer
+}
+
 // GetMockOCPRulesConsumerWithExpectedMessages creates mocked OCP rules
 // consumer which produces list of messages automatically
 func GetMockOCPRulesConsumerWithExpectedMessages(
@@ -88,6 +104,35 @@ func GetMockOCPRulesConsumerWithExpectedMessages(
 			},
 			Storage:          mockStorage,
 			MessageProcessor: consumer.OCPRulesProcessor{},
+		},
+		topic:    topic,
+		messages: messages,
+	}
+
+	return mockConsumer, func() {
+		storageCloser()
+		mockConsumer.Close(t)
+	}, nil
+}
+
+// GetMockDVOConsumerWithExpectedMessages same as GetMockOCPRulesConsumerWithExpectedMessages
+// but for DVO
+func GetMockDVOConsumerWithExpectedMessages(
+	t testing.TB, topic string, orgAllowlist mapset.Set, messages []string,
+) (*MockKafkaConsumer, func(), error) {
+	mockStorage, storageCloser := MustGetPostgresStorageDVO(t, true)
+
+	mockConsumer := &MockKafkaConsumer{
+		KafkaConsumer: consumer.KafkaConsumer{
+			Configuration: broker.Configuration{
+				Address:      "",
+				Topic:        topic,
+				Group:        "",
+				Enabled:      true,
+				OrgAllowlist: orgAllowlist,
+			},
+			Storage:          mockStorage,
+			MessageProcessor: consumer.DVORulesProcessor{},
 		},
 		topic:    topic,
 		messages: messages,
