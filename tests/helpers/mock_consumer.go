@@ -125,7 +125,7 @@ func GetMockDVOConsumerWithExpectedMessages(
 	mockConsumer := &MockKafkaConsumer{
 		KafkaConsumer: consumer.KafkaConsumer{
 			Configuration: broker.Configuration{
-				Address:      "",
+				Addresses:    "",
 				Topic:        topic,
 				Group:        "",
 				Enabled:      true,
