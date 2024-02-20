@@ -446,3 +446,24 @@ func TestProcessingDVOMessageWithWrongDateFormatReportNotEmpty(t *testing.T) {
 		))
 	}
 }
+
+func TestDVOKafkaConsumerMockOK(t *testing.T) {
+	helpers.RunTestWithTimeout(t, func(t testing.TB) {
+		mockConsumer, closer := ira_helpers.MustGetMockDVOConsumerWithExpectedMessages(
+			t,
+			testTopicName,
+			testOrgAllowlist,
+			[]string{messageReportWithDVOHits},
+		)
+
+		go mockConsumer.Serve()
+
+		// wait for message processing
+		ira_helpers.WaitForMockConsumerToHaveNConsumedMessages(mockConsumer, 1)
+
+		closer()
+
+		assert.Equal(t, uint64(1), mockConsumer.KafkaConsumer.GetNumberOfSuccessfullyConsumedMessages())
+		assert.Equal(t, uint64(0), mockConsumer.KafkaConsumer.GetNumberOfErrorsConsumingMessages())
+	}, testCaseTimeLimit)
+}
