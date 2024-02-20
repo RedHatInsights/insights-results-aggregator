@@ -316,7 +316,7 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	}
 
 	// Get the INSERT statement for writing a workload into the database.
-	workloadInsertStatement := storage.getReportUpsertQuery()
+	workloadInsertStatement := storage.getReportInsertQuery()
 
 	// Get values to be stored in dvo.dvo_report table
 	values := make([]interface{}, 9)
