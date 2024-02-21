@@ -18,13 +18,13 @@ STORAGE=$1
 function run_unit_tests() {
     if [ -z "$TEST_TO_RUN" ]; then
         echo "No specific tests given. Running all available tests."
-        run_cmd=""
+        run_cmd="$(go list ./... | grep -v tests | tr '\n' ' ')"
     else
         echo "Running specific test $TEST_TO_RUN"
-        run_cmd="-run $TEST_TO_RUN"
+        run_cmd="$TEST_TO_RUN"
     fi
     # shellcheck disable=SC2046
-    if ! go test -timeout 5m $run_cmd -coverprofile coverage.out $(go list ./... | grep -v tests | tr '\n' ' ')
+    if ! go test -timeout 5m -coverprofile coverage.out $run_cmd
     then
         echo "unit tests failed"
         exit 1
