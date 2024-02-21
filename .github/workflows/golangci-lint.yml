@@ -1,16 +1,12 @@
 name: golangci-lint
 on:
-  push:
-    tags:
-      - v*
-    branches:
-      - master
-      - main
   pull_request:
+
 permissions:
   contents: read
   # Optional: allow read access to pull request. Use with `only-new-issues` option.
   # pull-requests: read
+
 jobs:
   golangci:
     name: lint
@@ -31,7 +27,7 @@ jobs:
           args: >
             --enable=goimports,gosimple,nilerr,prealloc,revive,staticcheck,unconvert,unused,whitespace,zerologlint
             --timeout=3m
-          
+
           # Optional: show only new issues if it's a pull request. The default value is `false`.
           only-new-issues: true
 
