@@ -348,8 +348,15 @@ func TestParseDVOMessageWithProperMetrics(t *testing.T) {
 				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
 				ProductDocumentation: []string{},
 			},
-			Details: types.DVODetails{CheckName: "", CheckURL: ""},
-			Tags:    []string{},
+			Details: map[string]interface{}{
+				"check_name": "",
+				"check_url":  "",
+				"samples": []map[string]interface{}{
+					{"namespace_uid": "193a2099-1234-5678-916a-d570c9aac158", "kind": "Deployment", "uid": "0501e150-1234-5678-907f-ee732c25044a"},
+					{"namespace_uid": "337477af-1234-5678-b258-16f19d8a6289", "kind": "Deployment", "uid": "8c534861-1234-5678-9af5-913de71a545b"},
+				},
+			},
+			Tags: []string{},
 			Workloads: []types.DVOWorkload{
 				{
 					Namespace:    "namespace-name-A",
