@@ -66,9 +66,10 @@ var (
 			Details: map[string]interface{}{
 				"check_name": "",
 				"check_url":  "",
-				"samples": []map[string]interface{}{
-					{"namespace_uid": "193a2099-1234-5678-916a-d570c9aac158", "kind": "Deployment", "uid": "0501e150-1234-5678-907f-ee732c25044a"},
-					{"namespace_uid": "337477af-1234-5678-b258-16f19d8a6289", "kind": "Deployment", "uid": "8c534861-1234-5678-9af5-913de71a545b"},
+				"samples": []interface{}{
+					map[string]interface{}{
+						"namespace_uid": "NAMESPACE-UID-A", "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
+					},
 				},
 			},
 			Tags: []string{},
@@ -83,7 +84,7 @@ var (
 			},
 		},
 	}
-	validReport = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
+	validReport = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","uid":"193a2099-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
 
 	twoNamespacesRecommendation = []types.WorkloadRecommendation{
 		{
@@ -97,9 +98,10 @@ var (
 			Details: map[string]interface{}{
 				"check_name": "",
 				"check_url":  "",
-				"samples": []map[string]interface{}{
-					{"namespace_uid": "193a2099-1234-5678-916a-d570c9aac158", "kind": "Deployment", "uid": "0501e150-1234-5678-907f-ee732c25044a"},
-					{"namespace_uid": "337477af-1234-5678-b258-16f19d8a6289", "kind": "Deployment", "uid": "8c534861-1234-5678-9af5-913de71a545b"},
+				"samples": []interface{}{
+					map[string]interface{}{
+						"namespace_uid": "NAMESPACE-UID-A", "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
+					},
 				},
 			},
 			Tags:      []string{},
