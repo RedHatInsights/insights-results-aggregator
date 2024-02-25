@@ -45,7 +45,7 @@ type DVORecommendationsStorage interface {
 		clusterName types.ClusterName,
 		report types.ClusterReport,
 		workloads []types.WorkloadRecommendation,
-		collectedAtTime time.Time,
+		lastCheckedTime time.Time,
 		gatheredAtTime time.Time,
 		storedAtTime time.Time,
 		requestID types.RequestID,
@@ -56,6 +56,7 @@ type DVORecommendationsStorage interface {
 		types.ClusterName,
 		string,
 	) (types.DVOReport, error)
+	DeleteReportsForOrg(orgID types.OrgID) error
 }
 
 // dvoDBSchema represents the name of the DB schema used by DVO-related queries/migrations
@@ -313,8 +314,15 @@ func (storage DVORecommendationsDBStorage) updateReport(
 
 	namespaceMap, objectsMap, nRecommendations := mapWorkloadRecommendations(&recommendations)
 
+	// Delete previous reports (CCXDEV-12529)
+	_, err = tx.Exec("DELETE FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;", orgID, clusterName)
+	if err != nil {
+		log.Err(err).Msgf("Unable to remove previous cluster DVO reports (org: %v, cluster: %v)", orgID, clusterName)
+		return err
+	}
+
 	// Get the INSERT statement for writing a workload into the database.
-	workloadInsertStatement := storage.getReportUpsertQuery()
+	workloadInsertStatement := storage.getReportInsertQuery()
 
 	// Get values to be stored in dvo.dvo_report table
 	values := make([]interface{}, 9)
@@ -519,4 +527,8 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 	log.Debug().Int("org_id", int(orgID)).Msgf("ReadWorkloadsForClusterAndNamespace took %v", time.Since(tStart))
 
 	return dvoReport, err
+// DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
+func (storage DVORecommendationsDBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
+	_, err := storage.connection.Exec("DELETE FROM dvo.dvo_report WHERE org_id = $1;", orgID)
+	return err
 }

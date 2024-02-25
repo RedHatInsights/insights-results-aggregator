@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM registry.redhat.io/rhel8/go-toolset:1.18.9-8.1675807488 AS builder
+FROM registry.redhat.io/ubi9/go-toolset:1.18.10 AS builder
 
 COPY . .
 
@@ -23,7 +23,7 @@ RUN umask 0022 && \
     make build && \
     chmod a+x insights-results-aggregator
 
-FROM registry.access.redhat.com/ubi8/ubi-micro:latest
+FROM registry.access.redhat.com/ubi9/ubi-micro:latest
 
 COPY --from=builder /opt/app-root/src/insights-results-aggregator .
 COPY --from=builder /opt/app-root/src/openapi.json /openapi/openapi.json

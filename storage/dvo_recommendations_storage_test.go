@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"database/sql"
 	"database/sql/driver"
 
 	"github.com/rs/zerolog"
@@ -35,6 +36,24 @@ import (
 )
 
 var (
+	now             = time.Now().UTC()
+	nowAfterOneHour = now.Add(1 * time.Hour).UTC()
+	dummyTime       = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	namespaceAWorkload = types.DVOWorkload{
+		Namespace:    "namespace-name-A",
+		NamespaceUID: "NAMESPACE-UID-A",
+		Kind:         "DaemonSet",
+		Name:         "test-name-0099",
+		UID:          "UID-0099",
+	}
+	namespaceBWorkload = types.DVOWorkload{
+		Namespace:    "namespace-name-B",
+		NamespaceUID: "NAMESPACE-UID-B",
+		Kind:         "NotDaemonSet",
+		Name:         "test-name-1199",
+		UID:          "UID-1199",
+	}
 	validDVORecommendation = []types.WorkloadRecommendation{
 		{
 			ResponseID: "an_issue|DVO_AN_ISSUE",
@@ -65,6 +84,21 @@ var (
 		},
 	}
 	validReport = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
+
+	twoNamespacesRecommendation = []types.WorkloadRecommendation{
+		{
+			ResponseID: "an_issue|DVO_AN_ISSUE",
+			Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
+			Key:        "DVO_AN_ISSUE",
+			Links: types.DVOLinks{
+				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+				ProductDocumentation: []string{},
+			},
+			Details:   types.DVODetails{CheckName: "", CheckURL: ""},
+			Tags:      []string{},
+			Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceBWorkload},
+		},
+	}
 )
 
 func init() {
@@ -148,9 +182,9 @@ func TestDVOStorageWriteReportForClusterClosedStorage(t *testing.T) {
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
 		validDVORecommendation,
-		time.Now(),
-		time.Now(),
-		time.Now(),
+		now,
+		dummyTime,
+		dummyTime,
 		testdata.RequestID1,
 	)
 	assert.EqualError(t, err, "sql: database is closed")
@@ -166,9 +200,9 @@ func TestDVOStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
 		validDVORecommendation,
-		time.Now(),
-		time.Now(),
-		time.Now(),
+		now,
+		dummyTime,
+		dummyTime,
 		testdata.RequestID1,
 	)
 	assert.EqualError(t, err, "writing workloads with DB -1 is not supported")
@@ -180,7 +214,7 @@ func TestDVOStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
 
-	newerTime := time.Now().UTC()
+	newerTime := now.UTC()
 	olderTime := newerTime.Add(-time.Hour)
 
 	// Insert newer report.
@@ -190,8 +224,8 @@ func TestDVOStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testdata.ClusterReportEmpty,
 		validDVORecommendation,
 		newerTime,
-		time.Now(),
-		time.Now(),
+		dummyTime,
+		dummyTime,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
@@ -203,8 +237,8 @@ func TestDVOStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testdata.ClusterReportEmpty,
 		validDVORecommendation,
 		olderTime,
-		time.Now(),
-		time.Now(),
+		now,
+		now,
 		testdata.RequestID1,
 	)
 	assert.Equal(t, types.ErrOldReport, err)
@@ -225,7 +259,7 @@ func TestDVOStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty,
-		validDVORecommendation, time.Now(), time.Now(), time.Now(),
+		validDVORecommendation, now, now, now,
 		testdata.RequestID1,
 	)
 	assert.EqualError(t, err, "no such table: dvo.dvo_report")
@@ -241,6 +275,9 @@ func TestDVOStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 		WillReturnRows(expects.NewRows([]string{"last_checked_at"})).
 		RowsWillBeClosed()
 
+	expects.ExpectExec("DELETE FROM dvo.dvo_report").
+		WillReturnResult(driver.ResultNoRows)
+
 	expects.ExpectExec("INSERT INTO dvo.dvo_report").
 		WillReturnResult(driver.ResultNoRows)
 
@@ -250,7 +287,7 @@ func TestDVOStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, `{"test": "report"}`,
-		validDVORecommendation, testdata.LastCheckedAt, time.Now(), time.Now(),
+		validDVORecommendation, testdata.LastCheckedAt, now, now,
 		testdata.RequestID1)
 	helpers.FailOnError(t, mockStorage.Close())
 	helpers.FailOnError(t, err)
@@ -260,19 +297,90 @@ func TestDVOStorageWriteReportForClusterCheckItIsStored(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
 
-	now := time.Now().UTC()
-	err := mockStorage.WriteReportForCluster(
+	err := mockStorage.DeleteReportsForOrg(testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
 		types.ClusterReport(validReport),
 		validDVORecommendation,
 		now,
-		now,
-		now,
+		dummyTime,
+		dummyTime,
 		testdata.RequestID1,
 	)
 	helpers.FailOnError(t, err)
 
+	row := mockStorage.GetConnection().QueryRow(
+		"SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;",
+		testdata.OrgID, testdata.ClusterName,
+	)
+	checkStoredReport(t, row, namespaceAWorkload, 1, now, now)
+}
+
+func TestDVOStorageWriteReportForClusterCheckPreviousIsDeleted(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	err := mockStorage.DeleteReportsForOrg(testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		twoNamespacesRecommendation,
+		now,
+		dummyTime,
+		dummyTime,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// Check both namespaces are stored in the DB
+	row := mockStorage.GetConnection().QueryRow(`
+		SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at
+		FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND namespace_id = $3;`,
+		testdata.OrgID, testdata.ClusterName, namespaceAWorkload.NamespaceUID,
+	)
+	checkStoredReport(t, row, namespaceAWorkload, 1, now, now)
+	row = mockStorage.GetConnection().QueryRow(`
+		SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at
+		FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND namespace_id = $3;`,
+		testdata.OrgID, testdata.ClusterName, namespaceBWorkload.NamespaceUID,
+	)
+	checkStoredReport(t, row, namespaceBWorkload, 1, now, now)
+
+	// Now receive a report with just one namespace for the same cluster
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		validDVORecommendation,
+		nowAfterOneHour,
+		dummyTime,
+		dummyTime,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// Make sure just one namespace is in the DB now
+	row = mockStorage.GetConnection().QueryRow(`
+		SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at
+		FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND namespace_id = $3;`,
+		testdata.OrgID, testdata.ClusterName, namespaceAWorkload.NamespaceUID,
+	)
+	checkStoredReport(t, row, namespaceAWorkload, 1, nowAfterOneHour, now)
+	row = mockStorage.GetConnection().QueryRow(`
+		SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at
+		FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND namespace_id = $3;`,
+		testdata.OrgID, testdata.ClusterName, namespaceBWorkload.NamespaceUID,
+	)
+	checkRowDoesntExist(t, row)
+}
+
+func checkStoredReport(t *testing.T, row *sql.Row, want types.DVOWorkload, wantObjects int, wantLastChecked, wantReportedAt time.Time) {
 	var (
 		namespaceID     string
 		namespaceName   string
@@ -282,10 +390,8 @@ func TestDVOStorageWriteReportForClusterCheckItIsStored(t *testing.T) {
 		lastChecked     time.Time
 		reportedAt      time.Time
 	)
-	err = mockStorage.GetConnection().QueryRow(
-		"SELECT namespace_id, namespace_name, report, recommendations, objects, reported_at, last_checked_at FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;",
-		testdata.OrgID, testdata.ClusterName,
-	).Scan(&namespaceID, &namespaceName, &report, &recommendations, &objects, &lastChecked, &reportedAt)
+
+	err := row.Scan(&namespaceID, &namespaceName, &report, &recommendations, &objects, &lastChecked, &reportedAt)
 	helpers.FailOnError(t, err)
 
 	unquotedReport, err := strconv.Unquote(string(report))
@@ -294,11 +400,26 @@ func TestDVOStorageWriteReportForClusterCheckItIsStored(t *testing.T) {
 	err = json.Unmarshal([]byte(unquotedReport), &gotWorkloads)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, "NAMESPACE-UID-A", namespaceID, "the column namespace_id is different than expected")
-	assert.Equal(t, "namespace-name-A", namespaceName, "the column namespace_name is different than expected")
+	assert.Equal(t, want.NamespaceUID, namespaceID, "the column namespace_id is different than expected")
+	assert.Equal(t, want.Namespace, namespaceName, "the column namespace_name is different than expected")
 	assert.Equal(t, validDVORecommendation, gotWorkloads.WorkloadRecommendations, "the column report is different than expected")
 	assert.Equal(t, 1, recommendations, "the column recommendations is different than expected")
-	assert.Equal(t, 1, objects, "the column objects is different than expected")
-	assert.Equal(t, now.Truncate(time.Millisecond), lastChecked.UTC().Truncate(time.Millisecond), "the column reported_at is different than expected")
-	assert.Equal(t, now.Truncate(time.Millisecond), reportedAt.UTC().Truncate(time.Millisecond), "the column last_checked_at is different than expected")
+	assert.Equal(t, wantObjects, objects, "the column objects is different than expected")
+	assert.Equal(t, wantLastChecked.Truncate(time.Second), lastChecked.UTC().Truncate(time.Second), "the column reported_at is different than expected")
+	assert.Equal(t, wantReportedAt.Truncate(time.Second), reportedAt.UTC().Truncate(time.Second), "the column last_checked_at is different than expected")
+}
+
+func checkRowDoesntExist(t *testing.T, row *sql.Row) {
+	var (
+		namespaceID     string
+		namespaceName   string
+		report          types.ClusterReport
+		recommendations int
+		objects         int
+		lastChecked     time.Time
+		reportedAt      time.Time
+	)
+
+	err := row.Scan(&namespaceID, &namespaceName, &report, &recommendations, &objects, &lastChecked, &reportedAt)
+	assert.ErrorIs(t, err, sql.ErrNoRows, "a row was found for this queryß")
 }
