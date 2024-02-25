@@ -32,7 +32,8 @@ import (
 )
 
 const (
-	namespaceIDParam     = "namespace"
+	namespaceIDParam = "namespace"
+	// RecommendationSuffix is used to strip a suffix from rule ID
 	RecommendationSuffix = ".recommendation"
 )
 
@@ -154,7 +155,7 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 
 	processedWorkloads := server.processDVOWorkloads(workloads)
 
-	log.Info().Uint32(orgIDStr, uint32(orgID)).Msgf(
+	log.Debug().Uint32(orgIDStr, uint32(orgID)).Msgf(
 		"getWorkloads took %s", time.Since(tStart),
 	)
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData("workloads", processedWorkloads))
@@ -221,9 +222,6 @@ func (server *HTTPServer) getWorkloadsForNamespace(writer http.ResponseWriter, r
 	processedWorkload := server.processSingleDVONamespace(workload)
 
 	log.Info().Uint32(orgIDStr, uint32(orgID)).Msgf(
-		"getWorkloadsForNamespace -\n\n\n\n\n\n\n %v", processedWorkload,
-	)
-	log.Info().Uint32(orgIDStr, uint32(orgID)).Msgf(
 		"getWorkloadsForNamespace took %s", time.Since(tStart),
 	)
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData("workloads", processedWorkload))
@@ -256,7 +254,12 @@ func (server *HTTPServer) processSingleDVONamespace(workload types.DVOReport) (
 	var dvoReport types.DVOMetrics
 	// remove doubled escape characters due to improper encoding during storage
 	s := strings.Replace(workload.Report, "\\", "", -1)
-	json.Unmarshal(json.RawMessage(s), &dvoReport)
+
+	err := json.Unmarshal(json.RawMessage(s), &dvoReport)
+	if err != nil {
+		log.Error().Err(err).Msg("error unmarshalling full report")
+		return
+	}
 
 	for _, recommendation := range dvoReport.WorkloadRecommendations {
 		filteredObjects := make([]DVOObject, 0)
@@ -273,13 +276,14 @@ func (server *HTTPServer) processSingleDVONamespace(workload types.DVOReport) (
 			})
 		}
 
+		// recommendation.ResponseID doesn't contain the full rule ID, so smart-proxy was unable to retrieve content, we need to build it
 		compositeRuleID, err := generators.GenerateCompositeRuleID(
-			// for some unknown reason, there's a `.recommendation` suffix for each rule hit. no idea why...
+			// for some unknown reason, there's a `.recommendation` suffix for each rule hit instead of the usual .report
 			types.RuleFQDN(strings.TrimSuffix(recommendation.Component, RecommendationSuffix)),
 			types.ErrorKey(recommendation.Key),
 		)
 		if err != nil {
-			log.Error().Err(err).Msgf("error generating composite rule ID for rule [%+v]", recommendation)
+			log.Error().Err(err).Msg("error generating composite rule ID for rule")
 			continue
 		}
 

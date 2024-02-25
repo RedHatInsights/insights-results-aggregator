@@ -59,8 +59,12 @@ type DVORecommendationsStorage interface {
 	DeleteReportsForOrg(orgID types.OrgID) error
 }
 
-// dvoDBSchema represents the name of the DB schema used by DVO-related queries/migrations
-const dvoDBSchema = "dvo"
+const (
+	// dvoDBSchema represents the name of the DB schema used by DVO-related queries/migrations
+	dvoDBSchema = "dvo"
+	// orgIDStr used in log messages
+	orgIDStr = "orgID"
+)
 
 // DVORecommendationsDBStorage is an implementation of Storage interface that use selected SQL like database
 // like PostgreSQL or RDS etc. That implementation is based on the standard
@@ -467,7 +471,7 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID ty
 		count++
 	}
 
-	log.Debug().Int("org_id", int(orgID)).Msgf("ReadWorkloadsForOrganization processed %d rows in %v", count, time.Since(tStart))
+	log.Debug().Int(orgIDStr, int(orgID)).Msgf("ReadWorkloadsForOrganization processed %d rows in %v", count, time.Since(tStart))
 
 	return workloads, err
 }
@@ -524,7 +528,7 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 	dvoReport.LastCheckedAt = types.Timestamp(lastCheckedAtDB.Time.UTC().Format(time.RFC3339))
 	dvoReport.ReportedAt = types.Timestamp(reportedAtDB.Time.UTC().Format(time.RFC3339))
 
-	log.Debug().Int("org_id", int(orgID)).Msgf("ReadWorkloadsForClusterAndNamespace took %v", time.Since(tStart))
+	log.Debug().Int(orgIDStr, int(orgID)).Msgf("ReadWorkloadsForClusterAndNamespace took %v", time.Since(tStart))
 
 	return dvoReport, err
 }
