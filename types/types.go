@@ -165,20 +165,15 @@ type DVOMetrics struct {
 }
 
 // WorkloadRecommendation contains all the information about the recommendation
+// Details is generic interface{} because it contains template data used to fill rule content, i.e. we don't/should't know the structure
 type WorkloadRecommendation struct {
-	ResponseID string        `json:"response_id"`
-	Component  string        `json:"component"`
-	Key        string        `json:"key"`
-	Details    DVODetails    `json:"details"`
-	Tags       []string      `json:"tags"`
-	Links      DVOLinks      `json:"links"`
-	Workloads  []DVOWorkload `json:"workloads"`
-}
-
-// DVODetails contains some information about the workload
-type DVODetails struct {
-	CheckName string `json:"check_name"`
-	CheckURL  string `json:"check_url"`
+	ResponseID string                 `json:"response_id"`
+	Component  string                 `json:"component"`
+	Key        string                 `json:"key"`
+	Details    map[string]interface{} `json:"details"`
+	Tags       []string               `json:"tags"`
+	Links      DVOLinks               `json:"links"`
+	Workloads  []DVOWorkload          `json:"workloads"`
 }
 
 // DVOWorkload contains the main information of the workload recommendation
@@ -194,6 +189,19 @@ type DVOWorkload struct {
 type DVOLinks struct {
 	Jira                 []string `json:"jira"`
 	ProductDocumentation []string `json:"product_documentation"`
+}
+
+// DVOReport represents a single row of the dvo.dvo_report table.
+type DVOReport struct {
+	OrgID           string          `json:"org_id"`
+	NamespaceID     string          `json:"namespace_id"`
+	NamespaceName   string          `json:"namespace_name"`
+	ClusterID       string          `json:"cluster_id"`
+	Recommendations uint            `json:"recommendations"`
+	Report          string          `json:"report"`
+	Objects         uint            `json:"objects"`
+	ReportedAt      types.Timestamp `json:"reported_at"`
+	LastCheckedAt   types.Timestamp `json:"last_checked_at"`
 }
 
 // ClusterReports is a data structure containing list of clusters, list of
