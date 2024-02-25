@@ -50,6 +50,12 @@ type DVORecommendationsStorage interface {
 		storedAtTime time.Time,
 		requestID types.RequestID,
 	) error
+	ReadWorkloadsForOrganization(types.OrgID) ([]types.DVOReport, error)
+	ReadWorkloadsForClusterAndNamespace(
+		types.OrgID,
+		types.ClusterName,
+		string,
+	) (types.DVOReport, error)
 }
 
 // dvoDBSchema represents the name of the DB schema used by DVO-related queries/migrations
@@ -137,7 +143,7 @@ func (storage DVORecommendationsDBStorage) Init() error {
 	for rows.Next() {
 		var (
 			clusterName types.ClusterName
-			lastChecked time.Time
+			lastChecked sql.NullTime
 		)
 
 		if err := rows.Scan(&clusterName, &lastChecked); err != nil {
@@ -147,7 +153,7 @@ func (storage DVORecommendationsDBStorage) Init() error {
 			return err
 		}
 
-		storage.clustersLastChecked[clusterName] = lastChecked
+		storage.clustersLastChecked[clusterName] = lastChecked.Time
 	}
 
 	// Not using defer to close the rows here to:
@@ -401,4 +407,116 @@ func (storage DVORecommendationsDBStorage) getReportedAtMap(orgID types.OrgID, c
 		reportedAtMap[namespaceID] = types.Timestamp(reportedAt.UTC().Format(time.RFC3339))
 	}
 	return reportedAtMap, err
+}
+
+// ReadWorkloadsForOrganization returns all rows from dvo.dvo_report table for given organizaiton
+func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID types.OrgID) (
+	workloads []types.DVOReport,
+	err error,
+) {
+	tStart := time.Now()
+	query := `
+		SELECT cluster_id, namespace_id, namespace_name, recommendations, objects, reported_at, last_checked_at
+		FROM dvo.dvo_report
+		WHERE org_id = $1
+	`
+
+	// #nosec G202
+	rows, err := storage.connection.Query(query, orgID)
+
+	err = types.ConvertDBError(err, orgID)
+	if err != nil {
+		return workloads, err
+	}
+
+	defer closeRows(rows)
+
+	var (
+		dvoReport       types.DVOReport
+		lastCheckedAtDB sql.NullTime
+		reportedAtDB    sql.NullTime
+		count           uint
+	)
+	for rows.Next() {
+		err = rows.Scan(
+			&dvoReport.ClusterID,
+			&dvoReport.NamespaceID,
+			&dvoReport.NamespaceName,
+			&dvoReport.Recommendations,
+			&dvoReport.Objects,
+			&lastCheckedAtDB,
+			&reportedAtDB,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("ReadWorkloadsForOrganization")
+		}
+
+		// convert timestamps to string
+		dvoReport.LastCheckedAt = types.Timestamp(lastCheckedAtDB.Time.UTC().Format(time.RFC3339))
+		dvoReport.ReportedAt = types.Timestamp(reportedAtDB.Time.UTC().Format(time.RFC3339))
+
+		workloads = append(workloads, dvoReport)
+		count++
+	}
+
+	log.Debug().Int("org_id", int(orgID)).Msgf("ReadWorkloadsForOrganization processed %d rows in %v", count, time.Since(tStart))
+
+	return workloads, err
+}
+
+// ReadWorkloadsForClusterAndNamespace returns a single result from the dvo.dvo_report table
+func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
+	orgID types.OrgID,
+	clusterID types.ClusterName,
+	namespaceID string,
+) (
+	workload types.DVOReport,
+	err error,
+) {
+	tStart := time.Now()
+	query := `
+		SELECT cluster_id, namespace_id, namespace_name, recommendations, report, objects, reported_at, last_checked_at
+		FROM dvo.dvo_report
+		WHERE org_id = $1
+		AND cluster_id = $2
+		AND namespace_id = $3
+	`
+
+	// #nosec G202
+	rows, err := storage.connection.Query(query, orgID, clusterID, namespaceID)
+
+	err = types.ConvertDBError(err, orgID)
+	if err != nil {
+		return workload, err
+	}
+
+	defer closeRows(rows)
+
+	var (
+		dvoReport       types.DVOReport
+		lastCheckedAtDB sql.NullTime
+		reportedAtDB    sql.NullTime
+	)
+	for rows.Next() {
+		err = rows.Scan(
+			&dvoReport.ClusterID,
+			&dvoReport.NamespaceID,
+			&dvoReport.NamespaceName,
+			&dvoReport.Recommendations,
+			&dvoReport.Report,
+			&dvoReport.Objects,
+			&lastCheckedAtDB,
+			&reportedAtDB,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("ReadWorkloadsForClusterAndNamespace")
+		}
+	}
+	// convert timestamps to string
+	dvoReport.LastCheckedAt = types.Timestamp(lastCheckedAtDB.Time.UTC().Format(time.RFC3339))
+	dvoReport.ReportedAt = types.Timestamp(reportedAtDB.Time.UTC().Format(time.RFC3339))
+
+	log.Debug().Int("org_id", int(orgID)).Msgf("ReadWorkloadsForClusterAndNamespace took %v", time.Since(tStart))
+
+	return dvoReport, err
 }

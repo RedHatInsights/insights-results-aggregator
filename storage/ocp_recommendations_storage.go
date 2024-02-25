@@ -419,7 +419,7 @@ func (storage OCPRecommendationsDBStorage) Init() error {
 	for rows.Next() {
 		var (
 			clusterName types.ClusterName
-			lastChecked time.Time
+			lastChecked sql.NullTime
 		)
 
 		if err := rows.Scan(&clusterName, &lastChecked); err != nil {
@@ -429,7 +429,7 @@ func (storage OCPRecommendationsDBStorage) Init() error {
 			return err
 		}
 
-		storage.clustersLastChecked[clusterName] = lastChecked
+		storage.clustersLastChecked[clusterName] = lastChecked.Time
 	}
 
 	// Not using defer to close the rows here to:
