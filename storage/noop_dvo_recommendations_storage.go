@@ -90,6 +90,8 @@ func (*NoopDVOStorage) ReadWorkloadsForClusterAndNamespace(
 	string,
 ) (types.DVOReport, error) {
 	return types.DVOReport{}, nil
+}
+
 // DeleteReportsForOrg noop
 func (*NoopDVOStorage) DeleteReportsForOrg(types.OrgID) error {
 	return nil

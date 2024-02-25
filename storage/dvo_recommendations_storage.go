@@ -527,6 +527,8 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 	log.Debug().Int("org_id", int(orgID)).Msgf("ReadWorkloadsForClusterAndNamespace took %v", time.Since(tStart))
 
 	return dvoReport, err
+}
+
 // DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
 func (storage DVORecommendationsDBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
 	_, err := storage.connection.Exec("DELETE FROM dvo.dvo_report WHERE org_id = $1;", orgID)
