@@ -90,6 +90,11 @@ const (
 	// ClustersRecommendationsListEndpoint receives a list of clusters in POST body and returns a list of clusters with lists of hitting recommendations
 	ClustersRecommendationsListEndpoint = "clusters/organizations/{org_id}/users/{user_id}/recommendations"
 
+	// DVOWorkloadRecommendations returns a list of cluster + namespace workloads for given organization ID.
+	DVOWorkloadRecommendations = "organization/{organization}/workloads"
+	// DVOWorkloadRecommendationsSingleNamespace returns workloads for a single cluster + namespace ID.
+	DVOWorkloadRecommendationsSingleNamespace = "organization/{organization}/namespace/{namespace}/cluster/{cluster}/workloads"
+
 	// Rating accepts a list of ratings in the request body and store them in the database for the given user
 	Rating = "rules/organizations/{org_id}/rating"
 	// GetRating retrieves the rating for a specific rule and user
@@ -181,4 +186,7 @@ func (server *HTTPServer) addRuleEnableDisableEndpointsToRouter(router *mux.Rout
 func (server *HTTPServer) addInsightsAdvisorEndpointsToRouter(router *mux.Router, apiPrefix string) {
 	router.HandleFunc(apiPrefix+RecommendationsListEndpoint, server.getRecommendations).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ClustersRecommendationsListEndpoint, server.getClustersRecommendationsList).Methods(http.MethodPost, http.MethodOptions)
+
+	router.HandleFunc(apiPrefix+DVOWorkloadRecommendations, server.getWorkloads).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+DVOWorkloadRecommendationsSingleNamespace, server.getWorkloadsForNamespace).Methods(http.MethodGet)
 }

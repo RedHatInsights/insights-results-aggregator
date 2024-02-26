@@ -72,7 +72,7 @@ func (storage OCPRecommendationsDBStorage) EnableRuleSystemWide(
 	ruleID types.RuleID,
 	errorKey types.ErrorKey,
 ) error {
-	log.Info().Int("org_id", int(orgID)).Msgf("re-enabling rule %v|%v", ruleID, errorKey)
+	log.Info().Int(orgIDStr, int(orgID)).Msgf("re-enabling rule %v|%v", ruleID, errorKey)
 
 	const query = `DELETE FROM rule_disable
 	                WHERE org_id = $1

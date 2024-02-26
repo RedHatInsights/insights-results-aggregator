@@ -63,12 +63,28 @@ var (
 				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
 				ProductDocumentation: []string{},
 			},
-			Details:   types.DVODetails{CheckName: "", CheckURL: ""},
-			Tags:      []string{},
-			Workloads: []types.DVOWorkload{namespaceAWorkload},
+			Details: map[string]interface{}{
+				"check_name": "",
+				"check_url":  "",
+				"samples": []interface{}{
+					map[string]interface{}{
+						"namespace_uid": "NAMESPACE-UID-A", "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
+					},
+				},
+			},
+			Tags: []string{},
+			Workloads: []types.DVOWorkload{
+				{
+					Namespace:    "namespace-name-A",
+					NamespaceUID: "NAMESPACE-UID-A",
+					Kind:         "DaemonSet",
+					Name:         "test-name-0099",
+					UID:          "UID-0099",
+				},
+			},
 		},
 	}
-	validReport = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
+	validReport = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","uid":"193a2099-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
 
 	twoNamespacesRecommendation = []types.WorkloadRecommendation{
 		{
@@ -79,7 +95,15 @@ var (
 				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
 				ProductDocumentation: []string{},
 			},
-			Details:   types.DVODetails{CheckName: "", CheckURL: ""},
+			Details: map[string]interface{}{
+				"check_name": "",
+				"check_url":  "",
+				"samples": []interface{}{
+					map[string]interface{}{
+						"namespace_uid": "NAMESPACE-UID-A", "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
+					},
+				},
+			},
 			Tags:      []string{},
 			Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceBWorkload},
 		},
