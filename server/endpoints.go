@@ -91,9 +91,9 @@ const (
 	ClustersRecommendationsListEndpoint = "clusters/organizations/{org_id}/users/{user_id}/recommendations"
 
 	// DVOWorkloadRecommendations returns a list of cluster + namespace workloads for given organization ID.
-	DVOWorkloadRecommendations = "organization/{organization}/workloads"
+	DVOWorkloadRecommendations = "organization/{org_id}/workloads"
 	// DVOWorkloadRecommendationsSingleNamespace returns workloads for a single cluster + namespace ID.
-	DVOWorkloadRecommendationsSingleNamespace = "organization/{organization}/namespace/{namespace}/cluster/{cluster}/workloads"
+	DVOWorkloadRecommendationsSingleNamespace = "organization/{org_id}/namespace/{namespace}/cluster/{cluster}/workloads"
 
 	// Rating accepts a list of ratings in the request body and store them in the database for the given user
 	Rating = "rules/organizations/{org_id}/rating"
