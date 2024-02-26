@@ -18,8 +18,10 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -27,7 +29,6 @@ import (
 	httputils "github.com/RedHatInsights/insights-operator-utils/http"
 	"github.com/RedHatInsights/insights-operator-utils/responses"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -119,16 +120,13 @@ func readNamespace(writer http.ResponseWriter, request *http.Request) (
 }
 
 func validateNamespaceID(namespace string) (string, error) {
-	if _, err := uuid.Parse(namespace); err != nil {
-		message := fmt.Sprintf("invalid namespace ID: '%s'. Error: %s", namespace, err.Error())
+	IDValidator := regexp.MustCompile(`^.{1,256}$`)
 
+	if !IDValidator.MatchString(namespace) {
+		message := fmt.Sprintf("invalid namespace ID: '%s'", namespace)
+		err := errors.New(message)
 		log.Error().Err(err).Msg(message)
-
-		return "", &RouterParsingError{
-			ParamName:  namespaceIDParam,
-			ParamValue: namespace,
-			ErrString:  err.Error(),
-		}
+		return "", err
 	}
 
 	return namespace, nil
