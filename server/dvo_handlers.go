@@ -217,7 +217,7 @@ func (server *HTTPServer) getWorkloadsForNamespace(writer http.ResponseWriter, r
 		return
 	}
 
-	processedWorkload := server.processSingleDVONamespace(workload)
+	processedWorkload := server.ProcessSingleDVONamespace(workload)
 
 	log.Info().Uint32(orgIDStr, uint32(orgID)).Msgf(
 		"getWorkloadsForNamespace took %s", time.Since(tStart),
@@ -228,8 +228,8 @@ func (server *HTTPServer) getWorkloadsForNamespace(writer http.ResponseWriter, r
 	}
 }
 
-// processSingleDVONamespace processes a report, filters out mismatching namespaces, returns processed results
-func (server *HTTPServer) processSingleDVONamespace(workload types.DVOReport) (
+// ProcessSingleDVONamespace processes a report, filters out mismatching namespaces, returns processed results
+func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 	processedWorkloads WorkloadsForCluster,
 ) {
 	processedWorkloads = WorkloadsForCluster{
@@ -251,7 +251,13 @@ func (server *HTTPServer) processSingleDVONamespace(workload types.DVOReport) (
 
 	var dvoReport types.DVOMetrics
 	// remove doubled escape characters due to improper encoding during storage
-	s := strings.Replace(workload.Report, "\\", "", -1)
+	// we're working with a "JSON" string like this
+	// \"{\\\"analysis_metadata\\\":{\\\"start\\\":\\\"2024-02-27T10:11:00.688774+00:00\\\",....}}\"
+	// note not only double escape keys, but the whole `report` column is also in quototation marks \"{}\"
+	s := strings.Replace(workload.Report, `\\\`, "", -1)
+
+	// remove leading and trailing \"{}\" -> {}
+	s = strings.Replace(s, `\"`, "", -1)
 
 	err := json.Unmarshal(json.RawMessage(s), &dvoReport)
 	if err != nil {
