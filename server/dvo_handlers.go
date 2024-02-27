@@ -255,7 +255,8 @@ func (server *HTTPServer) processSingleDVONamespace(workload types.DVOReport) (
 
 	err := json.Unmarshal(json.RawMessage(s), &dvoReport)
 	if err != nil {
-		log.Error().Err(err).Msg("error unmarshalling full report")
+		log.Error().Err(err).Msgf("error unmarshalling full report: [%v]", string([]rune(s)[:100]))
+		log.Info().Msgf("report without escape %v", string([]rune(workload.Report)[:100]))
 		return
 	}
 
