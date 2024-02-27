@@ -258,7 +258,7 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 		// and also take care of the escaped `\"` quotes and replaces them with valid `"`, producing a valid JSON
 		err := json.Unmarshal(json.RawMessage(workload.Report), &report)
 		if err != nil {
-			log.Fatal().Err(err)
+			log.Error().Err(err).Msgf("report has unknown structure: [%v]", string([]rune(workload.Report)[:100]))
 		}
 	case `{`:
 		// we're dealing with either a valid JSON `{"system":{}}` or a string with escaped
