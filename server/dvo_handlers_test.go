@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	currentDvoReportFromDB = `\"{\\\"system\\\":{\\\"metadata\\\":{},\\\"hostname\\\":null},\\\"fingerprints\\\":[],\\\"version\\\":1,\\\"analysis_metadata\\\":{},\\\"workload_recommendations\\\":[{\\\"response_id\\\":\\\"an_issue|DVO_AN_ISSUE\\\",\\\"component\\\":\\\"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation\\\",\\\"key\\\":\\\"DVO_AN_ISSUE\\\",\\\"details\\\":{\\\"check_name\\\":\\\"\\\",\\\"check_url\\\":\\\"\\\",\\\"samples\\\":[{\\\"namespace_uid\\\":\\\"NAMESPACE-UID-A\\\",\\\"kind\\\":\\\"DaemonSet\\\",\\\"uid\\\":\\\"193a2099-1234-5678-916a-d570c9aac158\\\"}]},\\\"tags\\\":[],\\\"links\\\":{\\\"jira\\\":[\\\"https://issues.redhat.com/browse/AN_ISSUE\\\"],\\\"product_documentation\\\":[]},\\\"workloads\\\":[{\\\"namespace\\\":\\\"namespace-name-A\\\",\\\"namespace_uid\\\":\\\"NAMESPACE-UID-A\\\",\\\"kind\\\":\\\"DaemonSet\\\",\\\"name\\\":\\\"test-name-0099\\\",\\\"uid\\\":\\\"UID-0099\\\"}]}]}\"`
+	currentDvoReportFromDB = `"{\"system\":{\"metadata\":{},\"hostname\":null},\"fingerprints\":[],\"version\":1,\"analysis_metadata\":{},\"workload_recommendations\":[{\"response_id\":\"an_issue|DVO_AN_ISSUE\",\"component\":\"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation\",\"key\":\"DVO_AN_ISSUE\",\"details\":{\"check_name\":\"\",\"check_url\":\"\",\"samples\":[{\"namespace_uid\":\"NAMESPACE-UID-A\",\"kind\":\"DaemonSet\",\"uid\":\"193a2099-1234-5678-916a-d570c9aac158\"}]},\"tags\":[],\"links\":{\"jira\":[\"https://issues.redhat.com/browse/AN_ISSUE\"],\"product_documentation\":[]},\"workloads\":[{\"namespace\":\"namespace-name-A\",\"namespace_uid\":\"NAMESPACE-UID-A\",\"kind\":\"DaemonSet\",\"name\":\"test-name-0099\",\"uid\":\"UID-0099\"}]}]}"`
 	// fixedDvoReportFromDB is what the string inside the report column should look like (after we fix the encoding issues)
 	fixedDvoReportFromDB = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","uid":"193a2099-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
 	objectUID            = `UID-0099`
@@ -35,7 +35,7 @@ const (
 )
 
 // TestProcessSingleDVONamespace_MustProcessEscapedString tests the behavior of ProcessSingleDVONamespace with the current
-// double-escaped JSON string, the whole string is also wrapped in quotation marks, which are only single-escaped
+// escaped JSON string, the whole string is also wrapped in quotation marks
 func TestProcessSingleDVONamespace_MustProcessEscapedString(t *testing.T) {
 	testServer := server.New(helpers.DefaultServerConfig, nil, nil)
 

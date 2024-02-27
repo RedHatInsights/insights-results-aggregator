@@ -249,19 +249,30 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 		Recommendations: []DVORecommendation{},
 	}
 
+	var report string
+
+	switch string([]rune(workload.Report)[:1]) {
+	case `"`:
+		// we're dealing with a quoted `"{\"system\":{}}"` string
+		// unmarshalling into a string first before unmarshalling into a struct will remove the leading/trailing quotes
+		// and also take care of the escaped `\"` quotes and replaces them with valid `"`, producing a valid JSON
+		err := json.Unmarshal(json.RawMessage(workload.Report), &report)
+		if err != nil {
+			log.Fatal().Err(err)
+		}
+	case `{`:
+		// we're dealing with either a valid JSON `{"system":{}}` or a string with escaped
+		// quotes `{\"system\":{}}`. Stripping escape chars `\` if any, produces a valid JSON
+		report = strings.Replace(workload.Report, `\`, "", -1)
+	default:
+		log.Error().Msgf("report has unknown structure: [%v]", string([]rune(workload.Report)[:100]))
+		return
+	}
+
 	var dvoReport types.DVOMetrics
-	// remove doubled escape characters due to improper encoding during storage
-	// we're working with a "JSON" string like this
-	// \"{\\\"analysis_metadata\\\":{\\\"start\\\":\\\"2024-02-27T10:11:00.688774+00:00\\\",....}}\"
-	// note not only double escape keys, but the whole `report` column is also in quototation marks \"{}\"
-	s := strings.Replace(workload.Report, `\\\`, "", -1)
-
-	// remove leading and trailing \"{}\" -> {}
-	s = strings.Replace(s, `\"`, "", -1)
-
-	err := json.Unmarshal(json.RawMessage(s), &dvoReport)
+	err := json.Unmarshal([]byte(report), &dvoReport)
 	if err != nil {
-		log.Error().Err(err).Msgf("error unmarshalling full report: [%v]", string([]rune(s)[:100]))
+		log.Error().Err(err).Msgf("error unmarshalling full report: [%v]", string([]rune(report)[:100]))
 		log.Info().Msgf("report without escape %v", string([]rune(workload.Report)[:100]))
 		return
 	}
