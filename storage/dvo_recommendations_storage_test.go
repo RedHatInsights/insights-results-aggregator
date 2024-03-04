@@ -466,7 +466,7 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, testdata.ClusterName, workloads[0].ClusterID)
-	assert.Equal(t, nowAfterOneHour.UTC().Format(time.RFC3339), workloads[0].LastCheckedAt)
-	assert.Equal(t, now.UTC().Format(time.RFC3339), workloads[0].ReportedAt)
+	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[0].ClusterID))
+	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), workloads[0].LastCheckedAt)
+	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[0].ReportedAt)
 }
