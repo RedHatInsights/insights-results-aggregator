@@ -305,9 +305,6 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	recommendations []types.WorkloadRecommendation,
 	lastCheckedTime time.Time,
 ) error {
-	if len(recommendations) == 0 {
-		return nil
-	}
 
 	// Get reported_at if present before deletion
 	reportedAtMap, err := storage.getReportedAtMap(orgID, clusterName)
@@ -316,14 +313,21 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		reportedAtMap = make(map[string]types.Timestamp) // create empty map
 	}
 
-	namespaceMap, objectsMap, nRecommendations := mapWorkloadRecommendations(&recommendations)
-
 	// Delete previous reports (CCXDEV-12529)
 	_, err = tx.Exec("DELETE FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;", orgID, clusterName)
 	if err != nil {
 		log.Err(err).Msgf("Unable to remove previous cluster DVO reports (org: %v, cluster: %v)", orgID, clusterName)
 		return err
 	}
+
+	if len(recommendations) == 0 {
+		log.Info().Msgf("No new DVO report to insert (org: %v, cluster: %v)",
+			orgID, clusterName,
+		)
+		return nil
+	}
+
+	namespaceMap, objectsMap, nRecommendations := mapWorkloadRecommendations(&recommendations)
 
 	// Get the INSERT statement for writing a workload into the database.
 	workloadInsertStatement := storage.getReportInsertQuery()
