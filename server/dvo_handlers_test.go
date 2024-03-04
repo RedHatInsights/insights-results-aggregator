@@ -17,6 +17,7 @@ limitations under the License.
 package server_test
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -61,6 +62,10 @@ func TestProcessSingleDVONamespace_MustProcessEscapedString(t *testing.T) {
 	assert.Equal(t, namespaceID, processedWorkload.Namespace.UUID)
 	assert.Equal(t, 1, processedWorkload.Metadata.Objects)
 	assert.Equal(t, 1, processedWorkload.Metadata.Recommendations)
+
+	samples, err := json.Marshal(processedWorkload.Recommendations[0].TemplateData["samples"])
+	assert.NoError(t, err)
+	assert.GreaterOrEqual(t, len(string(samples)), 1)
 }
 
 // TestProcessSingleDVONamespace_MustProcessCorrectString tests the behavior of the ProcessSingleDVONamespace with a
@@ -91,4 +96,8 @@ func TestProcessSingleDVONamespace_MustProcessCorrectString(t *testing.T) {
 	assert.Equal(t, namespaceID, processedWorkload.Namespace.UUID)
 	assert.Equal(t, 1, processedWorkload.Metadata.Objects)
 	assert.Equal(t, 1, processedWorkload.Metadata.Recommendations)
+
+	samples, err := json.Marshal(processedWorkload.Recommendations[0].TemplateData["samples"])
+	assert.NoError(t, err)
+	assert.GreaterOrEqual(t, len(string(samples)), 1)
 }
