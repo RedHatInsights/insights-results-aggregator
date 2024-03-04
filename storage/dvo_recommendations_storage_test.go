@@ -432,3 +432,41 @@ func checkRowDoesntExist(t *testing.T, row *sql.Row) {
 	err := row.Scan(&namespaceID, &namespaceName, &report, &recommendations, &objects, &lastChecked, &reportedAt)
 	assert.ErrorIs(t, err, sql.ErrNoRows, "a row was found for this queryß")
 }
+
+// TestDVOStorageReadWorkloadsForOrganization tests timestamps being kept correctly
+func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		twoNamespacesRecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// write new archive with newer timestamp, old reported_at must be kept
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		twoNamespacesRecommendation,
+		nowAfterOneHour,
+		nowAfterOneHour,
+		nowAfterOneHour,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.ClusterName, workloads[0].ClusterID)
+	assert.Equal(t, nowAfterOneHour.UTC().Format(time.RFC3339), workloads[0].LastCheckedAt)
+	assert.Equal(t, now.UTC().Format(time.RFC3339), workloads[0].ReportedAt)
+}

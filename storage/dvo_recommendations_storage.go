@@ -456,8 +456,8 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID ty
 			&dvoReport.NamespaceName,
 			&dvoReport.Recommendations,
 			&dvoReport.Objects,
-			&lastCheckedAtDB,
 			&reportedAtDB,
+			&lastCheckedAtDB,
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("ReadWorkloadsForOrganization")
