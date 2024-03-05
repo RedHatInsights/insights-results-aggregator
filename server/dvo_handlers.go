@@ -292,6 +292,13 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 			})
 		}
 
+		// because the whole report contains a list of recommendations and each rec. contains
+		// a list of objects + namespaces, it can happen that upon filtering the objects to get rid
+		// of namespaces that weren't requested, we can end up with 0 hitting objects in that namespace
+		if len(filteredObjects) == 0 {
+			continue
+		}
+
 		// recommendation.ResponseID doesn't contain the full rule ID, so smart-proxy was unable to retrieve content, we need to build it
 		compositeRuleID, err := generators.GenerateCompositeRuleID(
 			// for some unknown reason, there's a `.recommendation` suffix for each rule hit instead of the usual .report
