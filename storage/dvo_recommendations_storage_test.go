@@ -40,12 +40,21 @@ var (
 	nowAfterOneHour = now.Add(1 * time.Hour).UTC()
 	dummyTime       = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 
+	namespaceAUID = "NAMESPACE-UID-A"
+
 	namespaceAWorkload = types.DVOWorkload{
 		Namespace:    "namespace-name-A",
-		NamespaceUID: "NAMESPACE-UID-A",
+		NamespaceUID: namespaceAUID,
 		Kind:         "DaemonSet",
 		Name:         "test-name-0099",
 		UID:          "UID-0099",
+	}
+	namespaceAWorkload2 = types.DVOWorkload{
+		Namespace:    "namespace-name-A",
+		NamespaceUID: namespaceAUID,
+		Kind:         "Pod",
+		Name:         "test-name-0001",
+		UID:          "UID-0001",
 	}
 	namespaceBWorkload = types.DVOWorkload{
 		Namespace:    "namespace-name-B",
@@ -68,7 +77,7 @@ var (
 				"check_url":  "",
 				"samples": []interface{}{
 					map[string]interface{}{
-						"namespace_uid": "NAMESPACE-UID-A", "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
+						"namespace_uid": namespaceAUID, "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
 					},
 				},
 			},
@@ -76,7 +85,7 @@ var (
 			Workloads: []types.DVOWorkload{
 				{
 					Namespace:    "namespace-name-A",
-					NamespaceUID: "NAMESPACE-UID-A",
+					NamespaceUID: namespaceAUID,
 					Kind:         "DaemonSet",
 					Name:         "test-name-0099",
 					UID:          "UID-0099",
@@ -100,7 +109,7 @@ var (
 				"check_url":  "",
 				"samples": []interface{}{
 					map[string]interface{}{
-						"namespace_uid": "NAMESPACE-UID-A", "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
+						"namespace_uid": namespaceAUID, "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
 					},
 				},
 			},
@@ -469,4 +478,103 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[0].ClusterID))
 	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), workloads[0].LastCheckedAt)
 	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[0].ReportedAt)
+}
+
+// TestDVOStorageReadWorkloadsForNamespace tests timestamps being kept correctly
+func TestDVOStorageReadWorkloadsForNamespace_Timestamps(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		twoNamespacesRecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// write new archive with newer timestamp, old reported_at must be kept
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		twoNamespacesRecommendation,
+		nowAfterOneHour,
+		nowAfterOneHour,
+		nowAfterOneHour,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
+	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, uint(1), report.Recommendations)
+	assert.Equal(t, uint(1), report.Objects)
+	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), report.LastCheckedAt)
+	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), report.ReportedAt)
+}
+
+// TestDVOStorageReadWorkloadsForNamespace tests the behavior when we insert 1 recommendation and 1 object
+// and then 1 recommendation with 2 objects
+func TestDVOStorageReadWorkloadsForNamespace_TwoObjectsOneNamespace(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	nowTstmp := types.Timestamp(now.UTC().Format(time.RFC3339))
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		twoNamespacesRecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
+	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, uint(1), report.Recommendations)
+	assert.Equal(t, uint(1), report.Objects)
+	assert.Equal(t, nowTstmp, report.ReportedAt)
+	assert.Equal(t, nowTstmp, report.LastCheckedAt)
+
+	newerReport2Objs := twoNamespacesRecommendation
+	newerReport2Objs[0].Workloads = []types.DVOWorkload{namespaceAWorkload, namespaceAWorkload2, namespaceBWorkload}
+	// write new archive with newer timestamp and 1 more object in the recommendation hit
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		newerReport2Objs,
+		nowAfterOneHour,
+		nowAfterOneHour,
+		nowAfterOneHour,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	report, err = mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
+	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, uint(1), report.Recommendations)
+	assert.Equal(t, uint(2), report.Objects) // <-- two objs now
+
+	// reported_at keeps timestamp, last_checked_at gets updated
+	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), report.LastCheckedAt)
+	assert.Equal(t, nowTstmp, report.ReportedAt)
 }
