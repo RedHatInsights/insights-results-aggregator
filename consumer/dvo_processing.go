@@ -104,7 +104,16 @@ func (DVORulesProcessor) shouldProcess(_ *KafkaConsumer, _ *sarama.ConsumerMessa
 // parseDVOContent verifies the content of the DVO structure and parses it into
 // the relevant parts of the incomingMessage structure
 func parseDVOContent(message *incomingMessage) error {
-	return json.Unmarshal(*((*message.DvoMetrics)["workload_recommendations"]), &message.ParsedWorkloads)
+	log.Info().Msg("Received DVO metrics (workload truncated if > 140 chars)")
+	for key, value := range *message.DvoMetrics {
+		if len(*value) >= 140 {
+			log.Info().Msgf("%s: %s", key, (*value)[:140])
+		} else {
+			log.Info().Msgf("%s: %s", key, *value)
+		}
+	}
+	err := json.Unmarshal(*((*message.DvoMetrics)["workload_recommendations"]), &message.ParsedWorkloads)
+	return err
 }
 
 func (DVORulesProcessor) storeInDB(consumer *KafkaConsumer, msg *sarama.ConsumerMessage, message incomingMessage) (types.RequestID, incomingMessage, error) {
