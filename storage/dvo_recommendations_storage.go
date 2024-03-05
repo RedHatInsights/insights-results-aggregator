@@ -517,8 +517,8 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 			&dvoReport.Recommendations,
 			&dvoReport.Report,
 			&dvoReport.Objects,
-			&lastCheckedAtDB,
 			&reportedAtDB,
+			&lastCheckedAtDB,
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("ReadWorkloadsForClusterAndNamespace")
