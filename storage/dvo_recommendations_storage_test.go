@@ -41,6 +41,7 @@ var (
 	dummyTime       = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	namespaceAUID = "NAMESPACE-UID-A"
+	namespaceBUID = "NAMESPACE-UID-B"
 
 	namespaceAWorkload = types.DVOWorkload{
 		Namespace:    "namespace-name-A",
@@ -58,7 +59,7 @@ var (
 	}
 	namespaceBWorkload = types.DVOWorkload{
 		Namespace:    "namespace-name-B",
-		NamespaceUID: "NAMESPACE-UID-B",
+		NamespaceUID: namespaceBUID,
 		Kind:         "NotDaemonSet",
 		Name:         "test-name-1199",
 		UID:          "UID-1199",
@@ -93,7 +94,8 @@ var (
 			},
 		},
 	}
-	validReport = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","uid":"193a2099-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
+	validReport                  = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","uid":"193a2099-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
+	validReport2Rules2Namespaces = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"unset_requirements|DVO_UNSET_REQUIREMENTS","component":"ccx_rules_ocp.external.dvo.unset_requirements.recommendation","key":"DVO_UNSET_REQUIREMENTS","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","uid":"193a2099-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"193a2099-1234-5678-916a-d570c9aac158"},{"namespace":"namespace-name-B","namespace_uid":"NAMESPACE-UID-B","kind":"DaemonSet","name":"test-name-1234","uid":"12345678-1234-5678-916a-d570c9aac158"}]},{"response_id":"excluded_pod|EXCLUDED_POD","component":"ccx_rules_ocp.external.dvo.excluded_pod.recommendation","key":"EXCLUDED_POD","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-B","kind":"DaemonSet","uid":"12345678-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-B","namespace_uid":"NAMESPACE-UID-B","kind":"DaemonSet","name":"test-name-1234","uid":"12345678-1234-5678-916a-d570c9aac158"}]}]}`
 
 	twoNamespacesRecommendation = []types.WorkloadRecommendation{
 		{
@@ -115,6 +117,39 @@ var (
 			},
 			Tags:      []string{},
 			Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceBWorkload},
+		},
+	}
+
+	twoNamespaces2Recommendations = []types.WorkloadRecommendation{
+		{
+			ResponseID: "an_issue|DVO_AN_ISSUE",
+			Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
+			Key:        "DVO_AN_ISSUE",
+			Links: types.DVOLinks{
+				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+				ProductDocumentation: []string{},
+			},
+			Details: map[string]interface{}{
+				"check_name": "",
+				"check_url":  "",
+			},
+			Tags:      []string{},
+			Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceBWorkload},
+		},
+		{
+			ResponseID: "unset_requirements|DVO_UNSET_REQUIREMENTS",
+			Component:  "ccx_rules_ocp.external.dvo.unset_requirements.recommendation",
+			Key:        "DVO_UNSET_REQUIREMENTS",
+			Links: types.DVOLinks{
+				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+				ProductDocumentation: []string{},
+			},
+			Details: map[string]interface{}{
+				"check_name": "",
+				"check_url":  "",
+			},
+			Tags:      []string{},
+			Workloads: []types.DVOWorkload{namespaceAWorkload2},
 		},
 	}
 )
@@ -577,4 +612,63 @@ func TestDVOStorageReadWorkloadsForNamespace_TwoObjectsOneNamespace(t *testing.T
 	// reported_at keeps timestamp, last_checked_at gets updated
 	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), report.LastCheckedAt)
 	assert.Equal(t, nowTstmp, report.ReportedAt)
+}
+
+// TestDVOStorageReadWorkloadsForNamespace tests the behavior when we insert 1 recommendation and 1 object
+// and then 1 recommendation with 2 objects
+func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	nowTstmp := types.Timestamp(now.UTC().Format(time.RFC3339))
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport2Rules2Namespaces),
+		twoNamespaces2Recommendations,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	expectedWorkloads := []types.DVOReport{
+		{
+			NamespaceID:     namespaceAUID,
+			NamespaceName:   namespaceAWorkload.Namespace,
+			ClusterID:       string(testdata.ClusterName),
+			Recommendations: uint(2),
+			Objects:         uint(2),
+			ReportedAt:      nowTstmp,
+			LastCheckedAt:   nowTstmp,
+		},
+		{
+			NamespaceID:     namespaceBUID,
+			NamespaceName:   namespaceBWorkload.Namespace,
+			ClusterID:       string(testdata.ClusterName),
+			Recommendations: uint(1), // <-- must contain only 1 rule, the other rule wasn't hitting this ns
+			Objects:         uint(1),
+			ReportedAt:      nowTstmp,
+			LastCheckedAt:   nowTstmp,
+		},
+	}
+
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, 2, len(workloads))
+	assert.ElementsMatch(t, expectedWorkloads, workloads)
+
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
+	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, uint(2), report.Recommendations)
+	assert.Equal(t, uint(2), report.Objects)
+	assert.Equal(t, nowTstmp, report.ReportedAt)
+	assert.Equal(t, nowTstmp, report.LastCheckedAt)
+
 }
