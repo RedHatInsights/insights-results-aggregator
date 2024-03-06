@@ -670,5 +670,4 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 	assert.Equal(t, uint(2), report.Objects)
 	assert.Equal(t, nowTstmp, report.ReportedAt)
 	assert.Equal(t, nowTstmp, report.LastCheckedAt)
-
 }
