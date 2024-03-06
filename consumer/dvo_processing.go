@@ -107,7 +107,14 @@ func parseDVOContent(message *incomingMessage) error {
 	log.Info().Msg("Received DVO metrics (workload truncated if > 140 chars)")
 	for key, value := range *message.DvoMetrics {
 		if len(*value) >= 140 {
-			log.Info().Msgf("%s: %s", key, (*value)[:140])
+			log.Info().Msgf("%s", key)
+			for i := 0; i < len(*value); i += 140 {
+				end := i + 140
+				if end > len(*value) {
+					end = len(*value)
+				}
+				log.Info().Msgf("%s", (*value)[i:end])
+			}
 		} else {
 			log.Info().Msgf("%s: %s", key, *value)
 		}
