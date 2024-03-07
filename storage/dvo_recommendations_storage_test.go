@@ -120,37 +120,52 @@ var (
 		},
 	}
 
-	twoNamespaces2Recommendations = []types.WorkloadRecommendation{
-		{
-			ResponseID: "an_issue|DVO_AN_ISSUE",
-			Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
-			Key:        "DVO_AN_ISSUE",
-			Links: types.DVOLinks{
-				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
-				ProductDocumentation: []string{},
-			},
-			Details: map[string]interface{}{
-				"check_name": "",
-				"check_url":  "",
-			},
-			Tags:      []string{},
-			Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceBWorkload},
+	recommendation1TwoNamespaces = types.WorkloadRecommendation{
+		ResponseID: "an_issue|DVO_AN_ISSUE",
+		Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
+		Key:        "DVO_AN_ISSUE",
+		Links: types.DVOLinks{
+			Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+			ProductDocumentation: []string{},
 		},
-		{
-			ResponseID: "unset_requirements|DVO_UNSET_REQUIREMENTS",
-			Component:  "ccx_rules_ocp.external.dvo.unset_requirements.recommendation",
-			Key:        "DVO_UNSET_REQUIREMENTS",
-			Links: types.DVOLinks{
-				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
-				ProductDocumentation: []string{},
-			},
-			Details: map[string]interface{}{
-				"check_name": "",
-				"check_url":  "",
-			},
-			Tags:      []string{},
-			Workloads: []types.DVOWorkload{namespaceAWorkload2},
+		Details: map[string]interface{}{
+			"check_name": "",
+			"check_url":  "",
 		},
+		Tags:      []string{},
+		Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceBWorkload},
+	}
+
+	recommendation2OneNamespace = types.WorkloadRecommendation{
+		ResponseID: "unset_requirements|DVO_UNSET_REQUIREMENTS",
+		Component:  "ccx_rules_ocp.external.dvo.unset_requirements.recommendation",
+		Key:        "DVO_UNSET_REQUIREMENTS",
+		Links: types.DVOLinks{
+			Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+			ProductDocumentation: []string{},
+		},
+		Details: map[string]interface{}{
+			"check_name": "",
+			"check_url":  "",
+		},
+		Tags:      []string{},
+		Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceAWorkload2},
+	}
+
+	recommendation3OneNamespace = types.WorkloadRecommendation{
+		ResponseID: "bad_requirements|BAD_REQUIREMENTS",
+		Component:  "ccx_rules_ocp.external.dvo.bad_requirements.recommendation",
+		Key:        "BAD_REQUIREMENTS",
+		Links: types.DVOLinks{
+			Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
+			ProductDocumentation: []string{},
+		},
+		Details: map[string]interface{}{
+			"check_name": "",
+			"check_url":  "",
+		},
+		Tags:      []string{},
+		Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceAWorkload2},
 	}
 )
 
@@ -626,7 +641,7 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		types.ClusterReport(validReport2Rules2Namespaces),
-		twoNamespaces2Recommendations,
+		[]types.WorkloadRecommendation{recommendation1TwoNamespaces, recommendation2OneNamespace},
 		now,
 		now,
 		now,
@@ -640,7 +655,7 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 			NamespaceName:   namespaceAWorkload.Namespace,
 			ClusterID:       string(testdata.ClusterName),
 			Recommendations: uint(2),
-			Objects:         uint(2),
+			Objects:         uint(2), // <-- must be 2, because one workload is hitting more recommendations, but counts as 1
 			ReportedAt:      nowTstmp,
 			LastCheckedAt:   nowTstmp,
 		},
@@ -667,6 +682,68 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
 	assert.Equal(t, namespaceAUID, report.NamespaceID)
 	assert.Equal(t, uint(2), report.Recommendations)
+	assert.Equal(t, uint(2), report.Objects)
+	assert.Equal(t, nowTstmp, report.ReportedAt)
+	assert.Equal(t, nowTstmp, report.LastCheckedAt)
+}
+
+func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	nowTstmp := types.Timestamp(now.UTC().Format(time.RFC3339))
+
+	// writing 3 recommendations, but objects/workloads are hitting multiple recommendations
+	// and need to be filtered out
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport2Rules2Namespaces),
+		[]types.WorkloadRecommendation{
+			recommendation1TwoNamespaces,
+			recommendation2OneNamespace,
+			recommendation3OneNamespace,
+		},
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	expectedWorkloads := []types.DVOReport{
+		{
+			NamespaceID:     namespaceAUID,
+			NamespaceName:   namespaceAWorkload.Namespace,
+			ClusterID:       string(testdata.ClusterName),
+			Recommendations: uint(3),
+			Objects:         uint(2), // <-- must be 2, because workloadA and workloadB are hitting more rules, but count as 1 within a namespace
+			ReportedAt:      nowTstmp,
+			LastCheckedAt:   nowTstmp,
+		},
+		{
+			NamespaceID:     namespaceBUID,
+			NamespaceName:   namespaceBWorkload.Namespace,
+			ClusterID:       string(testdata.ClusterName),
+			Recommendations: uint(1), // <-- must contain only 1 rule, the other rules weren't affecting this namespace
+			Objects:         uint(1), // <-- same as ^
+			ReportedAt:      nowTstmp,
+			LastCheckedAt:   nowTstmp,
+		},
+	}
+
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, 2, len(workloads))
+	assert.ElementsMatch(t, expectedWorkloads, workloads)
+
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
+	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, uint(3), report.Recommendations)
 	assert.Equal(t, uint(2), report.Objects)
 	assert.Equal(t, nowTstmp, report.ReportedAt)
 	assert.Equal(t, nowTstmp, report.LastCheckedAt)

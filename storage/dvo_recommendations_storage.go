@@ -369,42 +369,60 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	return nil
 }
 
+// mapWorkloadRecommendations filters out the data which is grouped by recommendations and aggregates
+// them by namespace.
+// Essentially we need to "invert" data from:
+//   - list of recommendations: list of workloads from ALL namespaces combined (objects can also be duplicate between recommendations)
+//
+// to:
+//   - list of namespaces: list of affected workloads and data aggregations for this particular namespace
 func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation) (
 	map[string]string, map[string]int, map[string]int,
 ) {
 	// map the namespace ID to the namespace name
 	namespaceMap := make(map[string]string)
-	// map the number of different workloads in the report per namespace
-	objectsMap := make(map[string]int)
-	// how many recommendations hit per namespace
+	// map how many recommendations hit per namespace
 	namespaceRecommendationCount := make(map[string]int)
+	// map the number of unique workloads affected by at least 1 rule per namespace
+	objectsPerNamespace := make(map[string]map[string]struct{})
 
 	for _, recommendation := range *recommendations {
 		// objectsMapPerRecommendation is used to calculate number of rule hits in namespace
-		objectsMapPerRecommendation := make(map[string]int)
+		objectsPerRecommendation := make(map[string]int)
 
-		for _, workload := range recommendation.Workloads {
+		for i := range recommendation.Workloads {
+			workload := &recommendation.Workloads[i]
+
 			if _, ok := namespaceMap[workload.NamespaceUID]; !ok {
 				// store the namespace name in the namespaceMap if it's not already there
 				namespaceMap[workload.NamespaceUID] = workload.Namespace
 			}
 
-			if _, ok := objectsMap[workload.NamespaceUID]; !ok {
-				objectsMap[workload.NamespaceUID] = 1
-			} else {
-				objectsMap[workload.NamespaceUID]++
-			}
+			// per single recommendation within namespace
+			objectsPerRecommendation[workload.NamespaceUID]++
 
-			objectsMapPerRecommendation[workload.NamespaceUID]++
+			// per whole namespace; just workload IDs with empty structs to filter out duplicate objects
+			if _, ok := objectsPerNamespace[workload.NamespaceUID]; !ok {
+				objectsPerNamespace[workload.NamespaceUID] = make(map[string]struct{})
+			}
+			objectsPerNamespace[workload.NamespaceUID][workload.UID] = struct{}{}
 		}
 
+		// increase rule hit count for affected namespaces
 		for namespace := range namespaceMap {
-			if _, ok := objectsMapPerRecommendation[namespace]; ok {
+			if _, ok := objectsPerRecommendation[namespace]; ok {
 				namespaceRecommendationCount[namespace]++
 			}
 		}
 	}
-	return namespaceMap, objectsMap, namespaceRecommendationCount
+
+	uniqueObjectsMap := make(map[string]int)
+	// count the number of unique objects per namespace
+	for namespace, objects := range objectsPerNamespace {
+		uniqueObjectsMap[namespace] = len(objects)
+	}
+
+	return namespaceMap, uniqueObjectsMap, namespaceRecommendationCount
 }
 
 // getRuleKeyCreatedAtMap returns a map between
