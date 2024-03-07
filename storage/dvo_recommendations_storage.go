@@ -305,7 +305,6 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	recommendations []types.WorkloadRecommendation,
 	lastCheckedTime time.Time,
 ) error {
-
 	// Get reported_at if present before deletion
 	reportedAtMap, err := storage.getReportedAtMap(orgID, clusterName)
 	if err != nil {
@@ -327,7 +326,7 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		return nil
 	}
 
-	namespaceMap, objectsMap, nRecommendations := mapWorkloadRecommendations(&recommendations)
+	namespaceMap, objectsMap, namespaceRecommendationCount := mapWorkloadRecommendations(&recommendations)
 
 	// Get the INSERT statement for writing a workload into the database.
 	workloadInsertStatement := storage.getReportInsertQuery()
@@ -348,8 +347,8 @@ func (storage DVORecommendationsDBStorage) updateReport(
 			values[4] = string(workloadAsJSON) // report
 		}
 
-		values[5] = nRecommendations         // recommendations
-		values[6] = objectsMap[namespaceUID] // objects
+		values[5] = namespaceRecommendationCount[namespaceUID] // recommendations
+		values[6] = objectsMap[namespaceUID]                   // objects
 
 		if reportedAt, ok := reportedAtMap[namespaceUID]; ok {
 			values[7] = reportedAt // reported_at
@@ -371,27 +370,41 @@ func (storage DVORecommendationsDBStorage) updateReport(
 }
 
 func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation) (
-	map[string]string, map[string]int, int) {
+	map[string]string, map[string]int, map[string]int,
+) {
 	// map the namespace ID to the namespace name
 	namespaceMap := make(map[string]string)
 	// map the number of different workloads in the report per namespace
 	objectsMap := make(map[string]int)
-	nRecommendations := len(*recommendations)
+	// how many recommendations hit per namespace
+	namespaceRecommendationCount := make(map[string]int)
 
 	for _, recommendation := range *recommendations {
+		// objectsMapPerRecommendation is used to calculate number of rule hits in namespace
+		objectsMapPerRecommendation := make(map[string]int)
+
 		for _, workload := range recommendation.Workloads {
 			if _, ok := namespaceMap[workload.NamespaceUID]; !ok {
 				// store the namespace name in the namespaceMap if it's not already there
 				namespaceMap[workload.NamespaceUID] = workload.Namespace
 			}
+
 			if _, ok := objectsMap[workload.NamespaceUID]; !ok {
 				objectsMap[workload.NamespaceUID] = 1
 			} else {
 				objectsMap[workload.NamespaceUID]++
 			}
+
+			objectsMapPerRecommendation[workload.NamespaceUID]++
+		}
+
+		for namespace := range namespaceMap {
+			if _, ok := objectsMapPerRecommendation[namespace]; ok {
+				namespaceRecommendationCount[namespace]++
+			}
 		}
 	}
-	return namespaceMap, objectsMap, nRecommendations
+	return namespaceMap, objectsMap, namespaceRecommendationCount
 }
 
 // getRuleKeyCreatedAtMap returns a map between
