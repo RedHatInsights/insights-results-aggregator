@@ -42,7 +42,6 @@ var (
 
 	namespaceAUID = "NAMESPACE-UID-A"
 	namespaceBUID = "NAMESPACE-UID-B"
-	namespaceCUID = "NAMESPACE-UID-C"
 
 	namespaceAWorkload = types.DVOWorkload{
 		Namespace:    "namespace-name-A",
@@ -64,13 +63,6 @@ var (
 		Kind:         "NotDaemonSet",
 		Name:         "test-name-1199",
 		UID:          "UID-1199",
-	}
-	namespaceCWorkload = types.DVOWorkload{
-		Namespace:    "namespace-name-C",
-		NamespaceUID: namespaceCUID,
-		Kind:         "Pod",
-		Name:         "test-name-8899",
-		UID:          "UID-8899",
 	}
 	validDVORecommendation = []types.WorkloadRecommendation{
 		{
