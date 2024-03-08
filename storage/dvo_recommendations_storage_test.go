@@ -18,6 +18,7 @@ package storage_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -82,16 +83,8 @@ var (
 					},
 				},
 			},
-			Tags: []string{},
-			Workloads: []types.DVOWorkload{
-				{
-					Namespace:    "namespace-name-A",
-					NamespaceUID: namespaceAUID,
-					Kind:         "DaemonSet",
-					Name:         "test-name-0099",
-					UID:          "UID-0099",
-				},
-			},
+			Tags:      []string{},
+			Workloads: []types.DVOWorkload{namespaceAWorkload},
 		},
 	}
 	validReport                  = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","uid":"193a2099-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
@@ -747,4 +740,41 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 	assert.Equal(t, uint(2), report.Objects)
 	assert.Equal(t, nowTstmp, report.ReportedAt)
 	assert.Equal(t, nowTstmp, report.LastCheckedAt)
+}
+
+// TestDVOStorageReadWorkloadsForNamespace_MissingData tests wht happens if the data is missing
+func TestDVOStorageReadWorkloadsForNamespace_MissingData(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	// write data for namespaceA and testdata.ClusterName
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(validReport),
+		validDVORecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	t.Run("cluster and namespace exist", func(t *testing.T) {
+		report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+		helpers.FailOnError(t, err)
+		assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
+		assert.Equal(t, namespaceAUID, report.NamespaceID)
+	})
+
+	t.Run("cluster exists and namespace doesn't", func(t *testing.T) {
+		_, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceBUID)
+		assert.Equal(t, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", testdata.OrgID, testdata.ClusterName, namespaceBUID)}, err)
+	})
+
+	t.Run("namespace exists and cluster doesn't", func(t *testing.T) {
+		nonExistingCluster := types.ClusterName("a6fe3cd2-2c6a-48b8-a58d-b05853d47f4f")
+		_, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, nonExistingCluster, namespaceAUID)
+		assert.Equal(t, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", testdata.OrgID, nonExistingCluster, namespaceAUID)}, err)
+	})
 }
