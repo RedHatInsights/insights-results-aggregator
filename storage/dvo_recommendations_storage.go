@@ -529,35 +529,23 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 		AND namespace_id = $3
 	`
 
-	// #nosec G202
-	rows, err := storage.connection.Query(query, orgID, clusterID, namespaceID)
-
-	err = types.ConvertDBError(err, orgID)
-	if err != nil {
-		return workload, err
-	}
-
-	defer closeRows(rows)
-
 	var (
 		dvoReport       types.DVOReport
 		lastCheckedAtDB sql.NullTime
 		reportedAtDB    sql.NullTime
 	)
-	for rows.Next() {
-		err = rows.Scan(
-			&dvoReport.ClusterID,
-			&dvoReport.NamespaceID,
-			&dvoReport.NamespaceName,
-			&dvoReport.Recommendations,
-			&dvoReport.Report,
-			&dvoReport.Objects,
-			&reportedAtDB,
-			&lastCheckedAtDB,
-		)
-		if err != nil {
-			log.Error().Err(err).Msg("ReadWorkloadsForClusterAndNamespace")
-		}
+	err = storage.connection.QueryRow(query, orgID, clusterID, namespaceID).Scan(
+		&dvoReport.ClusterID,
+		&dvoReport.NamespaceID,
+		&dvoReport.NamespaceName,
+		&dvoReport.Recommendations,
+		&dvoReport.Report,
+		&dvoReport.Objects,
+		&reportedAtDB,
+		&lastCheckedAtDB,
+	)
+	if err == sql.ErrNoRows {
+		return workload, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", orgID, clusterID, namespaceID)}
 	}
 	// convert timestamps to string
 	dvoReport.LastCheckedAt = types.Timestamp(lastCheckedAtDB.Time.UTC().Format(time.RFC3339))
