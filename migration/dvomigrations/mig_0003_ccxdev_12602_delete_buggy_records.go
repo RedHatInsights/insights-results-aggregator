@@ -30,5 +30,5 @@ var mig0003CCXDEV12602DeleteBuggyRecords = migration.Migration{
 		`)
 		return err
 	},
-	StepDown: func(tx *sql.Tx, _ types.DBDriver) error { return nil },
+	StepDown: func(_ *sql.Tx, _ types.DBDriver) error { return nil },
 }
