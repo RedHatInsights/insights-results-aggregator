@@ -26,7 +26,7 @@ import (
 var mig0003CCXDEV12602DeleteBuggyRecords = migration.Migration{
 	StepUp: func(tx *sql.Tx, _ types.DBDriver) error {
 		_, err := tx.Exec(`
-			DELETE FROM dvo.dvo_reports WHERE last_checked_at <= DATE '2024-04-08';
+			DELETE FROM dvo.dvo_report WHERE last_checked_at <= DATE '2024-04-08';
 		`)
 		return err
 	},
