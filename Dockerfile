@@ -19,9 +19,9 @@ COPY . .
 USER 0
 
 # build the aggregator
-RUN umask 0022 && \
-    make build && \
-    chmod a+x insights-results-aggregator
+RUN umask 0022
+RUN make build
+RUN chmod a+x insights-results-aggregator
 
 FROM registry.access.redhat.com/ubi9/ubi-micro:latest
 
