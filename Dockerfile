@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM registry.redhat.io/ubi9/go-toolset:1.20.12 AS builder
+FROM registry.redhat.io/ubi9/go-toolset:1.20 AS builder
 
 COPY . .
 
 USER 0
 
 # build the aggregator
-RUN umask 0022 && \
-    make build && \
-    chmod a+x insights-results-aggregator
+RUN umask 0022
+ENV GOFLAGS="-buildvcs=false"
+RUN make build
+RUN chmod a+x insights-results-aggregator
 
 FROM registry.access.redhat.com/ubi9/ubi-micro:latest
 
