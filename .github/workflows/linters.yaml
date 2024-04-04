@@ -8,9 +8,10 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        go-version: ["1.20","1.21"]
-        make-command: [{"name":"formatting","command":"make fmt"},{"name":"Go lint","command":"make lint"},{"name":"GO vet","command":"make vet"},{"name":"gocyclo","command":"make cyclo"},{"name":"shellcheck","command":"make shellcheck"},{"name":"errcheck","command":"make errcheck"},{"name":"goconst checker","command":"make goconst"},{"name":"gosec checker","command":"make gosec"},{"name":"ineffassign checker","command":"make ineffassign"},{"name":"goconst checker","command":"make goconst"},{"name":"gosec checker","command":"make gosec"},{"name":"ABC metrics checker","command":"make abcgo"},{"name":"JSON checker","command":"make json-check"}]
-    name: ${{ matrix.make-command.name }} for Go ${{ matrix.go-version}}
+        go-version:
+          - "1.20"
+          - "1.21"
+    name: Linters for Go ${{ matrix.go-version}}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
@@ -19,6 +20,25 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Build project
         run: go build
-      - name: ${{ matrix.make-command.name }}
-        run: ${{ matrix.make-command.command }}
- 
+      - name: GO formatting
+        run: make fmt
+      - name: GO lint 
+        run: make lint
+      - name: GO vet
+        run: make vet
+      - name: gocyclo
+        run: make cyclo
+      - name: shellcheck
+        run: make shellcheck
+      - name: errcheck
+        run: make errcheck
+      - name: goconst checker
+        run: make goconst
+      - name: gosec checker
+        run: make gosec
+      - name: ineffassign checker
+        run: make ineffassign
+      - name: ABC metrics checker
+        run: make abcgo
+      - name: JSON checker
+        run: make json-check
