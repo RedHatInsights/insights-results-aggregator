@@ -8,9 +8,8 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        go-version:
-          - "1.20"
-          - "1.21"
+        go-version: ["1.20","1.21"]
+        make-command: ["make fmt","make lint","make vet","make cyclo","make shellcheck","make errcheck","make goconst","make gosec","make ineffassign","make abcgo","make json-check"]
     name: Linters for Go ${{ matrix.go-version}}
     steps:
       - uses: actions/checkout@v4
@@ -20,26 +19,5 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Build project
         run: go build
-      - name: GO formatting
-        run: make ftm
-      - name: GO lint 
-        run: make lint
-      - name: GO vet
-        run: make vet
-      - name: gocyclo
-        run: make cyclo
-      - name: shellcheck
-        run: make shellcheck
-      - name: errcheck
-        run: make errcheck
-      - name: goconst checker
-        run: make goconst
-      - name: gosec checker
-        run: make gosec
-      - name: ineffassign checker
-        run: make ineffassign
-      - name: ABC metrics checker
-        run: make abcgo
-      - name: JSON checker
-        run: make json-check
-
+      - name: ${{ matrix.make-command[0] }}
+        run: ${{ matrix.make-command }}
