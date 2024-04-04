@@ -20,5 +20,25 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Build project
         run: go build
-      - name: Style linters
-        run: make style
+      - name: GO formatting
+        run: make fmt
+      - name: GO lint 
+        run: make lint
+      - name: GO vet
+        run: make vet
+      - name: gocyclo
+        run: make cyclo
+      - name: shellcheck
+        run: make shellcheck
+      - name: errcheck
+        run: make errcheck
+      - name: goconst checker
+        run: make goconst
+      - name: gosec checker
+        run: make gosec
+      - name: ineffassign checker
+        run: make ineffassign
+      - name: ABC metrics checker
+        run: make abcgo
+      - name: JSON checker
+        run: make json-check
