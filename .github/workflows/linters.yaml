@@ -10,7 +10,7 @@ jobs:
       matrix:
         go-version: ["1.20","1.21"]
         make-command: ["make fmt","make lint","make vet","make cyclo","make shellcheck","make errcheck","make goconst","make gosec","make ineffassign","make abcgo","make json-check"]
-    name: Linters for Go ${{ matrix.go-version}}
+    name: Linters ${{ matrix.make-command[0] }} for Go ${{ matrix.go-version}}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
