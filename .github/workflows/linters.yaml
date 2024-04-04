@@ -9,8 +9,8 @@ jobs:
     strategy:
       matrix:
         go-version: ["1.20","1.21"]
-        make-command: ["make fmt","make lint","make vet","make cyclo","make shellcheck","make errcheck","make goconst","make gosec","make ineffassign","make abcgo","make json-check"]
-    name: Linters ${{ matrix.make-command }} for Go ${{ matrix.go-version}}
+        make-command: [{"name":"formatting","command":"make fmt"},{"name":"Go lint","command":"make lint"},{"name":"GO vet","command":"make vet"},{"name":"gocyclo","command":"make cyclo"},{"name":"shellcheck","command":"make shellcheck"},{"name":"errcheck","command":"make errcheck"},{"name":"goconst checker","command":"make goconst"},{"name":"gosec checker","command":"make gosec"},{"name":"ineffassign checker","command":"make ineffassign"},{"name":"goconst checker","command":"make goconst"},{"name":"gosec checker","command":"make gosec"},{"name":"ABC metrics checker","command":"make abcgo"},{"name":"JSON checker","command":"make json-check"}]
+    name: ${{ matrix.make-command.name }} for Go ${{ matrix.go-version}}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
@@ -19,5 +19,6 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Build project
         run: go build
-      - name: ${{ matrix.make-command[0] }}
-        run: ${{ matrix.make-command }}
+      - name: ${{ matrix.make-command.name }}
+        run: ${{ matrix.make-command.command }}
+ 
