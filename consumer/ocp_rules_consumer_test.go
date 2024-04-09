@@ -312,6 +312,7 @@ func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T
 func TestCheckReportStructureReportWithAnalysisMetadata(t *testing.T) {
 	report := consumer.Report{
 		"system":            unmarshall(`{"metadata": {}, "hostname": null}`),
+		"reports":           unmarshall("[]"),
 		"fingerprints":      unmarshall("[]"),
 		"analysis_metadata": unmarshall(`{"start": "2023-09-11T18:33:14.527845+00:00", "finish": "2023-09-11T18:33:15.632777+00:00"}`),
 	}
@@ -334,6 +335,7 @@ func TestCheckReportStructureReportWithEmptyAndMissingAttributes(t *testing.T) {
 func TestCheckReportStructureReportWithItems(t *testing.T) {
 	report := consumer.Report{
 		"fingerprints": unmarshall("[]"),
+		"info":         unmarshall("[]"),
 		"reports":      unmarshall(string(testdata.Report2Rules)),
 		"skips":        unmarshall("[]"),
 		"system":       unmarshall(`{"metadata": {},"hostname": null}`),
