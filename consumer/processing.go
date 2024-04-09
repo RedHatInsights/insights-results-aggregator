@@ -39,12 +39,12 @@ const (
 	reportAttributeInfo          = "info"
 	reportAttributeFingerprints  = "fingerprints"
 	reportAttributeMetadata      = "analysis_metadata"
-	numberOfExpectedKeysInReport = 4
+	numberOfExpectedKeysInReport = 3 // Number of items in expectedKeysInReport
 )
 
 var (
 	expectedKeysInReport = []string{
-		reportAttributeFingerprints, reportAttributeInfo, reportAttributeReports, reportAttributeSystem,
+		reportAttributeFingerprints, reportAttributeReports, reportAttributeSystem,
 	}
 )
 
