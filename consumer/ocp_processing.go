@@ -242,7 +242,7 @@ func isReportWithEmptyAttributes(r Report) bool {
 func checkReportStructure(r Report) error {
 	// the structure is not well-defined yet, so all we should do is to check if all keys are there
 
-	// 'skips' key is now optional, we should not expect it anymore:
+	// 'skips' and 'info' keys are now optional, we should not expect them anymore:
 	// https://github.com/RedHatInsights/insights-results-aggregator/issues/1206
 	keysNotFound := make([]string, 0, numberOfExpectedKeysInReport)
 	keysFound := 0
@@ -283,13 +283,18 @@ func parseReportContent(message *incomingMessage) error {
 		return err
 	}
 
-	// it is expected that message.ParsedInfo contains at least one item:
-	// result from special INFO rule containing cluster version that is
-	// used just in external data pipeline
+	// with support for Hypershift-enabled clusters, the info attribute became optional
+	_, infoExists := (*message.Report)[reportAttributeInfo]
+	if !infoExists {
+		log.Debug().Msgf("%s key does not exist in the JSON object", reportAttributeInfo)
+		return nil
+	}
+
 	err = json.Unmarshal(*((*message.Report)[reportAttributeInfo]), &message.ParsedInfo)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
