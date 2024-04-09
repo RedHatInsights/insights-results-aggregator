@@ -532,6 +532,35 @@ func TestParseProperMessageWithInfoReport(t *testing.T) {
 	assert.EqualValues(t, expectedInfoReport, parsed.ParsedInfo)
 }
 
+func TestParseProperMessageNoInfoAttribute(t *testing.T) {
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Report": {
+			"system": {
+				"metadata": {},
+				"hostname": null
+			},
+			"reports": [
+				{
+					"component": "` + string(testdata.Rule2ID) + `",
+					"key": "` + testdata.ErrorKey2 + `",
+					"user_vote": 0,
+					"disabled": ` + fmt.Sprint(testdata.Rule2Disabled) + `,
+					"details": ` + helpers.ToJSONString(testdata.Rule2ExtraData) + `
+				}
+			],
+			"fingerprints": [],
+			"skips": []
+		}
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+
+	_, err := consumer.ParseMessage(&ocpConsumer, &message)
+	helpers.FailOnError(t, err)
+}
+
 func TestProcessEmptyMessage(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
