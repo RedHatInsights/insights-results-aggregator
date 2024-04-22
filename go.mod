@@ -16,7 +16,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.19.0
-	github.com/prometheus/client_model v0.6.0
+	github.com/prometheus/client_model v0.6.1
 	github.com/redhatinsights/app-common-go v1.6.7
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/viper v1.18.2
