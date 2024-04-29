@@ -44,7 +44,7 @@ objects:
       iqePlugin: ccx
     deployments:
       - name: instance
-        minReplicas: ${{DVO_WRITER_REPLICAS}}
+        minReplicas: ${{MIN_REPLICAS}}
         webServices:
           public:
             enabled: false
@@ -328,9 +328,6 @@ parameters:
   value: /
 - name: LOG_STREAM
   value: dvo-writer
-- name: DVO_WRITER_REPLICAS
-  description: The number of replicas to use for the dvo-writer deployment
-  value: "1"
 - name: DVO_WRITER_CPU_LIMIT
   value: 200m
 - name: DVO_WRITER_MEMORY_LIMIT
