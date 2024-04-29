@@ -31,7 +31,7 @@ objects:
     scaleTargetRef:
       apiVersion: apps/v1
       kind: Deployment
-      name: dvo-writer
+      name: dvo-writer-instance
     targetCPUUtilizationPercentage: 80
 
 - apiVersion: cloud.redhat.com/v1alpha1
