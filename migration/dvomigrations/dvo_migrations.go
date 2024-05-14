@@ -7,4 +7,5 @@ var UsableDVOMigrations = []migration.Migration{
 	mig0001CreateDVOReport,
 	mig0002CreateDVOReportIndexes,
 	mig0003CCXDEV12602DeleteBuggyRecords,
+	mig0004AddRuleHitsCount,
 }
