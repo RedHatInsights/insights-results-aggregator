@@ -18,6 +18,7 @@ package server_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -76,10 +77,30 @@ const (
 )
 
 var (
-	now             = time.Now().UTC()
-	nowAfterOneHour = now.Add(1 * time.Hour).UTC()
-	dummyTime       = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+	now = time.Now().UTC()
 )
+
+func workloadInResponseChecker(t testing.TB, expected, got []byte) {
+	type Response struct {
+		Status    string `json:"string"`
+		Workloads []server.WorkloadsForNamespace
+	}
+
+	var expectedResp Response
+	var gotResp Response
+
+	if err := json.Unmarshal(expected, &expectedResp); err != nil {
+		err = fmt.Errorf(`"expected" is not JSON. value = "%v", err = "%v"`, expected, err)
+		helpers.FailOnError(t, err)
+	}
+
+	if err := json.Unmarshal(got, &gotResp); err != nil {
+		err = fmt.Errorf(`"got" is not JSON. value = "%v", err = "%v"`, string(got), err)
+		helpers.FailOnError(t, err)
+	}
+
+	assert.ElementsMatch(t, expectedResp.Workloads, gotResp.Workloads)
+}
 
 // TestProcessSingleDVONamespace_MustProcessEscapedString tests the behavior of ProcessSingleDVONamespace with the current
 // escaped JSON string, the whole string is also wrapped in quotation marks
@@ -213,7 +234,6 @@ func TestGetWorkloadsOK(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	//var expected []server.WorkloadsForNamespace
 	workload := server.WorkloadsForNamespace{
 		Cluster: server.Cluster{
 			UUID: string(testdata.ClusterName),
@@ -250,5 +270,65 @@ func TestGetWorkloads_NoData(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
+	})
+}
+
+func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	workloads := []server.WorkloadsForNamespace{
+		{
+			Cluster: server.Cluster{
+				UUID: string(testdata.ClusterName),
+			},
+			Namespace: server.Namespace{
+				UUID: ira_data.NamespaceAUID,
+				Name: "namespace-name-A",
+			},
+			Metadata: server.Metadata{
+				Recommendations: 1,
+				Objects:         1,
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+		},
+		{
+			Cluster: server.Cluster{
+				UUID: string(testdata.ClusterName),
+			},
+			Namespace: server.Namespace{
+				UUID: ira_data.NamespaceBUID,
+				Name: "namespace-name-B",
+			},
+			Metadata: server.Metadata{
+				Recommendations: 1,
+				Objects:         1,
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+		},
+	}
+
+	ira_helpers.AssertAPIRequestDVO(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.DVOWorkloadRecommendations,
+		EndpointArgs: []interface{}{testdata.OrgID},
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        `{"status":"ok","workloads":` + helpers.ToJSONString(workloads) + `}`,
+		BodyChecker: workloadInResponseChecker,
 	})
 }
