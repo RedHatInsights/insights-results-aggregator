@@ -181,6 +181,7 @@ func (server *HTTPServer) processDVOWorkloads(workloads []types.DVOReport) (
 				LastCheckedAt:   string(workload.LastCheckedAt),
 			},
 			// TODO: fill RecommendationsHitCount map efficiently instead of processing the report again every time
+			RecommendationsHitCount: workload.RuleHitsCount,
 		})
 	}
 

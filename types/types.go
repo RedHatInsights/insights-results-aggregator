@@ -202,6 +202,7 @@ type DVOReport struct {
 	Objects         uint            `json:"objects"`
 	ReportedAt      types.Timestamp `json:"reported_at"`
 	LastCheckedAt   types.Timestamp `json:"last_checked_at"`
+	RuleHitsCount   map[string]int  `json:"rule_hits_count"`
 }
 
 // ClusterReports is a data structure containing list of clusters, list of
