@@ -97,6 +97,7 @@ func AssertAPIRequest(
 	helpers.AssertAPIRequest(t, testServer, serverConfig.APIPrefix, request, expectedResponse)
 }
 
+// AssertAPIRequestDVO is used for requests made against DVO storage
 func AssertAPIRequestDVO(
 	t testing.TB,
 	mockStorage storage.DVORecommendationsStorage,
