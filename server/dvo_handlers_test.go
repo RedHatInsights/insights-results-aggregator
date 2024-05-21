@@ -169,14 +169,14 @@ func TestProcessSingleDVONamespace_MustFilterZeroObjects_CCXDEV_12589_Reproducer
 	assert.Equal(t, 2, len(processedWorkload.Recommendations[0].Objects))
 	expectedObjects := []server.DVOObject{
 		{
-			UID:  "193a2099-0000-1111-916a-d570c9aac158",
-			Kind: "Pod",
-			Name: "test-name-0001",
+			UID:         "193a2099-0000-1111-916a-d570c9aac158",
+			Kind:        "Pod",
+			DisplayName: "test-name-0001",
 		},
 		{
-			UID:  "193a2099-1234-5678-916a-d570c9aac158",
-			Kind: "DaemonSet",
-			Name: "test-name-0099",
+			UID:         "193a2099-1234-5678-916a-d570c9aac158",
+			Kind:        "DaemonSet",
+			DisplayName: "test-name-0099",
 		},
 	}
 	assert.ElementsMatch(t, expectedObjects, processedWorkload.Recommendations[0].Objects)
