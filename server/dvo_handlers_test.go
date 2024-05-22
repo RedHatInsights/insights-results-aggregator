@@ -248,6 +248,7 @@ func TestGetWorkloadsOK(t *testing.T) {
 			ReportedAt:      now.UTC().Format(time.RFC3339),
 			LastCheckedAt:   now.UTC().Format(time.RFC3339),
 		},
+		RecommendationsHitCount: types.RuleHitsCount{},
 	}
 
 	ira_helpers.AssertAPIRequestDVO(t, mockStorage, nil, &helpers.APIRequest{
@@ -304,6 +305,7 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 				ReportedAt:      now.UTC().Format(time.RFC3339),
 				LastCheckedAt:   now.UTC().Format(time.RFC3339),
 			},
+			RecommendationsHitCount: types.RuleHitsCount{},
 		},
 		{
 			Cluster: server.Cluster{
@@ -319,6 +321,7 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 				ReportedAt:      now.UTC().Format(time.RFC3339),
 				LastCheckedAt:   now.UTC().Format(time.RFC3339),
 			},
+			RecommendationsHitCount: types.RuleHitsCount{},
 		},
 	}
 
