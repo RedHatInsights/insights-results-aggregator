@@ -17,7 +17,6 @@ package helpers
 import (
 	"database/sql"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -116,8 +115,6 @@ func MustCloseMockDBWithExpects(
 
 // MustGetPostgresStorage creates test postgres storage with credentials from config-devel
 func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendationsStorage, func()) {
-	dbAdminPassword := os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS")
-
 	err := conf.LoadConfiguration("../config-devel")
 	helpers.FailOnError(tb, err)
 
@@ -125,7 +122,6 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendation
 	storageConf := &conf.Config.OCPRecommendationsStorage
 	storageConf.Driver = postgres
 	storageConf.PGDBName += "_test_db_" + strings.ReplaceAll(uuid.New().String(), "-", "_")
-	storageConf.PGPassword = dbAdminPassword
 
 	connString := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s sslmode=disable",
@@ -161,8 +157,6 @@ func MustGetPostgresStorage(tb testing.TB, init bool) (storage.OCPRecommendation
 
 // MustGetPostgresStorageDVO creates test postgres storage with credentials from config-devel for DVO storage
 func MustGetPostgresStorageDVO(tb testing.TB, init bool) (storage.DVORecommendationsStorage, func()) {
-	dbAdminPassword := os.Getenv("INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS")
-
 	err := conf.LoadConfiguration("../config-devel")
 	helpers.FailOnError(tb, err)
 
@@ -170,7 +164,6 @@ func MustGetPostgresStorageDVO(tb testing.TB, init bool) (storage.DVORecommendat
 	storageConf := &conf.Config.DVORecommendationsStorage
 	storageConf.Driver = postgres
 	storageConf.PGDBName += "_test_db_" + strings.ReplaceAll(uuid.New().String(), "-", "_")
-	storageConf.PGPassword = dbAdminPassword
 
 	connString := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s sslmode=disable",
