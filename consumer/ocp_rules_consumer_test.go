@@ -312,7 +312,6 @@ func TestCheckReportStructureReportWithAllAttributesPresentAndEmpty(t *testing.T
 func TestCheckReportStructureReportWithAnalysisMetadata(t *testing.T) {
 	report := consumer.Report{
 		"system":            unmarshall(`{"metadata": {}, "hostname": null}`),
-		"reports":           unmarshall("[]"),
 		"fingerprints":      unmarshall("[]"),
 		"analysis_metadata": unmarshall(`{"start": "2023-09-11T18:33:14.527845+00:00", "finish": "2023-09-11T18:33:15.632777+00:00"}`),
 	}
@@ -335,7 +334,6 @@ func TestCheckReportStructureReportWithEmptyAndMissingAttributes(t *testing.T) {
 func TestCheckReportStructureReportWithItems(t *testing.T) {
 	report := consumer.Report{
 		"fingerprints": unmarshall("[]"),
-		"info":         unmarshall("[]"),
 		"reports":      unmarshall(string(testdata.Report2Rules)),
 		"skips":        unmarshall("[]"),
 		"system":       unmarshall(`{"metadata": {},"hostname": null}`),
@@ -532,6 +530,35 @@ func TestParseProperMessageWithInfoReport(t *testing.T) {
 		},
 	}
 	assert.EqualValues(t, expectedInfoReport, parsed.ParsedInfo)
+}
+
+func TestParseProperMessageNoInfoAttribute(t *testing.T) {
+	data := `{
+		"OrgID": ` + fmt.Sprint(testdata.OrgID) + `,
+		"ClusterName": "` + string(testdata.ClusterName) + `",
+		"LastChecked": "` + testdata.LastCheckedAt.Format(time.RFC3339) + `",
+		"Report": {
+			"system": {
+				"metadata": {},
+				"hostname": null
+			},
+			"reports": [
+				{
+					"component": "` + string(testdata.Rule2ID) + `",
+					"key": "` + testdata.ErrorKey2 + `",
+					"user_vote": 0,
+					"disabled": ` + fmt.Sprint(testdata.Rule2Disabled) + `,
+					"details": ` + helpers.ToJSONString(testdata.Rule2ExtraData) + `
+				}
+			],
+			"fingerprints": [],
+			"skips": []
+		}
+	}`
+	message := sarama.ConsumerMessage{Value: []byte(data)}
+
+	_, err := consumer.ParseMessage(&ocpConsumer, &message)
+	helpers.FailOnError(t, err)
 }
 
 func TestProcessEmptyMessage(t *testing.T) {

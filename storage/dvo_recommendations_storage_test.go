@@ -32,6 +32,7 @@ import (
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	ira_data "github.com/RedHatInsights/insights-results-aggregator/tests/data"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
@@ -40,126 +41,6 @@ var (
 	now             = time.Now().UTC()
 	nowAfterOneHour = now.Add(1 * time.Hour).UTC()
 	dummyTime       = time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
-
-	namespaceAUID = "NAMESPACE-UID-A"
-	namespaceBUID = "NAMESPACE-UID-B"
-
-	namespaceAWorkload = types.DVOWorkload{
-		Namespace:    "namespace-name-A",
-		NamespaceUID: namespaceAUID,
-		Kind:         "DaemonSet",
-		Name:         "test-name-0099",
-		UID:          "UID-0099",
-	}
-	namespaceAWorkload2 = types.DVOWorkload{
-		Namespace:    "namespace-name-A",
-		NamespaceUID: namespaceAUID,
-		Kind:         "Pod",
-		Name:         "test-name-0001",
-		UID:          "UID-0001",
-	}
-	namespaceBWorkload = types.DVOWorkload{
-		Namespace:    "namespace-name-B",
-		NamespaceUID: namespaceBUID,
-		Kind:         "NotDaemonSet",
-		Name:         "test-name-1199",
-		UID:          "UID-1199",
-	}
-	validDVORecommendation = []types.WorkloadRecommendation{
-		{
-			ResponseID: "an_issue|DVO_AN_ISSUE",
-			Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
-			Key:        "DVO_AN_ISSUE",
-			Links: types.DVOLinks{
-				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
-				ProductDocumentation: []string{},
-			},
-			Details: map[string]interface{}{
-				"check_name": "",
-				"check_url":  "",
-				"samples": []interface{}{
-					map[string]interface{}{
-						"namespace_uid": namespaceAUID, "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
-					},
-				},
-			},
-			Tags:      []string{},
-			Workloads: []types.DVOWorkload{namespaceAWorkload},
-		},
-	}
-	validReport                  = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"an_issue|DVO_AN_ISSUE","component":"ccx_rules_ocp.external.dvo.an_issue_pod.recommendation","key":"DVO_AN_ISSUE","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","uid":"193a2099-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"UID-0099"}]}]}`
-	validReport2Rules2Namespaces = `{"system":{"metadata":{},"hostname":null},"fingerprints":[],"version":1,"analysis_metadata":{},"workload_recommendations":[{"response_id":"unset_requirements|DVO_UNSET_REQUIREMENTS","component":"ccx_rules_ocp.external.dvo.unset_requirements.recommendation","key":"DVO_UNSET_REQUIREMENTS","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","uid":"193a2099-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-A","namespace_uid":"NAMESPACE-UID-A","kind":"DaemonSet","name":"test-name-0099","uid":"193a2099-1234-5678-916a-d570c9aac158"},{"namespace":"namespace-name-B","namespace_uid":"NAMESPACE-UID-B","kind":"DaemonSet","name":"test-name-1234","uid":"12345678-1234-5678-916a-d570c9aac158"}]},{"response_id":"excluded_pod|EXCLUDED_POD","component":"ccx_rules_ocp.external.dvo.excluded_pod.recommendation","key":"EXCLUDED_POD","details":{"check_name":"","check_url":"","samples":[{"namespace_uid":"NAMESPACE-UID-B","kind":"DaemonSet","uid":"12345678-1234-5678-916a-d570c9aac158"}]},"tags":[],"links":{"jira":["https://issues.redhat.com/browse/AN_ISSUE"],"product_documentation":[]},"workloads":[{"namespace":"namespace-name-B","namespace_uid":"NAMESPACE-UID-B","kind":"DaemonSet","name":"test-name-1234","uid":"12345678-1234-5678-916a-d570c9aac158"}]}]}`
-
-	twoNamespacesRecommendation = []types.WorkloadRecommendation{
-		{
-			ResponseID: "an_issue|DVO_AN_ISSUE",
-			Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
-			Key:        "DVO_AN_ISSUE",
-			Links: types.DVOLinks{
-				Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
-				ProductDocumentation: []string{},
-			},
-			Details: map[string]interface{}{
-				"check_name": "",
-				"check_url":  "",
-				"samples": []interface{}{
-					map[string]interface{}{
-						"namespace_uid": namespaceAUID, "kind": "DaemonSet", "uid": "193a2099-1234-5678-916a-d570c9aac158",
-					},
-				},
-			},
-			Tags:      []string{},
-			Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceBWorkload},
-		},
-	}
-
-	recommendation1TwoNamespaces = types.WorkloadRecommendation{
-		ResponseID: "an_issue|DVO_AN_ISSUE",
-		Component:  "ccx_rules_ocp.external.dvo.an_issue_pod.recommendation",
-		Key:        "DVO_AN_ISSUE",
-		Links: types.DVOLinks{
-			Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
-			ProductDocumentation: []string{},
-		},
-		Details: map[string]interface{}{
-			"check_name": "",
-			"check_url":  "",
-		},
-		Tags:      []string{},
-		Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceBWorkload},
-	}
-
-	recommendation2OneNamespace = types.WorkloadRecommendation{
-		ResponseID: "unset_requirements|DVO_UNSET_REQUIREMENTS",
-		Component:  "ccx_rules_ocp.external.dvo.unset_requirements.recommendation",
-		Key:        "DVO_UNSET_REQUIREMENTS",
-		Links: types.DVOLinks{
-			Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
-			ProductDocumentation: []string{},
-		},
-		Details: map[string]interface{}{
-			"check_name": "",
-			"check_url":  "",
-		},
-		Tags:      []string{},
-		Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceAWorkload2},
-	}
-
-	recommendation3OneNamespace = types.WorkloadRecommendation{
-		ResponseID: "bad_requirements|BAD_REQUIREMENTS",
-		Component:  "ccx_rules_ocp.external.dvo.bad_requirements.recommendation",
-		Key:        "BAD_REQUIREMENTS",
-		Links: types.DVOLinks{
-			Jira:                 []string{"https://issues.redhat.com/browse/AN_ISSUE"},
-			ProductDocumentation: []string{},
-		},
-		Details: map[string]interface{}{
-			"check_name": "",
-			"check_url":  "",
-		},
-		Tags:      []string{},
-		Workloads: []types.DVOWorkload{namespaceAWorkload, namespaceAWorkload2},
-	}
 )
 
 func init() {
@@ -242,7 +123,7 @@ func TestDVOStorageWriteReportForClusterClosedStorage(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
-		validDVORecommendation,
+		ira_data.ValidDVORecommendation,
 		now,
 		dummyTime,
 		dummyTime,
@@ -260,7 +141,7 @@ func TestDVOStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
-		validDVORecommendation,
+		ira_data.ValidDVORecommendation,
 		now,
 		dummyTime,
 		dummyTime,
@@ -283,7 +164,7 @@ func TestDVOStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
-		validDVORecommendation,
+		ira_data.ValidDVORecommendation,
 		newerTime,
 		dummyTime,
 		dummyTime,
@@ -296,7 +177,7 @@ func TestDVOStorageWriteReportForClusterMoreRecentInDB(t *testing.T) {
 		testdata.OrgID,
 		testdata.ClusterName,
 		testdata.ClusterReportEmpty,
-		validDVORecommendation,
+		ira_data.ValidDVORecommendation,
 		olderTime,
 		now,
 		now,
@@ -320,7 +201,7 @@ func TestDVOStorageWriteReportForClusterDroppedReportTable(t *testing.T) {
 
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, testdata.ClusterReportEmpty,
-		validDVORecommendation, now, now, now,
+		ira_data.ValidDVORecommendation, now, now, now,
 		testdata.RequestID1,
 	)
 	assert.EqualError(t, err, "no such table: dvo.dvo_report")
@@ -348,7 +229,7 @@ func TestDVOStorageWriteReportForClusterFakePostgresOK(t *testing.T) {
 
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName, `{"test": "report"}`,
-		validDVORecommendation, testdata.LastCheckedAt, now, now,
+		ira_data.ValidDVORecommendation, testdata.LastCheckedAt, now, now,
 		testdata.RequestID1)
 	helpers.FailOnError(t, mockStorage.Close())
 	helpers.FailOnError(t, err)
@@ -364,8 +245,8 @@ func TestDVOStorageWriteReportForClusterCheckItIsStored(t *testing.T) {
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
-		validDVORecommendation,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.ValidDVORecommendation,
 		now,
 		dummyTime,
 		dummyTime,
@@ -377,7 +258,7 @@ func TestDVOStorageWriteReportForClusterCheckItIsStored(t *testing.T) {
 		"SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;",
 		testdata.OrgID, testdata.ClusterName,
 	)
-	checkStoredReport(t, row, namespaceAWorkload, 1, now, now)
+	checkStoredReport(t, row, ira_data.NamespaceAWorkload, 1, now, now)
 }
 
 func TestDVOStorageWriteReportForClusterCheckPreviousIsDeleted(t *testing.T) {
@@ -390,8 +271,8 @@ func TestDVOStorageWriteReportForClusterCheckPreviousIsDeleted(t *testing.T) {
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
-		twoNamespacesRecommendation,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
 		now,
 		dummyTime,
 		dummyTime,
@@ -403,22 +284,22 @@ func TestDVOStorageWriteReportForClusterCheckPreviousIsDeleted(t *testing.T) {
 	row := mockStorage.GetConnection().QueryRow(`
 		SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at
 		FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND namespace_id = $3;`,
-		testdata.OrgID, testdata.ClusterName, namespaceAWorkload.NamespaceUID,
+		testdata.OrgID, testdata.ClusterName, ira_data.NamespaceAWorkload.NamespaceUID,
 	)
-	checkStoredReport(t, row, namespaceAWorkload, 1, now, now)
+	checkStoredReport(t, row, ira_data.NamespaceAWorkload, 1, now, now)
 	row = mockStorage.GetConnection().QueryRow(`
 		SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at
 		FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND namespace_id = $3;`,
-		testdata.OrgID, testdata.ClusterName, namespaceBWorkload.NamespaceUID,
+		testdata.OrgID, testdata.ClusterName, ira_data.NamespaceBWorkload.NamespaceUID,
 	)
-	checkStoredReport(t, row, namespaceBWorkload, 1, now, now)
+	checkStoredReport(t, row, ira_data.NamespaceBWorkload, 1, now, now)
 
 	// Now receive a report with just one namespace for the same cluster
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
-		validDVORecommendation,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.ValidDVORecommendation,
 		nowAfterOneHour,
 		dummyTime,
 		dummyTime,
@@ -430,13 +311,13 @@ func TestDVOStorageWriteReportForClusterCheckPreviousIsDeleted(t *testing.T) {
 	row = mockStorage.GetConnection().QueryRow(`
 		SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at
 		FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND namespace_id = $3;`,
-		testdata.OrgID, testdata.ClusterName, namespaceAWorkload.NamespaceUID,
+		testdata.OrgID, testdata.ClusterName, ira_data.NamespaceAWorkload.NamespaceUID,
 	)
-	checkStoredReport(t, row, namespaceAWorkload, 1, nowAfterOneHour, now)
+	checkStoredReport(t, row, ira_data.NamespaceAWorkload, 1, nowAfterOneHour, now)
 	row = mockStorage.GetConnection().QueryRow(`
 		SELECT namespace_id, namespace_name, report, recommendations, objects, last_checked_at, reported_at
 		FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2 AND namespace_id = $3;`,
-		testdata.OrgID, testdata.ClusterName, namespaceBWorkload.NamespaceUID,
+		testdata.OrgID, testdata.ClusterName, ira_data.NamespaceBWorkload.NamespaceUID,
 	)
 	checkRowDoesntExist(t, row)
 }
@@ -463,7 +344,7 @@ func checkStoredReport(t *testing.T, row *sql.Row, want types.DVOWorkload, wantO
 
 	assert.Equal(t, want.NamespaceUID, namespaceID, "the column namespace_id is different than expected")
 	assert.Equal(t, want.Namespace, namespaceName, "the column namespace_name is different than expected")
-	assert.Equal(t, validDVORecommendation, gotWorkloads.WorkloadRecommendations, "the column report is different than expected")
+	assert.Equal(t, ira_data.ValidDVORecommendation, gotWorkloads.WorkloadRecommendations, "the column report is different than expected")
 	assert.Equal(t, 1, recommendations, "the column recommendations is different than expected")
 	assert.Equal(t, wantObjects, objects, "the column objects is different than expected")
 	assert.Equal(t, wantLastChecked.Truncate(time.Second), lastChecked.UTC().Truncate(time.Second), "the column reported_at is different than expected")
@@ -493,8 +374,8 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
-		twoNamespacesRecommendation,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
 		now,
 		now,
 		now,
@@ -506,8 +387,8 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
-		twoNamespacesRecommendation,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
 		nowAfterOneHour,
 		nowAfterOneHour,
 		nowAfterOneHour,
@@ -531,8 +412,8 @@ func TestDVOStorageReadWorkloadsForNamespace_Timestamps(t *testing.T) {
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
-		twoNamespacesRecommendation,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
 		now,
 		now,
 		now,
@@ -544,8 +425,8 @@ func TestDVOStorageReadWorkloadsForNamespace_Timestamps(t *testing.T) {
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
-		twoNamespacesRecommendation,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
 		nowAfterOneHour,
 		nowAfterOneHour,
 		nowAfterOneHour,
@@ -553,11 +434,11 @@ func TestDVOStorageReadWorkloadsForNamespace_Timestamps(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, ira_data.NamespaceAUID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
-	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, ira_data.NamespaceAUID, report.NamespaceID)
 	assert.Equal(t, uint(1), report.Recommendations)
 	assert.Equal(t, uint(1), report.Objects)
 	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), report.LastCheckedAt)
@@ -575,8 +456,8 @@ func TestDVOStorageReadWorkloadsForNamespace_TwoObjectsOneNamespace(t *testing.T
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
-		twoNamespacesRecommendation,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
 		now,
 		now,
 		now,
@@ -584,23 +465,23 @@ func TestDVOStorageReadWorkloadsForNamespace_TwoObjectsOneNamespace(t *testing.T
 	)
 	helpers.FailOnError(t, err)
 
-	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, ira_data.NamespaceAUID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
-	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, ira_data.NamespaceAUID, report.NamespaceID)
 	assert.Equal(t, uint(1), report.Recommendations)
 	assert.Equal(t, uint(1), report.Objects)
 	assert.Equal(t, nowTstmp, report.ReportedAt)
 	assert.Equal(t, nowTstmp, report.LastCheckedAt)
 
-	newerReport2Objs := twoNamespacesRecommendation
-	newerReport2Objs[0].Workloads = []types.DVOWorkload{namespaceAWorkload, namespaceAWorkload2, namespaceBWorkload}
+	newerReport2Objs := ira_data.TwoNamespacesRecommendation
+	newerReport2Objs[0].Workloads = []types.DVOWorkload{ira_data.NamespaceAWorkload, ira_data.NamespaceAWorkload2, ira_data.NamespaceBWorkload}
 	// write new archive with newer timestamp and 1 more object in the recommendation hit
 	err = mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
+		types.ClusterReport(ira_data.ValidReport),
 		newerReport2Objs,
 		nowAfterOneHour,
 		nowAfterOneHour,
@@ -609,11 +490,11 @@ func TestDVOStorageReadWorkloadsForNamespace_TwoObjectsOneNamespace(t *testing.T
 	)
 	helpers.FailOnError(t, err)
 
-	report, err = mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	report, err = mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, ira_data.NamespaceAUID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
-	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, ira_data.NamespaceAUID, report.NamespaceID)
 	assert.Equal(t, uint(1), report.Recommendations)
 	assert.Equal(t, uint(2), report.Objects) // <-- two objs now
 
@@ -633,8 +514,8 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport2Rules2Namespaces),
-		[]types.WorkloadRecommendation{recommendation1TwoNamespaces, recommendation2OneNamespace},
+		types.ClusterReport(ira_data.ValidReport2Rules2Namespaces),
+		[]types.WorkloadRecommendation{ira_data.Recommendation1TwoNamespaces, ira_data.Recommendation2OneNamespace},
 		now,
 		now,
 		now,
@@ -644,8 +525,8 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 
 	expectedWorkloads := []types.DVOReport{
 		{
-			NamespaceID:     namespaceAUID,
-			NamespaceName:   namespaceAWorkload.Namespace,
+			NamespaceID:     ira_data.NamespaceAUID,
+			NamespaceName:   ira_data.NamespaceAWorkload.Namespace,
 			ClusterID:       string(testdata.ClusterName),
 			Recommendations: uint(2),
 			Objects:         uint(2), // <-- must be 2, because one workload is hitting more recommendations, but counts as 1
@@ -653,8 +534,8 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 			LastCheckedAt:   nowTstmp,
 		},
 		{
-			NamespaceID:     namespaceBUID,
-			NamespaceName:   namespaceBWorkload.Namespace,
+			NamespaceID:     ira_data.NamespaceBUID,
+			NamespaceName:   ira_data.NamespaceBWorkload.Namespace,
 			ClusterID:       string(testdata.ClusterName),
 			Recommendations: uint(1), // <-- must contain only 1 rule, the other rule wasn't hitting this ns
 			Objects:         uint(1),
@@ -669,11 +550,11 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 	assert.Equal(t, 2, len(workloads))
 	assert.ElementsMatch(t, expectedWorkloads, workloads)
 
-	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, ira_data.NamespaceAUID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
-	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, ira_data.NamespaceAUID, report.NamespaceID)
 	assert.Equal(t, uint(2), report.Recommendations)
 	assert.Equal(t, uint(2), report.Objects)
 	assert.Equal(t, nowTstmp, report.ReportedAt)
@@ -691,11 +572,11 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport2Rules2Namespaces),
+		types.ClusterReport(ira_data.ValidReport2Rules2Namespaces),
 		[]types.WorkloadRecommendation{
-			recommendation1TwoNamespaces,
-			recommendation2OneNamespace,
-			recommendation3OneNamespace,
+			ira_data.Recommendation1TwoNamespaces,
+			ira_data.Recommendation2OneNamespace,
+			ira_data.Recommendation3OneNamespace,
 		},
 		now,
 		now,
@@ -706,8 +587,8 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 
 	expectedWorkloads := []types.DVOReport{
 		{
-			NamespaceID:     namespaceAUID,
-			NamespaceName:   namespaceAWorkload.Namespace,
+			NamespaceID:     ira_data.NamespaceAUID,
+			NamespaceName:   ira_data.NamespaceAWorkload.Namespace,
 			ClusterID:       string(testdata.ClusterName),
 			Recommendations: uint(3),
 			Objects:         uint(2), // <-- must be 2, because workloadA and workloadB are hitting more rules, but count as 1 within a namespace
@@ -715,8 +596,8 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 			LastCheckedAt:   nowTstmp,
 		},
 		{
-			NamespaceID:     namespaceBUID,
-			NamespaceName:   namespaceBWorkload.Namespace,
+			NamespaceID:     ira_data.NamespaceBUID,
+			NamespaceName:   ira_data.NamespaceBWorkload.Namespace,
 			ClusterID:       string(testdata.ClusterName),
 			Recommendations: uint(1), // <-- must contain only 1 rule, the other rules weren't affecting this namespace
 			Objects:         uint(1), // <-- same as ^
@@ -731,11 +612,11 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 	assert.Equal(t, 2, len(workloads))
 	assert.ElementsMatch(t, expectedWorkloads, workloads)
 
-	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, ira_data.NamespaceAUID)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
-	assert.Equal(t, namespaceAUID, report.NamespaceID)
+	assert.Equal(t, ira_data.NamespaceAUID, report.NamespaceID)
 	assert.Equal(t, uint(3), report.Recommendations)
 	assert.Equal(t, uint(2), report.Objects)
 	assert.Equal(t, nowTstmp, report.ReportedAt)
@@ -751,8 +632,8 @@ func TestDVOStorageReadWorkloadsForNamespace_MissingData(t *testing.T) {
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
-		types.ClusterReport(validReport),
-		validDVORecommendation,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.ValidDVORecommendation,
 		now,
 		now,
 		now,
@@ -761,20 +642,20 @@ func TestDVOStorageReadWorkloadsForNamespace_MissingData(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	t.Run("cluster and namespace exist", func(t *testing.T) {
-		report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceAUID)
+		report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, ira_data.NamespaceAUID)
 		helpers.FailOnError(t, err)
 		assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
-		assert.Equal(t, namespaceAUID, report.NamespaceID)
+		assert.Equal(t, ira_data.NamespaceAUID, report.NamespaceID)
 	})
 
 	t.Run("cluster exists and namespace doesn't", func(t *testing.T) {
-		_, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, namespaceBUID)
-		assert.Equal(t, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", testdata.OrgID, testdata.ClusterName, namespaceBUID)}, err)
+		_, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, ira_data.NamespaceBUID)
+		assert.Equal(t, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", testdata.OrgID, testdata.ClusterName, ira_data.NamespaceBUID)}, err)
 	})
 
 	t.Run("namespace exists and cluster doesn't", func(t *testing.T) {
 		nonExistingCluster := types.ClusterName("a6fe3cd2-2c6a-48b8-a58d-b05853d47f4f")
-		_, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, nonExistingCluster, namespaceAUID)
-		assert.Equal(t, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", testdata.OrgID, nonExistingCluster, namespaceAUID)}, err)
+		_, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, nonExistingCluster, ira_data.NamespaceAUID)
+		assert.Equal(t, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", testdata.OrgID, nonExistingCluster, ira_data.NamespaceAUID)}, err)
 	})
 }

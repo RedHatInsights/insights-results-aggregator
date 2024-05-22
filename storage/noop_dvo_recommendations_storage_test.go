@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
+	ira_data "github.com/RedHatInsights/insights-results-aggregator/tests/data"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
@@ -38,5 +39,5 @@ func TestDVONoopStorageEmptyMethods(_ *testing.T) {
 	_ = noopStorage.GetConnection()
 	_ = noopStorage.GetDBDriverType()
 
-	_ = noopStorage.WriteReportForCluster(0, "", "", validDVORecommendation, time.Now(), time.Now(), time.Now(), "")
+	_ = noopStorage.WriteReportForCluster(0, "", "", ira_data.ValidDVORecommendation, time.Now(), time.Now(), time.Now(), "")
 }
