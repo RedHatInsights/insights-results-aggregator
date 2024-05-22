@@ -358,13 +358,13 @@ func (storage DVORecommendationsDBStorage) updateReport(
 
 		values[8] = lastCheckedTime // last_checked_at
 
-		ruleHitsCountsJson, err := json.Marshal(ruleHitsCounts[namespaceUID])
+		ruleHitsCountsJSON, err := json.Marshal(ruleHitsCounts[namespaceUID])
 		if err != nil {
 			log.Error().Err(err).Msg("cannot create rule hits count JSON")
-			ruleHitsCountsJson = nil
+			ruleHitsCountsJSON = nil
 		}
 
-		values[9] = ruleHitsCountsJson // rule_hits_count
+		values[9] = ruleHitsCountsJSON // rule_hits_count
 
 		_, err = tx.Exec(workloadInsertStatement, values...)
 		if err != nil {
