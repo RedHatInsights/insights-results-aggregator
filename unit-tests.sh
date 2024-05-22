@@ -32,7 +32,9 @@ function run_unit_tests() {
 }
 
 function check_composer() {
-    if command -v docker-compose > /dev/null; then
+    if command -v docker > /dev/null && docker compose version > /dev/null 2>&1; then
+        COMPOSER="docker compose"
+    elif command -v docker-compose > /dev/null; then
         COMPOSER=docker-compose
     elif command -v podman-compose > /dev/null; then
         COMPOSER=podman-compose
@@ -44,22 +46,26 @@ function check_composer() {
 
 
 function wait_for_postgres() {
-    until psql "dbname=aggregator user=postgres password=postgres host=localhost sslmode=disable" -c '\q' ; do
+    echo -n "Waiting for postgres to be available"
+    until psql "dbname=aggregator user=postgres password=postgres host=localhost sslmode=disable" -c '\q' 2> /dev/null; do
+         echo -n "."
          sleep 1
     done
+
+    echo
+    echo "Postgres already available. Continuing"
 }
 
 if [ -z "$CI" ]; then
     echo "Running postgres container locally"
     check_composer
+    echo \"$COMPOSER\" to be used as composer
     $COMPOSER up -d > /dev/null
     wait_for_postgres
 fi
 
 path_to_config=$(pwd)/config-devel.toml
 export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE="$path_to_config"
-export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="aggregator"
-export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="postgres"
 run_unit_tests
 
 if [ -z "$CI" ]; then
