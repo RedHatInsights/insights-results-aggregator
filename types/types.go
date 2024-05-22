@@ -221,3 +221,6 @@ type RuleRating = types.RuleRating
 type Metadata struct {
 	GatheredAt time.Time `json:"gathering_time"`
 }
+
+// RuleHitsCount represents the number of hits for a given rule
+type RuleHitsCount map[string]int

@@ -326,13 +326,13 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		return nil
 	}
 
-	namespaceMap, objectsMap, namespaceRecommendationCount := mapWorkloadRecommendations(&recommendations)
+	namespaceMap, objectsMap, namespaceRecommendationCount, ruleHitsCounts := mapWorkloadRecommendations(&recommendations)
 
 	// Get the INSERT statement for writing a workload into the database.
 	workloadInsertStatement := storage.getReportInsertQuery()
 
 	// Get values to be stored in dvo.dvo_report table
-	values := make([]interface{}, 9)
+	values := make([]interface{}, 10)
 	for namespaceUID, namespaceName := range namespaceMap {
 		values[0] = orgID         // org_id
 		values[1] = clusterName   // cluster_id
@@ -357,6 +357,15 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		}
 
 		values[8] = lastCheckedTime // last_checked_at
+
+		ruleHitsCountsJSON, err := json.Marshal(ruleHitsCounts[namespaceUID])
+		if err != nil {
+			log.Error().Err(err).Msg("cannot create rule hits count JSON")
+			ruleHitsCountsJSON = nil
+		}
+
+		values[9] = ruleHitsCountsJSON // rule_hits_count
+
 		_, err = tx.Exec(workloadInsertStatement, values...)
 		if err != nil {
 			log.Err(err).Msgf("Unable to insert the cluster workloads (org: %v, cluster: %v)",
@@ -377,7 +386,7 @@ func (storage DVORecommendationsDBStorage) updateReport(
 // to:
 //   - list of namespaces: list of affected workloads and data aggregations for this particular namespace
 func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation) (
-	map[string]string, map[string]int, map[string]int,
+	map[string]string, map[string]int, map[string]int, map[string]types.RuleHitsCount,
 ) {
 	// map the namespace ID to the namespace name
 	namespaceMap := make(map[string]string)
@@ -385,6 +394,8 @@ func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation)
 	namespaceRecommendationCount := make(map[string]int)
 	// map the number of unique workloads affected by at least 1 rule per namespace
 	objectsPerNamespace := make(map[string]map[string]struct{})
+	// map the hit counts per namespace and rule
+	ruleHitsCounts := make(map[string]types.RuleHitsCount)
 
 	for _, recommendation := range *recommendations {
 		// objectsMapPerRecommendation is used to calculate number of rule hits in namespace
@@ -400,6 +411,15 @@ func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation)
 
 			// per single recommendation within namespace
 			objectsPerRecommendation[workload.NamespaceUID]++
+
+			if _, ok := ruleHitsCounts[workload.NamespaceUID]; !ok {
+				ruleHitsCounts[workload.NamespaceUID] = make(types.RuleHitsCount)
+			}
+
+			if _, ok := ruleHitsCounts[workload.NamespaceUID][recommendation.ResponseID]; !ok {
+				ruleHitsCounts[workload.NamespaceUID][recommendation.ResponseID] = 0
+			}
+			ruleHitsCounts[workload.NamespaceUID][recommendation.ResponseID]++
 
 			// per whole namespace; just workload IDs with empty structs to filter out duplicate objects
 			if _, ok := objectsPerNamespace[workload.NamespaceUID]; !ok {
@@ -422,7 +442,7 @@ func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation)
 		uniqueObjectsMap[namespace] = len(objects)
 	}
 
-	return namespaceMap, uniqueObjectsMap, namespaceRecommendationCount
+	return namespaceMap, uniqueObjectsMap, namespaceRecommendationCount, ruleHitsCounts
 }
 
 // getRuleKeyCreatedAtMap returns a map between
