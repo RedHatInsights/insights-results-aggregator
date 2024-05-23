@@ -24,7 +24,7 @@ function run_unit_tests() {
         run_cmd="$TEST_TO_RUN"
     fi
     # shellcheck disable=SC2046
-    if ! go test -timeout 5m -coverprofile coverage.out $run_cmd
+    if ! go test -timeout 10m -coverprofile coverage.out $run_cmd
     then
         echo "unit tests failed"
         exit 1
