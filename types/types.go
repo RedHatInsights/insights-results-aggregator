@@ -19,10 +19,7 @@ package types
 import (
 	"database/sql/driver"
 	"encoding/json"
-<<<<<<< HEAD
 	"errors"
-=======
->>>>>>> origin/master
 	"time"
 
 	types "github.com/RedHatInsights/insights-results-types"
