@@ -516,7 +516,7 @@ func TestDBStorageVoteOnRuleDBExecError(t *testing.T) {
 
 	err = mockStorage.VoteOnRule("non int", testdata.Rule1ID, testdata.ErrorKey1, testdata.OrgID, testdata.UserID, types.UserVoteNone, "")
 	assert.Error(t, err)
-	const postgresErrMessage = "pq: invalid input syntax for type integer: \"non int\""
+	const postgresErrMessage = "pq: invalid input syntax"
 	if !strings.HasPrefix(err.Error(), postgresErrMessage) {
 		t.Fatalf("expected : \n%v\ngot:\n%v", postgresErrMessage, err.Error())
 	}

@@ -17,6 +17,8 @@
 package types
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
 
 	types "github.com/RedHatInsights/insights-results-types"
@@ -220,4 +222,12 @@ type RuleRating = types.RuleRating
 // Metadata represents the metadata field in the Kafka topic messages
 type Metadata struct {
 	GatheredAt time.Time `json:"gathering_time"`
+}
+
+// RuleHitsCount represents the number of hits for a given rule
+type RuleHitsCount map[string]int
+
+// Value convert a RuleHitsCount into a byte[]
+func (in RuleHitsCount) Value() (driver.Value, error) {
+	return json.Marshal(in)
 }

@@ -34,7 +34,7 @@ func (storage OCPRecommendationsDBStorage) getReportInfoUpsertQuery() string {
 
 func (storage DVORecommendationsDBStorage) getReportInsertQuery() string {
 	return `
-		INSERT INTO dvo.dvo_report(org_id, cluster_id, namespace_id, namespace_name, report, recommendations, objects, reported_at, last_checked_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO dvo.dvo_report(org_id, cluster_id, namespace_id, namespace_name, report, recommendations, objects, reported_at, last_checked_at, rule_hits_count)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 }
