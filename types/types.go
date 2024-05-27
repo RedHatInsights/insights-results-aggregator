@@ -56,6 +56,8 @@ const (
 	UserVoteNone = types.UserVoteNone
 	// UserVoteLike shows user's like
 	UserVoteLike = types.UserVoteLike
+	// WorkloadRecommendationSuffix is used to strip a suffix from rule ID (Component attribute) in WorkloadRecommendation
+	WorkloadRecommendationSuffix = ".recommendation"
 )
 
 type (

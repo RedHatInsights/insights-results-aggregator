@@ -19,10 +19,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-operator-utils/generators"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/migration/dvomigrations"
@@ -410,10 +412,22 @@ func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation)
 				ruleHitsCounts[workload.NamespaceUID] = make(types.RuleHitsCount)
 			}
 
-			if _, ok := ruleHitsCounts[workload.NamespaceUID][recommendation.ResponseID]; !ok {
-				ruleHitsCounts[workload.NamespaceUID][recommendation.ResponseID] = 0
+			// define key in rule hits counts map as concatenation of rule component and key
+			compositeRuleID, err := generators.GenerateCompositeRuleID(
+				// for some unknown reason, there's a `.recommendation` suffix for each rule hit instead of the usual .report
+				types.RuleFQDN(strings.TrimSuffix(recommendation.Component, types.WorkloadRecommendationSuffix)),
+				types.ErrorKey(recommendation.Key),
+			)
+			if err != nil {
+				log.Error().Err(err).Msg("error generating composite rule ID for rule")
+				continue
 			}
-			ruleHitsCounts[workload.NamespaceUID][recommendation.ResponseID]++
+
+			compositeRuleIDString := string(compositeRuleID)
+			if _, ok := ruleHitsCounts[workload.NamespaceUID][compositeRuleIDString]; !ok {
+				ruleHitsCounts[workload.NamespaceUID][compositeRuleIDString] = 0
+			}
+			ruleHitsCounts[workload.NamespaceUID][compositeRuleIDString]++
 
 			// per whole namespace; just workload IDs with empty structs to filter out duplicate objects
 			if _, ok := objectsPerNamespace[workload.NamespaceUID]; !ok {

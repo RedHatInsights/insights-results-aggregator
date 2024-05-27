@@ -34,8 +34,6 @@ import (
 
 const (
 	namespaceIDParam = "namespace"
-	// RecommendationSuffix is used to strip a suffix from rule ID
-	RecommendationSuffix = ".recommendation"
 )
 
 // Cluster structure contains cluster UUID and cluster name
@@ -302,7 +300,7 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 		// recommendation.ResponseID doesn't contain the full rule ID, so smart-proxy was unable to retrieve content, we need to build it
 		compositeRuleID, err := generators.GenerateCompositeRuleID(
 			// for some unknown reason, there's a `.recommendation` suffix for each rule hit instead of the usual .report
-			types.RuleFQDN(strings.TrimSuffix(recommendation.Component, RecommendationSuffix)),
+			types.RuleFQDN(strings.TrimSuffix(recommendation.Component, types.WorkloadRecommendationSuffix)),
 			types.ErrorKey(recommendation.Key),
 		)
 		if err != nil {
