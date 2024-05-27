@@ -19,10 +19,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-operator-utils/generators"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/migration/dvomigrations"
@@ -372,6 +374,30 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	return nil
 }
 
+// updateRuleHitsCountsForNamespace updates the rule hits for given namespace based on the given recommendation
+func updateRuleHitsCountsForNamespace(ruleHitsCounts map[string]types.RuleHitsCount, namespaceUID string, recommendation types.WorkloadRecommendation) {
+	if _, ok := ruleHitsCounts[namespaceUID]; !ok {
+		ruleHitsCounts[namespaceUID] = make(types.RuleHitsCount)
+	}
+
+	// define key in rule hits counts map as concatenation of rule component and key
+	compositeRuleID, err := generators.GenerateCompositeRuleID(
+		// for some unknown reason, there's a `.recommendation` suffix for each rule hit instead of the usual .report
+		types.RuleFQDN(strings.TrimSuffix(recommendation.Component, types.WorkloadRecommendationSuffix)),
+		types.ErrorKey(recommendation.Key),
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("error generating composite rule ID for rule")
+		return
+	}
+
+	compositeRuleIDString := string(compositeRuleID)
+	if _, ok := ruleHitsCounts[namespaceUID][compositeRuleIDString]; !ok {
+		ruleHitsCounts[namespaceUID][compositeRuleIDString] = 0
+	}
+	ruleHitsCounts[namespaceUID][compositeRuleIDString]++
+}
+
 // mapWorkloadRecommendations filters out the data which is grouped by recommendations and aggregates
 // them by namespace.
 // Essentially we need to "invert" data from:
@@ -406,14 +432,7 @@ func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation)
 			// per single recommendation within namespace
 			objectsPerRecommendation[workload.NamespaceUID]++
 
-			if _, ok := ruleHitsCounts[workload.NamespaceUID]; !ok {
-				ruleHitsCounts[workload.NamespaceUID] = make(types.RuleHitsCount)
-			}
-
-			if _, ok := ruleHitsCounts[workload.NamespaceUID][recommendation.ResponseID]; !ok {
-				ruleHitsCounts[workload.NamespaceUID][recommendation.ResponseID] = 0
-			}
-			ruleHitsCounts[workload.NamespaceUID][recommendation.ResponseID]++
+			updateRuleHitsCountsForNamespace(ruleHitsCounts, workload.NamespaceUID, recommendation)
 
 			// per whole namespace; just workload IDs with empty structs to filter out duplicate objects
 			if _, ok := objectsPerNamespace[workload.NamespaceUID]; !ok {
