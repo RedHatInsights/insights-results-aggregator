@@ -249,7 +249,7 @@ func TestGetWorkloadsOK(t *testing.T) {
 			LastCheckedAt:   now.UTC().Format(time.RFC3339),
 		},
 		RecommendationsHitCount: types.RuleHitsCount{
-			"an_issue|DVO_AN_ISSUE": 1,
+			"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
 		},
 	}
 
@@ -308,7 +308,7 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 				LastCheckedAt:   now.UTC().Format(time.RFC3339),
 			},
 			RecommendationsHitCount: types.RuleHitsCount{
-				"an_issue|DVO_AN_ISSUE": 1,
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
 			},
 		},
 		{
@@ -326,7 +326,7 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 				LastCheckedAt:   now.UTC().Format(time.RFC3339),
 			},
 			RecommendationsHitCount: types.RuleHitsCount{
-				"an_issue|DVO_AN_ISSUE": 1,
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
 			},
 		},
 	}

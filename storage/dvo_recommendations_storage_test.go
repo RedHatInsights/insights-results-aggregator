@@ -405,8 +405,8 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), workloads[1].LastCheckedAt)
 	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[0].ReportedAt)
 	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[1].ReportedAt)
-	assert.Equal(t, types.RuleHitsCount{"an_issue|DVO_AN_ISSUE": 1}, workloads[0].RuleHitsCount)
-	assert.Equal(t, types.RuleHitsCount{"an_issue|DVO_AN_ISSUE": 1}, workloads[1].RuleHitsCount)
+	assert.Equal(t, types.RuleHitsCount{"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1}, workloads[0].RuleHitsCount)
+	assert.Equal(t, types.RuleHitsCount{"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1}, workloads[1].RuleHitsCount)
 }
 
 // TestDVOStorageReadWorkloadsForNamespace tests timestamps being kept correctly
@@ -538,8 +538,8 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 			ReportedAt:      nowTstmp,
 			LastCheckedAt:   nowTstmp,
 			RuleHitsCount: types.RuleHitsCount{
-				"an_issue|DVO_AN_ISSUE":                     1,
-				"unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE":                 1,
+				"ccx_rules_ocp.external.dvo.unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
 			},
 		},
 		{
@@ -551,8 +551,8 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 			ReportedAt:      nowTstmp,
 			LastCheckedAt:   nowTstmp,
 			RuleHitsCount: types.RuleHitsCount{
-				"an_issue|DVO_AN_ISSUE":                     1,
-				"unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE":                 1,
+				"ccx_rules_ocp.external.dvo.unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
 			},
 		},
 	}
@@ -608,9 +608,9 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 			ReportedAt:      nowTstmp,
 			LastCheckedAt:   nowTstmp,
 			RuleHitsCount: types.RuleHitsCount{
-				"an_issue|DVO_AN_ISSUE":                     1,
-				"unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
-				"bad_requirements|BAD_REQUIREMENTS":         2,
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE":                 1,
+				"ccx_rules_ocp.external.dvo.unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
+				"ccx_rules_ocp.external.dvo.bad_requirements|BAD_REQUIREMENTS":         2,
 			},
 		},
 		{
@@ -622,9 +622,9 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 			ReportedAt:      nowTstmp,
 			LastCheckedAt:   nowTstmp,
 			RuleHitsCount: types.RuleHitsCount{
-				"an_issue|DVO_AN_ISSUE":                     1,
-				"unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
-				"bad_requirements|BAD_REQUIREMENTS":         2,
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE":                 1,
+				"ccx_rules_ocp.external.dvo.unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
+				"ccx_rules_ocp.external.dvo.bad_requirements|BAD_REQUIREMENTS":         2,
 			},
 		},
 	}
