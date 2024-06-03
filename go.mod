@@ -7,7 +7,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/RedHatInsights/insights-operator-utils v1.25.4
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
-	github.com/RedHatInsights/insights-results-types v1.3.23
+	github.com/RedHatInsights/insights-results-types v1.23.4
 	github.com/Shopify/sarama v1.27.1
 	github.com/deckarep/golang-set v1.8.0
 	github.com/gchaincl/sqlhooks v1.3.0
