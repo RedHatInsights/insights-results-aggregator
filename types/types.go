@@ -19,7 +19,6 @@ package types
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"time"
 
 	types "github.com/RedHatInsights/insights-results-types"
@@ -207,7 +206,6 @@ type DVOReport struct {
 	Objects         uint            `json:"objects"`
 	ReportedAt      types.Timestamp `json:"reported_at"`
 	LastCheckedAt   types.Timestamp `json:"last_checked_at"`
-	RuleHitsCount   RuleHitsCount   `json:"rule_hits_count"`
 }
 
 // ClusterReports is a data structure containing list of clusters, list of
@@ -234,14 +232,4 @@ type RuleHitsCount map[string]int
 // Value convert a RuleHitsCount into a byte[]
 func (in RuleHitsCount) Value() (driver.Value, error) {
 	return json.Marshal(in)
-}
-
-// Scan parses a byte[] value into a RuleHitsCount
-func (in *RuleHitsCount) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("not byte array")
-	}
-
-	return json.Unmarshal(b, &in)
 }

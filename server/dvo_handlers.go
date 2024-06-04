@@ -60,10 +60,10 @@ type Metadata struct {
 
 // WorkloadsForNamespace structure represents a single entry of the namespace list with some aggregations
 type WorkloadsForNamespace struct {
-	Cluster                 Cluster             `json:"cluster"`
-	Namespace               Namespace           `json:"namespace"`
-	Metadata                Metadata            `json:"metadata"`
-	RecommendationsHitCount types.RuleHitsCount `json:"recommendations_hit_count"`
+	Cluster                 Cluster        `json:"cluster"`
+	Namespace               Namespace      `json:"namespace"`
+	Metadata                Metadata       `json:"metadata"`
+	RecommendationsHitCount map[string]int `json:"recommendations_hit_count"`
 }
 
 // WorkloadsForCluster structure represents workload for one selected cluster
@@ -178,7 +178,7 @@ func (server *HTTPServer) processDVOWorkloads(workloads []types.DVOReport) (
 				ReportedAt:      string(workload.ReportedAt),
 				LastCheckedAt:   string(workload.LastCheckedAt),
 			},
-			RecommendationsHitCount: workload.RuleHitsCount,
+			// TODO: fill RecommendationsHitCount map efficiently instead of processing the report again every time
 		})
 	}
 
