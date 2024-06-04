@@ -149,6 +149,7 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 		return
 	}
 
+	log.Debug().Msg("processing database workloads into response")
 	processedWorkloads := server.processDVOWorkloads(workloads)
 
 	log.Debug().Uint32(orgIDStr, uint32(orgID)).Msgf(
@@ -163,7 +164,12 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 func (server *HTTPServer) processDVOWorkloads(workloads []types.DVOReport) (
 	processedWorkloads []WorkloadsForNamespace,
 ) {
+	log.Debug().Int("workloadsLen", len(workloads)).Msg("Length of the workloads to process")
 	for _, workload := range workloads {
+		log.Debug().Int("hitCount", len(workload.RuleHitsCount)).
+			Str("ClusterID", workload.ClusterID).Str("Namespace", workload.NamespaceID).
+			Msg("Length of the workloads to process")
+
 		processedWorkloads = append(processedWorkloads, WorkloadsForNamespace{
 			Cluster: Cluster{
 				UUID: workload.ClusterID,
