@@ -496,7 +496,7 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID ty
 ) {
 	tStart := time.Now()
 	query := `
-		SELECT cluster_id, namespace_id, namespace_name, recommendations, objects, reported_at, last_checked_at, rule_hits_count
+		SELECT cluster_id, namespace_id, namespace_name, recommendations, objects, reported_at, last_checked_at
 		FROM dvo.dvo_report
 		WHERE org_id = $1
 	`
@@ -526,7 +526,6 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID ty
 			&dvoReport.Objects,
 			&reportedAtDB,
 			&lastCheckedAtDB,
-			&dvoReport.RuleHitsCount,
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("ReadWorkloadsForOrganization")

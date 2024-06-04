@@ -248,9 +248,6 @@ func TestGetWorkloadsOK(t *testing.T) {
 			ReportedAt:      now.UTC().Format(time.RFC3339),
 			LastCheckedAt:   now.UTC().Format(time.RFC3339),
 		},
-		RecommendationsHitCount: types.RuleHitsCount{
-			"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
-		},
 	}
 
 	ira_helpers.AssertAPIRequestDVO(t, mockStorage, nil, &helpers.APIRequest{
@@ -307,9 +304,6 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 				ReportedAt:      now.UTC().Format(time.RFC3339),
 				LastCheckedAt:   now.UTC().Format(time.RFC3339),
 			},
-			RecommendationsHitCount: types.RuleHitsCount{
-				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
-			},
 		},
 		{
 			Cluster: server.Cluster{
@@ -324,9 +318,6 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 				Objects:         1,
 				ReportedAt:      now.UTC().Format(time.RFC3339),
 				LastCheckedAt:   now.UTC().Format(time.RFC3339),
-			},
-			RecommendationsHitCount: types.RuleHitsCount{
-				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
 			},
 		},
 	}
