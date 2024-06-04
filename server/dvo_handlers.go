@@ -60,10 +60,10 @@ type Metadata struct {
 
 // WorkloadsForNamespace structure represents a single entry of the namespace list with some aggregations
 type WorkloadsForNamespace struct {
-	Cluster                 Cluster        `json:"cluster"`
-	Namespace               Namespace      `json:"namespace"`
-	Metadata                Metadata       `json:"metadata"`
-	RecommendationsHitCount map[string]int `json:"recommendations_hit_count"`
+	Cluster                 Cluster             `json:"cluster"`
+	Namespace               Namespace           `json:"namespace"`
+	Metadata                Metadata            `json:"metadata"`
+	RecommendationsHitCount types.RuleHitsCount `json:"recommendations_hit_count"`
 }
 
 // WorkloadsForCluster structure represents workload for one selected cluster
@@ -149,6 +149,7 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 		return
 	}
 
+	log.Debug().Msg("processing database workloads into response")
 	processedWorkloads := server.processDVOWorkloads(workloads)
 
 	log.Debug().Uint32(orgIDStr, uint32(orgID)).Msgf(
@@ -163,7 +164,12 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 func (server *HTTPServer) processDVOWorkloads(workloads []types.DVOReport) (
 	processedWorkloads []WorkloadsForNamespace,
 ) {
+	log.Debug().Int("workloadsLen", len(workloads)).Msg("Length of the workloads to process")
 	for _, workload := range workloads {
+		log.Debug().Int("hitCount", len(workload.RuleHitsCount)).
+			Str("ClusterID", workload.ClusterID).Str("Namespace", workload.NamespaceID).
+			Msg("Length of the workloads to process")
+
 		processedWorkloads = append(processedWorkloads, WorkloadsForNamespace{
 			Cluster: Cluster{
 				UUID: workload.ClusterID,
@@ -178,7 +184,7 @@ func (server *HTTPServer) processDVOWorkloads(workloads []types.DVOReport) (
 				ReportedAt:      string(workload.ReportedAt),
 				LastCheckedAt:   string(workload.LastCheckedAt),
 			},
-			// TODO: fill RecommendationsHitCount map efficiently instead of processing the report again every time
+			RecommendationsHitCount: workload.RuleHitsCount,
 		})
 	}
 
