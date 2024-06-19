@@ -421,11 +421,11 @@ parameters:
   name: MAX_REPLICAS
   value: '6'
 - name: IRA_CPU_LIMIT
-  value: 200m
+  value: 300m
 - name: IRA_LOG_STREAM
   value: insights-results-aggregator
 - name: IRA_MEMORY_LIMIT
-  value: 300Mi
+  value: 450mi
 - name: IRA_CPU_REQUEST
   value: 100m
 - name: IRA_MEMORY_REQUEST
