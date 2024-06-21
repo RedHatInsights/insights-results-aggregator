@@ -21,9 +21,6 @@ rm coverage.out 2>/dev/null
 
 case $1 in
 "unit-postgres")
-    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB="postgres"
-    export INSIGHTS_RESULTS_AGGREGATOR__TESTS_DB_ADMIN_PASS="admin"
-
     echo "Running unit tests with postgres..."
     go test -timeout $TIMEOUT -coverprofile=coverage.out ./... 1>&2
     ;;

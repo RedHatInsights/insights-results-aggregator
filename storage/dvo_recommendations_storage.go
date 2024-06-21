@@ -19,10 +19,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/RedHatInsights/insights-operator-utils/generators"
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/migration/dvomigrations"
@@ -326,13 +328,13 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		return nil
 	}
 
-	namespaceMap, objectsMap, namespaceRecommendationCount := mapWorkloadRecommendations(&recommendations)
+	namespaceMap, objectsMap, namespaceRecommendationCount, ruleHitsCounts := mapWorkloadRecommendations(&recommendations)
 
 	// Get the INSERT statement for writing a workload into the database.
 	workloadInsertStatement := storage.getReportInsertQuery()
 
 	// Get values to be stored in dvo.dvo_report table
-	values := make([]interface{}, 9)
+	values := make([]interface{}, 10)
 	for namespaceUID, namespaceName := range namespaceMap {
 		values[0] = orgID         // org_id
 		values[1] = clusterName   // cluster_id
@@ -357,6 +359,9 @@ func (storage DVORecommendationsDBStorage) updateReport(
 		}
 
 		values[8] = lastCheckedTime // last_checked_at
+
+		values[9] = ruleHitsCounts[namespaceUID] // rule_hits_count
+
 		_, err = tx.Exec(workloadInsertStatement, values...)
 		if err != nil {
 			log.Err(err).Msgf("Unable to insert the cluster workloads (org: %v, cluster: %v)",
@@ -369,6 +374,30 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	return nil
 }
 
+// updateRuleHitsCountsForNamespace updates the rule hits for given namespace based on the given recommendation
+func updateRuleHitsCountsForNamespace(ruleHitsCounts map[string]types.RuleHitsCount, namespaceUID string, recommendation types.WorkloadRecommendation) {
+	if _, ok := ruleHitsCounts[namespaceUID]; !ok {
+		ruleHitsCounts[namespaceUID] = make(types.RuleHitsCount)
+	}
+
+	// define key in rule hits counts map as concatenation of rule component and key
+	compositeRuleID, err := generators.GenerateCompositeRuleID(
+		// for some unknown reason, there's a `.recommendation` suffix for each rule hit instead of the usual .report
+		types.RuleFQDN(strings.TrimSuffix(recommendation.Component, types.WorkloadRecommendationSuffix)),
+		types.ErrorKey(recommendation.Key),
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("error generating composite rule ID for rule")
+		return
+	}
+
+	compositeRuleIDString := string(compositeRuleID)
+	if _, ok := ruleHitsCounts[namespaceUID][compositeRuleIDString]; !ok {
+		ruleHitsCounts[namespaceUID][compositeRuleIDString] = 0
+	}
+	ruleHitsCounts[namespaceUID][compositeRuleIDString]++
+}
+
 // mapWorkloadRecommendations filters out the data which is grouped by recommendations and aggregates
 // them by namespace.
 // Essentially we need to "invert" data from:
@@ -377,7 +406,7 @@ func (storage DVORecommendationsDBStorage) updateReport(
 // to:
 //   - list of namespaces: list of affected workloads and data aggregations for this particular namespace
 func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation) (
-	map[string]string, map[string]int, map[string]int,
+	map[string]string, map[string]int, map[string]int, map[string]types.RuleHitsCount,
 ) {
 	// map the namespace ID to the namespace name
 	namespaceMap := make(map[string]string)
@@ -385,6 +414,8 @@ func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation)
 	namespaceRecommendationCount := make(map[string]int)
 	// map the number of unique workloads affected by at least 1 rule per namespace
 	objectsPerNamespace := make(map[string]map[string]struct{})
+	// map the hit counts per namespace and rule
+	ruleHitsCounts := make(map[string]types.RuleHitsCount)
 
 	for _, recommendation := range *recommendations {
 		// objectsMapPerRecommendation is used to calculate number of rule hits in namespace
@@ -400,6 +431,8 @@ func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation)
 
 			// per single recommendation within namespace
 			objectsPerRecommendation[workload.NamespaceUID]++
+
+			updateRuleHitsCountsForNamespace(ruleHitsCounts, workload.NamespaceUID, recommendation)
 
 			// per whole namespace; just workload IDs with empty structs to filter out duplicate objects
 			if _, ok := objectsPerNamespace[workload.NamespaceUID]; !ok {
@@ -422,7 +455,7 @@ func mapWorkloadRecommendations(recommendations *[]types.WorkloadRecommendation)
 		uniqueObjectsMap[namespace] = len(objects)
 	}
 
-	return namespaceMap, uniqueObjectsMap, namespaceRecommendationCount
+	return namespaceMap, uniqueObjectsMap, namespaceRecommendationCount, ruleHitsCounts
 }
 
 // getRuleKeyCreatedAtMap returns a map between
@@ -463,7 +496,7 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID ty
 ) {
 	tStart := time.Now()
 	query := `
-		SELECT cluster_id, namespace_id, namespace_name, recommendations, objects, reported_at, last_checked_at
+		SELECT cluster_id, namespace_id, namespace_name, recommendations, objects, reported_at, last_checked_at, rule_hits_count
 		FROM dvo.dvo_report
 		WHERE org_id = $1
 	`
@@ -493,6 +526,7 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID ty
 			&dvoReport.Objects,
 			&reportedAtDB,
 			&lastCheckedAtDB,
+			&dvoReport.RuleHitsCount,
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("ReadWorkloadsForOrganization")

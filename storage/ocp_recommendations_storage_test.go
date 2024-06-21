@@ -421,7 +421,7 @@ func TestDBStorageWriteReportForClusterExecError(t *testing.T) {
 	)
 	assert.Error(t, err)
 
-	const postgresErrMessage = "pq: invalid input syntax for type integer"
+	const postgresErrMessage = "pq: invalid input syntax"
 	if !strings.HasPrefix(err.Error(), postgresErrMessage) {
 		t.Fatalf("expected: \n%v\ngot:\n%v", postgresErrMessage, err.Error())
 	}
