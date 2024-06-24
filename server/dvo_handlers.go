@@ -128,36 +128,6 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 	}
 }
 
-func (server *HTTPServer) processDVOWorkloads(workloads []types.DVOReport) (
-	processedWorkloads []types.WorkloadsForNamespace,
-) {
-	log.Debug().Int("workloadsLen", len(workloads)).Msg("Length of the workloads to process")
-	for _, workload := range workloads {
-		log.Debug().Int("hitCount", len(workload.RuleHitsCount)).
-			Str("ClusterID", workload.ClusterID).Str("Namespace", workload.NamespaceID).
-			Msg("Length of the workloads to process")
-
-		processedWorkloads = append(processedWorkloads, types.WorkloadsForNamespace{
-			Cluster: types.Cluster{
-				UUID: workload.ClusterID,
-			},
-			Namespace: types.Namespace{
-				UUID: workload.NamespaceID,
-				Name: workload.NamespaceName,
-			},
-			Metadata: types.DVOMetadata{
-				Recommendations: int(workload.Recommendations),
-				Objects:         int(workload.Objects),
-				ReportedAt:      string(workload.ReportedAt),
-				LastCheckedAt:   string(workload.LastCheckedAt),
-			},
-			RecommendationsHitCount: workload.RuleHitsCount,
-		})
-	}
-
-	return
-}
-
 // getWorkloadsForNamespace retrieves data about a single namespace within a cluster
 func (server *HTTPServer) getWorkloadsForNamespace(writer http.ResponseWriter, request *http.Request) {
 	tStart := time.Now()
