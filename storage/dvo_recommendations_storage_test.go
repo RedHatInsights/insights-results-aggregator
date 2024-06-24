@@ -401,10 +401,10 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[0].Cluster.UUID))
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[1].Cluster.UUID))
-	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), workloads[0].Metadata.LastCheckedAt)
-	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), workloads[1].Metadata.LastCheckedAt)
-	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[0].Metadata.ReportedAt)
-	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[1].Metadata.ReportedAt)
+	assert.Equal(t, nowAfterOneHour.UTC().Format(time.RFC3339), workloads[0].Metadata.LastCheckedAt)
+	assert.Equal(t, nowAfterOneHour.UTC().Format(time.RFC3339), workloads[1].Metadata.LastCheckedAt)
+	assert.Equal(t, now.UTC().Format(time.RFC3339), workloads[0].Metadata.ReportedAt)
+	assert.Equal(t, now.UTC().Format(time.RFC3339), workloads[1].Metadata.ReportedAt)
 	assert.Equal(t, types.RuleHitsCount{"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1}, workloads[0].RecommendationsHitCount)
 	assert.Equal(t, types.RuleHitsCount{"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1}, workloads[1].RecommendationsHitCount)
 }
@@ -528,31 +528,42 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	expectedWorkloads := []types.DVOReport{
+	expectedWorkloads := []types.WorkloadsForNamespace{
 		{
-			NamespaceID:     ira_data.NamespaceAUID,
-			NamespaceName:   ira_data.NamespaceAWorkload.Namespace,
-			ClusterID:       string(testdata.ClusterName),
-			Recommendations: uint(2),
-			Objects:         uint(2), // <-- must be 2, because one workload is hitting more recommendations, but counts as 1
-			ReportedAt:      nowTstmp,
-			LastCheckedAt:   nowTstmp,
-			RuleHitsCount: types.RuleHitsCount{
+			Cluster: types.Cluster{
+				UUID: string(testdata.ClusterName),
+			},
+			Namespace: types.Namespace{
+				UUID: ira_data.NamespaceAUID,
+				Name: ira_data.NamespaceAWorkload.Namespace,
+			},
+			Metadata: types.DVOMetadata{
+				Recommendations: 2,
+				Objects:         2, // <-- must be 2, because one workload is hitting more recommendations, but counts as 1
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+			RecommendationsHitCount: types.RuleHitsCount{
 				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE":                 1,
 				"ccx_rules_ocp.external.dvo.unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
 			},
 		},
 		{
-			NamespaceID:     ira_data.NamespaceBUID,
-			NamespaceName:   ira_data.NamespaceBWorkload.Namespace,
-			ClusterID:       string(testdata.ClusterName),
-			Recommendations: uint(1), // <-- must contain only 1 rule, the other rule wasn't hitting this ns
-			Objects:         uint(1),
-			ReportedAt:      nowTstmp,
-			LastCheckedAt:   nowTstmp,
-			RuleHitsCount: types.RuleHitsCount{
-				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE":                 1,
-				"ccx_rules_ocp.external.dvo.unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
+			Cluster: types.Cluster{
+				UUID: string(testdata.ClusterName),
+			},
+			Namespace: types.Namespace{
+				UUID: ira_data.NamespaceBUID,
+				Name: ira_data.NamespaceBWorkload.Namespace,
+			},
+			Metadata: types.DVOMetadata{
+				Recommendations: 1, // <-- must contain only 1 rule, the other rule wasn't hitting this ns
+				Objects:         1,
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+			RecommendationsHitCount: types.RuleHitsCount{
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
 			},
 		},
 	}
@@ -598,33 +609,43 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 	)
 	helpers.FailOnError(t, err)
 
-	expectedWorkloads := []types.DVOReport{
+	expectedWorkloads := []types.WorkloadsForNamespace{
 		{
-			NamespaceID:     ira_data.NamespaceAUID,
-			NamespaceName:   ira_data.NamespaceAWorkload.Namespace,
-			ClusterID:       string(testdata.ClusterName),
-			Recommendations: uint(3),
-			Objects:         uint(2), // <-- must be 2, because workloadA and workloadB are hitting more rules, but count as 1 within a namespace
-			ReportedAt:      nowTstmp,
-			LastCheckedAt:   nowTstmp,
-			RuleHitsCount: types.RuleHitsCount{
+			Cluster: types.Cluster{
+				UUID: string(testdata.ClusterName),
+			},
+			Namespace: types.Namespace{
+				UUID: ira_data.NamespaceAUID,
+				Name: ira_data.NamespaceAWorkload.Namespace,
+			},
+			Metadata: types.DVOMetadata{
+				Recommendations: 3,
+				Objects:         2, // <-- must be 2, because workloadA and workloadB are hitting more rules, but count as 1 within a namespace
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+			RecommendationsHitCount: types.RuleHitsCount{
 				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE":                 1,
 				"ccx_rules_ocp.external.dvo.unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
 				"ccx_rules_ocp.external.dvo.bad_requirements|BAD_REQUIREMENTS":         2,
 			},
 		},
 		{
-			NamespaceID:     ira_data.NamespaceBUID,
-			NamespaceName:   ira_data.NamespaceBWorkload.Namespace,
-			ClusterID:       string(testdata.ClusterName),
-			Recommendations: uint(1), // <-- must contain only 1 rule, the other rules weren't affecting this namespace
-			Objects:         uint(1), // <-- same as ^
-			ReportedAt:      nowTstmp,
-			LastCheckedAt:   nowTstmp,
-			RuleHitsCount: types.RuleHitsCount{
-				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE":                 1,
-				"ccx_rules_ocp.external.dvo.unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
-				"ccx_rules_ocp.external.dvo.bad_requirements|BAD_REQUIREMENTS":         2,
+			Cluster: types.Cluster{
+				UUID: string(testdata.ClusterName),
+			},
+			Namespace: types.Namespace{
+				UUID: ira_data.NamespaceBUID,
+				Name: ira_data.NamespaceBWorkload.Namespace,
+			},
+			Metadata: types.DVOMetadata{
+				Recommendations: 1, // <-- must contain only 1 rule, the other rules weren't affecting this namespace
+				Objects:         1,
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+			RecommendationsHitCount: types.RuleHitsCount{
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
 			},
 		},
 	}
