@@ -1207,17 +1207,17 @@ func Test_CCXDEV_10244_DBStorageGetImpactedSinceMap(t *testing.T) {
 	}
 	assert.Equal(t, expectResp, res)
 
-	//We have 3 recommendations with different rule FQDN for this Org ID + Clustername
+	// We have 3 recommendations with different rule FQDN for this Org ID + Clustername
+	// Therefore, we expect 3 entries in the RuleKeyCreatedAtMap
 
-	//query used before fix.
+	// query used before fix.
 	query := "SELECT rule_fqdn, error_key, created_at FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;"
 	rkcMap, err := storage.GetRuleKeyCreatedAtMap(mockStorage.(*storage.OCPRecommendationsDBStorage), query, testdata.OrgID, testdata.ClusterName)
 	helpers.FailOnError(t, err)
 	assert.Equal(t, len(rkcMap), 1)
 
 	//query used after fix, without limiting number of rows retrieved from the DB
-	query = "SELECT rule_fqdn, error_key, created_at FROM recommendation WHERE org_id = $1 AND cluster_id = $2;"
-	rkcMap, err = storage.GetRuleKeyCreatedAtMap(mockStorage.(*storage.OCPRecommendationsDBStorage), query, testdata.OrgID, testdata.ClusterName)
+	rkcMap, err = storage.GetRuleKeyCreatedAtMapForTable(mockStorage.(*storage.OCPRecommendationsDBStorage), "recommendation", testdata.OrgID, testdata.ClusterName)
 	helpers.FailOnError(t, err)
 	assert.Equal(t, len(rkcMap), 3)
 }

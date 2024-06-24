@@ -89,3 +89,7 @@ func InsertRecommendations(
 func GetRuleKeyCreatedAtMap(storage *OCPRecommendationsDBStorage, query string, orgID types.OrgID, clusterName types.ClusterName) (map[string]types.Timestamp, error) {
 	return storage.getRuleKeyCreatedAtMap(query, orgID, clusterName)
 }
+
+func GetRuleKeyCreatedAtMapForTable(storage *OCPRecommendationsDBStorage, table string, orgID types.OrgID, clusterName types.ClusterName) (map[string]types.Timestamp, error) {
+	return storage.getRuleKeyCreatedAtMapForTable(table, orgID, clusterName)
+}
