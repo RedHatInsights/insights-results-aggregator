@@ -119,17 +119,10 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 		return
 	}
 
-	copyStart := time.Now()
-	log.Debug().Msg("processing database workloads into response")
-	processedWorkloads := server.processDVOWorkloads(workloads)
-
-	log.Debug().Uint32(orgIDStr, uint32(orgID)).Msgf(
-		"processDVOWorkloads took %s", time.Since(copyStart),
-	)
 	log.Debug().Uint32(orgIDStr, uint32(orgID)).Msgf(
 		"getWorkloads took %s", time.Since(tStart),
 	)
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData("workloads", processedWorkloads))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData("workloads", workloads))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}

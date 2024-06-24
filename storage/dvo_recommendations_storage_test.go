@@ -399,14 +399,14 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[0].ClusterID))
-	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[1].ClusterID))
-	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), workloads[0].LastCheckedAt)
-	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), workloads[1].LastCheckedAt)
-	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[0].ReportedAt)
-	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[1].ReportedAt)
-	assert.Equal(t, types.RuleHitsCount{"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1}, workloads[0].RuleHitsCount)
-	assert.Equal(t, types.RuleHitsCount{"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1}, workloads[1].RuleHitsCount)
+	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[0].Cluster.UUID))
+	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[1].Cluster.UUID))
+	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), workloads[0].Metadata.LastCheckedAt)
+	assert.Equal(t, types.Timestamp(nowAfterOneHour.UTC().Format(time.RFC3339)), workloads[1].Metadata.LastCheckedAt)
+	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[0].Metadata.ReportedAt)
+	assert.Equal(t, types.Timestamp(now.UTC().Format(time.RFC3339)), workloads[1].Metadata.ReportedAt)
+	assert.Equal(t, types.RuleHitsCount{"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1}, workloads[0].RecommendationsHitCount)
+	assert.Equal(t, types.RuleHitsCount{"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1}, workloads[1].RecommendationsHitCount)
 }
 
 // TestDVOStorageReadWorkloadsForNamespace tests timestamps being kept correctly
