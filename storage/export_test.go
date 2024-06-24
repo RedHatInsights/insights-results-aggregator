@@ -85,3 +85,7 @@ func InsertRecommendations(
 	_ = tx.Commit()
 	return inserted, nil
 }
+
+func GetRuleKeyCreatedAtMap(storage *OCPRecommendationsDBStorage, query string, orgID types.OrgID, clusterName types.ClusterName) (map[string]types.Timestamp, error) {
+	return storage.getRuleKeyCreatedAtMap(query, orgID, clusterName)
+}
