@@ -1208,13 +1208,12 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
 			// Get impacted_since if present
-			query := "SELECT rule_fqdn, error_key, impacted_since FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;"
+			query := "SELECT rule_fqdn, error_key, impacted_since FROM recommendation WHERE org_id = $1 AND cluster_id = $2;"
 			impactedSinceMap, err = storage.getRuleKeyCreatedAtMap(
 				query, orgID, clusterName)
 			if err != nil {
 				log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
 			}
-
 			// it is needed to use `org_id = $1` condition there
 			// because it allows DB to use proper btree indexing
 			// and not slow sequential scan
