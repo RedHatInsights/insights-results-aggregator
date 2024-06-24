@@ -1186,6 +1186,42 @@ func TestDBStorageInsertRecommendationsNoRuleHit(t *testing.T) {
 	helpers.FailOnError(t, err)
 }
 
+func Test_CCXDEV_10244_DBStorageGetImpactedSinceMap(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	defer closer()
+
+	err := mockStorage.WriteRecommendationsForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules, RecommendationCreatedAtTimestamp,
+	)
+	helpers.FailOnError(t, err)
+
+	// let's retrieve the stored data and ensure it is what we want to work with
+	res, err := mockStorage.ReadRecommendationsForClusters([]string{string(testdata.ClusterName)}, testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	expect := []types.ClusterName{testdata.ClusterName}
+	expectResp := ctypes.RecommendationImpactedClusters{
+		testdata.Rule1CompositeID: expect,
+		testdata.Rule2CompositeID: expect,
+		testdata.Rule3CompositeID: expect,
+	}
+	assert.Equal(t, expectResp, res)
+
+	//We have 3 recommendations with different rule FQDN for this Org ID + Clustername
+
+	//query used before fix.
+	query := "SELECT rule_fqdn, error_key, created_at FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;"
+	rkcMap, err := storage.GetRuleKeyCreatedAtMap(mockStorage.(*storage.OCPRecommendationsDBStorage), query, testdata.OrgID, testdata.ClusterName)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, len(rkcMap), 1)
+
+	//query used after fix, without limiting number of rows retrieved from the DB
+	query = "SELECT rule_fqdn, error_key, created_at FROM recommendation WHERE org_id = $1 AND cluster_id = $2;"
+	rkcMap, err = storage.GetRuleKeyCreatedAtMap(mockStorage.(*storage.OCPRecommendationsDBStorage), query, testdata.OrgID, testdata.ClusterName)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, len(rkcMap), 3)
+}
+
 // TestDBStorageReadRecommendationsForClusters checks that stored recommendations
 // are retrieved correctly
 func TestDBStorageReadRecommendationsForClusters(t *testing.T) {
