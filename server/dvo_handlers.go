@@ -36,42 +36,12 @@ const (
 	namespaceIDParam = "namespace"
 )
 
-// Cluster structure contains cluster UUID and cluster name
-type Cluster struct {
-	UUID        string `json:"uuid"`
-	DisplayName string `json:"display_name"`
-}
-
-// Namespace structure contains basic information about namespace
-type Namespace struct {
-	UUID string `json:"uuid"`
-	Name string `json:"name"`
-}
-
-// Metadata structure contains basic information about workload metadata
-type Metadata struct {
-	Recommendations int         `json:"recommendations"`
-	Objects         int         `json:"objects"`
-	ReportedAt      string      `json:"reported_at"`
-	LastCheckedAt   string      `json:"last_checked_at"`
-	HighestSeverity int         `json:"highest_severity"`
-	HitsBySeverity  map[int]int `json:"hits_by_severity"`
-}
-
-// WorkloadsForNamespace structure represents a single entry of the namespace list with some aggregations
-type WorkloadsForNamespace struct {
-	Cluster                 Cluster             `json:"cluster"`
-	Namespace               Namespace           `json:"namespace"`
-	Metadata                Metadata            `json:"metadata"`
-	RecommendationsHitCount types.RuleHitsCount `json:"recommendations_hit_count"`
-}
-
 // WorkloadsForCluster structure represents workload for one selected cluster
 type WorkloadsForCluster struct {
 	Status          string              `json:"status"`
-	Cluster         Cluster             `json:"cluster"`
-	Namespace       Namespace           `json:"namespace"`
-	Metadata        Metadata            `json:"metadata"`
+	Cluster         types.Cluster       `json:"cluster"`
+	Namespace       types.Namespace     `json:"namespace"`
+	Metadata        types.DVOMetadata   `json:"metadata"`
 	Recommendations []DVORecommendation `json:"recommendations"`
 }
 
@@ -166,7 +136,7 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 }
 
 func (server *HTTPServer) processDVOWorkloads(workloads []types.DVOReport) (
-	processedWorkloads []WorkloadsForNamespace,
+	processedWorkloads []types.WorkloadsForNamespace,
 ) {
 	log.Debug().Int("workloadsLen", len(workloads)).Msg("Length of the workloads to process")
 	for _, workload := range workloads {
@@ -174,15 +144,15 @@ func (server *HTTPServer) processDVOWorkloads(workloads []types.DVOReport) (
 			Str("ClusterID", workload.ClusterID).Str("Namespace", workload.NamespaceID).
 			Msg("Length of the workloads to process")
 
-		processedWorkloads = append(processedWorkloads, WorkloadsForNamespace{
-			Cluster: Cluster{
+		processedWorkloads = append(processedWorkloads, types.WorkloadsForNamespace{
+			Cluster: types.Cluster{
 				UUID: workload.ClusterID,
 			},
-			Namespace: Namespace{
+			Namespace: types.Namespace{
 				UUID: workload.NamespaceID,
 				Name: workload.NamespaceName,
 			},
-			Metadata: Metadata{
+			Metadata: types.DVOMetadata{
 				Recommendations: int(workload.Recommendations),
 				Objects:         int(workload.Objects),
 				ReportedAt:      string(workload.ReportedAt),
@@ -241,14 +211,14 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 	processedWorkloads WorkloadsForCluster,
 ) {
 	processedWorkloads = WorkloadsForCluster{
-		Cluster: Cluster{
+		Cluster: types.Cluster{
 			UUID: workload.ClusterID,
 		},
-		Namespace: Namespace{
+		Namespace: types.Namespace{
 			UUID: workload.NamespaceID,
 			Name: workload.NamespaceName,
 		},
-		Metadata: Metadata{
+		Metadata: types.DVOMetadata{
 			Recommendations: int(workload.Recommendations),
 			Objects:         int(workload.Objects),
 			ReportedAt:      string(workload.ReportedAt),
