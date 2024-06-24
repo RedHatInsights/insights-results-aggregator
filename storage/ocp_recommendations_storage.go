@@ -234,6 +234,12 @@ const (
 
 	// ocpDBSchema uses the default public schema in all queries/migrations and all environments
 	ocpDBSchema = "public"
+
+	// Query for getting creation timestamp in rule_hit table for given Org + Cluster
+	selectRuleCreatedAtQuery = `SELECT rule_fqdn, error_key, created_at FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;`
+
+	// Query for getting creation timestamp in recommendation table for impacted_since Org + Cluster
+	selectRuleImpactedSinceQuery = `SELECT rule_fqdn, error_key, impacted_since FROM recommendation WHERE org_id = $1 AND cluster_id = $2;`
 )
 
 // OCPRecommendationsDBStorage is an implementation of Storage interface that use selected SQL like database
@@ -912,6 +918,31 @@ func (storage OCPRecommendationsDBStorage) GetRuleHitInsertStatement(rules []typ
 	return fmt.Sprintf(ruleInsertStatement, strings.Join(placeholders, ","))
 }
 
+func (storage OCPRecommendationsDBStorage) getRuleKeyCreatedAtMapForTable(table string, orgID types.OrgID, clusterName types.ClusterName) (
+	RuleKeyCreatedAt map[string]types.Timestamp,
+	err error) {
+	// Switch case to select the appropriate query based on the table name
+	switch table {
+	case "rule_hit":
+		RuleKeyCreatedAt, err = storage.getRuleKeyCreatedAtMap(
+			selectRuleCreatedAtQuery, orgID, clusterName,
+		)
+	case "recommendation":
+		RuleKeyCreatedAt, err = storage.getRuleKeyCreatedAtMap(
+			selectRuleImpactedSinceQuery, orgID, clusterName,
+		)
+	default:
+		log.Error().Err(err).Str("tableName", table).Msg("Unexpected table to get ruleCreatedAtMap")
+		return
+	}
+
+	if err != nil {
+		log.Error().Err(err).Str("tableName", table).Msg("Unable to generate ruleCreatedAtMap")
+		return
+	}
+	return
+}
+
 // valuesForRuleHitsInsert function prepares values to insert rules into
 // rule_hit table.
 func valuesForRuleHitsInsert(
@@ -955,9 +986,8 @@ func (storage OCPRecommendationsDBStorage) updateReport(
 	reportUpsertQuery := storage.getReportUpsertQuery()
 
 	// Get created_at if present before deletion
-	query := "SELECT rule_fqdn, error_key, created_at FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
-	RuleKeyCreatedAt, err := storage.getRuleKeyCreatedAtMap(
-		query, orgID, clusterName,
+	RuleKeyCreatedAt, err := storage.getRuleKeyCreatedAtMapForTable(
+		"rule_hit", orgID, clusterName,
 	)
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
@@ -1208,13 +1238,11 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
 			// Get impacted_since if present
-			query := "SELECT rule_fqdn, error_key, impacted_since FROM recommendation WHERE org_id = $1 AND cluster_id = $2 LIMIT 1;"
-			impactedSinceMap, err = storage.getRuleKeyCreatedAtMap(
-				query, orgID, clusterName)
+			impactedSinceMap, err = storage.getRuleKeyCreatedAtMapForTable(
+				"recommendation", orgID, clusterName)
 			if err != nil {
 				log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
 			}
-
 			// it is needed to use `org_id = $1` condition there
 			// because it allows DB to use proper btree indexing
 			// and not slow sequential scan
