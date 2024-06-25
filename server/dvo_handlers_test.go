@@ -83,7 +83,7 @@ var (
 func workloadInResponseChecker(t testing.TB, expected, got []byte) {
 	type Response struct {
 		Status    string `json:"string"`
-		Workloads []server.WorkloadsForNamespace
+		Workloads []types.WorkloadsForNamespace
 	}
 
 	var expectedResp Response
@@ -234,15 +234,15 @@ func TestGetWorkloadsOK(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	workload := server.WorkloadsForNamespace{
-		Cluster: server.Cluster{
+	workload := types.WorkloadsForNamespace{
+		Cluster: types.Cluster{
 			UUID: string(testdata.ClusterName),
 		},
-		Namespace: server.Namespace{
+		Namespace: types.Namespace{
 			UUID: ira_data.NamespaceAUID,
 			Name: "namespace-name-A",
 		},
-		Metadata: server.Metadata{
+		Metadata: types.DVOMetadata{
 			Recommendations: 1,
 			Objects:         1,
 			ReportedAt:      now.UTC().Format(time.RFC3339),
@@ -259,7 +259,7 @@ func TestGetWorkloadsOK(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
-		Body:       `{"status":"ok","workloads":` + helpers.ToJSONString([]server.WorkloadsForNamespace{workload}) + `}`,
+		Body:       `{"status":"ok","workloads":` + helpers.ToJSONString([]types.WorkloadsForNamespace{workload}) + `}`,
 	})
 }
 
@@ -292,16 +292,16 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	workloads := []server.WorkloadsForNamespace{
+	workloads := []types.WorkloadsForNamespace{
 		{
-			Cluster: server.Cluster{
+			Cluster: types.Cluster{
 				UUID: string(testdata.ClusterName),
 			},
-			Namespace: server.Namespace{
+			Namespace: types.Namespace{
 				UUID: ira_data.NamespaceAUID,
 				Name: "namespace-name-A",
 			},
-			Metadata: server.Metadata{
+			Metadata: types.DVOMetadata{
 				Recommendations: 1,
 				Objects:         1,
 				ReportedAt:      now.UTC().Format(time.RFC3339),
@@ -312,14 +312,14 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 			},
 		},
 		{
-			Cluster: server.Cluster{
+			Cluster: types.Cluster{
 				UUID: string(testdata.ClusterName),
 			},
-			Namespace: server.Namespace{
+			Namespace: types.Namespace{
 				UUID: ira_data.NamespaceBUID,
 				Name: "namespace-name-B",
 			},
-			Metadata: server.Metadata{
+			Metadata: types.DVOMetadata{
 				Recommendations: 1,
 				Objects:         1,
 				ReportedAt:      now.UTC().Format(time.RFC3339),

@@ -52,7 +52,7 @@ type DVORecommendationsStorage interface {
 		storedAtTime time.Time,
 		requestID types.RequestID,
 	) error
-	ReadWorkloadsForOrganization(types.OrgID) ([]types.DVOReport, error)
+	ReadWorkloadsForOrganization(types.OrgID) ([]types.WorkloadsForNamespace, error)
 	ReadWorkloadsForClusterAndNamespace(
 		types.OrgID,
 		types.ClusterName,
@@ -491,7 +491,7 @@ func (storage DVORecommendationsDBStorage) getReportedAtMap(orgID types.OrgID, c
 
 // ReadWorkloadsForOrganization returns all rows from dvo.dvo_report table for given organizaiton
 func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID types.OrgID) (
-	workloads []types.DVOReport,
+	workloads []types.WorkloadsForNamespace,
 	err error,
 ) {
 	tStart := time.Now()
@@ -511,36 +511,36 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID ty
 
 	defer closeRows(rows)
 
-	var (
-		dvoReport       types.DVOReport
-		lastCheckedAtDB sql.NullTime
-		reportedAtDB    sql.NullTime
-		count           uint
-	)
+	var count uint
 	for rows.Next() {
+		var (
+			dvoReport       types.WorkloadsForNamespace
+			lastCheckedAtDB sql.NullTime
+			reportedAtDB    sql.NullTime
+		)
 		err = rows.Scan(
-			&dvoReport.ClusterID,
-			&dvoReport.NamespaceID,
-			&dvoReport.NamespaceName,
-			&dvoReport.Recommendations,
-			&dvoReport.Objects,
+			&dvoReport.Cluster.UUID,
+			&dvoReport.Namespace.UUID,
+			&dvoReport.Namespace.Name,
+			&dvoReport.Metadata.Recommendations,
+			&dvoReport.Metadata.Objects,
 			&reportedAtDB,
 			&lastCheckedAtDB,
-			&dvoReport.RuleHitsCount,
+			&dvoReport.RecommendationsHitCount,
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("ReadWorkloadsForOrganization")
 		}
 
 		// convert timestamps to string
-		dvoReport.LastCheckedAt = types.Timestamp(lastCheckedAtDB.Time.UTC().Format(time.RFC3339))
-		dvoReport.ReportedAt = types.Timestamp(reportedAtDB.Time.UTC().Format(time.RFC3339))
+		dvoReport.Metadata.LastCheckedAt = lastCheckedAtDB.Time.UTC().Format(time.RFC3339)
+		dvoReport.Metadata.ReportedAt = reportedAtDB.Time.UTC().Format(time.RFC3339)
 
 		workloads = append(workloads, dvoReport)
 		count++
 	}
 
-	log.Debug().Int(orgIDStr, int(orgID)).Msgf("ReadWorkloadsForOrganization processed %d rows in %v", count, time.Since(tStart))
+	log.Info().Int(orgIDStr, int(orgID)).Msgf("ReadWorkloadsForOrganization processed %d rows in %v", count, time.Since(tStart))
 
 	return workloads, err
 }
