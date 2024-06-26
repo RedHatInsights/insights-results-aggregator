@@ -210,6 +210,36 @@ type DVOReport struct {
 	RuleHitsCount   RuleHitsCount   `json:"rule_hits_count"`
 }
 
+// Cluster structure contains cluster UUID and cluster name
+type Cluster struct {
+	UUID        string `json:"uuid"`
+	DisplayName string `json:"display_name"`
+}
+
+// Namespace structure contains basic information about namespace
+type Namespace struct {
+	UUID string `json:"uuid"`
+	Name string `json:"name"`
+}
+
+// DVOMetadata structure contains basic information about workload metadata
+type DVOMetadata struct {
+	Recommendations int         `json:"recommendations"`
+	Objects         int         `json:"objects"`
+	ReportedAt      string      `json:"reported_at"`
+	LastCheckedAt   string      `json:"last_checked_at"`
+	HighestSeverity int         `json:"highest_severity"`
+	HitsBySeverity  map[int]int `json:"hits_by_severity"`
+}
+
+// WorkloadsForNamespace structure represents a single entry of the namespace list with some aggregations
+type WorkloadsForNamespace struct {
+	Cluster                 Cluster       `json:"cluster"`
+	Namespace               Namespace     `json:"namespace"`
+	Metadata                DVOMetadata   `json:"metadata"`
+	RecommendationsHitCount RuleHitsCount `json:"recommendations_hit_count"`
+}
+
 // ClusterReports is a data structure containing list of clusters, list of
 // errors and dictionary with results per cluster.
 type ClusterReports = types.ClusterReports

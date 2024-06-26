@@ -504,7 +504,6 @@ func TestParseProperMessageWithInfoReport(t *testing.T) {
 				"links": {}
 			  }
 		]
-
 	}`
 	message := sarama.ConsumerMessage{Value: []byte(createConsumerMessage(consumerReport))}
 	parsed, err := consumer.ParseMessage(&ocpConsumer, &message)

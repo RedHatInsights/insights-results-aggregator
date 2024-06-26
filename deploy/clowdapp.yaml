@@ -425,7 +425,7 @@ parameters:
 - name: IRA_LOG_STREAM
   value: insights-results-aggregator
 - name: IRA_MEMORY_LIMIT
-  value: 450mi
+  value: 450Mi
 - name: IRA_CPU_REQUEST
   value: 100m
 - name: IRA_MEMORY_REQUEST
