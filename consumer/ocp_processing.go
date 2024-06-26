@@ -63,11 +63,9 @@ func (OCPRulesProcessor) deserializeMessage(messageValue []byte) (incomingMessag
 
 func (consumer *KafkaConsumer) writeOCPReport(
 	msg *sarama.ConsumerMessage, message incomingMessage,
-	reportAsBytes []byte, lastCheckedTime time.Time,
+	reportAsBytes []byte, lastCheckedTime, storedAtTime time.Time,
 ) error {
 	if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
-		// timestamp when the report is about to be written into database
-		storedAtTime := time.Now()
 
 		err := ocpStorage.WriteReportForCluster(
 			*message.Organization,
@@ -95,14 +93,14 @@ func (consumer *KafkaConsumer) writeOCPReport(
 }
 
 func (consumer *KafkaConsumer) writeRecommendations(
-	msg *sarama.ConsumerMessage, message incomingMessage, reportAsBytes []byte,
+	msg *sarama.ConsumerMessage, message incomingMessage, reportAsBytes []byte, storedAtTime time.Time,
 ) (time.Time, error) {
 	if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
 		err := ocpStorage.WriteRecommendationsForCluster(
 			*message.Organization,
 			*message.ClusterName,
 			types.ClusterReport(reportAsBytes),
-			types.Timestamp(time.Now().UTC().Format(time.RFC3339)),
+			types.Timestamp(storedAtTime.Format(time.RFC3339)),
 		)
 		if err != nil {
 			logMessageError(consumer, msg, &message, "Error writing recommendations to database", err)
@@ -163,14 +161,19 @@ func (OCPRulesProcessor) storeInDB(consumer *KafkaConsumer, msg *sarama.Consumer
 		return message.RequestID, message, err
 	}
 
-	err = consumer.writeOCPReport(msg, message, reportAsBytes, lastCheckedTime)
+	// Timestamp when the report is about to be written into database
+	// This ensures that the same timestamp is stored in rule_hit and
+	// recommendation tables for a given report
+	storedAtTime := time.Now().UTC()
+
+	err = consumer.writeOCPReport(msg, message, reportAsBytes, lastCheckedTime, storedAtTime)
 	if err != nil {
 		return message.RequestID, message, err
 	}
 	tStored := time.Now()
 	logDuration(tTimeCheck, tStored, msg.Offset, "db_store_report")
 
-	tRecommendationsStored, err := consumer.writeRecommendations(msg, message, reportAsBytes)
+	tRecommendationsStored, err := consumer.writeRecommendations(msg, message, reportAsBytes, storedAtTime)
 	if err != nil {
 		return message.RequestID, message, err
 	}
