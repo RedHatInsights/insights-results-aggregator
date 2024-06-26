@@ -58,8 +58,9 @@ type DVORecommendation struct {
 
 // DVOObject structure
 type DVOObject struct {
-	Kind string `json:"kind"`
-	UID  string `json:"uid"`
+	Kind        string `json:"kind"`
+	UID         string `json:"uid"`
+	DisplayName string `json:"display_name"`
 }
 
 // readNamespace retrieves namespace UUID from request
@@ -228,8 +229,9 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 				continue
 			}
 			filteredObjects = append(filteredObjects, DVOObject{
-				Kind: object.Kind,
-				UID:  object.UID,
+				Kind:        object.Kind,
+				UID:         object.UID,
+				DisplayName: object.Name,
 			})
 		}
 
