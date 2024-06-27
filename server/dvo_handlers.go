@@ -120,13 +120,13 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 		return
 	}
 
-	log.Debug().Uint32(orgIDStr, uint32(orgID)).Msgf(
-		"getWorkloads took %s", time.Since(tStart),
-	)
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData("workloads", workloads))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
+	log.Info().Uint32(orgIDStr, uint32(orgID)).Msgf(
+		"getWorkloads took %s overall", time.Since(tStart),
+	)
 }
 
 // getWorkloadsForNamespace retrieves data about a single namespace within a cluster
