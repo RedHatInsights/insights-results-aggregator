@@ -259,6 +259,7 @@ func TestGetWorkloadsOK(t *testing.T) {
 		Method:       http.MethodGet,
 		Endpoint:     server.DVOWorkloadRecommendations,
 		EndpointArgs: []interface{}{testdata.OrgID},
+		Body:         fmt.Sprintf(`{[%v]}`, testdata.ClusterName),
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status":"ok","workloads":` + helpers.ToJSONString([]types.WorkloadsForNamespace{workload}) + `}`,
@@ -337,9 +338,38 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 		Method:       http.MethodGet,
 		Endpoint:     server.DVOWorkloadRecommendations,
 		EndpointArgs: []interface{}{testdata.OrgID},
+		Body:         fmt.Sprintf(`{[%v]}`, testdata.ClusterName),
 	}, &helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        `{"status":"ok","workloads":` + helpers.ToJSONString(workloads) + `}`,
+		BodyChecker: workloadInResponseChecker,
+	})
+}
+
+func TestGetWorkloadsOK_ActiveClusterFilter(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	ira_helpers.AssertAPIRequestDVO(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.DVOWorkloadRecommendations,
+		EndpointArgs: []interface{}{testdata.OrgID},
+		Body:         `{}`, // <-- no cluster list
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        `{"status":"ok","workloads":""}`, // <-- cluster filtered
 		BodyChecker: workloadInResponseChecker,
 	})
 }
