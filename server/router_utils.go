@@ -221,7 +221,7 @@ func ReadClusterMapFromBody(writer http.ResponseWriter, request *http.Request) (
 		return
 	}
 
-	// decode from body
+	// decode cluster list from body
 	var clustersInRequest []types.ClusterName
 	err := json.NewDecoder(request.Body).Decode(&clustersInRequest)
 	if err != nil {
@@ -230,10 +230,9 @@ func ReadClusterMapFromBody(writer http.ResponseWriter, request *http.Request) (
 	}
 
 	clusterMap = make(map[types.ClusterName]struct{}, len(clustersInRequest))
-
-	// more efficient to unmarshall a JSON list and iterate over it to create a map
-	for _, cid := range clustersInRequest {
-		clusterMap[cid] = struct{}{}
+	// more efficient to unmarshall a JSON list and iterate over it to create a map than marshaling a map
+	for i := range clustersInRequest {
+		clusterMap[clustersInRequest[i]] = struct{}{}
 	}
 
 	return clusterMap, true
