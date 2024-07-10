@@ -113,7 +113,13 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 	}
 	log.Debug().Int(orgIDStr, int(orgID)).Msg("getWorkloads")
 
-	workloads, err := server.StorageDvo.ReadWorkloadsForOrganization(orgID)
+	// try to read map of cluster IDs from request body
+	clusterMap, successful := ReadClusterMapFromBody(writer, request)
+	if !successful {
+		// wrong state has been handled already
+		return
+	}
+	workloads, err := server.StorageDvo.ReadWorkloadsForOrganization(orgID, clusterMap)
 	if err != nil {
 		log.Error().Err(err).Msg("Errors retrieving DVO workload recommendations from storage")
 		handleServerError(writer, err)
