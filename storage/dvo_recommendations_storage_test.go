@@ -399,7 +399,7 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap)
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap, true)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[0].Cluster.UUID))
@@ -574,7 +574,7 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 		},
 	}
 
-	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap)
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap, true)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, 2, len(workloads))
@@ -659,7 +659,7 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 		},
 	}
 
-	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap)
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap, true)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, 2, len(workloads))
@@ -682,9 +682,11 @@ func TestDVOStorageWriteReport_ActiveClusterListFiltering(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
 
+	enabledCluster := testdata.GetRandomClusterID()
+
 	// only contains one cluster
 	activeClusterMap := make(map[types.ClusterName]struct{})
-	activeClusterMap[testdata.ClusterName] = struct{}{}
+	activeClusterMap[enabledCluster] = struct{}{}
 
 	nowTstmp := types.Timestamp(now.UTC().Format(time.RFC3339))
 
@@ -700,10 +702,22 @@ func TestDVOStorageWriteReport_ActiveClusterListFiltering(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		enabledCluster,
+		types.ClusterReport(ira_data.ValidReport2Rules2Namespaces),
+		[]types.WorkloadRecommendation{ira_data.Recommendation1TwoNamespaces, ira_data.Recommendation2OneNamespace},
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
 	expectedWorkloads := []types.WorkloadsForNamespace{
 		{
 			Cluster: types.Cluster{
-				UUID: string(testdata.ClusterName),
+				UUID: string(enabledCluster), // <-- not in active cluster list
 			},
 			Namespace: types.Namespace{
 				UUID: ira_data.NamespaceAUID,
@@ -722,47 +736,11 @@ func TestDVOStorageWriteReport_ActiveClusterListFiltering(t *testing.T) {
 		},
 		{
 			Cluster: types.Cluster{
-				UUID: string(testdata.ClusterName),
+				UUID: string(enabledCluster),
 			},
 			Namespace: types.Namespace{
 				UUID: ira_data.NamespaceBUID,
 				Name: ira_data.NamespaceBWorkload.Namespace,
-			},
-			Metadata: types.DVOMetadata{
-				Recommendations: 1, // <-- must contain only 1 rule, the other rule wasn't hitting this ns
-				Objects:         1,
-				ReportedAt:      now.UTC().Format(time.RFC3339),
-				LastCheckedAt:   now.UTC().Format(time.RFC3339),
-			},
-			RecommendationsHitCount: types.RuleHitsCount{
-				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
-			},
-		},
-		{
-			Cluster: types.Cluster{
-				UUID: string(testdata.GetRandomClusterID()), // <-- not in active cluster list
-			},
-			Namespace: types.Namespace{
-				UUID: ira_data.NamespaceBUID,
-				Name: ira_data.NamespaceBWorkload.Namespace,
-			},
-			Metadata: types.DVOMetadata{
-				Recommendations: 1,
-				Objects:         1,
-				ReportedAt:      now.UTC().Format(time.RFC3339),
-				LastCheckedAt:   now.UTC().Format(time.RFC3339),
-			},
-			RecommendationsHitCount: types.RuleHitsCount{
-				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
-			},
-		},
-		{
-			Cluster: types.Cluster{
-				UUID: string(testdata.GetRandomClusterID()), // <-- not in active cluster list
-			},
-			Namespace: types.Namespace{
-				UUID: ira_data.NamespaceAUID,
-				Name: ira_data.NamespaceAWorkload.Namespace,
 			},
 			Metadata: types.DVOMetadata{
 				Recommendations: 1,
@@ -776,7 +754,7 @@ func TestDVOStorageWriteReport_ActiveClusterListFiltering(t *testing.T) {
 		},
 	}
 
-	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap)
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap, true)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, 2, len(workloads))

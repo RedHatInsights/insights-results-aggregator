@@ -79,7 +79,7 @@ func (*NoopDVOStorage) WriteReportForCluster(
 }
 
 // ReadWorkloadsForOrganization noop
-func (*NoopDVOStorage) ReadWorkloadsForOrganization(types.OrgID, map[types.ClusterName]struct{}) ([]types.WorkloadsForNamespace, error) {
+func (*NoopDVOStorage) ReadWorkloadsForOrganization(types.OrgID, map[types.ClusterName]struct{}, bool) ([]types.WorkloadsForNamespace, error) {
 	return nil, nil
 }
 
