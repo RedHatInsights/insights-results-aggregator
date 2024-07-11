@@ -34,6 +34,7 @@ import (
 
 const (
 	namespaceIDParam = "namespace"
+	workloadsParam   = "workloads"
 )
 
 // WorkloadsForCluster structure represents workload for one selected cluster
@@ -122,7 +123,17 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 			// wrong state has been handled already
 			return
 		}
+
+		// skip storage part if there are no active clusters (the results would be filtered out)
+		if len(clusterMap) == 0 {
+			err := responses.SendOK(writer, responses.BuildOkResponseWithData(workloadsParam, []types.WorkloadsForNamespace{}))
+			if err != nil {
+				log.Error().Err(err).Msg(responseDataError)
+			}
+			return
+		}
 	}
+
 	workloads, err := server.StorageDvo.ReadWorkloadsForOrganization(orgID, clusterMap, request.Method == http.MethodPost)
 	if err != nil {
 		log.Error().Err(err).Msg("Errors retrieving DVO workload recommendations from storage")
@@ -130,7 +141,7 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 		return
 	}
 
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData("workloads", workloads))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(workloadsParam, workloads))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}
@@ -174,7 +185,7 @@ func (server *HTTPServer) getWorkloadsForNamespace(writer http.ResponseWriter, r
 	log.Info().Uint32(orgIDStr, uint32(orgID)).Msgf(
 		"getWorkloadsForNamespace took %s", time.Since(tStart),
 	)
-	err = responses.SendOK(writer, responses.BuildOkResponseWithData("workloads", processedWorkload))
+	err = responses.SendOK(writer, responses.BuildOkResponseWithData(workloadsParam, processedWorkload))
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
 	}

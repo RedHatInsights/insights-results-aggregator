@@ -334,6 +334,7 @@ func TestGetWorkloadsOK_TwoNamespacesGet(t *testing.T) {
 		},
 	}
 
+	// testing that GET functionality is kept (no filtering)
 	ira_helpers.AssertAPIRequestDVO(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodGet,
 		Endpoint:     server.DVOWorkloadRecommendations,
