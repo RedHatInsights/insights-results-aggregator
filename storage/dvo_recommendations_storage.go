@@ -52,7 +52,11 @@ type DVORecommendationsStorage interface {
 		storedAtTime time.Time,
 		requestID types.RequestID,
 	) error
-	ReadWorkloadsForOrganization(types.OrgID) ([]types.WorkloadsForNamespace, error)
+	ReadWorkloadsForOrganization(
+		types.OrgID,
+		map[types.ClusterName]struct{},
+		bool,
+	) ([]types.WorkloadsForNamespace, error)
 	ReadWorkloadsForClusterAndNamespace(
 		types.OrgID,
 		types.ClusterName,
@@ -490,7 +494,11 @@ func (storage DVORecommendationsDBStorage) getReportedAtMap(orgID types.OrgID, c
 }
 
 // ReadWorkloadsForOrganization returns all rows from dvo.dvo_report table for given organizaiton
-func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID types.OrgID) (
+func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(
+	orgID types.OrgID,
+	activeClusterMap map[types.ClusterName]struct{},
+	clusterFilteringEnabled bool,
+) (
 	workloads []types.WorkloadsForNamespace,
 	err error,
 ) {
@@ -530,6 +538,13 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(orgID ty
 		)
 		if err != nil {
 			log.Error().Err(err).Msg("ReadWorkloadsForOrganization")
+		}
+
+		if clusterFilteringEnabled {
+			// skip inactive clusters, cheaper than using the list in an SQL query.
+			if _, found := activeClusterMap[types.ClusterName(dvoReport.Cluster.UUID)]; !found {
+				continue
+			}
 		}
 
 		// convert timestamps to string

@@ -256,9 +256,10 @@ func TestGetWorkloadsOK(t *testing.T) {
 	}
 
 	ira_helpers.AssertAPIRequestDVO(t, mockStorage, nil, &helpers.APIRequest{
-		Method:       http.MethodGet,
+		Method:       http.MethodPost,
 		Endpoint:     server.DVOWorkloadRecommendations,
 		EndpointArgs: []interface{}{testdata.OrgID},
+		Body:         fmt.Sprintf(`["%v"]`, testdata.ClusterName),
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       `{"status":"ok","workloads":` + helpers.ToJSONString([]types.WorkloadsForNamespace{workload}) + `}`,
@@ -275,6 +276,73 @@ func TestGetWorkloads_NoData(t *testing.T) {
 		EndpointArgs: []interface{}{testdata.OrgID},
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
+	})
+}
+
+func TestGetWorkloadsOK_TwoNamespacesGet(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	workloads := []types.WorkloadsForNamespace{
+		{
+			Cluster: types.Cluster{
+				UUID: string(testdata.ClusterName),
+			},
+			Namespace: types.Namespace{
+				UUID: ira_data.NamespaceAUID,
+				Name: "namespace-name-A",
+			},
+			Metadata: types.DVOMetadata{
+				Recommendations: 1,
+				Objects:         1,
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+			RecommendationsHitCount: types.RuleHitsCount{
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
+			},
+		},
+		{
+			Cluster: types.Cluster{
+				UUID: string(testdata.ClusterName),
+			},
+			Namespace: types.Namespace{
+				UUID: ira_data.NamespaceBUID,
+				Name: "namespace-name-B",
+			},
+			Metadata: types.DVOMetadata{
+				Recommendations: 1,
+				Objects:         1,
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+			RecommendationsHitCount: types.RuleHitsCount{
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
+			},
+		},
+	}
+
+	// testing that GET functionality is kept (no filtering)
+	ira_helpers.AssertAPIRequestDVO(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodGet,
+		Endpoint:     server.DVOWorkloadRecommendations,
+		EndpointArgs: []interface{}{testdata.OrgID},
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        `{"status":"ok","workloads":` + helpers.ToJSONString(workloads) + `}`,
+		BodyChecker: workloadInResponseChecker,
 	})
 }
 
@@ -334,12 +402,43 @@ func TestGetWorkloadsOK_TwoNamespaces(t *testing.T) {
 	}
 
 	ira_helpers.AssertAPIRequestDVO(t, mockStorage, nil, &helpers.APIRequest{
-		Method:       http.MethodGet,
+		Method:       http.MethodPost,
 		Endpoint:     server.DVOWorkloadRecommendations,
 		EndpointArgs: []interface{}{testdata.OrgID},
+		Body:         fmt.Sprintf(`["%v"]`, testdata.ClusterName),
 	}, &helpers.APIResponse{
 		StatusCode:  http.StatusOK,
 		Body:        `{"status":"ok","workloads":` + helpers.ToJSONString(workloads) + `}`,
+		BodyChecker: workloadInResponseChecker,
+	})
+}
+
+// TestGetWorkloadsOK_ActiveClusterFilter tests scenario where cluster list filtering is enabled by making
+// a POST request, but no clusters are provided. Therefore, all clusters/results must be filtered out.
+func TestGetWorkloadsOK_ActiveClusterFilter(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(ira_data.ValidReport),
+		ira_data.TwoNamespacesRecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	ira_helpers.AssertAPIRequestDVO(t, mockStorage, nil, &helpers.APIRequest{
+		Method:       http.MethodPost,
+		Endpoint:     server.DVOWorkloadRecommendations,
+		EndpointArgs: []interface{}{testdata.OrgID},
+		Body:         `[]`, // <-- no cluster list
+	}, &helpers.APIResponse{
+		StatusCode:  http.StatusOK,
+		Body:        `{"status":"ok","workloads":[]}`, // <-- cluster filtered
 		BodyChecker: workloadInResponseChecker,
 	})
 }

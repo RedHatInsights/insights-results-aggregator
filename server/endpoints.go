@@ -187,6 +187,6 @@ func (server *HTTPServer) addInsightsAdvisorEndpointsToRouter(router *mux.Router
 	router.HandleFunc(apiPrefix+RecommendationsListEndpoint, server.getRecommendations).Methods(http.MethodPost, http.MethodOptions)
 	router.HandleFunc(apiPrefix+ClustersRecommendationsListEndpoint, server.getClustersRecommendationsList).Methods(http.MethodPost, http.MethodOptions)
 
-	router.HandleFunc(apiPrefix+DVOWorkloadRecommendations, server.getWorkloads).Methods(http.MethodGet)
+	router.HandleFunc(apiPrefix+DVOWorkloadRecommendations, server.getWorkloads).Methods(http.MethodGet, http.MethodPost)
 	router.HandleFunc(apiPrefix+DVOWorkloadRecommendationsSingleNamespace, server.getWorkloadsForNamespace).Methods(http.MethodGet)
 }

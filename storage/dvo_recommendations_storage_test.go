@@ -371,6 +371,9 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
 
+	activeClusterMap := make(map[types.ClusterName]struct{})
+	activeClusterMap[testdata.ClusterName] = struct{}{}
+
 	err := mockStorage.WriteReportForCluster(
 		testdata.OrgID,
 		testdata.ClusterName,
@@ -396,7 +399,7 @@ func TestDVOStorageReadWorkloadsForOrganization(t *testing.T) {
 	)
 	helpers.FailOnError(t, err)
 
-	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID)
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap, true)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(workloads[0].Cluster.UUID))
@@ -514,6 +517,9 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
 
+	activeClusterMap := make(map[types.ClusterName]struct{})
+	activeClusterMap[testdata.ClusterName] = struct{}{}
+
 	nowTstmp := types.Timestamp(now.UTC().Format(time.RFC3339))
 
 	err := mockStorage.WriteReportForCluster(
@@ -568,7 +574,7 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 		},
 	}
 
-	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID)
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap, true)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, 2, len(workloads))
@@ -588,6 +594,9 @@ func TestDVOStorageWriteReport_TwoNamespacesTwoRecommendations(t *testing.T) {
 func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
+
+	activeClusterMap := make(map[types.ClusterName]struct{})
+	activeClusterMap[testdata.ClusterName] = struct{}{}
 
 	nowTstmp := types.Timestamp(now.UTC().Format(time.RFC3339))
 
@@ -650,7 +659,7 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 		},
 	}
 
-	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID)
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap, true)
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, 2, len(workloads))
@@ -662,6 +671,101 @@ func TestDVOStorageWriteReport_FilterOutDuplicateObjects_CCXDEV_12608_Reproducer
 	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
 	assert.Equal(t, ira_data.NamespaceAUID, report.NamespaceID)
 	assert.Equal(t, uint(3), report.Recommendations)
+	assert.Equal(t, uint(2), report.Objects)
+	assert.Equal(t, nowTstmp, report.ReportedAt)
+	assert.Equal(t, nowTstmp, report.LastCheckedAt)
+}
+
+// TestDVOStorageWriteReport_ActiveClusterListFiltering tests the behavior when providing the active
+// cluster list in POST body
+func TestDVOStorageWriteReport_ActiveClusterListFiltering(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	enabledCluster := testdata.GetRandomClusterID()
+
+	// only contains one cluster
+	activeClusterMap := make(map[types.ClusterName]struct{})
+	activeClusterMap[enabledCluster] = struct{}{}
+
+	nowTstmp := types.Timestamp(now.UTC().Format(time.RFC3339))
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(ira_data.ValidReport2Rules2Namespaces),
+		[]types.WorkloadRecommendation{ira_data.Recommendation1TwoNamespaces, ira_data.Recommendation2OneNamespace},
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		enabledCluster,
+		types.ClusterReport(ira_data.ValidReport2Rules2Namespaces),
+		[]types.WorkloadRecommendation{ira_data.Recommendation1TwoNamespaces, ira_data.Recommendation2OneNamespace},
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	expectedWorkloads := []types.WorkloadsForNamespace{
+		{
+			Cluster: types.Cluster{
+				UUID: string(enabledCluster), // <-- not in active cluster list
+			},
+			Namespace: types.Namespace{
+				UUID: ira_data.NamespaceAUID,
+				Name: ira_data.NamespaceAWorkload.Namespace,
+			},
+			Metadata: types.DVOMetadata{
+				Recommendations: 2,
+				Objects:         2,
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+			RecommendationsHitCount: types.RuleHitsCount{
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE":                 1,
+				"ccx_rules_ocp.external.dvo.unset_requirements|DVO_UNSET_REQUIREMENTS": 2,
+			},
+		},
+		{
+			Cluster: types.Cluster{
+				UUID: string(enabledCluster),
+			},
+			Namespace: types.Namespace{
+				UUID: ira_data.NamespaceBUID,
+				Name: ira_data.NamespaceBWorkload.Namespace,
+			},
+			Metadata: types.DVOMetadata{
+				Recommendations: 1,
+				Objects:         1,
+				ReportedAt:      now.UTC().Format(time.RFC3339),
+				LastCheckedAt:   now.UTC().Format(time.RFC3339),
+			},
+			RecommendationsHitCount: types.RuleHitsCount{
+				"ccx_rules_ocp.external.dvo.an_issue_pod|DVO_AN_ISSUE": 1,
+			},
+		},
+	}
+
+	workloads, err := mockStorage.ReadWorkloadsForOrganization(testdata.OrgID, activeClusterMap, true)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, 2, len(workloads))
+	assert.ElementsMatch(t, expectedWorkloads, workloads)
+
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, ira_data.NamespaceAUID)
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, testdata.ClusterName, types.ClusterName(report.ClusterID))
+	assert.Equal(t, ira_data.NamespaceAUID, report.NamespaceID)
+	assert.Equal(t, uint(2), report.Recommendations)
 	assert.Equal(t, uint(2), report.Objects)
 	assert.Equal(t, nowTstmp, report.ReportedAt)
 	assert.Equal(t, nowTstmp, report.LastCheckedAt)

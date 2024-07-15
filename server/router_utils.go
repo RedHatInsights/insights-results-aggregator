@@ -206,3 +206,34 @@ func getRuleAndErrorKeyFromRuleID(ruleIDWithErrorKey string) (
 	errorKey = types.ErrorKey(splitedRuleID[1])
 	return
 }
+
+// ReadClusterMapFromBody retrieves a list of clusters from the request body and
+// generates a map of empty structs for fast access. If it's not possible,
+// it writes an http error to the writer and returns false
+func ReadClusterMapFromBody(writer http.ResponseWriter, request *http.Request) (
+	clusterMap map[types.ClusterName]struct{},
+	successful bool,
+) {
+	// check if there's any body provided in the request sent by client
+	if request.ContentLength <= 0 {
+		err := &NoBodyError{}
+		handleServerError(writer, err)
+		return
+	}
+
+	// decode cluster list from body
+	var clustersInRequest []types.ClusterName
+	err := json.NewDecoder(request.Body).Decode(&clustersInRequest)
+	if err != nil {
+		handleServerError(writer, err)
+		return
+	}
+
+	clusterMap = make(map[types.ClusterName]struct{}, len(clustersInRequest))
+	// more efficient to unmarshall a JSON list and iterate over it to create a map than marshaling a map
+	for i := range clustersInRequest {
+		clusterMap[clustersInRequest[i]] = struct{}{}
+	}
+
+	return clusterMap, true
+}
