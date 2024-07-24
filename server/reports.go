@@ -77,7 +77,7 @@ func sendWrongClusterIDResponse(writer http.ResponseWriter, err error) {
 // sendWrongClusterOrgIDResponse function sends response to client when
 // bad/improper cluster organization ID is detected
 func sendWrongClusterOrgIDResponse(writer http.ResponseWriter, orgIDs []types.OrgID) {
-	log.Error().Str("organization IDs", fmt.Sprint(orgIDs)).Msg("wrong cluster organization IDs detected")
+	log.Warn().Str("organization IDs", fmt.Sprint(orgIDs)).Msg("wrong cluster organization IDs detected")
 	err := responses.SendBadRequest(writer, "Improper organization ID")
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
