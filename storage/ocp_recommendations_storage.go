@@ -50,8 +50,7 @@ import (
 
 // OCPRecommendationsStorage represents an interface to almost any database or storage system
 type OCPRecommendationsStorage interface {
-	Init() error
-	Close() error
+	Storage
 	ListOfOrgs() ([]types.OrgID, error)
 	ListOfClustersForOrg(
 		orgID types.OrgID, timeLimit time.Time) ([]types.ClusterName, error,
@@ -219,13 +218,7 @@ type OCPRecommendationsStorage interface {
 	ReadClusterListRecommendations(clusterList []string, orgID types.OrgID) (
 		ctypes.ClusterRecommendationMap, error,
 	)
-	MigrateToLatest() error
-	GetConnection() *sql.DB
 	PrintRuleDisableDebugInfo()
-	GetDBDriverType() types.DBDriver
-	GetMigrations() []migration.Migration
-	GetDBSchema() migration.Schema
-	GetMaxVersion() migration.Version
 }
 
 const (

@@ -33,14 +33,7 @@ import (
 
 // DVORecommendationsStorage represents an interface to almost any database or storage system
 type DVORecommendationsStorage interface {
-	Init() error
-	Close() error
-	GetMigrations() []migration.Migration
-	GetDBDriverType() types.DBDriver
-	GetDBSchema() migration.Schema
-	GetConnection() *sql.DB
-	GetMaxVersion() migration.Version
-	MigrateToLatest() error
+	Storage
 	ReportsCount() (int, error)
 	WriteReportForCluster(
 		orgID types.OrgID,
