@@ -103,6 +103,16 @@ objects:
                       name: cloudwatch
                       key: aws_secret_access_key
                       optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_SENTRY_ENABLED
+                  value: ${SENTRY_ENABLED}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN
+                  valueFrom:
+                    secretKeyRef:
+                      key: dsn
+                      name: insights-results-aggregator-db-writer-dsn
+                      optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
+                  value: ${ENV_NAME}
               resources:
                 limits:
                   cpu: ${DB_WRITER_CPU_LIMIT}
@@ -195,6 +205,16 @@ objects:
                   name: cloudwatch
                   key: aws_secret_access_key
                   optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_SENTRY_ENABLED
+              value: ${SENTRY_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN
+              valueFrom:
+                secretKeyRef:
+                  key: dsn
+                  name: insights-results-aggregator-db-writer-dsn
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
+              value: ${ENV_NAME}
           image: ${IMAGE}:${IMAGE_TAG}
           livenessProbe:
             failureThreshold: 10
@@ -313,6 +333,16 @@ objects:
                   name: cloudwatch
                   key: aws_secret_access_key
                   optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_SENTRY_ENABLED
+              value: ${SENTRY_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN
+              valueFrom:
+                secretKeyRef:
+                  key: dsn
+                  name: insights-results-aggregator-dsn
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
+              value: ${ENV_NAME}
           image: ${IMAGE}:${IMAGE_TAG}
           livenessProbe:
             failureThreshold: 5
@@ -497,3 +527,7 @@ parameters:
   value: "0"
 - name: INSIGHTS_REDIS_TIMEOUT_SECONDS
   value: "30"
+
+# Both services
+- name: SENTRY_ENABLED
+  value: "false"

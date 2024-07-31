@@ -65,7 +65,11 @@ path = "/rules-content"
 debug = false
 log_level = ""
 logging_to_cloud_watch_enabled = false
-logging_to_sentry_enabled = false
+logging_to_sentry_enabled = true
+
+[sentry]
+dsn = ""
+environment = "dev"
 
 [cloudwatch]
 aws_access_id = "a key id"

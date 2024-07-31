@@ -547,7 +547,7 @@ func main() {
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to init ZeroLog")
 	}
-
+	log.Error().Msg("TEST AGGREGATOR ERROR")
 	command := "start-service"
 
 	if len(os.Args) >= 2 {
