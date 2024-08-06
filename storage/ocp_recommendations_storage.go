@@ -811,7 +811,7 @@ func (storage OCPRecommendationsDBStorage) ReadReportForCluster(
 
 	err = types.ConvertDBError(err, []interface{}{orgID, clusterName})
 	if err != nil {
-		log.Error().Err(err).Str(clusterKey, string(clusterName)).Msg(
+		log.Warn().Err(err).Str(clusterKey, string(clusterName)).Msg(
 			"ReadReportForCluster query from report table error",
 		)
 		return report, lastCheckedStr, reportedAtStr, gatheredAtStr, err
