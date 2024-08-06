@@ -315,14 +315,14 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	_, err = tx.Exec("DELETE FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;", orgID, clusterName)
 	if err != nil {
 		log.Err(err).
-			Str("cluster", string(clusterName)).Interface("org", orgID).
+			Str(clusterKey, string(clusterName)).Interface(orgIDStr, orgID).
 			Msg("Unable to remove previous cluster DVO reports")
 		return err
 	}
 
 	if len(recommendations) == 0 {
 		log.Info().
-			Str("cluster", string(clusterName)).Interface("org", orgID).
+			Str(clusterKey, string(clusterName)).Interface(orgIDStr, orgID).
 			Msg("No new DVO report to insert")
 		return nil
 	}
