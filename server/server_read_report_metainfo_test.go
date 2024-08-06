@@ -71,7 +71,7 @@ func TestReadNonExistingReportMetainfo(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusNotFound,
 		Body: fmt.Sprintf(
-			`{"status":"Item with ID %v/%v was not found in the storage"}`, testdata.OrgID, testdata.ClusterName,
+			`{"status":"Item was not found in the storage"}`,
 		),
 	})
 }

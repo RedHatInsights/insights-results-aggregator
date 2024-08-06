@@ -195,6 +195,7 @@ func (server *HTTPServer) getWorkloadsForNamespace(writer http.ResponseWriter, r
 func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 	processedWorkloads WorkloadsForCluster,
 ) {
+	firstBytesStr := "first bytes"
 	processedWorkloads = WorkloadsForCluster{
 		Cluster: types.Cluster{
 			UUID: workload.ClusterID,
@@ -221,21 +222,27 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 		// and also take care of the escaped `\"` quotes and replaces them with valid `"`, producing a valid JSON
 		err := json.Unmarshal(json.RawMessage(workload.Report), &report)
 		if err != nil {
-			log.Error().Err(err).Msgf("report has unknown structure: [%v]", string([]rune(workload.Report)[:100]))
+			log.Error().Err(err).
+				Str(firstBytesStr, string([]rune(workload.Report)[:100])).
+				Msg("report has unknown structure")
 		}
 	case `{`:
 		// we're dealing with either a valid JSON `{"system":{}}` or a string with escaped
 		// quotes `{\"system\":{}}`. Stripping escape chars `\` if any, produces a valid JSON
 		report = strings.Replace(workload.Report, `\`, "", -1)
 	default:
-		log.Error().Msgf("report has unknown structure: [%v]", string([]rune(workload.Report)[:100]))
+		log.Error().
+			Str(firstBytesStr, string([]rune(workload.Report)[:100])).
+			Msg("report has unknown structure")
 		return
 	}
 
 	var dvoReport types.DVOMetrics
 	err := json.Unmarshal([]byte(report), &dvoReport)
 	if err != nil {
-		log.Error().Err(err).Msgf("error unmarshalling full report: [%v]", string([]rune(report)[:100]))
+		log.Error().
+			Str(firstBytesStr, string([]rune(report)[:100])).
+			Msg("error unmarshalling full report")
 		log.Info().Msgf("report without escape %v", string([]rune(workload.Report)[:100]))
 		return
 	}

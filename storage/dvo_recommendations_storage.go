@@ -307,21 +307,23 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	// Get reported_at if present before deletion
 	reportedAtMap, err := storage.getReportedAtMap(orgID, clusterName)
 	if err != nil {
-		log.Error().Err(err).Msgf("Unable to get dvo report reported_at")
+		log.Error().Err(err).Msg("Unable to get dvo report reported_at")
 		reportedAtMap = make(map[string]types.Timestamp) // create empty map
 	}
 
 	// Delete previous reports (CCXDEV-12529)
 	_, err = tx.Exec("DELETE FROM dvo.dvo_report WHERE org_id = $1 AND cluster_id = $2;", orgID, clusterName)
 	if err != nil {
-		log.Err(err).Msgf("Unable to remove previous cluster DVO reports (org: %v, cluster: %v)", orgID, clusterName)
+		log.Err(err).
+			Str("cluster", string(clusterName)).Str("org", string(orgID)).
+			Msg("Unable to remove previous cluster DVO reports")
 		return err
 	}
 
 	if len(recommendations) == 0 {
-		log.Info().Msgf("No new DVO report to insert (org: %v, cluster: %v)",
-			orgID, clusterName,
-		)
+		log.Info().
+			Str("cluster", string(clusterName)).Str("org", string(orgID)).
+			Msg("No new DVO report to insert")
 		return nil
 	}
 

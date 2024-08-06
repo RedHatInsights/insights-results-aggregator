@@ -983,14 +983,16 @@ func (storage OCPRecommendationsDBStorage) updateReport(
 		"rule_hit", orgID, clusterName,
 	)
 	if err != nil {
-		log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
+		log.Error().Err(err).Msg("Unable to get recommendation impacted_since")
 		RuleKeyCreatedAt = make(map[string]types.Timestamp) // create empty map
 	}
 
 	deleteQuery := "DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;"
 	_, err = tx.Exec(deleteQuery, orgID, clusterName)
 	if err != nil {
-		log.Err(err).Msgf("Unable to remove previous cluster reports (org: %v, cluster: %v)", orgID, clusterName)
+		log.Err(err).
+			Str("cluster", string(clusterName)).Str("org", string(orgID)).
+			Msg("Unable to remove previous cluster reports")
 		return err
 	}
 
@@ -1006,9 +1008,9 @@ func (storage OCPRecommendationsDBStorage) updateReport(
 
 		_, err = tx.Exec(ruleInsertStatement, values...)
 		if err != nil {
-			log.Err(err).Msgf("Unable to insert the cluster report rules (org: %v, cluster: %v)",
-				orgID, clusterName,
-			)
+			log.Err(err).
+				Str("cluster", string(clusterName)).Str("org", string(orgID)).
+				Msg("Unable to insert the cluster report rules")
 			return err
 		}
 	}
@@ -1020,7 +1022,9 @@ func (storage OCPRecommendationsDBStorage) updateReport(
 	}
 
 	if err != nil {
-		log.Err(err).Msgf("Unable to upsert the cluster report (org: %v, cluster: %v)", orgID, clusterName)
+		log.Err(err).
+			Str("cluster", string(clusterName)).Str("org", string(orgID)).
+			Msg("Unable to upsert the cluster report")
 		return err
 	}
 
@@ -1234,7 +1238,7 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 			impactedSinceMap, err = storage.getRuleKeyCreatedAtMapForTable(
 				"recommendation", orgID, clusterName)
 			if err != nil {
-				log.Error().Err(err).Msgf("Unable to get recommendation impacted_since")
+				log.Error().Err(err).Msg("Unable to get recommendation impacted_since")
 			}
 			// it is needed to use `org_id = $1` condition there
 			// because it allows DB to use proper btree indexing
@@ -1243,7 +1247,9 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 				"DELETE FROM recommendation WHERE org_id = $1 AND cluster_id = $2;", orgID, clusterName)
 			err = types.ConvertDBError(err, []interface{}{clusterName})
 			if err != nil {
-				log.Error().Err(err).Msgf("Unable to delete the existing recommendations for %s", clusterName)
+				log.Error().Err(err).
+					Str("cluster", string(clusterName)).Str("org", string(orgID)).
+					Msg("Unable to delete the existing recommendations")
 				return err
 			}
 
@@ -1288,12 +1294,12 @@ func finishTransaction(tx *sql.Tx, err error) {
 	if err != nil {
 		rollbackError := tx.Rollback()
 		if rollbackError != nil {
-			log.Err(rollbackError).Msgf("error when trying to rollback a transaction")
+			log.Err(rollbackError).Msg("error when trying to rollback a transaction")
 		}
 	} else {
 		commitError := tx.Commit()
 		if commitError != nil {
-			log.Err(commitError).Msgf("error when trying to commit a transaction")
+			log.Err(commitError).Msg("error when trying to commit a transaction")
 		}
 	}
 }

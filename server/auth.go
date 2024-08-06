@@ -114,7 +114,7 @@ func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID,
 	i := request.Context().Value(types.ContextKeyUser)
 
 	if i == nil {
-		log.Error().Msgf("user id was not found in request's context")
+		log.Error().Msg("user id was not found in request's context")
 		return "", &UnauthorizedError{ErrString: "user id is not provided"}
 	}
 
