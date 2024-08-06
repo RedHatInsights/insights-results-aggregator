@@ -991,7 +991,7 @@ func (storage OCPRecommendationsDBStorage) updateReport(
 	_, err = tx.Exec(deleteQuery, orgID, clusterName)
 	if err != nil {
 		log.Err(err).
-			Str("cluster", string(clusterName)).Str("org", string(orgID)).
+			Str("cluster", string(clusterName)).Interface("org", orgID).
 			Msg("Unable to remove previous cluster reports")
 		return err
 	}
@@ -1009,7 +1009,7 @@ func (storage OCPRecommendationsDBStorage) updateReport(
 		_, err = tx.Exec(ruleInsertStatement, values...)
 		if err != nil {
 			log.Err(err).
-				Str("cluster", string(clusterName)).Str("org", string(orgID)).
+				Str("cluster", string(clusterName)).Interface("org", orgID).
 				Msg("Unable to insert the cluster report rules")
 			return err
 		}
@@ -1023,7 +1023,7 @@ func (storage OCPRecommendationsDBStorage) updateReport(
 
 	if err != nil {
 		log.Err(err).
-			Str("cluster", string(clusterName)).Str("org", string(orgID)).
+			Str("cluster", string(clusterName)).Interface("org", orgID).
 			Msg("Unable to upsert the cluster report")
 		return err
 	}
@@ -1248,7 +1248,7 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 			err = types.ConvertDBError(err, []interface{}{clusterName})
 			if err != nil {
 				log.Error().Err(err).
-					Str("cluster", string(clusterName)).Str("org", string(orgID)).
+					Str("cluster", string(clusterName)).Interface("org", orgID).
 					Msg("Unable to delete the existing recommendations")
 				return err
 			}
