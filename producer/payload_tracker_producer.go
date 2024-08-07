@@ -109,9 +109,11 @@ func (producer *PayloadTrackerProducer) TrackPayload(
 
 	_, _, err := producer.produceMessage(statusUpdate)
 	if err != nil {
-		log.Error().Err(err).Msgf(
-			"unable to produce payload tracker message (request ID: '%s', timestamp: %v, status: '%s')",
-			reqID, timestamp, status)
+		log.Error().Err(err).
+			Str("request ID", string(reqID)).
+			Time("timestamp", timestamp).
+			Str("status", status).
+			Msg("unable to produce payload tracker message")
 
 		return err
 	}

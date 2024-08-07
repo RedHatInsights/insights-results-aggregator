@@ -113,7 +113,7 @@ func regexGetNthMatchOrLogError(regexStr string, nMatch uint, str string) string
 		log.Error().
 			Str("regex", regexStr).
 			Str("str", str).
-			Msgf("unable to get first match from string '%v' with regex '%v'", str, regexStr)
+			Msg("unable to get first match from string")
 		return ""
 	}
 

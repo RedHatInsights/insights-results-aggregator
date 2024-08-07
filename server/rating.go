@@ -77,7 +77,7 @@ func (server *HTTPServer) getRuleRating(writer http.ResponseWriter, request *htt
 
 	rating, err := server.Storage.GetRuleRating(orgID, ruleSelector)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to get rating")
+		log.Warn().Err(err).Msg("Unable to get rating")
 		handleServerError(writer, err)
 		return
 	}

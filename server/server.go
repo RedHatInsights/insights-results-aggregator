@@ -164,7 +164,7 @@ func (server *HTTPServer) readReportForCluster(writer http.ResponseWriter, reque
 		clusterName,
 	)
 	if err != nil {
-		log.Error().Err(err).Msgf("Unable to read report for cluster %v", clusterName)
+		log.Warn().Err(err).Str("cluster", string(clusterName)).Msg("Unable to read report for cluster")
 		handleServerError(writer, err)
 		return
 	}
@@ -213,7 +213,7 @@ func (server *HTTPServer) readReportMetainfoForCluster(writer http.ResponseWrite
 		clusterName,
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to read report for cluster")
+		log.Warn().Err(err).Msg("Unable to read report for cluster")
 		handleServerError(writer, err)
 		return
 	}
