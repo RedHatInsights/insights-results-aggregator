@@ -547,8 +547,16 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msgf("Unable to get list of clusters for specific rule %s", selector)
 		// err received at this point can be either TableNotFoundError (500) or ItemNotFoundError (404)
+		logLevel := log.Error
+		errMsg := "Unable to get list of clusters for specific rule"
+		if errors.Is(err, &types.ItemNotFoundError{}) {
+			// If the item is not found, we shouldn't treat it as an error
+			logLevel = log.Warn
+			errMsg = "Rule not found in storage"
+		}
+		logLevel().Interface("rule", selector).
+			Msg(errMsg)
 		handleServerError(writer, err)
 		return
 	}

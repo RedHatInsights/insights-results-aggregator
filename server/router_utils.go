@@ -105,7 +105,7 @@ func readRuleIDWithErrorKey(writer http.ResponseWriter, request *http.Request) (
 
 	ruleID, errorKey, err := getRuleAndErrorKeyFromRuleID(ruleIDWithErrorKey)
 	if err != nil {
-		log.Error().Err(err).Msg("Error splitting the rule identifier")
+		log.Warn().Err(err).Msg("Error splitting the rule identifier")
 		handleServerError(writer, &RouterParsingError{
 			ParamName:  "rule_id",
 			ParamValue: ruleIDWithErrorKey,
