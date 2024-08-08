@@ -177,12 +177,14 @@ func (server *HTTPServer) getWorkloadsForNamespace(writer http.ResponseWriter, r
 	if err != nil {
 		// err received at this point can be either TableNotFoundError (500) or ItemNotFoundError (404)
 		logLevel := log.Error
+		errMsg := "Errors retrieving DVO workload recommendations from storage"
 		if errors.Is(err, &types.ItemNotFoundError{}) {
 			// If the item is not found, we shouldn't treat it as an error
 			logLevel = log.Warn
+			errMsg = "DVO workload recommendations not found in storage"
 		}
 		logLevel().Int(orgIDStr, int(orgID)).Str("namespaceID", namespaceID).
-			Msg("Errors retrieving DVO workload recommendations from storage")
+			Msg(errMsg)
 		handleServerError(writer, err)
 		return
 	}
