@@ -549,7 +549,7 @@ func (server *HTTPServer) RuleClusterDetailEndpoint(writer http.ResponseWriter, 
 	if err != nil {
 		// err received at this point can be either TableNotFoundError (500) or ItemNotFoundError (404)
 		logLevel := log.Error
-		if _, ok := err.(*types.ItemNotFoundError); ok {
+		if errors.Is(err, &types.ItemNotFoundError{}) {
 			// If the item is not found, we shouldn't treat it as an error
 			logLevel = log.Warn
 		}
