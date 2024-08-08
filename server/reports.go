@@ -67,7 +67,7 @@ func validateClusterIDs(clusterIDs []string) error {
 // sendWrongClusterIDResponse function sends response to client when
 // bad/improper cluster ID is detected
 func sendWrongClusterIDResponse(writer http.ResponseWriter, err error) {
-	log.Error().Err(err).Msg("wrong cluster identifier detected")
+	log.Warn().Err(err).Msg("wrong cluster identifier detected")
 	err = responses.SendBadRequest(writer, err.Error())
 	if err != nil {
 		log.Error().Err(err).Msg(responseDataError)
