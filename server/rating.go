@@ -39,7 +39,7 @@ func (server *HTTPServer) setRuleRating(writer http.ResponseWriter, request *htt
 	// Split the rule_fqdn (RuleID) and ErrorKey from the received rule
 	ruleID, errorKey, err := getRuleAndErrorKeyFromRuleID(rating.Rule)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to parse rule identifier")
+		log.Warn().Err(err).Msg("Unable to parse rule identifier")
 		handleServerError(writer, err)
 		return
 	}
@@ -47,7 +47,7 @@ func (server *HTTPServer) setRuleRating(writer http.ResponseWriter, request *htt
 	// Store to the db
 	err = server.Storage.RateOnRule(orgID, ruleID, errorKey, rating.Rating)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to store rating")
+		log.Warn().Err(err).Msg("Unable to store rating")
 		handleServerError(writer, err)
 		return
 	}
@@ -55,7 +55,7 @@ func (server *HTTPServer) setRuleRating(writer http.ResponseWriter, request *htt
 	// If everythig goes fine, we should send the same ratings as response to the client
 	err = responses.SendOK(writer, responses.BuildOkResponseWithData("ratings", rating))
 	if err != nil {
-		log.Error().Err(err).Msg("Errors sending response back to client")
+		log.Warn().Err(err).Msg("Errors sending response back to client")
 		handleServerError(writer, err)
 		return
 	}

@@ -342,7 +342,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 ) types.RuleOnReport {
 	ruleToggle, err := server.Storage.GetFromClusterRuleToggle(clusterName, rule.Module)
 	if err != nil {
-		log.Error().Err(err).Msg("Rule toggle was not found")
+		log.Warn().Err(err).Msg("Rule toggle was not found")
 		rule.Disabled = false
 	} else {
 		rule.Disabled = ruleToggle.Disabled == storage.RuleToggleDisable
@@ -351,7 +351,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 
 	disableFeedback, err := server.Storage.GetUserFeedbackOnRuleDisable(clusterName, rule.Module, rule.ErrorKey, userID)
 	if err != nil {
-		log.Error().Err(err).Msg("Feedback for rule was not found")
+		log.Warn().Err(err).Msg("Feedback for rule was not found")
 		rule.DisableFeedback = ""
 	} else {
 		log.Info().Msgf("feedback Message: '%v'", disableFeedback.Message)
@@ -360,7 +360,7 @@ func (server HTTPServer) getFeedbackAndTogglesOnRule(
 
 	userVote, err := server.Storage.GetUserFeedbackOnRule(clusterName, rule.Module, rule.ErrorKey, userID)
 	if err != nil {
-		log.Error().Err(err).Msg("User vote for rule was not found")
+		log.Warn().Err(err).Msg("User vote for rule was not found")
 		rule.UserVote = types.UserVoteNone
 	} else {
 		rule.UserVote = userVote.UserVote
