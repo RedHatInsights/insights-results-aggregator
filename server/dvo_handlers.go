@@ -95,7 +95,7 @@ func validateNamespaceID(namespace string) (string, error) {
 	if !IDValidator.MatchString(namespace) {
 		message := fmt.Sprintf("invalid namespace ID: '%s'", namespace)
 		err := errors.New(message)
-		log.Error().Err(err).Msg(message)
+		log.Warn().Err(err).Msg(message)
 		return "", err
 	}
 
@@ -136,7 +136,7 @@ func (server *HTTPServer) getWorkloads(writer http.ResponseWriter, request *http
 
 	workloads, err := server.StorageDvo.ReadWorkloadsForOrganization(orgID, clusterMap, request.Method == http.MethodPost)
 	if err != nil {
-		log.Error().Err(err).Msg("Errors retrieving DVO workload recommendations from storage")
+		log.Warn().Err(err).Msg("Errors retrieving DVO workload recommendations from storage")
 		handleServerError(writer, err)
 		return
 	}
@@ -286,7 +286,7 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 			types.ErrorKey(recommendation.Key),
 		)
 		if err != nil {
-			log.Error().Err(err).Msg("error generating composite rule ID for rule")
+			log.Warn().Err(err).Msg("error generating composite rule ID for rule")
 			continue
 		}
 
