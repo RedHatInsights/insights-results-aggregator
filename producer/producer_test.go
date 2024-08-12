@@ -21,10 +21,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/IBM/sarama"
+	"github.com/IBM/sarama/mocks"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
-	"github.com/Shopify/sarama"
-	"github.com/Shopify/sarama/mocks"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
@@ -51,10 +51,10 @@ func init() {
 
 // Test Producer creation with a non-accessible Kafka broker
 func TestNewProducerBadBroker(t *testing.T) {
-	const expectedErr = "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
+	const expectedErr = "kafka: client has run out of available brokers to talk to"
 
 	_, err := producer.New(brokerCfg)
-	assert.EqualError(t, err, expectedErr)
+	assert.ErrorContains(t, err, expectedErr)
 }
 
 // TestProducerTrackPayload calls the TrackPayload function using a mock Sarama producer.

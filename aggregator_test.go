@@ -212,8 +212,8 @@ func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 	})
 
 	err := main.StartConsumer(conf.GetBrokerConfiguration())
-	assert.EqualError(
-		t, err, "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)",
+	assert.ErrorContains(
+		t, err, "kafka: client has run out of available brokers to talk to",
 	)
 }
 

@@ -27,10 +27,10 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 
+	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
