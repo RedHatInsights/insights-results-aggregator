@@ -5,10 +5,10 @@ go 1.20
 require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
+	github.com/IBM/sarama v1.43.2
 	github.com/RedHatInsights/insights-operator-utils v1.25.8
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
 	github.com/RedHatInsights/insights-results-types v1.23.4
-	github.com/Shopify/sarama v1.27.1
 	github.com/deckarep/golang-set v1.8.0
 	github.com/gchaincl/sqlhooks v1.3.0
 	github.com/go-redis/redismock/v9 v9.2.0
@@ -27,7 +27,6 @@ require (
 )
 
 require (
-	github.com/IBM/sarama v1.43.2 // indirect
 	github.com/RedHatInsights/cloudwatch v0.0.0-20210111105023-1df2bdfe3291 // indirect
 	github.com/RedHatInsights/kafka-zerolog v1.0.0 // indirect
 	github.com/archdx/zerolog-sentry v1.8.4 // indirect
@@ -91,10 +90,6 @@ require (
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/h2non/gock.v1 v1.1.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/jcmturner/aescts.v1 v1.0.1 // indirect
-	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
-	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
-	gopkg.in/jcmturner/rpc.v1 v1.1.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

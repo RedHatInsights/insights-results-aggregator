@@ -24,7 +24,7 @@ import (
 	"time"
 
 	tlsutils "github.com/RedHatInsights/insights-operator-utils/tls"
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
 )

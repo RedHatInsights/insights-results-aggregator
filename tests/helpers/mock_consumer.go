@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	mapset "github.com/deckarep/golang-set"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"

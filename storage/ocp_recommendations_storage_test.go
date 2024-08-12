@@ -29,7 +29,7 @@ import (
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	ctypes "github.com/RedHatInsights/insights-results-types"
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"

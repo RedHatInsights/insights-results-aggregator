@@ -20,7 +20,7 @@ package producer
 
 import (
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/rs/zerolog/log"
 )
 
