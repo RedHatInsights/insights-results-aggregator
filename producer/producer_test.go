@@ -21,10 +21,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
-	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/IBM/sarama"
 	"github.com/IBM/sarama/mocks"
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
+	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 

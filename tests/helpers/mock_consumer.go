@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/IBM/sarama"
+	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	mapset "github.com/deckarep/golang-set"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"

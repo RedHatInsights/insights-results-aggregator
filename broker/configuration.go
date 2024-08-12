@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	tlsutils "github.com/RedHatInsights/insights-operator-utils/tls"
 	"github.com/IBM/sarama"
+	tlsutils "github.com/RedHatInsights/insights-operator-utils/tls"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
 )

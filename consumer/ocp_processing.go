@@ -22,9 +22,9 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
+	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/IBM/sarama"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
