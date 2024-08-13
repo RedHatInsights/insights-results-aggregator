@@ -29,14 +29,14 @@ func TestSaramaConfigFromBrokerConfig(t *testing.T) {
 	cfg := broker.Configuration{}
 	saramaConfig, err := broker.SaramaConfigFromBrokerConfig(cfg)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, sarama.V0_10_2_0, saramaConfig.Version)
+	assert.Equal(t, sarama.V3_6_0_0, saramaConfig.Version)
 
 	cfg = broker.Configuration{
 		Timeout: time.Second,
 	}
 	saramaConfig, err = broker.SaramaConfigFromBrokerConfig(cfg)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, sarama.V0_10_2_0, saramaConfig.Version)
+	assert.Equal(t, sarama.V3_6_0_0, saramaConfig.Version)
 	assert.Equal(t, time.Second, saramaConfig.Net.DialTimeout)
 	assert.Equal(t, time.Second, saramaConfig.Net.ReadTimeout)
 	assert.Equal(t, time.Second, saramaConfig.Net.WriteTimeout)
@@ -48,7 +48,7 @@ func TestSaramaConfigFromBrokerConfig(t *testing.T) {
 
 	saramaConfig, err = broker.SaramaConfigFromBrokerConfig(cfg)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, sarama.V0_10_2_0, saramaConfig.Version)
+	assert.Equal(t, sarama.V3_6_0_0, saramaConfig.Version)
 	assert.True(t, saramaConfig.Net.TLS.Enable)
 
 	cfg = broker.Configuration{
@@ -60,7 +60,7 @@ func TestSaramaConfigFromBrokerConfig(t *testing.T) {
 	}
 	saramaConfig, err = broker.SaramaConfigFromBrokerConfig(cfg)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, sarama.V0_10_2_0, saramaConfig.Version)
+	assert.Equal(t, sarama.V3_6_0_0, saramaConfig.Version)
 	assert.True(t, saramaConfig.Net.TLS.Enable)
 	assert.True(t, saramaConfig.Net.SASL.Enable)
 	assert.Equal(t, sarama.SASLMechanism("PLAIN"), saramaConfig.Net.SASL.Mechanism)
@@ -71,7 +71,7 @@ func TestSaramaConfigFromBrokerConfig(t *testing.T) {
 	cfg.SaslMechanism = "SCRAM-SHA-512"
 	saramaConfig, err = broker.SaramaConfigFromBrokerConfig(cfg)
 	helpers.FailOnError(t, err)
-	assert.Equal(t, sarama.V0_10_2_0, saramaConfig.Version)
+	assert.Equal(t, sarama.V3_6_0_0, saramaConfig.Version)
 	assert.True(t, saramaConfig.Net.TLS.Enable)
 	assert.True(t, saramaConfig.Net.SASL.Enable)
 	assert.Equal(t, sarama.SASLMechanism(sarama.SASLTypeSCRAMSHA512), saramaConfig.Net.SASL.Mechanism)
