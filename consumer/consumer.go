@@ -22,7 +22,7 @@ limitations under the License.
 package consumer
 
 import (
-	"github.com/IBM/sarama"
+	"github.com/Shopify/sarama"
 )
 
 // Consumer represents any consumer of insights-rules messages

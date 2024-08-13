@@ -19,8 +19,8 @@ limitations under the License.
 package producer
 
 import (
-	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
+	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
 )
 

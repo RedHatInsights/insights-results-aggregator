@@ -21,7 +21,7 @@ package producer
 import (
 	"strings"
 
-	"github.com/IBM/sarama"
+	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"

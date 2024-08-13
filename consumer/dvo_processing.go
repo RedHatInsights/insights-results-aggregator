@@ -24,8 +24,8 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 	"github.com/rs/zerolog/log"
 
-	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/Shopify/sarama"
 	"github.com/google/uuid"
 )
 

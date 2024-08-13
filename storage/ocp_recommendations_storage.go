@@ -34,7 +34,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM/sarama"
+	"github.com/Shopify/sarama"
 	"github.com/lib/pq" // PostgreSQL database driver
 	"github.com/rs/zerolog/log"
 
