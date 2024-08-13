@@ -16,7 +16,7 @@ limitations under the License.
 
 package consumer
 
-import "github.com/IBM/sarama"
+import "github.com/Shopify/sarama"
 
 // Export for testing
 //

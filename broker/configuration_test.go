@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/IBM/sarama"
+	"github.com/Shopify/sarama"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/tests/helpers"

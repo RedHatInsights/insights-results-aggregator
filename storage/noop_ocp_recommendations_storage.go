@@ -18,7 +18,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/IBM/sarama"
+	"github.com/Shopify/sarama"
 
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
