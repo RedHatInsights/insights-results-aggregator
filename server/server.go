@@ -274,7 +274,7 @@ func (server *HTTPServer) readSingleRule(writer http.ResponseWriter, request *ht
 
 	templateData, err := server.Storage.ReadSingleRuleTemplateData(orgID, clusterName, ruleID, errorKey)
 	if err != nil {
-		log.Error().Err(err).Msg("Unable to read rule report for cluster")
+		log.Warn().Err(err).Msg("Unable to read rule report for cluster")
 		handleServerError(writer, err)
 		return
 	}
