@@ -36,9 +36,12 @@ import (
 // ExpirationDuration set to keys stored into Redis
 const ExpirationDuration = "24h"
 
-// DefaultValue represents value that is stored under some key. We don't care
-// about the value right now so it can be empty.
-const DefaultValue = ""
+const (
+	// DefaultValue represents value that is stored under some key. We don't care
+	// about the value right now so it can be empty.
+	DefaultValue = ""
+	redisSetKey  = "setKey"
+)
 
 // RedisStorage represents a storage which does nothing (for benchmarking without a storage)
 type RedisStorage struct {
@@ -128,20 +131,23 @@ func (storage *RedisStorage) WriteReportForCluster(
 	_ time.Time, gatheredAtTime time.Time, storedAtTime time.Time,
 	requestID types.RequestID,
 ) error {
-	// retrieve context
 	ctx := context.Background()
 
-	// construct key to be stored in Redis
-	key := fmt.Sprintf("organization:%d:cluster:%s:request:%s",
-		int(orgID),
-		string(clusterName),
-		string(requestID))
-	log.Info().Str("key", key).Msg("Storing key into Redis")
+	// Construct the set key for storing request IDs
+	setKey := fmt.Sprintf("organization:%d:cluster:%s:requests", int(orgID), string(clusterName))
+	log.Info().Str(redisSetKey, setKey).Msg("Adding request ID to Redis set")
 
-	// try to store key
-	err := storage.Client.Connection.Set(ctx, key, DefaultValue, storage.Expiration).Err()
+	// Add request ID to the set
+	err := storage.Client.Connection.SAdd(ctx, setKey, string(requestID)).Err()
 	if err != nil {
-		log.Error().Err(err).Str("key", key).Msg("Error storing key into Redis")
+		log.Error().Err(err).Str(redisSetKey, setKey).Msg("Error adding request ID to Redis set")
+		return err
+	}
+
+	// Set expiration on the set
+	err = storage.Client.Connection.Expire(ctx, setKey, storage.Expiration).Err()
+	if err != nil {
+		log.Error().Err(err).Str(redisSetKey, setKey).Msg("Error setting expiration on Redis set")
 		return err
 	}
 
@@ -155,7 +161,7 @@ func (storage *RedisStorage) WriteReportForCluster(
 	}
 
 	// update hash with reports
-	reportsKey := key + ":reports"
+	reportsKey := setKey + ":reports"
 	log.Info().Str("reportsKey", reportsKey).Msg("Storing hash into Redis")
 
 	err = storage.Client.Connection.HSet(ctx, reportsKey, data).Err()

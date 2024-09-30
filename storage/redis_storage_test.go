@@ -173,11 +173,14 @@ func TestRedisWriteReportForCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// it is expected that key will be set with given expiration period
-	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
-	server.ExpectSet(expectedKey, "", client.Expiration).SetVal("OK")
-
 	timestamp := time.Now()
+
+	// Expect SADD operation for adding request ID to the set
+	setKey := fmt.Sprintf("organization:%d:cluster:%s:requests", int(testdata.OrgID), string(testdata.ClusterName))
+	server.ExpectSAdd(setKey, string(testdata.RequestID1)).SetVal(1)
+
+	// Expect EXPIRE operation on the set
+	server.ExpectExpire(setKey, client.Expiration).SetVal(true)
 
 	expectedData := ctypes.SimplifiedReport{
 		OrgID:              int(testdata.OrgID),
@@ -188,9 +191,9 @@ func TestRedisWriteReportForCluster(t *testing.T) {
 		RuleHitsCSV:        "ccx_rules_ocp.external.rules.node_installer_degraded|ek1,test.rule2|ek2,test.rule3|ek3",
 	}
 
-	expectedReportKey := expectedKey + ":reports"
-	server.ExpectHSet(expectedReportKey, expectedData).SetVal(1)
-	server.ExpectExpire(expectedReportKey, client.Expiration).SetVal(true)
+	reportsKey := setKey + ":reports"
+	server.ExpectHSet(reportsKey, expectedData).SetVal(1)
+	server.ExpectExpire(reportsKey, client.Expiration).SetVal(true)
 
 	err = client.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName,
@@ -212,11 +215,14 @@ func TestWriteEmptyReport(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// it is expected that key will be set with given expiration period
-	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
-	server.ExpectSet(expectedKey, "", client.Expiration).SetVal("OK")
-
 	timestamp := time.Now()
+
+	// Expect SADD operation for adding request ID to the set
+	setKey := fmt.Sprintf("organization:%d:cluster:%s:requests", int(testdata.OrgID), string(testdata.ClusterName))
+	server.ExpectSAdd(setKey, string(testdata.RequestID1)).SetVal(1)
+
+	// Expect EXPIRE operation on the set
+	server.ExpectExpire(setKey, client.Expiration).SetVal(true)
 
 	expectedData := ctypes.SimplifiedReport{
 		OrgID:              int(testdata.OrgID),
@@ -227,13 +233,13 @@ func TestWriteEmptyReport(t *testing.T) {
 		RuleHitsCSV:        "",
 	}
 
-	expectedReportKey := expectedKey + ":reports"
-	server.ExpectHSet(expectedReportKey, expectedData).SetVal(1)
-	server.ExpectExpire(expectedReportKey, client.Expiration).SetVal(true)
+	reportsKey := setKey + ":reports"
+	server.ExpectHSet(reportsKey, expectedData).SetVal(1)
+	server.ExpectExpire(reportsKey, client.Expiration).SetVal(true)
 
 	err = client.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName,
-		testdata.Report3Rules, []types.ReportItem{},
+		"", []types.ReportItem{},
 		testdata.LastCheckedAt, testdata.LastCheckedAt, timestamp,
 		testdata.RequestID1)
 
@@ -244,7 +250,7 @@ func TestWriteEmptyReport(t *testing.T) {
 // TestRedisWriteReportForClusterErrorHandling1 checks how the method
 // WriteReportForCluster handles errors
 func TestRedisWriteReportForClusterErrorHandling1(t *testing.T) {
-	errorMessage := "key set error!"
+	errorMessage := "SADD error!"
 
 	client, server := getMockRedis(t)
 
@@ -254,11 +260,11 @@ func TestRedisWriteReportForClusterErrorHandling1(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// it is expected that key will be set with given expiration period
-	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
-	server.ExpectSet(expectedKey, "", client.Expiration).SetErr(errors.New(errorMessage))
-
 	timestamp := time.Now()
+
+	// Expect SADD operation to fail
+	setKey := fmt.Sprintf("organization:%d:cluster:%s:requests", int(testdata.OrgID), string(testdata.ClusterName))
+	server.ExpectSAdd(setKey, string(testdata.RequestID1)).SetErr(errors.New(errorMessage))
 
 	err = client.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName,
@@ -274,7 +280,7 @@ func TestRedisWriteReportForClusterErrorHandling1(t *testing.T) {
 // TestRedisWriteReportForClusterErrorHandling2 checks how the method
 // WriteReportForCluster handles errors
 func TestRedisWriteReportForClusterErrorHandling2(t *testing.T) {
-	errorMessage := "hash set error!"
+	errorMessage := "EXPIRE error!"
 
 	client, server := getMockRedis(t)
 
@@ -284,23 +290,14 @@ func TestRedisWriteReportForClusterErrorHandling2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// it is expected that key will be set with given expiration period
-	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
-	server.ExpectSet(expectedKey, "", client.Expiration).SetVal("OK")
-
 	timestamp := time.Now()
 
-	expectedData := ctypes.SimplifiedReport{
-		OrgID:              int(testdata.OrgID),
-		RequestID:          string(testdata.RequestID1),
-		ClusterID:          string(testdata.ClusterName),
-		ReceivedTimestamp:  testdata.LastCheckedAt,
-		ProcessedTimestamp: timestamp,
-		RuleHitsCSV:        "",
-	}
+	// Expect SADD operation to succeed
+	setKey := fmt.Sprintf("organization:%d:cluster:%s:requests", int(testdata.OrgID), string(testdata.ClusterName))
+	server.ExpectSAdd(setKey, string(testdata.RequestID1)).SetVal(1)
 
-	expectedReportKey := expectedKey + ":reports"
-	server.ExpectHSet(expectedReportKey, expectedData).SetErr(errors.New(errorMessage))
+	// Expect EXPIRE operation to fail
+	server.ExpectExpire(setKey, client.Expiration).SetErr(errors.New(errorMessage))
 
 	err = client.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName,
@@ -316,8 +313,6 @@ func TestRedisWriteReportForClusterErrorHandling2(t *testing.T) {
 // TestRedisWriteReportForClusterErrorHandling3 checks how the method
 // WriteReportForCluster handles errors
 func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
-	errorMessage := "expiration set error!"
-
 	client, server := getMockRedis(t)
 
 	// Redis client needs to be initialized
@@ -326,24 +321,26 @@ func TestRedisWriteReportForClusterErrorHandling3(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// it is expected that key will be set with given expiration period
-	expectedKey := constructExpectedKey(testdata.OrgID, testdata.ClusterName, testdata.RequestID1)
-	server.ExpectSet(expectedKey, "", client.Expiration).SetVal("OK")
-
 	timestamp := time.Now()
 
-	expectedData := ctypes.SimplifiedReport{
-		OrgID:              int(testdata.OrgID),
-		RequestID:          string(testdata.RequestID1),
-		ClusterID:          string(testdata.ClusterName),
-		ReceivedTimestamp:  testdata.LastCheckedAt,
-		ProcessedTimestamp: timestamp,
-		RuleHitsCSV:        "",
-	}
+	// Expect SADD operation to succeed
+	setKey := fmt.Sprintf("organization:%d:cluster:%s:requests", int(testdata.OrgID), string(testdata.ClusterName))
+	server.ExpectSAdd(setKey, string(testdata.RequestID1)).SetVal(1)
 
-	expectedReportKey := expectedKey + ":reports"
-	server.ExpectHSet(expectedReportKey, expectedData).SetVal(1)
-	server.ExpectExpire(expectedReportKey, client.Expiration).SetErr(errors.New(errorMessage))
+	// Expect EXPIRE operation to succeed
+	server.ExpectExpire(setKey, client.Expiration).SetVal(true)
+
+	// Expect HSET operation to fail
+	reportsKey := setKey + ":reports"
+	errorMessage := "HSET error!"
+	server.ExpectHSet(reportsKey,
+		"request_id", string(testdata.RequestID1),
+		"cluster_id", string(testdata.ClusterName),
+		"org_id", int(testdata.OrgID),
+		"received_timestamp", testdata.LastCheckedAt,
+		"processed_timestamp", timestamp,
+		"rule_hits", "",
+	).SetErr(errors.New(errorMessage))
 
 	err = client.WriteReportForCluster(
 		testdata.OrgID, testdata.ClusterName,
