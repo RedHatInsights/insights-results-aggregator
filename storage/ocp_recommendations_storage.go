@@ -582,7 +582,7 @@ func (storage OCPRecommendationsDBStorage) ListOfClustersForOrgSpecificRule(
 func (storage OCPRecommendationsDBStorage) GetOrgIDByClusterID(cluster types.ClusterName) (types.OrgID, error) {
 	row := storage.connection.QueryRow("SELECT org_id FROM report WHERE cluster = $1 ORDER BY org_id;", cluster)
 
-	var orgID uint64
+	var orgID uint32
 	err := row.Scan(&orgID)
 	if err != nil {
 		log.Error().Err(err).Msg("GetOrgIDByClusterID")
