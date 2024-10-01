@@ -127,8 +127,8 @@ func TestProcessSingleDVONamespace_MustProcessEscapedString(t *testing.T) {
 	assert.Equal(t, 1, len(processedWorkload.Recommendations[0].Objects))
 	assert.Equal(t, objectBUID, processedWorkload.Recommendations[0].Objects[0].UID)
 	assert.Equal(t, ira_data.NamespaceBUID, processedWorkload.Namespace.UUID)
-	assert.Equal(t, 1, processedWorkload.Metadata.Objects)
-	assert.Equal(t, 1, processedWorkload.Metadata.Recommendations)
+	assert.Equal(t, uint(1), processedWorkload.Metadata.Objects)
+	assert.Equal(t, uint(1), processedWorkload.Metadata.Recommendations)
 
 	samples, err := json.Marshal(processedWorkload.Recommendations[0].TemplateData["samples"])
 	assert.NoError(t, err)
@@ -161,8 +161,8 @@ func TestProcessSingleDVONamespace_MustProcessCorrectString(t *testing.T) {
 	assert.Equal(t, 1, len(processedWorkload.Recommendations[0].Objects))
 	assert.Equal(t, objectBUID, processedWorkload.Recommendations[0].Objects[0].UID)
 	assert.Equal(t, ira_data.NamespaceBUID, processedWorkload.Namespace.UUID)
-	assert.Equal(t, 1, processedWorkload.Metadata.Objects)
-	assert.Equal(t, 1, processedWorkload.Metadata.Recommendations)
+	assert.Equal(t, uint(1), processedWorkload.Metadata.Objects)
+	assert.Equal(t, uint(1), processedWorkload.Metadata.Recommendations)
 
 	samples, err := json.Marshal(processedWorkload.Recommendations[0].TemplateData["samples"])
 	assert.NoError(t, err)
@@ -212,8 +212,8 @@ func TestProcessSingleDVONamespace_MustFilterZeroObjects_CCXDEV_12589_Reproducer
 	assert.Equal(t, ira_data.NamespaceAUID, processedWorkload.Namespace.UUID)
 
 	// check correct metadata as well
-	assert.Equal(t, 2, processedWorkload.Metadata.Objects)
-	assert.Equal(t, 1, processedWorkload.Metadata.Recommendations)
+	assert.Equal(t, uint(2), processedWorkload.Metadata.Objects)
+	assert.Equal(t, uint(1), processedWorkload.Metadata.Recommendations)
 
 	samples, err := json.Marshal(processedWorkload.Recommendations[0].TemplateData["samples"])
 	assert.NoError(t, err)
