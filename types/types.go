@@ -224,8 +224,8 @@ type Namespace struct {
 
 // DVOMetadata structure contains basic information about workload metadata
 type DVOMetadata struct {
-	Recommendations int         `json:"recommendations"`
-	Objects         int         `json:"objects"`
+	Recommendations uint        `json:"recommendations"`
+	Objects         uint        `json:"objects"`
 	ReportedAt      string      `json:"reported_at"`
 	LastCheckedAt   string      `json:"last_checked_at"`
 	HighestSeverity int         `json:"highest_severity"`

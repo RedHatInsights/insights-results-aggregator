@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	httputils "github.com/RedHatInsights/insights-operator-utils/http"
+	typeutils "github.com/RedHatInsights/insights-operator-utils/types"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/types"
@@ -63,7 +64,13 @@ func readUserID(writer http.ResponseWriter, request *http.Request) (types.UserID
 // readOrgID retrieves org_id from request
 // if it's not possible, it writes http error to the writer and returns false
 func readOrgID(writer http.ResponseWriter, request *http.Request) (types.OrgID, bool) {
-	orgID, err := getRouterPositiveIntParam(request, "org_id")
+	val, err := getRouterPositiveIntParam(request, "org_id")
+	if err != nil {
+		handleServerError(writer, err)
+		return 0, false
+	}
+
+	orgID, err := typeutils.Uint64ToUint32(val)
 	if err != nil {
 		handleServerError(writer, err)
 		return 0, false

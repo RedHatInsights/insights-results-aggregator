@@ -42,6 +42,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/RedHatInsights/insights-operator-utils/logger"
+	typeutils "github.com/RedHatInsights/insights-operator-utils/types"
 	mapset "github.com/deckarep/golang-set"
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/rs/zerolog/log"
@@ -277,7 +278,7 @@ func loadAllowlistFromCSV(r io.Reader) (mapset.Set, error) {
 			continue // skip header
 		}
 
-		orgID, err := strconv.ParseUint(line[0], 10, 64)
+		val, err := strconv.ParseUint(line[0], 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"organization ID on line %v in allowlist CSV is not numerical. Found value: %v",
@@ -285,6 +286,10 @@ func loadAllowlistFromCSV(r io.Reader) (mapset.Set, error) {
 			)
 		}
 
+		orgID, err := typeutils.Uint64ToUint32(val)
+		if err != nil {
+			return nil, err
+		}
 		allowlist.Add(types.OrgID(orgID))
 	}
 

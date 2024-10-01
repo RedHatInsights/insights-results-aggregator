@@ -24,7 +24,7 @@ echo -e "${BLUE}Detecting ineffectual assignments in Go code${NC}"
 if ! [ -x "$(command -v ineffassign)" ]
 then
     echo -e "${BLUE}Installing ineffassign${NC}"
-    GO111MODULE=off go get github.com/gordonklaus/ineffassign
+    GO111MODULE=on go install github.com/gordonklaus/ineffassign@latest
 fi
 
 if ! ineffassign ./...
