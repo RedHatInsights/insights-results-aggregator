@@ -471,7 +471,8 @@ func setMigrationVersion(db storage.Storage, dbConn *sql.DB, versStr string) int
 	if versStrLower := strings.ToLower(versStr); versStrLower == "latest" || versStrLower == "max" {
 		targetVersion = db.GetMaxVersion()
 	} else {
-		vers, err := strconv.Atoi(versStr)
+		vers, err := strconv.ParseUint(versStr, 10, 64)
+
 		if err != nil {
 			log.Error().Err(err).Msg("Unable to parse target migration version")
 			return ExitStatusMigrationError

@@ -127,7 +127,7 @@ func regexGetNthMatch(regexStr string, nMatch uint, str string) (string, error) 
 	}
 
 	matches := regex.FindStringSubmatch(str)
-	if len(matches) < int(nMatch+1) {
+	if uint(len(matches)) < nMatch+1 {
 		return "", errors.New("regexGetNthMatch unable to find match")
 	}
 
