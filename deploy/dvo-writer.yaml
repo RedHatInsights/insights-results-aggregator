@@ -288,7 +288,7 @@ parameters:
   required: true
 - description: Image name
   name: IMAGE
-  value: quay.io/cloudservices/insights-results-aggregator
+  value: quay.io/redhat-services-prod/obsint-processing-tenant/aggregator/aggregator
 - description: Image tag
   name: IMAGE_TAG
   required: true
