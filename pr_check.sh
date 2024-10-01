@@ -32,6 +32,13 @@ COMPONENTS="ccx-data-pipeline ccx-insights-results ccx-redis dvo-writer dvo-extr
 COMPONENTS_W_RESOURCES=""  # component to keep
 CACHE_FROM_LATEST_IMAGE="true"
 DEPLOY_FRONTENDS="false"
+# Set the correct images for pull requests.
+# pr_check in pull requests still uses the old cloudservices images
+EXTRA_DEPLOY_ARGS="\
+    --set-parameter ccx-insights-results/IMAGE=quay.io/cloudservices/insights-results-aggregator \
+    --set-parameter ccx-redis/IMAGE=quay.io/cloudservices/insights-results-aggregator \
+    --set-parameter dvo-writer/IMAGE=quay.io/cloudservices/insights-results-aggregator
+"
 
 export IQE_PLUGINS="ccx"
 # Run all pipeline tests
