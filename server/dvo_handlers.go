@@ -214,8 +214,8 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 			Name: workload.NamespaceName,
 		},
 		Metadata: types.DVOMetadata{
-			Recommendations: int(workload.Recommendations),
-			Objects:         int(workload.Objects),
+			Recommendations: workload.Recommendations,
+			Objects:         workload.Objects,
 			ReportedAt:      string(workload.ReportedAt),
 			LastCheckedAt:   string(workload.LastCheckedAt),
 		},

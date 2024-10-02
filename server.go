@@ -88,7 +88,7 @@ func setDBVersion(s *server.HTTPServer, storageConf storage.Configuration, stora
 		log.Error().Err(err).Msg(msg)
 		serverInstance.InfoParams[key] = msg
 	} else {
-		serverInstance.InfoParams[key] = strconv.Itoa(int(currentVersion))
+		serverInstance.InfoParams[key] = strconv.FormatUint(uint64(currentVersion), 10)
 	}
 }
 

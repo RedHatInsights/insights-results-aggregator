@@ -239,7 +239,7 @@ func TestDBStorageGetOrgIDByClusterID_Error(t *testing.T) {
 		t,
 		err,
 		`sql: Scan error on column index 0, name "org_id": `+
-			`converting driver.Value type string ("not-int") to a uint64: invalid syntax`,
+			`converting driver.Value type string ("not-int") to a uint32: invalid syntax`,
 	)
 }
 
@@ -1285,7 +1285,13 @@ func TestDBStorageReadRecommendationsForClustersMoreClusters(t *testing.T) {
 	res, err := mockStorage.ReadRecommendationsForClusters(clusterList, testdata.OrgID)
 	helpers.FailOnError(t, err)
 
-	assert.Equal(t, expect, res)
+	// Compare the results
+	assert.Equal(t, len(expect), len(res), "Number of rules should match")
+	for ruleID, expectedClusters := range expect {
+		actualClusters, exists := res[ruleID]
+		assert.True(t, exists, "Rule %s should exist in the result", ruleID)
+		assert.ElementsMatch(t, expectedClusters, actualClusters, "Clusters for rule %s should match", ruleID)
+	}
 }
 
 // TestDBStorageReadRecommendationsForClustersNoRecommendations checks that when no recommendations
