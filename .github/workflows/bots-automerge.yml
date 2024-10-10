@@ -1,0 +1,34 @@
+# Set as automatically merge all the pull requests created by dependabot[bot], red-hat-konflux[bot], InsightsDroid.
+name: Bots auto-merge
+on: pull_request
+
+# This section adds write permissions to the secrets.GITHUB_TOKEN. Default is just read
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bot-automerge:
+    runs-on: ubuntu-latest
+    # Check the pull request author.
+    if: |
+      github.event.pull_request.user.login == 'dependabot[bot]' ||
+      github.event.pull_request.user.login == 'red-hat-konflux[bot]' ||
+      github.event.pull_request.user.login == 'InsightsDroid'
+    steps:
+      # NOTE: PR approval does not work on PRs from forks
+      - name: Github Actions bot approves the PR
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{ github.token }}
+      - name: InsightsDroid approves the PR
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{secrets.INSIGHTSDROID_TOKEN}}
+      - name: Enable auto-merge for PR
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{ github.token }}
