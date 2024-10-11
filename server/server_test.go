@@ -1260,6 +1260,26 @@ func TestHTTPServer_RecommendationsListEndpoint_3Recs2Clusters(t *testing.T) {
 	}, &helpers.APIResponse{
 		StatusCode: http.StatusOK,
 		Body:       respBody,
+		BodyChecker: func(t testing.TB, expected, got []byte) {
+			var expectedMap, gotMap map[string]interface{}
+			err := json.Unmarshal(expected, &expectedMap)
+			assert.NoError(t, err)
+			err = json.Unmarshal(got, &gotMap)
+			assert.NoError(t, err)
+
+			assert.Equal(t, expectedMap["status"], gotMap["status"])
+
+			expectedRecs := expectedMap["recommendations"].(map[string]interface{})
+			gotRecs := gotMap["recommendations"].(map[string]interface{})
+
+			assert.Equal(t, len(expectedRecs), len(gotRecs))
+
+			for rule, expectedClusters := range expectedRecs {
+				gotClusters, exists := gotRecs[rule]
+				assert.True(t, exists)
+				assert.ElementsMatch(t, expectedClusters, gotClusters)
+			}
+		},
 	})
 }
 
