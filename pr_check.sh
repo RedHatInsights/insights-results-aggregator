@@ -29,7 +29,7 @@ REF_ENV="insights-production"
 COMPONENT_NAME="ccx-insights-results ccx-redis dvo-writer"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/insights-results-aggregator"
 COMPONENTS="ccx-data-pipeline ccx-insights-results ccx-redis dvo-writer dvo-extractor insights-content-service ccx-smart-proxy ccx-mock-ams" # space-separated list of components to load
-COMPONENTS_W_RESOURCES=""  # component to keep
+COMPONENTS_W_RESOURCES="all"  # component to keep
 CACHE_FROM_LATEST_IMAGE="true"
 DEPLOY_FRONTENDS="false"
 # Set the correct images for pull requests.
