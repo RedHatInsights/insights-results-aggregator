@@ -127,8 +127,6 @@ func Test0004RuleHitsCount(t *testing.T) {
 	assert.Equal(t, ruleHitsInput, ruleHits)
 }
 
-
-
 func TestMigration5_TableRuntimesHeartbeatsAlreadyExists(t *testing.T) {
 	db, closer := helpers.PrepareDBDVO(t)
 	defer closer()
