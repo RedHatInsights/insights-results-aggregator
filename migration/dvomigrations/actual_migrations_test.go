@@ -133,7 +133,10 @@ func TestMigration5_TableRuntimesHeartbeatsAlreadyExists(t *testing.T) {
 
 	dbConn := db.GetConnection()
 
-	_, err := dbConn.Exec(`CREATE TABLE dvo.runtimes_heartbeats(c INTEGER);`)
+	err := migration.SetDBVersion(dbConn, db.GetDBDriverType(), db.GetDBSchema(), 4, dvomigrations.UsableDVOMigrations)
+	helpers.FailOnError(t, err)
+
+	_, err = dbConn.Exec(`CREATE TABLE dvo.runtimes_heartbeats(c INTEGER);`)
 	helpers.FailOnError(t, err)
 
 	err = migration.SetDBVersion(dbConn, db.GetDBDriverType(), db.GetDBSchema(), db.GetMaxVersion(), dvomigrations.UsableDVOMigrations)
@@ -149,7 +152,7 @@ func TestMigration5_TableRuntimesHeartbeatsDoesNotExist(t *testing.T) {
 	err := migration.SetDBVersion(dbConn, db.GetDBDriverType(), db.GetDBSchema(), 5, dvomigrations.UsableDVOMigrations)
 	helpers.FailOnError(t, err)
 
-	_, err = dbConn.Exec(`DROP TABLE runtimes_heartbeats;`)
+	_, err = dbConn.Exec(`DROP TABLE dvo.runtimes_heartbeats;`)
 	helpers.FailOnError(t, err)
 
 	// try to set to the first version
