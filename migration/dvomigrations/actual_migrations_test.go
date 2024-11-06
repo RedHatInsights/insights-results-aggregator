@@ -126,3 +126,36 @@ func Test0004RuleHitsCount(t *testing.T) {
 	helpers.FailOnError(t, err)
 	assert.Equal(t, ruleHitsInput, ruleHits)
 }
+
+func TestMigration5_TableRuntimesHeartbeatsAlreadyExists(t *testing.T) {
+	db, closer := helpers.PrepareDBDVO(t)
+	defer closer()
+
+	dbConn := db.GetConnection()
+
+	err := migration.SetDBVersion(dbConn, db.GetDBDriverType(), db.GetDBSchema(), 4, dvomigrations.UsableDVOMigrations)
+	helpers.FailOnError(t, err)
+
+	_, err = dbConn.Exec(`CREATE TABLE dvo.runtimes_heartbeats(c INTEGER);`)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(dbConn, db.GetDBDriverType(), db.GetDBSchema(), db.GetMaxVersion(), dvomigrations.UsableDVOMigrations)
+	assert.EqualError(t, err, "table runtimes_heartbeats already exists")
+}
+
+func TestMigration5_TableRuntimesHeartbeatsDoesNotExist(t *testing.T) {
+	db, closer := helpers.PrepareDBDVO(t)
+	defer closer()
+
+	dbConn := db.GetConnection()
+
+	err := migration.SetDBVersion(dbConn, db.GetDBDriverType(), db.GetDBSchema(), 5, dvomigrations.UsableDVOMigrations)
+	helpers.FailOnError(t, err)
+
+	_, err = dbConn.Exec(`DROP TABLE dvo.runtimes_heartbeats;`)
+	helpers.FailOnError(t, err)
+
+	// try to set to the first version
+	err = migration.SetDBVersion(dbConn, db.GetDBDriverType(), db.GetDBSchema(), 4, dvomigrations.UsableDVOMigrations)
+	assert.EqualError(t, err, "no such table: runtimes_heartbeats")
+}
