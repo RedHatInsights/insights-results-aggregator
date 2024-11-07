@@ -639,7 +639,10 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 
 	// filter report
 	var reportData []types.DVOWorkload
-	json.Unmarshal([]byte(dvoReport.Report), &reportData)
+	err = json.Unmarshal([]byte(dvoReport.Report), &reportData)
+	if err != nil {
+		return dvoReport, err
+	}
 
 	i := 0 // output index
 	for _, x := range reportData {

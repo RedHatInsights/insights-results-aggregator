@@ -829,8 +829,10 @@ func TestReadWorkloadsForClusterAndNamespace_HearbeatsFiltering(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// write heartbeats
-	mockStorage.WriteHeartbeat("UID-0099", time.Now().UTC())
-	mockStorage.WriteHeartbeat("UID-0100", time.Now().UTC().Add(-1*time.Hour).UTC())
+	err = mockStorage.WriteHeartbeat("UID-0099", time.Now().UTC())
+	helpers.FailOnError(t, err)
+	err = mockStorage.WriteHeartbeat("UID-0100", time.Now().UTC().Add(-1*time.Hour).UTC())
+	helpers.FailOnError(t, err)
 
 	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, "NAMESPACE-UID-A")
 	helpers.FailOnError(t, err)
