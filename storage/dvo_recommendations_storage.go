@@ -557,6 +557,8 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(
 }
 
 // ReadWorkloadsForClusterAndNamespace returns a single result from the dvo.dvo_report table
+//
+//gocyclo:ignore
 func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 	orgID types.OrgID,
 	clusterID types.ClusterName,
