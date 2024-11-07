@@ -17,6 +17,7 @@ limitations under the License.
 package storage_test
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -806,4 +807,34 @@ func TestDVOStorageReadWorkloadsForNamespace_MissingData(t *testing.T) {
 		_, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, nonExistingCluster, ira_data.NamespaceAUID)
 		assert.Equal(t, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", testdata.OrgID, nonExistingCluster, ira_data.NamespaceAUID)}, err)
 	})
+}
+
+//go:embed report_for_heartbeats.json
+var heartbeatsFilteringReport string
+
+func TestReadWorkloadsForClusterAndNamespace_HearbeatsFiltering(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(heartbeatsFilteringReport),
+		ira_data.ValidDVORecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// write heartbeats
+	mockStorage.WriteHeartbeat("UID-0099", time.Now().UTC())
+	mockStorage.WriteHeartbeat("UID-0100", time.Now().UTC().Add(-1*time.Hour).UTC())
+
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, "NAMESPACE-UID-A")
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, uint(1), report.Objects)
+
 }

@@ -56,6 +56,7 @@ type DVORecommendationsStorage interface {
 		string,
 	) (types.DVOReport, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
+	WriteHeartbeat(string, time.Time) error
 }
 
 const (
@@ -597,11 +598,101 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 
 	log.Debug().Int(orgIDStr, int(orgID)).Msgf("ReadWorkloadsForClusterAndNamespace took %v", time.Since(tStart))
 
-	return dvoReport, err
+	if err != nil {
+		return dvoReport, err
+	}
+
+	query = `
+		SELECT instance_id
+		FROM dvo.runtimes_heartbeats
+		WHERE last_checked_at > (now() - interval '30 seconds')
+	`
+
+	rows, err := storage.connection.Query(query)
+	if err != nil {
+		return dvoReport, err
+	}
+
+	defer closeRows(rows)
+
+	aliveInstances := map[string]bool{}
+
+	for rows.Next() {
+		var (
+			instanceID string
+		)
+		err = rows.Scan(
+			&instanceID,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("ReadWorkloadsForOrganization getting alive instances")
+		}
+
+		aliveInstances[instanceID] = true
+	}
+
+	// do not do any filtering if there is no data.
+	// This is a dirty trick for previosly existing unit tests
+	if len(aliveInstances) == 0 {
+		return dvoReport, nil
+	}
+
+	// filter report
+	var reportData []types.DVOWorkload
+	json.Unmarshal([]byte(dvoReport.Report), &reportData)
+
+	i := 0 // output index
+	for _, x := range reportData {
+		if _, ok := aliveInstances[x.UID]; ok {
+			// copy and increment index
+			reportData[i] = x
+			i++
+		}
+	}
+	reportData = reportData[:i]
+
+	bReport, err := json.Marshal(reportData)
+	if err != nil {
+		return dvoReport, err
+	}
+	dvoReport.Report = string(bReport)
+	dvoReport.Objects = uint(i)
+
+	return dvoReport, nil
+
 }
 
 // DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
 func (storage DVORecommendationsDBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
 	_, err := storage.connection.Exec("DELETE FROM dvo.dvo_report WHERE org_id = $1;", orgID)
+	return err
+}
+
+// WriteHeartbeat ...
+func (storage DVORecommendationsDBStorage) WriteHeartbeat(
+	instanceID string,
+	lastCheckedTime time.Time,
+) error {
+
+	// Begin a new transaction.
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = func(tx *sql.Tx) error {
+		// Check if there is a more recent report for the cluster already in the database.
+		_, err := tx.Exec(
+			"INSERT INTO dvo.runtimes_heartbeats VALUES ($1, $2) ON DUPLICATE KEY UPDATE last_checked_at = VALUES(last_checked_at);",
+			instanceID, lastCheckedTime)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}(tx)
+
+	finishTransaction(tx, err)
+
 	return err
 }
