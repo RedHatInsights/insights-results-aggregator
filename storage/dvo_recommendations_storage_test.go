@@ -838,5 +838,4 @@ func TestReadWorkloadsForClusterAndNamespace_HearbeatsFiltering(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	assert.Equal(t, uint(1), report.Objects)
-
 }
