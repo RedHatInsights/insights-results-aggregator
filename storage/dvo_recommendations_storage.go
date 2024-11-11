@@ -640,7 +640,7 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 	}
 
 	processedReport := dvoReport.Report
-	processedReport = strings.ReplaceAll(processedReport, "\n", "")
+	processedReport = strings.ReplaceAll(processedReport, "\\n", "")
 	processedReport = strings.ReplaceAll(processedReport, "\\", "")
 	processedReport = processedReport[1 : len(processedReport)-1]
 
