@@ -639,11 +639,14 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 		return dvoReport, nil
 	}
 
-	fmt.Println(dvoReport.Report)
+	processedReport := dvoReport.Report
+	processedReport = strings.ReplaceAll(processedReport, "\n", "")
+	processedReport = strings.ReplaceAll(processedReport, "\\", "")
+	processedReport = processedReport[1 : len(processedReport)-1]
 
 	// filter report
-	var reportData types.DVOMetrics  // here we will miss part of the original report, would it matter?
-	err = json.Unmarshal([]byte(dvoReport.Report), &reportData)
+	var reportData types.DVOMetrics // here we will miss part of the original report, would it matter?
+	err = json.Unmarshal([]byte(processedReport), &reportData)
 	if err != nil {
 		return dvoReport, err
 	}
@@ -663,8 +666,6 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 		}
 		rec.Workloads = workloads[:i]
 	}
-
-	
 
 	bReport, err := json.Marshal(reportData)
 	if err != nil {
@@ -698,7 +699,7 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeat(
 	err = func(tx *sql.Tx) error {
 		// Check if there is a more recent report for the cluster already in the database.
 		_, err := tx.Exec(
-			"INSERT INTO dvo.runtimes_heartbeats VALUES ($1, $2);",  // ON DUPLICATE KEY UPDATE last_checked_at = VALUES(last_checked_at)
+			"INSERT INTO dvo.runtimes_heartbeats VALUES ($1, $2);", // ON DUPLICATE KEY UPDATE last_checked_at = VALUES(last_checked_at)
 			instanceID, types.Timestamp(lastCheckedTime.UTC().Format(time.RFC3339)))
 		if err != nil {
 			return err
