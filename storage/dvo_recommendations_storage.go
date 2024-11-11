@@ -557,8 +557,6 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForOrganization(
 }
 
 // ReadWorkloadsForClusterAndNamespace returns a single result from the dvo.dvo_report table
-//
-//gocyclo:ignore
 func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 	orgID types.OrgID,
 	clusterID types.ClusterName,
@@ -604,7 +602,17 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 		return dvoReport, err
 	}
 
-	query = `
+	return storage.filterReportWithHeartbeats(dvoReport)
+}
+
+// filter a DVO report based on the data in dvo.runtimes_heartbeats
+// It the last timestampt there is  longer than 30 secs (value for the demo)
+// it gets removed from the report.
+func (storage DVORecommendationsDBStorage)filterReportWithHeartbeats(dvoReport types.DVOReport) (
+	workload types.DVOReport,
+	err error,
+) {
+	query := `
 		SELECT instance_id
 		FROM dvo.runtimes_heartbeats
 		WHERE last_checked_at > (now() - interval '30 seconds')
@@ -634,7 +642,7 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 	}
 
 	// do not do any filtering if there is no data.
-	// This is a dirty trick for previosly existing unit tests
+	// This is a hack for previosly existing unit tests
 	if len(aliveInstances) == 0 {
 		return dvoReport, nil
 	}
@@ -645,7 +653,7 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 	processedReport = processedReport[1 : len(processedReport)-1]
 
 	// filter report
-	var reportData types.DVOMetrics // here we will miss part of the original report, would it matter?
+	var reportData types.DVOMetrics // here we will miss part of the original report, but a part that is not used anywhere
 	err = json.Unmarshal([]byte(processedReport), &reportData)
 	if err != nil {
 		return dvoReport, err
@@ -697,7 +705,7 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeat(
 	err = func(tx *sql.Tx) error {
 		// Check if there is a more recent report for the cluster already in the database.
 		_, err := tx.Exec(
-			"INSERT INTO dvo.runtimes_heartbeats VALUES ($1, $2);", // ON DUPLICATE KEY UPDATE last_checked_at = VALUES(last_checked_at)
+			"INSERT INTO dvo.runtimes_heartbeats VALUES ($1, $2);",
 			instanceID, types.Timestamp(lastCheckedTime.UTC().Format(time.RFC3339)))
 		if err != nil {
 			return err
