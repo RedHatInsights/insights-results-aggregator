@@ -608,7 +608,7 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 // filter a DVO report based on the data in dvo.runtimes_heartbeats
 // It the last timestampt there is  longer than 30 secs (value for the demo)
 // it gets removed from the report.
-func (storage DVORecommendationsDBStorage)filterReportWithHeartbeats(dvoReport types.DVOReport) (
+func (storage DVORecommendationsDBStorage) filterReportWithHeartbeats(dvoReport types.DVOReport) (
 	workload types.DVOReport,
 	err error,
 ) {
