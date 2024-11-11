@@ -689,7 +689,6 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeat(
 	instanceID string,
 	lastCheckedTime time.Time,
 ) error {
-
 	// Begin a new transaction.
 	tx, err := storage.connection.Begin()
 	if err != nil {
