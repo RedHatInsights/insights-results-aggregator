@@ -639,29 +639,39 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 		return dvoReport, nil
 	}
 
+	fmt.Println(dvoReport.Report)
+
 	// filter report
-	var reportData []types.DVOWorkload
+	var reportData types.DVOMetrics  // here we will miss part of the original report, would it matter?
 	err = json.Unmarshal([]byte(dvoReport.Report), &reportData)
 	if err != nil {
 		return dvoReport, err
 	}
 
-	i := 0 // output index
-	for _, x := range reportData {
-		if _, ok := aliveInstances[x.UID]; ok {
-			// copy and increment index
-			reportData[i] = x
-			i++
+	seenObjects := map[string]bool{}
+
+	for _, rec := range reportData.WorkloadRecommendations {
+		workloads := rec.Workloads
+		i := 0 // output index
+		for _, x := range workloads {
+			if _, ok := aliveInstances[x.UID]; ok {
+				// copy and increment index
+				workloads[i] = x
+				i++
+				seenObjects[x.UID] = true
+			}
 		}
+		rec.Workloads = workloads[:i]
 	}
-	reportData = reportData[:i]
+
+	
 
 	bReport, err := json.Marshal(reportData)
 	if err != nil {
 		return dvoReport, err
 	}
 	dvoReport.Report = string(bReport)
-	dvoReport.Objects = uint(i)
+	dvoReport.Objects = uint(len(seenObjects)) // #nosec G115
 
 	return dvoReport, nil
 
@@ -688,8 +698,8 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeat(
 	err = func(tx *sql.Tx) error {
 		// Check if there is a more recent report for the cluster already in the database.
 		_, err := tx.Exec(
-			"INSERT INTO dvo.runtimes_heartbeats VALUES ($1, $2) ON DUPLICATE KEY UPDATE last_checked_at = VALUES(last_checked_at);",
-			instanceID, lastCheckedTime)
+			"INSERT INTO dvo.runtimes_heartbeats VALUES ($1, $2);",  // ON DUPLICATE KEY UPDATE last_checked_at = VALUES(last_checked_at)
+			instanceID, types.Timestamp(lastCheckedTime.UTC().Format(time.RFC3339)))
 		if err != nil {
 			return err
 		}
