@@ -675,7 +675,6 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 	dvoReport.Objects = uint(len(seenObjects)) // #nosec G115
 
 	return dvoReport, nil
-
 }
 
 // DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
