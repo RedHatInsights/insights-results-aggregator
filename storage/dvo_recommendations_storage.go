@@ -676,7 +676,7 @@ func (storage DVORecommendationsDBStorage) filterReportWithHeartbeats(dvoReport 
 	return dvoReport, nil
 }
 
-// FilterWorkloads: use aliveInstances to filter the workloads and add seen objects to a map
+// FilterWorkloads use aliveInstances to filter the workloads and add seen objects to a map
 func FilterWorkloads(workloads []types.DVOWorkload, aliveInstances map[string]bool, seenObjects map[string]bool) []types.DVOWorkload {
 	i := 0 // output index
 	for _, x := range workloads {
