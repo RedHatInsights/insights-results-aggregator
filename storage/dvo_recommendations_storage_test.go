@@ -850,7 +850,6 @@ func NewDVOWorkload(uid string) types.DVOWorkload {
 }
 
 func TestFilterWorkloads(t *testing.T) {
-
 	aliveInstances := map[string]bool{"x": true, "y": true, "z": true}
 
 	testCases := []struct {
