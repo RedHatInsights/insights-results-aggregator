@@ -895,5 +895,4 @@ func TestFilterWorkloads(t *testing.T) {
 			assert.Equal(t, tt.seen, gotUIDs)
 		})
 	}
-
 }
