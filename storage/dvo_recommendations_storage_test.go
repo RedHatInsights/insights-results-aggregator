@@ -843,55 +843,53 @@ func TestReadWorkloadsForClusterAndNamespace_HearbeatsFiltering(t *testing.T) {
 	assert.NotContains(t, report.Report, "UID-0100")
 }
 
-
 func NewDVOWorkload(uid string) types.DVOWorkload {
 	return types.DVOWorkload{
 		UID: uid,
 	}
 }
 
-
 func TestFilterWorkloads(t *testing.T) {
 
 	aliveInstances := map[string]bool{"x": true, "y": true, "z": true}
 
-	testCases := []struct{
+	testCases := []struct {
 		workloads []types.DVOWorkload
-		seen []string
+		seen      []string
 	}{
 		{
 			workloads: []types.DVOWorkload{NewDVOWorkload("x")},
-			seen: []string{"x"},
+			seen:      []string{"x"},
 		},
 		{
 			workloads: []types.DVOWorkload{NewDVOWorkload("a")},
-			seen: []string{},
+			seen:      []string{},
 		},
 		{
 			workloads: []types.DVOWorkload{NewDVOWorkload("a"), NewDVOWorkload("x")},
-			seen: []string{"x"},
+			seen:      []string{"x"},
 		},
 		{
 			workloads: []types.DVOWorkload{NewDVOWorkload("a"), NewDVOWorkload("x"), NewDVOWorkload("b"), NewDVOWorkload("y")},
-			seen: []string{"x", "y"},
+			seen:      []string{"x", "y"},
 		},
 	}
 
 	for i, tt := range testCases {
-		t.Run("case-" + fmt.Sprint(i), func(t *testing.T) {
+		t.Run("case-"+fmt.Sprint(i), func(t *testing.T) {
 			gotSeen := map[string]bool{}
 			expectedSeen := map[string]bool{}
 			for _, v := range tt.seen {
 				expectedSeen[v] = true
 			}
 			got := storage.FilterWorkloads(tt.workloads, aliveInstances, gotSeen)
-			
+
 			if reflect.DeepEqual(expectedSeen, gotSeen) {
 				t.Errorf("Seen objects error got = %v, want %v", gotSeen, expectedSeen)
 			}
 			assert.Len(t, got, len(tt.seen))
 			gotUIDs := []string{}
-			for _, workload := range got{
+			for _, workload := range got {
 				gotUIDs = append(gotUIDs, workload.UID)
 			}
 			assert.Equal(t, tt.seen, gotUIDs)
