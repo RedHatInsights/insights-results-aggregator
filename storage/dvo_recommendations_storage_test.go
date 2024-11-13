@@ -20,7 +20,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -883,9 +882,7 @@ func TestFilterWorkloads(t *testing.T) {
 			}
 			got := storage.FilterWorkloads(tt.workloads, aliveInstances, gotSeen)
 
-			if reflect.DeepEqual(expectedSeen, gotSeen) {
-				t.Errorf("Seen objects error got = %v, want %v", gotSeen, expectedSeen)
-			}
+			assert.Equal(t, expectedSeen, gotSeen)
 			assert.Len(t, got, len(tt.seen))
 			gotUIDs := []string{}
 			for _, workload := range got {
