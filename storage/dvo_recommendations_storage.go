@@ -661,28 +661,33 @@ func (storage DVORecommendationsDBStorage) filterReportWithHeartbeats(dvoReport 
 
 	seenObjects := map[string]bool{}
 
-	for _, rec := range reportData.WorkloadRecommendations {
-		workloads := rec.Workloads
-		i := 0 // output index
-		for _, x := range workloads {
-			if _, ok := aliveInstances[x.UID]; ok {
-				// copy and increment index
-				workloads[i] = x
-				i++
-				seenObjects[x.UID] = true
-			}
-		}
-		rec.Workloads = workloads[:i]
+	for i, rec := range reportData.WorkloadRecommendations {
+		reportData.WorkloadRecommendations[i].Workloads = filterWorkloads(rec.Workloads, aliveInstances, seenObjects)
 	}
 
 	bReport, err := json.Marshal(reportData)
 	if err != nil {
 		return dvoReport, err
 	}
+	fmt.Print(string(bReport))
 	dvoReport.Report = string(bReport)
 	dvoReport.Objects = uint(len(seenObjects)) // #nosec G115
 
 	return dvoReport, nil
+}
+
+// filterWorkloads: use aliveInstances to filter the workloads and add seen objects to a map
+func filterWorkloads(workloads []types.DVOWorkload, aliveInstances map[string]bool, seenObjects map[string]bool) []types.DVOWorkload {
+	i := 0 // output index
+	for _, x := range workloads {
+		if _, ok := aliveInstances[x.UID]; ok {
+			// copy and increment index
+			workloads[i] = x
+			i++
+			seenObjects[x.UID] = true
+		}
+	}
+	return workloads[:i]
 }
 
 // DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
