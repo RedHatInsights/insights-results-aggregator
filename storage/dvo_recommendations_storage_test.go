@@ -884,7 +884,7 @@ func TestFilterWorkloads(t *testing.T) {
 			for _, v := range tt.seen {
 				expectedSeen[v] = true
 			}
-			got := filterWorkloads(tt.workloads, aliveInstances, gotSeen)
+			got := storage.FilterWorkloads(tt.workloads, aliveInstances, gotSeen)
 			
 			if reflect.DeepEqual(expectedSeen, gotSeen) {
 				t.Errorf("Seen objects error got = %v, want %v", gotSeen, expectedSeen)
@@ -892,7 +892,7 @@ func TestFilterWorkloads(t *testing.T) {
 			assert.Len(t, got, len(tt.seen))
 			gotUIDs := []string{}
 			for _, workload := range got{
-				append(gotUIDs, workload.UID)
+				gotUIDs = append(gotUIDs, workload.UID)
 			}
 			assert.Equal(t, tt.seen, gotUIDs)
 		})
