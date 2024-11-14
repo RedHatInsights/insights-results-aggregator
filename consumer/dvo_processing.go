@@ -128,6 +128,10 @@ func (DVORulesProcessor) storeInDB(consumer *KafkaConsumer, msg *sarama.Consumer
 	}
 	tStored := time.Now()
 	logDuration(tTimeCheck, tStored, msg.Offset, "db_store_report")
+	err = consumer.writeHeartbeats(msg, message, lastCheckedTime)
+	if err != nil {
+		return message.RequestID, message, err
+	}
 	return message.RequestID, message, nil
 }
 
@@ -160,6 +164,36 @@ func (consumer *KafkaConsumer) writeDVOReport(
 		return nil
 	}
 	err := errors.New("report could not be stored")
+	logMessageError(consumer, msg, &message, unexpectedStorageType, err)
+	return err
+}
+
+
+func (consumer *KafkaConsumer) writeHeartbeats(
+	msg *sarama.ConsumerMessage, message incomingMessage, lastCheckedTime time.Time,
+) error {
+	if dvoStorage, ok := consumer.Storage.(storage.DVORecommendationsStorage); ok {
+
+		var uids []string
+
+		for _, w := range message.ParsedWorkloads {
+			for _, workload := range w.Workloads {
+				uids = append(uids,workload.UID)
+			}
+		}
+
+		err := dvoStorage.WriteHeartbeats(
+			uids,
+			lastCheckedTime,
+		)
+		if err != nil {
+			logMessageError(consumer, msg, &message, "Error writing heartbeats to database", err)
+			return err
+		}
+		logMessageDebug(consumer, msg, &message, "Stored heartbeats")
+		return nil
+	}
+	err := errors.New("heartbeats could not be stored")
 	logMessageError(consumer, msg, &message, unexpectedStorageType, err)
 	return err
 }

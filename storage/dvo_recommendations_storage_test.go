@@ -892,3 +892,83 @@ func TestFilterWorkloads(t *testing.T) {
 		})
 	}
 }
+
+
+func TestWriteHeartbeat(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+
+	err := mockStorage.WriteHeartbeat(
+		"x", now,
+	)
+	helpers.FailOnError(t, err)
+
+	connection := storage.GetConnectionDVO(mockStorage.(*storage.DVORecommendationsDBStorage))
+
+	query := `
+		SELECT *
+		FROM dvo.runtimes_heartbeats
+	`
+
+	rows, err := connection.Query(query)
+	helpers.FailOnError(t, err)
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			instanceID string
+			timestamp time.Time
+		)
+		err = rows.Scan(
+			&instanceID, &timestamp,
+		)
+		helpers.FailOnError(t, err)
+
+		assert.Equal(t, now.UTC().Format(time.RFC3339), timestamp.UTC().Format(time.RFC3339))
+		assert.Equal(t, "x", instanceID)
+	}
+}
+
+
+func TestWriteHeartbeats(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	data := []string{"x", "y", "z"}
+
+	err := mockStorage.WriteHeartbeats(
+		data, now,
+	)
+	helpers.FailOnError(t, err)
+
+	connection := storage.GetConnectionDVO(mockStorage.(*storage.DVORecommendationsDBStorage))
+
+	query := `
+		SELECT *
+		FROM dvo.runtimes_heartbeats
+	`
+
+	rows, err := connection.Query(query)
+	helpers.FailOnError(t, err)
+
+	defer rows.Close()
+
+	var instances []string
+
+	for rows.Next() {
+		var (
+			instanceID string
+			timestamp time.Time
+		)
+		err = rows.Scan(
+			&instanceID, &timestamp,
+		)
+		helpers.FailOnError(t, err)
+
+		assert.Equal(t, now.UTC().Format(time.RFC3339), timestamp.UTC().Format(time.RFC3339))
+		instances = append(instances, instanceID)
+	}
+	assert.Equal(t, data, instances)
+}
