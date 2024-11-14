@@ -893,11 +893,9 @@ func TestFilterWorkloads(t *testing.T) {
 	}
 }
 
-
 func TestWriteHeartbeat(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 	defer closer()
-
 
 	err := mockStorage.WriteHeartbeat(
 		"x", now,
@@ -919,7 +917,7 @@ func TestWriteHeartbeat(t *testing.T) {
 	for rows.Next() {
 		var (
 			instanceID string
-			timestamp time.Time
+			timestamp  time.Time
 		)
 		err = rows.Scan(
 			&instanceID, &timestamp,
@@ -930,7 +928,6 @@ func TestWriteHeartbeat(t *testing.T) {
 		assert.Equal(t, "x", instanceID)
 	}
 }
-
 
 func TestWriteHeartbeats(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
@@ -960,7 +957,7 @@ func TestWriteHeartbeats(t *testing.T) {
 	for rows.Next() {
 		var (
 			instanceID string
-			timestamp time.Time
+			timestamp  time.Time
 		)
 		err = rows.Scan(
 			&instanceID, &timestamp,

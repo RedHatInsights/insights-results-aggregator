@@ -168,7 +168,6 @@ func (consumer *KafkaConsumer) writeDVOReport(
 	return err
 }
 
-
 func (consumer *KafkaConsumer) writeHeartbeats(
 	msg *sarama.ConsumerMessage, message incomingMessage, lastCheckedTime time.Time,
 ) error {
@@ -178,7 +177,7 @@ func (consumer *KafkaConsumer) writeHeartbeats(
 
 		for _, w := range message.ParsedWorkloads {
 			for _, workload := range w.Workloads {
-				uids = append(uids,workload.UID)
+				uids = append(uids, workload.UID)
 			}
 		}
 

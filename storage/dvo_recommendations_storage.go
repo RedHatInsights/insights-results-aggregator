@@ -725,7 +725,6 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeat(
 	return err
 }
 
-
 // WriteHeartbeat insert multiple heartbeats
 func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 	instanceIDs []string,
@@ -734,29 +733,26 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 
 	timestamp := types.Timestamp(lastCheckedTime.UTC().Format(time.RFC3339))
 
-
 	sqlStr := "INSERT INTO dvo.runtimes_heartbeats VALUES "
 	vals := []interface{}{}
 
 	itemIndex := 1
 
 	for _, instanceID := range instanceIDs {
-		sqlStr += "($"+fmt.Sprint(itemIndex)+", $"+fmt.Sprint(itemIndex+1)+"),"
+		sqlStr += "($" + fmt.Sprint(itemIndex) + ", $" + fmt.Sprint(itemIndex+1) + "),"
 		vals = append(vals, instanceID, timestamp)
 		itemIndex += 2
 	}
 	//trim the last ,
-	sqlStr = sqlStr[0:len(sqlStr)-1]
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
 
 	sqlStr += ";"
-
 
 	// Begin a new transaction.
 	tx, err := storage.connection.Begin()
 	if err != nil {
 		return err
 	}
-
 
 	err = func(tx *sql.Tx) error {
 		// Check if there is a more recent report for the cluster already in the database.
