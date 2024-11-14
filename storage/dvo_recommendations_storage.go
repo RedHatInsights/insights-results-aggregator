@@ -730,7 +730,6 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 	instanceIDs []string,
 	lastCheckedTime time.Time,
 ) error {
-
 	timestamp := types.Timestamp(lastCheckedTime.UTC().Format(time.RFC3339))
 
 	sqlStr := "INSERT INTO dvo.runtimes_heartbeats VALUES "

@@ -172,7 +172,6 @@ func (consumer *KafkaConsumer) writeHeartbeats(
 	msg *sarama.ConsumerMessage, message incomingMessage, lastCheckedTime time.Time,
 ) error {
 	if dvoStorage, ok := consumer.Storage.(storage.DVORecommendationsStorage); ok {
-
 		var uids []string
 
 		for _, w := range message.ParsedWorkloads {
