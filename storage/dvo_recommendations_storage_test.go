@@ -912,7 +912,7 @@ func TestWriteHeartbeat(t *testing.T) {
 	rows, err := connection.Query(query)
 	helpers.FailOnError(t, err)
 
-	defer func(){ _ = rows.Close() }()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var (
@@ -950,7 +950,7 @@ func TestWriteHeartbeats(t *testing.T) {
 	rows, err := connection.Query(query)
 	helpers.FailOnError(t, err)
 
-	defer func(){ _ = rows.Close() }()
+	defer func() { _ = rows.Close() }()
 
 	var instances []string
 

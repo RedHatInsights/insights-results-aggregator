@@ -725,7 +725,7 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeat(
 	return err
 }
 
-// WriteHeartbeat insert multiple heartbeats
+// WriteHeartbeats insert multiple heartbeats
 func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 	instanceIDs []string,
 	lastCheckedTime time.Time,

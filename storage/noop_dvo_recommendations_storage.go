@@ -105,7 +105,7 @@ func (*NoopDVOStorage) WriteHeartbeat(
 	return nil
 }
 
-// WriteHeartbeas noop
+// WriteHeartbeats noop
 func (*NoopDVOStorage) WriteHeartbeats(
 	[]string,
 	time.Time,
