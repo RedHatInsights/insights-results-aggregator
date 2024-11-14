@@ -17,6 +17,7 @@ limitations under the License.
 package storage_test
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -806,4 +807,88 @@ func TestDVOStorageReadWorkloadsForNamespace_MissingData(t *testing.T) {
 		_, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, nonExistingCluster, ira_data.NamespaceAUID)
 		assert.Equal(t, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", testdata.OrgID, nonExistingCluster, ira_data.NamespaceAUID)}, err)
 	})
+}
+
+//go:embed report_for_heartbeats.json
+var heartbeatsFilteringReport string
+
+func TestReadWorkloadsForClusterAndNamespace_HearbeatsFiltering(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID,
+		testdata.ClusterName,
+		types.ClusterReport(heartbeatsFilteringReport),
+		ira_data.ValidDVORecommendation,
+		now,
+		now,
+		now,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// write heartbeats
+	err = mockStorage.WriteHeartbeat("UID-0099", time.Now().UTC())
+	helpers.FailOnError(t, err)
+	err = mockStorage.WriteHeartbeat("UID-0100", time.Now().UTC().Add(-1*time.Hour).UTC())
+	helpers.FailOnError(t, err)
+
+	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, "NAMESPACE-UID-A")
+	helpers.FailOnError(t, err)
+
+	assert.Equal(t, uint(1), report.Objects)
+	assert.Contains(t, report.Report, "UID-0099")
+	assert.NotContains(t, report.Report, "UID-0100")
+}
+
+func NewDVOWorkload(uid string) types.DVOWorkload {
+	return types.DVOWorkload{
+		UID: uid,
+	}
+}
+
+func TestFilterWorkloads(t *testing.T) {
+	aliveInstances := map[string]bool{"x": true, "y": true, "z": true}
+
+	testCases := []struct {
+		workloads []types.DVOWorkload
+		seen      []string
+	}{
+		{
+			workloads: []types.DVOWorkload{NewDVOWorkload("x")},
+			seen:      []string{"x"},
+		},
+		{
+			workloads: []types.DVOWorkload{NewDVOWorkload("a")},
+			seen:      []string{},
+		},
+		{
+			workloads: []types.DVOWorkload{NewDVOWorkload("a"), NewDVOWorkload("x")},
+			seen:      []string{"x"},
+		},
+		{
+			workloads: []types.DVOWorkload{NewDVOWorkload("a"), NewDVOWorkload("x"), NewDVOWorkload("b"), NewDVOWorkload("y")},
+			seen:      []string{"x", "y"},
+		},
+	}
+
+	for i, tt := range testCases {
+		t.Run("case-"+fmt.Sprint(i), func(t *testing.T) {
+			gotSeen := map[string]bool{}
+			expectedSeen := map[string]bool{}
+			for _, v := range tt.seen {
+				expectedSeen[v] = true
+			}
+			got := storage.FilterWorkloads(tt.workloads, aliveInstances, gotSeen)
+
+			assert.Equal(t, expectedSeen, gotSeen)
+			assert.Len(t, got, len(tt.seen))
+			gotUIDs := []string{}
+			for _, workload := range got {
+				gotUIDs = append(gotUIDs, workload.UID)
+			}
+			assert.Equal(t, tt.seen, gotUIDs)
+		})
+	}
 }

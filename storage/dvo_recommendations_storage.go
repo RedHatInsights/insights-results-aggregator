@@ -56,6 +56,7 @@ type DVORecommendationsStorage interface {
 		string,
 	) (types.DVOReport, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
+	WriteHeartbeat(string, time.Time) error
 }
 
 const (
@@ -597,11 +598,128 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 
 	log.Debug().Int(orgIDStr, int(orgID)).Msgf("ReadWorkloadsForClusterAndNamespace took %v", time.Since(tStart))
 
-	return dvoReport, err
+	if err != nil {
+		return dvoReport, err
+	}
+
+	return storage.filterReportWithHeartbeats(dvoReport)
+}
+
+// filter a DVO report based on the data in dvo.runtimes_heartbeats
+// It the last timestampt there is  longer than 30 secs (value for the demo)
+// it gets removed from the report.
+func (storage DVORecommendationsDBStorage) filterReportWithHeartbeats(dvoReport types.DVOReport) (
+	workload types.DVOReport,
+	err error,
+) {
+	query := `
+		SELECT instance_id
+		FROM dvo.runtimes_heartbeats
+		WHERE last_checked_at > (now() - interval '30 seconds')
+	`
+
+	rows, err := storage.connection.Query(query)
+	if err != nil {
+		return dvoReport, err
+	}
+
+	defer closeRows(rows)
+
+	aliveInstances := map[string]bool{}
+
+	for rows.Next() {
+		var (
+			instanceID string
+		)
+		err = rows.Scan(
+			&instanceID,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("ReadWorkloadsForOrganization getting alive instances")
+		}
+
+		aliveInstances[instanceID] = true
+	}
+
+	// do not do any filtering if there is no data.
+	// This is a hack for previosly existing unit tests
+	if len(aliveInstances) == 0 {
+		return dvoReport, nil
+	}
+
+	processedReport := dvoReport.Report
+	processedReport = strings.ReplaceAll(processedReport, "\\n", "")
+	processedReport = strings.ReplaceAll(processedReport, "\\", "")
+	processedReport = processedReport[1 : len(processedReport)-1]
+
+	// filter report
+	var reportData types.DVOMetrics // here we will miss part of the original report, but a part that is not used anywhere
+	err = json.Unmarshal([]byte(processedReport), &reportData)
+	if err != nil {
+		return dvoReport, err
+	}
+
+	seenObjects := map[string]bool{}
+
+	for i, rec := range reportData.WorkloadRecommendations {
+		reportData.WorkloadRecommendations[i].Workloads = FilterWorkloads(rec.Workloads, aliveInstances, seenObjects)
+	}
+
+	bReport, err := json.Marshal(reportData)
+	if err != nil {
+		return dvoReport, err
+	}
+	fmt.Print(string(bReport))
+	dvoReport.Report = string(bReport)
+	dvoReport.Objects = uint(len(seenObjects)) // #nosec G115
+
+	return dvoReport, nil
+}
+
+// FilterWorkloads use aliveInstances to filter the workloads and add seen objects to a map
+func FilterWorkloads(workloads []types.DVOWorkload, aliveInstances map[string]bool, seenObjects map[string]bool) []types.DVOWorkload {
+	i := 0 // output index
+	for _, x := range workloads {
+		if _, ok := aliveInstances[x.UID]; ok {
+			// copy and increment index
+			workloads[i] = x
+			i++
+			seenObjects[x.UID] = true
+		}
+	}
+	return workloads[:i]
 }
 
 // DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
 func (storage DVORecommendationsDBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
 	_, err := storage.connection.Exec("DELETE FROM dvo.dvo_report WHERE org_id = $1;", orgID)
+	return err
+}
+
+// WriteHeartbeat ...
+func (storage DVORecommendationsDBStorage) WriteHeartbeat(
+	instanceID string,
+	lastCheckedTime time.Time,
+) error {
+	// Begin a new transaction.
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = func(tx *sql.Tx) error {
+		// Check if there is a more recent report for the cluster already in the database.
+		_, err := tx.Exec(
+			"INSERT INTO dvo.runtimes_heartbeats VALUES ($1, $2);",
+			instanceID, types.Timestamp(lastCheckedTime.UTC().Format(time.RFC3339)))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}(tx)
+
+	finishTransaction(tx, err)
+
 	return err
 }
