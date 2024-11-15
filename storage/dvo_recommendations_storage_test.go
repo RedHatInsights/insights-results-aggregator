@@ -829,9 +829,9 @@ func TestReadWorkloadsForClusterAndNamespace_HearbeatsFiltering(t *testing.T) {
 	helpers.FailOnError(t, err)
 
 	// write heartbeats
-	err = mockStorage.WriteHeartbeat("UID-0099", time.Now().UTC())
+	err = mockStorage.WriteHeartbeats([]string{"UID-0099"}, time.Now().UTC())
 	helpers.FailOnError(t, err)
-	err = mockStorage.WriteHeartbeat("UID-0100", time.Now().UTC().Add(-1*time.Hour).UTC())
+	err = mockStorage.WriteHeartbeats([]string{"UID-0100"}, time.Now().UTC().Add(-1*time.Hour).UTC())
 	helpers.FailOnError(t, err)
 
 	report, err := mockStorage.ReadWorkloadsForClusterAndNamespace(testdata.OrgID, testdata.ClusterName, "NAMESPACE-UID-A")
@@ -890,42 +890,6 @@ func TestFilterWorkloads(t *testing.T) {
 			}
 			assert.Equal(t, tt.seen, gotUIDs)
 		})
-	}
-}
-
-func TestWriteHeartbeat(t *testing.T) {
-	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
-	defer closer()
-
-	err := mockStorage.WriteHeartbeat(
-		"x", now,
-	)
-	helpers.FailOnError(t, err)
-
-	connection := storage.GetConnectionDVO(mockStorage.(*storage.DVORecommendationsDBStorage))
-
-	query := `
-		SELECT *
-		FROM dvo.runtimes_heartbeats
-	`
-
-	rows, err := connection.Query(query)
-	helpers.FailOnError(t, err)
-
-	defer func() { _ = rows.Close() }()
-
-	for rows.Next() {
-		var (
-			instanceID string
-			timestamp  time.Time
-		)
-		err = rows.Scan(
-			&instanceID, &timestamp,
-		)
-		helpers.FailOnError(t, err)
-
-		assert.Equal(t, now.UTC().Format(time.RFC3339), timestamp.UTC().Format(time.RFC3339))
-		assert.Equal(t, "x", instanceID)
 	}
 }
 

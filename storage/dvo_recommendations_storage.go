@@ -56,7 +56,6 @@ type DVORecommendationsStorage interface {
 		string,
 	) (types.DVOReport, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
-	WriteHeartbeat(string, time.Time) error
 	WriteHeartbeats([]string, time.Time) error
 }
 
@@ -697,34 +696,6 @@ func (storage DVORecommendationsDBStorage) DeleteReportsForOrg(orgID types.OrgID
 	return err
 }
 
-// WriteHeartbeat ...
-func (storage DVORecommendationsDBStorage) WriteHeartbeat(
-	instanceID string,
-	lastCheckedTime time.Time,
-) error {
-	// Begin a new transaction.
-	tx, err := storage.connection.Begin()
-	if err != nil {
-		return err
-	}
-
-	err = func(tx *sql.Tx) error {
-		// Check if there is a more recent report for the cluster already in the database.
-		_, err := tx.Exec(
-			"INSERT INTO dvo.runtimes_heartbeats VALUES ($1, $2);",
-			instanceID, types.Timestamp(lastCheckedTime.UTC().Format(time.RFC3339)))
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}(tx)
-
-	finishTransaction(tx, err)
-
-	return err
-}
-
 // WriteHeartbeats insert multiple heartbeats
 func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 	instanceIDs []string,
@@ -753,20 +724,7 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 		return err
 	}
 
-	err = func(tx *sql.Tx) error {
-		// Check if there is a more recent report for the cluster already in the database.
-		_, err := tx.Exec(sqlStr, vals...)
-		// stmt, err := tx.Prepare(sqlStr)
-		// if err != nil {
-		// 	return err
-		// }
-		// _, err = stmt.Exec(vals...)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}(tx)
+	_, err = tx.Exec(sqlStr, vals...)
 
 	finishTransaction(tx, err)
 
