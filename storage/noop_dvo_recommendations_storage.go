@@ -104,3 +104,11 @@ func (*NoopDVOStorage) WriteHeartbeat(
 ) error {
 	return nil
 }
+
+// WriteHeartbeats noop
+func (*NoopDVOStorage) WriteHeartbeats(
+	[]string,
+	time.Time,
+) error {
+	return nil
+}
