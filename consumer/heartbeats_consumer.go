@@ -223,18 +223,18 @@ func (p *HearbeatMessageProcessor) HandleMessage(msg *sarama.ConsumerMessage) er
 	// Something went wrong while processing the message.
 	if err != nil {
 		log.Error().Err(err).Msg("Error processing message consumed from Kafka")
-	} else {
-		log.Info().Int64(offsetKey, msg.Offset).Msg("Message consumed")
+		return err
 	}
+	log.Info().Int64(offsetKey, msg.Offset).Msg("Message consumed")
 
 	err = p.updateHeartbeat(instanceID, messageRequest.Timestamp)
 	if err != nil {
 		log.Error().Err(err).Msg("Error updating hearbeat Kafka")
-	} else {
-		log.Info().Msg("Heartbeat updated")
+		return err
 	}
+	log.Info().Msg("Heartbeat updated")
 
-	return err
+	return nil
 }
 
 // deserializeMessage deserialize a kafka meesage
@@ -283,6 +283,11 @@ func parseHearbeat(url string) (string, error) {
 		log.Error().Err(err).Msg("Error parsing JSON")
 		return "", err
 	}
+
+	if heartbeat.Details.ObjectUID == "" {
+		return "", errors.New("Empty value for Object UID")
+	}
+
 	log.Info().Msg("Read heartbeat")
 	log.Debug().Msgf("Processed heartbeat for %s", heartbeat.Details.ObjectUID)
 	return heartbeat.Details.ObjectUID, nil
