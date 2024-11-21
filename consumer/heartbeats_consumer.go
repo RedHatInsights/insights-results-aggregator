@@ -181,7 +181,6 @@ func (consumer *KfkConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, c
 
 // Close method closes all resources used by consumer
 func (consumer *KfkConsumer) Close() error {
-
 	if consumer.client != nil {
 		if err := consumer.client.Close(); err != nil {
 			log.Error().Err(err).Msg("unable to close consumer group")
@@ -297,7 +296,6 @@ func (p *HearbeatMessageProcessor) updateHeartbeat(
 	objectUID string, timestamp time.Time,
 ) error {
 	if dvoStorage, ok := p.Storage.(storage.DVORecommendationsStorage); ok {
-
 		err := dvoStorage.UpdateHeartbeat(
 			objectUID,
 			timestamp,

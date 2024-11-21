@@ -21,7 +21,7 @@ import (
 
 type NoopProcessor struct{}
 
-func (p *NoopProcessor) HandleMessage(msg *sarama.ConsumerMessage) error {
+func (p *NoopProcessor) HandleMessage(_ *sarama.ConsumerMessage) error {
 	return nil
 }
 
@@ -92,7 +92,7 @@ func TestHeartbeatsConsumer_SetupCleanup(t *testing.T) {
 func TestHeartbeatHandling(t *testing.T) {
 	processor := consumer.HearbeatMessageProcessor{Storage: &storage.NoopDVOStorage{}}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprintln(w, heartbeatMessage)
 	}))
 	defer ts.Close()
@@ -107,7 +107,7 @@ func TestHeartbeatHandling(t *testing.T) {
 func TestHeartbeatHandling_ProcessingError(t *testing.T) {
 	processor := consumer.HearbeatMessageProcessor{Storage: &storage.NoopDVOStorage{}}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r_ *http.Request) {
 		_, _ = fmt.Fprintln(w, ``)
 	}))
 	defer ts.Close()
@@ -122,7 +122,7 @@ func TestHeartbeatHandling_ProcessingError(t *testing.T) {
 func TestHeartbeatHandling_EmptyData(t *testing.T) {
 	processor := consumer.HearbeatMessageProcessor{Storage: &storage.NoopDVOStorage{}}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprintln(w, `{}`)
 	}))
 	defer ts.Close()
@@ -139,7 +139,7 @@ func TestHeartbeatHandling_Storage(t *testing.T) {
 	defer closer()
 	processor := consumer.HearbeatMessageProcessor{Storage: mockStorage}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprintln(w, heartbeatMessage)
 	}))
 	defer ts.Close()
