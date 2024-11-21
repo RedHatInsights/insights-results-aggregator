@@ -107,7 +107,7 @@ func TestHeartbeatHandling(t *testing.T) {
 func TestHeartbeatHandling_ProcessingError(t *testing.T) {
 	processor := consumer.HearbeatMessageProcessor{Storage: &storage.NoopDVOStorage{}}
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r_ *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = fmt.Fprintln(w, ``)
 	}))
 	defer ts.Close()
