@@ -133,3 +133,44 @@ func TestHeartbeatHandling_EmptyData(t *testing.T) {
 	err := processor.HandleMessage(&saramaMessage)
 	assert.Error(t, err)
 }
+
+func TestHeartbeatHandling_Storage(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+	processor := consumer.HearbeatMessageProcessor{Storage: mockStorage}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = fmt.Fprintln(w, heartbeatMessage)
+	}))
+	defer ts.Close()
+
+	msg := strings.Replace(heartbeatIngressMessage, "myserverurl", ts.URL, 1)
+	saramaMessage := sarama.ConsumerMessage{Value: []byte(msg)}
+
+	err := processor.HandleMessage(&saramaMessage)
+	helpers.FailOnError(t, err)
+
+	connection := mockStorage.(*storage.DVORecommendationsDBStorage).GetConnection()
+
+	query := `
+		SELECT instance_id
+		FROM dvo.runtimes_heartbeats
+	`
+
+	rows, err := connection.Query(query)
+	helpers.FailOnError(t, err)
+
+	defer func() { _ = rows.Close() }()
+
+	for rows.Next() {
+		var (
+			objectUID string
+		)
+		err = rows.Scan(
+			&objectUID,
+		)
+		helpers.FailOnError(t, err)
+
+		assert.Equal(t, "24f31da9-4e40-4b92-ab15-8c5f4dd5fb8c", objectUID)
+	}
+}
