@@ -77,7 +77,7 @@ type KfkConsumer struct {
 func NewKfkConsumer(brokerCfg broker.Configuration, processor KkfMessageProcessor) (*KfkConsumer, error) {
 	saramaConfig, err := broker.SaramaConfigFromBrokerConfig(brokerCfg)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to create sarama configuration from current broker configuration")
+		log.Error().Err(err).Msg("Unable to create sarama configuration from current broker configuration")
 		return nil, err
 	}
 	log.Info().
