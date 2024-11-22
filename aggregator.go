@@ -251,7 +251,6 @@ func prepareDB() int {
 }
 
 func setupService() int {
-
 	metricsCfg := conf.GetMetricsConfiguration()
 	if metricsCfg.Namespace != "" {
 		metrics.AddMetricsWithNamespace(metricsCfg.Namespace)
@@ -265,14 +264,12 @@ func setupService() int {
 
 	log.Debug().Msg("DB initialized")
 	return ExitStatusOK
-
 }
 
 // startService function starts service and returns error code in case the
 // service can't be started properly. If service is terminated correctly,
 // ExitStatusOK is returned instead.
 func startService() int {
-
 	setupErrCode := setupService()
 	if setupErrCode != 0 {
 		return setupErrCode
