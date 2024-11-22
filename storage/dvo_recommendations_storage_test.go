@@ -933,3 +933,44 @@ func TestWriteHeartbeats(t *testing.T) {
 	}
 	assert.Equal(t, data, instances)
 }
+
+func TestUpdateHeartbeat(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	data := []string{"x", "y"}
+
+	err := mockStorage.WriteHeartbeats(
+		data, now.Add(-1*time.Hour).UTC(),
+	)
+	helpers.FailOnError(t, err)
+
+	err = mockStorage.UpdateHeartbeat("x", now)
+	helpers.FailOnError(t, err)
+	err = mockStorage.UpdateHeartbeat("y", now)
+	helpers.FailOnError(t, err)
+
+	connection := storage.GetConnectionDVO(mockStorage.(*storage.DVORecommendationsDBStorage))
+
+	query := `
+		SELECT last_checked_at
+		FROM dvo.runtimes_heartbeats
+	`
+
+	rows, err := connection.Query(query)
+	helpers.FailOnError(t, err)
+
+	defer func() { _ = rows.Close() }()
+
+	for rows.Next() {
+		var (
+			timestamp time.Time
+		)
+		err = rows.Scan(
+			&timestamp,
+		)
+		helpers.FailOnError(t, err)
+
+		assert.Equal(t, now.UTC().Format(time.RFC3339), timestamp.UTC().Format(time.RFC3339))
+	}
+}

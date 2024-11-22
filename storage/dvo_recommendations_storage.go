@@ -57,6 +57,7 @@ type DVORecommendationsStorage interface {
 	) (types.DVOReport, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
 	WriteHeartbeats([]string, time.Time) error
+	UpdateHeartbeat(string, time.Time) error
 }
 
 const (
@@ -725,6 +726,28 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 	}
 
 	_, err = tx.Exec(sqlStr, vals...)
+
+	finishTransaction(tx, err)
+
+	return err
+}
+
+// UpdateHeartbeat update timestamp of a heartbeat
+func (storage DVORecommendationsDBStorage) UpdateHeartbeat(
+	instanceID string,
+	timestamp time.Time,
+) error {
+	ts := types.Timestamp(timestamp.UTC().Format(time.RFC3339))
+
+	sqlStr := "UPDATE dvo.runtimes_heartbeats SET last_checked_at = $1 WHERE instance_id = $2;"
+
+	// Begin a new transaction.
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(sqlStr, ts, instanceID)
 
 	finishTransaction(tx, err)
 

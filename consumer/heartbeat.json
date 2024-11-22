@@ -1,0 +1,26 @@
+{
+  "version" : "1.0.0",
+  "idHash" : "5b43352e973d2f1ccbb274f392460430237a670c0a0aedfc15cad7d049f6d93efede450496f9aba6bd93b1011d1a4c9ac9f56ce68df5f5d1929d19eeed8b3f5f",
+  "updated-jars" : {
+    "version" : "1.0.0",
+    "jars" : [ {
+      "name" : "EMPRESP.war",
+      "version" : " ",
+      "attributes" : {
+        "sha1Checksum" : "d95d4c072772eca2559dca114901a9e8e4fcc6af",
+        "path" : "EMPRESP.war",
+        "sha256Checksum" : "67b6e2d08d430b9ead1fcda24f7e6dba17e9531fe7ab88973b99b6f26f3777b7",
+        "sha512Checksum" : "9d3d9752dcd16a21d9289dd136b6c95ffed48a61ffb28b1759ce860feb05fa9324e05a7758d963408fa4d031937ec3ffaf67d005ce9cfd7d7ca4cc5fbcb0b463",
+        "runtime-name" : "EMPRESP.war",
+        "deployment" : "EMPRESP.war"
+      }
+    } ]
+  },
+  "details": {
+    "type": "General Java app",
+    "is_ocp": "true",
+    "pod_name": "sample-app-799584c8bc-9b8jn",
+    "pod_namespace": "sample-app",
+    "object_uid": "24f31da9-4e40-4b92-ab15-8c5f4dd5fb8c"
+  }
+}
