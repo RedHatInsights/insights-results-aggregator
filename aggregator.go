@@ -381,7 +381,7 @@ The commands are:
     print-version-info  prints version info
     migration           prints information about migrations (current, latest)
     migration <version> migrates database to the specified version
-	start-heartbeater   start the heartbeat processor service
+    start-heartbeater   start the heartbeat processor service
 
 `
 
