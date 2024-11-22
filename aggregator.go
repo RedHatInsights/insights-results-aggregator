@@ -250,10 +250,7 @@ func prepareDB() int {
 	return ExitStatusOK
 }
 
-// startService function starts service and returns error code in case the
-// service can't be started properly. If service is terminated correctly,
-// ExitStatusOK is returned instead.
-func startService() int {
+func setupService() int {
 	metricsCfg := conf.GetMetricsConfiguration()
 	if metricsCfg.Namespace != "" {
 		metrics.AddMetricsWithNamespace(metricsCfg.Namespace)
@@ -266,6 +263,17 @@ func startService() int {
 	}
 
 	log.Debug().Msg("DB initialized")
+	return ExitStatusOK
+}
+
+// startService function starts service and returns error code in case the
+// service can't be started properly. If service is terminated correctly,
+// ExitStatusOK is returned instead.
+func startService() int {
+	setupErrCode := setupService()
+	if setupErrCode != 0 {
+		return setupErrCode
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -373,6 +381,7 @@ The commands are:
     print-version-info  prints version info
     migration           prints information about migrations (current, latest)
     migration <version> migrates database to the specified version
+    start-heartbeater   start the heartbeat processor service
 
 `
 
@@ -515,7 +524,9 @@ func performMigrations() int {
 	}
 }
 
-func stopServiceOnProcessStopSignal() {
+type processStopper func() int
+
+func stopServiceOnProcessStopSignal(stopper processStopper) {
 	signals := make(chan os.Signal, 1)
 
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
@@ -524,7 +535,7 @@ func stopServiceOnProcessStopSignal() {
 		<-signals
 		fmt.Println("SIGINT or SIGTERM was sent, stopping the service...")
 
-		errCode := stopService()
+		errCode := stopper()
 		if errCode != 0 {
 			log.Error().Msgf("unable to stop the service, code is %v", errCode)
 			os.Exit(errCode)
@@ -569,7 +580,7 @@ func handleCommand(command string) int {
 	case "start-service":
 		printVersionInfo()
 
-		stopServiceOnProcessStopSignal()
+		stopServiceOnProcessStopSignal(stopService)
 
 		return startService()
 	case "help", "print-help":
@@ -582,6 +593,9 @@ func handleCommand(command string) int {
 		printVersionInfo()
 	case "migrations", "migration", "migrate":
 		return performMigrations()
+	case "start-heartbeater":
+		stopServiceOnProcessStopSignal(stopHeartbeatConsumer)
+		return startHeartbeatConsumer()
 	default:
 		fmt.Printf("\nCommand '%v' not found\n", command)
 		return printHelp()
