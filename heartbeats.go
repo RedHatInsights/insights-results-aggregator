@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+
+	"github.com/rs/zerolog/log"
+
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/rs/zerolog/log"
 )
 
 var (
