@@ -702,6 +702,11 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 	instanceIDs []string,
 	lastCheckedTime time.Time,
 ) error {
+	if len(instanceIDs) == 0 {
+		log.Info().Msg("No ID to write to heartbeats.")
+		return nil
+	}
+
 	timestamp := types.Timestamp(lastCheckedTime.UTC().Format(time.RFC3339))
 
 	sqlStr := "INSERT INTO dvo.runtimes_heartbeats VALUES "
