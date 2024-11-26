@@ -719,6 +719,8 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 
 	sqlStr += ";"
 
+	log.Debug().Msgf("About to write heartbeats with %s and args %v", sqlStr, vals)
+
 	// Begin a new transaction.
 	tx, err := storage.connection.Begin()
 	if err != nil {
@@ -740,6 +742,8 @@ func (storage DVORecommendationsDBStorage) UpdateHeartbeat(
 	ts := types.Timestamp(timestamp.UTC().Format(time.RFC3339))
 
 	sqlStr := "UPDATE dvo.runtimes_heartbeats SET last_checked_at = $1 WHERE instance_id = $2;"
+
+	log.Debug().Msgf("About to update heartbeat with %s and args %v -- %v", sqlStr, ts, instanceID)
 
 	// Begin a new transaction.
 	tx, err := storage.connection.Begin()
