@@ -28,7 +28,7 @@ REF_ENV="insights-production"
 #       git version of clowdapp.yaml(or any other) file from the pull request.
 COMPONENT_NAME="ccx-insights-results ccx-redis dvo-writer"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/insights-results-aggregator"
-COMPONENTS="ccx-data-pipeline ccx-insights-results ccx-redis dvo-writer dvo-extractor insights-content-service ccx-smart-proxy ccx-mock-ams" # space-separated list of components to load
+COMPONENTS="ccx-data-pipeline ccx-insights-results ccx-redis dvo-writer dvo-extractor insights-content-service ccx-smart-proxy ccx-mock-ams ccx-upgrades-rhobs-mock" # space-separated list of components to load
 COMPONENTS_W_RESOURCES=""  # component to keep
 CACHE_FROM_LATEST_IMAGE="true"
 DEPLOY_FRONTENDS="false"
