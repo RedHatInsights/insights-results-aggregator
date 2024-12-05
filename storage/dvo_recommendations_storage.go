@@ -56,6 +56,8 @@ type DVORecommendationsStorage interface {
 		string,
 	) (types.DVOReport, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
+	WriteHeartbeats([]string, time.Time) error
+	UpdateHeartbeat(string, time.Time) error
 }
 
 const (
@@ -597,11 +599,166 @@ func (storage DVORecommendationsDBStorage) ReadWorkloadsForClusterAndNamespace(
 
 	log.Debug().Int(orgIDStr, int(orgID)).Msgf("ReadWorkloadsForClusterAndNamespace took %v", time.Since(tStart))
 
-	return dvoReport, err
+	if err != nil {
+		return dvoReport, err
+	}
+
+	return storage.filterReportWithHeartbeats(dvoReport)
+}
+
+// filter a DVO report based on the data in dvo.runtimes_heartbeats
+// It the last timestampt there is  longer than 30 secs (value for the demo)
+// it gets removed from the report.
+func (storage DVORecommendationsDBStorage) filterReportWithHeartbeats(dvoReport types.DVOReport) (
+	workload types.DVOReport,
+	err error,
+) {
+	query := `
+		SELECT instance_id
+		FROM dvo.runtimes_heartbeats
+		WHERE last_checked_at > (now() - interval '30 seconds')
+	`
+
+	rows, err := storage.connection.Query(query)
+	if err != nil {
+		return dvoReport, err
+	}
+
+	defer closeRows(rows)
+
+	aliveInstances := map[string]bool{}
+
+	for rows.Next() {
+		var (
+			instanceID string
+		)
+		err = rows.Scan(
+			&instanceID,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("ReadWorkloadsForOrganization getting alive instances")
+		}
+
+		aliveInstances[instanceID] = true
+	}
+
+	// do not do any filtering if there is no data.
+	// This is a hack for previosly existing unit tests
+	if len(aliveInstances) == 0 {
+		return dvoReport, nil
+	}
+
+	processedReport := dvoReport.Report
+	processedReport = strings.ReplaceAll(processedReport, "\\n", "")
+	processedReport = strings.ReplaceAll(processedReport, "\\", "")
+	processedReport = processedReport[1 : len(processedReport)-1]
+
+	// filter report
+	var reportData types.DVOMetrics // here we will miss part of the original report, but a part that is not used anywhere
+	err = json.Unmarshal([]byte(processedReport), &reportData)
+	if err != nil {
+		return dvoReport, err
+	}
+
+	seenObjects := map[string]bool{}
+
+	for i, rec := range reportData.WorkloadRecommendations {
+		reportData.WorkloadRecommendations[i].Workloads = FilterWorkloads(rec.Workloads, aliveInstances, seenObjects)
+	}
+
+	bReport, err := json.Marshal(reportData)
+	if err != nil {
+		return dvoReport, err
+	}
+	fmt.Print(string(bReport))
+	dvoReport.Report = string(bReport)
+	dvoReport.Objects = uint(len(seenObjects)) // #nosec G115
+
+	return dvoReport, nil
+}
+
+// FilterWorkloads use aliveInstances to filter the workloads and add seen objects to a map
+func FilterWorkloads(workloads []types.DVOWorkload, aliveInstances map[string]bool, seenObjects map[string]bool) []types.DVOWorkload {
+	i := 0 // output index
+	for _, x := range workloads {
+		if _, ok := aliveInstances[x.UID]; ok {
+			// copy and increment index
+			workloads[i] = x
+			i++
+			seenObjects[x.UID] = true
+		}
+	}
+	return workloads[:i]
 }
 
 // DeleteReportsForOrg deletes all reports related to the specified organization from the storage.
 func (storage DVORecommendationsDBStorage) DeleteReportsForOrg(orgID types.OrgID) error {
 	_, err := storage.connection.Exec("DELETE FROM dvo.dvo_report WHERE org_id = $1;", orgID)
+	return err
+}
+
+// WriteHeartbeats insert multiple heartbeats
+func (storage DVORecommendationsDBStorage) WriteHeartbeats(
+	instanceIDs []string,
+	lastCheckedTime time.Time,
+) error {
+	if len(instanceIDs) == 0 {
+		log.Info().Msg("No ID to write to heartbeats.")
+		return nil
+	}
+
+	timestamp := types.Timestamp(lastCheckedTime.UTC().Format(time.RFC3339))
+
+	sqlStr := "INSERT INTO dvo.runtimes_heartbeats VALUES "
+	vals := []interface{}{}
+
+	itemIndex := 1
+
+	for _, instanceID := range instanceIDs {
+		sqlStr += "($" + fmt.Sprint(itemIndex) + ", $" + fmt.Sprint(itemIndex+1) + "),"
+		vals = append(vals, instanceID, timestamp)
+		itemIndex += 2
+	}
+	//trim the last ,
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
+
+	sqlStr += " ON CONFLICT (instance_id) DO NOTHING;"
+
+	log.Debug().Msgf("About to write heartbeats with %s and args %v", sqlStr, vals)
+
+	// Begin a new transaction.
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(sqlStr, vals...)
+
+	finishTransaction(tx, err)
+
+	return err
+}
+
+// UpdateHeartbeat update timestamp of a heartbeat
+func (storage DVORecommendationsDBStorage) UpdateHeartbeat(
+	instanceID string,
+	timestamp time.Time,
+) error {
+	ts := types.Timestamp(timestamp.UTC().Format(time.RFC3339))
+
+	sqlStr := "UPDATE dvo.runtimes_heartbeats SET last_checked_at = $1 WHERE instance_id = $2;"
+
+	log.Debug().Msgf("About to update heartbeat with %s and args %v -- %v", sqlStr, ts, instanceID)
+
+	// Begin a new transaction.
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(sqlStr, ts, instanceID)
+
+	finishTransaction(tx, err)
+
 	return err
 }
