@@ -722,7 +722,7 @@ func (storage DVORecommendationsDBStorage) WriteHeartbeats(
 	//trim the last ,
 	sqlStr = sqlStr[0 : len(sqlStr)-1]
 
-	sqlStr += ";"
+	sqlStr += " ON CONFLICT (instance_id) DO NOTHING;"
 
 	log.Debug().Msgf("About to write heartbeats with %s and args %v", sqlStr, vals)
 
