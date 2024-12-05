@@ -974,7 +974,7 @@ func TestWriteHeartbeatsWithConfict(t *testing.T) {
 		)
 		helpers.FailOnError(t, err)
 
-		assert.Equal(t, now.UTC().Format(time.RFC3339), timestamp.UTC().Format(time.RFC3339))
+		assert.Equal(t, now.Add(-1*time.Hour).UTC().Format(time.RFC3339), timestamp.UTC().Format(time.RFC3339))
 		instances = append(instances, instanceID)
 	}
 	assert.Equal(t, data, instances)
