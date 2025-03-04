@@ -96,3 +96,27 @@ func (*NoopDVOStorage) ReadWorkloadsForClusterAndNamespace(
 func (*NoopDVOStorage) DeleteReportsForOrg(types.OrgID) error {
 	return nil
 }
+
+// WriteHeartbeat noop
+func (*NoopDVOStorage) WriteHeartbeat(
+	string,
+	time.Time,
+) error {
+	return nil
+}
+
+// WriteHeartbeats noop
+func (*NoopDVOStorage) WriteHeartbeats(
+	[]string,
+	time.Time,
+) error {
+	return nil
+}
+
+// UpdateHeartbeat noop
+func (*NoopDVOStorage) UpdateHeartbeat(
+	string,
+	time.Time,
+) error {
+	return nil
+}
