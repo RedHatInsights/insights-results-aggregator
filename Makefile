@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: default clean build fmt lint vet cyclo ineffassign shellcheck errcheck goconst gosec abcgo json-check openapi-check style run test cover integration_tests rest_api_tests license before_commit help install_addlicense
+.PHONY: default clean build shellcheck abcgo json-check openapi-check style run test cover integration_tests rest_api_tests license before_commit help install_addlicense
 
 SOURCES:=$(shell find . -name '*.go')
 BINARY:=insights-results-aggregator
@@ -20,42 +20,10 @@ ${BINARY}: ${SOURCES}
 	./build.sh
 
 check:	install_golangci_lint
-	golangci-lint run --enable=goimports,gosimple,nilerr,prealloc,revive,staticcheck,unconvert,unused,whitespace,zerologlint --timeout=3m 
-
-fmt: ## Run go fmt -w for all sources
-	@echo "Running go formatting"
-	./gofmt.sh
-
-lint: ## Run golint
-	@echo "Running go lint"
-	./golint.sh
-
-vet: ## Run go vet. Report likely mistakes in source code
-	@echo "Running go vet"
-	./govet.sh
-
-cyclo: ## Run gocyclo
-	@echo "Running gocyclo"
-	./gocyclo.sh
-
-ineffassign: ## Run ineffassign checker
-	@echo "Running ineffassign checker"
-	./ineffassign.sh
+	golangci-lint run --enable=goconst,gocyclo,gofmt,goimports,gosec,gosimple,nilerr,prealloc,revive,staticcheck,unconvert,unused,whitespace,zerologlint  --timeout=3m 
 
 shellcheck: ## Run shellcheck
 	./shellcheck.sh
-
-errcheck: ## Run errcheck
-	@echo "Running errcheck"
-	./goerrcheck.sh
-
-goconst: ## Run goconst checker
-	@echo "Running goconst checker"
-	./goconst.sh ${VERBOSE}
-
-gosec: ## Run gosec checker
-	@echo "Running gosec checker"
-	./gosec.sh ${VERBOSE}
 
 abcgo: ## Run ABC metrics checker
 	@echo "Run ABC metrics checker"
@@ -68,7 +36,7 @@ json-check: ## Check all JSONs for basic syntax
 openapi-check:
 	./check_openapi.sh
 
-style: fmt vet lint cyclo shellcheck errcheck goconst gosec ineffassign abcgo json-check ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
+style: shellcheck abcgo json-check ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
 
 run: ${BINARY} ## Build the project and executes the binary
 	./$^
