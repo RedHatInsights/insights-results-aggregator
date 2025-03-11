@@ -19,6 +19,9 @@ build-cover:	${SOURCES}  ## Build binary with code coverage detection support
 ${BINARY}: ${SOURCES}
 	./build.sh
 
+check:	install_golangci_lint
+	golangci-lint run --enable=goimports,gosimple,nilerr,prealloc,revive,staticcheck,unconvert,unused,whitespace,zerologlint --timeout=3m 
+
 fmt: ## Run go fmt -w for all sources
 	@echo "Running go formatting"
 	./gofmt.sh
@@ -111,3 +114,6 @@ function_list: ${BINARY} ## List all functions in generated binary file
 install_addlicense: export GO111MODULE=off
 install_addlicense:
 	[[ `command -v addlicense` ]] || GO111MODULE=off go get -u github.com/google/addlicense
+
+install_golangci_lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6
