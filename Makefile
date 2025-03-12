@@ -79,9 +79,8 @@ help: ## Show this help screen
 function_list: ${BINARY} ## List all functions in generated binary file
 	go tool objdump ${BINARY} | grep ^TEXT | sed "s/^TEXT\s//g"
 
-install_addlicense: export GO111MODULE=off
 install_addlicense:
-	[[ `command -v addlicense` ]] || GO111MODULE=off go get -u github.com/google/addlicense
+	[[ `command -v addlicense` ]] || go install github.com/google/addlicense
 
 install_golangci_lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6
