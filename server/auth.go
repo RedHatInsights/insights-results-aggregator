@@ -109,23 +109,6 @@ func (server *HTTPServer) Authentication(next http.Handler, noAuthURLs []string)
 	})
 }
 
-// GetCurrentUserID retrieves current user's id from request
-func (server *HTTPServer) GetCurrentUserID(request *http.Request) (types.UserID, error) {
-	i := request.Context().Value(types.ContextKeyUser)
-
-	if i == nil {
-		log.Error().Msg("user id was not found in request's context")
-		return "", &UnauthorizedError{ErrString: "user id is not provided"}
-	}
-
-	identity, ok := i.(Identity)
-	if !ok {
-		return "", fmt.Errorf("contextKeyUser has wrong type")
-	}
-
-	return identity.User.UserID, nil
-}
-
 func (server *HTTPServer) getAuthTokenHeader(_ http.ResponseWriter, r *http.Request) (string, error) {
 	tokenHeader := r.Header.Get("x-rh-identity") // Grab the token from the header
 
