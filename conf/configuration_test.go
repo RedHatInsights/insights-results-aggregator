@@ -25,7 +25,7 @@ import (
 
 	"github.com/RedHatInsights/insights-operator-utils/logger"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
-	mapset "github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set/v2"
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"

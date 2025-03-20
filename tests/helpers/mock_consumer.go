@@ -20,7 +20,7 @@ import (
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/Shopify/sarama"
-	mapset "github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"

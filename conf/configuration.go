@@ -43,7 +43,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/RedHatInsights/insights-operator-utils/logger"
 	typeutils "github.com/RedHatInsights/insights-operator-utils/types"
-	mapset "github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set/v2"
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
