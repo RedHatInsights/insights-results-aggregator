@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# shellcheck disable=SC2317
+
 COLORS_RED='\033[0;31m'
 COLORS_RESET='\033[0m'
 LOG_LEVEL="fatal"
