@@ -23,8 +23,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/gchaincl/sqlhooks"
 	"github.com/prometheus/client_golang/prometheus"
+	sqlhooks "github.com/qustavo/sqlhooks/v2"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"

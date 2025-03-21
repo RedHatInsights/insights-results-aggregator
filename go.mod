@@ -10,13 +10,13 @@ require (
 	github.com/RedHatInsights/insights-results-types v1.23.5
 	github.com/Shopify/sarama v1.27.1
 	github.com/deckarep/golang-set/v2 v2.8.0
-	github.com/gchaincl/sqlhooks/v2 v2.1.0
 	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.21.1
 	github.com/prometheus/client_model v0.6.1
+	github.com/qustavo/sqlhooks/v2 v2.1.0
 	github.com/redhatinsights/app-common-go v1.6.8
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/viper v1.20.0
