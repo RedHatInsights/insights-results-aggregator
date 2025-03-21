@@ -20,10 +20,11 @@ import (
 
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/Shopify/sarama"
-	mapset "github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/consumer"
+	"github.com/RedHatInsights/insights-results-aggregator/types"
 )
 
 // MockKafkaConsumer is mock consumer
@@ -59,7 +60,7 @@ func (mockKafkaConsumer *MockKafkaConsumer) Close(t testing.TB) {
 func MustGetMockOCPRulesConsumerWithExpectedMessages(
 	t testing.TB,
 	topic string,
-	orgAllowlist mapset.Set,
+	orgAllowlist mapset.Set[types.OrgID],
 	messages []string,
 ) (*MockKafkaConsumer, func()) {
 	mockConsumer, closer, err := GetMockOCPRulesConsumerWithExpectedMessages(t, topic, orgAllowlist, messages)
@@ -75,7 +76,7 @@ func MustGetMockOCPRulesConsumerWithExpectedMessages(
 func MustGetMockDVOConsumerWithExpectedMessages(
 	t testing.TB,
 	topic string,
-	orgAllowlist mapset.Set,
+	orgAllowlist mapset.Set[types.OrgID],
 	messages []string,
 ) (*MockKafkaConsumer, func()) {
 	mockConsumer, closer, err := GetMockDVOConsumerWithExpectedMessages(t, topic, orgAllowlist, messages)
@@ -89,7 +90,7 @@ func MustGetMockDVOConsumerWithExpectedMessages(
 // GetMockOCPRulesConsumerWithExpectedMessages creates mocked OCP rules
 // consumer which produces list of messages automatically
 func GetMockOCPRulesConsumerWithExpectedMessages(
-	t testing.TB, topic string, orgAllowlist mapset.Set, messages []string,
+	t testing.TB, topic string, orgAllowlist mapset.Set[types.OrgID], messages []string,
 ) (*MockKafkaConsumer, func(), error) {
 	mockStorage, storageCloser := MustGetPostgresStorage(t, true)
 
@@ -118,7 +119,7 @@ func GetMockOCPRulesConsumerWithExpectedMessages(
 // GetMockDVOConsumerWithExpectedMessages same as GetMockOCPRulesConsumerWithExpectedMessages
 // but for DVO
 func GetMockDVOConsumerWithExpectedMessages(
-	t testing.TB, topic string, orgAllowlist mapset.Set, messages []string,
+	t testing.TB, topic string, orgAllowlist mapset.Set[types.OrgID], messages []string,
 ) (*MockKafkaConsumer, func(), error) {
 	mockStorage, storageCloser := MustGetPostgresStorageDVO(t, true)
 

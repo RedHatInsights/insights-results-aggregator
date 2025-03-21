@@ -34,7 +34,7 @@ import (
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	"github.com/Shopify/sarama"
-	mapset "github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
@@ -68,7 +68,7 @@ func dummyOCPConsumer(s storage.OCPRecommendationsStorage, allowlist bool) consu
 		Group:     "group",
 	}
 	if allowlist {
-		brokerCfg.OrgAllowlist = mapset.NewSetWith(types.OrgID(1))
+		brokerCfg.OrgAllowlist = mapset.NewSet(types.OrgID(1))
 		brokerCfg.OrgAllowlistEnabled = true
 	} else {
 		brokerCfg.OrgAllowlistEnabled = false
@@ -765,7 +765,7 @@ func TestKafkaConsumer_ProcessMessageWithEmptyReport_OrganizationIsNotAllowed(t 
 		Addresses:           "localhost:1234",
 		Topic:               "topic",
 		Group:               "group",
-		OrgAllowlist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
+		OrgAllowlist:        mapset.NewSet(types.OrgID(123)), // in testdata, OrgID = 1
 		OrgAllowlistEnabled: true,
 	}
 	mockConsumer := createOCPConsumer(brokerCfg, mockStorage)
@@ -782,7 +782,7 @@ func TestKafkaConsumer_ProcessMessage_OrganizationIsNotAllowed(t *testing.T) {
 		Addresses:           "localhost:1234",
 		Topic:               "topic",
 		Group:               "group",
-		OrgAllowlist:        mapset.NewSetWith(types.OrgID(123)), // in testdata, OrgID = 1
+		OrgAllowlist:        mapset.NewSet(types.OrgID(123)), // in testdata, OrgID = 1
 		OrgAllowlistEnabled: true,
 	}
 	mockConsumer := createOCPConsumer(brokerCfg, mockStorage)

@@ -30,7 +30,7 @@ import (
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
 	"github.com/Shopify/sarama"
-	mapset "github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
@@ -64,7 +64,7 @@ func dummyDVOConsumer(s storage.DVORecommendationsStorage, allowlist bool) consu
 		Group:     "group",
 	}
 	if allowlist {
-		brokerCfg.OrgAllowlist = mapset.NewSetWith(types.OrgID(1))
+		brokerCfg.OrgAllowlist = mapset.NewSet(types.OrgID(1))
 		brokerCfg.OrgAllowlistEnabled = true
 	} else {
 		brokerCfg.OrgAllowlistEnabled = false
