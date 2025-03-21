@@ -166,7 +166,7 @@ func GetBrokerConfiguration() broker.Configuration {
 	return Config.Broker
 }
 
-func getOrganizationAllowlist() mapset.Set {
+func getOrganizationAllowlist() mapset.Set[types.OrgID] {
 	if !Config.Broker.OrgAllowlistEnabled {
 		return nil
 	}
@@ -263,8 +263,8 @@ func checkIfFileExists(path string) error {
 }
 
 // loadAllowlistFromCSV creates a new CSV reader and returns a Set of allowlisted org. IDs
-func loadAllowlistFromCSV(r io.Reader) (mapset.Set, error) {
-	allowlist := mapset.NewSet()
+func loadAllowlistFromCSV(r io.Reader) (mapset.Set[types.OrgID], error) {
+	allowlist := mapset.NewSet[types.OrgID]()
 
 	reader := csv.NewReader(r)
 

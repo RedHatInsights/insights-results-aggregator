@@ -64,7 +64,7 @@ func dummyDVOConsumer(s storage.DVORecommendationsStorage, allowlist bool) consu
 		Group:     "group",
 	}
 	if allowlist {
-		brokerCfg.OrgAllowlist = mapset.NewSetWith(types.OrgID(1))
+		brokerCfg.OrgAllowlist = mapset.NewSet(types.OrgID(1))
 		brokerCfg.OrgAllowlistEnabled = true
 	} else {
 		brokerCfg.OrgAllowlistEnabled = false

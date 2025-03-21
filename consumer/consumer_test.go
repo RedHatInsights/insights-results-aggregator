@@ -54,7 +54,7 @@ const (
 )
 
 var (
-	testOrgAllowlist = mapset.NewSetWith(types.OrgID(1))
+	testOrgAllowlist = mapset.NewSet(types.OrgID(1))
 	wrongBrokerCfg   = broker.Configuration{
 		Addresses: "localhost:1234",
 		Topic:     "topic",

@@ -309,7 +309,7 @@ func TestLoadConfigurationOverrideFromEnv2(t *testing.T) {
 
 // TestLoadOrganizationAllowlist tests if the allow-list CSV file gets loaded properly
 func TestLoadOrganizationAllowlist(t *testing.T) {
-	expectedAllowlist := mapset.NewSetWith(
+	expectedAllowlist := mapset.NewSet(
 		types.OrgID(1),
 		types.OrgID(2),
 		types.OrgID(3),
@@ -418,7 +418,7 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 
 	assert.True(
 		t,
-		orgAllowlist.Equal(mapset.NewSetWith(
+		orgAllowlist.Equal(mapset.NewSet(
 			types.OrgID(1),
 			types.OrgID(2),
 			types.OrgID(3),
@@ -480,7 +480,7 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 
 	assert.True(
 		t,
-		orgAllowlist.Equal(mapset.NewSetWith(
+		orgAllowlist.Equal(mapset.NewSet(
 			types.OrgID(1),
 			types.OrgID(2),
 			types.OrgID(3),
