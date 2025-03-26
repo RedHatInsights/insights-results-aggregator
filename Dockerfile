@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM registry.access.redhat.com/ubi9/go-toolset:9.5-1742197705 AS builder
+FROM registry.access.redhat.com/ubi9/go-toolset:9.5-1742890357 AS builder
 
 COPY . .
 
