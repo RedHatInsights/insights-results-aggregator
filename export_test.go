@@ -27,22 +27,24 @@ package main
 // to see why this trick is needed.
 // nolint
 var (
-	CreateStorage       = createStorage
-	StartService        = startService
-	StopService         = stopService
-	CloseStorage        = closeStorage
-	PrepareDB           = prepareDB
-	StartConsumer       = startConsumer
-	StartServer         = startServer
-	PrintVersionInfo    = printVersionInfo
-	PrintHelp           = printHelp
-	PrintConfig         = printConfig
-	PrintEnv            = printEnv
-	GetDBForMigrations  = getDBForMigrations
-	PrintMigrationInfo  = printMigrationInfo
-	SetMigrationVersion = setMigrationVersion
-	PerformMigrations   = performMigrations
-	AutoMigratePtr      = &autoMigrate
-	Main                = main
-	FillInInfoParams    = fillInInfoParams
+	CreateStorage         = createStorage
+	StartService          = startService
+	StopService           = stopService
+	CloseStorage          = closeStorage
+	PrepareDB             = prepareDB
+	StartConsumer         = startConsumer
+	StartServer           = startServer
+	PrintVersionInfo      = printVersionInfo
+	PrintHelp             = printHelp
+	PrintConfig           = printConfig
+	PrintEnv              = printEnv
+	GetDBForMigrations    = getDBForMigrations
+	PrintMigrationInfo    = printMigrationInfo
+	SetMigrationVersion   = setMigrationVersion
+	PerformMigrations     = performMigrations
+	AutoMigratePtr        = &autoMigrate
+	Main                  = main
+	FillInInfoParams      = fillInInfoParams
+	StartHeartbeatService = startHeartbeatConsumer
+	StopHeartbeatService  = stopHeartbeatConsumer
 )
