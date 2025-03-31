@@ -45,4 +45,5 @@ var (
 	AutoMigratePtr      = &autoMigrate
 	Main                = main
 	FillInInfoParams    = fillInInfoParams
+	HandleCommand       = handleCommand
 )

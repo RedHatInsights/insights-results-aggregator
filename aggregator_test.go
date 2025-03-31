@@ -459,6 +459,117 @@ func TestPerformMigrationsTooManyArgs(t *testing.T) {
 	os.Args = oldArgs
 }
 
+// TestHandleCommandStartService checks whether "start-service"
+// command successfully finishes
+func TestHandleCommandStartService(t *testing.T) {
+	*main.AutoMigratePtr = true
+
+	os.Clearenv()
+	mustLoadConfiguration("./tests/tests")
+	oldArgs := os.Args
+	os.Args = []string{os.Args[0], "start-service"}
+
+	go func() {
+		main.Main()
+	}()
+
+	errCode := main.StopService()
+	assert.Equal(t, main.ExitStatusOK, errCode)
+
+	os.Args = oldArgs
+
+	*main.AutoMigratePtr = false
+}
+
+// TestHandleCommands checks whether "help", "print-help",
+// an undefined command (defaults to help), "print-config",
+// "print-env" and "print-version-info" successfully finish
+func TestHandleCommands(t *testing.T) {
+	type testCase struct {
+		name    string
+		command string
+	}
+	testCases := []testCase{
+		{
+			name:    "Help",
+			command: "help",
+		},
+		{
+			name:    "PrintHelp",
+			command: "print-help",
+		},
+		{
+			name:    "BadCommandDefaultsToHelp",
+			command: "bad-command",
+		},
+		{
+			name:    "PrintConfig",
+			command: "print-config",
+		},
+		{
+			name:    "PrintEnv",
+			command: "print-env",
+		},
+		{
+			name:    "PrintVersionInfo",
+			command: "print-version-info",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			exitCode := main.HandleCommand(tc.command)
+			assert.Equal(t, main.ExitStatusOK, exitCode)
+		})
+	}
+}
+
+// TestHandleCommandMigrations checks whether "migrations",
+// "migration" and "migrate" command successfully finishes
+func TestHandleCommandMigrations(t *testing.T) {
+	type testCase struct {
+		name    string
+		command string
+	}
+	testCases := []testCase{
+		{
+			name:    "Migrations",
+			command: "migrations",
+		},
+		{
+			name:    "Migration",
+			command: "migration",
+		},
+		{
+			name:    "Migrate",
+			command: "migrate",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			*main.AutoMigratePtr = true
+
+			os.Clearenv()
+			mustLoadConfiguration("./tests/tests")
+			oldArgs := os.Args
+			os.Args = []string{os.Args[0], tc.command}
+
+			go func() {
+				main.Main()
+			}()
+
+			buf := new(bytes.Buffer)
+			log.Logger = zerolog.New(buf)
+
+			assert.NotContains(t, buf.String(), "Service exited with non-zero code")
+
+			os.Args = oldArgs
+			*main.AutoMigratePtr = false
+		})
+	}
+}
+
 // TestFillInInfoParams test the behaviour of function fillInInfoParams
 func TestFillInInfoParams(t *testing.T) {
 	// map to be used by this unit test
