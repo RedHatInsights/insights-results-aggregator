@@ -1,6 +1,8 @@
 module github.com/RedHatInsights/insights-results-aggregator
 
-go 1.22
+go 1.23.0
+
+toolchain go1.23.8
 
 require (
 	github.com/BurntSushi/toml v1.5.0
@@ -23,7 +25,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
 	github.com/xdg/scram v1.0.5
-	golang.org/x/sync v0.10.0
+	golang.org/x/sync v0.13.0
 )
 
 require (
@@ -74,10 +76,10 @@ require (
 	github.com/xdg/stringprep v1.0.3 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/crypto v0.37.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/h2non/gock.v1 v1.1.2 // indirect
 	gopkg.in/jcmturner/aescts.v1 v1.0.1 // indirect
