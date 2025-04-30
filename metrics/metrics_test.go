@@ -152,6 +152,121 @@ func TestWrittenReportsMetric(t *testing.T) {
 	assertCounterValue(t, 100, metrics.WrittenReports, initValue)
 }
 
+// unregisterAllMetrics manually unregisters metrics before use
+func unregisterAllMetrics() {
+	prometheus.Unregister(metrics.ConsumedMessages)
+	prometheus.Unregister(metrics.ConsumingErrors)
+	prometheus.Unregister(metrics.SkippedEmptyReports)
+	prometheus.Unregister(metrics.SuccessfulMessagesProcessingTime)
+	prometheus.Unregister(metrics.FailedMessagesProcessingTime)
+	prometheus.Unregister(metrics.LastCheckedTimestampLagMinutes)
+	prometheus.Unregister(metrics.ProducedMessages)
+	prometheus.Unregister(metrics.WrittenReports)
+	prometheus.Unregister(metrics.FeedbackOnRules)
+	prometheus.Unregister(metrics.SQLQueriesCounter)
+}
+
+// TestCounterMetrics checks whether incrementing metrics
+// works as expected
+func TestCounterMetrics(t *testing.T) {
+	type testCase struct {
+		name    string
+		counter prometheus.Counter
+	}
+	testCases := []testCase{
+		{
+			name:    "ConsumedMessagesMetric",
+			counter: metrics.ConsumedMessages,
+		},
+		{
+			name:    "ConsumingErrorsMetric",
+			counter: metrics.ConsumingErrors,
+		},
+		{
+			name:    "SkippedEmptyReportsMetric",
+			counter: metrics.SkippedEmptyReports,
+		},
+		{
+			name:    "ProducedMessagesMetric",
+			counter: metrics.ProducedMessages,
+		},
+		{
+			name:    "WrittenReportsMetric",
+			counter: metrics.WrittenReports,
+		},
+		{
+			name:    "FeedbackOnRulesMetric",
+			counter: metrics.FeedbackOnRules,
+		},
+		{
+			name:    "SQLQueriesCounterMetric",
+			counter: metrics.SQLQueriesCounter,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			unregisterAllMetrics()
+
+			metrics.AddMetricsWithNamespace(tc.name)
+
+			initValue := int64(getCounterValue(tc.counter))
+			assertCounterValue(t, 0, tc.counter, initValue)
+
+			tc.counter.Inc()
+			tc.counter.Inc()
+
+			expectedValue := int64(2)
+			assertCounterValue(t, expectedValue, tc.counter, initValue)
+		})
+	}
+}
+
+// TestHistogramMetrics checks whether incrementing time metrics
+// works as expected
+func TestHistogramMetrics(t *testing.T) {
+	type testCase struct {
+		name      string
+		histogram prometheus.Histogram
+	}
+	testCases := []testCase{
+		{
+			name:      "SuccessfulMessagesProcessingTimeMetric",
+			histogram: metrics.SuccessfulMessagesProcessingTime,
+		},
+		{
+			name:      "FailedMessagesProcessingTimeMetric",
+			histogram: metrics.FailedMessagesProcessingTime,
+		},
+		{
+			name:      "LastCheckedTimestampLagMinutesMetric",
+			histogram: metrics.LastCheckedTimestampLagMinutes,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			unregisterAllMetrics()
+
+			metrics.AddMetricsWithNamespace(tc.name)
+
+			tc.histogram.Observe(1.5)
+			tc.histogram.Observe(2.0)
+
+			metric := &prommodels.Metric{}
+			err := tc.histogram.Write(metric)
+			helpers.FailOnError(t, err)
+
+			count := metric.GetHistogram().GetSampleCount()
+			expectedCount := uint64(2)
+			assert.Equal(t, expectedCount, count)
+
+			sum := metric.GetHistogram().GetSampleSum()
+			assert.InDelta(t, 3.5, sum, 0.01)
+		})
+	}
+}
+
 // TODO: write tests for sql queries metrics
 // - SQLQueriesCounter
 // - SQLQueriesDurations
