@@ -1,6 +1,8 @@
 module github.com/RedHatInsights/insights-results-aggregator
 
-go 1.22
+go 1.23
+
+toolchain go1.24.0
 
 require (
 	github.com/BurntSushi/toml v1.5.0
