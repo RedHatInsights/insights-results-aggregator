@@ -58,6 +58,7 @@ endpoint = "localhost:6379"
 password = ""
 username = ""
 timeout_seconds = 30
+use_clowder = false
 
 [content]
 path = "./tests/content/ok/"

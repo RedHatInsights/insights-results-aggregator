@@ -37,4 +37,5 @@ type RedisConfiguration struct {
 	RedisTimeoutSeconds int    `mapstructure:"timeout_seconds" toml:"timeout_seconds"`
 	RedisPassword       string `mapstructure:"password" toml:"password"`
 	RedisUsername       string `mapstructure:"username" toml:"username"`
+	UseClowder          bool   `mapstructure:"use_clowder" toml:"use_clowder"`
 }
