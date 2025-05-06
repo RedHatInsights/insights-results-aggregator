@@ -92,8 +92,6 @@ objects:
                   key: password
             - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS
               value: "${REDIS_TIMEOUT_SECONDS}"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__USE_CLOWDER
-              value: ${REDIS_USE_CLOWDER}
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
               value: ${LOG_LEVEL}
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__DEBUG
@@ -649,9 +647,6 @@ parameters:
   value: 100m
 - name: CACHE_WRITER_MEMORY_REQUEST
   value: 200Mi
-- name: REDIS_USE_CLOWDER
-  value: "false"
-  required: true
 # redis
 - name: REDIS_EXPORTER_IMAGE_TAG
   value: 1.37.0-debian-10-r63

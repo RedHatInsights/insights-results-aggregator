@@ -49,7 +49,6 @@ endpoint = "localhost:6379"
 username = ""
 password = ""
 timeout_seconds = 30
-use_clowder = true
 
 [content]
 path = "/rules-content"

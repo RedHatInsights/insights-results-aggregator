@@ -358,10 +358,6 @@ func updateConfigFromClowder(c *ConfigStruct) error {
 	}
 
 	// get in-memory DB configuration from clowder
-	if !c.Redis.UseClowder {
-		fmt.Println("Clowder for Redis is disabled")
-		return nil
-	}
 	if clowder.LoadedConfig.InMemoryDb != nil {
 		updateRedisConfig(&c.Redis)
 	} else {

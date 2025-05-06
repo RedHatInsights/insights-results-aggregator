@@ -91,7 +91,6 @@ func setEnvVariables(t *testing.T) {
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE", "42")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS", "0")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__PASSWORD", "top secret")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__USE_CLOWDER", "true")
 
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN", "test.example.com")
 	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT", "test")
@@ -382,7 +381,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		endpoint = "localhost:6379"
 		password = ""
 		timeout_seconds = 30
-		use_clowder = false
 
 		[sentry]
 		dsn = "test.example2.com"
@@ -447,7 +445,6 @@ func TestLoadConfigurationFromFile(t *testing.T) {
 		RedisDatabase:       0,
 		RedisTimeoutSeconds: 30,
 		RedisPassword:       "",
-		UseClowder:          false,
 	}, conf.GetRedisConfiguration())
 
 	assert.Equal(t, logger.SentryLoggingConfiguration{
@@ -510,7 +507,6 @@ func TestLoadConfigurationFromEnv(t *testing.T) {
 		RedisDatabase:       42,
 		RedisTimeoutSeconds: 0,
 		RedisPassword:       "top secret",
-		UseClowder:          true,
 	}, conf.GetRedisConfiguration())
 
 	assert.Equal(t, logger.SentryLoggingConfiguration{
@@ -728,29 +724,4 @@ func TestClowderConfigForRedis(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s:%d", hostname, port), redisCfg.RedisEndpoint)
 	assert.Equal(t, username, redisCfg.RedisUsername)
 	assert.Equal(t, password, redisCfg.RedisPassword)
-}
-
-func TestClowderForRedisDisabled(t *testing.T) {
-	os.Clearenv()
-
-	var hostname = "redis"
-	var port = 6379
-
-	// explicit Redis config
-	clowder.LoadedConfig = &clowder.AppConfig{
-		InMemoryDb: &clowder.InMemoryDBConfig{
-			Hostname: hostname,
-			Port:     port,
-		},
-	}
-
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "../tests/config1")
-	mustSetEnv(t, "ACG_CONFIG", "tests/clowder_config.json")
-	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR__REDIS__USE_CLOWDER", "false")
-
-	err := conf.LoadConfiguration("config")
-	assert.NoError(t, err, "Failed loading configuration file")
-
-	redisCfg := conf.GetRedisConfiguration()
-	assert.Equal(t, "localhost:6379", redisCfg.RedisEndpoint)
 }
