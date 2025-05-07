@@ -31,7 +31,7 @@ objects:
       iqePlugin: ccx
     deployments:
       - name: db-writer
-        minReplicas: ${{CACHE_WRITER_REPLICAS}}
+        replicas: ${{VALKEY_WRITER_REPLICAS}}
         webServices:
           public:
             enabled: false
@@ -190,7 +190,7 @@ objects:
       iqePlugin: ccx
     deployments:
       - name: db-writer
-        minReplicas: ${{CACHE_WRITER_REPLICAS}}
+        replicas: ${{CACHE_WRITER_REPLICAS}}
         webServices:
           public:
             enabled: false
@@ -749,6 +749,9 @@ parameters:
   required: true
 - name: CACHE_WRITER_REPLICAS
   description: The number of replicas to use for the ccx-cache-writer deployment
+  value: "1"
+- name: VALKEY_WRITER_REPLICAS
+  description: The number of replicas to use for the valkey-writer deployment
   value: "1"
 - name: KAFKA_BOOTSTRAP_HOST
   required: true
