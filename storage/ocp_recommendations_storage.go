@@ -286,6 +286,7 @@ func newRedisStorage(configuration Configuration) (OCPRecommendationsStorage, er
 	client, err := redis.CreateRedisClient(
 		redisCfg.RedisEndpoint,
 		redisCfg.RedisDatabase,
+		redisCfg.RedisUsername,
 		redisCfg.RedisPassword,
 		redisCfg.RedisTimeoutSeconds,
 	)

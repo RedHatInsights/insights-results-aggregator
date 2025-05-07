@@ -63,6 +63,7 @@ const (
 	noSaslConfig   = "warning: SASL configuration is missing"
 	noTopicMapping = "warning: no kafka mapping found for topic %s"
 	noStorage      = "warning: no storage section in Clowder config"
+	noInMemoryDB   = "warning: no in-memory database section in Clowder config"
 )
 
 // MetricsConfiguration holds metrics related configuration
@@ -356,7 +357,24 @@ func updateConfigFromClowder(c *ConfigStruct) error {
 		fmt.Println(noStorage)
 	}
 
+	// get in-memory DB configuration from clowder
+	if clowder.LoadedConfig.InMemoryDb != nil {
+		updateRedisConfig(&c.Redis)
+	} else {
+		fmt.Println(noInMemoryDB)
+	}
+
 	return nil
+}
+
+func updateRedisConfig(conf *storage.RedisConfiguration) {
+	conf.RedisEndpoint = fmt.Sprintf("%s:%d", clowder.LoadedConfig.InMemoryDb.Hostname, clowder.LoadedConfig.InMemoryDb.Port)
+	if clowder.LoadedConfig.InMemoryDb.Username != nil {
+		conf.RedisUsername = *clowder.LoadedConfig.InMemoryDb.Username
+	}
+	if clowder.LoadedConfig.InMemoryDb.Password != nil {
+		conf.RedisPassword = *clowder.LoadedConfig.InMemoryDb.Password
+	}
 }
 
 func updateStorageConfFromClowder(conf *storage.Configuration) {
