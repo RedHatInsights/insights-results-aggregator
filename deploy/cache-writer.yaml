@@ -52,7 +52,7 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__PAYLOAD_TRACKER_TOPIC
               value: "${PAYLOAD_TRACKER_TOPIC}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__SERVICE_NAME
-              value: "${CACHE_WRITER_SERVICE_NAME}"
+              value: "${VALKEY_WRITER_SERVICE_NAME}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP
               value: "${VALKEY_GROUP_ID}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
@@ -769,6 +769,9 @@ parameters:
   required: true
 - name: CACHE_WRITER_SERVICE_NAME
   value: ccx-cache-writer
+  required: true
+- name: VALKEY_WRITER_SERVICE_NAME
+  value: valkey-writer
   required: true
 - name: GROUP_ID
   value: ccx_cache_writer_app
