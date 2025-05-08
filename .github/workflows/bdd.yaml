@@ -10,7 +10,7 @@ jobs:
       matrix:
         go-version:
           - "1.23"
-    name: BDD for Go ${{ matrix.go-version}}
+    name: BDD tests
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
