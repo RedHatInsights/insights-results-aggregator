@@ -6,17 +6,13 @@ on:
 jobs:
   bdd:
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        go-version:
-          - "1.23"
     name: BDD tests
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: "1.23"
       - name: Build project
         run: make build
       - name: Retrieve Docker compose file
