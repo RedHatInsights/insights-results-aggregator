@@ -1208,7 +1208,7 @@ func (storage OCPRecommendationsDBStorage) WriteReportForCluster(
 		return nil
 	}(tx)
 
-	finishTransaction(tx, err)
+	err = finishTransaction(tx, err)
 
 	return err
 }
@@ -1285,23 +1285,38 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 		return nil
 	}(tx)
 
-	finishTransaction(tx, err)
+	err = finishTransaction(tx, err)
 
 	return err
 }
 
+// rollbackTransaction attempts to roll back the transaction, returning any error encountered.
+func rollbackTransaction(tx *sql.Tx) error {
+	rollbackError := tx.Rollback()
+	if rollbackError != nil {
+		log.Err(rollbackError).Msg("error when trying to rollback a transaction")
+		return rollbackError
+	}
+	return nil
+}
+
+// commitTransaction attempts to commit the transaction, when error is detecter it attempts rollback.
+func commitTransaction(tx *sql.Tx) error {
+	commitError := tx.Commit()
+	if commitError != nil {
+		log.Err(commitError).Msg("error when trying to commit a transaction")
+		return commitError
+	}
+	return nil
+
+}
+
 // finishTransaction finishes the transaction depending on err. err == nil -> commit, err != nil -> rollback
-func finishTransaction(tx *sql.Tx, err error) {
+func finishTransaction(tx *sql.Tx, err error) error {
 	if err != nil {
-		rollbackError := tx.Rollback()
-		if rollbackError != nil {
-			log.Err(rollbackError).Msg("error when trying to rollback a transaction")
-		}
+		return rollbackTransaction(tx)
 	} else {
-		commitError := tx.Commit()
-		if commitError != nil {
-			log.Err(commitError).Msg("error when trying to commit a transaction")
-		}
+		return commitTransaction(tx)
 	}
 }
 
