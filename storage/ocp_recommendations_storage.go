@@ -1300,7 +1300,7 @@ func rollbackTransaction(tx *sql.Tx) error {
 	return nil
 }
 
-// commitTransaction attempts to commit the transaction, when error is detecter it attempts rollback.
+// commitTransaction attempts to commit the transaction, when error is detected it attempts rollback.
 func commitTransaction(tx *sql.Tx) error {
 	commitError := tx.Commit()
 	if commitError != nil {
