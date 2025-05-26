@@ -1308,15 +1308,19 @@ func commitTransaction(tx *sql.Tx) error {
 		return commitError
 	}
 	return nil
-
 }
 
 // finishTransaction finishes the transaction depending on err. err == nil -> commit, err != nil -> rollback
 func finishTransaction(tx *sql.Tx, err error) error {
 	if err != nil {
-		return rollbackTransaction(tx)
+		rollbackErr := rollbackTransaction(tx)
+		if rollbackErr != nil {
+			return rollbackErr
+		}
+		return err
 	} else {
-		return commitTransaction(tx)
+		err = commitTransaction(tx)
+		return err
 	}
 }
 
