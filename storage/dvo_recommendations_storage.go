@@ -291,7 +291,7 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 		return nil
 	}(tx)
 
-	finishTransaction(tx, err)
+	err = finishTransaction(tx, err)
 
 	return err
 }

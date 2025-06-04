@@ -2235,6 +2235,163 @@
           "prod"
         ]
       }
+    },
+    "/organization/{org_id}/workloads": {
+      "get": {
+        "summary": "Returns the namespace workloads for the given organization",
+        "operationId": "getOrganizationWorkloadsGet",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "A JSON containing workloads for this organization",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/statusResponse"
+                    },                    
+                    "workloads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/workloadsForNamespace"
+                    }
+                  }
+                }
+              }
+            }
+          }
+          }
+        },
+        "tags": []
+      },
+      "post": {
+        "summary": "Returns the namespace workloads for the given organization",
+        "operationId": "getOrganizationWorkloadsPost",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "requestBody": {
+          "description": "List of cluster IDs. Each ID must conform to UUID format.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clusters": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/clusterId"
+                    }
+                  }
+                }
+              },
+              "example": "{\"clusters\": [\"34c3ecc5-624a-49a5-bab8-4fdc5e51a266\"]}"
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "A JSON containing workloads for this organization",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/statusResponse"
+                    },                    
+                    "workloads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/workloadsForNamespace"
+                    }
+                  }
+                }
+              }
+            }
+            }
+          }
+        },
+        "tags": []
+      }
+    },
+    "/organization/{org_id}/namespace/{namespace}/cluster/{cluster}/workloads": {
+      "get": {
+        "summary": "Returns the workloads for a single namespace in the given cluster",
+        "operationId": "getNamespaceClusterWorkloadsGet",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "description": "Name of the namespace",
+            "schema": {
+              "type": "string"
+            },
+            "example": "default"
+          },
+          {
+            "name": "cluster",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster in valid UUID format",
+            "schema": {
+              "$ref":"#/components/schemas/clusterId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref":"#/components/schemas/workloadsForCluster"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found, usually caused when the namespace doesn't belong to the cluster"
+          }
+        },
+        "tags": []
+      }
     }
   },
   "security": [],
@@ -2243,6 +2400,18 @@
     "links": {},
     "callbacks": {},
     "schemas": {
+      "statusResponse": {
+        "type": "string",
+        "description": "response status for the processed request",
+        "example": "ok"
+      },
+      "clusterId": {
+        "description": "ID of the cluster in valid UUID format",
+        "type": "string",
+        "minLength": 36,
+        "maxLength": 36,
+        "format": "uuid"
+      },
       "ratingSchema": {
         "description": "An object representing the rating given from a user for a rule",
         "type": "object",
@@ -2252,6 +2421,179 @@
           },
           "rating": {
             "type": "integer"
+          }
+        }
+      },
+      "clusterType": {
+        "type": "object",
+        "description": "object representing a cluster with its uuid and a human-readable name",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "UUID of the cluster"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "display name of the cluster"
+          }
+        }
+      },
+      "namespaceType": {
+        "type": "object",
+        "description": "object representing a namespace of a cluster",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "internal UUID for the namespace in its cluster"            
+          },
+          "name": {
+            "type": "string",
+            "description": "human-readable name of the namespace"
+          }
+        }
+      },
+      "dvoReportMeta": {
+        "type": "object",
+        "description": "object with metadata of the DVO workloads",
+        "properties": {
+          "recommendations": {
+            "type": "integer",
+            "description": "Total number of DVO recommendations affecting this namespace"
+          },
+          "objects": {
+            "type": "integer",
+            "description": "Total number of unique objects (workloads) being affected by DVO recommendations in this namespace. When a workload is being affected by several recommendations at once, it still counts as one affected object/workload in the context of a namespace."
+          },
+          "reported_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of the first analysis"
+          },
+          "last_checked_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of the last analysis"
+          },
+          "highest_severity": {
+            "type": "integer",
+            "description": "Highest recommendation severity affecting this namespace + cluster"
+          },
+          "hits_by_severity": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "A dictionary with the number of DVO recommendation hits grouped by their severity. Always provides the severity keys even if there are no recommendations currently hitting.",
+            "example": {
+              "1": 2,
+              "2": 3,
+              "3": 0,
+              "4": 1
+            }
+          }
+        }
+      },
+      "dvoObject": {
+        "type": "object",
+        "description": "Representation of a DVO object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind of the object"
+          },
+          "uid": {
+            "type": "string",
+            "description": "The unique identifier of the object in its cluster"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "The human-readable name of the object"
+          }
+        }
+      },
+      "dvoRecommendation": {
+        "type": "object",
+        "description": "An object representing a single DVO recommendation",
+        "properties": {
+          "check": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "modified": {
+            "type": "string"
+          },
+          "more_info": {
+            "type": "string"
+          },
+          "extra_data": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "objects":{
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/dvoObject"
+            }
+          }
+        }
+      },
+      "workloadsForNamespace": {
+        "description": "An object representing a single entry of the namespace list with some aggregations",
+        "type": "object",
+        "properties": {
+          "cluster": {
+            "$ref":"#/components/schemas/clusterType"
+          },
+          "namespace": {
+            "$ref":"#/components/schemas/namespaceType"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/dvoReportMeta"
+          },
+          "recommendations_hit_count": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "A dictionary with the number of DVO recommendation hits grouped by recommendation",
+            "example": {
+              "rule1": 2,
+              "rule2": 3,
+              "rule3": 0,
+              "rule4": 1
+            }
+          }
+        }
+      },
+      "workloadsForCluster": {
+        "description": "An object representing the workloads for a single cluster",
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref":"#/components/schemas/statusResponse"
+          },
+          "cluster": {
+            "$ref":"#/components/schemas/clusterType"
+          },
+          "namespaces": {
+            "type": "array",
+            "items": {
+              "$ref":"#/components/schemas/workloadsForNamespace"
+            }
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/dvoReportMeta"
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/dvoRecommendation"
+            }
           }
         }
       }

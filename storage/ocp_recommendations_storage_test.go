@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"database/sql"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -298,6 +299,56 @@ func TestDBStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
 		testdata.RequestID1,
 	)
 	assert.EqualError(t, err, "writing report with DB -1 is not supported")
+}
+
+// TestDBStorageWriteReportForClusterCommitFailure checks that if the database COMMIT operation
+// fails during an attempt to write a report, a ROLLBACK is subsequently performed and
+// the original commit error is returned by WriteReportForCluster.
+func TestDBStorageWriteReportForClusterCommitFailure(t *testing.T) {
+	mockStorage, mockSQL := ira_helpers.MustGetMockStorageWithExpectsForDriver(t, types.DBDriverPostgres)
+	mockSQL.ExpectBegin()
+	mockSQL.ExpectQuery(`SELECT last_checked_at FROM report`).
+		WillReturnRows(sqlmock.NewRows([]string{"last_checked_at"}))
+	mockSQL.ExpectQuery(`SELECT rule_fqdn, error_key, created_at FROM rule_hit`).
+		WillReturnRows(sqlmock.NewRows([]string{"rule_fqdn", "error_key", "created_at"}))
+	mockSQL.ExpectExec(`DELETE FROM rule_hit`).
+		WillReturnResult(driver.ResultNoRows)
+	mockSQL.ExpectExec(`INSERT INTO report`).
+		WillReturnResult(driver.ResultNoRows)
+	dbCommitErr := errors.New("simulated DB commit failure")
+	mockSQL.ExpectCommit().WillReturnError(dbCommitErr)
+	mockSQL.ExpectRollback()
+	expectedReturnedError := dbCommitErr
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, time.Now(), time.Now(),
+		testdata.RequestID1)
+	assert.Error(t, err)
+	assert.Equal(t, expectedReturnedError.Error(), err.Error())
+}
+
+// TestDBStorageWriteReportForClusterRollBackFailure checks that if an error occurs within the report writing transaction
+// (triggering a rollback attempt), and the subsequent ROLLBACK operation itself also fails,
+// WriteReportForCluster returns the error from the failed ROLLBACK.
+func TestDBStorageWriteReportForClusterRollBackFailure(t *testing.T) {
+	simulatedLogicError := errors.New("simulated failure during DELETE FROM rule_hit")
+	simulatedRollbackFailureError := errors.New("simulated DB rollback failure")
+	mockStorage, mockSQL := ira_helpers.MustGetMockStorageWithExpectsForDriver(t, types.DBDriverPostgres)
+	mockSQL.ExpectBegin()
+	mockSQL.ExpectQuery(`SELECT last_checked_at FROM report`).
+		WillReturnRows(sqlmock.NewRows([]string{"last_checked_at"}))
+	mockSQL.ExpectQuery(`SELECT rule_fqdn, error_key, created_at FROM rule_hit`).
+		WillReturnRows(sqlmock.NewRows([]string{"rule_fqdn", "error_key", "created_at"}))
+	mockSQL.ExpectExec(`DELETE FROM rule_hit`).
+		WillReturnError(simulatedLogicError)
+	mockSQL.ExpectRollback().WillReturnError(simulatedRollbackFailureError)
+	expectedReturnedError := simulatedRollbackFailureError
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, time.Now(), time.Now(),
+		testdata.RequestID1)
+	assert.Error(t, err)
+	assert.Equal(t, expectedReturnedError.Error(), err.Error())
 }
 
 // TestDBStorageWriteReportForClusterMoreRecentInDB checks that older report

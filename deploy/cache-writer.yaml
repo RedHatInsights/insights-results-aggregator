@@ -93,8 +93,6 @@ objects:
               value: ${CLOUDWATCH_ENABLED}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
               value: ${CLOUDWATCH_DEBUG}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
-              value: ${CW_LOG_STREAM}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
               value: ${CREATE_STREAM_IF_NOT_EXISTS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
@@ -259,8 +257,6 @@ objects:
               value: ${CLOUDWATCH_ENABLED}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
               value: ${CLOUDWATCH_DEBUG}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
-              value: ${CW_LOG_STREAM}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
               value: ${CREATE_STREAM_IF_NOT_EXISTS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
@@ -803,8 +799,6 @@ parameters:
 - name: CLOUDWATCH_ENABLED
   value: "true"
   required: true
-- name: CW_LOG_STREAM
-  value: "cache-writer"
 - name: CREATE_STREAM_IF_NOT_EXISTS
   value: "true"
 - name: CACHE_WRITER_CPU_LIMIT
