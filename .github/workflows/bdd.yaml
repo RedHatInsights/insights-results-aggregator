@@ -5,7 +5,11 @@ on:
 
 jobs:
   bdd:
-    runs-on: ubuntu-latest
+    # cannot move to latest because 24.04 uses mv (gnu coreutils) version 9.4
+    # and between 9.2 and 9.5 (when the change was reverted) `mv -n (--no-clobber)`
+    # exits with error if destination file exits; which in our case was happeing
+    # in the "Rename logs" step when the `sed` command was not modifying the file name.
+    runs-on: ubuntu-22.04
     name: BDD tests
     steps:
       - uses: actions/checkout@v4
