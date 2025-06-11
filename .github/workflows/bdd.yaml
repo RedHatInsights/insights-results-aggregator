@@ -33,7 +33,7 @@ jobs:
       - name: Rename logs
         if: always()
         # Otherwise the upload-artifact action will complain
-        run: for filename in logs/insights-results-aggregator/*; do mv -n "$filename" "$(echo "$filename" | sed -e 's/["><:]//g')";  done
+        run: for filename in logs/insights-results-aggregator/*; do mv --verbose -n "$filename" "$(echo "$filename" | sed -e 's/["><:]//g')";  done
       - name: Store service logs
         if: always()
         uses: actions/upload-artifact@v4
