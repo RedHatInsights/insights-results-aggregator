@@ -23,12 +23,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
 	main "github.com/RedHatInsights/insights-results-aggregator"
+	"github.com/RedHatInsights/insights-results-aggregator/broker"
 	"github.com/RedHatInsights/insights-results-aggregator/conf"
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
@@ -211,9 +213,17 @@ func TestStartConsumer_BadBrokerAddress(t *testing.T) {
 		"INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED":   "true",
 	})
 
+	// MockBroker does not currently work with newer Kafka versions,
+	// so it has to be set to an older value
+	defaultVersion := broker.SaramaVersion
+	broker.SaramaVersion = sarama.V0_10_2_0
+	defer func() {
+		broker.SaramaVersion = defaultVersion
+	}()
+
 	err := main.StartConsumer(conf.GetBrokerConfiguration())
 	assert.EqualError(
-		t, err, "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)",
+		t, err, "kafka: client has run out of available brokers to talk to: dial tcp: address 999999: invalid port",
 	)
 }
 

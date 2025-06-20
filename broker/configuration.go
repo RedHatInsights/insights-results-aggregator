@@ -23,12 +23,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/IBM/sarama"
 	tlsutils "github.com/RedHatInsights/insights-operator-utils/tls"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/rs/zerolog/log"
 )
+
+// SaramaVersion is the version of Kafka API used in sarama client
+var SaramaVersion = sarama.V3_8_0_0
 
 // Configuration represents configuration of Kafka broker
 type Configuration struct {
@@ -54,7 +57,7 @@ type Configuration struct {
 // SaramaConfigFromBrokerConfig returns a Config struct from broker.Configuration parameters
 func SaramaConfigFromBrokerConfig(cfg Configuration) (*sarama.Config, error) {
 	saramaConfig := sarama.NewConfig()
-	saramaConfig.Version = sarama.V0_10_2_0
+	saramaConfig.Version = SaramaVersion
 
 	if cfg.Timeout > 0 {
 		saramaConfig.Net.DialTimeout = cfg.Timeout
