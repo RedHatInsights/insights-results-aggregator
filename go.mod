@@ -10,7 +10,7 @@ require (
 	github.com/RedHatInsights/insights-operator-utils v1.25.14
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
 	github.com/RedHatInsights/insights-results-types v1.23.5
-	github.com/Shopify/sarama v1.27.1
+	github.com/Shopify/sarama v1.45.2
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/google/uuid v1.6.0
