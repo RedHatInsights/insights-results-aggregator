@@ -91,7 +91,6 @@ type ConfigStruct struct {
 	Redis                     storage.RedisConfiguration        `mapstructure:"redis" toml:"redis"`
 	Metrics                   MetricsConfiguration              `mapstructure:"metrics" toml:"metrics"`
 	SentryLoggingConf         logger.SentryLoggingConfiguration `mapstructure:"sentry" toml:"sentry"`
-	KafkaZerologConf          logger.KafkaZerologConfiguration  `mapstructure:"kafka_zerolog" toml:"kafka_zerolog"`
 }
 
 // Config has exactly the same structure as *.toml file
@@ -224,11 +223,6 @@ func GetCloudWatchConfiguration() logger.CloudWatchConfiguration {
 // GetSentryLoggingConfiguration returns the sentry log configuration
 func GetSentryLoggingConfiguration() logger.SentryLoggingConfiguration {
 	return Config.SentryLoggingConf
-}
-
-// GetKafkaZerologConfiguration returns the kafkazero log configuration
-func GetKafkaZerologConfiguration() logger.KafkaZerologConfiguration {
-	return Config.KafkaZerologConf
 }
 
 // GetServerConfiguration returns server configuration
