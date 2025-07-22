@@ -1110,8 +1110,8 @@ data:
           {
             "current": {
               "selected": false,
-              "text": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*",
-              "value": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*"
+              "text": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*",
+              "value": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*"
             },
             "description": "The RegEx to match the services to monitor",
             "hide": 0,
@@ -1120,19 +1120,19 @@ data:
             "options": [
               {
                 "selected": true,
-                "text": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*",
-                "value": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*"
+                "text": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*",
+                "value": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*"
               }
             ],
-            "query": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*",
+            "query": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*",
             "skipUrlSync": false,
             "type": "textbox"
           },
           {
             "current": {
               "selected": false,
-              "text": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app",
-              "value": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app"
+              "text": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app",
+              "value": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app"
             },
             "description": "The RegEx to match the consumer groups to monitor",
             "hide": 0,
@@ -1141,11 +1141,11 @@ data:
             "options": [
               {
                 "selected": true,
-                "text": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app",
-                "value": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app"
+                "text": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app",
+                "value": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app"
               }
             ],
-            "query": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app",
+            "query": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app",
             "skipUrlSync": false,
             "type": "textbox"
           },
