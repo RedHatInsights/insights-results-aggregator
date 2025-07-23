@@ -27,7 +27,7 @@ REF_ENV="insights-production"
 #       deployed to ephemeral env and overriding resource template --set-template-ref.
 #       Using multiple components name in COMPONENT_NAME forces bonfire to use the
 #       git version of clowdapp.yaml(or any other) file from the pull request.
-COMPONENT_NAME="ccx-insights-results ccx-redis dvo-writer"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
+COMPONENT_NAME="ccx-insights-results valkey-writer dvo-writer"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/insights-results-aggregator"
 COMPONENTS="ccx-data-pipeline ccx-insights-results valkey-writer dvo-writer dvo-extractor insights-content-service ccx-smart-proxy ccx-mock-ams ccx-upgrades-rhobs-mock" # space-separated list of components to load
 COMPONENTS_W_RESOURCES=""  # component to keep
@@ -37,7 +37,7 @@ DEPLOY_FRONTENDS="false"
 # pr_check in pull requests still uses the old cloudservices images
 EXTRA_DEPLOY_ARGS="\
     --set-parameter ccx-insights-results/IMAGE=quay.io/cloudservices/insights-results-aggregator \
-    --set-parameter ccx-redis/IMAGE=quay.io/cloudservices/insights-results-aggregator \
+    --set-parameter valkey-writer/IMAGE=quay.io/cloudservices/insights-results-aggregator \
     --set-parameter dvo-writer/IMAGE=quay.io/cloudservices/insights-results-aggregator
 "
 
