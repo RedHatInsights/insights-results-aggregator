@@ -554,7 +554,6 @@ func TestGetCloudWatchConfigurationDefault(t *testing.T) {
 		AWSRegion:               "",
 		LogGroup:                "",
 		StreamName:              "",
-		CreateStreamIfNotExists: false,
 		Debug:                   false,
 	}, conf.GetCloudWatchConfiguration())
 }
