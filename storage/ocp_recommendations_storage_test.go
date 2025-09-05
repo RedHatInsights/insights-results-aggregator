@@ -1569,6 +1569,32 @@ func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
 	assert.True(t, res[expectedCluster2ID].CreatedAt.Equal(testdata.LastCheckedAt))
 }
 
+func TestDBStorageReadClusterListRecommendationsEmptyRecommendationTable(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	defer closer()
+
+	// Create a cluster with a report but NO recommendations
+	randomClusterID := testdata.GetRandomClusterID()
+	clusterList := []string{string(randomClusterID)}
+
+	// Write only a report for the cluster, but do NOT write any recommendations
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, randomClusterID, testdata.Report3Rules, testdata.Report3RulesParsed,
+		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// Call ReadClusterListRecommendations - this will do a LEFT JOIN and return empty rule_id
+	res, err := mockStorage.ReadClusterListRecommendations(clusterList, testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	expectedClusterID := types.ClusterName(clusterList[0])
+	assert.Contains(t, res, expectedClusterID)
+	assert.Empty(t, res[expectedClusterID].Recommendations)
+	assert.True(t, res[expectedClusterID].CreatedAt.Equal(testdata.LastCheckedAt))
+}
+
 // TestDBStorageWriteReportForClusterWithZeroGatheredTime tries to write a report in the DB
 // using the "zero" time (if the report doesn't include a gathering time, its value will be
 // this one)
