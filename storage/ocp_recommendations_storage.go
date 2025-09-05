@@ -1430,23 +1430,17 @@ func (storage OCPRecommendationsDBStorage) ReadClusterListRecommendations(
 			log.Error().Err(err).Msg("problem reading one recommendation")
 			return clusterMap, err
 		}
-
-		if cluster, exists := clusterMap[clusterID]; exists {
-			// Only add non-empty rule IDs to recommendations
-			if ruleID != "" {
-				cluster.Recommendations = append(cluster.Recommendations, ruleID)
-				clusterMap[clusterID] = cluster
-			}
-		} else {
+		if _, exists := clusterMap[clusterID]; !exists {
 			// create entry in map for new cluster ID
-			cluster := ctypes.ClusterRecommendationList{
+			clusterMap[clusterID] = ctypes.ClusterRecommendationList{
+				// created at is the same for all rows for each cluster
 				CreatedAt:       timestamp,
 				Recommendations: []ctypes.RuleID{},
 			}
-			// Only add non-empty rule IDs to recommendations
-			if ruleID != "" {
-				cluster.Recommendations = append(cluster.Recommendations, ruleID)
-			}
+		}
+		if ruleID != "" {
+			cluster := clusterMap[clusterID]
+			cluster.Recommendations = append(clusterMap[clusterID].Recommendations, ruleID)
 			clusterMap[clusterID] = cluster
 		}
 	}
