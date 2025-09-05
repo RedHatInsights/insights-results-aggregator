@@ -1388,6 +1388,7 @@ func (storage OCPRecommendationsDBStorage) ReadClusterListRecommendations(
 
 	// we have to select from report table primarily because we need to show last_checked_at even if there
 	// are no rule hits (which means there are no rows in recommendation table for that cluster)
+	// that's why we need to use COALESCE. Then, if the rule ID is an empty string, we won't add it to the result
 
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
@@ -1431,14 +1432,23 @@ func (storage OCPRecommendationsDBStorage) ReadClusterListRecommendations(
 		}
 
 		if cluster, exists := clusterMap[clusterID]; exists {
-			cluster.Recommendations = append(cluster.Recommendations, ruleID)
+			// Only add non-empty rule IDs to recommendations
+			if ruleID != "" {
+				cluster.Recommendations = append(cluster.Recommendations, ruleID)
+			}
 			clusterMap[clusterID] = cluster
 		} else {
 			// create entry in map for new cluster ID
 			clusterMap[clusterID] = ctypes.ClusterRecommendationList{
 				// created at is the same for all rows for each cluster
-				CreatedAt:       timestamp,
-				Recommendations: []ctypes.RuleID{ruleID},
+				CreatedAt: timestamp,
+				Recommendations: func() []ctypes.RuleID {
+					// Only add non-empty rule IDs to recommendations
+					if ruleID != "" {
+						return []ctypes.RuleID{ruleID}
+					}
+					return []ctypes.RuleID{}
+				}(),
 			}
 		}
 	}
