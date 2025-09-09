@@ -60,14 +60,6 @@ func logClusterInfo(message *incomingMessage) {
 	}
 }
 
-func logUnparsedMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, event string, err error) {
-	log.Error().
-		Int(offsetKey, int(originalMessage.Offset)).
-		Str(topicKey, consumer.Configuration.Topic).
-		Err(err).
-		Msg(event)
-}
-
 func logMessageError(consumer *KafkaConsumer, originalMessage *sarama.ConsumerMessage, parsedMessage *incomingMessage, event string, err error) {
 	fillEvent(log.Error(), consumer, originalMessage, parsedMessage).Err(err).Msg(event)
 }

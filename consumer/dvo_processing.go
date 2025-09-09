@@ -68,7 +68,6 @@ func (DVORulesProcessor) parseMessage(consumer *KafkaConsumer, msg *sarama.Consu
 	message, err := consumer.MessageProcessor.deserializeMessage(msg.Value)
 	if err != nil {
 		consumer.logMsgForFurtherAnalysis(msg)
-		logUnparsedMessageError(consumer, msg, "Error parsing message from Kafka", err)
 		return message, err
 	}
 	consumer.updatePayloadTracker(message.RequestID, time.Now(), message.Organization, message.Account, producer.StatusReceived)
