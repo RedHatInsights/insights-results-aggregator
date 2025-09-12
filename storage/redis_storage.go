@@ -145,13 +145,25 @@ func (storage *RedisStorage) WriteReportForCluster(
 		return err
 	}
 
+	ruleHitsCSV := getRuleHitsCSV(reportItems)
+	
+	// Log what we're about to store
+	log.Info().
+		Int("org_id", int(orgID)).
+		Str("cluster_name", string(clusterName)).
+		Str("request_id", string(requestID)).
+		Str("rule_hits_csv", ruleHitsCSV).
+		Int("csv_length", len(ruleHitsCSV)).
+		Int("report_items_count", len(reportItems)).
+		Msg("WriteReportForCluster: Storing rule hits CSV to Redis")
+
 	data := ctypes.SimplifiedReport{
 		OrgID:              int(orgID),
 		RequestID:          string(requestID),
 		ClusterID:          string(clusterName),
 		ReceivedTimestamp:  gatheredAtTime,
 		ProcessedTimestamp: storedAtTime,
-		RuleHitsCSV:        getRuleHitsCSV(reportItems),
+		RuleHitsCSV:        ruleHitsCSV,
 	}
 
 	// update hash with reports
@@ -494,18 +506,49 @@ func getRuleHitsCSV(reportItems []types.ReportItem) string {
 	// usage of strings.Builder is more efficient than consecutive string
 	// concatenation
 	var output strings.Builder
-
-	for i, reportItem := range reportItems {
-		// rule separator
-		if i > 0 {
-			output.WriteRune(',')
-		}
-		// strip .report suffix from rule module added automatically by running insights evaluation
-		output.WriteString(strings.TrimSuffix(string(reportItem.Module), ReportSuffix))
-		output.WriteRune('|')
-		output.WriteString(string(reportItem.ErrorKey))
+	
+	// Log the input to track what we're processing
+	log.Debug().Int("reportItems_count", len(reportItems)).Msg("getRuleHitsCSV: Processing report items")
+	
+	if len(reportItems) == 0 {
+		log.Warn().Msg("getRuleHitsCSV: Empty reportItems slice - will result in empty CSV")
+		return ""
 	}
 
+	validItems := 0
+	for i, reportItem := range reportItems {
+		// Validate each report item before processing
+		module := strings.TrimSuffix(string(reportItem.Module), ReportSuffix)
+		errorKey := string(reportItem.ErrorKey)
+		
+		if module == "" || errorKey == "" {
+			log.Error().
+				Str("original_module", string(reportItem.Module)).
+				Str("trimmed_module", module).
+				Str("error_key", errorKey).
+				Int("item_index", i).
+				Msg("getRuleHitsCSV: Found reportItem with empty module or error_key")
+			continue // Skip invalid items instead of creating malformed rule_ids
+		}
+		
+		// rule separator
+		if validItems > 0 {
+			output.WriteRune(',')
+		}
+		output.WriteString(module)
+		output.WriteRune('|')
+		output.WriteString(errorKey)
+		validItems++
+	}
+
+	result := output.String()
+	log.Debug().
+		Str("csv_result", result).
+		Int("result_length", len(result)).
+		Int("valid_items", validItems).
+		Int("total_items", len(reportItems)).
+		Msg("getRuleHitsCSV: Generated CSV")
+	
 	// convert back to string
-	return output.String()
+	return result
 }
