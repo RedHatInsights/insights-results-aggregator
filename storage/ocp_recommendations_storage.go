@@ -1150,6 +1150,88 @@ func (storage OCPRecommendationsDBStorage) getRuleKeyCreatedAtMap(
 	return RuleKeyCreatedAt, err
 }
 
+// updateOrgIDForCluster updates org_id in all related tables for a given cluster
+// if the org_id has changed from what's currently stored in the database
+func (storage OCPRecommendationsDBStorage) updateOrgIDForCluster(
+	tx *sql.Tx,
+	newOrgID types.OrgID,
+	clusterName types.ClusterName,
+) error {
+	// Check current org_id for this cluster from any existing record
+	var currentOrgID types.OrgID
+	var hasExistingRecord bool
+
+	// Check report table first
+	err := tx.QueryRow("SELECT org_id FROM report WHERE cluster = $1", clusterName).Scan(&currentOrgID)
+	if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("failed to check current org_id in report table: %w", err)
+	}
+	hasExistingRecord = (err != sql.ErrNoRows)
+
+	// If no record in report table, check recommendation table
+	if !hasExistingRecord {
+		err = tx.QueryRow("SELECT org_id FROM recommendation WHERE cluster_id = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+		if err != nil && err != sql.ErrNoRows {
+			return fmt.Errorf("failed to check current org_id in recommendation table: %w", err)
+		}
+		hasExistingRecord = (err != sql.ErrNoRows)
+	}
+
+	// If no record in recommendation table, check report_info table
+	if !hasExistingRecord {
+		err = tx.QueryRow("SELECT org_id FROM report_info WHERE cluster_id = $1", clusterName).Scan(&currentOrgID)
+		if err != nil && err != sql.ErrNoRows {
+			return fmt.Errorf("failed to check current org_id in report_info table: %w", err)
+		}
+		hasExistingRecord = (err != sql.ErrNoRows)
+	}
+
+	// If no existing records found, no need to update
+	if !hasExistingRecord {
+		log.Debug().Msgf("No existing records found for cluster %s, no org_id update needed", clusterName)
+		return nil
+	}
+
+	// If org_id hasn't changed, no need to update
+	if currentOrgID == newOrgID {
+		log.Debug().Msgf("org_id unchanged (%d) for cluster %s, no update needed", currentOrgID, clusterName)
+		return nil
+	}
+
+	log.Info().Msgf("Updating org_id from %d to %d for cluster %s", currentOrgID, newOrgID, clusterName)
+
+	// Update org_id in all related tables
+	tables := []struct {
+		table      string
+		clusterCol string
+	}{
+		{"report", "cluster"},
+		{"recommendation", "cluster_id"},
+		{"report_info", "cluster_id"},
+		{"rule_hit", "cluster_id"},
+		{"cluster_rule_toggle", "cluster_id"},
+		{"cluster_rule_user_feedback", "cluster_id"},
+		{"cluster_user_rule_disable_feedback", "cluster_id"},
+	}
+
+	for _, tbl := range tables {
+		updateQuery := fmt.Sprintf("UPDATE %s SET org_id = $1 WHERE %s = $2", tbl.table, tbl.clusterCol)
+		result, err := tx.Exec(updateQuery, newOrgID, clusterName)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to update org_id in table %s for cluster %s", tbl.table, clusterName)
+			// Continue with other tables even if one fails
+			continue
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err == nil && rowsAffected > 0 {
+			log.Debug().Msgf("Updated %d rows in table %s for cluster %s", rowsAffected, tbl.table, clusterName)
+		}
+	}
+
+	return nil
+}
+
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
 func (storage OCPRecommendationsDBStorage) WriteReportForCluster(
 	orgID types.OrgID,
@@ -1197,6 +1279,13 @@ func (storage OCPRecommendationsDBStorage) WriteReportForCluster(
 			return nil
 		}
 
+		// Check if org_id has changed for this cluster and update all related records if necessary
+		err = storage.updateOrgIDForCluster(tx, orgID, clusterName)
+		if err != nil {
+			log.Error().Err(err).Msg("Unable to update org_id for cluster records")
+			return err
+		}
+
 		err = storage.updateReport(tx, orgID, clusterName, report, rules, lastCheckedTime, gatheredAt, storedAtTime)
 		if err != nil {
 			return err
@@ -1235,12 +1324,21 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 		var deleted int64
 		// Delete current recommendations for the cluster if some report has been previously stored for this cluster
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
-			// Get impacted_since if present
+			// Check if org_id has changed for this cluster and update all related records if necessary
+			// This must be done FIRST so that getRuleKeyCreatedAtMapForTable finds records with correct org_id
+			err = storage.updateOrgIDForCluster(tx, orgID, clusterName)
+			if err != nil {
+				log.Error().Err(err).Msg("Unable to update org_id for cluster records")
+				return err
+			}
+
+			// Get impacted_since if present - now that records have been updated to correct org_id
 			impactedSinceMap, err = storage.getRuleKeyCreatedAtMapForTable(
 				"recommendation", orgID, clusterName)
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get recommendation impacted_since")
 			}
+
 			// it is needed to use `org_id = $1` condition there
 			// because it allows DB to use proper btree indexing
 			// and not slow sequential scan
