@@ -17,9 +17,11 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/RedHatInsights/insights-results-aggregator/migration"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
+	"github.com/rs/zerolog/log"
 )
 
 // PostgreSQL database driver
@@ -34,4 +36,56 @@ type Storage interface {
 	GetDBSchema() migration.Schema
 	GetMaxVersion() migration.Version
 	MigrateToLatest() error
+}
+
+// TableInfo contains information about a table for orgID updates
+type TableInfo struct {
+	TableName      string
+	ClusterColumn  string
+}
+
+// checkOrgIDForCluster checks if there are existing records for the cluster
+// and returns the current orgID if found
+func checkOrgIDForCluster(
+	tx *sql.Tx,
+	clusterName types.ClusterName,
+	tablesToCheck []TableInfo,
+) (currentOrgID types.OrgID, hasExistingRecord bool, err error) {
+	for _, table := range tablesToCheck {
+		query := fmt.Sprintf("SELECT org_id FROM %s WHERE %s = $1 LIMIT 1", table.TableName, table.ClusterColumn)
+		err = tx.QueryRow(query, clusterName).Scan(&currentOrgID)
+		if err != nil && err != sql.ErrNoRows {
+			return 0, false, fmt.Errorf("failed to check current org_id in %s table: %w", table.TableName, err)
+		}
+		if err != sql.ErrNoRows {
+			hasExistingRecord = true
+			return currentOrgID, hasExistingRecord, nil
+		}
+	}
+	return 0, false, nil
+}
+
+// updateOrgIDInTables updates org_id in all specified tables for a given cluster
+func updateOrgIDInTables(
+	tx *sql.Tx,
+	newOrgID types.OrgID,
+	clusterName types.ClusterName,
+	tables []TableInfo,
+) error {
+	for _, tbl := range tables {
+		updateQuery := fmt.Sprintf("UPDATE %s SET org_id = $1 WHERE %s = $2", tbl.TableName, tbl.ClusterColumn)
+		result, err := tx.Exec(updateQuery, newOrgID, clusterName)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to update org_id in table %s for cluster %s", tbl.TableName, clusterName)
+			// Continue with other tables even if one fails
+			continue
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err == nil && rowsAffected > 0 {
+			log.Debug().Msgf("Updated %d rows in table %s for cluster %s", rowsAffected, tbl.TableName, clusterName)
+		}
+	}
+
+	return nil
 }

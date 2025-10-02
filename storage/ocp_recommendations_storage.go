@@ -219,6 +219,7 @@ type OCPRecommendationsStorage interface {
 		ctypes.ClusterRecommendationMap, error,
 	)
 	PrintRuleDisableDebugInfo()
+	UpdateOrgIDForCluster(orgID types.OrgID, clusterName types.ClusterName) error
 }
 
 const (
@@ -1150,6 +1151,72 @@ func (storage OCPRecommendationsDBStorage) getRuleKeyCreatedAtMap(
 	return RuleKeyCreatedAt, err
 }
 
+// UpdateOrgIDForCluster updates org_id in all related tables for a given cluster
+// if the org_id has changed from what's currently stored in the database.
+// This method creates its own transaction.
+func (storage OCPRecommendationsDBStorage) UpdateOrgIDForCluster(
+	newOrgID types.OrgID,
+	clusterName types.ClusterName,
+) error {
+	// Begin a new transaction
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = storage.updateOrgIDForClusterInTx(tx, newOrgID, clusterName)
+	return finishTransaction(tx, err)
+}
+
+// updateOrgIDForClusterInTx updates org_id in all related tables for a given cluster
+// if the org_id has changed from what's currently stored in the database.
+// This is the transaction-level implementation.
+func (storage OCPRecommendationsDBStorage) updateOrgIDForClusterInTx(
+	tx *sql.Tx,
+	newOrgID types.OrgID,
+	clusterName types.ClusterName,
+) error {
+	// Define tables to check for existing org_id (in priority order)
+	tablesToCheck := []TableInfo{
+		{"report", "cluster"},
+		{"recommendation", "cluster_id"},
+		{"report_info", "cluster_id"},
+	}
+
+	// Check if there are existing records and get current org_id
+	currentOrgID, hasExistingRecord, err := checkOrgIDForCluster(tx, clusterName, tablesToCheck)
+	if err != nil {
+		return err
+	}
+
+	// If no existing records found, no need to update
+	if !hasExistingRecord {
+		log.Debug().Msgf("No existing records found for cluster %s, no org_id update needed", clusterName)
+		return nil
+	}
+
+	// If org_id hasn't changed, no need to update
+	if currentOrgID == newOrgID {
+		log.Debug().Msgf("org_id unchanged (%d) for cluster %s, no update needed", currentOrgID, clusterName)
+		return nil
+	}
+
+	log.Info().Msgf("Updating org_id from %d to %d for cluster %s", currentOrgID, newOrgID, clusterName)
+
+	// Define all tables that need org_id update
+	tablesToUpdate := []TableInfo{
+		{"report", "cluster"},
+		{"recommendation", "cluster_id"},
+		{"report_info", "cluster_id"},
+		{"rule_hit", "cluster_id"},
+		{"cluster_rule_toggle", "cluster_id"},
+		{"cluster_rule_user_feedback", "cluster_id"},
+		{"cluster_user_rule_disable_feedback", "cluster_id"},
+	}
+
+	return updateOrgIDInTables(tx, newOrgID, clusterName, tablesToUpdate)
+}
+
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
 func (storage OCPRecommendationsDBStorage) WriteReportForCluster(
 	orgID types.OrgID,
@@ -1241,6 +1308,7 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get recommendation impacted_since")
 			}
+
 			// it is needed to use `org_id = $1` condition there
 			// because it allows DB to use proper btree indexing
 			// and not slow sequential scan

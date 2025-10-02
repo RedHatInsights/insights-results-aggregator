@@ -56,6 +56,7 @@ type DVORecommendationsStorage interface {
 		string,
 	) (types.DVOReport, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
+	UpdateOrgIDForCluster(orgID types.OrgID, clusterName types.ClusterName) error
 }
 
 const (
@@ -294,6 +295,64 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 	err = finishTransaction(tx, err)
 
 	return err
+}
+
+// UpdateOrgIDForCluster updates org_id in the dvo_report table for a given cluster
+// if the org_id has changed from what's currently stored in the database.
+// This method creates its own transaction.
+func (storage DVORecommendationsDBStorage) UpdateOrgIDForCluster(
+	newOrgID types.OrgID,
+	clusterName types.ClusterName,
+) error {
+	// Begin a new transaction
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = storage.updateOrgIDForClusterInTx(tx, newOrgID, clusterName)
+	return finishTransaction(tx, err)
+}
+
+// updateOrgIDForClusterInTx updates org_id in the dvo_report table for a given cluster
+// if the org_id has changed from what's currently stored in the database.
+// This is the transaction-level implementation.
+func (storage DVORecommendationsDBStorage) updateOrgIDForClusterInTx(
+	tx *sql.Tx,
+	newOrgID types.OrgID,
+	clusterName types.ClusterName,
+) error {
+	// Define tables to check for existing org_id
+	tablesToCheck := []TableInfo{
+		{"dvo.dvo_report", "cluster_id"},
+	}
+
+	// Check if there are existing records and get current org_id
+	currentOrgID, hasExistingRecord, err := checkOrgIDForCluster(tx, clusterName, tablesToCheck)
+	if err != nil {
+		return err
+	}
+
+	// If no existing records found, no need to update
+	if !hasExistingRecord {
+		log.Debug().Msgf("No existing DVO records found for cluster %s, no org_id update needed", clusterName)
+		return nil
+	}
+
+	// If org_id hasn't changed, no need to update
+	if currentOrgID == newOrgID {
+		log.Debug().Msgf("org_id unchanged (%d) for cluster %s in DVO records, no update needed", currentOrgID, clusterName)
+		return nil
+	}
+
+	log.Info().Msgf("Updating DVO org_id from %d to %d for cluster %s", currentOrgID, newOrgID, clusterName)
+
+	// Define all tables that need org_id update
+	tablesToUpdate := []TableInfo{
+		{"dvo.dvo_report", "cluster_id"},
+	}
+
+	return updateOrgIDInTables(tx, newOrgID, clusterName, tablesToUpdate)
 }
 
 func (storage DVORecommendationsDBStorage) updateReport(
