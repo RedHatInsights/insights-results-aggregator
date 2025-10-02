@@ -96,3 +96,8 @@ func (*NoopDVOStorage) ReadWorkloadsForClusterAndNamespace(
 func (*NoopDVOStorage) DeleteReportsForOrg(types.OrgID) error {
 	return nil
 }
+
+// UpdateOrgIDForCluster noop
+func (*NoopDVOStorage) UpdateOrgIDForCluster(types.OrgID, types.ClusterName) error {
+	return nil
+}

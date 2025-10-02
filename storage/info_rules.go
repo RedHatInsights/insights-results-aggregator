@@ -66,13 +66,6 @@ func (storage OCPRecommendationsDBStorage) updateInfoReport(
 	clusterName types.ClusterName,
 	infoRules []types.InfoItem,
 ) error {
-	// Check if org_id has changed for this cluster and update all related records if necessary
-	err := storage.updateOrgIDForCluster(tx, orgID, clusterName)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to update org_id for cluster records")
-		return err
-	}
-
 	// Get the UPSERT query for writing an info report into the database.
 	infoUpsertQuery := storage.getReportInfoUpsertQuery()
 

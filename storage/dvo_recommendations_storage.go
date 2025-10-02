@@ -56,6 +56,7 @@ type DVORecommendationsStorage interface {
 		string,
 	) (types.DVOReport, error)
 	DeleteReportsForOrg(orgID types.OrgID) error
+	UpdateOrgIDForCluster(orgID types.OrgID, clusterName types.ClusterName) error
 }
 
 const (
@@ -296,23 +297,41 @@ func (storage DVORecommendationsDBStorage) WriteReportForCluster(
 	return err
 }
 
-// updateOrgIDForCluster updates org_id in the dvo_report table for a given cluster
-// if the org_id has changed from what's currently stored in the database
-func (storage DVORecommendationsDBStorage) updateOrgIDForCluster(
+// UpdateOrgIDForCluster updates org_id in the dvo_report table for a given cluster
+// if the org_id has changed from what's currently stored in the database.
+// This method creates its own transaction.
+func (storage DVORecommendationsDBStorage) UpdateOrgIDForCluster(
+	newOrgID types.OrgID,
+	clusterName types.ClusterName,
+) error {
+	// Begin a new transaction
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = storage.updateOrgIDForClusterInTx(tx, newOrgID, clusterName)
+	return finishTransaction(tx, err)
+}
+
+// updateOrgIDForClusterInTx updates org_id in the dvo_report table for a given cluster
+// if the org_id has changed from what's currently stored in the database.
+// This is the transaction-level implementation.
+func (storage DVORecommendationsDBStorage) updateOrgIDForClusterInTx(
 	tx *sql.Tx,
 	newOrgID types.OrgID,
 	clusterName types.ClusterName,
 ) error {
-	// Check current org_id for this cluster from any existing record
-	var currentOrgID types.OrgID
-	var hasExistingRecord bool
-
-	// Check dvo_report table for any existing records with this cluster
-	err := tx.QueryRow("SELECT org_id FROM dvo.dvo_report WHERE cluster_id = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
-	if err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("failed to check current org_id in dvo.dvo_report table: %w", err)
+	// Define tables to check for existing org_id
+	tablesToCheck := []TableInfo{
+		{"dvo.dvo_report", "cluster_id"},
 	}
-	hasExistingRecord = (err != sql.ErrNoRows)
+
+	// Check if there are existing records and get current org_id
+	currentOrgID, hasExistingRecord, err := checkOrgIDForCluster(tx, clusterName, tablesToCheck)
+	if err != nil {
+		return err
+	}
 
 	// If no existing records found, no need to update
 	if !hasExistingRecord {
@@ -328,20 +347,12 @@ func (storage DVORecommendationsDBStorage) updateOrgIDForCluster(
 
 	log.Info().Msgf("Updating DVO org_id from %d to %d for cluster %s", currentOrgID, newOrgID, clusterName)
 
-	// Update org_id in dvo_report table
-	updateQuery := "UPDATE dvo.dvo_report SET org_id = $1 WHERE cluster_id = $2"
-	result, err := tx.Exec(updateQuery, newOrgID, clusterName)
-	if err != nil {
-		log.Warn().Err(err).Msgf("Failed to update org_id in dvo.dvo_report table for cluster %s", clusterName)
-		return fmt.Errorf("failed to update org_id in dvo.dvo_report table: %w", err)
+	// Define all tables that need org_id update
+	tablesToUpdate := []TableInfo{
+		{"dvo.dvo_report", "cluster_id"},
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err == nil && rowsAffected > 0 {
-		log.Debug().Msgf("Updated %d rows in dvo.dvo_report table for cluster %s", rowsAffected, clusterName)
-	}
-
-	return nil
+	return updateOrgIDInTables(tx, newOrgID, clusterName, tablesToUpdate)
 }
 
 func (storage DVORecommendationsDBStorage) updateReport(
@@ -352,13 +363,6 @@ func (storage DVORecommendationsDBStorage) updateReport(
 	recommendations []types.WorkloadRecommendation,
 	lastCheckedTime time.Time,
 ) error {
-	// Check if org_id has changed for this cluster and update if necessary
-	err := storage.updateOrgIDForCluster(tx, orgID, clusterName)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to update org_id for DVO cluster records")
-		return err
-	}
-
 	// Get reported_at if present before deletion
 	reportedAtMap, err := storage.getReportedAtMap(orgID, clusterName)
 	if err != nil {

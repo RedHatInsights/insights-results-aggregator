@@ -490,6 +490,11 @@ func (*RedisStorage) GetDBDriverType() types.DBDriver {
 	return types.DBDriverGeneral
 }
 
+// UpdateOrgIDForCluster noop
+func (*RedisStorage) UpdateOrgIDForCluster(types.OrgID, types.ClusterName) error {
+	return nil
+}
+
 func getRuleHitsCSV(reportItems []types.ReportItem) string {
 	// usage of strings.Builder is more efficient than consecutive string
 	// concatenation

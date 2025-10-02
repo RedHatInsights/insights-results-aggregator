@@ -61,6 +61,26 @@ func (OCPRulesProcessor) deserializeMessage(messageValue []byte) (incomingMessag
 	return deserialized, nil
 }
 
+func (consumer *KafkaConsumer) updateOrgID(
+	msg *sarama.ConsumerMessage, message incomingMessage,
+) error {
+	if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
+		err := ocpStorage.UpdateOrgIDForCluster(
+			*message.Organization,
+			*message.ClusterName,
+		)
+		if err != nil {
+			logMessageError(consumer, msg, &message, "Error updating orgID for cluster", err)
+			return err
+		}
+		logMessageDebug(consumer, msg, &message, "Updated orgID if needed")
+		return nil
+	}
+	err := errors.New("orgID could not be updated")
+	logMessageError(consumer, msg, &message, unexpectedStorageType, err)
+	return err
+}
+
 func (consumer *KafkaConsumer) writeOCPReport(
 	msg *sarama.ConsumerMessage, message incomingMessage,
 	reportAsBytes []byte, lastCheckedTime, storedAtTime time.Time,
@@ -147,12 +167,22 @@ func (processor OCPRulesProcessor) processMessage(consumer *KafkaConsumer, msg *
 
 func (OCPRulesProcessor) storeInDB(consumer *KafkaConsumer, msg *sarama.ConsumerMessage, message incomingMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
+
+	// Update orgID for the cluster if it has changed
+	// This must be done before any write operations
+	err := consumer.updateOrgID(msg, message)
+	if err != nil {
+		return message.RequestID, message, err
+	}
+	tOrgIDUpdated := time.Now()
+	logDuration(tStart, tOrgIDUpdated, msg.Offset, "orgid_update")
+
 	lastCheckedTime, err := consumer.retrieveLastCheckedTime(msg, &message)
 	if err != nil {
 		return message.RequestID, message, err
 	}
 	tTimeCheck := time.Now()
-	logDuration(tStart, tTimeCheck, msg.Offset, "time_check")
+	logDuration(tOrgIDUpdated, tTimeCheck, msg.Offset, "time_check")
 
 	reportAsBytes, err := json.Marshal(*message.Report)
 	if err != nil {
