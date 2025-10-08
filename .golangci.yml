@@ -38,9 +38,10 @@ linters:
       - path: migration/ocpmigrations/mig_(.+)\.go
         linters:
           - revive
-      - path: types/
+      - path: types/*
         linters:
           - revive
+        text: 'var-naming: avoid meaningless package names'
 formatters:
   enable:
     - gofmt
