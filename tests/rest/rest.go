@@ -79,7 +79,7 @@ func ClustersTests() {
 	checkClustersEndpointForUnknownOrganizations()
 	checkClustersEndpointForImproperOrganizations()
 	checkClustersEndpointWrongMethods()
-	checkClustersEndpointSpecialOrganizationIds()
+	checkClustersEndpointSpecialOrganizationIDs()
 }
 
 // ClustersDetailTests implements tests for REST API endpoints apiPrefix+"rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail"

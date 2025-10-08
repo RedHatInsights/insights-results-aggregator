@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"database/sql"
 	"database/sql/driver"
-	"fmt"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -538,7 +538,7 @@ func TestDBStorageVoteOnRuleDBCloseError(t *testing.T) {
 
 	expects.ExpectPrepare("INSERT").
 		WillBeClosed().
-		WillReturnCloseError(fmt.Errorf(errStr)).
+		WillReturnCloseError(errors.New(errStr)).
 		ExpectExec().
 		WillReturnResult(driver.ResultNoRows)
 

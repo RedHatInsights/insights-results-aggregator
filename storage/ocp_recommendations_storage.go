@@ -1318,10 +1318,9 @@ func finishTransaction(tx *sql.Tx, err error) error {
 			return rollbackErr
 		}
 		return err
-	} else {
-		err = commitTransaction(tx)
-		return err
 	}
+	err = commitTransaction(tx)
+	return err
 }
 
 // ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization

@@ -66,7 +66,6 @@ func (consumer *KafkaConsumer) writeOCPReport(
 	reportAsBytes []byte, lastCheckedTime, storedAtTime time.Time,
 ) error {
 	if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
-
 		err := ocpStorage.WriteReportForCluster(
 			*message.Organization,
 			*message.ClusterName,

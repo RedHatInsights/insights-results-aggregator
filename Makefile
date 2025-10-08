@@ -19,8 +19,16 @@ build-cover:	${SOURCES}  ## Build binary with code coverage detection support
 ${BINARY}: ${SOURCES}
 	./build.sh
 
-check:	install_golangci_lint
-	golangci-lint run --enable=goconst,gocyclo,gofmt,goimports,gosec,gosimple,nilerr,prealloc,revive,staticcheck,unconvert,unused,whitespace,zerologlint  --timeout=3m 
+install_golangci-lint:
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+
+fmt: install_golangci-lint ## Run go formatting
+	@echo "Running go formatting"
+	golangci-lint fmt
+
+lint: install_golangci-lint ## Run go linting
+	@echo "Running go linting"
+	golangci-lint run --fix
 
 shellcheck: ## Run shellcheck
 	./shellcheck.sh
@@ -36,7 +44,7 @@ json-check: ## Check all JSONs for basic syntax
 openapi-check:
 	./check_openapi.sh
 
-style: shellcheck abcgo json-check ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
+style: shellcheck abcgo json-check lint ## Run all the formatting related commands (fmt, vet, lint, cyclo) + check shell scripts
 
 run: ${BINARY} ## Build the project and executes the binary
 	./$^
@@ -82,5 +90,3 @@ function_list: ${BINARY} ## List all functions in generated binary file
 install_addlicense:
 	[[ `command -v addlicense` ]] || go install github.com/google/addlicense
 
-install_golangci_lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6
