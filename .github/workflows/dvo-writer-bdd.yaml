@@ -1,4 +1,4 @@
-name: BDD tests
+name: DVO writer BDD tests
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ jobs:
     # exits with error if destination file exits; which in our case was happeing
     # in the "Rename logs" step when the `sed` command was not modifying the file name.
     runs-on: ubuntu-22.04
-    name: BDD tests
+    name: DVO writer BDD tests
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
@@ -24,7 +24,7 @@ jobs:
       - name: Retrieve BDD runner
         run: wget -O bdd_runner.sh https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/run_in_docker.sh && chmod +x bdd_runner.sh
       - name: Run BDD
-        run: CLEANUP_ENABLED=0 ./bdd_runner.sh aggregator-tests .
+        run: CLEANUP_ENABLED=0 ./bdd_runner.sh dvo-writer-tests .
       - name: Set container ID as env
         if: always()
         run: echo "BDD_CONTAINER=$(docker ps | grep 'insights-behavioral-spec:latest' | cut -d ' ' -f 1)" >> $GITHUB_ENV
