@@ -38,6 +38,9 @@ linters:
       - path: migration/ocpmigrations/mig_(.+)\.go
         linters:
           - revive
+      - path: types/
+        linters:
+          - revive
 formatters:
   enable:
     - gofmt
