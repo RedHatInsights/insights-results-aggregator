@@ -25,6 +25,14 @@ const (
 	selectorsKey = "selectors"
 	// key for recommendations' creation time
 	createdAtKey = "created_at"
+	// key for current organization ID used in structured log messages
+	currentOrgIDKey = "currentOrgID"
+	// key for original organization ID used in structured log messages
+	originalOrgIDKey = "originalOrgID"
+	// key for table name used in structured log messages
+	tableNameKey = "tableName"
+	// key for number of rows affected by an operation
+	rowsAffectedKey = "rowsAffected"
 	// closeStatementError error string
 	closeStatementError = "Unable to close statement"
 	// inClauseError when constructing IN clause fails

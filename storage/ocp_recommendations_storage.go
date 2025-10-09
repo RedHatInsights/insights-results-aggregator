@@ -1191,17 +1191,17 @@ func (storage OCPRecommendationsDBStorage) updateOrgIDForClusterInTx(
 
 	// If no existing records found, no need to update
 	if !hasExistingRecord {
-		log.Debug().Msgf("No existing records found for cluster %s, no org_id update needed", clusterName)
+		log.Debug().Str(clusterKey, string(clusterName)).Msgf("No existing records found for cluster, no org_id update needed")
 		return nil
 	}
 
 	// If org_id hasn't changed, no need to update
 	if currentOrgID == newOrgID {
-		log.Debug().Msgf("org_id unchanged (%d) for cluster %s, no update needed", currentOrgID, clusterName)
+		log.Debug().Uint32(currentOrgIDKey, uint32(currentOrgID)).Str(clusterKey, string(clusterName)).Msgf("org_id unchanged, no update needed")
 		return nil
 	}
 
-	log.Info().Msgf("Updating org_id from %d to %d for cluster %s", currentOrgID, newOrgID, clusterName)
+	log.Info().Uint32(currentOrgIDKey, uint32(currentOrgID)).Uint32(originalOrgIDKey, uint32(newOrgID)).Str(clusterKey, string(clusterName)).Msgf("Updating org_id")
 
 	// Define all tables that need org_id update
 	tablesToUpdate := []TableInfo{
