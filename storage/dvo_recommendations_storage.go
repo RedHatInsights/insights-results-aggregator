@@ -322,37 +322,32 @@ func (storage DVORecommendationsDBStorage) updateOrgIDForClusterInTx(
 	newOrgID types.OrgID,
 	clusterName types.ClusterName,
 ) error {
-	// Define tables to check for existing org_id
-	tablesToCheck := []TableInfo{
+	// Define relevant tables
+	tables := []TableInfo{
 		{"dvo.dvo_report", "cluster_id"},
 	}
 
 	// Check if there are existing records and get current org_id
-	currentOrgID, hasExistingRecord, err := checkOrgIDForCluster(tx, clusterName, tablesToCheck)
+	currentOrgID, hasExistingRecord, err := checkOrgIDForCluster(tx, clusterName, tables)
 	if err != nil {
 		return err
 	}
 
 	// If no existing records found, no need to update
 	if !hasExistingRecord {
-		log.Debug().Msgf("No existing DVO records found for cluster %s, no org_id update needed", clusterName)
+		log.Debug().Str(clusterKey, string(clusterName)).Msg("No existing DVO records found for cluster, no org_id update needed")
 		return nil
 	}
 
 	// If org_id hasn't changed, no need to update
 	if currentOrgID == newOrgID {
-		log.Debug().Msgf("org_id unchanged (%d) for cluster %s in DVO records, no update needed", currentOrgID, clusterName)
+		log.Debug().Uint32(currentOrgIDKey, uint32(currentOrgID)).Str(clusterKey, string(clusterName)).Msg("org_id unchanged, no update needed")
 		return nil
 	}
 
 	log.Info().Msgf("Updating DVO org_id from %d to %d for cluster %s", currentOrgID, newOrgID, clusterName)
 
-	// Define all tables that need org_id update
-	tablesToUpdate := []TableInfo{
-		{"dvo.dvo_report", "cluster_id"},
-	}
-
-	return updateOrgIDInTables(tx, newOrgID, clusterName, tablesToUpdate)
+	return updateOrgIDInTables(tx, newOrgID, clusterName, tables)
 }
 
 func (storage DVORecommendationsDBStorage) updateReport(

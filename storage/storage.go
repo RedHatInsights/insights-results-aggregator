@@ -40,18 +40,19 @@ type Storage interface {
 
 // TableInfo contains information about a table for orgID updates
 type TableInfo struct {
-	TableName      string
-	ClusterColumn  string
+	TableName     string
+	ClusterColumn string
 }
 
 // checkOrgIDForCluster checks if there are existing records for the cluster
-// and returns the current orgID if found
+// and returns the current orgID if found.
 func checkOrgIDForCluster(
 	tx *sql.Tx,
 	clusterName types.ClusterName,
 	tablesToCheck []TableInfo,
 ) (currentOrgID types.OrgID, hasExistingRecord bool, err error) {
 	for _, table := range tablesToCheck {
+		// #nosec G201 - table/column names are from predefined TableInfo, not user input
 		query := fmt.Sprintf("SELECT org_id FROM %s WHERE %s = $1 LIMIT 1", table.TableName, table.ClusterColumn)
 		err = tx.QueryRow(query, clusterName).Scan(&currentOrgID)
 		if err != nil && err != sql.ErrNoRows {
@@ -65,7 +66,7 @@ func checkOrgIDForCluster(
 	return 0, false, nil
 }
 
-// updateOrgIDInTables updates org_id in all specified tables for a given cluster
+// updateOrgIDInTables updates org_id in all specified tables for a given cluster.
 func updateOrgIDInTables(
 	tx *sql.Tx,
 	newOrgID types.OrgID,
@@ -73,17 +74,18 @@ func updateOrgIDInTables(
 	tables []TableInfo,
 ) error {
 	for _, tbl := range tables {
+		// #nosec G201 - table/column names are from predefined TableInfo, not user input
 		updateQuery := fmt.Sprintf("UPDATE %s SET org_id = $1 WHERE %s = $2", tbl.TableName, tbl.ClusterColumn)
 		result, err := tx.Exec(updateQuery, newOrgID, clusterName)
 		if err != nil {
-			log.Warn().Err(err).Msgf("Failed to update org_id in table %s for cluster %s", tbl.TableName, clusterName)
+			log.Warn().Err(err).Str(tableNameKey, tbl.TableName).Str(clusterKey, string(clusterName)).Msg("Failed to update org_id")
 			// Continue with other tables even if one fails
 			continue
 		}
 
 		rowsAffected, err := result.RowsAffected()
 		if err == nil && rowsAffected > 0 {
-			log.Debug().Msgf("Updated %d rows in table %s for cluster %s", rowsAffected, tbl.TableName, clusterName)
+			log.Debug().Int64(rowsAffectedKey, rowsAffected).Str(tableNameKey, tbl.TableName).Str(clusterKey, string(clusterName)).Msg("Updated rows in table")
 		}
 	}
 
