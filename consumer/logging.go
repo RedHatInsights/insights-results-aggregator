@@ -49,7 +49,7 @@ func logClusterInfo(message *incomingMessage) {
 		*message.Organization,
 		*message.ClusterName,
 		printableRequestID(message))
-	if message.ParsedHits != nil && len(message.ParsedHits) > 0 {
+	if len(message.ParsedHits) > 0 {
 		for _, ph := range message.ParsedHits {
 			newLine := fmt.Sprintf("\n\trule: %s; error key: %s", ph.Module, ph.ErrorKey)
 			logMessage += newLine

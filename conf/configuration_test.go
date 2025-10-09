@@ -548,13 +548,13 @@ func TestGetCloudWatchConfigurationDefault(t *testing.T) {
 	mustLoadConfiguration("/non_existing_path")
 
 	assert.Equal(t, logger.CloudWatchConfiguration{
-		AWSAccessID:             "",
-		AWSSecretKey:            "",
-		AWSSessionToken:         "",
-		AWSRegion:               "",
-		LogGroup:                "",
-		StreamName:              "",
-		Debug:                   false,
+		AWSAccessID:     "",
+		AWSSecretKey:    "",
+		AWSSessionToken: "",
+		AWSRegion:       "",
+		LogGroup:        "",
+		StreamName:      "",
+		Debug:           false,
 	}, conf.GetCloudWatchConfiguration())
 }
 

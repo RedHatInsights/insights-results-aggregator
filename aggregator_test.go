@@ -18,7 +18,7 @@ package main_test
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"os"
 	"testing"
 	"time"
@@ -179,7 +179,7 @@ func TestCloseStorage_Error(t *testing.T) {
 	log.Logger = zerolog.New(buf)
 
 	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
-	expects.ExpectClose().WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectClose().WillReturnError(errors.New(errStr))
 
 	main.CloseStorage(mockStorage.(*storage.OCPRecommendationsDBStorage))
 

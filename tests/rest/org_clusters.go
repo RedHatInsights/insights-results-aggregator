@@ -125,8 +125,8 @@ func checkClustersEndpointWrongMethods() {
 	}
 }
 
-// checkClustersEndpointSpecialOrganizationIds is an implementation of several reproducers
-func checkClustersEndpointSpecialOrganizationIds() {
+// checkClustersEndpointSpecialOrganizationIDs is an implementation of several reproducers
+func checkClustersEndpointSpecialOrganizationIDs() {
 	var orgIDs = []int{
 		2147483647, // maxint32
 		2147483648, // reproducer for https://github.com/RedHatInsights/insights-results-aggregator/issues/383

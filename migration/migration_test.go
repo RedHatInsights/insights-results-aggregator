@@ -19,7 +19,7 @@ package migration_test
 import (
 	"database/sql"
 	sql_driver "database/sql/driver"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -43,7 +43,7 @@ var (
 		return nil
 	}
 	stepErrorFn = func(tx *sql.Tx, _ types.DBDriver) error {
-		return fmt.Errorf(stepErrorMsg)
+		return errors.New(stepErrorMsg)
 	}
 	stepRollbackFn = func(tx *sql.Tx, _ types.DBDriver) error {
 		return tx.Rollback()
@@ -396,7 +396,7 @@ func TestInitInfoTable_InitTableDBError(t *testing.T) {
 	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
 
 	expects.ExpectBegin()
-	expects.ExpectExec("CREATE TABLE IF NOT EXISTS public.migration_info").WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectExec("CREATE TABLE IF NOT EXISTS public.migration_info").WillReturnError(errors.New(errStr))
 	expects.ExpectRollback()
 
 	err := migration.InitInfoTable(db, "")
@@ -411,7 +411,7 @@ func TestInitInfoTable_InitVersionDBError(t *testing.T) {
 
 	expects.ExpectBegin()
 	expects.ExpectExec("CREATE TABLE IF NOT EXISTS public.migration_info").WillReturnResult(sql_driver.ResultNoRows)
-	expects.ExpectExec("INSERT INTO public.migration_info").WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectExec("INSERT INTO public.migration_info").WillReturnError(errors.New(errStr))
 	expects.ExpectRollback()
 
 	err := migration.InitInfoTable(db, "")
@@ -427,7 +427,7 @@ func TestInitInfoTable_CountDBError(t *testing.T) {
 	expects.ExpectBegin()
 	expects.ExpectExec("CREATE TABLE IF NOT EXISTS public.migration_info").WillReturnResult(sql_driver.ResultNoRows)
 	expects.ExpectExec("INSERT INTO public.migration_info").WillReturnResult(sql_driver.ResultNoRows)
-	expects.ExpectQuery("SELECT COUNT.+FROM public.migration_info").WillReturnError(fmt.Errorf(errStr))
+	expects.ExpectQuery("SELECT COUNT.+FROM public.migration_info").WillReturnError(errors.New(errStr))
 	expects.ExpectRollback()
 
 	err := migration.InitInfoTable(db, "")
@@ -468,7 +468,7 @@ func TestUpdateVersionInDB_RowsAffectedError(t *testing.T) {
 
 	expects.ExpectExec("UPDATE public.migration_info SET version").
 		WithArgs(1).
-		WillReturnResult(sqlmock.NewErrorResult(fmt.Errorf(errStr)))
+		WillReturnResult(sqlmock.NewErrorResult(errors.New(errStr)))
 
 	err := migration.SetDBVersion(db, types.DBDriverGeneral, "", 1, testMigrations)
 	assert.EqualError(t, err, errStr)

@@ -21,6 +21,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -239,11 +240,7 @@ func TestServerStart(t *testing.T) {
 		}, nil, mockStorageDVO)
 
 		go func() {
-			for {
-				if s.Serv != nil {
-					break
-				}
-
+			for s.Serv == nil {
 				time.Sleep(500 * time.Millisecond)
 			}
 
@@ -379,7 +376,7 @@ func TestRuleFeedbackVote_DBError(t *testing.T) {
 		)
 
 	expects.ExpectPrepare("INSERT INTO").
-		WillReturnError(fmt.Errorf(errStr))
+		WillReturnError(errors.New(errStr))
 
 	helpers.AssertAPIRequest(t, mockStorage, nil, &helpers.APIRequest{
 		Method:       http.MethodPut,
