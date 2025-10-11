@@ -1658,3 +1658,100 @@ func TestReadSingleRuleTemplateData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, value)
 }
+
+func TestOCPUpdateOrgIDForClusterWithNoExistingRecords(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	defer closer()
+
+	clusterName := types.ClusterName("non-existent-cluster")
+	newOrgID := types.OrgID(123)
+
+	// Try to update org_id for a cluster that doesn't exist in the database
+	err := mockStorage.UpdateOrgIDForCluster(newOrgID, clusterName)
+	helpers.FailOnError(t, err)
+
+	// Verify no records exist for this cluster in report table
+	var count int
+	err = mockStorage.GetConnection().QueryRow("SELECT COUNT(*) FROM report WHERE cluster = $1", clusterName).Scan(&count)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 0, count)
+
+	// Verify no records exist for this cluster in rule_hit table
+	err = mockStorage.GetConnection().QueryRow("SELECT COUNT(*) FROM rule_hit WHERE cluster_id = $1", clusterName).Scan(&count)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 0, count)
+}
+
+func TestOCPUpdateOrgIDForClusterWithExistingRecords(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	defer closer()
+
+	originalOrgID := types.OrgID(5)
+	newOrgID := types.OrgID(123)
+	clusterName := testdata.ClusterName
+
+	// Create initial report with original org_id
+	err := mockStorage.WriteReportForCluster(
+		originalOrgID,
+		clusterName,
+		testdata.ClusterReportEmpty,
+		testdata.ReportEmptyRulesParsed,
+		time.Now(),
+		time.Time{},
+		time.Now(),
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// Verify original org_id is set in report table
+	var currentOrgID types.OrgID
+	err = mockStorage.GetConnection().QueryRow("SELECT org_id FROM report WHERE cluster = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, originalOrgID, currentOrgID)
+
+	// Update org_id for the cluster
+	err = mockStorage.UpdateOrgIDForCluster(newOrgID, clusterName)
+	helpers.FailOnError(t, err)
+
+	// Verify org_id has been updated in report table
+	err = mockStorage.GetConnection().QueryRow("SELECT org_id FROM report WHERE cluster = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, newOrgID, currentOrgID)
+
+	// Verify all records for this cluster have been updated in report table
+	var distinctOrgIDs int
+	err = mockStorage.GetConnection().QueryRow("SELECT COUNT(DISTINCT org_id) FROM report WHERE cluster = $1", clusterName).Scan(&distinctOrgIDs)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 1, distinctOrgIDs)
+}
+
+func TestOCPUpdateOrgIDForClusterWithSameOrgID(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	defer closer()
+
+	orgID := types.OrgID(5)
+	clusterName := testdata.ClusterName
+
+	// Create initial report
+	err := mockStorage.WriteReportForCluster(
+		orgID,
+		clusterName,
+		testdata.ClusterReportEmpty,
+		testdata.ReportEmptyRulesParsed,
+		time.Now(),
+		time.Time{},
+		time.Now(),
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// Try to update with the same org_id
+	err = mockStorage.UpdateOrgIDForCluster(orgID, clusterName)
+	helpers.FailOnError(t, err)
+
+	// Verify org_id remains unchanged in report table
+	var currentOrgID types.OrgID
+	err = mockStorage.GetConnection().QueryRow("SELECT org_id FROM report WHERE cluster = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, orgID, currentOrgID)
+}

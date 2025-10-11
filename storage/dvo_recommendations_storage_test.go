@@ -807,3 +807,83 @@ func TestDVOStorageReadWorkloadsForNamespace_MissingData(t *testing.T) {
 		assert.Equal(t, &types.ItemNotFoundError{ItemID: fmt.Sprintf("%d:%s:%s", testdata.OrgID, nonExistingCluster, ira_data.NamespaceAUID)}, err)
 	})
 }
+
+func TestUpdateOrgIDForClusterWithNoExistingRecords(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	clusterName := types.ClusterName("non-existent-cluster")
+	newOrgID := types.OrgID(123)
+
+	// Try to update org_id for a cluster that doesn't exist in the database
+	err := mockStorage.UpdateOrgIDForCluster(newOrgID, clusterName)
+	helpers.FailOnError(t, err)
+
+	// Verify no records exist for this cluster
+	var count int
+	err = mockStorage.GetConnection().QueryRow("SELECT COUNT(*) FROM dvo.dvo_report WHERE cluster_id = $1", clusterName).Scan(&count)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 0, count)
+}
+
+func TestUpdateOrgIDForClusterWithExistingRecords(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	originalOrgID := types.OrgID(5)
+	newOrgID := types.OrgID(123)
+	clusterName := testdata.ClusterName
+	testReport := types.ClusterReport(`{"report": {}}`)
+
+	// Create initial report with original org_id
+	err := mockStorage.WriteReportForCluster(
+		originalOrgID, clusterName, testReport, ira_data.ValidDVORecommendation, time.Now(), time.Now(), time.Now(), "test",
+	)
+	helpers.FailOnError(t, err)
+
+	// Verify original org_id is set
+	var currentOrgID types.OrgID
+	err = mockStorage.GetConnection().QueryRow("SELECT org_id FROM dvo.dvo_report WHERE cluster_id = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, originalOrgID, currentOrgID)
+
+	// Update org_id for the cluster
+	err = mockStorage.UpdateOrgIDForCluster(newOrgID, clusterName)
+	helpers.FailOnError(t, err)
+
+	// Verify org_id has been updated
+	err = mockStorage.GetConnection().QueryRow("SELECT org_id FROM dvo.dvo_report WHERE cluster_id = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, newOrgID, currentOrgID)
+
+	// Verify all records for this cluster have been updated
+	var distinctOrgIDs int
+	err = mockStorage.GetConnection().QueryRow("SELECT COUNT(DISTINCT org_id) FROM dvo.dvo_report WHERE cluster_id = $1", clusterName).Scan(&distinctOrgIDs)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 1, distinctOrgIDs)
+}
+
+func TestUpdateOrgIDForClusterWithSameOrgID(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
+	defer closer()
+
+	orgID := types.OrgID(5)
+	clusterName := testdata.ClusterName
+	testReport := types.ClusterReport(`{"report": {}}`)
+
+	// Create initial report
+	err := mockStorage.WriteReportForCluster(
+		orgID, clusterName, testReport, ira_data.ValidDVORecommendation, time.Now(), time.Now(), time.Now(), "test",
+	)
+	helpers.FailOnError(t, err)
+
+	// Try to update with the same org_id
+	err = mockStorage.UpdateOrgIDForCluster(orgID, clusterName)
+	helpers.FailOnError(t, err)
+
+	// Verify org_id remains unchanged
+	var currentOrgID types.OrgID
+	err = mockStorage.GetConnection().QueryRow("SELECT org_id FROM dvo.dvo_report WHERE cluster_id = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, orgID, currentOrgID)
+}
