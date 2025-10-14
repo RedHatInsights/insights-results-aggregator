@@ -108,12 +108,22 @@ func parseDVOContent(message *incomingMessage) error {
 
 func (DVORulesProcessor) storeInDB(consumer *KafkaConsumer, msg *sarama.ConsumerMessage, message incomingMessage) (types.RequestID, incomingMessage, error) {
 	tStart := time.Now()
+
+	// Update orgID for the cluster if it has changed
+	// This must be done before any write operations
+	err := consumer.updateDVOOrgID(msg, message)
+	if err != nil {
+		return message.RequestID, message, err
+	}
+	tOrgIDUpdated := time.Now()
+	logDuration(tStart, tOrgIDUpdated, msg.Offset, "orgid_update")
+
 	lastCheckedTime, err := consumer.retrieveLastCheckedTime(msg, &message)
 	if err != nil {
 		return message.RequestID, message, err
 	}
 	tTimeCheck := time.Now()
-	logDuration(tStart, tTimeCheck, msg.Offset, "time_check")
+	logDuration(tOrgIDUpdated, tTimeCheck, msg.Offset, "time_check")
 
 	reportAsBytes, err := json.Marshal(*message.DvoMetrics)
 	if err != nil {
@@ -128,6 +138,26 @@ func (DVORulesProcessor) storeInDB(consumer *KafkaConsumer, msg *sarama.Consumer
 	tStored := time.Now()
 	logDuration(tTimeCheck, tStored, msg.Offset, "db_store_report")
 	return message.RequestID, message, nil
+}
+
+func (consumer *KafkaConsumer) updateDVOOrgID(
+	msg *sarama.ConsumerMessage, message incomingMessage,
+) error {
+	if dvoStorage, ok := consumer.Storage.(storage.DVORecommendationsStorage); ok {
+		err := dvoStorage.UpdateOrgIDForCluster(
+			*message.Organization,
+			*message.ClusterName,
+		)
+		if err != nil {
+			logMessageError(consumer, msg, &message, "Error updating orgID for cluster", err)
+			return err
+		}
+		logMessageDebug(consumer, msg, &message, "Updated orgID if needed")
+		return nil
+	}
+	err := errors.New("orgID could not be updated")
+	logMessageError(consumer, msg, &message, unexpectedStorageType, err)
+	return err
 }
 
 func (consumer *KafkaConsumer) writeDVOReport(

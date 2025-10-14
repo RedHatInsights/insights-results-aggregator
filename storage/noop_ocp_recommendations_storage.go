@@ -407,3 +407,8 @@ func (*NoopOCPStorage) PrintRuleDisableDebugInfo() {
 func (*NoopOCPStorage) GetDBDriverType() types.DBDriver {
 	return types.DBDriverGeneral
 }
+
+// UpdateOrgIDForCluster noop
+func (*NoopOCPStorage) UpdateOrgIDForCluster(types.OrgID, types.ClusterName) error {
+	return nil
+}
