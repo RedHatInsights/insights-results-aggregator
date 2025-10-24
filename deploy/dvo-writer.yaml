@@ -73,6 +73,8 @@ objects:
                   value: "true"
                 - name: INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE
                   value: "sql"
+                # We are not defining any variable related to OCP_RECOMMENDATIONS_STORAGE
+                # to avoid doing any initialization of the OCP recommendations storage
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
                   value: ${CLOUDWATCH_ENABLED}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_SENTRY_ENABLED
