@@ -13,7 +13,6 @@
 // limitations under the License.
 
 //go:build testrunmain
-// +build testrunmain
 
 package main_test
 
