@@ -91,6 +91,8 @@ objects:
               value: ${DEBUG}
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
               value: ${CLOUDWATCH_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_SENTRY_ENABLED
+              value: ${SENTRY_ENABLED}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
               value: ${CLOUDWATCH_DEBUG}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
@@ -117,6 +119,14 @@ objects:
                   name: cloudwatch
                   key: aws_secret_access_key
                   optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN
+              valueFrom:
+                secretKeyRef:
+                  key: dsn
+                  name: valkey-writer-dsn
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
+              value: ${ENV_NAME}
           image: ${IMAGE}:${IMAGE_TAG}
           livenessProbe:
             failureThreshold: 10
@@ -228,6 +238,8 @@ parameters:
 - name: CLOUDWATCH_ENABLED
   value: "true"
   required: true
+- name: SENTRY_ENABLED
+  value: "false"
 - name: CACHE_WRITER_CPU_LIMIT
   value: 200m
 - name: CACHE_WRITER_MEMORY_LIMIT
@@ -236,4 +248,3 @@ parameters:
   value: 100m
 - name: CACHE_WRITER_MEMORY_REQUEST
   value: 200Mi
-
