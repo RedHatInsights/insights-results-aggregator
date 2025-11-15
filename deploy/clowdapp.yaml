@@ -48,10 +48,13 @@ objects:
         webServices:
           public:
             enabled: false
+            tls: true
           private:
             enabled: false
+            tls: true
           metrics:
             enabled: true
+            tls: true
         podSpec:
           initContainers:
             - name: execute-migrations
