@@ -54,7 +54,7 @@ Makefile                 - Build and development targets
 ### Running Tests
 - `make test` - Unit tests
 - `make cover` - HTML coverage report
-- `make coverage` - Coverage on terminal
+- `make coverage` - Coverage in the terminal
 - `make integration_tests` - Integration tests
 - `make rest_api_tests` - REST API tests
 - `go test -v ./...` - Direct test execution
