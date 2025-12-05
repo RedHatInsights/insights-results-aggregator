@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project Overview
-insights-results-aggregator is a Go-based service for the Red Hat Insights ecosystem that aggregates and exposes OpenShift cluster recommendations data. It consumes Insights OCP data (recommendations) from message brokers, stores them in various storage backends (PostgreSQL, Redis), and exposes them via REST API endpoints for consumption by OpenShift Cluster Manager (OCM), Advanced Cluster Manager (ACM), and OCP WebConsole via Insights Operator.
+insights-results-aggregator is a Go-based service for the Red Hat Insights ecosystem that aggregates and exposes OpenShift cluster recommendations data. It consumes Insights OCP data (recommendations) from message brokers, stores them in various storage backends (PostgreSQL, Redis), and exposes them via REST API endpoints for consumption by OpenShift Cluster Manager (OCM), Advanced Cluster Manager (ACM), and OCP Web Console via Insights Operator.
 
 **Tech Stack**: Go 1.22+, PostgreSQL, Redis, Kafka (Sarama), Prometheus, Sentry/Glitchtip, REST API
 
