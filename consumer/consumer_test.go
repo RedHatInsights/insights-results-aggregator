@@ -27,10 +27,10 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/producer"
 
+	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -148,6 +148,14 @@ func TestConsumerConstructorNoKafka(t *testing.T) {
 
 func TestKafkaConsumer_New(t *testing.T) {
 	helpers.RunTestWithTimeout(t, func(t testing.TB) {
+		// MockBroker does not currently work with newer Kafka versions,
+		// so it has to be set to an older value
+		defaultVersion := broker.SaramaVersion
+		broker.SaramaVersion = sarama.V0_10_2_0
+		defer func() {
+			broker.SaramaVersion = defaultVersion
+		}()
+
 		sarama.Logger = log.New(os.Stdout, saramaLogPrefix, log.LstdFlags)
 
 		mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
@@ -173,6 +181,14 @@ func TestKafkaConsumer_New(t *testing.T) {
 func TestKafkaConsumer_SetupCleanup(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, false)
 	defer closer()
+
+	// MockBroker does not currently work with newer Kafka versions,
+	// so it has to be set to an older value
+	defaultVersion := broker.SaramaVersion
+	broker.SaramaVersion = sarama.V0_10_2_0
+	defer func() {
+		broker.SaramaVersion = defaultVersion
+	}()
 
 	mockBroker := sarama.NewMockBroker(t, 0)
 	defer mockBroker.Close()
@@ -217,6 +233,14 @@ func TestKafkaConsumer_NewDeadLetterProducer_Error(t *testing.T) {
 	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
 
+	// MockBroker does not currently work with newer Kafka versions,
+	// so it has to be set to an older value
+	defaultVersion := broker.SaramaVersion
+	broker.SaramaVersion = sarama.V0_10_2_0
+	defer func() {
+		broker.SaramaVersion = defaultVersion
+	}()
+
 	mockBroker := sarama.NewMockBroker(t, 0)
 	defer mockBroker.Close()
 
@@ -251,6 +275,14 @@ func TestKafkaConsumer_NewPayloadTrackerProducer_Error(t *testing.T) {
 
 	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
 	defer closer()
+
+	// MockBroker does not currently work with newer Kafka versions,
+	// so it has to be set to an older value
+	defaultVersion := broker.SaramaVersion
+	broker.SaramaVersion = sarama.V0_10_2_0
+	defer func() {
+		broker.SaramaVersion = defaultVersion
+	}()
 
 	mockBroker := sarama.NewMockBroker(t, 0)
 	defer mockBroker.Close()

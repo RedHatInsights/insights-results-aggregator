@@ -18,7 +18,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 
 	ctypes "github.com/RedHatInsights/insights-results-types"
 
@@ -406,4 +406,9 @@ func (*NoopOCPStorage) PrintRuleDisableDebugInfo() {
 // GetDBDriverType returns db driver type
 func (*NoopOCPStorage) GetDBDriverType() types.DBDriver {
 	return types.DBDriverGeneral
+}
+
+// UpdateOrgIDForCluster noop
+func (*NoopOCPStorage) UpdateOrgIDForCluster(types.OrgID, types.ClusterName) error {
+	return nil
 }

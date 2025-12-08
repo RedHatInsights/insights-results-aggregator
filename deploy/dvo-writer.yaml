@@ -38,6 +38,8 @@ objects:
   kind: ClowdApp
   metadata:
     name: dvo-writer
+    annotations:
+      ignore-check.kube-linter.io/minimum-three-replicas: "This app doesn't have that much traffic in stage"
   spec:
     envName: ${ENV_NAME}
     testing:
@@ -77,10 +79,6 @@ objects:
                   value: ${SENTRY_ENABLED}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
                   value: ${CLOUDWATCH_DEBUG}
-                - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
-                  value: ${LOG_STREAM}
-                - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
-                  value: ${CREATE_STREAM_IF_NOT_EXISTS}
                 - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
                   valueFrom:
                     secretKeyRef:
@@ -157,12 +155,8 @@ objects:
               value: ${PG_PARAMS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE
               value: "sql"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER
-              value: postgres
-            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS
-              value: ${PG_PARAMS}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
-              value: "sql"
+            # We are not defining any variable related to OCP_RECOMMENDATIONS_STORAGE
+            # to avoid doing any initialization of the OCP recommendations storage
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
               value: ${LOG_LEVEL}
             - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
@@ -171,10 +165,6 @@ objects:
               value: ${SENTRY_ENABLED}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
               value: ${CLOUDWATCH_DEBUG}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__STREAM_NAME
-              value: ${LOG_STREAM}
-            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__CREATE_STREAM_IF_NOT_EXISTS
-              value: ${CREATE_STREAM_IF_NOT_EXISTS}
             - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
               valueFrom:
                 secretKeyRef:
@@ -326,8 +316,6 @@ parameters:
 - name: DVO_WRITER_API_PREFIX
   required: true
   value: /
-- name: LOG_STREAM
-  value: dvo-writer
 - name: DVO_WRITER_CPU_LIMIT
   value: 200m
 - name: DVO_WRITER_MEMORY_LIMIT
@@ -345,7 +333,5 @@ parameters:
 - name: SENTRY_ENABLED
   value: "true"
   required: true
-- name: CREATE_STREAM_IF_NOT_EXISTS
-  value: "true"
 - name: LOG_LEVEL
   value: "INFO"

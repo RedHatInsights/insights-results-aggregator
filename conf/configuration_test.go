@@ -548,14 +548,13 @@ func TestGetCloudWatchConfigurationDefault(t *testing.T) {
 	mustLoadConfiguration("/non_existing_path")
 
 	assert.Equal(t, logger.CloudWatchConfiguration{
-		AWSAccessID:             "",
-		AWSSecretKey:            "",
-		AWSSessionToken:         "",
-		AWSRegion:               "",
-		LogGroup:                "",
-		StreamName:              "",
-		CreateStreamIfNotExists: false,
-		Debug:                   false,
+		AWSAccessID:     "",
+		AWSSecretKey:    "",
+		AWSSessionToken: "",
+		AWSRegion:       "",
+		LogGroup:        "",
+		StreamName:      "",
+		Debug:           false,
 	}, conf.GetCloudWatchConfiguration())
 }
 
@@ -691,4 +690,37 @@ func TestClowderConfigForStorage(t *testing.T) {
 	// rest of config outside of clowder must be loaded correctly
 	assert.Equal(t, "postgres", dvoStorageConf.Driver)
 	assert.Equal(t, "sql", dvoStorageConf.Type)
+}
+
+// TestClowderConfigForKafka tests loading the config file for testing from an
+// environment variable. Clowder config is enabled in this case, checking the Redis
+// configuration.
+func TestClowderConfigForRedis(t *testing.T) {
+	os.Clearenv()
+
+	var hostname = "redis"
+	var port = 6379
+	var username = "user"
+	var password = "password"
+
+	// explicit Redis config
+	clowder.LoadedConfig = &clowder.AppConfig{
+		InMemoryDb: &clowder.InMemoryDBConfig{
+			Hostname: hostname,
+			Port:     port,
+			Username: &username,
+			Password: &password,
+		},
+	}
+
+	mustSetEnv(t, "INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE", "../tests/config1")
+	mustSetEnv(t, "ACG_CONFIG", "tests/clowder_config.json")
+
+	err := conf.LoadConfiguration("config")
+	assert.NoError(t, err, "Failed loading configuration file")
+
+	redisCfg := conf.GetRedisConfiguration()
+	assert.Equal(t, fmt.Sprintf("%s:%d", hostname, port), redisCfg.RedisEndpoint)
+	assert.Equal(t, username, redisCfg.RedisUsername)
+	assert.Equal(t, password, redisCfg.RedisPassword)
 }

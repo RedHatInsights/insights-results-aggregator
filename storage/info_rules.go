@@ -56,7 +56,7 @@ func (storage OCPRecommendationsDBStorage) WriteReportInfoForCluster(
 
 	err = storage.updateInfoReport(tx, orgID, clusterName, info)
 
-	finishTransaction(tx, err)
+	err = finishTransaction(tx, err)
 	return err
 }
 

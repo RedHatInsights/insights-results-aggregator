@@ -81,7 +81,6 @@ data:
             "y": 0
           },
           "id": 16,
-          "links": [],
           "maxDataPoints": 100,
           "options": {
             "colorMode": "value",
@@ -95,9 +94,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "targets": [
             {
               "datasource": {
@@ -184,13 +185,12 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -311,13 +311,12 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -446,13 +445,12 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "connected",
           "options": {
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -553,13 +551,12 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "connected",
           "options": {
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -623,7 +620,7 @@ data:
           "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "${aws_msk}"
           },
           "fieldConfig": {
             "defaults": {
@@ -652,13 +649,12 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -669,13 +665,14 @@ data:
           "targets": [
             {
               "datasource": {
-                "uid": "$datasource"
+                "type": "prometheus",
+                "uid": "${aws_msk}"
               },
               "editorMode": "code",
-              "expr": "sum(kafka_consumergroup_group_lag{group=~\"$consumer_groups\"}) by (topic, group)",
+              "expr": "sum(aws_kafka_estimated_max_time_lag_sum{consumer_group=~\"$consumer_groups\"}) by (topic, consumer_group)",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{group}}",
+              "legendFormat": "{{consumer_group}} ({{topic}})",
               "range": true,
               "refId": "A"
             }
@@ -748,13 +745,12 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -876,13 +872,12 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1003,13 +998,12 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1063,7 +1057,7 @@ data:
         }
       ],
       "refresh": false,
-      "schemaVersion": 37,
+      "schemaVersion": 39,
       "style": "dark",
       "tags": [],
       "templating": {
@@ -1072,7 +1066,7 @@ data:
             "current": {
               "selected": false,
               "text": "crcp01ue1-prometheus",
-              "value": "crcp01ue1-prometheus"
+              "value": "PC1EAC84DCBBF0697"
             },
             "hide": 0,
             "includeAll": false,
@@ -1088,7 +1082,7 @@ data:
           },
           {
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "ccx-data-pipeline-prod",
               "value": "ccx-data-pipeline-prod"
             },
@@ -1116,8 +1110,8 @@ data:
           {
             "current": {
               "selected": false,
-              "text": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*",
-              "value": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*"
+              "text": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*",
+              "value": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*"
             },
             "description": "The RegEx to match the services to monitor",
             "hide": 0,
@@ -1126,19 +1120,19 @@ data:
             "options": [
               {
                 "selected": true,
-                "text": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*",
-                "value": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*"
+                "text": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*",
+                "value": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*"
               }
             ],
-            "query": ".*db-writer-.*|.*cache-writer-.*|.*dvo-writer-.*",
+            "query": ".*db-writer-.*|.*valkey-writer-.*|.*dvo-writer-.*",
             "skipUrlSync": false,
             "type": "textbox"
           },
           {
             "current": {
               "selected": false,
-              "text": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app",
-              "value": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app"
+              "text": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app",
+              "value": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app"
             },
             "description": "The RegEx to match the consumer groups to monitor",
             "hide": 0,
@@ -1147,13 +1141,31 @@ data:
             "options": [
               {
                 "selected": true,
-                "text": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app",
-                "value": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app"
+                "text": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app",
+                "value": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app"
               }
             ],
-            "query": "ccx_data_pipeline_app|ccx_cache_writer_app|dvo_writer_app",
+            "query": "ccx_data_pipeline_app|valkey_writer_app|dvo_writer_app",
             "skipUrlSync": false,
             "type": "textbox"
+          },
+          {
+            "current": {
+              "selected": false,
+              "text": "aws-resources-exporter-production",
+              "value": "PCEFB875D6FD018FC"
+            },
+            "description": "Datasource used for AWS MSK metrics",
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "name": "aws_msk",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "regex": "/^aws-resources-exporter-/",
+            "skipUrlSync": false,
+            "type": "datasource"
           }
         ]
       },

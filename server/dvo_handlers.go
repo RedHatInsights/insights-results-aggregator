@@ -238,7 +238,7 @@ func (server *HTTPServer) ProcessSingleDVONamespace(workload types.DVOReport) (
 	case `{`:
 		// we're dealing with either a valid JSON `{"system":{}}` or a string with escaped
 		// quotes `{\"system\":{}}`. Stripping escape chars `\` if any, produces a valid JSON
-		report = strings.Replace(workload.Report, `\`, "", -1)
+		report = strings.ReplaceAll(workload.Report, `\`, "")
 	default:
 		log.Error().
 			Str(firstBytesStr, string([]rune(workload.Report)[:100])).

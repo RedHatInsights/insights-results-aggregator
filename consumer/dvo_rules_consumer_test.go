@@ -26,10 +26,10 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
+	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	ira_helpers "github.com/RedHatInsights/insights-results-aggregator/tests/helpers"
-	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -78,6 +78,14 @@ func TestDVORulesConsumer_New(t *testing.T) {
 
 		mockStorage, closer := ira_helpers.MustGetPostgresStorageDVO(t, true)
 		defer closer()
+
+		// MockBroker does not currently work with newer Kafka versions,
+		// so it has to be set to an older value
+		defaultVersion := broker.SaramaVersion
+		broker.SaramaVersion = sarama.V0_10_2_0
+		defer func() {
+			broker.SaramaVersion = defaultVersion
+		}()
 
 		mockBroker := sarama.NewMockBroker(t, 0)
 		defer mockBroker.Close()

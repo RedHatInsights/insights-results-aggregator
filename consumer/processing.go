@@ -22,7 +22,7 @@ import (
 
 	"github.com/RedHatInsights/insights-results-aggregator/storage"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/rs/zerolog/log"
 
 	"github.com/RedHatInsights/insights-results-aggregator/metrics"
@@ -175,7 +175,7 @@ func (consumer *KafkaConsumer) HandleMessage(msg *sarama.ConsumerMessage) error 
 		metrics.FailedMessagesProcessingTime.Observe(messageProcessingDuration)
 		metrics.ConsumingErrors.Inc()
 
-		log.Error().Err(err).Msg("Error processing message consumed from Kafka")
+		log.Warn().Err(err).Msg("Error processing message consumed from Kafka")
 		consumer.numberOfErrorsConsumingMessages++
 		if ocpStorage, ok := consumer.Storage.(storage.OCPRecommendationsStorage); ok {
 			if err := ocpStorage.WriteConsumerError(msg, err); err != nil {

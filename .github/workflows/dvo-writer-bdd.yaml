@@ -1,22 +1,22 @@
-name: BDD tests
+name: DVO writer BDD tests
 
 on:
   pull_request:
 
 jobs:
   bdd:
+    # cannot move to latest because 24.04 uses mv (gnu coreutils) version 9.4
+    # and between 9.2 and 9.5 (when the change was reverted) `mv -n (--no-clobber)`
+    # exits with error if destination file exits; which in our case was happeing
+    # in the "Rename logs" step when the `sed` command was not modifying the file name.
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        go-version:
-          - "1.22"
-    name: BDD for Go ${{ matrix.go-version}}
+    name: DVO writer BDD tests
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: "1.23"
       - name: Build project
         run: make build
       - name: Retrieve Docker compose file
@@ -24,7 +24,7 @@ jobs:
       - name: Retrieve BDD runner
         run: wget -O bdd_runner.sh https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/run_in_docker.sh && chmod +x bdd_runner.sh
       - name: Run BDD
-        run: CLEANUP_ENABLED=0 ./bdd_runner.sh aggregator-tests .
+        run: CLEANUP_ENABLED=0 ./bdd_runner.sh dvo-writer-tests .
       - name: Set container ID as env
         if: always()
         run: echo "BDD_CONTAINER=$(docker ps | grep 'insights-behavioral-spec:latest' | cut -d ' ' -f 1)" >> $GITHUB_ENV

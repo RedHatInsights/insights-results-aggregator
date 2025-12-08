@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
-	"github.com/Shopify/sarama"
 	mapset "github.com/deckarep/golang-set/v2"
 
 	"github.com/RedHatInsights/insights-results-aggregator/broker"
@@ -162,6 +162,7 @@ func WaitForMockConsumerToHaveNConsumedMessages(mockConsumer *MockKafkaConsumer,
 // GetHandlersMapForMockConsumer returns handlers for mock broker to successfully create a new consumer
 func GetHandlersMapForMockConsumer(t testing.TB, mockBroker *sarama.MockBroker, topicName string) map[string]sarama.MockResponse {
 	return map[string]sarama.MockResponse{
+		"ApiVersionsRequest": sarama.NewMockApiVersionsResponse(t),
 		"MetadataRequest": sarama.NewMockMetadataResponse(t).
 			SetBroker(mockBroker.Addr(), mockBroker.BrokerID()).
 			SetLeader(topicName, 0, mockBroker.BrokerID()),

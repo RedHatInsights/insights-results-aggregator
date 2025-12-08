@@ -21,10 +21,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/IBM/sarama"
+	"github.com/IBM/sarama/mocks"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
-	"github.com/Shopify/sarama"
-	"github.com/Shopify/sarama/mocks"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
@@ -51,7 +51,15 @@ func init() {
 
 // Test Producer creation with a non-accessible Kafka broker
 func TestNewProducerBadBroker(t *testing.T) {
-	const expectedErr = "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
+	// MockBroker does not currently work with newer Kafka versions,
+	// so it has to be set to an older value
+	defaultVersion := broker.SaramaVersion
+	broker.SaramaVersion = sarama.V0_10_2_0
+	defer func() {
+		broker.SaramaVersion = defaultVersion
+	}()
+
+	const expectedErr = "kafka: client has run out of available brokers to talk to: dial tcp [::1]:1234: connect: connection refused"
 
 	_, err := producer.New(brokerCfg)
 	assert.EqualError(t, err, expectedErr)
@@ -125,6 +133,14 @@ func TestProducerClose(t *testing.T) {
 }
 
 func TestProducerNew(t *testing.T) {
+	// MockBroker does not currently work with newer Kafka versions,
+	// so it has to be set to an older value
+	defaultVersion := broker.SaramaVersion
+	broker.SaramaVersion = sarama.V0_10_2_0
+	defer func() {
+		broker.SaramaVersion = defaultVersion
+	}()
+
 	mockBroker := sarama.NewMockBroker(t, 0)
 	defer mockBroker.Close()
 
@@ -144,6 +160,14 @@ func TestProducerNew(t *testing.T) {
 
 // TestDeadLetterProducerNew checks that creating new DeadLetterProducer works fine
 func TestDeadLetterProducerNew(t *testing.T) {
+	// MockBroker does not currently work with newer Kafka versions,
+	// so it has to be set to an older value
+	defaultVersion := broker.SaramaVersion
+	broker.SaramaVersion = sarama.V0_10_2_0
+	defer func() {
+		broker.SaramaVersion = defaultVersion
+	}()
+
 	mockBroker := sarama.NewMockBroker(t, 0)
 	defer mockBroker.Close()
 
@@ -164,6 +188,14 @@ func TestDeadLetterProducerNew(t *testing.T) {
 
 // TestPayloadTrackerProducerNew checks that creating new PayloadTrackerProducer works fine
 func TestPayloadTrackerProducerNew(t *testing.T) {
+	// MockBroker does not currently work with newer Kafka versions,
+	// so it has to be set to an older value
+	defaultVersion := broker.SaramaVersion
+	broker.SaramaVersion = sarama.V0_10_2_0
+	defer func() {
+		broker.SaramaVersion = defaultVersion
+	}()
+
 	mockBroker := sarama.NewMockBroker(t, 0)
 	defer mockBroker.Close()
 

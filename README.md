@@ -15,12 +15,12 @@ Aggregator service for insights results
 
 <!-- vim-markdown-toc GFM -->
 
-* [Description](#description)
-* [Documentation](#documentation)
-* [Makefile targets](#makefile-targets)
-* [Usage](#usage)
-* [BDD tests](#bdd-tests)
-* [Package manifest](#package-manifest)
+- [Insights Results Aggregator](#insights-results-aggregator)
+  - [Description](#description)
+  - [Documentation](#documentation)
+  - [Makefile targets](#makefile-targets)
+  - [Usage](#usage)
+  - [BDD tests](#bdd-tests)
 
 <!-- vim-markdown-toc -->
 
@@ -102,8 +102,3 @@ In order to run these tests, the following steps need to be made:
 
 List of all test scenarios prepared for this service is available at
 <https://redhatinsights.github.io/insights-behavioral-spec/feature_list.html#insights-results-aggregator>
-
-
-## Package manifest
-
-Package manifest is available at [docs/manifest.txt](docs/manifest.txt).

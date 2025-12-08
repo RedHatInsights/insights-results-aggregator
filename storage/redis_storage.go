@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 
 	"github.com/rs/zerolog/log"
 
@@ -488,6 +488,11 @@ func (*RedisStorage) PrintRuleDisableDebugInfo() {
 // GetDBDriverType returns db driver type
 func (*RedisStorage) GetDBDriverType() types.DBDriver {
 	return types.DBDriverGeneral
+}
+
+// UpdateOrgIDForCluster noop
+func (*RedisStorage) UpdateOrgIDForCluster(types.OrgID, types.ClusterName) error {
+	return nil
 }
 
 func getRuleHitsCSV(reportItems []types.ReportItem) string {

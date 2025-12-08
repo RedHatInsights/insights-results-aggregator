@@ -16,6 +16,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -225,7 +226,15 @@ func (server HTTPServer) getRuleToggleMapForCluster(
 
 		compositeRuleID, err := generators.GenerateCompositeRuleID(types.RuleFQDN(rule.RuleID), rule.ErrorKey)
 		if err != nil {
-			log.Error().Err(err).Msgf("error generating composite rule ID for rule [%+v]", rule)
+			ruleSpecificErr := fmt.Errorf("error generating composite rule ID for rule %s: %s", rule.RuleID, err.Error())
+			log.Error().Err(ruleSpecificErr).
+				Str("rule_id", string(rule.RuleID)).
+				Str("cluster_id", string(rule.ClusterID)).
+				Str("error_key", string(rule.ErrorKey)).
+				Bool("disabled", rule.Disabled == 1).
+				Time("disabled_at", rule.DisabledAt.Time).
+				Time("updated_at", rule.UpdatedAt.Time).
+				Msgf("error generating composite rule ID for rule %s", rule.RuleID)
 			continue
 		}
 

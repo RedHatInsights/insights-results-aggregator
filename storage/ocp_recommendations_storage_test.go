@@ -20,16 +20,17 @@ import (
 	"bytes"
 	"database/sql"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
 	ctypes "github.com/RedHatInsights/insights-results-types"
-	"github.com/Shopify/sarama"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -298,6 +299,56 @@ func TestDBStorageWriteReportForClusterUnsupportedDriverError(t *testing.T) {
 		testdata.RequestID1,
 	)
 	assert.EqualError(t, err, "writing report with DB -1 is not supported")
+}
+
+// TestDBStorageWriteReportForClusterCommitFailure checks that if the database COMMIT operation
+// fails during an attempt to write a report, a ROLLBACK is subsequently performed and
+// the original commit error is returned by WriteReportForCluster.
+func TestDBStorageWriteReportForClusterCommitFailure(t *testing.T) {
+	mockStorage, mockSQL := ira_helpers.MustGetMockStorageWithExpectsForDriver(t, types.DBDriverPostgres)
+	mockSQL.ExpectBegin()
+	mockSQL.ExpectQuery(`SELECT last_checked_at FROM report`).
+		WillReturnRows(sqlmock.NewRows([]string{"last_checked_at"}))
+	mockSQL.ExpectQuery(`SELECT rule_fqdn, error_key, created_at FROM rule_hit`).
+		WillReturnRows(sqlmock.NewRows([]string{"rule_fqdn", "error_key", "created_at"}))
+	mockSQL.ExpectExec(`DELETE FROM rule_hit`).
+		WillReturnResult(driver.ResultNoRows)
+	mockSQL.ExpectExec(`INSERT INTO report`).
+		WillReturnResult(driver.ResultNoRows)
+	dbCommitErr := errors.New("simulated DB commit failure")
+	mockSQL.ExpectCommit().WillReturnError(dbCommitErr)
+	mockSQL.ExpectRollback()
+	expectedReturnedError := dbCommitErr
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, time.Now(), time.Now(),
+		testdata.RequestID1)
+	assert.Error(t, err)
+	assert.Equal(t, expectedReturnedError.Error(), err.Error())
+}
+
+// TestDBStorageWriteReportForClusterRollBackFailure checks that if an error occurs within the report writing transaction
+// (triggering a rollback attempt), and the subsequent ROLLBACK operation itself also fails,
+// WriteReportForCluster returns the error from the failed ROLLBACK.
+func TestDBStorageWriteReportForClusterRollBackFailure(t *testing.T) {
+	simulatedLogicError := errors.New("simulated failure during DELETE FROM rule_hit")
+	simulatedRollbackFailureError := errors.New("simulated DB rollback failure")
+	mockStorage, mockSQL := ira_helpers.MustGetMockStorageWithExpectsForDriver(t, types.DBDriverPostgres)
+	mockSQL.ExpectBegin()
+	mockSQL.ExpectQuery(`SELECT last_checked_at FROM report`).
+		WillReturnRows(sqlmock.NewRows([]string{"last_checked_at"}))
+	mockSQL.ExpectQuery(`SELECT rule_fqdn, error_key, created_at FROM rule_hit`).
+		WillReturnRows(sqlmock.NewRows([]string{"rule_fqdn", "error_key", "created_at"}))
+	mockSQL.ExpectExec(`DELETE FROM rule_hit`).
+		WillReturnError(simulatedLogicError)
+	mockSQL.ExpectRollback().WillReturnError(simulatedRollbackFailureError)
+	expectedReturnedError := simulatedRollbackFailureError
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, testdata.ClusterName, testdata.Report3Rules,
+		testdata.ReportEmptyRulesParsed, testdata.LastCheckedAt, time.Now(), time.Now(),
+		testdata.RequestID1)
+	assert.Error(t, err)
+	assert.Equal(t, expectedReturnedError.Error(), err.Error())
 }
 
 // TestDBStorageWriteReportForClusterMoreRecentInDB checks that older report
@@ -661,7 +712,7 @@ func TestDBStorageCloseError(t *testing.T) {
 
 	mockStorage, expects := ira_helpers.MustGetMockStorageWithExpects(t)
 
-	expects.ExpectClose().WillReturnError(fmt.Errorf(errString))
+	expects.ExpectClose().WillReturnError(errors.New(errString))
 	err := mockStorage.Close()
 
 	assert.EqualError(t, err, errString)
@@ -1518,6 +1569,32 @@ func TestDBStorageReadClusterListRecommendationsGetMoreClusters(t *testing.T) {
 	assert.True(t, res[expectedCluster2ID].CreatedAt.Equal(testdata.LastCheckedAt))
 }
 
+func TestDBStorageReadClusterListRecommendationsEmptyRecommendationTable(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	defer closer()
+
+	// Create a cluster with a report but NO recommendations
+	randomClusterID := testdata.GetRandomClusterID()
+	clusterList := []string{string(randomClusterID)}
+
+	// Write only a report for the cluster, but do NOT write any recommendations
+	err := mockStorage.WriteReportForCluster(
+		testdata.OrgID, randomClusterID, testdata.Report3Rules, testdata.Report3RulesParsed,
+		testdata.LastCheckedAt, testdata.LastCheckedAt, testdata.LastCheckedAt,
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// Call ReadClusterListRecommendations - this will do a LEFT JOIN and return empty rule_id
+	res, err := mockStorage.ReadClusterListRecommendations(clusterList, testdata.OrgID)
+	helpers.FailOnError(t, err)
+
+	expectedClusterID := types.ClusterName(clusterList[0])
+	assert.Contains(t, res, expectedClusterID)
+	assert.Empty(t, res[expectedClusterID].Recommendations)
+	assert.True(t, res[expectedClusterID].CreatedAt.Equal(testdata.LastCheckedAt))
+}
+
 // TestDBStorageWriteReportForClusterWithZeroGatheredTime tries to write a report in the DB
 // using the "zero" time (if the report doesn't include a gathering time, its value will be
 // this one)
@@ -1580,4 +1657,101 @@ func TestReadSingleRuleTemplateData(t *testing.T) {
 	)
 	assert.NoError(t, err)
 	assert.NotNil(t, value)
+}
+
+func TestOCPUpdateOrgIDForClusterWithNoExistingRecords(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	defer closer()
+
+	clusterName := types.ClusterName("non-existent-cluster")
+	newOrgID := types.OrgID(123)
+
+	// Try to update org_id for a cluster that doesn't exist in the database
+	err := mockStorage.UpdateOrgIDForCluster(newOrgID, clusterName)
+	helpers.FailOnError(t, err)
+
+	// Verify no records exist for this cluster in report table
+	var count int
+	err = mockStorage.GetConnection().QueryRow("SELECT COUNT(*) FROM report WHERE cluster = $1", clusterName).Scan(&count)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 0, count)
+
+	// Verify no records exist for this cluster in rule_hit table
+	err = mockStorage.GetConnection().QueryRow("SELECT COUNT(*) FROM rule_hit WHERE cluster_id = $1", clusterName).Scan(&count)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 0, count)
+}
+
+func TestOCPUpdateOrgIDForClusterWithExistingRecords(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	defer closer()
+
+	originalOrgID := types.OrgID(5)
+	newOrgID := types.OrgID(123)
+	clusterName := testdata.ClusterName
+
+	// Create initial report with original org_id
+	err := mockStorage.WriteReportForCluster(
+		originalOrgID,
+		clusterName,
+		testdata.ClusterReportEmpty,
+		testdata.ReportEmptyRulesParsed,
+		time.Now(),
+		time.Time{},
+		time.Now(),
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// Verify original org_id is set in report table
+	var currentOrgID types.OrgID
+	err = mockStorage.GetConnection().QueryRow("SELECT org_id FROM report WHERE cluster = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, originalOrgID, currentOrgID)
+
+	// Update org_id for the cluster
+	err = mockStorage.UpdateOrgIDForCluster(newOrgID, clusterName)
+	helpers.FailOnError(t, err)
+
+	// Verify org_id has been updated in report table
+	err = mockStorage.GetConnection().QueryRow("SELECT org_id FROM report WHERE cluster = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, newOrgID, currentOrgID)
+
+	// Verify all records for this cluster have been updated in report table
+	var distinctOrgIDs int
+	err = mockStorage.GetConnection().QueryRow("SELECT COUNT(DISTINCT org_id) FROM report WHERE cluster = $1", clusterName).Scan(&distinctOrgIDs)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 1, distinctOrgIDs)
+}
+
+func TestOCPUpdateOrgIDForClusterWithSameOrgID(t *testing.T) {
+	mockStorage, closer := ira_helpers.MustGetPostgresStorage(t, true)
+	defer closer()
+
+	orgID := types.OrgID(5)
+	clusterName := testdata.ClusterName
+
+	// Create initial report
+	err := mockStorage.WriteReportForCluster(
+		orgID,
+		clusterName,
+		testdata.ClusterReportEmpty,
+		testdata.ReportEmptyRulesParsed,
+		time.Now(),
+		time.Time{},
+		time.Now(),
+		testdata.RequestID1,
+	)
+	helpers.FailOnError(t, err)
+
+	// Try to update with the same org_id
+	err = mockStorage.UpdateOrgIDForCluster(orgID, clusterName)
+	helpers.FailOnError(t, err)
+
+	// Verify org_id remains unchanged in report table
+	var currentOrgID types.OrgID
+	err = mockStorage.GetConnection().QueryRow("SELECT org_id FROM report WHERE cluster = $1 LIMIT 1", clusterName).Scan(&currentOrgID)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, orgID, currentOrgID)
 }

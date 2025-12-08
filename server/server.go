@@ -313,13 +313,13 @@ func (server *HTTPServer) checkUserClusterPermissions(writer http.ResponseWriter
 }
 
 func (server *HTTPServer) deleteOrganizations(writer http.ResponseWriter, request *http.Request) {
-	orgIds, successful := readOrganizationIDs(writer, request)
+	orgIDs, successful := readOrganizationIDs(writer, request)
 	if !successful {
 		// everything has been handled already
 		return
 	}
 
-	for _, org := range orgIds {
+	for _, org := range orgIDs {
 		if err := server.Storage.DeleteReportsForOrg(org); err != nil {
 			log.Error().Err(err).Msg("Unable to delete reports")
 			handleServerError(writer, err)

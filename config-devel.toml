@@ -56,6 +56,7 @@ use = "ocp_recommendations"
 database = 0
 endpoint = "localhost:6379"
 password = ""
+username = ""
 timeout_seconds = 30
 
 [content]
@@ -75,7 +76,6 @@ aws_region = "us-east-1"
 log_group = "platform-dev"
 stream_name = "insights-results-aggregator"
 debug = false
-create_stream_if_not_exists = true
 
 [metrics]
 namespace = ""

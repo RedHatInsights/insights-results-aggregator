@@ -34,7 +34,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/lib/pq" // PostgreSQL database driver
 	"github.com/rs/zerolog/log"
 
@@ -219,6 +219,7 @@ type OCPRecommendationsStorage interface {
 		ctypes.ClusterRecommendationMap, error,
 	)
 	PrintRuleDisableDebugInfo()
+	UpdateOrgIDForCluster(orgID types.OrgID, clusterName types.ClusterName) error
 }
 
 const (
@@ -286,6 +287,7 @@ func newRedisStorage(configuration Configuration) (OCPRecommendationsStorage, er
 	client, err := redis.CreateRedisClient(
 		redisCfg.RedisEndpoint,
 		redisCfg.RedisDatabase,
+		redisCfg.RedisUsername,
 		redisCfg.RedisPassword,
 		redisCfg.RedisTimeoutSeconds,
 	)
@@ -1149,6 +1151,72 @@ func (storage OCPRecommendationsDBStorage) getRuleKeyCreatedAtMap(
 	return RuleKeyCreatedAt, err
 }
 
+// UpdateOrgIDForCluster updates org_id in all related tables for a given cluster
+// if the org_id has changed from what's currently stored in the database.
+// This method creates its own transaction.
+func (storage OCPRecommendationsDBStorage) UpdateOrgIDForCluster(
+	newOrgID types.OrgID,
+	clusterName types.ClusterName,
+) error {
+	// Begin a new transaction
+	tx, err := storage.connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = storage.updateOrgIDForClusterInTx(tx, newOrgID, clusterName)
+	return finishTransaction(tx, err)
+}
+
+// updateOrgIDForClusterInTx updates org_id in all related tables for a given cluster
+// if the org_id has changed from what's currently stored in the database.
+// This is the transaction-level implementation.
+func (storage OCPRecommendationsDBStorage) updateOrgIDForClusterInTx(
+	tx *sql.Tx,
+	newOrgID types.OrgID,
+	clusterName types.ClusterName,
+) error {
+	// Define tables to check for existing org_id (in priority order)
+	tablesToCheck := []TableInfo{
+		{"report", "cluster"},
+		{"recommendation", "cluster_id"},
+		{"report_info", "cluster_id"},
+	}
+
+	// Check if there are existing records and get current org_id
+	currentOrgID, hasExistingRecord, err := checkOrgIDForCluster(tx, clusterName, tablesToCheck)
+	if err != nil {
+		return err
+	}
+
+	// If no existing records found, no need to update
+	if !hasExistingRecord {
+		log.Debug().Str(clusterKey, string(clusterName)).Msgf("No existing records found for cluster, no org_id update needed")
+		return nil
+	}
+
+	// If org_id hasn't changed, no need to update
+	if currentOrgID == newOrgID {
+		log.Debug().Uint32(currentOrgIDKey, uint32(currentOrgID)).Str(clusterKey, string(clusterName)).Msgf("org_id unchanged, no update needed")
+		return nil
+	}
+
+	log.Info().Uint32(currentOrgIDKey, uint32(currentOrgID)).Uint32(originalOrgIDKey, uint32(newOrgID)).Str(clusterKey, string(clusterName)).Msgf("Updating org_id")
+
+	// Define all tables that need org_id update
+	tablesToUpdate := []TableInfo{
+		{"report", "cluster"},
+		{"recommendation", "cluster_id"},
+		{"report_info", "cluster_id"},
+		{"rule_hit", "cluster_id"},
+		{"cluster_rule_toggle", "cluster_id"},
+		{"cluster_rule_user_feedback", "cluster_id"},
+		{"cluster_user_rule_disable_feedback", "cluster_id"},
+	}
+
+	return updateOrgIDInTables(tx, newOrgID, clusterName, tablesToUpdate)
+}
+
 // WriteReportForCluster writes result (health status) for selected cluster for given organization
 func (storage OCPRecommendationsDBStorage) WriteReportForCluster(
 	orgID types.OrgID,
@@ -1207,7 +1275,7 @@ func (storage OCPRecommendationsDBStorage) WriteReportForCluster(
 		return nil
 	}(tx)
 
-	finishTransaction(tx, err)
+	err = finishTransaction(tx, err)
 
 	return err
 }
@@ -1240,6 +1308,7 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get recommendation impacted_since")
 			}
+
 			// it is needed to use `org_id = $1` condition there
 			// because it allows DB to use proper btree indexing
 			// and not slow sequential scan
@@ -1284,24 +1353,42 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 		return nil
 	}(tx)
 
-	finishTransaction(tx, err)
+	err = finishTransaction(tx, err)
 
 	return err
 }
 
-// finishTransaction finishes the transaction depending on err. err == nil -> commit, err != nil -> rollback
-func finishTransaction(tx *sql.Tx, err error) {
-	if err != nil {
-		rollbackError := tx.Rollback()
-		if rollbackError != nil {
-			log.Err(rollbackError).Msg("error when trying to rollback a transaction")
-		}
-	} else {
-		commitError := tx.Commit()
-		if commitError != nil {
-			log.Err(commitError).Msg("error when trying to commit a transaction")
-		}
+// rollbackTransaction attempts to roll back the transaction, returning any error encountered.
+func rollbackTransaction(tx *sql.Tx) error {
+	rollbackError := tx.Rollback()
+	if rollbackError != nil {
+		log.Err(rollbackError).Msg("error when trying to rollback a transaction")
+		return rollbackError
 	}
+	return nil
+}
+
+// commitTransaction attempts to commit the transaction, when error is detected it attempts rollback.
+func commitTransaction(tx *sql.Tx) error {
+	commitError := tx.Commit()
+	if commitError != nil {
+		log.Err(commitError).Msg("error when trying to commit a transaction")
+		return commitError
+	}
+	return nil
+}
+
+// finishTransaction finishes the transaction depending on err. err == nil -> commit, err != nil -> rollback
+func finishTransaction(tx *sql.Tx, err error) error {
+	if err != nil {
+		rollbackErr := rollbackTransaction(tx)
+		if rollbackErr != nil {
+			return rollbackErr
+		}
+		return err
+	}
+	err = commitTransaction(tx)
+	return err
 }
 
 // ReadRecommendationsForClusters reads all recommendations from recommendation table for given organization
@@ -1368,6 +1455,7 @@ func (storage OCPRecommendationsDBStorage) ReadClusterListRecommendations(
 
 	// we have to select from report table primarily because we need to show last_checked_at even if there
 	// are no rule hits (which means there are no rows in recommendation table for that cluster)
+	// that's why we need to use COALESCE. Then, if the rule ID is an empty string, we won't add it to the result
 
 	// disable "G202 (CWE-89): SQL string concatenation"
 	// #nosec G202
@@ -1409,17 +1497,18 @@ func (storage OCPRecommendationsDBStorage) ReadClusterListRecommendations(
 			log.Error().Err(err).Msg("problem reading one recommendation")
 			return clusterMap, err
 		}
-
-		if cluster, exists := clusterMap[clusterID]; exists {
-			cluster.Recommendations = append(cluster.Recommendations, ruleID)
-			clusterMap[clusterID] = cluster
-		} else {
+		if _, exists := clusterMap[clusterID]; !exists {
 			// create entry in map for new cluster ID
 			clusterMap[clusterID] = ctypes.ClusterRecommendationList{
 				// created at is the same for all rows for each cluster
 				CreatedAt:       timestamp,
-				Recommendations: []ctypes.RuleID{ruleID},
+				Recommendations: []ctypes.RuleID{},
 			}
+		}
+		if ruleID != "" {
+			cluster := clusterMap[clusterID]
+			cluster.Recommendations = append(clusterMap[clusterID].Recommendations, ruleID)
+			clusterMap[clusterID] = cluster
 		}
 	}
 
