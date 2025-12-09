@@ -95,7 +95,33 @@ This service acts as an **aggregator and cache layer**. The main flow is: consum
 ### Storage Architecture
 
 - **PostgreSQL**: Primary store with OCP and DVO schemas (separate migrations)
-- **Redis**: Optional cache
+- **Redis**: Cache used in on demand data gatherig endpoint
+
+### OCP vs DVO Recommendations
+
+Both **OCP** and **DVO** recommendations are generated from the same cluster archives but apply different rule sets:
+
+- **OCP recommendations**: Cluster health, configuration, and operational recommendations for OpenShift
+- **DVO recommendations**: Deployment validation and workload-specific recommendations
+
+The aggregator consumes results from separate Kafka topics (`ccx.ocp.results` and `ccx.dvo.results`) and stores them in separate PostgreSQL schemas with dedicated migration paths (`/migration/ocpmigrations/` and `/migration/dvomigrations/`).
+
+### Service Deployment Modes
+
+This repository contains four services that share the same codebase but operate differently based on configuration:
+
+1. **db-writer**: Consumes OCP recommendations from Kafka, writes to PostgreSQL (`deploy/clowdapp.yaml`)
+2. **aggregator**: REST API service that serves data from PostgreSQL/Redis (broker disabled, `deploy/clowdapp.yaml`)
+3. **dvo-writer**: Consumes DVO recommendations from Kafka, writes to DVO schema (`deploy/dvo-writer.yaml`)
+4. **cache-writer**: Consumes from Kafka, writes to Redis cache for on-demand data gathering (`deploy/cache-writer.yaml`)
+
+**Switching modes**: Set the `INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE` environment variable:
+- `ocp_recommendations` - OCP mode (db-writer, aggregator, cache-writer)
+- `dvo_recommendations` - DVO mode (dvo-writer)
+- For cache-writer, also set `INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE=redis`
+- For aggregator, set `INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED=false`
+
+All services run the same code with different configurations and environment variables.
 
 ### Configuration
 
@@ -135,12 +161,12 @@ This service acts as an **aggregator and cache layer**. The main flow is: consum
 ## Important Notes
 
 ### Dependencies
-- **Kafka client**: Shopify/sarama (NOT confluent-kafka or kafka-go)
+- **Kafka client**: IBM/sarama (NOT confluent-kafka or kafka-go)
 - **Database driver**: lib/pq for PostgreSQL
 - **Redis client**: go-redis/v9
 - **Logging**: rs/zerolog for structured logging
 - **Metrics**: prometheus/client_golang
-- **Common utilities**: redhatinsights/app-common-go for platform integration
+- **Common utilities**: redhatinsights/app-common-go for platform integration - a client access library for the config for the Clowder operator (database and kafka credentioals, kafka topic name resolutions)
 
 ### Testing
 - Unit tests: standard Go testing
@@ -149,7 +175,10 @@ This service acts as an **aggregator and cache layer**. The main flow is: consum
 - Mocking: DATA-DOG/go-sqlmock
 
 ### Behavioral Tests
-External BDD tests in [Insights Behavioral Spec](https://github.com/RedHatInsights/insights-behavioral-spec) via `insights_results_aggregator_tests.sh`
+External BDD tests in [Insights Behavioral Spec](https://github.com/RedHatInsights/insights-behavioral-spec):
+- `insights_results_aggregator_tests.sh` - OCP aggregator tests
+- `insights_results_aggregator__dvo_writer_tests.sh` - DVO writer tests
+- `insights_results_aggregator__db_writer_tests.sh` - Cache/DB writer tests
 
 ### Monitoring
 - Prometheus metrics (configurable port)
@@ -216,5 +245,6 @@ Before pushing changes, ensure:
 - [GitHub Pages Documentation](https://redhatinsights.github.io/insights-results-aggregator/)
 - [GoDoc API Documentation](https://godoc.org/github.com/RedHatInsights/insights-results-aggregator)
 - [Insights Behavioral Spec](https://github.com/RedHatInsights/insights-behavioral-spec)
-- [Sarama Kafka Client](https://github.com/Shopify/sarama)
+- [Sarama Kafka Client](https://github.com/IBM/sarama)
 - [Zerolog Documentation](https://github.com/rs/zerolog)
+- [app-common-go](https://github.com/RedHatInsights/app-common-go)
