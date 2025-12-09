@@ -166,7 +166,7 @@ All services run the same code with different configurations and environment var
 - **Redis client**: go-redis/v9
 - **Logging**: rs/zerolog for structured logging
 - **Metrics**: prometheus/client_golang
-- **Common utilities**: redhatinsights/app-common-go for platform integration - a client access library for the config for the Clowder operator (database and kafka credentioals, kafka topic name resolutions)
+- **Common utilities**: redhatinsights/app-common-go for platform integration - a client access library for the config for the Clowder operator (database and kafka credentials, kafka topic name resolutions)
 
 ### Testing
 - Unit tests: standard Go testing
