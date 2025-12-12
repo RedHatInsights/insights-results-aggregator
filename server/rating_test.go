@@ -54,16 +54,38 @@ func TestHTTPServer_RateOnRuleNoContent(t *testing.T) {
 }
 
 func TestHTTPServer_RateOnRuleBadContent(t *testing.T) {
-	ratingBody := `{"rule": "rule_module", "rating": -1}`
+	testCases := []struct {
+		name               string
+		ratingBody         string
+		expectedStatusCode int
+		description        string
+	}{
+		{
+			name:               "missing_error_key",
+			ratingBody:         `{"rule": "rule_module", "rating": -1}`,
+			expectedStatusCode: http.StatusBadRequest,
+			description:        "Rule without error key (missing pipe separator)",
+		},
+		{
+			name:               "invalid_symbols_in_rule_id",
+			ratingBody:         `{"rule": "rule_module|error-key-with-spaces", "rating": -1}`,
+			expectedStatusCode: http.StatusBadRequest,
+			description:        "Rule with hypens in error key",
+		},
+	}
 
-	helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
-		Method:       http.MethodPost,
-		Endpoint:     server.Rating,
-		EndpointArgs: []interface{}{testdata.OrgID},
-		Body:         ratingBody,
-	}, &helpers.APIResponse{
-		StatusCode: http.StatusBadRequest,
-	})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			helpers.AssertAPIRequest(t, nil, nil, &helpers.APIRequest{
+				Method:       http.MethodPost,
+				Endpoint:     server.Rating,
+				EndpointArgs: []interface{}{testdata.OrgID},
+				Body:         tc.ratingBody,
+			}, &helpers.APIResponse{
+				StatusCode: tc.expectedStatusCode,
+			})
+		})
+	}
 }
 
 func TestHTTPServer_getRuleRating_NoRating(t *testing.T) {
