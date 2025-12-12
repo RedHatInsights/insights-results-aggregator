@@ -17,7 +17,6 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
@@ -205,7 +204,11 @@ func getRuleAndErrorKeyFromRuleID(ruleIDWithErrorKey string) (
 	isErrorKeyValid := IDValidator.MatchString(splitedRuleID[1])
 
 	if !isRuleIDValid || !isErrorKeyValid {
-		err = fmt.Errorf("invalid rule ID, each part of ID must contain only from latin characters, number, underscores or dots")
+		err = &types.ValidationError{
+			ParamName:  "rule",
+			ParamValue: ruleIDWithErrorKey,
+			ErrString:  "invalid rule ID, each part of ID must contain only latin characters, numbers, underscores or dots",
+		}
 		return
 	}
 
