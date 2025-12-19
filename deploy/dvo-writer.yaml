@@ -113,11 +113,11 @@ objects:
                   value: ${ENV_NAME}
               resources:
                 limits:
-                  cpu: ${DVO_WRITER_CPU_LIMIT}
-                  memory: ${DVO_WRITER_MEMORY_LIMIT}
+                  cpu: ${CPU_LIMIT}
+                  memory: ${MEMORY_LIMIT}
                 requests:
-                  cpu: ${DVO_WRITER_CPU_REQUEST}
-                  memory: ${DVO_WRITER_MEMORY_REQUEST}
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
               command:
                 - ./insights-results-aggregator
                 - migration
@@ -232,11 +232,11 @@ objects:
             timeoutSeconds: 60
           resources:
             limits:
-              cpu: ${DVO_WRITER_CPU_LIMIT}
-              memory: ${DVO_WRITER_MEMORY_LIMIT}
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}
             requests:
-              cpu: ${DVO_WRITER_CPU_REQUEST}
-              memory: ${DVO_WRITER_MEMORY_REQUEST}
+              cpu: ${CPU_REQUEST}
+              memory: ${MEMORY_REQUEST}
     database:
       sharedDbAppName: ccx-insights-results
     dependencies:
@@ -316,13 +316,13 @@ parameters:
 - name: DVO_WRITER_API_PREFIX
   required: true
   value: /
-- name: DVO_WRITER_CPU_LIMIT
+- name: CPU_LIMIT
   value: 200m
-- name: DVO_WRITER_MEMORY_LIMIT
+- name: MEMORY_LIMIT
   value: 400Mi
-- name: DVO_WRITER_CPU_REQUEST
+- name: CPU_REQUEST
   value: 100m
-- name: DVO_WRITER_MEMORY_REQUEST
+- name: MEMORY_REQUEST
   value: 200Mi
 - name: CLOUDWATCH_DEBUG
   value: "false"
