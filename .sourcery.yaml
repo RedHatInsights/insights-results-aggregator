@@ -1,0 +1,9 @@
+ignore:
+  - "*"
+  - "**/*"
+
+# Disable all rules to be sure
+rule_settings:
+  disable:
+    - "*"
+  enable: []
