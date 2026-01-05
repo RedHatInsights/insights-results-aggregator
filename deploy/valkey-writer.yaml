@@ -150,11 +150,11 @@ objects:
             timeoutSeconds: 60
           resources:
             limits:
-              cpu: ${CACHE_WRITER_CPU_LIMIT}
-              memory: ${CACHE_WRITER_MEMORY_LIMIT}
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}
             requests:
-              cpu: ${CACHE_WRITER_CPU_REQUEST}
-              memory: ${CACHE_WRITER_MEMORY_REQUEST}
+              cpu: ${CPU_REQUEST}
+              memory: ${MEMORY_REQUEST}
     kafkaTopics:
       - replicas: 3
         partitions: 1
@@ -240,11 +240,11 @@ parameters:
   required: true
 - name: SENTRY_ENABLED
   value: "false"
-- name: CACHE_WRITER_CPU_LIMIT
+- name: CPU_LIMIT
   value: 200m
-- name: CACHE_WRITER_MEMORY_LIMIT
+- name: MEMORY_LIMIT
   value: 400Mi
-- name: CACHE_WRITER_CPU_REQUEST
+- name: CPU_REQUEST
   value: 100m
-- name: CACHE_WRITER_MEMORY_REQUEST
+- name: MEMORY_REQUEST
   value: 200Mi

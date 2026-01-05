@@ -113,11 +113,11 @@ objects:
                   value: ${ENV_NAME}
               resources:
                 limits:
-                  cpu: ${DB_WRITER_CPU_LIMIT}
-                  memory: ${DB_WRITER_MEMORY_LIMIT}
+                  cpu: ${CPU_LIMIT_DB_WRITER}
+                  memory: ${MEMORY_LIMIT_DB_WRITER}
                 requests:
-                  cpu: ${DB_WRITER_CPU_REQUEST}
-                  memory: ${DB_WRITER_MEMORY_REQUEST}
+                  cpu: ${CPU_REQUEST_DB_WRITER}
+                  memory: ${MEMORY_REQUEST_DB_WRITER}
               command:
                 - ./insights-results-aggregator
                 - migration
@@ -232,11 +232,11 @@ objects:
             timeoutSeconds: 60
           resources:
             limits:
-              cpu: ${DB_WRITER_CPU_LIMIT}
-              memory: ${DB_WRITER_MEMORY_LIMIT}
+              cpu: ${CPU_LIMIT_DB_WRITER}
+              memory: ${MEMORY_LIMIT_DB_WRITER}
             requests:
-              cpu: ${DB_WRITER_CPU_REQUEST}
-              memory: ${DB_WRITER_MEMORY_REQUEST}
+              cpu: ${CPU_REQUEST_DB_WRITER}
+              memory: ${MEMORY_REQUEST_DB_WRITER}
       - name: aggregator
         minReplicas: ${{MIN_REPLICAS}}
         webServices:
@@ -349,11 +349,11 @@ objects:
             timeoutSeconds: 60
           resources:
             requests:
-              cpu: ${IRA_CPU_REQUEST}
-              memory: ${IRA_MEMORY_REQUEST}
+              cpu: ${CPU_REQUEST_AGGREGATOR}
+              memory: ${MEMORY_REQUEST_AGGREGATOR}
             limits:
-              cpu: ${IRA_CPU_LIMIT}
-              memory: ${IRA_MEMORY_LIMIT}
+              cpu: ${CPU_LIMIT_AGGREGATOR}
+              memory: ${MEMORY_LIMIT_AGGREGATOR}
     database:
       # the DB name should match to app-interface DB name without specifying environment
       # https://gitlab.cee.redhat.com/service/app-interface/-/blob/ddd85c2ad79b40047391405b2d909eb38667bc43/data/services/insights/ccx-data-pipeline/namespaces/stage-ccx-data-pipeline-stage.yml#L60
@@ -433,13 +433,13 @@ parameters:
 - description: Maximum number of pods to use when autoscaling is enabled
   name: MAX_REPLICAS
   value: '6'
-- name: IRA_CPU_LIMIT
+- name: CPU_LIMIT_AGGREGATOR
   value: 300m
-- name: IRA_MEMORY_LIMIT
+- name: MEMORY_LIMIT_AGGREGATOR
   value: 450Mi
-- name: IRA_CPU_REQUEST
+- name: CPU_REQUEST_AGGREGATOR
   value: 100m
-- name: IRA_MEMORY_REQUEST
+- name: MEMORY_REQUEST_AGGREGATOR
   value: 150Mi
 - name: PAYLOAD_TRACKER_TOPIC
   description: Kafka topic for publishing updated for the Payload Tracker service
@@ -484,13 +484,13 @@ parameters:
 - name: DB_WRITER_REPLICAS
   description: The number of replicas to use for the insights-results-db-writer deployment
   value: "1"
-- name: DB_WRITER_CPU_LIMIT
+- name: CPU_LIMIT_DB_WRITER
   value: 200m
-- name: DB_WRITER_MEMORY_LIMIT
+- name: MEMORY_LIMIT_DB_WRITER
   value: 400Mi
-- name: DB_WRITER_CPU_REQUEST
+- name: CPU_REQUEST_DB_WRITER
   value: 100m
-- name: DB_WRITER_MEMORY_REQUEST
+- name: MEMORY_REQUEST_DB_WRITER
   value: 200Mi
 - name: CLOUDWATCH_DEBUG
   value: "false"
