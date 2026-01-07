@@ -1,0 +1,50 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  annotations:
+    build.appstudio.openshift.io/repo: https://github.com/RedHatInsights/insights-results-aggregator?rev={{revision}}
+    build.appstudio.redhat.com/commit_sha: '{{revision}}'
+    build.appstudio.redhat.com/target_branch: '{{target_branch}}'
+    pipelinesascode.tekton.dev/cancel-in-progress: "false"
+    pipelinesascode.tekton.dev/max-keep-runs: "3"
+    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch == "master"
+    pipelinesascode.tekton.dev/pipeline: https://github.com/RedHatInsights/konflux-pipelines/raw/main/pipelines/docker-build.yaml
+  creationTimestamp:
+  labels:
+    appstudio.openshift.io/application: aggregator
+    appstudio.openshift.io/component: aggregator
+    pipelines.appstudio.openshift.io/type: build
+  name: aggregator-on-push
+  namespace: obsint-processing-tenant
+spec:
+  params:
+  - name: git-url
+    value: '{{source_url}}'
+  - name: revision
+    value: '{{revision}}'
+  - name: output-image
+    value: quay.io/redhat-user-workloads/obsint-processing-tenant/aggregator/aggregator:{{revision}}
+  - name: dockerfile
+    value: Dockerfile
+  - name: path-context
+    value: .
+  pipelineRef:
+    name: docker-build
+  taskRunTemplate:
+    serviceAccountName: build-pipeline-aggregator
+  workspaces:
+  - name: workspace
+    volumeClaimTemplate:
+      metadata:
+        creationTimestamp:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+      status: {}
+  - name: git-auth
+    secret:
+      secretName: '{{ git_auth_secret }}'
+status: {}

@@ -1,0 +1,501 @@
+# "RDS burst balances are depleted"
+DB write speed in External data pipeline database
+28 Mar 2022
+Tags: golang, go, rds, database, burst balance
+
+Pavel Tišnovský
+Red Hat, Inc.
+<ptisnovs@redhat.com>
+
+
+
+## Problem description
+
+- Alerts: Insights databases have depleted RDS burst balances: ccx-notification-prod, ...
+- Consuming & writting results into DB is **slow** after service outage
+
+
+
+## Kafka lag on production after service outage
+
+- example from real outage that lasted just 30 minutes
+- 5 hours(!) to fully recover
+
+.image kafka1.png _ 1020
+
+
+
+## Burst mode versus "economy" mode
+
+- burst mode supported by AWS (so called gp2 volumes)
+- but it is not enough
+
+.image kafka2.png _ 1020
+
+
+
+## Burst mode
+
+- gp2 volumes
+- 5.4 million I/O credits at 3000 IOPS
+- 3000 IOPS for 30 minutes
+- once the burst is exhausted, it delivers only 100 IOPS
+- replenished at the rate 3 IOPS per GiB per second
+- during downtime, burst credit can be replenished
+- Burst/baseline performances
+    - burst performance is constant
+    - baseline performance increases linearly with volume size
+    - for volumes higher than 1TB, burst performance is irrelevant
+
+
+
+## Burst mode and external data pipeline
+
+- nice and important to have!
+- OTOH we are kicked by overall DB performance too
+
+
+
+## External data pipeline architecture
+
+.image architecture1.gif _ 800
+
+
+
+## Critical bottleneck
+
+.image architecture2.gif _ 800
+
+
+
+## Processing throughput
+
+- 3633 events per hour
+- 250 kB per event (rule result)
+- 768 MB per hour
+- 6.4 TB per year
+
+
+
+## Investigation
+
+So what's wrong?
+
+
+
+## Database schema
+
+- (only relevant tables are discussed)
+
+- table `report`
+- table `recommendation`
+- table `rule_hit`
+
+
+
+## Table report
+
+- contains just one record (latest report) for given `org_id` + `cluster name`
+
+```
+                  Table "public.report"
+     Column      |            Type             |Nullable | Default 
+-----------------+-----------------------------+---------+---------
+ org_id          | integer                     |not null | 
+ cluster         | character varying           |not null | 
+ report          | character varying           |not null | 
+ reported_at     | timestamp without time zone |         | 
+ last_checked_at | timestamp without time zone |         | 
+ kafka_offset    | bigint                      |not null | 0
+ gathered_at     | timestamp without time zone |         | 
+Indexes:
+    "report_pkey" PRIMARY KEY, btree (org_id, cluster)
+    "report_cluster_key" UNIQUE CONSTRAINT, btree (cluster)
+    "report_kafka_offset_btree_idx" btree (kafka_offset)
+Referenced by:
+    TABLE "cluster_rule_user_feedback"
+          CONSTRAINT "cluster_rule_user_feedback_cluster_id_fkey"
+          FOREIGN KEY (cluster_id)
+          REFERENCES report(cluster) ON DELETE CASCADE
+```
+
+
+
+## Table recommendation
+
+- contains more records for given `org_id` + `cluster_id`
+- depends on number of actual rule hits for a cluster
+
+```
+             Table "public.recommendation"
+   Column   |            Type             | Nullable |
+------------+-----------------------------+----------+
+ org_id     | integer                     | not null |
+ cluster_id | character varying           | not null |
+ rule_fqdn  | text                        | not null |
+ error_key  | character varying           | not null |
+ rule_id    | character varying           | not null |
+ created_at | timestamp without time zone |          |
+Indexes:
+    "recommendation_pk" PRIMARY KEY, btree (org_id, cluster_id, rule_fqdn, error_key)
+
+rule_fqdn      ccx_rules_ocp.external.rules.nodes_requirements_check
+error_key      NODES_MINIMUM_REQUIREMENTS_NOT_MET
+rule_id        ccx_rules_ocp.external.rules.nodes_requirements_check|NODES_MINIMUM_REQUIREMENTS_NOT_MET
+```
+
+
+
+## Table rule_hit
+
+- contains more records for given `org_id` + `cluster_id`
+- depends on number of actual rule hits for a cluster
+
+```
+                Table "public.rule_hit"
+    Column     |       Type        |Nullable |
+---------------+-------------------+---------+
+ org_id        | integer           |not null |
+ cluster_id    | character varying |not null |
+ rule_fqdn     | character varying |not null |
+ error_key     | character varying |not null |
+ template_data | character varying |not null |
+Indexes:
+    "rule_hit_pkey" PRIMARY KEY, btree (cluster_id, org_id, rule_fqdn, error_key)
+
+
+rule_fqdn      ccx_rules_ocp.external.rules.nodes_requirements_check.report
+error_key      NODES_MINIMUM_REQUIREMENTS_NOT_MET
+template_data  JSON taken from report
+```
+
+
+## Benchmarks setup
+
+- New 'real' machine with Fedora 36 Server installed
+- PostgreSQL, Go, Kafka, Kafkacat (Kcat) + relevant tools installed
+- New database `aggregator` created in PostgreSQL
+- Insights Results Aggregator built (and tested by UT)
+- Schema version migrated to `latest` version
+
+
+
+## Benchmarks steps
+
+- clean up DB completely
+- stop Aggregator
+- fill-in input Kafka topic with X records (10000 for example)
+- start timer
+- start Aggregator
+- wait for all messages to be finished
+- stop Aggregator
+- check if all messages from Kafka topic has been consumed
+- stop timer + measure time
+
+
+
+## Breaking things apart
+
+.image architecture2.gif _ 800
+
+
+
+## Low level stuff
+
+- Database cleanup
+
+```
+delete from report;
+delete from recommendation;
+delete from rule_hit;
+```
+
+- Check DB cleanup + check #reports after test
+
+```
+select count(*) from report;
+select count(*) from recommendation;
+select count(*) from rule_hit;
+```
+
+
+
+## Low level stuff (cont.)
+
+- Kafka lag check
+   - has to be 10,000 or 100,000 before benchmark
+   - has to be 0 after benchmark
+
+```
+
+$ bin/kafka-run-class.sh kafka.admin.ConsumerGroupCommand --group aggregator --bootstrap-server localhost:9092 --describe
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                 HOST                             CLIENT-ID
+aggregator      ccx.ocp.results 0          100000          100000          0               -               -               -
+
+
+$ bin/kafka-run-class.sh kafka.admin.ConsumerGroupCommand --group aggregator --bootstrap-server localhost:9092 --describe
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+aggregator      ccx.ocp.results 0          100000          200000          100000          -               -               -
+
+
+$ bin/kafka-run-class.sh kafka.admin.ConsumerGroupCommand --group aggregator --bootstrap-server localhost:9092 --describe
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+aggregator      ccx.ocp.results 0          200000          200000          0               -               -               -
+```
+
+
+
+## First measures and comparison
+
+- first 5,000 messages written with speed 27 messages per second
+- then DB is cleaned
+- first 100,000 messages written with speed just 14 messages per second
+    - 7 rule hits per cluster on average
+    - varies from 0 hits to 12 hits
+
+.image first_report.png
+
+- &rarr; filled-in DB slows down the write process
+    - expected
+    - but is there any space for improvement?
+
+
+## Benchmark results
+
+- not the benchmark is run in steps
+    - 10,000 messages in each step
+    - without DB cleanup between steps
+    - so DB is (slowly) being filled-in
+
+.image benchmarks.png
+
+
+
+## Write duration for 110,000 new unique reports
+
+- in steps with 10,000 blocks
+
+.image write_duration.png
+
+
+
+## Write speed
+
+- measured for 100,000 new unique reports
+
+.image write_speed_1.png
+
+
+
+## Write speed
+
+- measured for 100,000 new unique reports
+
+- approximation added
+
+.image write_speed_2.png
+
+
+
+## DB operations during writing new reports
+
+```
+INSERT OR REPLACE INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7);
+```
+
+- performed once per message (report)
+
+```
+DELETE FROM recommendation WHERE cluster_id = $1;
+INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at) VALUES ...
+```
+
+- `INSERT` performed several times, once per rule hit
+
+```
+DELETE FROM rule_hit WHERE org_id = $1 AND cluster_id = $2;
+INSERT OR REPLACE INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
+                       VALUES ($1, $2, $3, $4, $5);
+```
+
+- `INSERT` performed several times, once per rule hit
+
+
+
+## Usage of EXPLAIN and EXPLAIN ANALYSE statements
+
+- (for semi-full database)
+
+
+
+## UPSERT into report table
+
+```
+EXPLAIN ANALYZE INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
+VALUES (1, 123456, '', '2020-01-01', '2020-01-01', 0, '2020-01-01');
+
+                                            QUERY PLAN                                            
+
+--------------------------------------------------------------------------------------------------
+ Insert on report  (cost=0.00..0.01 rows=1 width=100) (actual time=25.302..25.303 rows=0 loops=1)
+   ->  Result  (cost=0.00..0.01 rows=1 width=100) (actual time=0.003..0.004 rows=1 loops=1)
+ Planning Time: 0.105 ms
+ Execution Time: 35.888 ms
+(4 rows)
+```
+
+
+
+## UPSERT into recommendation table
+
+```
+EXPLAIN ANALYZE DELETE FROM recommendation WHERE cluster_id = '94288c61-b7db-4d23-9f81-ee88d376970d';
+
+                                                   QUERY PLAN                                                    
+-----------------------------------------------------------------------------------------------------------------
+ Delete on recommendation  (cost=0.00..2794.57 rows=9 width=6) (actual time=9.539..9.542 rows=0 loops=1)
+   ->  Seq Scan on recommendation  (cost=0.00..2794.57 rows=9 width=6) (actual time=0.015..9.401 rows=5 loops=1)
+         Filter: ((cluster_id)::text = '94288c61-b7db-4d23-9f81-ee88d376970d'::text)
+         Rows Removed by Filter: 69995
+ Planning Time: 0.143 ms
+ Execution Time: 9.603 ms
+(6 rows)
+```
+
+- seq scan?!?!?!
+
+
+
+## UPSERT into recommendation table (cont.)
+
+```
+EXPLAIN ANALYZE INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at) VALUES ();
+
+                                               QUERY PLAN                                               
+--------------------------------------------------------------------------------------------------------
+ Insert on recommendation  (cost=0.00..0.01 rows=1 width=140) (actual time=9.934..9.937 rows=0 loops=1)
+   ->  Result  (cost=0.00..0.01 rows=1 width=140) (actual time=0.003..0.008 rows=1 loops=1)
+ Planning Time: 0.038 ms
+ Execution Time: 9.983 ms
+(4 rows)
+```
+
+- performed several times (once per rule hit)!
+
+
+
+## UPSERT into rule_hit table
+
+```
+EXPLAIN ANALYZE DELETE FROM rule_hit WHERE org_id = 4403030 AND cluster_id = '94288c61-b7db-4d23-9f81-ee88d376970d';
+
+                                                          QUERY PLAN                                               
+           
+-------------------------------------------------------------------------------------------------------------------
+-----------
+ Delete on rule_hit  (cost=0.42..8.44 rows=1 width=6) (actual time=0.035..0.037 rows=0 loops=1)
+   ->  Index Scan using rule_hit_pkey on rule_hit  (cost=0.42..8.44 rows=1 width=6) (actual time=0.033..0.034 rows=
+0 loops=1)
+         Index Cond: (((cluster_id)::text = '94288c61-b7db-4d23-9f81-ee88d376970d'::text) AND (org_id = 4403030))
+ Planning Time: 0.132 ms
+ Execution Time: 0.079 ms
+(5 rows)
+```
+
+
+
+## UPSERT into rule_hit table (cont.)
+
+```
+EXPLAIN ANALYZE INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
+                       VALUES (...);
+                                            QUERY PLAN                                            
+--------------------------------------------------------------------------------------------------
+ Insert on rule_hit  (cost=0.00..0.01 rows=1 width=132) (actual time=9.333..9.335 rows=0 loops=1)
+   ->  Result  (cost=0.00..0.01 rows=1 width=132) (actual time=0.003..0.004 rows=1 loops=1)
+ Planning Time: 0.064 ms
+ Execution Time: 9.363 ms
+(4 rows)
+```
+
+- performed several times (once per rule hit)!
+
+
+
+## Some scenarios
+
+- report with 0 rule hits (pretty common)
+
+```
+UPSERT INTO report table:         36 ms
+DELETE FROM recommendation table: 10 ms
+INSERT INTO recommendation table:  0 ms
+DELETE FROM rule_hit table:        0 ms
+INSERT INTO rule_hit table:        0 ms
+---------------------------------------
+                                  46 ms (21 wr/second)
+```
+
+
+
+## Some scenarios (cont.)
+
+- report with 3 rule hits (middle ground)
+
+```
+UPSERT INTO report table:         36 ms
+DELETE FROM recommendation table: 10 ms
+INSERT INTO recommendation table: 30 ms (3*9.983 ms)
+DELETE FROM rule_hit table:        0 ms
+INSERT INTO rule_hit table:       28 ms (3*9.363 ms)
+---------------------------------------
+                                 104 ms (9.6 wr/second)
+```
+
+
+
+## Some scenarios (cont.)
+
+- report with 10 rule hits (upper 'practical' limit)
+
+```
+UPSERT INTO report table:         36 ms
+DELETE FROM recommendation table: 10 ms
+INSERT INTO recommendation table: 99 ms (10*9.983 ms)
+DELETE FROM rule_hit table:        0 ms
+INSERT INTO rule_hit table:       93 ms (10*9.363 ms)
+---------------------------------------
+                                 238 ms (4.2 wr/second)
+```
+
+
+
+## Possible improvements
+
+- vacuuming
+- cleanup old records
+- proper index for `recommendation` table
+- (minor) get rid of `.report` postfix in all tables
+- make sure we use Amazon EBS SSD-based storage type
+- make sure that Notification DB does not affect Aggregator DB
+- `INSERT OR REPLACE INTO` (upsert) not needed, simple `INSERT` is enough
+- multiple INSERT statements into one statement (?)
+- horizontally or verticaly scaled database (needs some investigation)
+
+
+
+## Conclusion
+
+.image magic.jpg
+
+
+
+## Links
+
+- https://aws.amazon.com/blogs/database/understanding-burst-vs-baseline-performance-with-amazon-rds-and-gp2/
+- https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-volume-types.html#EBSVolumeTypes_piops
+- https://redhatinsights.github.io/ccx-notification-service/demos/db-indexes/db-indexes.html

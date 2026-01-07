@@ -1,0 +1,81 @@
+[broker]
+addresses = "kafka:29092"
+security_protocol = ""
+sasl_mechanism = "PLAIN"
+sasl_username = "username"
+sasl_password = "password"
+topic = "ccx.ocp.results"
+payload_tracker_topic = "platform.payload-status"
+dead_letter_queue_topic = "dead.letter.queue"
+service_name = "insights-results-aggregator"
+group = "aggregator"
+enabled = true
+enable_org_allowlist = false
+client_id = "db-writer"
+display_message_with_wrong_structure = true
+
+[server]
+address = ":8080"
+api_prefix = "/api/insights-results-aggregator/v1/"
+api_spec_file = "openapi.json"
+debug = true
+auth = false
+auth_type = "xrh"
+maximum_feedback_message_length = 255
+org_overview_limit_hours = 2
+
+[processing]
+org_allowlist_file = "org_allowlist.csv"
+
+[ocp_recommendations_storage]
+db_driver = "postgres"
+pg_username = "postgres"
+pg_password = "postgres"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = "sslmode=disable"
+log_sql_queries = true
+type = "sql"
+
+[dvo_recommendations_storage]
+db_driver = "postgres"
+pg_username = "postgres"
+pg_password = "postgres"
+pg_host = "localhost"
+pg_port = 5432
+pg_db_name = "aggregator"
+pg_params = "sslmode=disable"
+log_sql_queries = true
+type = "sql"
+
+[storage_backend]
+use = "ocp_recommendations"
+
+[redis]
+database = 0
+endpoint = "localhost:6379"
+password = ""
+username = ""
+timeout_seconds = 30
+
+[content]
+path = "./tests/content/ok/"
+
+[logging]
+debug = true
+log_level = ""
+logging_to_cloud_watch_enabled = false
+logging_to_sentry_enabled = false
+
+[cloudwatch]
+aws_access_id = "a key id"
+aws_secret_key = "tshhhh it is a secret"
+aws_session_token = ""
+aws_region = "us-east-1"
+log_group = "platform-dev"
+stream_name = "insights-results-aggregator"
+debug = false
+
+[metrics]
+namespace = ""

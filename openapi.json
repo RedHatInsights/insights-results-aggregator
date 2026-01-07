@@ -1,0 +1,2602 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Insights Results Aggregator",
+    "description": "Aggregation service for the results of running Insights rules.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "paths": {
+    "/openapi.json": {
+      "get": {
+        "summary": "Returns the OpenAPI specification JSON.",
+        "description": "The OpenAPI specification of this REST API service that is represented in formatted and human-readable JSON is available under this endpoint.",
+        "operationId": "getOpenApi",
+        "responses": {
+          "200": {
+            "description": "A JSON containing the OpenAPI specification for this service.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "openapi": {
+                      "type": "string"
+                    },
+                    "info": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "paths": {
+                      "type": "object",
+                      "description": "Available paths and their descriptions."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": []
+      }
+    },
+    "/info": {
+      "get": {
+        "summary": "Returns basic information about Insights Results Aggregator.",
+        "description": "InfoEndpoint returns basic information about Insights Results Aggregator version, utils repository version, commit hash etc.",
+        "operationId": "InfoEndpoint",
+        "responses": {
+          "200": {
+            "description": "A map containing information about Insights Results Aggregator.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "info": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Read all metrics exposed by this service",
+        "description": "Currently the following metrics are exposed to be consumed by Prometheus or any other tool compatible with it: 'consumed_messages' the total number of messages consumed from Kafka, 'consuming_errors' the total number of errors during consuming messages from Kafka, 'successful_messages_processing_time' the time to process successfully message, 'failed_messages_processing_time' the time to process message fail, 'last_checked_timestamp_lag_minutes' shows how slow we get messages from clusters, 'produced_messages' the total number of produced messages, 'written_reports' the total number of reports written to the storage, 'feedback_on_rules' the total number of left feedback, 'sql_queries_counter' the total number of SQL queries, 'sql_queries_durations' the SQL queries durations.  Additionally it is possible to consume all metrics provided by Go runtime. There metrics start with 'go_' and 'process_ 'prefixes.",
+        "parameters": [],
+        "operationId": "getMetrics",
+        "responses": {
+          "200": {
+            "description": "Default response containing all metrics in semi-structured text format",
+            "content": {
+              "text/plain": {}
+            }
+          }
+        }
+      }
+    },
+    "/organizations": {
+      "get": {
+        "summary": "Returns a list of available organization IDs.",
+        "operationId": "getOrganizations",
+        "description": "[DEBUG ONLY] List of organizations for which at least one Insights report is available via the API.",
+        "responses": {
+          "200": {
+            "description": "A JSON array of organization IDs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "organizations": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int64",
+                        "minimum": 0
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "debug"
+        ],
+        "parameters": []
+      }
+    },
+    "/organizations/{orgId}/clusters": {
+      "get": {
+        "summary": "Returns a list of clusters associated with the specified organization ID.",
+        "description": "Returns a list of clusters, ie. cluster IDs, that are associated with the specified organization ID. Please note that there is 1:N organization to cluster mapping, ie. one cluster belongs exactly to one organization.",
+        "operationId": "getClustersForOrganization",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the requested organization.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON array of clusters that belong to the specified organization.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/organizations/{orgId}/clusters/{clusterId}/users/{userId}/report": {
+      "get": {
+        "summary": "Returns the latest report for the given organization and cluster which contains information about rules that were hit by the cluster.",
+        "operationId": "getReportForCluster",
+        "description": "The report is specified by the organization ID and the cluster ID. The latest report available for the given combination will be returned.",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the organization that owns the cluster.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format.",
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest available report for the given organization and cluster combination. Returns rules and their descriptions that were hit by the cluster.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "meta": {
+                          "type": "object",
+                          "properties": {
+                            "count": {
+                              "type": "integer",
+                              "description": "Number of rules that were hit by the cluster. -1 is returned when no rules are defined for the cluster.",
+                              "example": "1"
+                            },
+                            "last_checked_at": {
+                              "type": "string",
+                              "format": "date",
+                              "example": "2020-01-23T16:15:59.478901889Z"
+                            },
+                            "gathered_at": {
+                              "type": "string",
+                              "format": "date",
+                              "example": "2022-03-10T16:15:30.973901889Z"
+                            }
+                          }
+                        },
+                        "report": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "component": {
+                                "type": "string",
+                                "description": "The rule identifier for the hit rule.",
+                                "example": "some.python.module"
+                              },
+                              "key": {
+                                "type": "string",
+                                "description": "The erroy key triggered for this rule in the cluster.",
+                                "example": "SOME_ERROR_KEY"
+                              },
+                              "user_vote": {
+                                "type": "integer",
+                                "description": "User vote - value of user voting. -1 is dislike vote, 0 is no vote, 1 is like vote.",
+                                "enum": [
+                                  -1,
+                                  0,
+                                  1
+                                ]
+                              },
+                              "disabled": {
+                                "type": "boolean",
+                                "description": "If this rule result disabled or not. This field can be used in the UI to show only specific set of rules results."
+                              },
+                              "disable_feedback": {
+                                "type": "string",
+                                "description": "feedback on disabled rule"
+                              },
+                              "disabled_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "timestamp when the rule was disabled"
+                              },
+                              "details": {
+                                "type": "string",
+                                "description": "details on rule"
+                              },
+                              "impacted": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "timestamp when the rule first appeared"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/organizations/{orgId}/clusters/{clusterId}/users/{userId}/report/info": {
+      "get": {
+        "summary": "Returns metainformations about the latest report for the given organization and cluster.",
+        "operationId": "getReportMetainfoForCluster",
+        "description": "The report is specified by the organization ID and the cluster ID. Metainformation about the latest report available for the given combination will be returned.",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the organization that owns the cluster.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format.",
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metainformation about the latest available report for the given organization and cluster combination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "metainfo": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "Number of rules that were hit by the cluster. -1 is returned when no rules are defined for the cluster.",
+                          "example": "1"
+                        },
+                        "last_checked_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Timestamp when the report has been produced.",
+                          "example": "2020-01-23T16:15:59.478901889Z"
+                        },
+                        "stored_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Timestamp when the report has been written into database.",
+                          "example": "2020-01-23T16:15:59.478901889Z"
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/organizations/{orgId}/clusters/{clusterList}/reports": {
+      "get": {
+        "summary": "Returns the latest reports for the given list of clusters.",
+        "operationId": "getReportsForClusters",
+        "description": "Reports that are going to be returned are specified by list of cluster IDs that is part of path.",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "description": "Organization ID represented as positive integer",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "clusterList",
+            "in": "path",
+            "description": "A comma separated list of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "description": "ID of cluster in UUID format.",
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request, usualy caused when some cluster belongs to different organization."
+          },
+          "200": {
+            "description": "Latest available report for the given list of cluster IDs. Returns rules and their descriptions that were hit by the cluster.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    },
+                    "reports": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cluster": {
+                            "type": "string",
+                            "minLength": 36,
+                            "maxLength": 36,
+                            "format": "uuid"
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "count": {
+                                "type": "integer",
+                                "description": "Number of rules that were hit by the cluster. -1 is returned when no rules are defined for the cluster.",
+                                "example": "1"
+                              },
+                              "last_checked_at": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "2020-01-23T16:15:59.478901889Z"
+                              }
+                            }
+                          },
+                          "report": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "component": {
+                                  "type": "string",
+                                  "description": "The rule identifier for the hit rule.",
+                                  "example": "some.python.module"
+                                },
+                                "key": {
+                                  "type": "string",
+                                  "description": "The erroy key triggered for this rule in the cluster.",
+                                  "example": "SOME_ERROR_KEY"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/organizations/{orgId}/clusters/reports": {
+      "post": {
+        "summary": "Returns the latest reports for the given list of clusters.",
+        "operationId": "getReportsForClustersPost",
+        "description": "Reports that are going to be returned are specified by list of cluster IDs that is part of request body.",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "description": "Organization ID represented as positive integer",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request, usualy caused when some cluster belongs to different organization."
+          },
+          "200": {
+            "description": "Latest available report for the given list of cluster IDs. Returns rules and their descriptions that were hit by the cluster.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    },
+                    "reports": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cluster": {
+                            "type": "string",
+                            "minLength": 36,
+                            "maxLength": 36,
+                            "format": "uuid"
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "count": {
+                                "type": "integer",
+                                "description": "Number of rules that were hit by the cluster. -1 is returned when no rules are defined for the cluster.",
+                                "example": "1"
+                              },
+                              "last_checked_at": {
+                                "type": "string",
+                                "format": "date",
+                                "example": "2020-01-23T16:15:59.478901889Z"
+                              }
+                            }
+                          },
+                          "report": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "component": {
+                                  "type": "string",
+                                  "description": "The rule identifier for the hit rule.",
+                                  "example": "some.python.module"
+                                },
+                                "key": {
+                                  "type": "string",
+                                  "description": "The erroy key triggered for this rule in the cluster.",
+                                  "example": "SOME_ERROR_KEY"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations/{orgId}/clusters/{clusterId}/users/{userId}/rules/{ruleId}": {
+      "get": {
+        "summary": "Returns the latest rule report for the given organization, cluster, user and rule ids",
+        "operationId": "getSingleRule",
+        "description": "The rule report is specified by organization ID, cluster ID, user ID and rule ID. The latest rule report available for the given combination will be returned.",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest available rule report for the given organization, cluster and rule id combination. Returns rule and it description that were hit by the cluster.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "component": {
+                          "type": "string",
+                          "description": "The rule identifier for the hit rule.",
+                          "example": "some.python.module"
+                        },
+                        "key": {
+                          "type": "string",
+                          "description": "The erroy key triggered for this rule in the cluster.",
+                          "example": "SOME_ERROR_KEY"
+                        },
+                        "user_vote": {
+                          "type": "integer",
+                          "description": "User vote - value of user voting. -1 is dislike vote, 0 is no vote, 1 is like vote.",
+                          "enum": [
+                            -1,
+                            0,
+                            1
+                          ]
+                        },
+                        "disabled": {
+                          "type": "boolean",
+                          "description": "If this rule result disabled or not. This field can be used in the UI to show only specific set of rules results."
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/like": {
+      "put": {
+        "summary": "Puts like for the rule with cluster for user",
+        "operationId": "addLikeToRule",
+        "description": "Puts like for the rule(ruleId) with cluster(clusterId) for user",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266`",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of a rule. An example: `some.python.module`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "ID of the error key",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}organizations/{orgId}//users/{userId}/dislike": {
+      "put": {
+        "summary": "Puts dislike for the rule with cluster for user",
+        "operationId": "addDislikeToRule",
+        "description": "Puts dislike for the rule(ruleId) with cluster(clusterId) for user",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266`",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of a rule. An example: `some.python.module`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "ID of the error key",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/reset_vote": {
+      "put": {
+        "summary": "Resets vote for the rule with cluster for current user",
+        "operationId": "resetVoteForRule",
+        "description": "Resets vote for the rule(ruleId) with cluster(clusterId) for current user(from auth token)",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266`",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of a rule. An example: `some.python.module`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "ID of the error key",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/users/{userId}/get_vote": {
+      "get": {
+        "summary": "Returns vote for the rule with cluster for user",
+        "operationId": "getVoteForRule",
+        "description": "[DEBUG ONLY] Returns vote for the rule(ruleId) with cluster(clusterId) for user",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266`",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of a rule. An example: `some.python.module`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "ID of the error key",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "vote": {
+                      "type": "integer",
+                      "example": "1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "debug"
+        ]
+      }
+    },
+    "/organizations/{orgIds}": {
+      "delete": {
+        "summary": "Deletes organization data from database.",
+        "operationId": "deleteOrganizations",
+        "description": "[DEBUG ONLY] All database entries related to the specified organization IDs will be deleted.",
+        "parameters": [
+          {
+            "name": "orgIds",
+            "in": "path",
+            "required": true,
+            "description": "IDs of the organizations whose data are supposed to be deleted.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 0
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion was successful."
+          }
+        },
+        "tags": [
+          "debug"
+        ]
+      }
+    },
+    "/clusters/{clusterIds}": {
+      "delete": {
+        "summary": "Deletes cluster data from database.",
+        "operationId": "deleteClusters",
+        "description": "[DEBUG ONLY] All database entries related to the specified cluster IDs will be deleted.",
+        "parameters": [
+          {
+            "name": "clusterIds",
+            "in": "path",
+            "required": true,
+            "description": "IDs of the clusters whose data are supposed to be deleted.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion was successful."
+          }
+        },
+        "tags": [
+          "debug"
+        ]
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/enable": {
+      "put": {
+        "summary": "Re-enables a rule/health check recommendation for specified cluster",
+        "operationId": "enableRule",
+        "description": "Enables a rule (ruleId) for cluster (clusterId)",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "description": "ID of the cluster which must conform to UUID format",
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of a rule",
+            "schema": {
+              "type": "string"
+            },
+            "example": "some.python.module"
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_KEY"
+          },
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/disable": {
+      "put": {
+        "summary": "Disables a rule/health check recommendation for specified cluster",
+        "operationId": "disableRule",
+        "description": "Disables a rule (ruleId) for cluster (clusterId)",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266"
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of a rule",
+            "schema": {
+              "type": "string"
+            },
+            "example": "some.python.module"
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "ID of the error key",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
+      }
+    },
+    "/clusters/{clusterId}/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/users/{userId}/disable_feedback": {
+      "post": {
+        "summary": "Accepts a feedback from user when (s)he disables a rule",
+        "operationId": "disableRuleFeedback",
+        "description": "Accepts a feedback from user when (s)he disables a rule",
+        "parameters": [
+          {
+            "name": "clusterId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster which must conform to UUID format",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266"
+          },
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the rule",
+            "schema": {
+              "type": "string"
+            },
+            "example": "some.python.module"
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "ID of the error key",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "ID of the user",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1234"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "disable_feedback": {
+                      "type": "string",
+                      "example": "test"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
+      }
+    },
+    "/clusters/rules/{ruleId}/error_key/{errorKey}/organizations/{orgId}/disabled": {
+      "get": {
+        "summary": "Returns a list of clusters disabled for given rule from current account",
+        "operationId": "ListOfDisabledClusters",
+        "description": "Returns a list of clusters disabled for given rule from current account",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "description": "ID of a rule",
+            "schema": {
+              "type": "string"
+            },
+            "example": "some.python.module"
+          },
+          {
+            "name": "errorKey",
+            "in": "path",
+            "required": true,
+            "description": "ID of the error key",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ERROR_COOL_NAME"
+          },
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of disabled clusters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cluster_id": {
+                            "type": "string",
+                            "description": "ID of the cluster which must conform to UUID format.",
+                            "example": "34c3ecc5-624a-49a5-bab8-4fdc5e51a266"
+                          },
+                          "cluster_name": {
+                            "type": "string",
+                            "description": "The display name of a cluster. Filled later in smart-proxy with info from AMS API"
+                          },
+                          "disabled_at": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "justification": {
+                            "type": "string",
+                            "description": "User given justification why rule was disabled.",
+                            "example": "Not useful for us."
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/recommendations/organizations/{org_id}/users/{user_id}/list": {
+      "post": {
+        "summary": "Returns a list of recommendations and a list of clusters each one is hitting.",
+        "operationId": "getRecommendationsPost",
+        "description": "Recommendations will be retrieved based on the list of cluster IDs that is part of request body.",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID represented as positive integer",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "List of cluster IDs. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of recommendations and a number of clusters each one is hitting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recommendations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rule_id": {
+                            "type": "string",
+                            "description": "The rule ID in the | format.",
+                            "example": "rule.module|ERROR_KEY"
+                          },
+                          "cluster_id": {
+                            "type": "array",
+                            "items": {
+                              "description": "Cluster ID",
+                              "type": "string",
+                              "minLength": 36,
+                              "maxLength": 36,
+                              "format": "uuid"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clusters/organizations/{org_id}/users/{user_id}/recommendations": {
+      "post": {
+        "summary": "getClustersRecommendationsList retrieves all hitting recommendations for all clusters given in the POST body",
+        "operationId": "getClustersRecommendationsPost",
+        "description": "Recommendations will be retrieved based on the list of cluster IDs that is part of request body.",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "description": "Organization ID represented as positive integer",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "List of cluster IDs. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Map of clusters and a list of hitting recommendations for corresponding clusters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "created_at": {
+                            "type": "string",
+                            "description": "The time of last analysis for this cluster."
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "cluster_version": {
+                                "type": "string",
+                                "description": "The version of the cluster.",
+                                "example": "1.0"
+                              }
+                            }
+                          },
+                          "recommendations": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "description": "The array of recommendation IDs",
+                              "example": [
+                                "rule.module|ERROR_KEY",
+                                "rule.another.module|SPECIFIC_KEY"
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      "example": {
+                        "1234ecc5-624a-49a5-bab8-4fdc5e51a266": {
+                          "created_at": "2021-09-07T15:50+00Z",
+                          "recommendations": [
+                            "rule.module1|ERROR_KEY1",
+                            "rule.module2|ERROR_KEY2"
+                          ]
+                        },
+                        "5678ecc5-624a-49a5-bab8-4fdc5e51a266": {
+                          "created_at": "2021-09-07T15:50+00Z",
+                          "recommendations": [
+                            "rule.module1|ERROR_KEY1",
+                            "rule.module2|ERROR_KEY2"
+                          ]
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rules/organizations/{orgId}/disabled": {
+      "get": {
+        "summary": "Returns a list of rules disabled for given organization",
+        "operationId": "ListOfDisabledRules",
+        "description": "Returns a list of rules disabled for given organization",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of disabled rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "rules": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "component": {
+                                "type": "string",
+                                "description": "The rule identifier for the hit rule.",
+                                "example": "some.python.module"
+                              },
+                              "key": {
+                                "type": "string",
+                                "description": "The erroy key triggered for this rule in the cluster.",
+                                "example": "SOME_ERROR_KEY"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/rules/organizations/{orgId}/disabled_for_clusters": {
+      "post": {
+        "summary": "Returns a list of rules disabled for current organization for given list of clusters",
+        "operationId": "ListOfDisabledRulesForClusters",
+        "description": "Returns a list of rules disabled for current organization for given list of clusters",
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "requestBody": {
+          "description": "List of cluster IDs. Each ID must conform to UUID format. An example: `34c3ecc5-624a-49a5-bab8-4fdc5e51a266.",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of disabled rules",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/rules/users/{userId}/disabled/feedback": {
+      "get": {
+        "summary": "Returns a list of reasons why rule or rules has been disabled",
+        "operationId": "ListOfReasons",
+        "description": "Returns a list of reasons why rule or rules has been disabled",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user. An example: `42`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of reasons for disabled rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "type": "object",
+                      "properties": {
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "component": {
+                                "type": "string",
+                                "description": "The rule identifier for the hit rule.",
+                                "example": "some.python.module"
+                              },
+                              "key": {
+                                "type": "string",
+                                "description": "The erroy key triggered for this rule in the cluster.",
+                                "example": "SOME_ERROR_KEY"
+                              },
+                              "message": {
+                                "type": "string",
+                                "description": "Feedback provided by user",
+                                "example": "I don't like this rule!!!"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/enable": {
+      "put": {
+        "summary": "Re-enables a rule for all clusters",
+        "operationId": "EnableRuleSystemWide",
+        "description": "Re-enables a rule for all clusters",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "description": "ID of rule",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_key",
+            "in": "path",
+            "required": true,
+            "description": "Rule error key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/disable": {
+      "put": {
+        "summary": "Disables a rule for all clusters",
+        "operationId": "DisableRuleSystemWide",
+        "description": "Disables a rule for all clusters",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "description": "ID of rule",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_key",
+            "in": "path",
+            "required": true,
+            "description": "Rule error key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Justification why rule was disabled",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}/update": {
+      "post": {
+        "summary": "Updates disable justification of a rule disabled for all clusters",
+        "operationId": "UpdateRuleSystemWide",
+        "description": "Updates disable justification of a rule disabled for all clusters",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "description": "ID of rule",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_key",
+            "in": "path",
+            "required": true,
+            "description": "Rule error key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Justification why rule was disabled",
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/rules/{rule_id}/error_key/{error_key}/organizations/{org_id}": {
+      "get": {
+        "summary": "Returns info about rule disabled system-wide",
+        "operationId": "ReadRuleSystemWide",
+        "description": "Returns info about rule disabled system-wide",
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "description": "ID of rule",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_key",
+            "in": "path",
+            "required": true,
+            "description": "Rule error key",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/rules/organizations/{org_id}/disabled_system_wide": {
+      "get": {
+        "summary": "Returns a list of all rules disabled system-wide",
+        "operationId": "ListOfDisabledRulesSystemWide",
+        "description": "Returns a list of all rules disabled system-wide",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of organization",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/rules/organizations/{orgId}/rating": {
+      "post": {
+        "tags": [
+          "prod"
+        ],
+        "parameters": [
+          {
+            "name": "orgId",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "requestBody": {
+          "description": "A JSON object with the current rule and its rating.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ratingSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ratingSchema"
+                }
+              }
+            },
+            "description": "The current ratings for the given rule IDs"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ratingSchema"
+                }
+              }
+            },
+            "description": "The current rating value for the rule"
+          },
+          "400": {
+            "description": "Invalid request, usually caused when some rule identifier doesn't exist"
+          }
+        }
+      }
+    },
+    "/rules/{rule_selector}/organizations/{org_id}/users/{user_id}/clusters_detail": {
+      "get": {
+        "summary": "Returns a list of cluster where the given rule is active.",
+        "description": "Provided a correct rule selector and a valid organization ID, this method will query the DB for all the organization's clusters being currently affected by the rule, if any.",
+        "operationId": "getClustersForRecommendation",
+        "parameters": [
+          {
+            "name": "rule_selector",
+            "in": "path",
+            "required": true,
+            "description": "Recommendation identifier, in the plugin_name|error_key format",
+            "schema": {
+              "type": "string"
+            },
+            "example": "existing.plugin.name|ERROR_KEY"
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "123422"
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the user",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of cluster data for provided rule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clusters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cluster": {
+                            "type": "string",
+                            "minLength": 36,
+                            "maxLength": 36,
+                            "format": "uuid"
+                          },
+                          "cluster_name": {
+                            "type": "string",
+                            "description": "The display name of a cluster. Filled later in smart-proxy with info from AMS API."
+                          },
+                          "last_checked_at": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2020-01-23T16:15:59.478901889Z"
+                          },
+                          "impacted": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2020-01-23T16:15:59.478901889Z"
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "cluster_version": {
+                                "type": "string",
+                                "description": "The version of the cluster.",
+                                "example": "1.0"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request body could not be parsed, so the query is not processed"
+          },
+          "404": {
+            "description": "Resource not found, usually caused when some rule selector, organization or user doesn't exist"
+          },
+          "500": {
+            "description": "Internal server error, should only be returned if unexpected error happened when querying from the DB"
+          }
+        },
+        "tags": [
+          "rule",
+          "prod"
+        ]
+      }
+    },
+    "/rules/{rule_selector}/organizations/{org_id}/rating": {
+      "get": {
+        "summary": "Returns the user rating for given rule ID.",
+        "operationId": "getRatingForRecommendation",
+        "parameters": [
+          {
+            "name": "rule_selector",
+            "in": "path",
+            "required": true,
+            "description": "Recommendation identifier, in the plugin_name|error_key format",
+            "schema": {
+              "type": "string"
+            },
+            "example": "existing.plugin.name|ERROR_KEY"
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "123422"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ratingSchema"
+                }
+              }
+            },
+            "description": "The current rating for the given rule ID"
+          },
+          "404": {
+            "description": "Rating for this rule was not found"
+          }
+        },
+        "tags": [
+          "prod"
+        ]
+      }
+    },
+    "/organization/{org_id}/workloads": {
+      "get": {
+        "summary": "Returns the namespace workloads for the given organization",
+        "operationId": "getOrganizationWorkloadsGet",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "A JSON containing workloads for this organization",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/statusResponse"
+                    },                    
+                    "workloads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/workloadsForNamespace"
+                    }
+                  }
+                }
+              }
+            }
+          }
+          }
+        },
+        "tags": []
+      },
+      "post": {
+        "summary": "Returns the namespace workloads for the given organization",
+        "operationId": "getOrganizationWorkloadsPost",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          }
+        ],
+        "requestBody": {
+          "description": "List of cluster IDs. Each ID must conform to UUID format.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clusters": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/clusterId"
+                    }
+                  }
+                }
+              },
+              "example": "{\"clusters\": [\"34c3ecc5-624a-49a5-bab8-4fdc5e51a266\"]}"
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "A JSON containing workloads for this organization",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/statusResponse"
+                    },                    
+                    "workloads": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/workloadsForNamespace"
+                    }
+                  }
+                }
+              }
+            }
+            }
+          }
+        },
+        "tags": []
+      }
+    },
+    "/organization/{org_id}/namespace/{namespace}/cluster/{cluster}/workloads": {
+      "get": {
+        "summary": "Returns the workloads for a single namespace in the given cluster",
+        "operationId": "getNamespaceClusterWorkloadsGet",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the organization",
+            "schema": {
+              "type": "string"
+            },
+            "example": "42"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "description": "Name of the namespace",
+            "schema": {
+              "type": "string"
+            },
+            "example": "default"
+          },
+          {
+            "name": "cluster",
+            "in": "path",
+            "required": true,
+            "description": "ID of the cluster in valid UUID format",
+            "schema": {
+              "$ref":"#/components/schemas/clusterId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON containing report for this operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref":"#/components/schemas/workloadsForCluster"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found, usually caused when the namespace doesn't belong to the cluster"
+          }
+        },
+        "tags": []
+      }
+    }
+  },
+  "security": [],
+  "servers": [],
+  "components": {
+    "links": {},
+    "callbacks": {},
+    "schemas": {
+      "statusResponse": {
+        "type": "string",
+        "description": "response status for the processed request",
+        "example": "ok"
+      },
+      "clusterId": {
+        "description": "ID of the cluster in valid UUID format",
+        "type": "string",
+        "minLength": 36,
+        "maxLength": 36,
+        "format": "uuid"
+      },
+      "ratingSchema": {
+        "description": "An object representing the rating given from a user for a rule",
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer"
+          }
+        }
+      },
+      "clusterType": {
+        "type": "object",
+        "description": "object representing a cluster with its uuid and a human-readable name",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "UUID of the cluster"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "display name of the cluster"
+          }
+        }
+      },
+      "namespaceType": {
+        "type": "object",
+        "description": "object representing a namespace of a cluster",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "internal UUID for the namespace in its cluster"            
+          },
+          "name": {
+            "type": "string",
+            "description": "human-readable name of the namespace"
+          }
+        }
+      },
+      "dvoReportMeta": {
+        "type": "object",
+        "description": "object with metadata of the DVO workloads",
+        "properties": {
+          "recommendations": {
+            "type": "integer",
+            "description": "Total number of DVO recommendations affecting this namespace"
+          },
+          "objects": {
+            "type": "integer",
+            "description": "Total number of unique objects (workloads) being affected by DVO recommendations in this namespace. When a workload is being affected by several recommendations at once, it still counts as one affected object/workload in the context of a namespace."
+          },
+          "reported_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of the first analysis"
+          },
+          "last_checked_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp of the last analysis"
+          },
+          "highest_severity": {
+            "type": "integer",
+            "description": "Highest recommendation severity affecting this namespace + cluster"
+          },
+          "hits_by_severity": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "A dictionary with the number of DVO recommendation hits grouped by their severity. Always provides the severity keys even if there are no recommendations currently hitting.",
+            "example": {
+              "1": 2,
+              "2": 3,
+              "3": 0,
+              "4": 1
+            }
+          }
+        }
+      },
+      "dvoObject": {
+        "type": "object",
+        "description": "Representation of a DVO object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The kind of the object"
+          },
+          "uid": {
+            "type": "string",
+            "description": "The unique identifier of the object in its cluster"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "The human-readable name of the object"
+          }
+        }
+      },
+      "dvoRecommendation": {
+        "type": "object",
+        "description": "An object representing a single DVO recommendation",
+        "properties": {
+          "check": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "modified": {
+            "type": "string"
+          },
+          "more_info": {
+            "type": "string"
+          },
+          "extra_data": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "objects":{
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/dvoObject"
+            }
+          }
+        }
+      },
+      "workloadsForNamespace": {
+        "description": "An object representing a single entry of the namespace list with some aggregations",
+        "type": "object",
+        "properties": {
+          "cluster": {
+            "$ref":"#/components/schemas/clusterType"
+          },
+          "namespace": {
+            "$ref":"#/components/schemas/namespaceType"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/dvoReportMeta"
+          },
+          "recommendations_hit_count": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "A dictionary with the number of DVO recommendation hits grouped by recommendation",
+            "example": {
+              "rule1": 2,
+              "rule2": 3,
+              "rule3": 0,
+              "rule4": 1
+            }
+          }
+        }
+      },
+      "workloadsForCluster": {
+        "description": "An object representing the workloads for a single cluster",
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref":"#/components/schemas/statusResponse"
+          },
+          "cluster": {
+            "$ref":"#/components/schemas/clusterType"
+          },
+          "namespaces": {
+            "type": "array",
+            "items": {
+              "$ref":"#/components/schemas/workloadsForNamespace"
+            }
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/dvoReportMeta"
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/dvoRecommendation"
+            }
+          }
+        }
+      }
+    }
+  }
+}

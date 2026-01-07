@@ -1,0 +1,23 @@
+name: Go linters
+
+on:
+  pull_request:
+
+jobs:
+  golint:
+    runs-on: ubuntu-latest
+    name: Linters
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - name: Build project
+        run: go build
+      - name: shellcheck
+        run: make shellcheck
+      - name: ABC metrics checker
+        run: make abcgo
+      - name: JSON checker
+        run: make json-check

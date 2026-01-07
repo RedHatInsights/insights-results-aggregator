@@ -1,0 +1,508 @@
+# Copyright 2021, 2022, 2023 Red Hat, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: ccx-insights-results-aggregator
+objects:
+
+- kind: HorizontalPodAutoscaler
+  apiVersion: autoscaling/v1
+  metadata:
+    labels:
+      app: ccx-data-pipeline
+    name: ccx-insights-results-aggregator
+  spec:
+    minReplicas: ${{MIN_REPLICAS}}
+    maxReplicas: ${{MAX_REPLICAS}}
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: ccx-insights-results-aggregator
+    targetCPUUtilizationPercentage: 80
+
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: ccx-insights-results
+  spec:
+    envName: ${ENV_NAME}
+    testing:
+      iqePlugin: ccx
+    dependencies:
+      - dvo-writer
+    deployments:
+      - name: db-writer
+        minReplicas: ${{DB_WRITER_REPLICAS}}
+        webServices:
+          public:
+            enabled: false
+          private:
+            enabled: false
+          metrics:
+            enabled: true
+        podSpec:
+          initContainers:
+            - name: execute-migrations
+              image: ${IMAGE}:${IMAGE_TAG}
+              env:
+                - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE
+                  value: "ocp_recommendations"
+                - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
+                  value: "false"
+                - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
+                  value: "false"
+                - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER
+                  value: postgres
+                - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS
+                  value: ${PG_PARAMS}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__LOG_SQL_QUERIES
+                  value: "true"
+                - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
+                  value: "sql"
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
+                  value: ${CLOUDWATCH_ENABLED}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
+                  value: ${CLOUDWATCH_DEBUG}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: aws_region
+                      optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_GROUP
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: log_group_name
+                      optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_ACCESS_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: aws_access_key_id
+                      optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__AWS_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudwatch
+                      key: aws_secret_access_key
+                      optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_SENTRY_ENABLED
+                  value: ${SENTRY_ENABLED}
+                - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN
+                  valueFrom:
+                    secretKeyRef:
+                      key: dsn
+                      name: insights-results-aggregator-db-writer-dsn
+                      optional: true
+                - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
+                  value: ${ENV_NAME}
+              resources:
+                limits:
+                  cpu: ${CPU_LIMIT_DB_WRITER}
+                  memory: ${MEMORY_LIMIT_DB_WRITER}
+                requests:
+                  cpu: ${CPU_REQUEST_DB_WRITER}
+                  memory: ${MEMORY_REQUEST_DB_WRITER}
+              command:
+                - ./insights-results-aggregator
+                - migration
+                - latest
+          env:
+            - name: INSIGHTS_RESULTS_AGGREGATOR__STORAGE_BACKEND__USE
+              value: "ocp_recommendations"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ADDRESSES
+              value: "${KAFKA_BOOTSTRAP_HOST}:${KAFKA_BOOTSTRAP_PORT}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__TIMEOUT
+              value: "${KAFKA_TIMEOUT}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__TOPIC
+              value: "${INCOMING_TOPIC}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__DEAD_LETTER_QUEUE_TOPIC
+              value: "${DEAD_LETTER_QUEUE_TOPIC}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__PAYLOAD_TRACKER_TOPIC
+              value: "${PAYLOAD_TRACKER_TOPIC}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__SERVICE_NAME
+              value: "${DB_WRITER_SERVICE_NAME}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__GROUP
+              value: "${GROUP_ID}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
+              value: "true"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLE_ORG_WHITELIST
+              value: "false"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__DISPLAY_MESSAGE_WITH_WRONG_STRUCTURE
+              value: "true"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH
+              value: "/rules-content"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
+              value: ":9000"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
+              value: "${IRDW_API_PREFIX}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
+              value: "/openapi/openapi.json"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG
+              value: "${DEBUG}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH
+              value: "${AUTH}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH_TYPE
+              value: "xrh"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__PROCESSING__ORG_WHITELIST_FILE
+              value: "/data/org_whitelist.csv"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
+              value: "true"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER
+              value: postgres
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS
+              value: ${PG_PARAMS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
+              value: "sql"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
+              value: ${LOG_LEVEL}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
+              value: ${CLOUDWATCH_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
+              value: ${CLOUDWATCH_DEBUG}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_region
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__LOG_GROUP
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: log_group_name
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_ACCESS_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_access_key_id
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_secret_access_key
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_SENTRY_ENABLED
+              value: ${SENTRY_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN
+              valueFrom:
+                secretKeyRef:
+                  key: dsn
+                  name: insights-results-aggregator-db-writer-dsn
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
+              value: ${ENV_NAME}
+          image: ${IMAGE}:${IMAGE_TAG}
+          livenessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: "${IRDW_API_PREFIX}metrics"
+              port: 9000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 60
+          readinessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: "${IRDW_API_PREFIX}metrics"
+              port: 9000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 60
+          resources:
+            limits:
+              cpu: ${CPU_LIMIT_DB_WRITER}
+              memory: ${MEMORY_LIMIT_DB_WRITER}
+            requests:
+              cpu: ${CPU_REQUEST_DB_WRITER}
+              memory: ${MEMORY_REQUEST_DB_WRITER}
+      - name: aggregator
+        minReplicas: ${{MIN_REPLICAS}}
+        webServices:
+          public:
+            enabled: false
+          private:
+            enabled: true
+          metrics:
+            enabled: true
+        podSpec:
+          env:
+            - name: INSIGHTS_RESULTS_AGGREGATOR__BROKER__ENABLED
+              value: "false"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CONTENT__PATH
+              value: "/rules-content"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ADDRESS
+              value: ":10000"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_PREFIX
+              value: "${IRA_API_PREFIX}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
+              value: "/openapi/openapi.json"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG
+              value: "${DEBUG}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH
+              value: "${AUTH}"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH_TYPE
+              value: "xrh"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__METRICS__ENABLED
+              value: "true"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__MAXIMUM_FEEDBACK_MESSAGE_LENGTH
+              value: "255"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__ORG_OVERVIEW_LIMIT_HOURS
+              value: "3"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__DB_DRIVER
+              value: postgres
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_PARAMS
+              value: ${PG_PARAMS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__TYPE
+              value: "sql"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__DB_DRIVER
+              value: postgres
+            - name: INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_PARAMS
+              value: ${PG_PARAMS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__TYPE
+              value: "sql"
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOG_LEVEL
+              value: ${LOG_LEVEL}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_CLOUD_WATCH_ENABLED
+              value: ${CLOUDWATCH_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__DATABASE
+              value: ${INSIGHTS_REDIS_DATABASE}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__REDIS__TIMEOUT_SECONDS
+              value: ${INSIGHTS_REDIS_TIMEOUT_SECONDS}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__DEBUG
+              value: ${CLOUDWATCH_DEBUG}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_region
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__LOG_GROUP
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: log_group_name
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_ACCESS_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_access_key_id
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__CLOUDWATCH__AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudwatch
+                  key: aws_secret_access_key
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__LOGGING__LOGGING_TO_SENTRY_ENABLED
+              value: ${SENTRY_ENABLED}
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__DSN
+              valueFrom:
+                secretKeyRef:
+                  key: dsn
+                  name: insights-results-aggregator-dsn
+                  optional: true
+            - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
+              value: ${ENV_NAME}
+          image: ${IMAGE}:${IMAGE_TAG}
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: ${IRA_API_PREFIX}openapi.json
+              port: 10000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 60
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: ${IRA_API_PREFIX}openapi.json
+              port: 10000
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 60
+          resources:
+            requests:
+              cpu: ${CPU_REQUEST_AGGREGATOR}
+              memory: ${MEMORY_REQUEST_AGGREGATOR}
+            limits:
+              cpu: ${CPU_LIMIT_AGGREGATOR}
+              memory: ${MEMORY_LIMIT_AGGREGATOR}
+    database:
+      # the DB name should match to app-interface DB name without specifying environment
+      # https://gitlab.cee.redhat.com/service/app-interface/-/blob/ddd85c2ad79b40047391405b2d909eb38667bc43/data/services/insights/ccx-data-pipeline/namespaces/stage-ccx-data-pipeline-stage.yml#L60
+      name: ccx-data-pipeline
+      version: 16
+    kafkaTopics:
+      - replicas: 3
+        partitions: 1
+        topicName: ${INCOMING_TOPIC}
+      - replicas: 3
+        partitions: 1
+        topicName: ${PAYLOAD_TRACKER_TOPIC}
+      - replicas: 3
+        partitions: 1
+        topicName: ${DEAD_LETTER_QUEUE_TOPIC}
+
+- kind: Service
+  apiVersion: v1
+  metadata:
+    annotations:
+      prometheus.io/path: /api/v1/metrics
+      prometheus.io/port: "10000"
+      prometheus.io/scheme: http
+      prometheus.io/scrape: "true"
+    name: ccx-insights-results-aggregator-prometheus-exporter
+    labels:
+      app: insights-results-aggregator
+  spec:
+    ports:
+      - name: web
+        port: 10000
+        protocol: TCP
+        targetPort: 10000
+    selector:
+      pod: ccx-insights-results-aggregator
+
+- kind: Service
+  apiVersion: v1
+  metadata:
+    annotations:
+      prometheus.io/path: /metrics
+      prometheus.io/port: "9000"
+      prometheus.io/scheme: http
+      prometheus.io/scrape: "true"
+    name: ccx-insights-results-db-writer-prometheus-exporter
+    labels:
+      app: insights-results-db-writer
+  spec:
+    ports:
+      - name: web
+        port: 9000
+        protocol: TCP
+        targetPort: 9000
+    selector:
+      app: ccx-insights-results
+      pod: ccx-insights-results-db-writer
+
+parameters:
+- name: PG_PARAMS
+  value: sslmode=require
+# insights-results-aggregator
+- description: Image name
+  name: IMAGE
+  value: quay.io/redhat-services-prod/obsint-processing-tenant/aggregator/aggregator
+- description: Image tag
+  name: IMAGE_TAG
+  required: true
+- description: Determines Clowder deployment
+  name: CLOWDER_ENABLED
+  value: "false"
+- description: Env Name
+  name: ENV_NAME
+  required: true
+- description: Minimum number of pods to use when autoscaling is enabled
+  name: MIN_REPLICAS
+  value: '2'
+- description: Maximum number of pods to use when autoscaling is enabled
+  name: MAX_REPLICAS
+  value: '6'
+- name: CPU_LIMIT_AGGREGATOR
+  value: 300m
+- name: MEMORY_LIMIT_AGGREGATOR
+  value: 450Mi
+- name: CPU_REQUEST_AGGREGATOR
+  value: 100m
+- name: MEMORY_REQUEST_AGGREGATOR
+  value: 150Mi
+- name: PAYLOAD_TRACKER_TOPIC
+  description: Kafka topic for publishing updated for the Payload Tracker service
+  value: platform.payload-status
+- name: LOG_LEVEL
+  value: "INFO"
+- name: DEBUG
+  value: "true"
+- name: AUTH
+  value: "false"
+- name: IRA_API_PREFIX
+  required: true
+  value: "/api/v1/"
+
+# insights-results-db-writer
+- name: KAFKA_BOOTSTRAP_HOST
+  required: true
+  value: mq-kafka
+- name: KAFKA_BOOTSTRAP_PORT
+  required: true
+  value: "29092"
+- name: KAFKA_TIMEOUT
+  value: 300s
+- name: INCOMING_TOPIC
+  value: ccx.ocp.results
+  required: true
+- name: DEAD_LETTER_QUEUE_TOPIC
+  value: ccx.aggregator.dead.letter.queue
+  required: true
+- name: PAYLOAD_TRACKER_TOPIC
+  value: platform.payload-status
+  required: true
+- name: DB_WRITER_SERVICE_NAME
+  value: insights-results-db-writer
+  required: true
+- name: GROUP_ID
+  value: ccx_data_pipeline_app
+  required: true
+- name: IRDW_API_PREFIX
+  required: true
+  value: /
+- name: DB_WRITER_REPLICAS
+  description: The number of replicas to use for the insights-results-db-writer deployment
+  value: "1"
+- name: CPU_LIMIT_DB_WRITER
+  value: 200m
+- name: MEMORY_LIMIT_DB_WRITER
+  value: 400Mi
+- name: CPU_REQUEST_DB_WRITER
+  value: 100m
+- name: MEMORY_REQUEST_DB_WRITER
+  value: 200Mi
+- name: CLOUDWATCH_DEBUG
+  value: "false"
+  required: true
+- name: CLOUDWATCH_ENABLED
+  value: "true"
+  required: true
+- name: INSIGHTS_REDIS_DATABASE
+  value: "0"
+- name: INSIGHTS_REDIS_TIMEOUT_SECONDS
+  value: "30"
+
+# Both services
+- name: SENTRY_ENABLED
+  value: "false"
