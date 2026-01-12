@@ -151,7 +151,7 @@ func (storage OCPRecommendationsDBStorage) GetTogglesForRules(
 	rulesReport []types.RuleOnReport,
 	orgID types.OrgID,
 ) (map[types.RuleID]bool, error) {
-	ruleIDs := make([]string, 0)
+	ruleIDs := make([]string, 0, len(rulesReport))
 	for _, rule := range rulesReport {
 		ruleIDs = append(ruleIDs, string(rule.Module))
 	}

@@ -225,7 +225,7 @@ func (storage OCPRecommendationsDBStorage) GetUserFeedbackOnRuleDisable(
 func (storage OCPRecommendationsDBStorage) GetUserFeedbackOnRules(
 	clusterID types.ClusterName, rulesReport []types.RuleOnReport, userID types.UserID,
 ) (map[types.RuleID]types.UserVote, error) {
-	ruleIDs := make([]string, 0)
+	ruleIDs := make([]string, 0, len(rulesReport))
 	for _, v := range rulesReport {
 		ruleIDs = append(ruleIDs, string(v.Module))
 	}
