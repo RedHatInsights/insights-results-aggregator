@@ -48,7 +48,7 @@ func BenchmarkHTTPServer_ReadReportForCluster(b *testing.B) {
 		N               uint
 	}
 
-	var testCases []testCase
+	testCases := make([]testCase, 0, 4)
 
 	for _, n := range []uint{1, 10, 100, 1000} {
 		for storageName, storageProvider := range map[string]func(testing.TB, bool) (storage.OCPRecommendationsStorage, func()){
