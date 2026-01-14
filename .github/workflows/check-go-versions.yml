@@ -1,0 +1,25 @@
+name: Check Go Version Consistency
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  check-versions:
+    name: Verify Go versions are in sync
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install skopeo
+        run: sudo apt-get update && sudo apt-get install -y skopeo
+
+      - name: Check Go version consistency
+        run: ./scripts/check_go_versions.sh
+
+      - name: Report status
+        if: failure()
+        run: |
+          echo "::error::Go version mismatch detected. Please sync versions in go.mod, Dockerfile, and gotests.yaml."

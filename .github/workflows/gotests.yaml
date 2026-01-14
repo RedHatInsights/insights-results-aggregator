@@ -6,12 +6,7 @@ on:
 jobs:
   gotests:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version:
-          - "1.23"
-          - "1.24"
-    name: Tests for Go ${{ matrix.go-version}}
+    name: Go tests
     services:
       postgres:
         image: postgres
@@ -31,7 +26,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: "1.25"
       - name: Print env vars
         run: env
       - name: Unit tests
