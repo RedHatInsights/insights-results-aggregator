@@ -1,47 +1,29 @@
-name: Aggregator BDD tests
+# Copyright 2026 Red Hat, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: BDD tests
 
 on:
+  push:
+    branches: ["master", "main"]
   pull_request:
 
 jobs:
-  bdd:
-    # cannot move to latest because 24.04 uses mv (gnu coreutils) version 9.4
-    # and between 9.2 and 9.5 (when the change was reverted) `mv -n (--no-clobber)`
-    # exits with error if destination file exits; which in our case was happeing
-    # in the "Rename logs" step when the `sed` command was not modifying the file name.
-    runs-on: ubuntu-22.04
-    name: Aggregator BDD tests
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-      - name: Build project
-        run: make build
-      - name: Retrieve Docker compose file
-        run: wget -O docker-compose.yml https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/docker-compose.yml
-      - name: Retrieve BDD runner
-        run: wget -O bdd_runner.sh https://raw.githubusercontent.com/RedHatInsights/insights-behavioral-spec/main/run_in_docker.sh && chmod +x bdd_runner.sh
-      - name: Run BDD
-        run: CLEANUP_ENABLED=0 ./bdd_runner.sh aggregator-tests .
-      - name: Set container ID as env
-        if: always()
-        run: echo "BDD_CONTAINER=$(docker ps | grep 'insights-behavioral-spec:latest' | cut -d ' ' -f 1)" >> $GITHUB_ENV
-      - name: Debug
-        if: always()
-        run: docker exec -u root "$BDD_CONTAINER" /bin/bash -c "ls -R /insights-behavioral-spec/logs"
-      - name: Copy logs from container to host
-        if: always()
-        run: docker cp "$BDD_CONTAINER:/insights-behavioral-spec/logs" .
-      - name: Rename logs
-        if: always()
-        # Otherwise the upload-artifact action will complain
-        run: for filename in logs/insights-results-aggregator/*; do mv -n "$filename" "$(echo "$filename" | sed -e 's/["><:]//g')";  done
-      - name: Store service logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: store-logs
-          path: |
-            logs/insights-results-aggregator
+  call-workflow-passing-data:
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: joselsegura/processing-tools/.github/workflows/bdd-go.yml@reusable-bdd
+    with:
+      service: "aggregator-tests"
