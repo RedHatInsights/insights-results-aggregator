@@ -27,3 +27,4 @@ jobs:
     uses: joselsegura/processing-tools/.github/workflows/bdd-go.yml@reusable-bdd
     with:
       service: "aggregator-tests"
+      artifacts_log_dir: "insights-results-aggregator"
