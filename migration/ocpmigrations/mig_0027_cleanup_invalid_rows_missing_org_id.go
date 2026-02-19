@@ -45,7 +45,7 @@ var mig0027CleanupInvalidRowsMissingOrgID = migration.Migration{
 
 		if driver == types.DBDriverPostgres {
 			for _, table := range tablesToDeleteFrom {
-				deleteQuery := fmt.Sprintf(deleteEmptyOrgIDQuery, table)
+				deleteQuery := fmt.Sprintf(deleteEmptyOrgIDQuery, table) // #nosec G201 -- table is from constant tablesToDeleteFrom
 
 				// execute delete
 				res, err := tx.Exec(deleteQuery)

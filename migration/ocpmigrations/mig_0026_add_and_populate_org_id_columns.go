@@ -45,7 +45,7 @@ var mig0026AddAndPopulateOrgIDColumns = migration.Migration{
 
 		for _, table := range tablesToUpdate {
 			alterQuery := fmt.Sprintf(addOrgIDQuery, table)
-			updateQuery := fmt.Sprintf(updateOrgIDQuery, table)
+			updateQuery := fmt.Sprintf(updateOrgIDQuery, table) // #nosec G201 -- table is from constant tablesToUpdate
 
 			// add org_id column
 			_, err := tx.Exec(alterQuery)
