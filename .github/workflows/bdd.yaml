@@ -1,0 +1,23 @@
+name: Aggregator BDD tests
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+
+jobs:
+  aggregator-bdd:
+    name: BDD tests
+    uses: RedHatInsights/processing-tools/.github/workflows/bdd.yaml@master
+    with:
+      service: aggregator
+      use_kafka: true
+      use_postgres: true
+
+  dvo-bdd:
+    name: DVO BDD tests
+    uses: RedHatInsights/processing-tools/.github/workflows/bdd.yaml@master
+    with:
+      service: dvo-writer
+      use_kafka: true
+      use_postgres: true
