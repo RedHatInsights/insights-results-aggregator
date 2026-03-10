@@ -61,10 +61,12 @@ function build_image() {
    source $CICD_ROOT/build.sh
 }
 
+# shellcheck disable=SC2329
 function deploy_ephemeral() {
    source $CICD_ROOT/deploy_ephemeral_env.sh
 }
 
+# shellcheck disable=SC2329
 function run_smoke_tests() {
    # Workaround: cji_smoke_test.sh requires only one component name. Fallback to only one component name.
    export COMPONENT_NAME="ccx-insights-results"
