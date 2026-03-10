@@ -37,8 +37,7 @@ abcgo: ## Run ABC metrics checker
 	pre-commit run --all-files abcgo
 
 json-check: ## Check all JSONs for basic syntax
-	@echo "Run JSON checker"
-	python3 utils/json_check.py
+	pre-commit run --all-files check-json
 
 openapi-check:
 	./check_openapi.sh
