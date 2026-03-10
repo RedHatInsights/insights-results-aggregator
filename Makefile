@@ -88,4 +88,3 @@ function_list: ${BINARY} ## List all functions in generated binary file
 
 install_addlicense:
 	[[ `command -v addlicense` ]] || go install github.com/google/addlicense
-

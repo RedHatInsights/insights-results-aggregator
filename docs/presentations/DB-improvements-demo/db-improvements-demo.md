@@ -88,7 +88,7 @@ FROM report
 WHERE org_id = 1
 AND reported_at >= '2000-01-01'
 ORDER BY cluster;
-                                                        QUERY PLAN                                                         
+                                                        QUERY PLAN
 ---------------------------------------------------------------------------------------------------------------------------
  Index Scan using report_pkey on report  (cost=0.42..193.63 rows=98 width=37) (actual time=0.035..1.278 rows=1000 loops=1)
    Index Cond: (org_id = 1)
@@ -102,8 +102,8 @@ ORDER BY cluster;
 aggregator=# explain analyze SELECT cluster
 FROM report
 WHERE org_id = 1
-ORDER BY cluster;              
-                                                           QUERY PLAN                                                           
+ORDER BY cluster;
+                                                           QUERY PLAN
 --------------------------------------------------------------------------------------------------------------------------------
  Index Only Scan using report_pkey on report  (cost=0.42..193.38 rows=98 width=37) (actual time=0.038..1.019 rows=1000 loops=1)
    Index Cond: (org_id = 1)
@@ -227,7 +227,7 @@ ORDER BY cluster;
 
 ```
 aggregator=# select count(*), min(org_id), max(org_id) from recommendation;
- count |  min  |   max    
+ count |  min  |   max
 -------+-------+----------
  35000 | 11804 | 99985512
 (1 row)

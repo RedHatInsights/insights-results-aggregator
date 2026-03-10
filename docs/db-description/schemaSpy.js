@@ -41,5 +41,3 @@ function dataTableExportButtons(table) {
     table.buttons().container().appendTo( '#' + table.table().container().id + ' #button_group_one' );
     table.buttons( 'exports', null ).container().appendTo( '#' + table.table().container().id + ' #button_group_two' );
 }
-
- 
