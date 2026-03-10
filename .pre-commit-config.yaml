@@ -1,0 +1,27 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        exclude: docs/presentations
+        args: ['--exclude=SC1090,SC2086,SC2034,SC1091']
+
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.11.2
+    hooks:
+      - id: golangci-lint-config-verify
+      - id: golangci-lint
+
+  - repo: https://github.com/joselsegura/processing-tools
+    rev: add_new_hook
+    hooks:
+      - id: abcgo
+        args: ['--threshold=64']
+
+      - id: go-version-consistency
