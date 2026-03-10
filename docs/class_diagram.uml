@@ -35,7 +35,7 @@ namespace conf {
 
 namespace consumer {
     interface Consumer  {
-        + Serve() 
+        + Serve()
         + Close() error
         + ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error)
 
@@ -51,16 +51,16 @@ namespace consumer {
         + ConsumerGroup sarama.ConsumerGroup
         + Storage storage.Storage
 
-        - updatePayloadTracker(requestID types.RequestID, timestamp time.Time, status string) 
+        - updatePayloadTracker(requestID types.RequestID, timestamp time.Time, status string)
 
-        + Serve() 
+        + Serve()
         + Setup( sarama.ConsumerGroupSession) error
         + Cleanup( sarama.ConsumerGroupSession) error
         + ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error
         + Close() error
         + GetNumberOfSuccessfullyConsumedMessages() uint64
         + GetNumberOfErrorsConsumingMessages() uint64
-        + HandleMessage(msg *sarama.ConsumerMessage) 
+        + HandleMessage(msg *sarama.ConsumerMessage)
         + ProcessMessage(msg *sarama.ConsumerMessage) (types.RequestID, error)
 
     }
@@ -99,11 +99,11 @@ namespace helpers {
         + Claims() <font color=blue>map</font>[string][]int32
         + MemberID() string
         + GenerationID() int32
-        + MarkOffset(topic string, partition int32, offset int64, metadata string) 
-        + ResetOffset(topic string, partition int32, offset int64, metadata string) 
-        + MarkMessage(msg *sarama.ConsumerMessage, metadata string) 
+        + MarkOffset(topic string, partition int32, offset int64, metadata string)
+        + ResetOffset(topic string, partition int32, offset int64, metadata string)
+        + MarkMessage(msg *sarama.ConsumerMessage, metadata string)
         + Context() context.Context
-        + Commit() 
+        + Commit()
 
     }
     class MockKafkaConsumer << (S,Aquamarine) >> {
@@ -112,8 +112,8 @@ namespace helpers {
 
         + KafkaConsumer consumer.KafkaConsumer
 
-        + Serve() 
-        + Close(t testing.TB) 
+        + Serve()
+        + Close(t testing.TB)
 
     }
     class helpers.APIRequest << (T, #FF7700) >>  {
@@ -191,32 +191,32 @@ namespace server {
         + Storage storage.Storage
         + Serv *http.Server
 
-        - reportForListOfClusters(writer http.ResponseWriter, request *http.Request) 
-        - reportForListOfClustersPayload(writer http.ResponseWriter, request *http.Request) 
-        - addDebugEndpointsToRouter(router *mux.Router) 
-        - addEndpointsToRouter(router *mux.Router) 
-        - disableRuleForCluster(writer http.ResponseWriter, request *http.Request) 
-        - enableRuleForCluster(writer http.ResponseWriter, request *http.Request) 
-        - toggleRuleForCluster(writer http.ResponseWriter, request *http.Request, toggleRule storage.RuleToggle) 
+        - reportForListOfClusters(writer http.ResponseWriter, request *http.Request)
+        - reportForListOfClustersPayload(writer http.ResponseWriter, request *http.Request)
+        - addDebugEndpointsToRouter(router *mux.Router)
+        - addEndpointsToRouter(router *mux.Router)
+        - disableRuleForCluster(writer http.ResponseWriter, request *http.Request)
+        - enableRuleForCluster(writer http.ResponseWriter, request *http.Request)
+        - toggleRuleForCluster(writer http.ResponseWriter, request *http.Request, toggleRule storage.RuleToggle)
         - getFeedbackAndTogglesOnRules(clusterName types.ClusterName, userID types.UserID, rules []types.RuleOnReport) ([]types.RuleOnReport, error)
-        - saveDisableFeedback(writer http.ResponseWriter, request *http.Request) 
+        - saveDisableFeedback(writer http.ResponseWriter, request *http.Request)
         - getFeedbackAndTogglesOnRule(clusterName types.ClusterName, userID types.UserID, rule types.RuleOnReport) types.RuleOnReport
-        - mainEndpoint(writer http.ResponseWriter, _ *http.Request) 
-        - listOfOrganizations(writer http.ResponseWriter, _ *http.Request) 
-        - listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request) 
-        - readReportForCluster(writer http.ResponseWriter, request *http.Request) 
-        - readSingleRule(writer http.ResponseWriter, request *http.Request) 
+        - mainEndpoint(writer http.ResponseWriter, _ *http.Request)
+        - listOfOrganizations(writer http.ResponseWriter, _ *http.Request)
+        - listOfClustersForOrganization(writer http.ResponseWriter, request *http.Request)
+        - readReportForCluster(writer http.ResponseWriter, request *http.Request)
+        - readSingleRule(writer http.ResponseWriter, request *http.Request)
         - checkUserClusterPermissions(writer http.ResponseWriter, request *http.Request, clusterID types.ClusterName) bool
-        - deleteOrganizations(writer http.ResponseWriter, request *http.Request) 
-        - deleteClusters(writer http.ResponseWriter, request *http.Request) 
+        - deleteOrganizations(writer http.ResponseWriter, request *http.Request)
+        - deleteClusters(writer http.ResponseWriter, request *http.Request)
         - handleOptionsMethod(nextHandler http.Handler) http.Handler
         - readFeedbackRequestBody(writer http.ResponseWriter, request *http.Request) (string, bool)
         - getFeedbackMessageFromBody(request *http.Request) (string, error)
-        - likeRule(writer http.ResponseWriter, request *http.Request) 
-        - dislikeRule(writer http.ResponseWriter, request *http.Request) 
-        - resetVoteOnRule(writer http.ResponseWriter, request *http.Request) 
-        - voteOnRule(writer http.ResponseWriter, request *http.Request, userVote types.UserVote) 
-        - getVoteOnRule(writer http.ResponseWriter, request *http.Request) 
+        - likeRule(writer http.ResponseWriter, request *http.Request)
+        - dislikeRule(writer http.ResponseWriter, request *http.Request)
+        - resetVoteOnRule(writer http.ResponseWriter, request *http.Request)
+        - voteOnRule(writer http.ResponseWriter, request *http.Request, userVote types.UserVote)
+        - getVoteOnRule(writer http.ResponseWriter, request *http.Request)
         - readClusterRuleUserParams(writer http.ResponseWriter, request *http.Request) (types.ClusterName, types.RuleID, types.UserID, bool)
         - getAuthTokenHeader(w http.ResponseWriter, r *http.Request) (string, error)
 
@@ -409,7 +409,7 @@ namespace storage {
 
     }
     class sqlHooks << (S,Aquamarine) >> {
-        - log(format string, params ...<font color=blue>interface</font>{}) 
+        - log(format string, params ...<font color=blue>interface</font>{})
 
         + Before(ctx context.Context, query string, args ...<font color=blue>interface</font>{}) (context.Context, error)
         + After(ctx context.Context, query string, args ...<font color=blue>interface</font>{}) (context.Context, error)

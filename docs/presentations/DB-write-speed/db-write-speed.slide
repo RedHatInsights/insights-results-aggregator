@@ -99,15 +99,15 @@ So what's wrong?
 
 ```
                   Table "public.report"
-     Column      |            Type             |Nullable | Default 
+     Column      |            Type             |Nullable | Default
 -----------------+-----------------------------+---------+---------
- org_id          | integer                     |not null | 
- cluster         | character varying           |not null | 
- report          | character varying           |not null | 
- reported_at     | timestamp without time zone |         | 
- last_checked_at | timestamp without time zone |         | 
+ org_id          | integer                     |not null |
+ cluster         | character varying           |not null |
+ report          | character varying           |not null |
+ reported_at     | timestamp without time zone |         |
+ last_checked_at | timestamp without time zone |         |
  kafka_offset    | bigint                      |not null | 0
- gathered_at     | timestamp without time zone |         | 
+ gathered_at     | timestamp without time zone |         |
 Indexes:
     "report_pkey" PRIMARY KEY, btree (org_id, cluster)
     "report_cluster_key" UNIQUE CONSTRAINT, btree (cluster)
@@ -338,7 +338,7 @@ INSERT OR REPLACE INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, templa
 EXPLAIN ANALYZE INSERT INTO report(org_id, cluster, report, reported_at, last_checked_at, kafka_offset, gathered_at)
 VALUES (1, 123456, '', '2020-01-01', '2020-01-01', 0, '2020-01-01');
 
-                                            QUERY PLAN                                            
+                                            QUERY PLAN
 
 --------------------------------------------------------------------------------------------------
  Insert on report  (cost=0.00..0.01 rows=1 width=100) (actual time=25.302..25.303 rows=0 loops=1)
@@ -355,7 +355,7 @@ VALUES (1, 123456, '', '2020-01-01', '2020-01-01', 0, '2020-01-01');
 ```
 EXPLAIN ANALYZE DELETE FROM recommendation WHERE cluster_id = '94288c61-b7db-4d23-9f81-ee88d376970d';
 
-                                                   QUERY PLAN                                                    
+                                                   QUERY PLAN
 -----------------------------------------------------------------------------------------------------------------
  Delete on recommendation  (cost=0.00..2794.57 rows=9 width=6) (actual time=9.539..9.542 rows=0 loops=1)
    ->  Seq Scan on recommendation  (cost=0.00..2794.57 rows=9 width=6) (actual time=0.015..9.401 rows=5 loops=1)
@@ -375,7 +375,7 @@ EXPLAIN ANALYZE DELETE FROM recommendation WHERE cluster_id = '94288c61-b7db-4d2
 ```
 EXPLAIN ANALYZE INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error_key, rule_id, created_at) VALUES ();
 
-                                               QUERY PLAN                                               
+                                               QUERY PLAN
 --------------------------------------------------------------------------------------------------------
  Insert on recommendation  (cost=0.00..0.01 rows=1 width=140) (actual time=9.934..9.937 rows=0 loops=1)
    ->  Result  (cost=0.00..0.01 rows=1 width=140) (actual time=0.003..0.008 rows=1 loops=1)
@@ -393,8 +393,8 @@ EXPLAIN ANALYZE INSERT INTO recommendation (org_id, cluster_id, rule_fqdn, error
 ```
 EXPLAIN ANALYZE DELETE FROM rule_hit WHERE org_id = 4403030 AND cluster_id = '94288c61-b7db-4d23-9f81-ee88d376970d';
 
-                                                          QUERY PLAN                                               
-           
+                                                          QUERY PLAN
+
 -------------------------------------------------------------------------------------------------------------------
 -----------
  Delete on rule_hit  (cost=0.42..8.44 rows=1 width=6) (actual time=0.035..0.037 rows=0 loops=1)
@@ -413,7 +413,7 @@ EXPLAIN ANALYZE DELETE FROM rule_hit WHERE org_id = 4403030 AND cluster_id = '94
 ```
 EXPLAIN ANALYZE INSERT INTO rule_hit(org_id, cluster_id, rule_fqdn, error_key, template_data)
                        VALUES (...);
-                                            QUERY PLAN                                            
+                                            QUERY PLAN
 --------------------------------------------------------------------------------------------------
  Insert on rule_hit  (cost=0.00..0.01 rows=1 width=132) (actual time=9.333..9.335 rows=0 loops=1)
    ->  Result  (cost=0.00..0.01 rows=1 width=132) (actual time=0.003..0.004 rows=1 loops=1)

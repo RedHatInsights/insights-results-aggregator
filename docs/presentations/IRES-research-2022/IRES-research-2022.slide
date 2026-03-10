@@ -34,7 +34,7 @@ Red Hat, Inc.
 * Visualize architecture - dynamic perspective
 * Tools for gather “code smells”
 
-## Research questions 
+## Research questions
 
 * How can we use provenance tracking to map changes/history and different versions of visual software architecture/graphs?
 * Are there any established tools for this?
