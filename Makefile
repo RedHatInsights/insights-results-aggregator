@@ -31,15 +31,13 @@ lint: install_golangci-lint ## Run go linting
 	golangci-lint run --fix
 
 shellcheck: ## Run shellcheck
-	./shellcheck.sh
+	pre-commit run --all-files shellcheck
 
 abcgo: ## Run ABC metrics checker
-	@echo "Run ABC metrics checker"
-	./abcgo.sh ${VERBOSE}
+	pre-commit run --all-files abcgo
 
 json-check: ## Check all JSONs for basic syntax
-	@echo "Run JSON checker"
-	python3 utils/json_check.py
+	pre-commit run --all-files check-json
 
 openapi-check:
 	./check_openapi.sh
@@ -89,4 +87,3 @@ function_list: ${BINARY} ## List all functions in generated binary file
 
 install_addlicense:
 	[[ `command -v addlicense` ]] || go install github.com/google/addlicense
-

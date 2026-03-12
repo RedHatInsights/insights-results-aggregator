@@ -3,4 +3,3 @@ Red Hat Insights for OpenShift uses the Remote Health Monitoring feature of Open
 This is an example  recommendation that you can safely ignore. To disable it, click  the triple-dot menu button next to the header, and select Disable.
 
 [Knowledgebase Article](https://access.redhat.com/search/#/knowledgebase)
-

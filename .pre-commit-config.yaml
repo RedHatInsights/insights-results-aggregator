@@ -1,0 +1,76 @@
+repos:
+  # General linters language independenent
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+        exclude: 'tests/content/.+'
+      - id: debug-statements
+      - id: mixed-line-ending
+      - id: check-ast
+      - id: check-merge-conflict
+      - id: check-added-large-files
+
+  # Linter for shell scripts
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        exclude: 'docs/presentations'
+        # Exclude checks that are commonly problematic in organization scripts
+        # SC1090: Can't follow non-constant source (dynamic sourcing)
+        # SC2086: Double quote to prevent globbing (intentional word splitting)
+        # SC2034: Variable appears unused (used by sourced scripts)
+        # SC1091: Not following included files (dynamic includes)
+        args: ['--exclude=SC1090,SC2086,SC2034,SC1091']
+
+  # Linter for Gos
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v2.11.3
+    hooks:
+      - id: golangci-lint-config-verify
+      - id: golangci-lint-full
+
+  - repo: https://github.com/RedHatInsights/processing-tools
+    rev: v0.1.0
+    hooks:
+      - id: abcgo
+        args: ['--threshold=64']
+
+      - id: go-version-consistency
+
+  # Linters for Python
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.5
+    hooks:
+      # Adding a set of rules to ruff check to match pyupgrade rules
+      - id: ruff-check
+        args:
+          - '--fix'
+          - '--line-length=100'
+          - '--select=UP,F632,E,W,F,I,UP,N,B,C4,SIM'
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.1
+    hooks:
+      - id: mypy
+        args:
+          - --check-untyped-defs
+          - --ignore-missing-imports
+          - --warn-unused-ignores
+          - --warn-redundant-casts
+          - --scripts-are-modules
+          - --show-error-codes
+        types: [python] # skip pyi
+
+
+  # Linter for Dockerfiles
+  # - repo: https://github.com/AleksaC/hadolint-py
+  #   rev: v2.14.0
+  #   hooks:
+  #     - id: hadolint

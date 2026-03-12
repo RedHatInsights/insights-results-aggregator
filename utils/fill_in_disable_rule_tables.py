@@ -33,11 +33,11 @@ optional arguments:
 """
 
 from argparse import ArgumentParser
-from random import random, choice
-from subprocess import Popen
 from datetime import datetime
-import psycopg2
+from random import choice, random
+from subprocess import Popen
 
+import psycopg2
 
 # default values
 DEFAULT_RULE_DISABLE_PROBABILITY = 100
@@ -108,13 +108,13 @@ def fill_in_database_for_clusters(connection, verbose, feedback, probability):
     # add new info about rule disable, but only with some probability.
     for cluster_id in CLUSTER_IDS:
         if verbose:
-            print("\tCluster ID {}".format(cluster_id))
+            print(f"\tCluster ID {cluster_id}")
         for rule_selector in RULE_SELECTORS:
             if random() * 100 < probability:
                 account_id = choice(ACCOUNT_IDS)
                 if verbose:
-                    print("\t\tAccount ID: {}".format(account_id))
-                    print("\t\tAdding new rule disable info: {}".format(rule_selector))
+                    print(f"\t\tAccount ID: {account_id}")
+                    print(f"\t\tAdding new rule disable info: {rule_selector}")
                 insert_into_db_for_clusters(
                     connection, account_id, cluster_id, rule_selector, feedback
                 )
@@ -127,8 +127,8 @@ def fill_in_database_system_wide_rule_disable(connection, verbose, probability):
         if random() * 100 < probability:
             account_id = choice(ACCOUNT_IDS)
             if verbose:
-                print("\t\tAccount ID: {}".format(account_id))
-                print("\t\tAdding new rule disable info: {}".format(rule_selector))
+                print(f"\t\tAccount ID: {account_id}")
+                print(f"\t\tAdding new rule disable info: {rule_selector}")
             insert_into_db_system_wide_disable(connection, account_id, rule_selector)
 
 
@@ -141,16 +141,14 @@ def check_if_postgres_is_running():
     p.communicate()
 
     # check the return code
-    assert (
-        p.returncode == 0
-    ), "Postgresql service not running: got return code {code}".format(
-        code=p.returncode
+    assert p.returncode == 0, (
+        f"Postgresql service not running: got return code {p.returncode}"
     )
 
 
 def connect_to_database(database, user, password):
     """Perform connection to selected database."""
-    connection_string = "dbname={} user={} password={}".format(database, user, password)
+    connection_string = f"dbname={database} user={user} password={password}"
     return psycopg2.connect(connection_string)
 
 
@@ -167,7 +165,7 @@ def insert_into_db_for_clusters(
 
     try:
         # try to perform insert statement
-        insertStatement = """INSERT INTO cluster_rule_toggle
+        insert_statement = """INSERT INTO cluster_rule_toggle
                              (cluster_id, rule_id, error_key, disabled, disabled_at,
                              updated_at, org_id)
                              VALUES(%s, %s, %s, 1, %s, %s, 1);"""
@@ -177,7 +175,7 @@ def insert_into_db_for_clusters(
 
         # insert in transaction
         cursor.execute(
-            insertStatement,
+            insert_statement,
             (
                 cluster_id,
                 rule_selector[0],
@@ -189,19 +187,20 @@ def insert_into_db_for_clusters(
 
         if feedback:
             # perform insert into cluster_user_rule_disable_feedback
-            insertStatement = """INSERT INTO cluster_user_rule_disable_feedback
+            insert_statement = """INSERT INTO cluster_user_rule_disable_feedback
                                  (cluster_id, user_id, rule_id, error_key, message, added_at,
                                  updated_at, org_id)
                                  VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"""
 
             # some nice feedback from user
-            message = "Rule {}|{} for cluster {} disabled by {}".format(
-                rule_selector[0], rule_selector[1], cluster_id, account_id, 1
+            message = (
+                f"Rule {rule_selector[0]}|{rule_selector[1]} for cluster {cluster_id} "
+                f"disabled by {account_id}"
             )
 
             # insert in transaction
             cursor.execute(
-                insertStatement,
+                insert_statement,
                 (
                     cluster_id,
                     account_id,
@@ -225,14 +224,15 @@ def insert_into_db_system_wide_disable(connection, account_id, rule_selector):
 
     try:
         # try to perform insert statement
-        insertStatement = """INSERT INTO rule_disable
+        insert_statement = """INSERT INTO rule_disable
                              (rule_id, error_key, org_id, user_id, created_at,
                              updated_at, justification)
                              VALUES(%s, %s, 1, %s, %s, %s, %s);"""
 
         # some nice feedback from user
-        justification = "Rule {}|{} has been disabled by {}".format(
-            rule_selector[0], rule_selector[1], account_id
+        justification = (
+            f"Rule {rule_selector[0]}|{rule_selector[1]} has been disabled "
+            f"by {account_id}"
         )
 
         # generate timestamp to be stored in database
@@ -240,7 +240,7 @@ def insert_into_db_system_wide_disable(connection, account_id, rule_selector):
 
         # insert in transaction
         cursor.execute(
-            insertStatement,
+            insert_statement,
             (
                 rule_selector[0],
                 rule_selector[1],

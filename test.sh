@@ -34,6 +34,7 @@ if [[ $* == *no-service* ]]; then
     NO_SERVICE=true
 fi
 
+# shellcheck disable=SC2329
 function cleanup() {
     print_descendent_pids() {
         pids=$(pgrep -P "$1")

@@ -76,5 +76,5 @@ curl ccx-cache-writer-prometheus-exporter:9000/metrics
 
 7. Delete the namespace
 ```
-bonfire namespace release $NAMESPACE 
+bonfire namespace release $NAMESPACE
 ```

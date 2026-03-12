@@ -2263,7 +2263,7 @@
                   "properties": {
                     "status": {
                       "$ref": "#/components/schemas/statusResponse"
-                    },                    
+                    },
                     "workloads": {
                       "type": "array",
                       "items": {
@@ -2324,7 +2324,7 @@
                   "properties": {
                     "status": {
                       "$ref": "#/components/schemas/statusResponse"
-                    },                    
+                    },
                     "workloads": {
                       "type": "array",
                       "items": {
@@ -2444,7 +2444,7 @@
         "properties": {
           "uuid": {
             "type": "string",
-            "description": "internal UUID for the namespace in its cluster"            
+            "description": "internal UUID for the namespace in its cluster"
           },
           "name": {
             "type": "string",

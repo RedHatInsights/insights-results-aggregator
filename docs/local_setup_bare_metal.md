@@ -36,7 +36,7 @@ All steps described in this document have been performed on brand new Fedora 35
 Server installation:
 
 ```
-$ cat /etc/fedora-release 
+$ cat /etc/fedora-release
 
 Fedora release 35 (Thirty Five)
 ```
@@ -540,7 +540,7 @@ aggregator=# \dt
 Last step is to run the DB writer:
 
 ```
-$ ./insights-results-aggregator 
+$ ./insights-results-aggregator
 
 Clowder is not enabled, skipping init...
 Clowder is disabled

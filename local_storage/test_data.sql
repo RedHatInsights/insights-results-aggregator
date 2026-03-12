@@ -35,4 +35,3 @@ VALUES
 
 -- Delete from cluster_rule_user_feedback
 DELETE FROM cluster_rule_user_feedback;
-

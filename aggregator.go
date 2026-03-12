@@ -267,6 +267,7 @@ func startService() int {
 
 	log.Debug().Msg("DB initialized")
 
+	// #nosec G118 cancel is invoked via defer in started goroutines
 	ctx, cancel := context.WithCancel(context.Background())
 
 	errorGroup := new(errgroup.Group)
