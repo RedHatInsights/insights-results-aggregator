@@ -41,7 +41,7 @@ repos:
       - id: go-version-consistency
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.7
+    rev: v0.15.8
     hooks:
       # Adding a set of rules to ruff check to match pyupgrade rules
       - id: ruff-check
