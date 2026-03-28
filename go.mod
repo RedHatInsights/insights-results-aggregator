@@ -18,7 +18,7 @@ require (
 	github.com/prometheus/client_model v0.6.2
 	github.com/qustavo/sqlhooks/v2 v2.1.0
 	github.com/redhatinsights/app-common-go v1.6.9
-	github.com/rs/zerolog v1.34.0
+	github.com/rs/zerolog v1.35.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/verdverm/frisby v0.0.0-20170604211311-b16556248a9a
