@@ -538,10 +538,10 @@ github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32/go.mod h1:9wM+0iRr9ahx58uY
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
-github.com/oasdiff/yaml v0.0.3 h1:IORGNY4IZ1+SKFSUuu288zE/33JYxx0FWp3ZTqn+Hdc=
-github.com/oasdiff/yaml v0.0.3/go.mod h1:cGJc1tLIzdmJs4PPPJsLHDh2j1bEgJLDyZ02wyp5tvg=
-github.com/oasdiff/yaml3 v0.0.3 h1:AoDWNMgx8ND5gmaxeUSX4LjrlxrYB6CGzKdVi/1zAPQ=
-github.com/oasdiff/yaml3 v0.0.3/go.mod h1:y5+oSEHCPT/DGrS++Wc/479ERge0zTFxaF8PbGKcg2o=
+github.com/oasdiff/yaml v0.0.4 h1:airPco4LbUoK4nbVwu+wwkRg2WarLC96cgBhgN93fsE=
+github.com/oasdiff/yaml v0.0.4/go.mod h1:EaJ6/lcrRLK+syawtvtrHdbrrln4/SUmQw6aBTIlaMs=
+github.com/oasdiff/yaml3 v0.0.4 h1:U5RTQZpBmsbcyCFlzPVuMctk6Jme6lOrbl0jJoOovMw=
+github.com/oasdiff/yaml3 v0.0.4/go.mod h1:y5+oSEHCPT/DGrS++Wc/479ERge0zTFxaF8PbGKcg2o=
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
