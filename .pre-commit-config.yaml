@@ -41,7 +41,7 @@ repos:
       - id: go-version-consistency
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.8
+    rev: v0.15.9
     hooks:
       # Adding a set of rules to ruff check to match pyupgrade rules
       - id: ruff-check
@@ -55,3 +55,8 @@ repos:
   #   rev: v2.14.0
   #   hooks:
   #     - id: hadolint
+
+  - repo: https://github.com/renovatebot/pre-commit-hooks
+    rev: 43.109.5
+    hooks:
+      - id: renovate-config-validator
