@@ -1,5 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "This file is synced from RedHatInsights/processing-tools automatically; do not edit in downstream repos.",
   "packageRules": [
     {
       "matchDatasources": ["pypi"],
