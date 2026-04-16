@@ -35,6 +35,8 @@ jobs:
         run: ./check_coverage.sh do-not-run-tests
       - name: Display code coverage
         run: make coverage
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unit-tests
+          fail_ci_if_error: false
