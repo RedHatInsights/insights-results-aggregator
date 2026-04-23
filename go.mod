@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/IBM/sarama v1.47.0
-	github.com/RedHatInsights/insights-operator-utils v1.27.0
+	github.com/RedHatInsights/insights-operator-utils v1.28.0
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
 	github.com/RedHatInsights/insights-results-types v1.23.5
 	github.com/deckarep/golang-set/v2 v2.9.0
@@ -27,7 +27,6 @@ require (
 )
 
 require (
-	github.com/archdx/zerolog-sentry v1.8.5 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.41.6 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.9 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.32.16 // indirect
@@ -54,7 +53,8 @@ require (
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/getkin/kin-openapi v0.135.0 // indirect
-	github.com/getsentry/sentry-go v0.45.1 // indirect
+	github.com/getsentry/sentry-go v0.46.0 // indirect
+	github.com/getsentry/sentry-go/zerolog v0.46.0 // indirect
 	github.com/go-openapi/jsonpointer v0.23.1 // indirect
 	github.com/go-openapi/swag/jsonname v0.26.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect

@@ -44,8 +44,8 @@ github.com/RedHatInsights/insights-operator-utils v1.21.0/go.mod h1:B2hizFGwXCc8
 github.com/RedHatInsights/insights-operator-utils v1.21.2/go.mod h1:3Pfsgsi7GCu2wgIqQlt1llpyQyyxsDWEGdgnPvadM40=
 github.com/RedHatInsights/insights-operator-utils v1.21.8/go.mod h1:qa1a8NdarIzcZkr5mu9fBw4OarOfg1qZFZC1vNGbyas=
 github.com/RedHatInsights/insights-operator-utils v1.24.5/go.mod h1:7qR/8rlMdiqoXAkZyQ5JhVrVNCa6SBwNUt4KMq/17j4=
-github.com/RedHatInsights/insights-operator-utils v1.27.0 h1:/9s6xwzsF8iGmv5FeArgFcl4QT3k1wqJbPmaWDenl3o=
-github.com/RedHatInsights/insights-operator-utils v1.27.0/go.mod h1:cMknNXfzE81QL1xBufQb/+kfJ2aemlvyBhp2AoZbSZY=
+github.com/RedHatInsights/insights-operator-utils v1.28.0 h1:4ZuClBrFA2VG5xGalmif7CjDkoanUXkl8zspNpBZ1cw=
+github.com/RedHatInsights/insights-operator-utils v1.28.0/go.mod h1:JY7L02n1AHu6U6t+eTClK9RKH7SW2OiJC/BNXY8D9AY=
 github.com/RedHatInsights/insights-results-aggregator v0.0.0-20200604090056-3534f6dd9c1c/go.mod h1:7Pc15NYXErx7BMJ4rF1Hacm+29G6atzjhwBpXNFMt+0=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20200825113234-e84e924194bc/go.mod h1:DcDgoCCmBuUSKQOGrTi0BfFLdSjAp/KxIwyqKUd46sM=
 github.com/RedHatInsights/insights-results-aggregator-data v0.0.0-20201014142608-de97c4b07d5c/go.mod h1:x8IvreR2g24veCKVMXDPOR6a0D86QK9UCBfi5Xm5Gnc=
@@ -81,8 +81,6 @@ github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9Pq
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/apache/thrift v0.13.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/archdx/zerolog-sentry v0.0.1/go.mod h1:dAIUEqBAhDI/yVS3nqOr7VS9BsvHJ5btxoGFEE2RmGk=
-github.com/archdx/zerolog-sentry v1.8.5 h1:W24e5+yfZiQ83yd9OjBw+o6ERUzyUlCpoBS97gUlwK8=
-github.com/archdx/zerolog-sentry v1.8.5/go.mod h1:XrFHGe1CH5DQk/XSySu/IJSi5C9XR6+zpc97zVf/c4c=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
@@ -229,8 +227,10 @@ github.com/getkin/kin-openapi v0.22.1/go.mod h1:WGRs2ZMM1Q8LR1QBEwUxC6RJEfaBcD0s
 github.com/getkin/kin-openapi v0.135.0 h1:751SjYfbiwqukYuVjwYEIKNfrSwS5YpA7DZnKSwQgtg=
 github.com/getkin/kin-openapi v0.135.0/go.mod h1:6dd5FJl6RdX4usBtFBaQhk9q62Yb2J0Mk5IhUO/QqFI=
 github.com/getsentry/sentry-go v0.6.1/go.mod h1:0yZBuzSvbZwBnvaF9VwZIMen3kXscY8/uasKtAX1qG8=
-github.com/getsentry/sentry-go v0.45.1 h1:9rfzJtGiJG+MGIaWZXidDGHcH5GU1Z5y0WVJGf9nysw=
-github.com/getsentry/sentry-go v0.45.1/go.mod h1:XDotiNZbgf5U8bPDUAfvcFmOnMQQceESxyKaObSssW0=
+github.com/getsentry/sentry-go v0.46.0 h1:mbdDaarbUdOt9X+dx6kDdntkShLEX3/+KyOsVDTPDj0=
+github.com/getsentry/sentry-go v0.46.0/go.mod h1:evVbw2qotNUdYG8KxXbAdjOQWWvWIwKxpjdZZIvcIPw=
+github.com/getsentry/sentry-go/zerolog v0.46.0 h1:/kXddDbSPEbjwck2DXQnSQPnei2K0DVjyN3cAbFG5lg=
+github.com/getsentry/sentry-go/zerolog v0.46.0/go.mod h1:zQ3ipnNvKBq/Grjrb6tx6RGh+TGJ1ne42z2NOU/PF8E=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3/go.mod h1:VJ0WA2NBN22VlZ2dKZQPAPnyWw5XTlK1KymzLKsr59s=
 github.com/gin-gonic/gin v1.4.0/go.mod h1:OW2EZn3DO8Ln9oIKOvM++LBO+5UPHJJDH72/q/3rZdM=
