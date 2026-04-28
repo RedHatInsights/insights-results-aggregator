@@ -33,7 +33,7 @@ repos:
       - id: golangci-lint-full
 
   - repo: https://github.com/RedHatInsights/processing-tools
-    rev: v0.4.0
+    rev: v0.4.1
     hooks:
       - id: abcgo
         args: ['--threshold=64']
