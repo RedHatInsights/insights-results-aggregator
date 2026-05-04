@@ -47,7 +47,7 @@ function check_composer() {
 
 function wait_for_postgres() {
     echo -n "Waiting for postgres to be available"
-    until psql "dbname=aggregator user=postgres password=postgres host=localhost sslmode=disable" -c '\q' 2> /dev/null; do
+    until psql "dbname=test user=postgres password=postgres host=localhost sslmode=disable" -c '\q' 2> /dev/null; do
          echo -n "."
          sleep 1
     done
@@ -62,10 +62,14 @@ if [ -z "$CI" ]; then
     echo \"$COMPOSER\" to be used as composer
     $COMPOSER up -d > /dev/null
     wait_for_postgres
+else
+    export INSIGHTS_RESULTS_AGGREGATOR__OCP_RECOMMENDATIONS_STORAGE__PG_HOST="database"
+    export INSIGHTS_RESULTS_AGGREGATOR__DVO_RECOMMENDATIONS_STORAGE__PG_HOST="database"
 fi
 
 path_to_config=$(pwd)/config-devel.toml
 export INSIGHTS_RESULTS_AGGREGATOR_CONFIG_FILE="$path_to_config"
+
 run_unit_tests
 
 if [ -z "$CI" ]; then

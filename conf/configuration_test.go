@@ -248,7 +248,7 @@ func TestLoadConfigurationOverrideFromEnv1(t *testing.T) {
 		PGPassword: "password",
 		PGHost:     "localhost",
 		PGPort:     5432,
-		PGDBName:   "aggregator",
+		PGDBName:   "test",
 		PGParams:   "",
 		Type:       "sql",
 	}, storageCfg)
@@ -264,7 +264,7 @@ func TestLoadConfigurationOverrideFromEnv1(t *testing.T) {
 		PGPassword: "some very secret password",
 		PGHost:     "localhost",
 		PGPort:     5432,
-		PGDBName:   "aggregator",
+		PGDBName:   "test",
 		PGParams:   "",
 		Type:       "sql",
 	}, storageCfg)
@@ -285,7 +285,7 @@ func TestLoadConfigurationOverrideFromEnv2(t *testing.T) {
 		PGPassword: "password",
 		PGHost:     "localhost",
 		PGPort:     5432,
-		PGDBName:   "aggregator",
+		PGDBName:   "test",
 		PGParams:   "",
 		Type:       "sql",
 	}, storageCfg)
@@ -301,7 +301,7 @@ func TestLoadConfigurationOverrideFromEnv2(t *testing.T) {
 		PGPassword: "some very secret password",
 		PGHost:     "localhost",
 		PGPort:     5432,
-		PGDBName:   "aggregator",
+		PGDBName:   "test",
 		PGParams:   "",
 		Type:       "sql",
 	}, storageCfg)
