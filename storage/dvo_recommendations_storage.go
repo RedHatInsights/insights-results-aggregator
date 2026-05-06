@@ -324,7 +324,7 @@ func (storage DVORecommendationsDBStorage) updateOrgIDForClusterInTx(
 ) error {
 	// Define relevant tables
 	tables := []TableInfo{
-		{"dvo.dvo_report", "cluster_id"},
+		{"dvo.dvo_report", clusterIDKey},
 	}
 
 	// Check if there are existing records and get current org_id

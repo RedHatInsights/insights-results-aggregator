@@ -922,7 +922,7 @@ func (storage OCPRecommendationsDBStorage) getRuleKeyCreatedAtMapForTable(table 
 		RuleKeyCreatedAt, err = storage.getRuleKeyCreatedAtMap(
 			selectRuleCreatedAtQuery, orgID, clusterName,
 		)
-	case "recommendation":
+	case recommendationKey:
 		RuleKeyCreatedAt, err = storage.getRuleKeyCreatedAtMap(
 			selectRuleImpactedSinceQuery, orgID, clusterName,
 		)
@@ -1179,8 +1179,8 @@ func (storage OCPRecommendationsDBStorage) updateOrgIDForClusterInTx(
 	// Define tables to check for existing org_id (in priority order)
 	tablesToCheck := []TableInfo{
 		{"report", "cluster"},
-		{"recommendation", "cluster_id"},
-		{"report_info", "cluster_id"},
+		{recommendationKey, clusterIDKey},
+		{"report_info", clusterIDKey},
 	}
 
 	// Check if there are existing records and get current org_id
@@ -1206,12 +1206,12 @@ func (storage OCPRecommendationsDBStorage) updateOrgIDForClusterInTx(
 	// Define all tables that need org_id update
 	tablesToUpdate := []TableInfo{
 		{"report", "cluster"},
-		{"recommendation", "cluster_id"},
-		{"report_info", "cluster_id"},
-		{"rule_hit", "cluster_id"},
-		{"cluster_rule_toggle", "cluster_id"},
-		{"cluster_rule_user_feedback", "cluster_id"},
-		{"cluster_user_rule_disable_feedback", "cluster_id"},
+		{recommendationKey, clusterIDKey},
+		{"report_info", clusterIDKey},
+		{"rule_hit", clusterIDKey},
+		{"cluster_rule_toggle", clusterIDKey},
+		{"cluster_rule_user_feedback", clusterIDKey},
+		{"cluster_user_rule_disable_feedback", clusterIDKey},
 	}
 
 	return updateOrgIDInTables(tx, newOrgID, clusterName, tablesToUpdate)
@@ -1304,7 +1304,7 @@ func (storage OCPRecommendationsDBStorage) WriteRecommendationsForCluster(
 		if _, ok := storage.clustersLastChecked[clusterName]; ok {
 			// Get impacted_since if present
 			impactedSinceMap, err = storage.getRuleKeyCreatedAtMapForTable(
-				"recommendation", orgID, clusterName)
+				recommendationKey, orgID, clusterName)
 			if err != nil {
 				log.Error().Err(err).Msg("Unable to get recommendation impacted_since")
 			}

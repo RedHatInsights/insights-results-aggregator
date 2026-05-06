@@ -37,4 +37,8 @@ const (
 	closeStatementError = "Unable to close statement"
 	// inClauseError when constructing IN clause fails
 	inClauseError = "error constructing WHERE IN clause"
+	// clusterIDKey column name for cluster ID
+	clusterIDKey = "cluster_id"
+	// recommendationKey table/type name for recommendations
+	recommendationKey = "recommendation"
 )
