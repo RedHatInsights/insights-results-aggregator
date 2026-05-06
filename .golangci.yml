@@ -39,6 +39,7 @@ linters:
       - path: tests/
         linters:
           - gosec
+          - goconst
       - path: migration/ocpmigrations/mig_(.+)\.go
         linters:
           - revive
