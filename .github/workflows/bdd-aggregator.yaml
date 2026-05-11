@@ -12,4 +12,4 @@ jobs:
     with:
       service: aggregator
       use_kafka: true
-      use_posrgres: true
+      use_postgres: true
