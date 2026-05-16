@@ -1,3 +1,5 @@
+# This workflow is synced from RedHatInsights/processing-tools automatically; do not edit in downstream repos.
+
 name: BDD Tests
 
 on:
