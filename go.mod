@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/IBM/sarama v1.48.1
+	github.com/IBM/sarama v1.48.2
 	github.com/RedHatInsights/insights-operator-utils v1.28.0
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
 	github.com/RedHatInsights/insights-results-types v1.23.5
@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.23 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.23 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.24 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.73.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.23 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.11 // indirect

@@ -22,8 +22,8 @@ github.com/DATA-DOG/go-sqlmock v1.4.1/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q
 github.com/DATA-DOG/go-sqlmock v1.5.2 h1:OcvFkGmslmlZibjAjaHm3L//6LiuBgolP7OputlJIzU=
 github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ+JlNzwDqpNU=
 github.com/DataDog/datadog-go v2.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
-github.com/IBM/sarama v1.48.1 h1:x1dSWebprjjE7Wr7n8RVAxwa4mt4O9JejRxnZrGIXk0=
-github.com/IBM/sarama v1.48.1/go.mod h1:m/Q1aFezH82/AglfTpJbw/fO0ZybYXhPgTmvajiZX50=
+github.com/IBM/sarama v1.48.2 h1:QKUXRaHF46aoRwagtvDR/imrOdbdV/qWzv0u6e5my+w=
+github.com/IBM/sarama v1.48.2/go.mod h1:m/Q1aFezH82/AglfTpJbw/fO0ZybYXhPgTmvajiZX50=
 github.com/Joker/hpp v1.0.0/go.mod h1:8x5n+M1Hp5hC0g8okX3sR3vFQwynaX/UgSOM9MeBKzY=
 github.com/Joker/jade v1.0.1-0.20190614124447-d475f43051e7/go.mod h1:6E6s8o2AE4KhCrqr6GRJjdC/gNfTdxkIXvuGZZda2VM=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
@@ -109,8 +109,8 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.23 h1:bpd8vxhlQi2r1hiueO
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.23/go.mod h1:15DfR2nw+CRHIk0tqNyifu3G1YdAOy68RftkhMDDwYk=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.24 h1:OQqn11BtaYv1WLUowvcA30MpzIu8Ti4pcLPIIyoKZrA=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.24/go.mod h1:X5ZJyfwVrWA96GzPmUCWFQaEARPR7gCrpq2E92PJwAE=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.73.0 h1:JmrHkELR2Q0O28swrFMm0hZNwpQrV8qmbhnb7suKIfc=
-github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.73.0/go.mod h1:MLJu3PUd8fp5Qvj4CiLvyY5H8y7kxHKlTp060Wsd+Vc=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.0 h1:6TqDeYdvJJEIJGg5ICy7nzC7/UuHk2Eg3wrpb5bWKPM=
+github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.0/go.mod h1:MLJu3PUd8fp5Qvj4CiLvyY5H8y7kxHKlTp060Wsd+Vc=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.9 h1:FLudkZLt5ci0ozzgkVo8BJGwvqNaZbTWb3UcucAateA=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.9/go.mod h1:w7wZ/s9qK7c8g4al+UyoF1Sp/Z45UwMGcqIzLWVQHWk=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.23 h1:pbrxO/kuIwgEsOPLkaHu0O+m4fNgLU8B3vxQ+72jTPw=
