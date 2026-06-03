@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.26 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.26 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.27 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.74.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.26 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.1.2 // indirect
