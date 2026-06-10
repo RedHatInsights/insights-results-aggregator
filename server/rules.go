@@ -227,7 +227,7 @@ func (server HTTPServer) getRuleToggleMapForCluster(
 		compositeRuleID, err := generators.GenerateCompositeRuleID(types.RuleFQDN(rule.RuleID), rule.ErrorKey)
 		if err != nil {
 			ruleSpecificErr := fmt.Errorf("error generating composite rule ID for rule %s: %s", rule.RuleID, err.Error())
-			log.Error().Err(ruleSpecificErr).
+			log.Warn().Err(ruleSpecificErr).
 				Str("rule_id", string(rule.RuleID)).
 				Str("cluster_id", string(rule.ClusterID)).
 				Str("error_key", string(rule.ErrorKey)).

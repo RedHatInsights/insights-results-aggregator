@@ -14,6 +14,8 @@
 
 package server
 
+import "github.com/RedHatInsights/insights-results-aggregator/types"
+
 // Export for testing
 //
 // This source file contains name aliases of all package-private functions
@@ -36,3 +38,12 @@ var (
 	ConstructClusterNames     = constructClusterNames
 	FillInGeneratedReports    = fillInGeneratedReports
 )
+
+// GetRuleToggleMapForCluster exports getRuleToggleMapForCluster for unit tests.
+func GetRuleToggleMapForCluster(
+	s *HTTPServer,
+	clusterName types.ClusterName,
+	orgID types.OrgID,
+) (map[types.RuleID]bool, error) {
+	return s.getRuleToggleMapForCluster(clusterName, orgID)
+}
