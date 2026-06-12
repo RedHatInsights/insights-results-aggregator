@@ -48,4 +48,5 @@ var UsableOCPMigrations = []migration.Migration{
 	mig0029DropClusterRuleToggleUserIDColumn,
 	mig0030DropRuleDisableUserIDColumn,
 	mig0031AlterConstraintDropUserAdvisorRatings,
+	mig0032CleanupClusterRuleToggleEmptyErrorKey,
 }

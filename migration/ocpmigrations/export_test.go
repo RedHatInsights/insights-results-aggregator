@@ -10,5 +10,6 @@ package ocpmigrations
 // https://medium.com/@robiplus/golang-trick-export-for-test-aa16cbd7b8cd
 // to see why this trick is needed.
 var (
-	Mig0004ModifyClusterRuleUserFeedback = mig0004ModifyClusterRuleUserFeedback
+	Mig0004ModifyClusterRuleUserFeedback         = mig0004ModifyClusterRuleUserFeedback
+	Mig0032CleanupClusterRuleToggleEmptyErrorKey = mig0032CleanupClusterRuleToggleEmptyErrorKey
 )

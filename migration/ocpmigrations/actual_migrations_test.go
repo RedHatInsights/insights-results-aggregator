@@ -17,6 +17,7 @@ package ocpmigrations_test
 import (
 	"database/sql"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -1196,4 +1197,241 @@ func TestMigration31(t *testing.T) {
 
 	// default value on stepdown
 	assert.Equal(t, userID, types.UserID("-1"))
+}
+
+func TestMigration32(t *testing.T) {
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
+	defer closer()
+
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 31, ocpmigrations.UsableOCPMigrations)
+	helpers.FailOnError(t, err)
+
+	const insertToggleQuery = `
+		INSERT INTO cluster_rule_toggle
+		(cluster_id, rule_id, error_key, org_id, disabled, updated_at)
+		VALUES
+		($1, $2, $3, $4, $5, $6)
+	`
+
+	// rows with empty error_key should be deleted
+	for i := 0; i < 2; i++ {
+		_, err = dbConn.Exec(
+			insertToggleQuery,
+			testdata.GetRandomClusterID(),
+			testdata.Rule1ID,
+			"",
+			testdata.OrgID,
+			storage.RuleToggleDisable,
+			time.Now(),
+		)
+		helpers.FailOnError(t, err)
+	}
+
+	// rows with non-empty error_key should remain
+	for i := 0; i < 2; i++ {
+		_, err = dbConn.Exec(
+			insertToggleQuery,
+			testdata.GetRandomClusterID(),
+			testdata.Rule1ID,
+			testdata.ErrorKey1,
+			testdata.OrgID,
+			storage.RuleToggleDisable,
+			time.Now(),
+		)
+		helpers.FailOnError(t, err)
+	}
+
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 32, ocpmigrations.UsableOCPMigrations)
+	helpers.FailOnError(t, err)
+
+	var remainingCount int
+	err = dbConn.QueryRow(`SELECT count(*) FROM cluster_rule_toggle`).Scan(&remainingCount)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 2, remainingCount)
+
+	var emptyErrorKeyCount int
+	err = dbConn.QueryRow(`SELECT count(*) FROM cluster_rule_toggle WHERE error_key = ''`).Scan(&emptyErrorKeyCount)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 0, emptyErrorKeyCount)
+
+	version, err := migration.GetDBVersion(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, migration.Version(32), version)
+
+	// StepDown is a one-way operation: it must succeed but not restore deleted rows.
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 31, ocpmigrations.UsableOCPMigrations)
+	helpers.FailOnError(t, err)
+
+	version, err = migration.GetDBVersion(dbConn, dbSchema)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, migration.Version(31), version)
+
+	err = dbConn.QueryRow(`SELECT count(*) FROM cluster_rule_toggle`).Scan(&remainingCount)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 2, remainingCount)
+
+	err = dbConn.QueryRow(`SELECT count(*) FROM cluster_rule_toggle WHERE error_key = ''`).Scan(&emptyErrorKeyCount)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 0, emptyErrorKeyCount)
+}
+
+func TestMigration32_StepUpNoEmptyErrorKeyRows(t *testing.T) {
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
+	defer closer()
+
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 31, ocpmigrations.UsableOCPMigrations)
+	helpers.FailOnError(t, err)
+
+	const insertToggleQuery = `
+		INSERT INTO cluster_rule_toggle
+		(cluster_id, rule_id, error_key, org_id, disabled, updated_at)
+		VALUES
+		($1, $2, $3, $4, $5, $6)
+	`
+
+	for i := 0; i < 3; i++ {
+		_, err = dbConn.Exec(
+			insertToggleQuery,
+			testdata.GetRandomClusterID(),
+			testdata.Rule1ID,
+			testdata.ErrorKey1,
+			testdata.OrgID,
+			storage.RuleToggleDisable,
+			time.Now(),
+		)
+		helpers.FailOnError(t, err)
+	}
+
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 32, ocpmigrations.UsableOCPMigrations)
+	helpers.FailOnError(t, err)
+
+	var remainingCount int
+	err = dbConn.QueryRow(`SELECT count(*) FROM cluster_rule_toggle`).Scan(&remainingCount)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 3, remainingCount)
+}
+
+func TestMigration32_StepDownDoesNotRestoreDeletedRows(t *testing.T) {
+	dbConn, dbDriver, dbSchema, closer := ira_helpers.PrepareDBAndInfo(t)
+	defer closer()
+
+	err := migration.SetDBVersion(dbConn, dbDriver, dbSchema, 31, ocpmigrations.UsableOCPMigrations)
+	helpers.FailOnError(t, err)
+
+	const insertToggleQuery = `
+		INSERT INTO cluster_rule_toggle
+		(cluster_id, rule_id, error_key, org_id, disabled, updated_at)
+		VALUES
+		($1, $2, $3, $4, $5, $6)
+	`
+
+	malformedClusterID := testdata.GetRandomClusterID()
+	validClusterID := testdata.GetRandomClusterID()
+
+	_, err = dbConn.Exec(
+		insertToggleQuery,
+		malformedClusterID,
+		testdata.Rule1ID,
+		"",
+		testdata.OrgID,
+		storage.RuleToggleDisable,
+		time.Now(),
+	)
+	helpers.FailOnError(t, err)
+
+	_, err = dbConn.Exec(
+		insertToggleQuery,
+		validClusterID,
+		testdata.Rule2ID,
+		testdata.ErrorKey2,
+		testdata.OrgID,
+		storage.RuleToggleDisable,
+		time.Now(),
+	)
+	helpers.FailOnError(t, err)
+
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 32, ocpmigrations.UsableOCPMigrations)
+	helpers.FailOnError(t, err)
+
+	var clusterID types.ClusterName
+	var ruleID types.RuleID
+	var errorKey string
+	err = dbConn.QueryRow(`
+		SELECT cluster_id, rule_id, error_key
+		FROM cluster_rule_toggle
+	`).Scan(&clusterID, &ruleID, &errorKey)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, validClusterID, clusterID)
+	assert.Equal(t, testdata.Rule2ID, ruleID)
+	assert.Equal(t, testdata.ErrorKey2, errorKey)
+
+	err = migration.SetDBVersion(dbConn, dbDriver, dbSchema, 31, ocpmigrations.UsableOCPMigrations)
+	helpers.FailOnError(t, err)
+
+	var remainingCount int
+	err = dbConn.QueryRow(`SELECT count(*) FROM cluster_rule_toggle`).Scan(&remainingCount)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 1, remainingCount)
+
+	err = dbConn.QueryRow(`
+		SELECT count(*)
+		FROM cluster_rule_toggle
+		WHERE cluster_id = $1 AND error_key = ''
+	`, malformedClusterID).Scan(&remainingCount)
+	helpers.FailOnError(t, err)
+	assert.Equal(t, 0, remainingCount)
+}
+
+func TestMigration32_StepUpDeleteError(t *testing.T) {
+	const errStr = "delete error"
+	mig32 := ocpmigrations.Mig0032CleanupClusterRuleToggleEmptyErrorKey
+
+	tx, db, expects := GetTxForMigration(t)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
+
+	expects.ExpectExec("DELETE FROM cluster_rule_toggle").
+		WillReturnError(errors.New(errStr))
+
+	err := mig32.StepUp(tx, types.DBDriverGeneral)
+	assert.EqualError(t, err, errStr)
+}
+
+func TestMigration32_StepUpRowsAffectedError(t *testing.T) {
+	const errStr = "rows affected error"
+	mig32 := ocpmigrations.Mig0032CleanupClusterRuleToggleEmptyErrorKey
+
+	tx, db, expects := GetTxForMigration(t)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
+
+	expects.ExpectExec("DELETE FROM cluster_rule_toggle").
+		WillReturnResult(sqlmock.NewErrorResult(errors.New(errStr)))
+
+	err := mig32.StepUp(tx, types.DBDriverGeneral)
+	assert.EqualError(t, err, errStr)
+}
+
+func TestMigration32_StepUpSuccess(t *testing.T) {
+	mig32 := ocpmigrations.Mig0032CleanupClusterRuleToggleEmptyErrorKey
+
+	tx, db, expects := GetTxForMigration(t)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
+
+	expects.ExpectExec("DELETE FROM cluster_rule_toggle").
+		WillReturnResult(sqlmock.NewResult(0, 3))
+
+	err := mig32.StepUp(tx, types.DBDriverGeneral)
+	helpers.FailOnError(t, err)
+}
+
+func TestMigration32_StepDownNoOp(t *testing.T) {
+	mig32 := ocpmigrations.Mig0032CleanupClusterRuleToggleEmptyErrorKey
+
+	tx, db, expects := GetTxForMigration(t)
+	defer ira_helpers.MustCloseMockDBWithExpects(t, db, expects)
+
+	err := mig32.StepDown(tx, types.DBDriverPostgres)
+	helpers.FailOnError(t, err)
+
+	err = mig32.StepDown(tx, types.DBDriverGeneral)
+	helpers.FailOnError(t, err)
 }
