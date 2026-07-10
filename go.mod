@@ -53,7 +53,7 @@ require (
 	github.com/getkin/kin-openapi v0.140.0 // indirect
 	github.com/getsentry/sentry-go v0.47.0 // indirect
 	github.com/getsentry/sentry-go/zerolog v0.47.0 // indirect
-	github.com/go-openapi/jsonpointer v0.24.0 // indirect
+	github.com/go-openapi/jsonpointer v1.0.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect
