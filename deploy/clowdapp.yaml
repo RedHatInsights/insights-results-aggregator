@@ -447,7 +447,7 @@ parameters:
 - name: LOG_LEVEL
   value: "INFO"
 - name: DEBUG
-  value: "true"
+  value: "false"
 - name: AUTH
   value: "false"
 - name: IRA_API_PREFIX
