@@ -203,8 +203,6 @@ objects:
               value: "${DVO_WRITER_API_PREFIX}"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__API_SPEC_FILE
               value: "/openapi/openapi.json"
-            - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__DEBUG
-              value: "true"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH
               value: "false"
             - name: INSIGHTS_RESULTS_AGGREGATOR__SERVER__AUTH_TYPE
