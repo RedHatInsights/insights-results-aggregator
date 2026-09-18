@@ -10,7 +10,7 @@ on:
 jobs:
   bdd:
     name: BDD tests
-    uses: RedHatInsights/processing-tools/.github/workflows/bdd.yaml@v0.4.4
+    uses: RedHatInsights/processing-tools/.github/workflows/bdd.yaml@v0.4.5
     with:
       service: dvo-writer
       use_kafka: true
