@@ -34,7 +34,7 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
-	mapset "github.com/deckarep/golang-set/v2"
+	mapset "github.com/deckarep/golang-set/v3"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
