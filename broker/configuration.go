@@ -26,7 +26,7 @@ import (
 	"github.com/IBM/sarama"
 	tlsutils "github.com/RedHatInsights/insights-operator-utils/tls"
 	"github.com/RedHatInsights/insights-results-aggregator/types"
-	mapset "github.com/deckarep/golang-set/v2"
+	mapset "github.com/deckarep/golang-set/v3"
 	"github.com/rs/zerolog/log"
 )
 

@@ -22,7 +22,7 @@ import (
 	"github.com/IBM/sarama/mocks"
 	"github.com/RedHatInsights/insights-operator-utils/tests/helpers"
 	"github.com/RedHatInsights/insights-results-aggregator-data/testdata"
-	mapset "github.com/deckarep/golang-set/v2"
+	mapset "github.com/deckarep/golang-set/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	prommodels "github.com/prometheus/client_model/go"
 	"github.com/rs/zerolog"
