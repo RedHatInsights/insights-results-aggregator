@@ -15,6 +15,7 @@
 package helpers
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -159,10 +160,41 @@ func WaitForMockConsumerToHaveNConsumedMessages(mockConsumer *MockKafkaConsumer,
 	}
 }
 
+// mockBrokerAPIVersions advertises Kafka APIs used by our mock handlers.
+// Sarama v1.61+ returns ErrUnsupportedVersion when ApiVersions omits an API key
+// (see IBM/sarama#3741), so the default MockApiVersionsResponse (Produce+Fetch only)
+// is not enough for Metadata/Offset/etc.
+func mockBrokerAPIVersions(t testing.TB) *sarama.MockApiVersionsResponse {
+	// Numeric keys match Kafka protocol / unexported sarama apiKey* constants.
+	keys := []int16{
+		0,  // Produce
+		1,  // Fetch
+		2,  // ListOffsets
+		3,  // Metadata
+		8,  // OffsetCommit
+		9,  // OffsetFetch
+		10, // FindCoordinator
+		11, // JoinGroup
+		12, // Heartbeat
+		13, // LeaveGroup
+		14, // SyncGroup
+		18, // ApiVersions
+	}
+	apiKeys := make([]sarama.ApiVersionsResponseKey, 0, len(keys))
+	for _, key := range keys {
+		apiKeys = append(apiKeys, sarama.ApiVersionsResponseKey{
+			ApiKey:     key,
+			MinVersion: 0,
+			MaxVersion: math.MaxInt16,
+		})
+	}
+	return sarama.NewMockApiVersionsResponse(t).SetApiKeys(apiKeys)
+}
+
 // GetHandlersMapForMockConsumer returns handlers for mock broker to successfully create a new consumer
 func GetHandlersMapForMockConsumer(t testing.TB, mockBroker *sarama.MockBroker, topicName string) map[string]sarama.MockResponse {
 	return map[string]sarama.MockResponse{
-		"ApiVersionsRequest": sarama.NewMockApiVersionsResponse(t),
+		"ApiVersionsRequest": mockBrokerAPIVersions(t),
 		"MetadataRequest": sarama.NewMockMetadataResponse(t).
 			SetBroker(mockBroker.Addr(), mockBroker.BrokerID()).
 			SetLeader(topicName, 0, mockBroker.BrokerID()),
