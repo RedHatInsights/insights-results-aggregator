@@ -33,6 +33,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/RedHatInsights/insights-operator-utils/logger"
 	"github.com/rs/zerolog/log"
@@ -70,6 +71,14 @@ const (
 const (
 	defaultConfigFilename = "config"
 	typeStr               = "type"
+
+	// defaultMigrationReadyWaitInterval is how long to sleep between DB migration
+	// version checks when the schema is not yet at the latest version.
+	defaultMigrationReadyWaitInterval = 2 * time.Second
+
+	// defaultMigrationReadyWaitTimeout is the maximum time to wait for DB
+	// migrations before giving up and exiting.
+	defaultMigrationReadyWaitTimeout = 5 * time.Minute
 )
 
 var (
@@ -97,6 +106,14 @@ var (
 	// the database to the latest migration version. This is necessary
 	// for unit tests that work with an empty DB.
 	autoMigrate = false
+
+	// migrationReadyWaitInterval is the pause between migration version checks.
+	// Overridable in unit tests.
+	migrationReadyWaitInterval = defaultMigrationReadyWaitInterval
+
+	// migrationReadyWaitTimeout is the maximum time to wait for migrations.
+	// Overridable in unit tests.
+	migrationReadyWaitTimeout = defaultMigrationReadyWaitTimeout
 )
 
 // fillInInfoParams function fills-in additional info used by /info endpoint
@@ -184,22 +201,55 @@ func prepareDBMigrations(dbStorage storage.Storage) int {
 			return ExitStatusPrepareDbError
 		}
 	} else {
-		currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection(), dbStorage.GetDBSchema())
-		if err != nil {
-			log.Error().Err(err).Msg("unable to check DB migration version")
-			return ExitStatusPrepareDbError
-		}
-		log.Debug().Msgf("%v DB schema current migration %v", dbSchema, currentVersion)
-
-		maxVersion := dbStorage.GetMaxVersion()
-		if currentVersion != maxVersion {
-			log.Error().Msgf("old DB migration version (current: %d, latest: %d)", currentVersion, maxVersion)
-			return ExitStatusPrepareDbError
-		}
-		log.Debug().Msgf("%v DB schema maximum migration %v", dbSchema, maxVersion)
+		// Wait for another process (e.g. db-writer initContainer) to finish
+		// migrations instead of exiting and triggering CrashLoopBackoff.
+		return waitUntilMigrationReady(dbStorage)
 	}
 
 	return ExitStatusOK
+}
+
+// waitUntilMigrationReady polls the DB migration version until it matches the
+// latest schema version, or until migrationReadyWaitTimeout elapses. Used at
+// startup when autoMigrate is disabled so the process stays alive instead of
+// exiting while migrations are still running.
+func waitUntilMigrationReady(dbStorage storage.Storage) int {
+	dbSchema := dbStorage.GetDBSchema()
+	maxVersion := dbStorage.GetMaxVersion()
+	deadline := time.Now().Add(migrationReadyWaitTimeout)
+
+	for {
+		if time.Now().After(deadline) {
+			log.Error().Msgf(
+				"DB migration not ready within %s; giving up",
+				migrationReadyWaitTimeout,
+			)
+			return ExitStatusPrepareDbError
+		}
+
+		currentVersion, err := migration.GetDBVersion(dbStorage.GetConnection(), dbSchema)
+		if err != nil {
+			// Table may not exist yet while another process is still migrating.
+			log.Warn().Err(err).Msgf(
+				"unable to check DB migration version; waiting %s before retry",
+				migrationReadyWaitInterval,
+			)
+			time.Sleep(migrationReadyWaitInterval)
+			continue
+		}
+		log.Debug().Msgf("%v DB schema current migration %v", dbSchema, currentVersion)
+
+		if currentVersion == maxVersion {
+			log.Debug().Msgf("%v DB schema maximum migration %v", dbSchema, maxVersion)
+			return ExitStatusOK
+		}
+
+		log.Warn().Msgf(
+			"DB migration not ready yet (current: %d, latest: %d); waiting %s before retry",
+			currentVersion, maxVersion, migrationReadyWaitInterval,
+		)
+		time.Sleep(migrationReadyWaitInterval)
+	}
 }
 
 // prepareDB function opens a connection to database and loads all available

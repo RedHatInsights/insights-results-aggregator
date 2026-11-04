@@ -216,7 +216,7 @@ objects:
               path: "${IRDW_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
             periodSeconds: 60
             successThreshold: 1
             timeoutSeconds: 60
@@ -226,7 +226,7 @@ objects:
               path: "${IRDW_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 5
             periodSeconds: 60
             successThreshold: 1
             timeoutSeconds: 60
@@ -327,13 +327,14 @@ objects:
             - name: INSIGHTS_RESULTS_AGGREGATOR__SENTRY__ENVIRONMENT
               value: ${ENV_NAME}
           image: ${IMAGE}:${IMAGE_TAG}
+          # failureThreshold covers migrationReadyWaitTimeout (5m): ~10s + 34*10s ≈ 6m
           livenessProbe:
-            failureThreshold: 5
+            failureThreshold: 35
             httpGet:
               path: ${IRA_API_PREFIX}openapi.json
               port: 10000
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 60
@@ -343,7 +344,7 @@ objects:
               path: ${IRA_API_PREFIX}openapi.json
               port: 10000
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 5
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 60

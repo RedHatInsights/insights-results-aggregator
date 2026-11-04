@@ -134,7 +134,7 @@ objects:
               path: "${CW_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
             periodSeconds: 60
             successThreshold: 1
             timeoutSeconds: 60
@@ -144,7 +144,7 @@ objects:
               path: "${CW_API_PREFIX}metrics"
               port: 9000
               scheme: HTTP
-            initialDelaySeconds: 60
+            initialDelaySeconds: 5
             periodSeconds: 60
             successThreshold: 1
             timeoutSeconds: 60
