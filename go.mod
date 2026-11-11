@@ -50,7 +50,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/eapache/go-resiliency v1.7.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
-	github.com/getkin/kin-openapi v0.152.0 // indirect
+	github.com/getkin/kin-openapi v0.153.0 // indirect
 	github.com/getsentry/sentry-go v0.50.0 // indirect
 	github.com/getsentry/sentry-go/zerolog v0.50.0 // indirect
 	github.com/go-openapi/jsonpointer v1.0.2 // indirect
@@ -69,8 +69,6 @@ require (
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mozillazg/request v0.8.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/oasdiff/yaml v0.1.3 // indirect
-	github.com/oasdiff/yaml3 v0.0.16 // indirect
 	github.com/pandatix/go-abnf v0.5.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.33 // indirect
@@ -87,6 +85,7 @@ require (
 	github.com/xdg/stringprep v1.0.3 // indirect
 	go.uber.org/atomic v1.12.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	go.yaml.in/yaml/v4 v4.0.0 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
