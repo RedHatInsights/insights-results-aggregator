@@ -37,4 +37,7 @@ type RedisConfiguration struct {
 	RedisTimeoutSeconds int    `mapstructure:"timeout_seconds" toml:"timeout_seconds"`
 	RedisPassword       string `mapstructure:"password" toml:"password"`
 	RedisUsername       string `mapstructure:"username" toml:"username"`
+	// RedisUseTLS enables TLS for the Redis/Valkey client. Required when
+	// ElastiCache transit encryption / AUTH is enabled.
+	RedisUseTLS bool `mapstructure:"use_tls" toml:"use_tls"`
 }

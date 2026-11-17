@@ -275,8 +275,11 @@ func newNoopOCPStorage(_ Configuration) (OCPRecommendationsStorage, error) {
 func newRedisStorage(configuration Configuration) (OCPRecommendationsStorage, error) {
 	redisCfg := configuration.RedisConfiguration
 	log.Info().
-		Str("Endpoint", redisCfg.RedisEndpoint).
-		Int("Database index", redisCfg.RedisDatabase).
+		Str("endpoint", redisCfg.RedisEndpoint).
+		Int("database", redisCfg.RedisDatabase).
+		Bool("tls", redisCfg.RedisUseTLS).
+		Bool("password_set", redisCfg.RedisPassword != "").
+		Bool("username_set", redisCfg.RedisUsername != "").
 		Msg("Making connection to Redis storage")
 
 	// pass for unit tests
@@ -290,6 +293,7 @@ func newRedisStorage(configuration Configuration) (OCPRecommendationsStorage, er
 		redisCfg.RedisUsername,
 		redisCfg.RedisPassword,
 		redisCfg.RedisTimeoutSeconds,
+		redisCfg.RedisUseTLS,
 	)
 	// check for init error
 	if err != nil {
