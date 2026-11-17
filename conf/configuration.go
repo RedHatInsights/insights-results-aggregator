@@ -369,6 +369,10 @@ func updateRedisConfig(conf *storage.RedisConfiguration) {
 	if clowder.LoadedConfig.InMemoryDb.Password != nil {
 		conf.RedisPassword = *clowder.LoadedConfig.InMemoryDb.Password
 	}
+	// Clowder's elasticache provider hardcodes sslMode=true even when transit
+	// encryption is off. AUTH tokens only exist with transit encryption, so key
+	// TLS off a nonempty password to avoid breaking plaintext caches.
+	conf.RedisUseTLS = conf.RedisPassword != ""
 }
 
 func updateStorageConfFromClowder(conf *storage.Configuration) {
