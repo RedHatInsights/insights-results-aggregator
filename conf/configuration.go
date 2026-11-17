@@ -144,6 +144,8 @@ func LoadConfiguration(defaultConfigFile string) error {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix(envPrefix)
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_", ".", "__"))
+	// Register so AutomaticEnv can override when the key is absent from config.toml.
+	viper.SetDefault("redis.use_tls", false)
 
 	err = viper.Unmarshal(&Config)
 	if err != nil {
