@@ -723,4 +723,5 @@ func TestClowderConfigForRedis(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s:%d", hostname, port), redisCfg.RedisEndpoint)
 	assert.Equal(t, username, redisCfg.RedisUsername)
 	assert.Equal(t, password, redisCfg.RedisPassword)
+	assert.True(t, redisCfg.RedisUseTLS, "TLS should be enabled when Clowder provides a password")
 }
