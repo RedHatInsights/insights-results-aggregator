@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/IBM/sarama v1.62.0
-	github.com/RedHatInsights/insights-operator-utils v1.28.0
+	github.com/RedHatInsights/insights-operator-utils v1.29.0
 	github.com/RedHatInsights/insights-results-aggregator-data v1.3.9
 	github.com/RedHatInsights/insights-results-types v1.23.5
 	github.com/deckarep/golang-set/v3 v3.0.0
